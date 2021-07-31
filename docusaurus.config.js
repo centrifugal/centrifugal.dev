@@ -1,20 +1,20 @@
 module.exports = {
   title: "Centrifugo",
-  tagline: "is CSS for components",
+  tagline: "Scalable real-time messaging server in language-agnostic way.",
   url: "https://centrifugal.dev",
   baseUrl: "/",
+  trailingSlash: false,
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
   favicon: "img/favicon.png",
-  organizationName: "centrifugal", // Usually your GitHub org/user name.
-  projectName: "centrifugal.dev", // Usually your repo name.
+  organizationName: "centrifugal",
+  projectName: "centrifugal.dev",
   themeConfig: {
     prism: {
 
     },
     colorMode: {
-      // "light" | "dark"
-      defaultMode: "dark",
+      defaultMode: "light",
       respectPrefersColorScheme: true,
     },
     navbar: {
