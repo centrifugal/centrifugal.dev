@@ -2,7 +2,7 @@
 title: Centrifugo v3 released
 tags: [centrifugo, release]
 description: Centrifugo v3 released with lots of exciting improvements
-image: /img/author.jpeg
+image: /img/v3_blog.jpg
 hide_table_of_contents: false
 ---
 
@@ -177,6 +177,8 @@ Publish API now returns the current top stream position (offset and epoch) for c
 Server history API inherited iteration possibilities described above.
 
 Centrifugo now supports API extensions in terms of the new `rpc` method. The purpose of this method is to have a way to quickly introduce JSON extensions for API without a need to update Protobuf definitions and add method implementation to API clients. It now serves a `getChannels` extension to get a list of active channels in a system with a number of connections in each and optionally filter channels by mask.
+
+Admin web UI has been updated too to support new methods, so you can play with new API from its `actions` tab.
 
 // TODO: refactor getChannels result to have a map to be more extensible.
 

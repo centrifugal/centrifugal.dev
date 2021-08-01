@@ -2,6 +2,9 @@
 title: Scaling WebSocket in Go and beyond
 tags: [websocket, go]
 description: Scaling WebSocket in Go and beyond
+author: Alexander Emelin
+authorTitle: Creator of Centrifugo
+authorImageURL: https://github.com/FZambia.png
 image: /img/author.jpeg
 hide_table_of_contents: false
 ---
