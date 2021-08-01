@@ -49,7 +49,7 @@ For more details, refer to the [v3 migration guide](/docs/getting-started/migrat
 
 ### License change
 
-As some of you know we considered changing Centrifugo license to AGPL v3 for a new release. After thinking a lot about this we decided to not go into this area at the moment.
+As some of you know we considered changing Centrifugo license to AGPL v3 for a new release. After thinking a lot about this we decided to not step into this area at the moment.
 
 But the license has been changed: the license of OSS Centrifugo is now Apache 2.0 instead of MIT. Apache 2.0 is also a permissive OSS license, it's just a bit more concrete in some aspects.
 
@@ -82,13 +82,13 @@ Centrifugo supports the following unidirectional transports:
 
 We expect that introducing unidirectional transports will significantly increase Centrifugo adoption.
 
-### History iteration API 
+### History iteration API
 
 <img src="/img/centrifuge.svg" align="right" width="25%" />
 
 There was a rather important limitation of Centrifugo history API – it was not very suitable for keeping large streams because a call to a history could only return the entire channel history.
 
-Centrifugo v3 introduces an API to iterate over a stream. It's possible to do since the current stream beginning or end in both directions – forward and backward – with configured limit. Also with starting stream position if it's known.
+Centrifugo v3 introduces an API to iterate over a stream. It's possible to do from the current stream beginning or end, in both directions – forward and backward, with configured limit. Also with certain starting stream position if it's known.
 
 This, among other things, can help to implement manual missed message recovery on a client-side to reduce the load on the application backend.
 
@@ -162,7 +162,7 @@ Centrifugo can now transform events received over persistent connections from us
 
 GRPC support should make Centrifugo ready for today's microservice architecture where GRPC is a huge player for inter-service communication.
 
-So we mostly just provide more choices for Centrifugo users here. GRPC has a good advantage that an application backend RPC layer which is responsible for communication with Centrifugo can now be generated from Protobuf definitions for all popular programming languages.
+So we mostly just provide more choices for Centrifugo users here. GRPC has some good advantages – for example an application backend RPC layer which is responsible for communication with Centrifugo can now be generated from Protobuf definitions for all popular programming languages.
 
 ### Server API improvements
 
@@ -174,7 +174,7 @@ The new `subscribe` API method allows subscribing connection to a channel at any
 
 Publish API now returns the current top stream position (offset and epoch) for channels with history enabled.
 
-Server history API inherited iteration possibilities too.
+Server history API inherited iteration possibilities described above.
 
 Centrifugo now supports API extensions in terms of the new `rpc` method. The purpose of this method is to have a way to quickly introduce JSON extensions for API without a need to update Protobuf definitions and add method implementation to API clients. It now serves a `getChannels` extension to get a list of active channels in a system with a number of connections in each and optionally filter channels by mask.
 
@@ -192,7 +192,7 @@ One important detail is that it's not required to set `?format=protobuf` URL par
 
 ### New documentation site
 
-You are reading this post on a new project site. It's built with amazing [Docusaurus](https://docusaurus.io/). Previously Centrifugo used `mkdocs` for documentation.
+You are reading this post on a new project site. It's built with amazing [Docusaurus](https://docusaurus.io/).
 
 A lot of documents were actualized, extended, and rewritten. We also now have new chapters like:
 
@@ -208,7 +208,7 @@ Server API and proxy documentation have been improved significantly.
 
 Centrifugo v3 has some notable performance improvements.
 
-JSON client protocol now utilizes a couple of libraries (`easyjson` for encoding and `segmentio/encoding` for unmarshaling). Actually we use a slightly customized version of easyjson lib to achieve even faster performance than it provides out-of-the-box. Changes allowed to speed up JSON encoding and decoding up to 4-5x for small messages. For large payloads speed up can be even more noticeable – we observed up to 30x performance boost when serializing 5kb messages.
+JSON client protocol now utilizes a couple of libraries (`easyjson` for encoding and `segmentio/encoding` for unmarshaling). Actually we use a slightly customized version of `easyjson` library to achieve even faster performance than it provides out-of-the-box. Changes allowed to speed up JSON encoding and decoding up to 4-5x for small messages. For large payloads speed up can be even more noticeable – we observed up to 30x performance boost when serializing 5kb messages.
 
 :::tip
 
