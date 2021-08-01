@@ -212,6 +212,26 @@ Centrifugo v3 has some notable performance improvements.
 
 JSON client protocol now utilizes a couple of libraries (`easyjson` for encoding and `segmentio/encoding` for unmarshaling). Actually we use a slightly customized version of `easyjson` library to achieve even faster performance than it provides out-of-the-box. Changes allowed to speed up JSON encoding and decoding up to 4-5x for small messages. For large payloads speed up can be even more noticeable – we observed up to 30x performance boost when serializing 5kb messages.
 
+For example, let's look at a JSON serialization benchmark result for 256 byte payload. Here is what we had before:
+
+```bash title="Centrifugo v2 JSON encoding/decoding"
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+BenchmarkReplyJSONMarshal-12              	  178749	      5883 ns/op	    1121 B/op	       6 allocs/op
+BenchmarkReplyJSONMarshalParallel-12      	 1000000	      1009 ns/op	    1121 B/op	       6 allocs/op
+BenchmarkReplyJSONUnmarshal-12            	  709442	      1717 ns/op	    1328 B/op	      16 allocs/op
+BenchmarkReplyJSONUnmarshalParallel-12    	 2562682	     492.2 ns/op	    1328 B/op	      16 allocs/op
+```
+
+And what we have now with mentioned optimizations:
+
+```bash title="Centrifugo v3 JSON encoding/decoding"
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+BenchmarkReplyJSONMarshal-12              	 2560554	       461.3 ns/op	     928 B/op	       3 allocs/op
+BenchmarkReplyJSONMarshalParallel-12      	 5238146	       250.6 ns/op	     928 B/op	       3 allocs/op
+BenchmarkReplyJSONUnmarshal-12            	 2511397	       476.5 ns/op	     136 B/op	       3 allocs/op
+BenchmarkReplyJSONUnmarshalParallel-12    	11006149	       107.2 ns/op	     136 B/op	       3 allocs/op
+```
+
 :::tip
 
 Centrifugo Protobuf protocol is still faster than JSON for encoding/decoding on a server-side.
