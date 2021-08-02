@@ -3,7 +3,6 @@ module.exports = {
   tagline: "Centrifugo – scalable real-time messaging server in language-agnostic way. Set up once and forever.",
   url: "https://centrifugal.dev",
   baseUrl: "/",
-  trailingSlash: false,
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
   favicon: "img/favicon.png",
@@ -12,6 +11,11 @@ module.exports = {
   themeConfig: {
     prism: {
 
+    },
+    announcementBar: {
+      id: 'announcementBar-1', // Increment on change.
+      content:
+        '🛑 🛑 🛑 This is a documentation for Centrifugo v3 which is not released yet. See <a target="_blank" rel="noopener noreferrer" href="https://centrifugal.github.io/centrifugo/">Centrifugo v2 documentation</a> instead. 🛑 🛑 🛑',
     },
     colorMode: {
       defaultMode: "light",

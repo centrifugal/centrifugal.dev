@@ -3,12 +3,6 @@ id: introduction
 title: Centrifugo introduction
 ---
 
-:::danger
-
-This is a documentation for Centrifugo v3 which is not released yet. See [Centrifugo v2 documentation](https://centrifugal.github.io/centrifugo/) instead.
-
-:::
-
 Centrifugo is an open-source scalable real-time messaging server in language-agnostic way.
 
 :::info Real-time?

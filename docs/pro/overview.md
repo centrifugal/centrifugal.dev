@@ -3,12 +3,6 @@ id: overview
 title: Centrifugo PRO overview
 ---
 
-:::danger
-
-This is a documentation for Centrifugo v3 which is not released yet. See [Centrifugo v2 documentation](https://centrifugal.github.io/centrifugo/) instead.
-
-:::
-
 Centrifugo PRO is an extended version of Centrifugo with some advanced features.
 
 Centrifugo PRO requires a license key which can be purchased to unlock these additional features. At this moment we form an invoice for payment with a payment link manually. Please contact over `centrifugal.dev@gmail.com` to buy a license key or request a trial license key. This process may be automated in the future.
