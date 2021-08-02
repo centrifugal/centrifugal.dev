@@ -13,7 +13,7 @@ Since Centrifugo originally designed to be used in conjunction with frameworks w
 
 Centrifugo is pretty fast. It's written in Go language, uses fast open-source libraries internally, has some internal optimizations like message queuing on broadcasts, smart batching to reduce number of RTT with broker, connection hub sharding to avoid contention, JSON and Protobuf encoding speedups over code generation and other.
 
-See a [Million WebSocket with Centrifugo](million-connections-with-centrifugo) post in our blog to see some real-world numbers.
+See a [Million WebSocket with Centrifugo](/blog/2020/02/10/million-connections-with-centrifugo) post in our blog to see some real-world numbers.
 
 ### Built-in scalability
 
