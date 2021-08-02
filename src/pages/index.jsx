@@ -64,8 +64,8 @@ function Home() {
   const { siteConfig = {} } = context;
   return (
     <Layout
-      title={siteConfig.title}
-      description="Scalable real-time messaging server"
+      title="Centrifugo"
+      description="Scalable real-time messaging server in language-agnostic way. Set up once and forever."
     >
       <Header />
       <main>

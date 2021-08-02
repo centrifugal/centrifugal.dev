@@ -17,7 +17,7 @@ module.exports = {
       defaultMode: "light",
       respectPrefersColorScheme: true,
     },
-    image: "img/favicon.png",
+    image: "img/centrifugo_soc.png",
     navbar: {
       hideOnScroll: true,
       title: "Centrifugo",
