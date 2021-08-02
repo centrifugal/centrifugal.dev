@@ -33,14 +33,14 @@ The license key has an expiration date. After the expiration date, Centrifugo PR
 
 Here is a list of all Pro features available at the moment. The list of PRO features may change with a time.
 
-* Channel and user tracing - see details in [dedicated chapter](tracing)
-* Real-time analytics with ClickHouse – see details in [dedicated chapter](analytics)
-* User status – see details in [dedicated chapter](user_status)
-* Operation throttling – see details in [dedicated chapter](throttling)
-* User connections RPC – see details in [dedicated chapter](user_connections)
-* Faster performance – see details in [dedicated chapter](performance)
-* Singleflight for presence and history – see details in [dedicated chapter](singleflight)
-* Near real-time CPU and RSS memory usage stats – see details in [dedicated chapter](process_stats)
+* Channel and user tracing - see details in [dedicated chapter](./tracing.md)
+* Real-time analytics with ClickHouse – see details in [dedicated chapter](./analytics.md)
+* User status – see details in [dedicated chapter](./user_status.md)
+* Operation throttling – see details in [dedicated chapter](./throttling.md)
+* User connections RPC – see details in [dedicated chapter](./user_connections.md)
+* Faster performance – see details in [dedicated chapter](./performance.md)
+* Singleflight for presence and history – see details in [dedicated chapter](./singleflight.md)
+* Near real-time CPU and RSS memory usage stats – see details in [dedicated chapter](./process_stats.md)
 
 :::note
 

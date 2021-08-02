@@ -83,4 +83,4 @@ With Centrifugo Pro it's possible to trace specific user or specific channel eve
 
 Centrifugo Pro offers even more extensions tend to be useful on practice. This includes user active status and throttling features. Active status is useful to build messenger-like applications where you want to show online indicators of users based on last activity time, throttling can help you limit number of operations each user may execute on Centrifugo cluster.
 
-For additional details, refer to the [Centrifugo PRO documentation](../pro/overview). 
+For additional details, refer to the [Centrifugo PRO documentation](../pro/overview.md). 

@@ -25,11 +25,11 @@ All supported brokers are very fast – they can handle hundreds of thousands re
 
 ### Message delivery model
 
-See [design overview](../getting-started/design#message-delivery-model)
+See [design overview](../getting-started/design.md#message-delivery-model)
 
 ### Message order guarantees
 
-See [design overview](../getting-started/design#message-order-guarantees).
+See [design overview](../getting-started/design.md#message-order-guarantees).
 
 ### Should I create channels explicitly?
 
@@ -118,7 +118,7 @@ Centrifugo was originally designed in a way where messages mostly flow one direc
 
 A bit tricky thing are disconnects. The difficulty is because there is no guarantee that disconnect code will have time to execute on client side (as client can just switch off its device or simply lose internet connection). If you need to know that client disconnected and program your business logic around this fact then the only reasonable approach is periodically call your backend from client side and update user status somewhere on backend (use Redis maybe). This is a pretty robust solution where you can't occasionally miss disconnect event.
 
-[Proxy feature](../server/proxy) allows integrating Centrifugo with your own session mechanism and provides a way to react on connection events. Also, it opens a road for bidirectional communication with RPC calls. But the note above about disconnects is still true - we can't simply call your app in case of client disconnects as loosing one such event can result in broken business logic inside your app.
+[Proxy feature](../server/proxy.md) allows integrating Centrifugo with your own session mechanism and provides a way to react on connection events. Also, it opens a road for bidirectional communication with RPC calls. But the note above about disconnects is still true - we can't simply call your app in case of client disconnects as loosing one such event can result in broken business logic inside your app.
 
 ### How scalable is presence and join/leave features?
 

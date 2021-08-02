@@ -31,7 +31,7 @@ Deprecated seq/gen now removed and Centrifugo uses `offset` field for position i
 
 ### Time interval options are duration
 
-In Centrifugo v3 all time intervals should be configured using [duration](../server/configuration#setting-time-duration-options).
+In Centrifugo v3 all time intervals should be configured using [duration](../server/configuration.md#setting-time-duration-options).
 
 For example `"proxy_connect_timeout": 1` should be changed to `"proxy_connect_timeout": "1s"`.
 
@@ -41,7 +41,7 @@ We provide a [configuration converter](#v2-to-v3-config-converter) which takes t
 
 In Centrifugo v3 `history_recover` option becomes `recover`.
 
-Also `history_lifetime` renamed to `history_ttl` and it's now a [duration](../server/configuration#setting-time-duration-options).
+Also `history_lifetime` renamed to `history_ttl` and it's now a [duration](../server/configuration.md#setting-time-duration-options).
 
 We provide a [configuration converter](#v2-to-v3-config-converter) which takes this change into account.
 
@@ -51,7 +51,7 @@ Configuring over command-line flags is not very convenient for production deploy
 
 ### Enforced request Origin check
 
-In Centrifugo v3 you should explicitly [set a list of allowed origins](../server/configuration#allowed_origins) which are allowed to connect to client transport endpoints.
+In Centrifugo v3 you should explicitly [set a list of allowed origins](../server/configuration.md#allowed_origins) which are allowed to connect to client transport endpoints.
 
 There is a way to disable origin check, but it's discouraged and insecure in case you are using connect proxy feature:
 
@@ -70,7 +70,7 @@ In Centrifugo v3 we addressed an [issue](https://github.com/centrifugal/centrifu
 package centrifugal.centrifugo.api;
 ```
 
-This means you need to regenerate your GRPC code which communicates with Centrifugo using latest Protobuf definitions. Refer to the [GRPC API doc](../server/server_api#grpc-api).
+This means you need to regenerate your GRPC code which communicates with Centrifugo using latest Protobuf definitions. Refer to the [GRPC API doc](../server/server_api.md#grpc-api).
 
 ### Channels API method removed
 
@@ -156,61 +156,61 @@ Here is a full list of configuration option changes. We provide a best-effort [c
 
 `redis_presence_ttl` renamed to `presence_ttl`
 
-`presence_ttl` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`presence_ttl` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`websocket_write_timeout` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`websocket_write_timeout` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`websocket_ping_interval` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`websocket_ping_interval` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`client_presence_update_interval` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`client_presence_update_interval` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`history_ttl` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`history_ttl` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`history_meta_ttl` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`history_meta_ttl` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`nats_dial_timeout` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`nats_dial_timeout` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`nats_write_timeout` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`nats_write_timeout` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`graphite_interval` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`graphite_interval` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`shutdown_timeout` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`shutdown_timeout` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`shutdown_termination_delay` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`shutdown_termination_delay` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`proxy_connect_timeout` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`proxy_connect_timeout` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`proxy_refresh_timeout` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`proxy_refresh_timeout` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`proxy_rpc_timeout` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`proxy_rpc_timeout` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`proxy_subscribe_timeout` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`proxy_subscribe_timeout` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`proxy_publish_timeout` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`proxy_publish_timeout` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`client_expired_close_delay` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`client_expired_close_delay` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`client_expired_sub_close_delay` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`client_expired_sub_close_delay` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`client_stale_close_delay` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`client_stale_close_delay` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`client_channel_position_check_delay` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`client_channel_position_check_delay` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`node_info_metrics_aggregate_interval` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`node_info_metrics_aggregate_interval` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`websocket_ping_interval` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`websocket_ping_interval` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`websocket_write_timeout` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`websocket_write_timeout` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`sockjs_heartbeat_delay` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`sockjs_heartbeat_delay` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`redis_idle_timeout` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`redis_idle_timeout` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`redis_connect_timeout` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`redis_connect_timeout` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`redis_read_timeout` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`redis_read_timeout` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
-`redis_write_timeout` should be converted to [duration](../server/configuration#setting-time-duration-options)
+`redis_write_timeout` should be converted to [duration](../server/configuration.md#setting-time-duration-options)
 
 `redis_cluster_addrs` renamed to `redis_cluster_address`
 

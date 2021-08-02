@@ -86,7 +86,7 @@ But `publish` option still can be useful to send something without backend-side 
 
 ### anonymous
 
-`anonymous` (boolean, default `false`) – this option enables anonymous user access (i.e. for a user with empty user ID). In most situations your application works with authenticated users so every user has its own unique user ID (set inside JWT `sub` claim or provided by backend when using connect proxy). But if you provide real-time features for a public access you may need unauthenticated access to some channels. Turn on this option and use empty string as user ID. See also related global option [client_anonymous](configuration#client_anonymous) which allows anonymous users to connect without JWT. 
+`anonymous` (boolean, default `false`) – this option enables anonymous user access (i.e. for a user with empty user ID). In most situations your application works with authenticated users so every user has its own unique user ID (set inside JWT `sub` claim or provided by backend when using connect proxy). But if you provide real-time features for a public access you may need unauthenticated access to some channels. Turn on this option and use empty string as user ID. See also related global option [client_anonymous](./configuration.md#client_anonymous) which allows anonymous users to connect without JWT. 
 
 ### presence
 
@@ -118,7 +118,7 @@ Enabling channel history adds some overhead (both memory and CPU) since Centrifu
 
 ### history_ttl
 
-`history_ttl` ([duration](configuration#setting-time-duration-options), default `0s`) – interval how long to keep channel history messages (with seconds precision).
+`history_ttl` ([duration](./configuration.md#setting-time-duration-options), default `0s`) – interval how long to keep channel history messages (with seconds precision).
 
 As all history is storing in a process memory (or in a broker memory) it is also very important to get rid of old history data for unused (inactive for a long time) channels.
 

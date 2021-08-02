@@ -13,7 +13,7 @@ The following libraries allow connecting to Centrifugo from application frontend
 
 :::info No need in clients for unidirectional approach
 
-Client libraries listed here speak Centrifugo bidirectional protocol (WebSocket). If you aim to use unidirectional approach you don't need client connectors – just use standard APIs. See the difference [here](../transports/overview).
+Client libraries listed here speak Centrifugo bidirectional protocol (WebSocket). If you aim to use unidirectional approach you don't need client connectors – just use standard APIs. See the difference [here](../transports/overview.md).
 
 :::
 
@@ -24,4 +24,4 @@ Client libraries listed here speak Centrifugo bidirectional protocol (WebSocket)
 * [centrifuge-swift](https://github.com/centrifugal/centrifuge-swift) – for native iOS development
 * [centrifuge-java](https://github.com/centrifugal/centrifuge-java) – for native Android development and general Java
 
-See a description of [client protocol](../transports/client_protocol) if you want to write a custom client bidirectional connector.
+See a description of [client protocol](../transports/protocol.md) if you want to write a custom client bidirectional connector.
