@@ -61,11 +61,11 @@ function Header() {
 
 function Home() {
   const context = useDocusaurusContext();
-  const { siteConfig = {} } = context;
+  const { siteConfig: { tagline } = {} } = context;
   return (
     <Layout
-      title="Centrifugo"
-      description="Scalable real-time messaging server in language-agnostic way. Set up once and forever."
+      title={tagline}
+      description="Centrifugo is an open source server designed to help building interactive real-time messaging applications. Think chats, live comments, multiplayer games, streaming metrics etc. Centrifugo provides a variety of real-time transports, scales well and integrates with any application."
     >
       <Header />
       <main>
