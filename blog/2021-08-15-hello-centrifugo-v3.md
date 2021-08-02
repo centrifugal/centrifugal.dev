@@ -4,6 +4,7 @@ tags: [centrifugo, release]
 description: Centrifugo v3 released with lots of exciting improvements
 image: /img/v3_blog.jpg
 hide_table_of_contents: false
+draft: true
 ---
 
 ![Centrifuge](/img/v3_blog.jpg)

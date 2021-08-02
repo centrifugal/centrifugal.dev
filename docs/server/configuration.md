@@ -3,6 +3,12 @@ id: configuration
 title: Configure Centrifugo
 ---
 
+:::danger
+
+This is a documentation for Centrifugo v3 which is not released yet. See [Centrifugo v2 documentation](https://centrifugal.github.io/centrifugo/) instead.
+
+:::
+
 Let's look at how Centrifigo can be configured.
 
 :::info There are more options

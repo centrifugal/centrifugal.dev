@@ -3,6 +3,12 @@ id: client
 title: Client API connectors
 ---
 
+:::danger
+
+This is a documentation for Centrifugo v3 which is not released yet. See [Centrifugo v2 documentation](https://centrifugal.github.io/centrifugo/) instead.
+
+:::
+
 The following libraries allow connecting to Centrifugo from application frontend:
 
 :::info No need in clients for unidirectional approach

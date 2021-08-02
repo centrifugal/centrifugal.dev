@@ -5,7 +5,7 @@ author: Alexander Emelin
 authorTitle: Creator of Centrifugo
 authorImageURL: https://github.com/FZambia.png
 description: An introduction to Centrifuge – real-time messaging with Go
-image: /img/author.jpeg
+image: https://i.imgur.com/W1PeoJL.jpg
 hide_table_of_contents: false
 ---
 

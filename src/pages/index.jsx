@@ -81,7 +81,7 @@ function Home() {
               </Feature>
               <Feature title="Great performance" imageUrl="img/performance.svg">
                 Centrifugo is built in Go language with some smart optimizations inside.
-                It has good performance – see a <a href="/blog/2020/02/10/million-websocket-with-centrifugo">description</a> of a
+                It has good performance – see a <a href="/blog/2020/02/10/million-connections-with-centrifugo">description</a> of a
                 test stand with one million WebSocket connections and 30 million delivered
                 messages per minute with a hardware comparable to one modern server machine.
               </Feature>

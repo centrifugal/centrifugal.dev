@@ -5,7 +5,7 @@ description: Scaling WebSocket in Go and beyond
 author: Alexander Emelin
 authorTitle: Creator of Centrifugo
 authorImageURL: https://github.com/FZambia.png
-image: /img/author.jpeg
+image: https://i.imgur.com/QOJ1M9a.png
 hide_table_of_contents: false
 ---
 

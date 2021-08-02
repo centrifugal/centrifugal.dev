@@ -3,6 +3,12 @@ id: overview
 title: Real-time transports 
 ---
 
+:::danger
+
+This is a documentation for Centrifugo v3 which is not released yet. See [Centrifugo v2 documentation](https://centrifugal.github.io/centrifugo/) instead.
+
+:::
+
 Centrifugo supports a variety of transports to deliver real-time messages to clients.
 
 :::info Every transport is a persistent connection
