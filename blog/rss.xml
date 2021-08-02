@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0">
+    <channel>
+        <title>Centrifugo Blog</title>
+        <link>https://centrifugal.dev/blog</link>
+        <description>Centrifugo Blog</description>
+        <lastBuildDate>Fri, 15 Jan 2021 00:00:00 GMT</lastBuildDate>
+        <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
+        <generator>https://github.com/jpmonette/feed</generator>
+        <copyright>Centrifugal</copyright>
+        <item>
+            <title><![CDATA[Centrifuge – real-time messaging with Go]]></title>
+            <link>https://centrifugal.dev/blog/2021/01/15/centrifuge-intro</link>
+            <guid>Centrifuge – real-time messaging with Go</guid>
+            <pubDate>Fri, 15 Jan 2021 00:00:00 GMT</pubDate>
+            <description><![CDATA[An introduction to Centrifuge – real-time messaging with Go]]></description>
+        </item>
+        <item>
+            <title><![CDATA[Scaling WebSocket in Go and beyond]]></title>
+            <link>https://centrifugal.dev/blog/2020/11/12/scaling-websocket</link>
+            <guid>Scaling WebSocket in Go and beyond</guid>
+            <pubDate>Thu, 12 Nov 2020 00:00:00 GMT</pubDate>
+            <description><![CDATA[Scaling WebSocket in Go and beyond]]></description>
+        </item>
+        <item>
+            <title><![CDATA[Experimenting with QUIC and WebTransport]]></title>
+            <link>https://centrifugal.dev/blog/2020/10/16/experimenting-with-quic-transport</link>
+            <guid>Experimenting with QUIC and WebTransport</guid>
+            <pubDate>Fri, 16 Oct 2020 00:00:00 GMT</pubDate>
+            <description><![CDATA[Experimenting with QUIC and WebTransport in Go]]></description>
+        </item>
+        <item>
+            <title><![CDATA[Million connections with Centrifugo]]></title>
+            <link>https://centrifugal.dev/blog/2020/02/10/million-connections-with-centrifugo</link>
+            <guid>Million connections with Centrifugo</guid>
+            <pubDate>Mon, 10 Feb 2020 00:00:00 GMT</pubDate>
+            <description><![CDATA[Million WebSocket connections with Centrifugo]]></description>
+        </item>
+    </channel>
+</rss>

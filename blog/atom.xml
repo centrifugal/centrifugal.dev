@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://centrifugal.dev/blog</id>
+    <title>Centrifugo Blog</title>
+    <updated>2021-01-15T00:00:00.000Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://centrifugal.dev/blog"/>
+    <subtitle>Centrifugo Blog</subtitle>
+    <icon>https://centrifugal.dev/img/favicon.png</icon>
+    <rights>Centrifugal</rights>
+    <entry>
+        <title type="html"><![CDATA[Centrifuge – real-time messaging with Go]]></title>
+        <id>Centrifuge – real-time messaging with Go</id>
+        <link href="https://centrifugal.dev/blog/2021/01/15/centrifuge-intro"/>
+        <updated>2021-01-15T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[An introduction to Centrifuge – real-time messaging with Go]]></summary>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Scaling WebSocket in Go and beyond]]></title>
+        <id>Scaling WebSocket in Go and beyond</id>
+        <link href="https://centrifugal.dev/blog/2020/11/12/scaling-websocket"/>
+        <updated>2020-11-12T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[Scaling WebSocket in Go and beyond]]></summary>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Experimenting with QUIC and WebTransport]]></title>
+        <id>Experimenting with QUIC and WebTransport</id>
+        <link href="https://centrifugal.dev/blog/2020/10/16/experimenting-with-quic-transport"/>
+        <updated>2020-10-16T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[Experimenting with QUIC and WebTransport in Go]]></summary>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Million connections with Centrifugo]]></title>
+        <id>Million connections with Centrifugo</id>
+        <link href="https://centrifugal.dev/blog/2020/02/10/million-connections-with-centrifugo"/>
+        <updated>2020-02-10T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[Million WebSocket connections with Centrifugo]]></summary>
+    </entry>
+</feed>
