@@ -217,20 +217,20 @@ For example, let's look at a JSON serialization benchmark result for 256 byte pa
 
 ```bash title="Centrifugo v2 JSON encoding/decoding"
 cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
-BenchmarkReplyJSONMarshal-12              	  178749	      5883 ns/op	    1121 B/op	       6 allocs/op
-BenchmarkReplyJSONMarshalParallel-12      	 1000000	      1009 ns/op	    1121 B/op	       6 allocs/op
-BenchmarkReplyJSONUnmarshal-12            	  709442	      1717 ns/op	    1328 B/op	      16 allocs/op
-BenchmarkReplyJSONUnmarshalParallel-12    	 2562682	     492.2 ns/op	    1328 B/op	      16 allocs/op
+BenchmarkMarshal-12              	 5883 ns/op	    1121 B/op	    6 allocs/op
+BenchmarkMarshalParallel-12      	 1009 ns/op	    1121 B/op	    6 allocs/op
+BenchmarkUnmarshal-12            	 1717 ns/op	    1328 B/op	   16 allocs/op
+BenchmarkUnmarshalParallel-12    	492.2 ns/op	    1328 B/op	   16 allocs/op
 ```
 
-And what we have now with mentioned optimizations:
+And what we have now with mentioned JSON optimizations:
 
 ```bash title="Centrifugo v3 JSON encoding/decoding"
 cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
-BenchmarkReplyJSONMarshal-12              	 2560554	       461.3 ns/op	     928 B/op	       3 allocs/op
-BenchmarkReplyJSONMarshalParallel-12      	 5238146	       250.6 ns/op	     928 B/op	       3 allocs/op
-BenchmarkReplyJSONUnmarshal-12            	 2511397	       476.5 ns/op	     136 B/op	       3 allocs/op
-BenchmarkReplyJSONUnmarshalParallel-12    	11006149	       107.2 ns/op	     136 B/op	       3 allocs/op
+BenchmarkMarshal-12              	 461.3 ns/op	 928 B/op	    3 allocs/op
+BenchmarkMarshalParallel-12      	 250.6 ns/op	 928 B/op	    3 allocs/op
+BenchmarkUnmarshal-12            	 476.5 ns/op	 136 B/op	    3 allocs/op
+BenchmarkUnmarshalParallel-12    	 107.2 ns/op	 136 B/op	    3 allocs/op
 ```
 
 :::tip
@@ -255,7 +255,7 @@ Centrifugo PRO details and features described [here in docs](/docs/pro/overview)
 
 There are some other changes introduced in v3 but not mentioned here. The full list can be found in the release notes and the migration guide.
 
-Hope we stepped into an exciting time of the v3 life cycle and many improvements will follow. Join our communities in Telegram and Discord if you have questions or want to follow Centrifugo development.
+Hope we stepped into an exciting time of the v3 life cycle and many improvements will follow. Join our [communities](/docs/getting-started/introduction#join-community) in Telegram and Discord if you have questions or want to follow Centrifugo development.
 
 Enjoy Centrifugo v3, and let the Centrifugal force be with you.
 
