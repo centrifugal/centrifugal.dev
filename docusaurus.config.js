@@ -3,6 +3,7 @@ module.exports = {
   tagline: "Centrifugo – scalable real-time messaging server in language-agnostic way. Set up once and forever.",
   url: "https://centrifugal.dev",
   baseUrl: "/",
+  trailingSlash: false,
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
   favicon: "img/favicon.png",

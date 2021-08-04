@@ -45,6 +45,8 @@ Also `history_lifetime` renamed to `history_ttl` and it's now a [duration](../se
 
 We provide a [configuration converter](#v2-to-v3-config-converter) which takes this change into account.
 
+`server_side` option removed, see [protected](../server/channels.md#protected) option as a replacement.
+
 ### Some command-line flags removed
 
 Configuring over command-line flags is not very convenient for production deployments, Centrifugo v3 reduced a number of command-line flags available – it mostly has flags frequently useful for development now. 

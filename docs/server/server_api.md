@@ -16,7 +16,7 @@ Here we will look at available methods and parameters
 
 :::note
 
-In some cases you can just use one of our [available HTTP API libraries](../ecosystem/api.md) or use Centrifugo [GRPC API](#grpc_api) to avoid manually constructing requests.
+In some cases you can just use one of our [available HTTP API libraries](../ecosystem/api.md) or use Centrifugo [GRPC API](#grpc-api) to avoid manually constructing requests.
 
 :::
 
@@ -505,7 +505,7 @@ GRPC API is also useful if you want to publish binary data to Centrifugo channel
 
 :::tip
 
-GRPC API basically allows calling all commands described in [HTTP API doc](#http_api), actually both GRPC and HTTP API in Centrifugo based on the same Protobuf schema definition. So refer to the HTTP API description doc for parameter and result field description.
+GRPC API basically allows calling all commands described in [HTTP API doc](#http-api), actually both GRPC and HTTP API in Centrifugo based on the same Protobuf schema definition. So refer to the HTTP API description doc for parameter and result field description.
 
 :::
 

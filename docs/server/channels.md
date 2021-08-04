@@ -162,9 +162,9 @@ History recovery mechanism if enabled will continue to work for clients anyway e
 
 :::
 
-### server_side
+### protected
 
-`server_side` (boolean, default `false`) – when enabled then all client-side subscription requests to channels in a namespace will be rejected with `PermissionDenied` error. Only server-side subscriptions are possible.
+`protected` (boolean, default `false`) – when on will prevent a client to subscribe to arbitrary channels in a namespace. In this case Centrifugo will only allow client to subscribe on user-limited channels, on channels returned by proxy response or channels listed inside JWT. Client-side subscriptions to arbitrary channels will be rejected with PermissionDenied error. Server-side channels belonging to protected namespace passed by client itself during connect will be ignored.
 
 ### proxy_subscribe
 

@@ -112,6 +112,7 @@ This response allows connecting and tells Centrifugo the ID of a user. See below
 | version      | string     | yes | optional version of client (this field will only be set if provided by a client on connect)            |
 | data         | JSON object     | yes | optional data from client (this field will only be set if provided by a client on connect)            |
 | b64data      | JSON object     | yes | optional data from client in base64 format (if binary proxy mode is used)            |
+| channels      | Array of strings     | yes | list of server-side channels client want to subsribe to, application server must check permissions and add allowed channels to result               |
 
 #### Connect result fields
 

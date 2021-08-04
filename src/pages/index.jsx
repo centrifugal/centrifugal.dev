@@ -74,7 +74,7 @@ function Home() {
             <div className="row">
               <Feature title="Integrates with everything" imageUrl="img/integration.svg">
                 Centrifugo is language-agnostic. It's a standalone server with
-                simple API which can be integrated with an application written in
+                a simple API which integrates well with an application written in
                 any programming language. No need to change an existing application
                 architecture to introduce real-time features. Just add Centrifugo nearby
                 and let it deal with persistent connections.
@@ -88,9 +88,9 @@ function Home() {
               <Feature title="Feature-rich" imageUrl="img/feature_rich.svg">
                 Many built-in features can help building an attractive real-time
                 application in a limited time. Centrifugo provides different types
-                of subscriptions, hot channel history and instant presence, RPC calls.
-                Also possibility to proxy WebSocket events to backend over HTTP or GRPC
-                and more.
+                of subscriptions, hot channel history, instant presence, RPC calls.
+                There is also the possibility to proxy WebSocket events to backend
+                over HTTP or GRPC and more.
               </Feature>
               <Feature title="Out-of-the-box scalability" imageUrl="img/scalability.svg">
                 Built-in Redis, KeyDB, Tarantool engines or Nats broker make it possible
@@ -101,13 +101,12 @@ function Home() {
               <Feature title="Used in production" imageUrl="img/production.svg">
                 Started almost 10 years back then Centrifugo (and Centrifuge library for Go
                 it's built on top of) is a mature server succesfully used in production by
-                many companies around the world: Mail.ru, Badoo, ManyChat, Grafana, Spot.im
-                and others.
+                many companies around the world: Mail.ru, Badoo, ManyChat, Grafana and other.
               </Feature>
               <Feature title="Even more with Centrifugo PRO" imageUrl="img/pro2.svg">
-                Centrifugo PRO has even more unique features: real-time connection analylics
+                Centrifugo PRO provides even more unique features: real-time connection analylics
                 with Clickhouse, real-time user and channel tracing, token bucket operation
-                throttling, user last active status support, faster API and proxy performance etc.
+                throttling, user active status support, faster API, faster proxy performance and more.
               </Feature>
             </div>
           </div>
