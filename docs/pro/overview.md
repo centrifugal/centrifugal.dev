@@ -38,7 +38,7 @@ Here is a list of all Pro features available at the moment. The list of PRO feat
 * Singleflight for presence and history – [details](./singleflight.md)
 * Near real-time CPU and RSS memory usage stats – [details](./process_stats.md)
 
-:::note
+:::info
 
 PRO features can change with time. We reserve a right to move features from PRO to OSS version if there is a clear signal that this is required to do for Centrifugo ecosystem.
 

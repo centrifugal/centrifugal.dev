@@ -2,6 +2,9 @@
 title: Centrifugo v3 released
 tags: [centrifugo, release]
 description: Centrifugo v3 released with lots of exciting improvements
+author: Centrifugal team
+authorTitle: Let the Centrifugal force be with you
+authorImageURL: /img/logo_animated.svg
 image: /img/v3_blog.jpg
 hide_table_of_contents: false
 draft: true
@@ -60,11 +63,9 @@ But the license has been changed: the license of OSS Centrifugo is now Apache 2.
 
 Server-side subscriptions introduced in Centrifugo v2 and recent improvements in the underlying Centrifuge library opened a road for a unidirectional approach.
 
-This means that Centrifugo v3 provides several unidirectional real-time transports where messages flow only in one direction – from a server to a client. Why is this change important?
+This means that Centrifugo v3 provides a set of unidirectional real-time transports where messages flow only in one direction – from a server to a client. Why is this change important?
 
-<img src="/img/atom.svg" align="right" width="25%" />
-
-Centrifugo originally concentrated on using bidirectional transports for client-server communication. Like WebSocket and SockJS. Bidirectional transports allow implementing many great protocol features since a client can communicate with a server in various ways after establishing a persistent connection. While this is a great opportunity this also leads to an increased complexity.
+Centrifugo originally concentrated on using bidirectional transports for client-server communication. Like WebSocket and SockJS. Bidirectional transports allow implementing some great protocol features since a client can communicate with a server in various ways after establishing a persistent connection. While this is a great opportunity this also leads to an increased complexity.
 
 Centrifugo users had to use special client connector libraries which abstracted underlying work into a simple public API. But internally connectors do many things: matching requests to responses, handling timeouts, handling an ordering, queuing operations, error handling. So the client connector is a pretty complex piece of software.
 
@@ -181,8 +182,6 @@ Centrifugo now supports API extensions in terms of the new `rpc` method. The pur
 
 Admin web UI has been updated too to support new methods, so you can play with new API from its `actions` tab.
 
-// TODO: refactor getChannels result to have a map to be more extensible.
-
 ### Better clustering
 
 Centrifugo behaves a bit better in cluster mode: as soon as a node leaves a cluster gracefully (upon graceful termination) it sends a shutdown signal to the control channel thus giving other nodes a chance to immediately delete that node from the local registry.
@@ -247,7 +246,7 @@ Centrifugo also inherited a couple of other improvements from the Centrifuge lib
 
 The final notable thing is an introduction of Centrifugo PRO. This is an extended version of Centrifugo built on top of the OSS version. It provides some unique features targeting business adopters.
 
-Those who followed Centrifugo for a long time know that there were some attempts to make project development sustainable. Buy me a coffee and Opencollective approaches were not successful, during a year we only got ~300$ of total contributions. While we appreciate these contributions a lot - this does not justify a time spent on Centrifugo maintenance these days and is not very helpful in the long-term. So here is another attempt to monetize Centrifugo.
+Those who followed Centrifugo for a long time know that there were some attempts to make project development sustainable. Buy me a coffee and Opencollective approaches were not successful, during a year we only got ~300$ of total contributions. While we appreciate these contributions a lot - this does not fairly justify a time spent on Centrifugo maintenance these days. So here is another attempt to monetize Centrifugo.
 
 Centrifugo PRO details and features described [here in docs](/docs/pro/overview). Will see how it goes. We believe that a set of additional functionality can provide great advantages for both small and large-scale Centrifugo setups. PRO features can give useful insights on a system, protect from client API misusing, reduce server resource usage and more.
 
