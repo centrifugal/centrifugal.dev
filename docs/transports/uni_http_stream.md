@@ -10,7 +10,7 @@ Default unidirectional HTTP streaming connection endpoint in Centrifugo is:
 /connection/uni_http_stream
 ```
 
-This is basically a long-lived HTTP connection. You can consume it from a browser using `fetch` API - see an example: TODO.
+This is basically a long-lived HTTP connection. You can consume it from a browser using `fetch` API.
 
 Streaming endpoint accepts HTTP POST requests and sends JSON messages to a connection. These JSON messages can have different meaning according to Centrifuge protocol Protobuf definitions. But in most cases you will be interested in Publication push types.
 
@@ -25,6 +25,21 @@ JSON
 ## Pings
 
 Centrifugo will send different message types to a connection. Every message is JSON encoded. A special JSON value `null` used as a PING message. You can simply ignore it on a client side upon receiving. 
+
+## Options
+
+### uni_http_stream
+
+Boolean, default: `false`.
+
+Enables unidirectional HTTP streaming endpoint.
+
+```json title="config.json"
+{
+    ...
+    "uni_http_stream": true
+}
+```
 
 ## Connecting using CURL
 

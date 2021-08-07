@@ -21,7 +21,7 @@ await centrifuge.namedRPC('updateActiveStatus')
 
 :::note
 
-Don't forget to debounce calling this method on client side to avoid exposing RPC on every mouse move event for example.
+Don't forget to debounce calling this method on a client side to avoid exposing RPC on every mouse move event for example.
 
 :::
 

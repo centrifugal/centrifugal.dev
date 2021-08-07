@@ -5,7 +5,7 @@ title: Client authentication
 
 Centrifugo should know the ID of a user which is connecting. This chapter describes a mechanism of authenticating user over JSON Web Token (JWT) passing.
 
-:::note
+:::tip
 
 If you prefer to avoid using JWT then look at [the proxy feature](proxy.md). It allows proxying connection request from Centrifugo to your application backend for authentication details.
 

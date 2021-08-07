@@ -22,7 +22,7 @@ SockJS connection endpoint in Centrifugo is:
 
 :::caution
 
-There are two important caveats to know when using SockJS – see below.
+There are some important caveats to know when using SockJS – see below.
 
 :::
 
@@ -58,8 +58,20 @@ One more thing to be aware of is that SockJS does not support binary data, so th
 
 ## Options
 
+### sockjs
+
+Boolean, default: `false`.
+
+Enables SockJS transport.
+
 ### sockjs_heartbeat_delay
 
 Default: 25
 
 Interval in seconds how often to send SockJS h-frames to client.
+
+### sockjs_url
+
+Default: `https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js`
+
+Link to SockJS url which is required when iframe-based HTTP fallbacks are in use. 

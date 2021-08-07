@@ -83,8 +83,12 @@ wss://centrifugo.example.com/connection/websocket?format=protobuf
 
 After doing this Centrifugo will use binary frames to pass data between client and server. Your application specific payload can be random bytes.
 
-:::note
+:::tip
 
 You still can continue to encode your application specific data as JSON when using Protobuf protocol thus have a possibility to co-exist with clients that use JSON protocol on the same Centrifugo installation inside the same channels.
 
 :::
+
+## Example
+
+Coming soon.

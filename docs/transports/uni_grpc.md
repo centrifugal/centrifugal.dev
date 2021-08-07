@@ -10,7 +10,19 @@ Protobuf definitions can be found here: TODO.
 
 See a Go based example that connects to a server: TODO.
 
-By default unidirectional GRPC endpoint is off, to enable it set:
+GRPC server will start on port `11000` (default).
+
+## Supported data formats
+
+JSON and binary.
+
+## Options
+
+### uni_grpc
+
+Boolean, default: `false`.
+
+Enables unidirectional GRPC endpoint.
 
 ```json title="config.json"
 {
@@ -19,8 +31,6 @@ By default unidirectional GRPC endpoint is off, to enable it set:
 }
 ```
 
-GRPC server will start on port `11000` (default).
+## Example
 
-## Supported data formats
-
-JSON and binary.
+Coming soon.

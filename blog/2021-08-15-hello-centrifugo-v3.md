@@ -148,9 +148,23 @@ Introducing a new engine to Centrifugo is pretty hard since the engine should pr
 
 ![](https://www.tadviser.ru/images/thumb/1/1a/Tarantool_%D0%A1%D0%A3%D0%91%D0%94_logo_2020.png/840px-Tarantool_%D0%A1%D0%A3%D0%91%D0%94_logo_2020.png)
 
-In v3 we added experimental support for the [Tarantool](https://www.tarantool.io/en/) engine. It fits nicely all the requirements above and provides a huge performance speedup for history and presence operations compared to Redis. According to our benchmarks, the speedup can be up to 5-10x. The PUB/SUB performance of Tarantool is comparable with Redis (10-20% worse according to our internal benchmarks to be exact, but that's pretty much the same).
+In v3 we added experimental support for the [Tarantool](https://www.tarantool.io/en/) engine. It fits nicely all the requirements above and provides a huge performance speedup for history and presence operations compared to Redis. According to our benchmarks, the speedup can be up to 4-10x depending on operation. The PUB/SUB performance of Tarantool is comparable with Redis (10-20% worse according to our internal benchmarks to be exact, but that's pretty much the same).
 
-Tarantool can provide new storage properties, new adoption. We are pretty excited about adding it as an option.
+For example, let's look at Centrifugo benchmark where we recover zero messages (i.e. emulate a situations when many connections disconnected for a very short time interval due to load balancer reload).
+
+For Redis engine:
+
+```bash title="Redis engine, single Redis instance"
+BenchmarkRedisRecover       26883 ns/op	    1204 B/op	   28 allocs/op
+```
+
+Compare it with the same situation benchmarked with Tarantool engine:
+
+```bash title="Tarantool engine, single Tarantool instance"
+BenchmarkTarantoolRecover    6292 ns/op	     563 B/op	   10 allocs/op
+```
+
+Tarantool can provide new storage properties (like synchronous replication), new adoption. We are pretty excited about adding it as an option.
 
 But you could notice that support is **experimental** for now. The reason for this is that Tarantool integration involves one more moving piece – the [Lua module](https://github.com/centrifugal/tarantool-engine) which should be run by a Tarantool server.
 
@@ -249,6 +263,8 @@ The final notable thing is an introduction of Centrifugo PRO. This is an extende
 Those who followed Centrifugo for a long time know that there were some attempts to make project development sustainable. Buy me a coffee and Opencollective approaches were not successful, during a year we only got ~300$ of total contributions. While we appreciate these contributions a lot - this does not fairly justify a time spent on Centrifugo maintenance these days. So here is another attempt to monetize Centrifugo.
 
 Centrifugo PRO details and features described [here in docs](/docs/pro/overview). Will see how it goes. We believe that a set of additional functionality can provide great advantages for both small and large-scale Centrifugo setups. PRO features can give useful insights on a system, protect from client API misusing, reduce server resource usage and more.
+
+PRO version will be released soon after Centrifugo v3 OSS.
 
 ### Conclusion
 

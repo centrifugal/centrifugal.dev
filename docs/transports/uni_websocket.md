@@ -23,3 +23,18 @@ JSON
 ## Pings
 
 Centrifugo uses empty messages (frame with no payload at all) as pings for unidirectional WS.
+
+## Options
+
+### uni_websocket
+
+Boolean, default: `false`.
+
+Enables unidirectional WebSocket endpoint.
+
+```json title="config.json"
+{
+    ...
+    "uni_websocket": true
+}
+```

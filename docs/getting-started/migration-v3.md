@@ -41,11 +41,11 @@ We provide a [configuration converter](#v2-to-v3-config-converter) which takes t
 
 In Centrifugo v3 `history_recover` option becomes `recover`.
 
-Also `history_lifetime` renamed to `history_ttl` and it's now a [duration](../server/configuration.md#setting-time-duration-options).
+Option `history_lifetime` renamed to `history_ttl` and it's now a [duration](../server/configuration.md#setting-time-duration-options).
 
-We provide a [configuration converter](#v2-to-v3-config-converter) which takes this change into account.
+Option `server_side` removed, see [protected](../server/channels.md#protected) option as a replacement.
 
-`server_side` option removed, see [protected](../server/channels.md#protected) option as a replacement.
+We provide a [configuration converter](#v2-to-v3-config-converter) which takes these changes into account.
 
 ### Some command-line flags removed
 
@@ -55,7 +55,7 @@ Configuring over command-line flags is not very convenient for production deploy
 
 In Centrifugo v3 you should explicitly [set a list of allowed origins](../server/configuration.md#allowed_origins) which are allowed to connect to client transport endpoints.
 
-There is a way to disable origin check, but it's discouraged and insecure in case you are using connect proxy feature:
+There is a way to disable origin check, but it's discouraged and **insecure** in case you are using connect proxy feature:
 
 ```json title="config.json"
 {
@@ -226,7 +226,7 @@ Here is a converter between Centrifugo v2 and v3 JSON configuration. It can help
 
 If you are using Centrifugo with TOML format then you can use [online converter](https://pseitz.github.io/toml-to-json-online-converter/) as initial step. Or [yaml-to-json](https://jsonformatter.org/yaml-to-json) and [json-to-yaml](https://jsonformatter.org/json-to-yaml) for YAML.
 
-:::note
+:::tip
 
 It's fully client-side: your data won't be sent anywhere.
 
@@ -234,7 +234,7 @@ It's fully client-side: your data won't be sent anywhere.
 
 :::danger
 
-Unfortunately we can't migrate environment variables and command-line flags authomatically - so if you are using env vars or command-line flags to configure Centrifugo you still need to migrate manually. Also, be aware: this converter tool is best effort only – we can not guarantee it solves all corner cases, especially in Redis configuration – you may still need to fix some things manually.
+Unfortunately we can't migrate environment variables and command-line flags authomatically - so if you are using env vars or command-line flags to configure Centrifugo you still need to migrate manually. Also, be aware: this converter tool is best effort only – we can not guarantee it solves all corner cases, especially in Redis configuration. You may still need to fix some things manually, for example - properly fill `allowed_origins`.
 
 :::
 

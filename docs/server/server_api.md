@@ -14,7 +14,7 @@ Server HTTP API works on `/api` endpoint (by default). It has a simple request f
 
 Here we will look at available methods and parameters
 
-:::note
+:::tip
 
 In some cases you can just use one of our [available HTTP API libraries](../ecosystem/api.md) or use Centrifugo [GRPC API](#grpc-api) to avoid manually constructing requests.
 
@@ -260,6 +260,23 @@ Empty object at the moment.
 | user       | string       | yes | User ID to subscribe        |
 
 #### Disconnect result
+
+Empty object at the moment.
+
+### refresh
+
+`refresh` allows refreshing user connection (mostly useful when unidirectional transports are used).
+
+#### Refresh params
+
+| Parameter name | Parameter type | Required | Description  |
+| -------------- | -------------- | ------------ | ---- |
+| user       | string       | yes | User ID to refresh       |
+| client       | string       | no | Client ID to refresh        |
+| expired       | bool       | no | Mark connection as expired and close with Disconnect Expired reason |
+| expire_at       | int       | no | Unix time (in seconds) in the future when connection will expire        |
+
+#### Refresh result
 
 Empty object at the moment.
 

@@ -11,10 +11,12 @@ This chapter describes configuration principles and some important configuration
 
 :::
 
+## Configuration sources
+
 Centrifugo can be configured in several ways.
 
 1. Over command-line flags. See `centrifugo -h` for available flags, command-line flags limited to most frequently used. Command-line options have the highest priority when set than other ways to configure Centrifugo.
-1. Over OS environment variables. All Centrifugo options can be set over env in format `CENTRIFUGO_<OPTION_NAME>` (mostly straightforward except namespaces - [see how to set namespaces via env](#setting-namespaces-over-env)). Environment variables have the second priority after flags.
+1. Over OS environment variables. All Centrifugo options can be set over env in format `CENTRIFUGO_<OPTION_NAME>` (i.e. option name with `CENTRIFUGO_` prefix, all in uppercase). Setting options over env is mostly straightforward except namespaces – [see how to set namespaces via env](#setting-namespaces-over-env). Environment variables have the second priority after flags.
 1. Over configuration file, configuration file supports all options mentioned in this documentation and can be in one of three supported formats: JSON, YAML or TOML. Config file options have the lowest priority.
 
 A simple way to start with Centrifugo is run:
@@ -35,24 +37,21 @@ Centrifugo supports three configuration file formats: JSON, YAML or TOML.
 
 ### JSON config format
 
-Here is a minimal Centrifugo JSON configuration file:
+Here is an example of Centrifugo JSON configuration file:
 
 ```json title="config.json"
 {
+  "allowed_origins": ["http://localhost:3000"],
   "token_hmac_secret_key": "<YOUR-SECRET-STRING-HERE>",
   "api_key": "<YOUR-API-KEY-HERE>"
 }
 ```
 
-The only two fields required are **token_hmac_secret_key** and **api_key**.
+`token_hmac_secret_key` used to check JWT signature (more info about JWT in [authentication chapter](authentication.md)). If you are using [connect proxy](proxy.md#connect-proxy) then you may use Centrifugo without JWT.
 
-:::note
+`api_key` used for Centrifugo API endpoint authorization, see more in [chapter about server HTTP API](server_api.md#http-api). Keep both values in secret and never reveal to clients.
 
-To be more exact latest Centrifugo releases introduced a new way of authenticating connections over [proxy HTTP request](proxy.md#connect-proxy) from Centrifugo to application backend, and a way to publish messages to channels over [proxy request to backend](proxy.md#publish-proxy). Also there is GRPC server API that can be used instead of HTTP API – so `api_key` not used there. This means that in some setups both `token_hmac_secret_key` and `api_key` are not required at all. But here we describe the traditional way of running Centrifugo - with JWT authentication and publishing messages over server HTTP API.
-
-:::
-
-`token_hmac_secret_key` used to check JWT signature (more info about JWT in [authentication chapter](authentication.md)). API key used for Centrifugo API endpoint authorization, see more in [chapter about server HTTP API](server_api.md#http-api). Keep both values in secret and never reveal to clients.
+`allowed_origins` option [described below](#allowed_origins).
 
 ### TOML config format
 
@@ -65,6 +64,7 @@ centrifugo --config=config.toml
 Where `config.toml` contains:
 
 ```toml title="config.toml"
+allowed_origins: [ "http://localhost:3000" ]
 token_hmac_secret_key = "<YOUR-SECRET-STRING-HERE>"
 api_key = "<YOUR-API-KEY-HERE>"
 log_level = "debug"
@@ -77,6 +77,8 @@ In example above we also defined logging level to be `debug` which is useful to 
 YAML format is also supported:
 
 ```yaml title="config.yaml"
+allowed_origins:
+  - "http://localhost:3000"
 token_hmac_secret_key: "<YOUR-SECRET-STRING-HERE>"
 api_key: "<YOUR-API-KEY-HERE>"
 log_level: debug
@@ -88,25 +90,11 @@ With YAML remember to use spaces, not tabs when writing configuration file.
 
 Let's describe some important options you can configure when running Centrifugo.
 
-### address
-
-Bind your Centrifugo to specific interface address (string, by default `""` - listen on all available interfaces).
-
-### port
-
-Port to bind Centrifugo to (string, by default `"8000"`).
-
-### engine
-
-Engine to use - `memory`, `redis` or `tarantool`. It's a string option, by default `memory`. Read more about engines in [special chapter](engines.md).
-
 ### allowed_origins
 
 This option allows setting an array of allowed origin patterns (array of strings) for WebSocket and SockJS endpoints to prevent [CSRF](https://en.wikipedia.org/wiki/Cross-site_request_forgery) attack. Also it's used for HTTP-based unidirectional transports to enable CORS for configured origins.
 
-If `allowed_origins` option not set at all then Centrifugo will try to match request origin to Host header in request.
-
-As soon as `allowed_origins` defined every connection request will be checked against each pattern in an array.
+As soon as `allowed_origins` defined every connection request with `Origin` set will be checked against each pattern in an array.
 
 For example, client connects to Centrifugo from an application on `http://localhost:3000`. In this case `allowed_origins` should be configured in this way:
 
@@ -134,7 +122,7 @@ Origin pattern can contain wildcard symbol `*` to match subdomains:
 
 – in this case requests with `Origin` header like `https://foo.example.com` or `https://bar.example.com` will pass the check.
 
-It's also possible to allow all origins in the following way (but this is discouraged especially when using connect proxy feature):
+It's also possible to allow all origins in the following way (but this is discouraged and insecure when using connect proxy feature):
 
 ```json
 "allowed_origins": [
@@ -143,6 +131,18 @@ It's also possible to allow all origins in the following way (but this is discou
 ```
 
 Connection requests without `Origin` header set are passing through without any checks (i.e. always allowed).
+
+### address
+
+Bind your Centrifugo to specific interface address (string, by default `""` - listen on all available interfaces).
+
+### port
+
+Port to bind Centrifugo to (string, by default `"8000"`).
+
+### engine
+
+Engine to use - `memory`, `redis` or `tarantool`. It's a string option, by default `memory`. Read more about engines in [special chapter](engines.md).
 
 ## Advanced options
 
@@ -166,13 +166,7 @@ Default: 0
 
 Maximum number of connections from user (with known user ID) to Centrifugo node. By default, unlimited.
 
-The important thing to emphasize is that `client_user_connection_limit` works only per one Centrifugo node and exists mostly to protect Centrifugo from many connections from a single user – but not for business logic limitations. This means that if you will scale nodes – say run 10 Centrifugo nodes – then a user will be able to create 10 connections (one to each node).
-
-### client_request_max_size
-
-Default: 65536
-
-Maximum allowed size of request from client in bytes.
+The important thing to emphasize is that `client_user_connection_limit` works only per one Centrifugo node and exists mostly to protect Centrifugo from many connections from a single user – but not for business logic limitations. This means that if you set this to 1 and scale nodes – say run 10 Centrifugo nodes – then a user will be able to create 10 connections (one to each node).
 
 ### client_queue_max_size
 

@@ -14,7 +14,7 @@ This can be super useful for debugging issues, investigating application behavio
   Sorry, your browser doesn't support embedded video.
 </video>
 
-:::note
+:::caution
 
 Tracing feature works fine for JSON messages. For binary payloads there are some limitations currently.
 

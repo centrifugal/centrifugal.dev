@@ -27,7 +27,7 @@ centrifuge.connect();
 
 I.e. listen for publications without any usage of subscription objects. You can look at channel publication relates to using field in callback context as shown in example.
 
-:::note
+:::tip
 
 The same [best practices](../faq/index.md#what-about-best-practices-with-amount-of-channels) of working with channels and client-side subscriptions equally applicable to server-side subscription. 
 

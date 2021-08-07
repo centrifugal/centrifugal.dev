@@ -13,7 +13,7 @@ For example in Javascript client AJAX POST request is automatically sent to `/c
 
 Private channel subscription token is also JWT (like connection token described in [authentication chapter](authentication.md)). But it has its own specific claims.
 
-:::note
+:::tip
 
 Connection token and private channel subscription token are both JWT and both can be generated with any JWT library.
 
@@ -25,7 +25,7 @@ Even when authorizing subscription to private channel with private subscription 
 
 :::
 
-:::note
+:::tip
 
 When you need to use namespace for a private channel then the name of a namespace should be written after a `$` symbol, i.e. if you have a namespace name `chat` – then private channel which belongs to that namespace must be written as sth like `$chat:stream`.
 

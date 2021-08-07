@@ -42,7 +42,7 @@ Centrifugo requires configuration file with several secret keys. If you are new 
 
 It generates random secret keys and creates configuration file `config.json` in a current directory (by default).
 
-:::note
+:::tip
 
 It's possible to generate file in YAML or TOML format, i.e. `./centrifugo genconfig -c config.toml`
 
@@ -78,6 +78,12 @@ docker run --ulimit nofile=65536:65536 -v /host/dir/with/config/file:/centrifugo
 
 Note that docker allows setting `nofile` limits in command-line arguments which is pretty important to handle lots of simultaneous persistent connections and not run out of open file limit (each connection requires one file descriptor). See also [infrastructure tuning chapter](../server/infra_tuning.md).
 
+:::caution
+
+Pin to exact Docker Image tag in production, for example: `centrifugo/centrifugo:v3.0.0`, this will help avoiding unexpected problems during re-deploy process. 
+
+:::
+
 ## Docker-compose example
 
 Create configuration file `config.json`:
@@ -97,7 +103,7 @@ Create `docker-compose.yml`:
 ```yml
 centrifugo:
   container_name: centrifugo
-  image: centrifugo/centrifugo:latest
+  image: centrifugo/centrifugo:v3
   volumes:
     - ./config.json:/centrifugo/config.json
   command: centrifugo -c config.json

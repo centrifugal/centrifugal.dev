@@ -540,7 +540,7 @@ Centrifugo can also proxy connection events to your backend over GRPC instead of
 
 GRPC service definitions can be found in Centrifugo repository (TODO).
 
-:::note
+:::tip
 
 GRPC proxy inherit all the fields for HTTP proxy – so you can refer to field descriptions for HTTP above. Actually both proxy types in Centrifugo share the same Protobuf schema definitions.
 
