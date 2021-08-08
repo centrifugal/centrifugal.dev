@@ -38,3 +38,7 @@ Enables unidirectional WebSocket endpoint.
     "uni_websocket": true
 }
 ```
+
+## Example
+
+Coming soon.

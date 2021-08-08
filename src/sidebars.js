@@ -66,6 +66,7 @@ module.exports = {
         "pro/user_connections",
         "pro/performance",
         "pro/singleflight",
+        "pro/db_namespaces",
         "pro/process_stats",
       ],
     },

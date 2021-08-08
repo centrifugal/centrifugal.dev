@@ -88,7 +88,3 @@ After doing this Centrifugo will use binary frames to pass data between client a
 You still can continue to encode your application specific data as JSON when using Protobuf protocol thus have a possibility to co-exist with clients that use JSON protocol on the same Centrifugo installation inside the same channels.
 
 :::
-
-## Example
-
-Coming soon.

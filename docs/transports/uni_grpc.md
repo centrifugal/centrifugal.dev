@@ -31,6 +31,18 @@ Enables unidirectional GRPC endpoint.
 }
 ```
 
+### uni_grpc_port
+
+String, default `"11000"`.
+
+Port to listen on.
+
+### uni_grpc_address
+
+String, default `""` (listen on all interfaces)
+
+Address to bind uni GRPC to.
+
 ## Example
 
 Coming soon.

@@ -36,6 +36,7 @@ Here is a list of all Pro features available at the moment. The list of PRO feat
 * User connections RPC – [details](./user_connections.md)
 * Faster performance – [details](./performance.md)
 * Singleflight for presence and history – [details](./singleflight.md)
+* Database-driven channel namespace configuration - [details](./db_namespaces.md)
 * Near real-time CPU and RSS memory usage stats – [details](./process_stats.md)
 
 :::info

@@ -64,12 +64,6 @@ Boolean, default: `false`.
 
 Enables SockJS transport.
 
-### sockjs_heartbeat_delay
-
-Default: 25
-
-Interval in seconds how often to send SockJS h-frames to client.
-
 ### sockjs_url
 
 Default: `https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js`
