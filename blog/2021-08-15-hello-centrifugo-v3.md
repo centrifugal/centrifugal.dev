@@ -22,12 +22,12 @@ New Centrifugo v3 is targeting to improve Centrifugo adoption for basic real-tim
 
 Centrifugo v2 life cycle has come to an end. Before discussing v3 let's look back at what has been done during the last three years.
 
-Centrifugo v2 was a pretty huge refactoring of v1. Since the v2 release, Centrifugo is built on top of  new [Centrifuge library](https://github.com/centrifugal/centrifuge) for Go language. Centrifuge library elolved significantly since its initial release and now powers Grafana v8 real-time streaming among other things.
+Centrifugo v2 was a pretty huge refactoring of v1. Since the v2 release, Centrifugo is built on top of  new [Centrifuge library](https://github.com/centrifugal/centrifuge) for Go language. Centrifuge library evolved significantly since its initial release and now powers Grafana v8 real-time streaming among other things.
 
 <div class="vimeo-full-width">
    <iframe src="https://player.vimeo.com/video/570333329?title=0&byline=0&portrait=0" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
 </div>  
-<p><a href="https://vimeo.com/570333329">Grafana Racing Telemetry Demo</a> by my collegue <a href="https://vimeo.com/user54793063">Alexander Zobnin</a></p>
+<p><a href="https://vimeo.com/570333329">Grafana Racing Telemetry Demo</a> by my colleague <a href="https://vimeo.com/user54793063">Alexander Zobnin</a></p>
 
 Centrifugo integrated with Redis Streams, got Redis Cluster support, can now work with Nats server as a PUB/SUB broker. Notable additions of Centrifugo v2 were [server-side subscriptions](/docs/server/server_subs) with some interesting features on top – like maintaining a single global connection from one user and automatic personal channel subscription upon user connect.
 
@@ -71,13 +71,13 @@ Centrifugo users had to use special client connector libraries which abstracted 
 
 But what if a user just needs to receive real-time updates from a stable set of channels known in connection time? Can we simplify everything and avoid using custom software on a client-side?
 
-With unidirectional transports, the answer is yes. Clients can now connect to Centrifugo using a bunch of unidirectional transports. And the greatest thing is that in this case, developers should not depend on Centrifugo client connectors at all – just use native browser APIs or GRPC-generated code. It's finally possible to consume events from Centrifigo using CURL.
+With unidirectional transports, the answer is yes. Clients can now connect to Centrifugo using a bunch of unidirectional transports. And the greatest thing is that in this case, developers should not depend on Centrifugo client connectors at all – just use native browser APIs or GRPC-generated code. It's finally possible to consume events from Centrifugo using CURL.
 
 With subscribe server API (see below) it's even possible to subscribe unidirectional client to server-side channels dynamically.
 
 Centrifugo supports the following unidirectional transports:
 
-* [Eventsource (SSE)](/docs/transports/uni_sse)
+* [EventSource (SSE)](/docs/transports/uni_sse)
 * [HTTP streaming](/docs/transports/uni_http_stream)
 * [Unidirectional WebSocket](/docs/transports/uni_websocket)
 * [Unidirectional GRPC stream](/docs/transports/uni_grpc)
@@ -260,9 +260,9 @@ Centrifugo also inherited a couple of other improvements from the Centrifuge lib
 
 The final notable thing is an introduction of Centrifugo PRO. This is an extended version of Centrifugo built on top of the OSS version. It provides some unique features targeting business adopters.
 
-Those who followed Centrifugo for a long time know that there were some attempts to make project development sustainable. Buy me a coffee and Opencollective approaches were not successful, during a year we only got ~300$ of total contributions. While we appreciate these contributions a lot - this does not fairly justify a time spent on Centrifugo maintenance these days. So here is another attempt to monetize Centrifugo.
+Those who followed Centrifugo for a long time know that there were some attempts to make project development sustainable. Buy me a coffee and Opencollective approaches were not successful, during a year we got ~300$ of total contributions. While we appreciate these contributions a lot - this does not fairly justify a time spent on Centrifugo maintenance these days. So here is an another attempt to monetize Centrifugo.
 
-Centrifugo PRO details and features described [here in docs](/docs/pro/overview). Will see how it goes. We believe that a set of additional functionality can provide great advantages for both small and large-scale Centrifugo setups. PRO features can give useful insights on a system, protect from client API misusing, reduce server resource usage and more.
+Centrifugo PRO details and features described [here in docs](/docs/pro/overview). Let's see how it goes. We believe that a set of additional functionality can provide great advantages for both small and large-scale Centrifugo setups. PRO features can give useful insights on a system, protect from client API misusing, reduce server resource usage, and more.
 
 PRO version will be released soon after Centrifugo v3 OSS.
 

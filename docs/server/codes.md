@@ -114,7 +114,7 @@ Client can be disconnected by a Centrifugo server with custom code and string re
 
 :::note
 
-We expect that in most situations developers don't need to programatically deal with handling various disconnect codes, but since Centrifugo sends them and codes shown in server metrics – they are documented. Actually most client connectors don't provide access to reading a disconnect code these days (only a reason). This is what we are [planning to improve](https://github.com/centrifugal/centrifuge/issues/149).
+We expect that in most situations developers don't need to programmatically deal with handling various disconnect codes, but since Centrifugo sends them and codes shown in server metrics – they are documented. Actually most client connectors don't provide access to reading a disconnect code these days (only a reason). This is what we are [planning to improve](https://github.com/centrifugal/centrifuge/issues/149).
 
 :::
 

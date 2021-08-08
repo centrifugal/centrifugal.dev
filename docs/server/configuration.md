@@ -3,7 +3,7 @@ id: configuration
 title: Configure Centrifugo
 ---
 
-Let's look at how Centrifigo can be configured.
+Let's look at how Centrifugo can be configured.
 
 :::info There are more options
 
@@ -146,7 +146,7 @@ Engine to use - `memory`, `redis` or `tarantool`. It's a string option, by defau
 
 ## Advanced options
 
-These options allow tweaking server behaviour, in most cases default values are good to start with. 
+These options allow tweaking server behavior, in most cases default values are good to start with. 
 
 ### client_channel_limit
 
@@ -212,7 +212,7 @@ Bidirectional SockJS default endpoint (disabled by default):
 http://localhost:8000/connection/sockjs
 ```
 
-Unidirectional Eventsource endpoint (disabled by default):
+Unidirectional EventSource endpoint (disabled by default):
 
 ```
 http://localhost:8000/connection/uni_sse
@@ -230,7 +230,7 @@ Unidirectional WebSocket endpoint (disabled by default):
 http://localhost:8000/connection/uni_websocket
 ```
 
-Unidirectional Eventsource endpoint (disabled by default):
+Unidirectional EventSource (SSE) endpoint (disabled by default):
 
 ```
 http://localhost:8000/connection/uni_sse

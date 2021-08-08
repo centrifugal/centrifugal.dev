@@ -5,7 +5,7 @@ title: Analytics with ClickHouse
 
 This feature allows exporting information about connections, subscriptions and client operations to [ClickHouse](https://clickhouse.tech/) thus providing an integration with a real-time (with seconds delay) analytics storage. ClickHouse is super fast and simple to operate with, and it allows effective data keeping for a window of time.  
 
-This unlocks a great observability and possibility to perform various analytics queries for better user behaviour understanding, check application correctness, building trends, reports and so on.
+This unlocks a great observability and possibility to perform various analytics queries for better user behavior understanding, check application correctness, building trends, reports and so on.
 
 ## Configuration
 
@@ -35,13 +35,13 @@ To enable integration with ClickHouse add the following section to a configurati
 }
 ```
 
-All Clickhouse analytics options scoped to `clickhouse_analytics` section of configuration.
+All ClickHouse analytics options scoped to `clickhouse_analytics` section of configuration.
 
 Toggle this feature using `enabled` boolean option.
 
 Centrifugo can export data to different ClickHouse instances, addresses of ClickHouse can be set over `clickhouse_dsn` option.
 
-You also need to set a Clickhouse cluster name (`clickhouse_cluster`) and database name `clickhouse_database`.
+You also need to set a ClickHouse cluster name (`clickhouse_cluster`) and database name `clickhouse_database`.
 
 `export_connections` tells Centrifugo to export connection information snapshots. Information about connection will be exported once a connection established and then periodically while connection alive. See below on table structure to see which fields are available.
 
@@ -232,7 +232,7 @@ LIMIT 10;
 
 ## Development
 
-The recommended way to run ClickHouse in prodiction is with cluster. But during development you may want to run Centrifugo with single instance Clickhouse.
+The recommended way to run ClickHouse in production is with cluster. But during development you may want to run Centrifugo with single instance ClickHouse.
 
 To do this set only one ClickHouse dsn and do not set cluster name:
 

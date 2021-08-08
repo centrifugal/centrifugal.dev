@@ -87,7 +87,7 @@ You can, but Centrifugo does not have such API. What you have to do to ensure yo
 
 Centrifugo designed to stream messages from server to client. Even though it's possible to publish messages into channels directly from a client (when `publish` channel option enabled) - we strongly discourage this in production usage as those messages just go through Centrifugo without any additional control.
 
-Theoretically Centrifugo could resend messages published from client to your application backend endpoint (i.e. having some sort of webhook built in) but it does not seem beneficial it terms of overall performance and application architecture. And this will require extra layer of convetions about Centrifugo-to-backend communication. 
+Theoretically Centrifugo could resend messages published from client to your application backend endpoint (i.e. having some sort of webhook built in) but it does not seem beneficial it terms of overall performance and application architecture. And this will require extra layer of conventions about Centrifugo-to-backend communication. 
 
 So in general when user generates an event it must be first delivered to your app backend using a convenient way (for example AJAX POST request for web application), processed on backend (validated, saved into main application database) and then published to Centrifugo using Centrifugo HTTP or GRPC API.
 
@@ -122,7 +122,7 @@ A bit tricky thing are disconnects. The difficulty is because there is no guaran
 
 ### How scalable is presence and join/leave features?
 
-Presence is good for small channels with a reasonable number of subscribers, as soon as there are tons of subscribers presence information becomes very expensive in terms of bandwidth (as it contains full information about all clients in channel). There is `presence_stats` API method that can be helpful if you only need to know a number of clients (or unique users) in a channel. But in case of Redis engine even `presence stats` not optimized for channels with more that several thousands active subscribers. You may consider using separate service to deal with presense status information that provides information in near real-time maybe with some reasonable approximation.
+Presence is good for small channels with a reasonable number of subscribers, as soon as there are tons of subscribers presence information becomes very expensive in terms of bandwidth (as it contains full information about all clients in channel). There is `presence_stats` API method that can be helpful if you only need to know a number of clients (or unique users) in a channel. But in case of Redis engine even `presence stats` not optimized for channels with more that several thousands active subscribers. You may consider using separate service to deal with presence status information that provides information in near real-time maybe with some reasonable approximation.
 
 The same is true for join/leave messages - as soon as you turn on join/leave events for a channel with many subscribers every join/leave event (which generally happen relatively frequently) result into many messages sent to each subscriber in a channel, drastically multiplying amount of messages travelling through the system. So be careful and estimate possible load. There is no magic unfortunately.
 

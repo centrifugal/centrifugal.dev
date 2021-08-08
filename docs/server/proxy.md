@@ -215,7 +215,7 @@ Response expected:
 
 | Field | Type | Optional | Description |
 | ------------ | -------------- | ------------ | ---- |
-| expired       | bool     | yes |  a flag to mark connection as expired - client will be diconnected  |
+| expired       | bool     | yes |  a flag to mark connection as expired - client will be disconnected  |
 | expire_at    | integer     | yes | a timestamp in the future when connection must be considered expired       |
 | info     | JSON object     | yes | a connection info JSON            |
 | b64info     | string     | yes | a binary connection info encoded in base64 format, will be decoded to raw bytes on Centrifugo before using in messages            |

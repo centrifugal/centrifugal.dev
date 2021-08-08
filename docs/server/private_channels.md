@@ -31,7 +31,7 @@ When you need to use namespace for a private channel then the name of a namespac
 
 :::
 
-Supported JWT algorithms for private subscription tokens match algorithms to create connection JWT. The same HMAC secret key, RSA and ECDSA public keys set for aiithentication tokens are re-used to check subscription JWT.
+Supported JWT algorithms for private subscription tokens match algorithms to create connection JWT. The same HMAC secret key, RSA and ECDSA public keys set for authentication tokens are re-used to check subscription JWT.
 
 ## Claims
 
@@ -43,7 +43,7 @@ Required. Client ID which wants to subscribe on a channel (**string**).
 
 :::note
 
-Centrifugo server generates a unique client ID for each incoming connection. This client ID regenerated for a client on every reconnect. You must use this client ID for private channel subscription token. If you are using [centrifuge-js](https://github.com/centrifugal/centrifuge-js) library then Client ID and channels that user wants to subscribe will be automaticaly added to AJAX POST request to application backend. In other cases refer to specific client documentation (in most cases you will have client ID and channel in private subscription event context).
+Centrifugo server generates a unique client ID for each incoming connection. This client ID regenerated for a client on every reconnect. You must use this client ID for private channel subscription token. If you are using [centrifuge-js](https://github.com/centrifugal/centrifuge-js) library then Client ID and channels that user wants to subscribe will be automatically added to AJAX POST request to application backend. In other cases refer to specific client documentation (in most cases you will have client ID and channel in private subscription event context).
 
 :::
 
@@ -74,7 +74,7 @@ Optional. By default Centrifugo looks on `exp` claim to both check token expirat
 `expire_at` is a UNIX timestamp seconds when subscription should expire.
 
 * Set in to the future time for expiring subscription at some point
-* Set it to `0` to disable subscription expiration (but since check token `exp`). This allows implementing one-time subcription tokens. 
+* Set it to `0` to disable subscription expiration (but since check token `exp`). This allows implementing one-time subscription tokens. 
 
 ## Example
 

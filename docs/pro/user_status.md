@@ -5,7 +5,7 @@ title: User status
 
 Centrifugo provides a presence feature for channels. It works well (for channels with reasonably small number of active subscribers though), but sometimes you need a bit different functionality.
 
-What if you want to get a specific user status based on its recent activity in application? You can create a personal channel with presence enabled for each user. It will show that user has an active connection with a server. But this won't show whether user did some actions in an appplication recently or just left it open while not actually using it.
+What if you want to get a specific user status based on its recent activity in application? You can create a personal channel with presence enabled for each user. It will show that user has an active connection with a server. But this won't show whether user did some actions in an application recently or just left it open while not actually using it.
 
 User status feature of Centrifugo PRO allows calling a special RPC method from a client side when a user makes a useful action in an application (clicks on buttons, uses a mouse – whatever means that user really uses application at the moment). This call sets a time of last user activity in Redis, and this information can then be queried.
 

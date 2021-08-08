@@ -1,10 +1,10 @@
 ---
 id: uni_sse
-title: Unidirectional SSE (Eventsource)
-sidebar_label: SSE (Eventsource)
+title: Unidirectional SSE (EventSource)
+sidebar_label: SSE (EventSource)
 ---
 
-Default unidirectional SSE (Eventsource) connection endpoint in Centrifugo is:
+Default unidirectional SSE (EventSource) connection endpoint in Centrifugo is:
 
 ```
 /connection/uni_sse
@@ -12,7 +12,7 @@ Default unidirectional SSE (Eventsource) connection endpoint in Centrifugo is:
 
 :::note
 
-Only parts of Eventsource spec that make sense for Centrifugo are implemented. For example `Last-Event-Id` header not supported (since one connection can be subscribed to many channels) and multiline strings (since we are passing JSON-encoded objects to the client) etc.
+Only parts of EventSource spec that make sense for Centrifugo are implemented. For example `Last-Event-Id` header not supported (since one connection can be subscribed to many channels) and multiline strings (since we are passing JSON-encoded objects to the client) etc.
 
 :::
 

@@ -7,7 +7,7 @@ SockJS is a polyfill browser library which provides HTTP-based fallback transpor
 
 If you have a requirement to work everywhere SockJS is the solution. SockJS will automatically choose best fallback transport if Websocket connection failed for some reason. Some of the fallback transports are:
 
-* Eventsource (SSE)
+* EventSource (SSE)
 * XHR-streaming
 * Long-polling
 * And more (see [SockJS docs](https://github.com/sockjs/sockjs-client))

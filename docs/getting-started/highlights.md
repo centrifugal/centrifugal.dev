@@ -7,7 +7,7 @@ Here is a list with main Centrifugo ✨highlights✨. Every point is then extend
 
 ### Simple integration
 
-Since Centrifugo originally designed to be used in conjunction with frameworks without builtin concurrency support (like Django, Laravel etc.) it works as a standalone service with well-defined communication contracts. It fits very well both monolythic and microservice architecture. Application developers should not change backend phylosophy at all – just integrate with Centrifugo HTTP or GRPC API and let users enjoy real-time updates. 
+Since Centrifugo originally designed to be used in conjunction with frameworks without builtin concurrency support (like Django, Laravel etc.) it works as a standalone service with well-defined communication contracts. It fits very well both monolithic and microservice architecture. Application developers should not change backend philosophy at all – just integrate with Centrifugo HTTP or GRPC API and let users enjoy real-time updates. 
 
 ### Great performance
 
@@ -27,11 +27,11 @@ Centrifugo supports JSON and binary Protobuf protocol for client-server communic
 
 The main transport in Centrifugo is WebSocket. It's a bidirectional transport on top of TCP with low-overhead. For browsers which do not support WebSocket Centrifugo provides SockJS support.
 
-Centrifugo v3 also introduced support for unidirectional transports for real-time updates: like SSE (Eventsource), HTTP streaming, GRPC unidirectional stream. Using unidirectional transport is sufficient for many real-time applications and does not require using custom client connectors – just native APIs or GRPC-generated code.
+Centrifugo v3 also introduced support for unidirectional transports for real-time updates: like SSE (EventSource), HTTP streaming, GRPC unidirectional stream. Using unidirectional transport is sufficient for many real-time applications and does not require using custom client connectors – just native APIs or GRPC-generated code.
 
 ### Flexible authentication
 
-Centrifugo can authenticate connections using JWT (JSON Web Tokens) or by issueing a HTTP/GRPC request to your application backend upon connection attempt. It's possible to proxy original request headers or request metadata (in case of GRPC connection). It supports JWK specification.
+Centrifugo can authenticate connections using JWT (JSON Web Tokens) or by issuing a HTTP/GRPC request to your application backend upon connection attempt. It's possible to proxy original request headers or request metadata (in case of GRPC connection). It supports JWK specification.
 
 ### Connection management
 
@@ -49,7 +49,7 @@ Centrifugo is unique in terms of the fact it supports both client-side and serve
 
 ### RPC over bidirectional connection
 
-You can fully utililize bidirectional persistent connections by sending RPC calls from client side to a configured endpoint on your backend. Calling RPC over WebSocket avoids sending headers on each request thus reducing external traffic. 
+You can fully utilize bidirectional persistent connections by sending RPC calls from client side to a configured endpoint on your backend. Calling RPC over WebSocket avoids sending headers on each request thus reducing external traffic. 
 
 ### Presence information
 
@@ -79,7 +79,7 @@ Centrifugo is built on top of open-source library Centrifuge (MIT license), the 
 
 Centrifugo PRO extends Centrifugo with several unique features which can give interesting advantages for business adopters. 
 
-With Centrifugo Pro it's possible to trace specific user or specific channel events in real-time. Centrifugo Pro integrates with ClickHouse for real-time connection analytics. This all may help with understanding client behaviour, inspect and analize an application on a very granular level.
+With Centrifugo Pro it's possible to trace specific user or specific channel events in real-time. Centrifugo Pro integrates with ClickHouse for real-time connection analytics. This all may help with understanding client behavior, inspect and analyze an application on a very granular level.
 
 Centrifugo Pro offers even more extensions tend to be useful on practice. This includes user active status and throttling features. Active status is useful to build messenger-like applications where you want to show online indicators of users based on last activity time, throttling can help you limit number of operations each user may execute on Centrifugo cluster.
 

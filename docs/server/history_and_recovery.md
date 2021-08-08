@@ -37,7 +37,7 @@ When re-subscribing on channels Centrifugo will return missed `publications` to 
 
 Centrifugo recovery model based on two fields in protocol: `offset` and `epoch`. All fields managed automatically by Centrifugo client libraries (for bidirectional transport), but it's good to know how recovery works under the hood.
 
-Recovery feature heavily relies on `offset` and `epoch` values descrbed above.
+Recovery feature heavily relies on `offset` and `epoch` values described above.
 
 `epoch` handles cases when history storage has been restarted while client was in disconnected state so publication numeration in a channel started from scratch. For example at moment Memory engine does not persist publication sequences on disk so every restart will start numeration from scratch, after each restart new `epoch` field generated, and we can understand in recovery process that client could miss messages thus returning correct `recovered` flag in subscribe `Reply`. This also applies to Redis engine – if you do not use AOF with fsync then sequences can be lost after Redis restart. When using Redis engine you need to use fully in-memory model strategy or AOF with fsync to guarantee reliability of `recovered` flag sent by Centrifugo.
 

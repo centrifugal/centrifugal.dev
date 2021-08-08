@@ -173,7 +173,7 @@ After a successful dial to WebSocket endpoint client must send `connect` command
 
 Where params fields:
 
-* optional string `token` - connection token. Can be ommited if token-based auth not used.
+* optional string `token` - connection token. Can be omitted if token-based auth not used.
 * `data` - can contain custom connect data, for example it can contain client settings.
 
 In response to `connect` command server sends a connect reply. It looks this way:
@@ -367,7 +367,7 @@ Next message is `Join` message:
 }
 ```
 
-Finally `Unsub` message that means that server unsubscribed current client from a channel:
+Finally `Unsubscribe` message that means that server unsubscribed current client from a channel:
 
 ```json
 {
@@ -421,7 +421,7 @@ Errors during `subscribe` must result in full client reconnect in case of intern
 
 The special corner case is client-side timeout during `subscribe` operation. As protocol is asynchronous it's possible in this case that server will eventually subscribe client on channel but client will think that it's not subscribed. It's possible to retry subscription request and tolerate `already subscribed` (code `105`) error as expected. But the simplest solution is to reconnect entirely as this is simpler and gives client a chance to connect to working server instance.
 
-Errors during rpc-like operations can be just returned to caller - i.e. user javascript code. Calls like `history` and `presence` are idempotent. You should be accurate with unidempotent operations like `publish` - in case of client timeout it's possible to send the same message into channel twice if retry publish after timeout - so users of libraries must care about this case – making sure they have some protection from displaying message twice on client side (maybe some sort of unique key in payload).
+Errors during rpc-like operations can be just returned to caller - i.e. user javascript code. Calls like `history` and `presence` are idempotent. You should be accurate with non-idempotent operations like `publish` - in case of client timeout it's possible to send the same message into channel twice if retry publish after timeout - so users of libraries must care about this case – making sure they have some protection from displaying message twice on client side (maybe some sort of unique key in payload).
 
 ### Client implementation advices
 
@@ -457,7 +457,7 @@ centrifuge.on('disconnect', function(context) {
 });
 ```
 
-Client created in `disconnected` state with `reconnect` attribute set to `true` and `reconnecting` flag set to `false` . After `connect()` called state goes to `connecting`. It's only possible to connect from `disconnected` state. Every time `connect()` called `reconnect` flag of client must be set to `true`. After each failed connect attempt state must be set to `disconnected`, `disconnect` event must be emitted (only if `reconnecting` flag is `false`), and then `reconnecting` flag must be set to `true` (if client should continue reconnecting) to not emit `disconnect` event again after next in a row connect attempt failure. In case of failure next connection attempt must be scheduled automatically with backoff strategy. On successful connect `reconnecting` flag must be set to `false`, backoff retry must be resetted and `connect` event must be emitted. When connection lost then the same set of actions as when connect failed must be performed.
+Client created in `disconnected` state with `reconnect` attribute set to `true` and `reconnecting` flag set to `false` . After `connect()` called state goes to `connecting`. It's only possible to connect from `disconnected` state. Every time `connect()` called `reconnect` flag of client must be set to `true`. After each failed connect attempt state must be set to `disconnected`, `disconnect` event must be emitted (only if `reconnecting` flag is `false`), and then `reconnecting` flag must be set to `true` (if client should continue reconnecting) to not emit `disconnect` event again after next in a row connect attempt failure. In case of failure next connection attempt must be scheduled automatically with backoff strategy. On successful connect `reconnecting` flag must be set to `false`, backoff retry must be reset and `connect` event must be emitted. When connection lost then the same set of actions as when connect failed must be performed.
 
 Client must allow to subscribe on channels:
 

@@ -7,19 +7,19 @@ Centrifugo PRO has performance improvements for several server parts. These impr
 
 ## Faster HTTP API
 
-Centrifugo PRO has an optimized JSON serialization/deserialization for HTTP API. The effect can be noticable under load (up to 20% more requests/sec according to our benchmarks).
+Centrifugo PRO has an optimized JSON serialization/deserialization for HTTP API. The effect can be noticeable under load (up to 20% more requests/sec according to our benchmarks).
 
 ## Faster GRPC API
 
-Centrifugo PRO has an optimized Protobuf serialization/deserialization for GRPC API. The effect can be noticable under load (up to 20% more requests/sec according to our benchmarks).
+Centrifugo PRO has an optimized Protobuf serialization/deserialization for GRPC API. The effect can be noticeable under load (up to 20% more requests/sec according to our benchmarks).
 
 ## Faster HTTP proxy
 
-Centrifugo PRO has an optimized JSON serialization/deserialization for HTTP proxy. The effect can be noticable under load (up to 20% CPU reduction according to our benchmarks).
+Centrifugo PRO has an optimized JSON serialization/deserialization for HTTP proxy. The effect can be noticeable under load (up to 20% CPU reduction according to our benchmarks).
 
 ## Faster GRPC proxy
 
-Centrifugo PRO has an optimized Protobuf serialization/deserialization for GRPC API. The effect can be noticable under load (up to 20% CPU reduction according to our benchmarks).
+Centrifugo PRO has an optimized Protobuf serialization/deserialization for GRPC API. The effect can be noticeable under load (up to 20% CPU reduction according to our benchmarks).
 
 ## Faster GRPC unidirectional stream
 

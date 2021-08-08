@@ -17,7 +17,7 @@ Client protocol has some backwards incompatible changes regarding working with h
 
 Call to `history` API from client-side now does not return all publications from history cache. It returns only information about stream with zero publications. Clients should explicitly provide a limit when calling history API. Also the maximum allowed limit can be set by `client_history_max_publication_limit` option (by default `300`).
 
-We provide a boolean flag `use_unlimited_history_by_default` to enable previous behaviour while you migrate client applications to use explicit limit.
+We provide a boolean flag `use_unlimited_history_by_default` to enable previous behavior while you migrate client applications to use explicit limit.
 
 ### Publication limit for recovery
 
@@ -80,7 +80,7 @@ Channels API method removed in Centrifugo v3. But it's still possible to extract
 
 ### HTTP proxy changes
 
-When using HTTP proxy you should now set an explicit list of headers you want to proxy. To mimic behaviour of Centrifugo v2 add to your configuration:
+When using HTTP proxy you should now set an explicit list of headers you want to proxy. To mimic behavior of Centrifugo v2 add to your configuration:
 
 ```json title=config.json
 {
@@ -98,7 +98,7 @@ When using HTTP proxy you should now set an explicit list of headers you want to
 
 If you had a list of extra HTTP headers using `proxy_extra_http_headers` then additionally extend list above with values from `proxy_extra_http_headers`. Then you can remove `proxy_extra_http_headers` - it's not used anymore.
 
-Another important change is how Centrifugo proxies binary data over HTTP JSON proxy. Previously proxy mode (whether to use base64 fields fields or not) could be configured using `encoding=binary` URL param of connection. With Centrifugo v3 it's only possible to use binary mode by enabling `"proxy_binary_encoding": true` option. BTW according to our community poll only 2% of Centrifugo users used binary mode in HTTP proxy. If you have problems with new behaviour – write about your situation to our community chats – and we will see what's possible.
+Another important change is how Centrifugo proxies binary data over HTTP JSON proxy. Previously proxy mode (whether to use base64 fields fields or not) could be configured using `encoding=binary` URL param of connection. With Centrifugo v3 it's only possible to use binary mode by enabling `"proxy_binary_encoding": true` option. BTW according to our community poll only 2% of Centrifugo users used binary mode in HTTP proxy. If you have problems with new behavior – write about your situation to our community chats – and we will see what's possible.
 
 ### JWT changes
 
@@ -112,7 +112,7 @@ Redis configuration was a bit messy - especially in Redis sharding case, in v3 w
 
 Centrifugo v3 will use Redis Stream data structure to keep history instead of lists. This requires Redis >= 5 to work.
 
-If you still need List data structure or have an old Redis version you can use `"redis_use_lists": true` to mimic default behaviour of Centrifugo v2.
+If you still need List data structure or have an old Redis version you can use `"redis_use_lists": true` to mimic default behavior of Centrifugo v2.
 
 ### SockJS disabled by default
 
@@ -234,7 +234,7 @@ It's fully client-side: your data won't be sent anywhere.
 
 :::danger
 
-Unfortunately we can't migrate environment variables and command-line flags authomatically - so if you are using env vars or command-line flags to configure Centrifugo you still need to migrate manually. Also, be aware: this converter tool is best effort only – we can not guarantee it solves all corner cases, especially in Redis configuration. You may still need to fix some things manually, for example - properly fill `allowed_origins`.
+Unfortunately we can't migrate environment variables and command-line flags automatically - so if you are using env vars or command-line flags to configure Centrifugo you still need to migrate manually. Also, be aware: this converter tool is best effort only – we can not guarantee it solves all corner cases, especially in Redis configuration. You may still need to fix some things manually, for example - properly fill `allowed_origins`.
 
 :::
 

@@ -70,7 +70,7 @@ This is useful for channels with static list of allowed users, for example for s
 
 ## Channel options
 
-Channel behaviour can be modified by using channel options. Channel options can be defined on configuration top-level and for every namespace.
+Channel behavior can be modified by using channel options. Channel options can be defined on configuration top-level and for every namespace.
 
 ### publish
 
@@ -104,7 +104,7 @@ Enabling channel presence adds some overhead since Centrifugo need to maintain a
 
 :::caution
 
-Keep in mind that join/leave messages can generate a big number of messages in a system if turned on for channels with large number of actibe subscribers. If you have channels with large number of subscribers consider to avoid using this feature or to scale Centrifugo.
+Keep in mind that join/leave messages can generate a big number of messages in a system if turned on for channels with large number of active subscribers. If you have channels with large number of subscribers consider to avoid using this feature or to scale Centrifugo.
 
 :::
 
@@ -199,7 +199,7 @@ Here we set channel options on config top-level – these options will affect ch
 
 It's possible to configure a list of channel namespaces. Namespaces are optional but very useful. 
 
-Namespace allows to set custom options for channels starting with namespace name. This provides a great control over channel behaviour so you have a flexible way to define different channel options for different real-time features in application.
+Namespace allows to set custom options for channels starting with namespace name. This provides a great control over channel behavior so you have a flexible way to define different channel options for different real-time features in application.
 
 Namespace has a name, and the same channel options (with same defaults) as described above.
 
@@ -244,8 +244,8 @@ All things together here is an example of `config.json` which includes some top-
 ```
 
 * Channel `news` will use globally defined channel options.
-* Channel `public:news` will use `public` namespace's options.
-* Channel `gossips:news` will use `gossips` namespace's options.
+* Channel `public:news` will use `public` namespace options.
+* Channel `gossips:news` will use `gossips` namespace options.
 * Channel `xxx:hello` will result into subscription error since there is no `xxx` namespace defined inn configuration above.
 
 **Channel namespaces also work with private channels and user-limited channels**. For example, if you have namespace called `dialogs` then private channel can be constructed as `$dialogs:gossips`, user-limited channel can be constructed as `dialogs:dialog#1,2`.
