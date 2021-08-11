@@ -33,7 +33,7 @@ Here is a list of all Pro features available at the moment. The list of PRO feat
 * Real-time analytics with ClickHouse – [details](./analytics.md)
 * User status – [details](./user_status.md)
 * Operation throttling – [details](./throttling.md)
-* User connections RPC – [details](./user_connections.md)
+* User connections API – [details](./user_connections.md)
 * Faster performance – [details](./performance.md)
 * Singleflight for presence and history – [details](./singleflight.md)
 * Database-driven channel namespace configuration - [details](./db_namespaces.md)

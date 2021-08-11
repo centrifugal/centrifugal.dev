@@ -74,9 +74,17 @@ package centrifugal.centrifugo.api;
 
 This means you need to regenerate your GRPC code which communicates with Centrifugo using latest Protobuf definitions. Refer to the [GRPC API doc](../server/server_api.md#grpc-api).
 
-### Channels API method removed
+### Channels API method changed
 
-Channels API method removed in Centrifugo v3. But it's still possible to extract information about channels using new RPC extension with method called `getChannels`. New extension has new additional possibilities like showing the number of connections in a channel and filter channels by pattern but it still has the same caveat as before: this method does not scale well for many active channels in a system.
+The response format of `channels` API call changed in v3. See description in [API doc](../server/server_api.md#channels). 
+
+Channels method has new additional possibilities like showing the number of connections in a channel and filter channels by pattern.
+
+:::info
+
+Channels API call still has the same concern as before: this method does not scale well for many active channels in a system.
+
+:::
 
 ### HTTP proxy changes
 

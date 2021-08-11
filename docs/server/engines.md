@@ -276,9 +276,7 @@ In order to run Centrifugo with KeyDB all you need to do is use `redis` engine b
 
 **EXPERIMENTAL**
 
-Centrifugo v3 introduced experimental support for Tarantool as one more possible engine.
-
-[Tarantool](https://www.tarantool.io) is a fast and flexible in-memory storage with different persistence/replication schemes and LuaJIT for writing custom logic on Tarantool side. It allows implementing Centrifugo engine with uniques characteristics.
+[Tarantool](https://www.tarantool.io) is a fast and flexible in-memory storage with different persistence/replication schemes and LuaJIT for writing custom logic on Tarantool side. It allows implementing Centrifugo engine with unique characteristics.
 
 :::caution
 
@@ -320,6 +318,12 @@ There are several supported Tarantool topologies to which Centrifugo can connect
 * To Tarantool with synchronous replication (Raft-based, Tarantool >= 2.7)
 
 See [centrifugal/tarantool-engine](https://github.com/centrifugal/tarantool-engine) repo readme for configuration examples.
+
+Options:
+
+* `tarantool_mode` (string, default `standalone`) – is a mode how to connect to Tarantool. Default is `standalone` which connects to a single Tarantool instance address. Possible values are: `leader-follower` (connects to a setup with Tarantool master and async replicas) and `leader-follower-raft` (connects to a Tarantool with synchronous Raft-based replication). All modes support client-side consistent sharding (similar to what Redis engine provides).
+* `tarantool_user` (string, default `""`) - allows to set a user.
+* `tarantool_password` (string, default `""`) - allows to set a password.
 
 ## Nats broker
 

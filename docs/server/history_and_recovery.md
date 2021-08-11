@@ -17,7 +17,55 @@ Each publication when added to history has `offset` field. This is an incrementa
 
 ## History iteration API
 
-Coming soon.
+History iteration based on three fields:
+
+* `limit`
+* `since`
+* `reverse`
+
+Combining these fields you can iterate over stream in both directions.
+
+Get current stream top offset and epoch:
+
+```
+history(limit: 0, since: null, reverse: false)
+```
+
+Get full history from the current beginning (but up to `client_history_max_publication_limit`, which is `300` by default):
+
+```
+history(limit: -1, since: null, reverse: false)
+```
+
+Get full history from the current end (but up to `client_history_max_publication_limit`, which is `300` by default):
+
+```
+history(limit: -1, since: null, reverse: true)
+```
+
+Get history from the current beginning (up to 10):
+
+```
+history(limit: 10, since: null, reverse: false)
+```
+
+Get history from the current end in reversed direction (up to 10):
+
+```
+history(limit: 10, since: null, reverse: true) 
+```
+
+Get up to 10 publications since known stream position (described by offset and epoch values):
+
+```
+history(limit: 10, since: {offset: 0, epoch: "epoch"}, reverse: false)
+```
+
+Get up to 10 publications since known stream position (described by offset and epoch values) but in reversed direction (from last to earliest):
+
+```
+history(limit: 10, since: {offset: 11, epoch: "epoch"}, reverse: true)
+```
 
 ## Automatic message recovery
 
@@ -34,6 +82,8 @@ Message recovery protocol feature designed to be used together with reasonably s
 To enable recovery mechanism for channels set `recover` boolean configuration option to `true` on the configuration file top-level or for a channel namespace. Make sure to enable this option in namespaces where history is on.
 
 When re-subscribing on channels Centrifugo will return missed `publications` to client in subscribe `Reply`, also it will return special `recovered` boolean flag to indicate whether all missed publications successfully recovered after disconnect or not.
+
+Number of publications which is possible to automatically recover controlled by `client_recovery_max_publication_limit` option which is `300` by default. 
 
 Centrifugo recovery model based on two fields in protocol: `offset` and `epoch`. All fields managed automatically by Centrifugo client libraries (for bidirectional transport), but it's good to know how recovery works under the hood.
 

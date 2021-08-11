@@ -120,3 +120,23 @@ html[data-theme="dark"] .header-github-link:before {
   height: 100%;
 }
 
+.docusaurus-mt-lg {
+  margin-top: 1rem !important;
+}
+
+.markdown table {
+  width: 100%;
+  display: inline-table;
+}
+.markdown table td {
+  text-align: left;
+}
+.markdown table th:first-child {
+  width: 15%;
+}
+.markdown table th:nth-child(2) {
+  width: 20%;
+}
+.markdown table th:nth-child(3) {
+  width: 10%;
+}

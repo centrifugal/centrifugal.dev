@@ -160,12 +160,12 @@ Date: Thu, 17 May 2018 22:03:09 GMT
 | Parameter name | Parameter type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | channel       | string  | yes | Name of channel to publish        |
-| data       | JSON object       | yes | Custom JSON data to publish into a channel        |
+| data       | any JSON       | yes | Custom JSON data to publish into a channel        |
 | skip_history  | bool       | no | Skip adding publication to history for this request            |
 
 #### Publish result
 
-| Result field   | Field type     | Can be omitted | Description  |
+| Field name   | Field type     | Optional | Description  |
 | -------------- | -------------- | ------ | ------------ |
 | offset       | integer  | yes | Offset of publication in history stream        |
 | epoch       | string       | yes |   Epoch of current stream        |
@@ -191,12 +191,12 @@ Similar to `publish` but allows to send the same data into many channels.
 | Parameter name | Parameter type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | channels       | Array of strings  | yes | List of channels to publish data to        |
-| data       | JSON object       | yes | Custom JSON data to publish into each channel        |
+| data       | any JSON       | yes | Custom JSON data to publish into each channel        |
 | skip_history  | bool       | no | Skip adding publications to channels' history for this request            |
 
 #### Broadcast result
 
-| Result field   | Field type     | Can be omitted | Description  |
+| Field name   | Field type     | Optional | Description  |
 | -------------- | -------------- | ------ | ------------ |
 | responses       | Array of publish responses  | no | Responses for each individual publish (with possible error and publish result)        |
 
@@ -326,9 +326,18 @@ Date: Thu, 17 May 2018 22:13:17 GMT
 
 #### Presence result
 
-| Result field   | Field type     | Can be omitted | Description  |
+| Field name   | Field type     | Optional | Description  |
 | -------------- | -------------- | ------ | ------------ |
-| presence       | Map of client ID (string) to client info  | no | Offset of publication in history stream        |
+| presence       | Map of client ID (string) to ClientInfo object  | no | Offset of publication in history stream        |
+
+#### ClientInfo
+
+| Field name   | Field type     | Optional | Description  |
+| -------------- | -------------- | ------ | ------------ |
+| client       | string  | no | Client ID        |
+| user       | string  | no | User ID        |
+| conn_info       | JSON  | yes | Optional connection info        |
+| chan_info       | JSON  | yes | Optional channel info        |
 
 ### presence_stats
 
@@ -368,7 +377,7 @@ Date: Thu, 17 May 2018 22:09:44 GMT
 
 #### Presence stats result
 
-| Result field   | Field type     | Can be omitted | Description  |
+| Field name   | Field type     | Optional | Description  |
 | -------------- | -------------- | ------ | ------------ |
 | num_clients       | integer  | no | Total number of clients in channel         |
 | num_users       | integer  | no | Total number of unique users in channel         |
@@ -424,51 +433,59 @@ Date: Wed, 21 Jul 2021 05:30:48 GMT
 | Parameter name | Parameter type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | channel       | string  | yes | Name of channel to call history from        |
-| limit       | int  | yes | Limit number of returned publications        |
-| since       | Stream position object  | no | To return publications after this position        |
+| limit       | int  | no | Limit number of returned publications        |
+| since       | StreamPosition object  | no | To return publications after this position        |
 | reverse       | bool  | no | Iterate in reversed order (from latest to earliest)        |
+
+#### StreamPosition
+
+| Field name | Field type | Required | Description  |
+| -------------- | -------------- | ------------ | ---- |
+| offset       | integer  | yes | Offset in a stream        |
+| epoch       | string  | yes | Stream epoch        |
 
 #### History result
 
-| Result field   | Field type     | Can be omitted | Description  |
+| Field name   | Field type     | Optional | Description  |
 | -------------- | -------------- | ------ | ------------ |
 | publications       | Array of publication objects  | yes | List of publications in channel         |
 | offset       | integer  | yes | Top offset in history stream        |
 | epoch       | string       | yes |   Epoch of current stream        |
 
-### rpc
+### channels
 
-`rpc` allows calling JSON RPC extension by name. Actually it's RPC inside RPC :)
-
-#### RPC params
-
-| Parameter name | Parameter type | Required | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| method       | string  | yes | RPC extension method        |
-| params       | JSON object  | yes | RPC extension method params        |
-
-#### RPC result
-
-| Result field   | Field type     | Can be omitted | Description  |
-| -------------- | -------------- | ------ | ------------ |
-| data       | JSON object  | no | Data returned from RPC <br />(different format for different RPC extensions)         |
-
-One available RPC extension is `getChannels` method which returns all active channels in Centrifugo with number of clients in each (optionally filtered by pattern), command looks like this:
+`channels` returns active channels (with one or more active subscribers in it).
 
 ```json
 {
-    "method": "rpc",
-    "params": {
-        "method": "getChannels",
-        "params": {
-            "pattern": "chat*"
-        }
-    }
+    "method": "channels",
+    "params": {}
 }
 ```
 
-**Keep in mind that since `getChannels` RPC extension returns all active channels it can be really heavy for massive deployments.** There is no way to paginate over channels list and we don't know a case where this could be useful and not error prone. At the moment **we mostly suppose that getChannels RPC extension will be used in development process and in not very massive Centrifugo setups** (with no more than 10k channels). A better and scalable approach could be real-time analytics approach [described here](../pro/overview.md).
+#### Channels params
 
+| Parameter name | Parameter type | Required | Description  |
+| -------------- | -------------- | ------------ | ---- |
+| pattern       | string  | no | Pattern to filter channels        |
+
+#### Channels result
+
+| Field name   | Field type     | Optional | Description  |
+| -------------- | -------------- | ------ | ------------ |
+| channels       | Map of string to ChannelInfo  | no |  Map where key is channel and value is ChannelInfo (see below)      |
+
+#### ChannelInfo
+
+| Field name   | Field type     | Optional | Description  |
+| -------------- | -------------- | ------ | ------------ |
+| num_clients       | integer  | no |  Total number of connections currently subscribed to a channel      |
+
+:::caution
+
+Keep in mind that since `channels` method by default returns all active channels it can be really heavy for massive deployments. Centrifugo does not provide a way to paginate over channels list. At the moment we mostly suppose that `channels` RPC extension will be used in development process and in not very massive Centrifugo setups (with no more than 10k active channels). A better and scalable approach for huge setups could be a real-time analytics approach [described here](../pro/analytics.md).
+
+:::
 
 ### info
 
@@ -506,7 +523,7 @@ Empty object at the moment.
 
 #### Info result
 
-| Result field   | Field type     | Can be omitted | Description  |
+| Field name   | Field type     | Optional | Description  |
 | -------------- | -------------- | ------ | ------------ |
 | nodes       | Array of Node objects  | no | Information about all nodes in a cluster  |
 
@@ -537,7 +554,7 @@ You can enable GRPC API in Centrifugo using `grpc_api` option:
 
 By default, GRPC will be served on port `10000` but you can change it using `grpc_api_port` option.
 
-Now as soon as Centrifugo started you can send GRPC commands to it. To do this get our API Protocol Buffer definitions [from this file](https://github.com/centrifugal/centrifugo/blob/master/misc/proto/api.proto).
+Now as soon as Centrifugo started you can send GRPC commands to it. To do this get our API Protocol Buffer definitions [from this file](https://github.com/centrifugal/centrifugo/blob/master/internal/apiproto/api.proto).
 
 Then see [GRPC docs specific to your language](https://grpc.io/docs/) to find out how to generate client code from definitions and use generated code to communicate with Centrifugo.
 
@@ -546,7 +563,8 @@ Then see [GRPC docs specific to your language](https://grpc.io/docs/) to find ou
 For example for Python you need to run sth like this according to GRPC docs:
 
 ```
-python -m grpc_tools.protoc -I../../protos --python_out=. --grpc_python_out=. api.proto
+pip install grpcio-tools
+python -m grpc_tools.protoc -I ./ --python_out=. --grpc_python_out=. api.proto
 ```
 
 As soon as you run command you will have 2 generated files: `api_pb2.py` and `api_pb2_grpc.py`. Now all you need is to write simple program that uses generated code and sends GRPC requests to Centrifugo:
@@ -557,7 +575,7 @@ import api_pb2_grpc as api_grpc
 import api_pb2 as api_pb
 
 channel = grpc.insecure_channel('localhost:10000')
-stub = api_grpc.CentrifugoStub(channel)
+stub = api_grpc.CentrifugoApiStub(channel)
 
 try:
     resp = stub.Info(api_pb.InfoRequest())
@@ -595,7 +613,7 @@ touch main.go
 go mod init centrifugo_example
 mkdir apiproto
 cd apiproto
-wget https://raw.githubusercontent.com/centrifugal/centrifugo/master/misc/proto/api.proto -O api.proto
+wget https://raw.githubusercontent.com/centrifugal/centrifugo/master/internal/apiproto/api.proto -O api.proto
 ```
 
 Run `protoc` to generate code:
@@ -625,9 +643,9 @@ func main() {
 		log.Fatalln(err)
 	}
 	defer conn.Close()
-	client := apiproto.NewCentrifugoClient(conn)
+	client := apiproto.NewCentrifugoApiClient(conn)
 	for {
-		resp, err := client.Publish(context.Background(), &PublishRequest{
+		resp, err := client.Publish(context.Background(), &apiproto.PublishRequest{
 			Channel: "chat:index",
 			Data:    []byte(`{"input": "hello from GRPC"}`),
 		})

@@ -9,11 +9,11 @@ It's possible to proxy some client connection events from Centrifugo to applicat
 
 The list of events which can be proxied:
 
-* Connect – called when client connects to Centrifugo, so it's possible to authenticate user, return custom data to a client, attach meta information to connection and so on
-* Refresh - called when client session is going to expire, so it's possible to prolong it or just let it expire
-* Subscribe - called when clients tries to subscribe on a channel, so it's possible to check permissions and return custom initial subscription data
-* Publish - called when client tries to publish into a channel, so it's possible to check permissions and optionally modify publication data
-* RPC - called when client sends RPC, you can do whatever logic you need based on a client-provided RPC method and params
+* Connect – called when client connects to Centrifugo, so it's possible to authenticate user, return custom data to a client, attach meta information to connection and so on. Works for bidirectional and unidirectional transports.
+* Refresh - called when client session is going to expire, so it's possible to prolong it or just let it expire. Works for bidirectional and unidirectional transports.
+* Subscribe - called when clients tries to subscribe on a channel, so it's possible to check permissions and return custom initial subscription data. Works for bidirectional transports only.
+* Publish - called when client tries to publish into a channel, so it's possible to check permissions and optionally modify publication data. Works for bidirectional transports only.
+* RPC - called when client sends RPC, you can do whatever logic you need based on a client-provided RPC method and params. Works for bidirectional transports only.
 
 At the moment Centrifugo can proxy these events over two protocols:
 

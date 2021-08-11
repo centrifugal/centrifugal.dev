@@ -39,6 +39,10 @@ We also have an [official Helm chart](https://github.com/centrifugal/helm-charts
 
 ![](https://grafana.com/api/dashboards/13039/images/8950/image)
 
+Centrifugo is becoming more noticeable in a wider real-time technology community. For example, it was included in a [periodic table of real-time](https://ably.com/periodic-table-of-realtime) created by Ably.com (one of the most powerful real-time messaging cloud services at the moment):
+
+![](https://ik.imagekit.io/ably/ghost/prod/2021/08/periodic-table-screenshots-combined-without-banner-no-legend.jpg?tr=w-1520)
+
 Of course, there are many aspects where Centrifugo can be improved. And v3 addresses some of them. Below we will look at the most notable features and changes of the new major Centrifugo version.
 
 ### Backwards compatibility
@@ -214,6 +218,7 @@ A lot of documents were actualized, extended, and rewritten. We also now have ne
 
 * [Main highlights](/docs/getting-started/highlights)
 * [Design overview](/docs/getting-started/design)
+* [History and recovery](/docs/server/history_and_recovery)
 * [Error and disconnect codes](/docs/server/codes).
 
 Server API and proxy documentation have been improved significantly.

@@ -3,23 +3,25 @@ id: performance
 title: PRO performance
 ---
 
-Centrifugo PRO has performance improvements for several server parts. These improvements can help to reduce tail end-to-end latencies in application and CPU usage on server machines.
+Centrifugo PRO has performance improvements for several server parts. These improvements can help to reduce tail end-to-end latencies in application, increase server throughput and/or reduce CPU usage on server machines.
 
 ## Faster HTTP API
 
-Centrifugo PRO has an optimized JSON serialization/deserialization for HTTP API. The effect can be noticeable under load (up to 20% more requests/sec according to our benchmarks).
+Centrifugo PRO has an optimized JSON serialization/deserialization for HTTP API.
+
+The effect can be noticeable under load. The exact numbers heavily depend on usage scenario. According to our benchmarks you can expect 10-15% more requests/sec for small message publications over HTTP API, and up to several times throughput boost when you are frequently get lots of messages from a history, see a couple of examples below.
 
 ## Faster GRPC API
 
-Centrifugo PRO has an optimized Protobuf serialization/deserialization for GRPC API. The effect can be noticeable under load (up to 20% more requests/sec according to our benchmarks).
+Centrifugo PRO has an optimized Protobuf serialization/deserialization for GRPC API. The effect can be noticeable under load. The exact numbers heavily depend on usage scenario.
 
 ## Faster HTTP proxy
 
-Centrifugo PRO has an optimized JSON serialization/deserialization for HTTP proxy. The effect can be noticeable under load (up to 20% CPU reduction according to our benchmarks).
+Centrifugo PRO has an optimized JSON serialization/deserialization for HTTP proxy. The effect can be noticeable under load. The exact numbers heavily depend on usage scenario.
 
 ## Faster GRPC proxy
 
-Centrifugo PRO has an optimized Protobuf serialization/deserialization for GRPC API. The effect can be noticeable under load (up to 20% CPU reduction according to our benchmarks).
+Centrifugo PRO has an optimized Protobuf serialization/deserialization for GRPC API. The effect can be noticeable under load. The exact numbers heavily depend on usage scenario.
 
 ## Faster GRPC unidirectional stream
 
@@ -45,4 +47,4 @@ In this video you can see a 13% speed up for publish operation. But for more com
   Sorry, your browser doesn't support embedded video.
 </video>
 
-In this video you can see a 2x speed up for asking 100 messages from Centrifugo history API.
+In this video you can see an almost 2x overall speed up while asking 100 messages from Centrifugo history API.
