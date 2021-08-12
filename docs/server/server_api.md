@@ -382,7 +382,6 @@ Date: Thu, 17 May 2018 22:09:44 GMT
 | num_clients       | integer  | no | Total number of clients in channel         |
 | num_users       | integer  | no | Total number of unique users in channel         |
 
-
 ### history
 
 `history` allows getting channel history information (list of last messages published into channel).

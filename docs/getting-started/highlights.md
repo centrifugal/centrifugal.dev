@@ -7,17 +7,17 @@ Here is a list with main Centrifugo ✨highlights✨. Every point is then extend
 
 ### Simple integration
 
-Since Centrifugo originally designed to be used in conjunction with frameworks without builtin concurrency support (like Django, Laravel etc.) it works as a standalone service with well-defined communication contracts. It fits very well both monolithic and microservice architecture. Application developers should not change backend philosophy at all – just integrate with Centrifugo HTTP or GRPC API and let users enjoy real-time updates. 
+Centrifugo originally designed to be used in conjunction with frameworks without built-in concurrency support (like Django, Laravel etc.) it works as a standalone service with well-defined communication contracts. It fits very well both monolithic and microservice architecture. Application developers should not change backend philosophy at all – just integrate with Centrifugo HTTP or GRPC API and let users enjoy real-time updates. 
 
 ### Great performance
 
-Centrifugo is pretty fast. It's written in Go language, uses fast open-source libraries internally, has some internal optimizations like message queuing on broadcasts, smart batching to reduce number of RTT with broker, connection hub sharding to avoid contention, JSON and Protobuf encoding speedups over code generation and other.
+Centrifugo is pretty fast. It's written in Go language, uses fast and battle-tested open-source libraries internally, has some internal optimizations like message queuing on broadcasts, smart batching to reduce number of RTT with broker, connection hub sharding to avoid contention, JSON and Protobuf encoding speedups over code generation and other.
 
 See a [Million WebSocket with Centrifugo](/blog/2020/02/10/million-connections-with-centrifugo) post in our blog to see some real-world numbers.
 
 ### Built-in scalability
 
-Centrifugo can scale to many nodes with a help of PUB/SUB brokers. The main PUB/SUB engine Centrifugo integrates with is Redis. It supports client-side consistent sharding and Redis Cluster support so single Redis instance won't be a bottleneck. There are other options to scale: like KeyDB, Nats, Tarantool.
+Centrifugo can scale to many machines with a help of PUB/SUB brokers. The main PUB/SUB engine Centrifugo integrates with is Redis. It supports client-side consistent sharding and Redis Cluster so single Redis instance won't be a bottleneck also. There are other options to scale: like KeyDB, Nats, Tarantool.
 
 ### Strict client protocol
 
@@ -31,33 +31,33 @@ Centrifugo v3 also introduced support for unidirectional transports for real-tim
 
 ### Flexible authentication
 
-Centrifugo can authenticate connections using JWT (JSON Web Tokens) or by issuing a HTTP/GRPC request to your application backend upon connection attempt. It's possible to proxy original request headers or request metadata (in case of GRPC connection). It supports JWK specification.
+Centrifugo can authenticate connections using JWT (JSON Web Token) or by issuing a HTTP/GRPC request to your application backend upon connection attempt. It's possible to proxy original request headers or request metadata (in case of GRPC connection). It supports JWK specification.
 
 ### Connection management
 
-Connections can expire, developers can choose a way on how to handle connection refresh – using client-side refresh workflow, or server-side call from Centrifugo to backend. 
+Connections can expire, developers can choose a way on how to handle connection refresh – using client-side refresh workflow, or server-side call from Centrifugo to the application backend. 
 
 ### Channel (room) concept
 
-Centrifugo is PUB/SUB server – users subscribe to channels to receive real-time updates. Message sent to a channel will be delivered to all active subscribers.
+Centrifugo is a PUB/SUB server – users subscribe to channels to receive real-time updates. Message sent to a channel will be delivered to all active subscribers.
 
-There are several different types of channels to deal with permissions. 
+There are several different types of channels to deal with permissions.
 
 ### Different types of subscriptions
 
-Centrifugo is unique in terms of the fact it supports both client-side and server-side channel subscriptions.
+Centrifugo is unique in terms of the fact that it supports both client-side and server-side channel subscriptions.
 
 ### RPC over bidirectional connection
 
-You can fully utilize bidirectional persistent connections by sending RPC calls from client side to a configured endpoint on your backend. Calling RPC over WebSocket avoids sending headers on each request thus reducing external traffic. 
+You can fully utilize bidirectional persistent connections by sending RPC calls from client side to a configured endpoint on your backend. Calling RPC over WebSocket avoids sending headers on each request thus reducing external traffic and in most cases provides better latency characteristics.
 
 ### Presence information
 
-It's possible to turn on presence feature for channels so you will have an information about active channels subscribers. Channel join and leave events (when user subscribes/unsubscribes) can also be sent.
+It's possible to turn on a presence feature for channels so you will have an information about active channel subscribers. Channel join and leave events (when user subscribes/unsubscribes) can also be sent.
 
 ### Message history in channels
 
-Optionally Centrifugo allows turning on history for publications in channels. This publication history has a limited size and retention period (TTL). With this history Centrifugo can help to survive mass reconnect scenario, clients can automatically recover missed messages from a cache thus reducing load on your main database. It's also possible to manually iterate over stream from a client or a server side.
+Optionally Centrifugo allows turning on history for publications in channels. This publication history has a limited size and retention period (TTL). With this history Centrifugo can help to survive mass reconnect scenario, clients can automatically recover missed messages from a cache thus reducing load on your main database. It's also possible to manually iterate over a stream from a client or a server side.
 
 ### Embedded admin web UI
 
@@ -69,7 +69,7 @@ Centrifugo works on Linux, MacOS and Windows.
 
 ### Ready to deploy
 
-Centrifugo supports various deploy ways: in Docker, using prepared RPM or DEB packages, via Kubernetes Helm chart. It supports automatic TLS with Let's Encrypt TLS, outputs Prometheus/Graphite metrics, has official Grafana dashboard for Prometheus data source.
+Centrifugo supports various deploy ways: in Docker, using prepared RPM or DEB packages, via Kubernetes Helm chart. It supports automatic TLS with Let's Encrypt TLS, outputs Prometheus/Graphite metrics, has an official Grafana dashboard for Prometheus data source.
 
 ### Open-source
 

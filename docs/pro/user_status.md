@@ -39,6 +39,16 @@ curl --header "Content-Type: application/json" \
   http://localhost:8000/api
 ```
 
+#### Update user status params
+
+| Parameter name | Parameter type | Required | Description  |
+| -------------- | -------------- | ------------ | ---- |
+| users       | array of strings  | yes | List of users to update status for  |
+
+#### Update user status result
+
+Empty object at the moment.
+
 ### get_user_status server API
 
 Now on a backend side you have access to a bulk API to effectively get status of particular users.
@@ -87,6 +97,26 @@ I.e. status object will present in a response but `active` field won't be set fo
 
 Note that Centrifugo also maintains `online` field inside user status object. This field updated periodically by Centrifugo itself while user has active connection with a server. So you can draw `away` statuses in your application: i.e. when user connected (`online` time) but not using application for a long time (`active` time).
 
+#### Get user status params
+
+| Parameter name | Parameter type | Required | Description  |
+| -------------- | -------------- | ------------ | ---- |
+| users       | array of strings  | yes | List of users to get status for  |
+
+#### Get user status result
+
+| Field name   | Field type     | Optional | Description  |
+| -------------- | -------------- | ------ | ------------ |
+| statuses       | array of UserStatus  | no | Statuses for each user in params (same order)        |
+
+#### UserStatus
+
+| Field name   | Field type     | Optional | Description  |
+| -------------- | -------------- | ------ | ------------ |
+| user       | string  | no | User ID        |
+| active       | integer  | yes | Last active time (Unix seconds)    |
+| online       | integer  | yes | Last online time (Unix seconds)    |
+
 ### delete_user_status server API
 
 If you need to clear user status information for some reason there is a `delete_user_status` server API call:
@@ -98,6 +128,16 @@ curl --header "Content-Type: application/json" \
   --data '{"method": "delete_user_status", "params": {"users": ["42"]}}' \
   http://localhost:8000/api
 ```
+
+#### Delete user status params
+
+| Parameter name | Parameter type | Required | Description  |
+| -------------- | -------------- | ------------ | ---- |
+| users       | array of strings  | yes | List of users to delete status for  |
+
+#### Delete user status result
+
+Empty object at the moment.
 
 ### Configuration
 

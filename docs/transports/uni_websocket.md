@@ -22,7 +22,7 @@ JSON
 
 ## Pings
 
-Centrifugo uses empty messages (frame with no payload at all) as pings for unidirectional WS.
+Centrifugo uses empty messages (frame with no payload at all) as pings for unidirectional WS. You can ignore such messages or use them to detect broken connections (nothing received from a server for a long time).
 
 ## Options
 

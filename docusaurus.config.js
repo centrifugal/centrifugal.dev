@@ -10,6 +10,9 @@ module.exports = {
   organizationName: "centrifugal",
   projectName: "centrifugal.dev",
   themeConfig: {
+    googleAnalytics: {
+      trackingID: 'UA-204787498-1',
+    },
     prism: {
 
     },
