@@ -3,7 +3,7 @@ module.exports = {
     "getting-started/introduction",
     "getting-started/highlights",
     "getting-started/installation",
-    "getting-started/quick_start",
+    "getting-started/quickstart",
     "getting-started/client_api",
     "getting-started/integration",
     "getting-started/design",

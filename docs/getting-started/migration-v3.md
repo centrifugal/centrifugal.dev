@@ -3,7 +3,7 @@ id: migration_v3
 title: Migrating to v3
 ---
 
-This chapter aims to help developers migrate from Centrifugo v2 to Centrifugo v3. Migration should mostly affect backend part only, so you won't need to change code of your frontend applications at all. In most cases all you should do is adapt Centrifugo configuration to match v3 changes and redeploy Centrifugo using v3 build instead of v2.
+This chapter aims to help developers migrate from Centrifugo v2 to Centrifugo v3. Migration should mostly affect the backend part only, so you won't need to change the code of your frontend applications at all. In most cases, all you should do is adapt Centrifugo configuration to match v3 changes and redeploy Centrifugo using v3 build instead of v2.
 
 There are a couple of exceptions - read carefully about client-side changes below.
 
@@ -11,21 +11,21 @@ In any case – don't forget to test your application before running in producti
 
 ## Client-side changes
 
-Client protocol has some backwards incompatible changes regarding working with history API and removing deprecated fields.
+Client protocol has some backward incompatible changes regarding working with history API and removing deprecated fields.
 
 ### No unlimited history by default
 
-Call to `history` API from client-side now does not return all publications from history cache. It returns only information about stream with zero publications. Clients should explicitly provide a limit when calling history API. Also the maximum allowed limit can be set by `client_history_max_publication_limit` option (by default `300`).
+Call to `history` API from client-side now does not return all publications from history cache. It returns only information about a stream with zero publications. Clients should explicitly provide a limit when calling history API. Also, the maximum allowed limit can be set by `client_history_max_publication_limit` option (by default `300`).
 
 We provide a boolean flag `use_unlimited_history_by_default` to enable previous behavior while you migrate client applications to use explicit limit.
 
 ### Publication limit for recovery
 
-Maximum number of messages that can be recovered is now limited by `client_recovery_max_publication_limit` option which is by default `300`.
+The maximum number of messages that can be recovered is now limited by `client_recovery_max_publication_limit` option which is by default `300`.
 
 ### Seq/Gen fields removed
 
-Deprecated seq/gen now removed and Centrifugo uses `offset` field for position in a stream. This means that there is no need in `v3_use_offset` option anymore – it's not used in Centrifugo v3.
+Deprecated seq/gen now removed and Centrifugo uses `offset` field for a position in a stream. This means that there is no need for `v3_use_offset` option anymore – it's not used in Centrifugo v3.
 
 ## Server-side changes
 
@@ -49,7 +49,7 @@ We provide a [configuration converter](#v2-to-v3-config-converter) which takes t
 
 ### Some command-line flags removed
 
-Configuring over command-line flags is not very convenient for production deployments, Centrifugo v3 reduced a number of command-line flags available – it mostly has flags frequently useful for development now. 
+Configuring over command-line flags is not very convenient for production deployments, Centrifugo v3 reduced the number of command-line flags available – it mostly has flags frequently useful for development now. 
 
 ### Enforced request Origin check
 
@@ -66,29 +66,29 @@ There is a way to disable origin check, but it's discouraged and **insecure** in
 
 ### Updated GRPC API Protobuf package
 
-In Centrifugo v3 we addressed an [issue](https://github.com/centrifugal/centrifugo/issues/379) where package name in Protobuf definitions resulted into some inconvenience and attempts to rename it. But it's not possible to rename since GRPC uses it as part of RPC methods internally. Now GRPC API package looks like this:
+In Centrifugo v3 we addressed an [issue](https://github.com/centrifugal/centrifugo/issues/379) where package name in Protobuf definitions resulted in some inconvenience and attempts to rename it. But it's not possible to rename it since GRPC uses it as part of RPC methods internally. Now GRPC API package looks like this:
 
 ```
 package centrifugal.centrifugo.api;
 ```
 
-This means you need to regenerate your GRPC code which communicates with Centrifugo using latest Protobuf definitions. Refer to the [GRPC API doc](../server/server_api.md#grpc-api).
+This means you need to regenerate your GRPC code which communicates with Centrifugo using the latest Protobuf definitions. Refer to the [GRPC API doc](../server/server_api.md#grpc-api).
 
 ### Channels API method changed
 
 The response format of `channels` API call changed in v3. See description in [API doc](../server/server_api.md#channels). 
 
-Channels method has new additional possibilities like showing the number of connections in a channel and filter channels by pattern.
+The channels method has new additional possibilities like showing the number of connections in a channel and filter channels by pattern.
 
 :::info
 
-Channels API call still has the same concern as before: this method does not scale well for many active channels in a system and mostly recommended for administrative/debug purposes.
+Channels API call still has the same concern as before: this method does not scale well for many active channels in a system and is mostly recommended for administrative/debug purposes.
 
 :::
 
 ### HTTP proxy changes
 
-When using HTTP proxy you should now set an explicit list of headers you want to proxy. To mimic behavior of Centrifugo v2 add to your configuration:
+When using HTTP proxy you should now set an explicit list of headers you want to proxy. To mimic the behavior of Centrifugo v2 add to your configuration:
 
 ```json title=config.json
 {
@@ -106,7 +106,7 @@ When using HTTP proxy you should now set an explicit list of headers you want to
 
 If you had a list of extra HTTP headers using `proxy_extra_http_headers` then additionally extend list above with values from `proxy_extra_http_headers`. Then you can remove `proxy_extra_http_headers` - it's not used anymore.
 
-Another important change is how Centrifugo proxies binary data over HTTP JSON proxy. Previously proxy mode (whether to use base64 fields fields or not) could be configured using `encoding=binary` URL param of connection. With Centrifugo v3 it's only possible to use binary mode by enabling `"proxy_binary_encoding": true` option. BTW according to our community poll only 2% of Centrifugo users used binary mode in HTTP proxy. If you have problems with new behavior – write about your situation to our community chats – and we will see what's possible.
+Another important change is how Centrifugo proxies binary data over HTTP JSON proxy. Previously proxy mode (whether to use base64 fields or not) could be configured using `encoding=binary` URL param of connection. With Centrifugo v3 it's only possible to use binary mode by enabling `"proxy_binary_encoding": true` option. BTW according to our community poll only 2% of Centrifugo users used binary mode in HTTP proxy. If you have problems with new behavior – write about your situation to our community chats – and we will see what's possible.
 
 ### JWT changes
 
@@ -114,13 +114,13 @@ Another important change is how Centrifugo proxies binary data over HTTP JSON pr
 
 ### Redis configuration changes
 
-Redis configuration was a bit messy - especially in Redis sharding case, in v3 we decided to clean up it a bit. Make it more explicit and reduce number of possible ways to configure.
+Redis configuration was a bit messy - especially in the Redis sharding case, in v3 we decided to clean up it a bit. Make it more explicit and reduce the number of possible ways to configure.
 
 ### Redis streams used by default
 
 Centrifugo v3 will use Redis Stream data structure to keep history instead of lists. This requires Redis >= 5 to work.
 
-If you still need List data structure or have an old Redis version you can use `"redis_use_lists": true` to mimic default behavior of Centrifugo v2.
+If you still need List data structure or have an old Redis version you can use `"redis_use_lists": true` to mimic the default behavior of Centrifugo v2.
 
 ### SockJS disabled by default
 
@@ -230,7 +230,7 @@ Here is a full list of configuration option changes. We provide a best-effort [c
 
 ### v2 to v3 config converter
 
-Here is a converter between Centrifugo v2 and v3 JSON configuration. It can help to translate most of things automatically for you.
+Here is a converter between Centrifugo v2 and v3 JSON configuration. It can help to translate most of the things automatically for you.
 
 If you are using Centrifugo with TOML format then you can use [online converter](https://pseitz.github.io/toml-to-json-online-converter/) as initial step. Or [yaml-to-json](https://jsonformatter.org/yaml-to-json) and [json-to-yaml](https://jsonformatter.org/json-to-yaml) for YAML.
 
@@ -242,7 +242,7 @@ It's fully client-side: your data won't be sent anywhere.
 
 :::danger
 
-Unfortunately we can't migrate environment variables and command-line flags automatically - so if you are using env vars or command-line flags to configure Centrifugo you still need to migrate manually. Also, be aware: this converter tool is best effort only – we can not guarantee it solves all corner cases, especially in Redis configuration. You may still need to fix some things manually, for example - properly fill `allowed_origins`.
+Unfortunately, we can't migrate environment variables and command-line flags automatically - so if you are using env vars or command-line flags to configure Centrifugo you still need to migrate manually. Also, be aware: this converter tool is the best effort only – we can not guarantee it solves all corner cases, especially in Redis configuration. You may still need to fix some things manually, for example - properly fill `allowed_origins`.
 
 :::
 

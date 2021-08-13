@@ -3,11 +3,11 @@ id: authentication
 title: Client authentication
 ---
 
-Centrifugo should know the ID of a user which is connecting. This chapter describes a mechanism of authenticating user over JSON Web Token (JWT) passing.
+Centrifugo should know the ID of a user who is connecting. This chapter describes a mechanism of authenticating users over JSON Web Token (JWT) passing.
 
 :::tip
 
-If you prefer to avoid using JWT then look at [the proxy feature](proxy.md). It allows proxying connection request from Centrifugo to your application backend for authentication details.
+If you prefer to avoid using JWT then look at [the proxy feature](proxy.md). It allows proxying connection requests from Centrifugo to your application backend for authentication details.
 
 :::
 
@@ -15,7 +15,7 @@ Upon connecting to Centrifugo client should provide a connection JWT with severa
 
 At the moment Centrifugo supports HMAC, RSA and ECDSA JWT algorithms - i.e. HS256, HS384, HS512, RSA256, RSA384, RSA512, EC256, EC384, EC512.
 
-We will use Javascript Centrifugo client here for example snippets for client side and [PyJWT](https://github.com/jpadilla/pyjwt) Python library to generate connection token on backend side.
+We will use Javascript Centrifugo client here for example snippets for client-side and [PyJWT](https://github.com/jpadilla/pyjwt) Python library to generate a connection token on the backend side.
 
 To add HMAC secret key to Centrifugo add `token_hmac_secret_key` to configuration file:
 
@@ -50,39 +50,39 @@ Centrifugo uses the following claims in a JWT: `sub`, `exp`, `info`, `b64info`, 
 
 ### sub
 
-This is a standard JWT claim which must contain an ID of current application user (**as string**). 
+This is a standard JWT claim which must contain an ID of the current application user (**as string**). 
 
-If a user is not currently authenticated in an application, but you want to let him connect to Centrifugo anyway – you can use empty string as a user ID in `sub` claim. This is called anonymous access. In this case `anonymous` option must be enabled in Centrifugo configuration for channels that client will subscribe to.
+If a user is not currently authenticated in an application, but you want to let him connect to Centrifugo anyway – you can use an empty string as a user ID in `sub` claim. This is called anonymous access. In this case, the `anonymous` option must be enabled in Centrifugo configuration for channels that the client will subscribe to.
 
 ### exp
 
-This is a UNIX timestamp seconds when token will expire. This is a standard JWT claim - all JWT libraries for different languages provide an API to set it.
+This is a UNIX timestamp seconds when the token will expire. This is a standard JWT claim - all JWT libraries for different languages provide an API to set it.
 
-If `exp` claim not provided then Centrifugo won't expire connection. When provided special algorithm will find connections with `exp` in the past and activate connection refresh mechanism. Refresh mechanism allows connection to survive and be prolonged. In case of refresh failure client connection will be eventually closed by Centrifugo and won't be accepted until new valid and actual credentials provided in connection token.
+If `exp` claim is not provided then Centrifugo won't expire connection. When provided special algorithm will find connections with `exp` in the past and activate the connection refresh mechanism. Refresh mechanism allows connection to survive and be prolonged. In case of refresh failure, the client connection will be eventually closed by Centrifugo and won't be accepted until new valid and actual credentials are provided in the connection token.
 
-You can use connection expiration mechanism in cases when you don't want users of your app to be subscribed on channels after being banned/deactivated in application. Or to protect your users from a token leakage (providing a reasonably short time of expiration).
+You can use the connection expiration mechanism in cases when you don't want users of your app to be subscribed on channels after being banned/deactivated in the application. Or to protect your users from token leakage (providing a reasonably short time of expiration).
 
-Choose `exp` value wisely, you don't need small values because refresh mechanism will hit your application often with refresh requests. But setting this value too large can lead to slow user connection deactivation. This is a trade off.
+Choose `exp` value wisely, you don't need small values because the refresh mechanism will hit your application often with refresh requests. But setting this value too large can lead to slow user connection deactivation. This is a trade-off.
 
 Read more about connection expiration [below](#connection-expiration).
 
 ### info
 
-This claim is optional - this is an additional information about client connection that can be provided for Centrifugo. This information will be included in presence information, join/leave events and in channel publication if it was published from a client-side.
+This claim is optional - this is additional information about client connection that can be provided for Centrifugo. This information will be included in presence information, join/leave events, and channel publication if it was published from a client-side.
 
 ### b64info
 
-If you are using binary protobuf protocol you may want info to be custom bytes. Use this field in this case.
+If you are using binary Protobuf protocol you may want info to be custom bytes. Use this field in this case.
 
-This field contains a `base64` representation of your bytes. After receiving Centrifugo will decode base64 back to bytes and will embed result into various places described above.
+This field contains a `base64` representation of your bytes. After receiving Centrifugo will decode base64 back to bytes and will embed the result into various places described above.
 
 ### channels
 
-An optional array of strings with server-side channels to subscribe client to. See more details about [server-side subscriptions](server_subs.md).
+An optional array of strings with server-side channels to subscribe a client to. See more details about [server-side subscriptions](server_subs.md).
 
 ### subs
 
-An optional map of channels with options. This is like `channels` claim but allows more control over server-side subscription since every channel can be annotated with info, data and so on using options.
+An optional map of channels with options. This is like a `channels` claim but allows more control over server-side subscription since every channel can be annotated with info, data, and so on using options.
 
 Example:
 
@@ -108,7 +108,7 @@ Example:
 | b64info       | string       | yes | Custom channel info in Base64 - to pass binary channel info   |
 | data       | JSON object       | yes | Custom JSON data to return in subscription context inside Connect reply    |
 | b64data       | string       | yes |  Same as `data` but in Base64 to send binary data   |
-| override       | Override object       | yes |  Allows dynamically override some channel options defined in Centrifugo configuration on per-connection basis (see below available fields)  |
+| override       | Override object       | yes |  Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields)  |
 
 #### Override object
 
@@ -129,22 +129,22 @@ BoolValue is an object like this:
 
 ### meta
 
-Meta is an addition JSON data that will be attached to a connection. Unlike `info` it's never exposed to clients and only accessible on a backend side. It will be included to proxy calls from Centrifugo to application backend. Also there is a `getUserConnections` RPC call in Centrifugo PRO that returns this data in user connection object.
+Meta is an additional JSON data that will be attached to a connection. Unlike `info` it's never exposed to clients and only accessible on a backend side. It will be included in proxy calls from Centrifugo to the application backend. Also, there is a `getUserConnections` RPC call in Centrifugo PRO that returns this data in the user connection object.
 
 ### expire_at
 
-By default Centrifugo looks on `exp` claim to configure connection expiration. In most cases this is fine, but there could be situations where you wish to decouple token expiration check with connection expiration time. As soon as `expire_at` claim provided (set) in JWT Centrifugo relies on it for setting connection expiration time (JWT expiration still checked over `exp` though).
+By default, Centrifugo looks on `exp` claim to configure connection expiration. In most cases this is fine, but there could be situations where you wish to decouple token expiration check with connection expiration time. As soon as the `expire_at` claim is provided (set) in JWT Centrifugo relies on it for setting connection expiration time (JWT expiration still checked over `exp` though).
 
-`expire_at` is a UNIX timestamp seconds when connection should expire.
+`expire_at` is a UNIX timestamp seconds when the connection should expire.
 
-* Set in to the future time for expiring connection at some point
+* Set it to the future time for expiring connection at some point
 * Set it to `0` to disable connection expiration (but since check token `exp`).
 
 ## Connection expiration
 
-As said above `exp` claim in connection token allows expiring client connection at some point of time. Let's look in detail what happens when Centrifugo detects that connection is going to expire.
+As said above `exp` claim in a connection token allows expiring client connection at some point in time. Let's look in detail at what happens when Centrifugo detects that the connection is going to expire.
 
-First you should do is enable client expiration mechanism in Centrifugo providing connection token with expiration:
+First, you should do is enable client expiration mechanism in Centrifugo providing a connection JWT with expiration:
 
 ```python
 import jwt
@@ -155,11 +155,11 @@ token = jwt.encode({"sub": "42", "exp": int(time.time()) + 10*60}, "secret").dec
 print(token)
 ```
 
-Let's suppose that you set `exp` field to timestamp that will expire in 10 minutes and client connected to Centrifugo with this token. During 10 mins connection will be kept by Centrifugo. When this time passed Centrifugo gives connection some time (configured, 25 seconds by default) to refresh its credentials and provide new valid token with new `exp`.
+Let's suppose that you set `exp` field to timestamp that will expire in 10 minutes and the client connected to Centrifugo with this token. During 10 minutes the connection will be kept by Centrifugo. When this time passed Centrifugo gives the connection some time (configured, 25 seconds by default) to refresh its credentials and provide a new valid token with new `exp`.
 
-When client first connects to Centrifugo it receives `ttl` value in connect reply. That `ttl` value contains number of seconds after which client must send `refresh` command with new credentials to Centrifugo. Centrifugo clients must handle this `ttl` field and automatically start refresh process.
+When a client first connects to Centrifugo it receives the `ttl` value in connect reply. That `ttl` value contains the number of seconds after which the client must send the `refresh` command with new credentials to Centrifugo. Centrifugo clients must handle this `ttl` field and automatically start the refresh process.
 
-For example Javascript browser client  will send AJAX POST request to your application when it's time to refresh credentials. By default this request goes to `/centrifuge/refresh` url endpoint. In response your server must return JSON with new connection token:
+For example, a Javascript browser client will send an AJAX POST request to your application when it's time to refresh credentials. By default, this request goes to `/centrifuge/refresh` URL endpoint. In response your server must return JSON with a new connection JWT:
 
 ```python
 {
@@ -167,17 +167,17 @@ For example Javascript browser client  will send AJAX POST request to your appli
 }
 ```
 
-So you must just return the same connection token for your user when rendering page initially. But with actual valid `exp`. Javascript client will then send them to Centrifugo server and connection will be refreshed for a time you set in `exp`.
+So you must just return the same connection JWT for your user when rendering the page initially. But with actual valid `exp`. Javascript client will then send them to Centrifugo server and connection will be refreshed for a time you set in `exp`.
 
-In this case you know which user want to refresh its connection because this is just a general request to your app - so your session mechanism will tell you about the user.
+In this case, you know which user wants to refresh its connection because this is just a general request to your app - so your session mechanism will tell you about the user.
 
-If you don't want to refresh connection for this user - just return 403 Forbidden on refresh request to your application backend.
+If you don't want to refresh the connection for this user - just return 403 Forbidden on refresh request to your application backend.
 
-Javascript client also has options to hook into refresh mechanism to implement your custom way of refreshing. Other Centrifugo clients also should have hooks to refresh credentials but depending on client API for this can be different - see specific client docs.
+Javascript client also has options to hook into a refresh mechanism to implement your custom way of refreshing. Other Centrifugo clients also should have hooks to refresh credentials but depending on client API for this can be different - see specific client docs.
 
 ## Examples
 
-Let's look how to generate connection HS256 JWT in Python:
+Let's look at how to generate connection HS256 JWT in Python:
 
 ### Simplest token
 
@@ -218,7 +218,7 @@ console.log(token);
 </Tabs>
 ````
 
-Note that we use the value of `token_hmac_secret_key` from Centrifugo config here (in this case `token_hmac_secret_key` value is just `secret`). The only two who must know HMAC secret key is your application backend which generates JWT and Centrifugo. You should never reveal HMAC secret key to your users.
+Note that we use the value of `token_hmac_secret_key` from Centrifugo config here (in this case `token_hmac_secret_key` value is just `secret`). The only two who must know the HMAC secret key is your application backend which generates JWT and Centrifugo. You should never reveal the HMAC secret key to your users.
 
 Then you can pass this token to your client side and use it when connecting to Centrifugo:
 
@@ -307,7 +307,7 @@ console.log(token);
 
 ### Investigating problems with JWT
 
-You can use [jwt.io](https://jwt.io/) site to investigate contents of your tokens. Also server logs usually contain some useful information.
+You can use [jwt.io](https://jwt.io/) site to investigate the contents of your tokens. Also, server logs usually contain some useful information.
 
 ## JSON Web Key support
 
@@ -321,6 +321,6 @@ At the moment Centrifugo caches keys loaded from an endpoint for one hour.
 
 Centrifugo will load keys from JWKS endpoint by issuing GET HTTP request with 1 second timeout and one retry in case of failure (not configurable at the moment).
 
-Only `RSA` algorithm supported.
+Only `RSA` algorithm is supported.
 
-JWKS support enabled both for connection and private channel subscription tokens.
+JWKS support enabled both connection and private channel subscription tokens.

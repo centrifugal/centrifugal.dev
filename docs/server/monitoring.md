@@ -16,7 +16,7 @@ To enable Prometheus endpoint start Centrifugo with `prometheus` option on:
 }
 ```
 
-This will enable `/metrics` endpoint so Centrifugo instance can be monitored by your Prometheus server.
+This will enable `/metrics` endpoint so the Centrifugo instance can be monitored by your Prometheus server.
 
 ### Graphite
 
@@ -31,9 +31,9 @@ To enable automatic export to Graphite (via TCP):
 }
 ```
 
-By default stats will be aggregated over 10 seconds interval inside Centrifugo and then pushed to Graphite over TCP connection.
+By default, stats will be aggregated over 10 seconds intervals inside Centrifugo and then pushed to Graphite over TCP connection.
 
-If you need to change this aggregation interval use `graphite_interval` option (in seconds, default `10`).
+If you need to change this aggregation interval use the `graphite_interval` option (in seconds, default `10`).
 
 ### Grafana dashboard
 

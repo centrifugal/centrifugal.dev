@@ -3,7 +3,7 @@ id: highlights
 title: Main highlights
 ---
 
-Here is a list with main Centrifugo ✨highlights✨. Every point is then extended throughout documentation.
+Here is a list with main Centrifugo ✨highlights✨. Every point is then extended throughout the documentation.
 
 ### Simple integration
 
@@ -11,7 +11,7 @@ Centrifugo was originally designed to be used in conjunction with frameworks wit
 
 ### Great performance
 
-Centrifugo is pretty fast. It's written in Go language, uses fast and battle-tested open-source libraries internally, has some internal optimizations like message queuing on broadcasts, smart batching to reduce number of RTT with broker, connection hub sharding to avoid contention, JSON and Protobuf encoding speedups over code generation and other.
+Centrifugo is pretty fast. It's written in Go language, uses fast and battle-tested open-source libraries internally, has some internal optimizations like message queuing on broadcasts, smart batching to reduce the number of RTT with broker, connection hub sharding to avoid contention, JSON and Protobuf encoding speedups over code generation and other.
 
 See a [Million WebSocket with Centrifugo](/blog/2020/02/10/million-connections-with-centrifugo) post in our blog to see some real-world numbers.
 
@@ -31,7 +31,7 @@ Centrifugo v3 also introduced support for unidirectional transports for real-tim
 
 ### Flexible authentication
 
-Centrifugo can authenticate connections using JWT (JSON Web Token) or by issuing a HTTP/GRPC request to your application backend upon connection attempt. It's possible to proxy original request headers or request metadata (in the case of GRPC connection). It supports JWK specification.
+Centrifugo can authenticate connections using JWT (JSON Web Token) or by issuing an HTTP/GRPC request to your application backend upon connection attempt. It's possible to proxy original request headers or request metadata (in the case of GRPC connection). It supports the JWK specification.
 
 ### Connection management
 
@@ -65,7 +65,7 @@ Built-in administrative web UI allows publishing messages to channels, looking a
 
 ### Cross-platform
 
-Centrifugo works on Linux, MacOS and Windows.
+Centrifugo works on Linux, macOS, and Windows.
 
 ### Ready to deploy
 
@@ -81,6 +81,6 @@ Centrifugo PRO extends Centrifugo with several unique features which can give in
 
 With Centrifugo PRO it's possible to trace specific user or specific channel events in real-time. Centrifugo PRO integrates with ClickHouse for real-time connection analytics. This all may help with understanding client behavior, inspect and analyze an application on a very granular level.
 
-Centrifugo PRO offers even more extensions that tend to be useful in practice. This includes user active status and throttling features. Active status is useful to build messenger-like applications where you want to show online indicators of users based on last activity time, throttling can help you limit the number of operations each user may execute on Centrifugo cluster.
+Centrifugo PRO offers even more extensions that tend to be useful in practice. This includes user active status and throttling features. Active status is useful to build messenger-like applications where you want to show online indicators of users based on last activity time, throttling can help you limit the number of operations each user may execute on a Centrifugo cluster.
 
 For additional details, refer to the [Centrifugo PRO documentation](../pro/overview.md). 

@@ -6,10 +6,11 @@ title: Admin web UI
 Centrifugo comes with builtin admin web interface. It can:
 
 * Show general information and statistics from server nodes - number of connections, unique users, unique channels etc.
-* Call `publish`, `broadcast`, `subscribe`, `unsubscribe`, `disconnect`, `history`, `history_remove`, `presence`, `presence_stats`, `info`, `rpc` server API commands
+* Call `publish`, `broadcast`, `subscribe`, `unsubscribe`, `disconnect`, `history`, `history_remove`, `presence`, `presence_stats`, `info`, `channels` and some addition Centrifugo PRO server API commands.
+* Configure namespaces over database (Centrifugo PRO feature)
 * Trace connections in real-time (Centrifugo PRO feature)
 
-To enable admin interface you must run `centrifugo` with `admin` option enabled and provide some security options in configuration file:
+To enable admin interface run Centrifugo with `admin` option enabled and provide some security options in configuration file:
 
 ```json title="config.json"
 {

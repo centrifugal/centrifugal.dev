@@ -196,9 +196,9 @@ Publish API now returns the current top stream position (offset and epoch) for c
 
 Server history API inherited iteration possibilities described above.
 
-Channels command now returns a number of clients in a channel, also supports channel filtering by a pattern.
+Channels command now returns a number of clients in a channel, also supports channel filtering by a pattern. Since we changed how channels call implemented internally there is no limitation anymore to call it when using Redis cluster.
 
-Admin web UI has been updated too to support new methods, so you can play with new API from its `actions` tab.
+Admin web UI has been updated too to support new API methods, so you can play with new API from its `actions` tab.
 
 ### Better clustering
 

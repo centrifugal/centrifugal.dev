@@ -3,20 +3,20 @@ id: server_api
 title: Server API
 ---
 
-Server API is a way to send various commands to Centrifugo. For example, server API allows publishing messages to channels, get server statistics etc. There are two kinds of API available at the moment:
+Server API is a way to send various commands to Centrifugo. For example, server API allows publishing messages to channels, get server statistics, etc. There are two kinds of API available at the moment:
 
 * HTTP API
 * GRPC API
 
 ## HTTP API
 
-Server HTTP API works on `/api` endpoint (by default). It has a simple request format: this is a HTTP POST request with `application/json` Content-Type and with JSON command body.
+Server HTTP API works on `/api` endpoint (by default). It has a simple request format: this is an HTTP POST request with `application/json` Content-Type and with JSON command body.
 
 Here we will look at available methods and parameters
 
 :::tip
 
-In some cases you can just use one of our [available HTTP API libraries](../ecosystem/api.md) or use Centrifugo [GRPC API](#grpc-api) to avoid manually constructing requests.
+In some cases, you can just use one of our [available HTTP API libraries](../ecosystem/api.md) or use Centrifugo [GRPC API](#grpc-api) to avoid manually constructing requests.
 
 :::
 
@@ -31,19 +31,19 @@ HTTP API protected by `api_key` set in Centrifugo configuration. I.e. `api_key` 
 }
 ```
 
-This API key must be set in request `Authorization` header in this way:
+This API key must be set in the request `Authorization` header in this way:
 
 ```
 Authorization: apikey <KEY>
 ```
 
-It's also possible to pass API key over URL query param. This solves some edge cases where it's not possible to use `Authorization` header. Simply add `?api_key=<YOUR API KEY>` query param to API endpoint. Keep in mind that passing API key in `Authorization` header is a recommended way. 
+It's also possible to pass API key over URL query param. This solves some edge cases where it's not possible to use the `Authorization` header. Simply add `?api_key=<YOUR API KEY>` query param to the API endpoint. Keep in mind that passing the API key in the `Authorization` header is a recommended way. 
 
-It's possible to disable API key check on Centrifugo side using `api_insecure` configuration option. Be sure to protect API endpoint by firewall rules in this case to prevent anyone in internet to send commands over your unprotected Centrifugo API endpoint. API key auth is not very safe for man-in-the-middle so we also recommended running Centrifugo with TLS.
+It's possible to disable API key check on Centrifugo side using the `api_insecure` configuration option. Be sure to protect the API endpoint by firewall rules, in this case, to prevent anyone on the internet to send commands over your unprotected Centrifugo API endpoint. API key auth is not very safe for man-in-the-middle so we also recommended running Centrifugo with TLS.
 
-Command is a JSON object with two properties: `method` and `params`.
+A command is a JSON object with two properties: `method` and `params`.
 
-* `method` is a name of API command you want to call.
+* `method` is the name of the API command you want to call.
 * `params` is an object with command arguments. Each `method` can have its own `params`
 
 Before looking at all available commands here is a CURL that calls `info` command:
@@ -59,7 +59,7 @@ Here is a live example:
 
 <iframe width="100%" height="400" src="/img/api_example.mp4" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-Now let's investigate each API methods in detail.
+Now let's investigate each API method in detail.
 
 ### publish
 
@@ -79,7 +79,7 @@ It looks like this:
 }
 ```
 
-Let's apply all information said above and send publish command to Centrifugo. We will send request using `requests` library for Python. 
+Let's apply all information said above and send publish command to Centrifugo. We will send a request using the `requests` library for Python. 
 
 ```python
 import json
@@ -153,7 +153,7 @@ Date: Thu, 17 May 2018 22:03:09 GMT
 }
 ```
 
-`error` object contains error code and message - this also the same for other commands described below.
+`error` object contains error code and message - this is also the same for other commands described below.
 
 #### Publish params
 
@@ -242,7 +242,7 @@ Empty object at the moment.
 
 ### disconnect
 
-`disconnect` allows disconnecting user by ID.
+`disconnect` allows disconnecting a user by ID.
 
 ```json
 {
@@ -274,7 +274,7 @@ Empty object at the moment.
 | user       | string       | yes | User ID to refresh       |
 | client       | string       | no | Client ID to refresh        |
 | expired       | bool       | no | Mark connection as expired and close with Disconnect Expired reason |
-| expire_at       | int       | no | Unix time (in seconds) in the future when connection will expire        |
+| expire_at       | int       | no | Unix time (in seconds) in the future when the connection will expire        |
 
 #### Refresh result
 
@@ -384,7 +384,7 @@ Date: Thu, 17 May 2018 22:09:44 GMT
 
 ### history
 
-`history` allows getting channel history information (list of last messages published into channel).
+`history` allows getting channel history information (list of last messages published into the channel).
 
 ```json
 {
@@ -453,7 +453,7 @@ Date: Wed, 21 Jul 2021 05:30:48 GMT
 
 ### channels
 
-`channels` returns active channels (with one or more active subscribers in it).
+`channels` return active channels (with one or more active subscribers in it).
 
 ```json
 {
@@ -482,7 +482,7 @@ Date: Wed, 21 Jul 2021 05:30:48 GMT
 
 :::caution
 
-Keep in mind that since `channels` method by default returns all active channels it can be really heavy for massive deployments. Centrifugo does not provide a way to paginate over channels list. At the moment we mostly suppose that `channels` RPC extension will be used in development process or for administrative/debug purposes, and in not very massive Centrifugo setups (with no more than 10k active channels). A better and scalable approach for huge setups could be a real-time analytics approach [described here](../pro/analytics.md).
+Keep in mind that since the `channels` method by default returns all active channels it can be really heavy for massive deployments. Centrifugo does not provide a way to paginate over channels list. At the moment we mostly suppose that `channels` RPC extension will be used in the development process or for administrative/debug purposes, and in not very massive Centrifugo setups (with no more than 10k active channels). A better and scalable approach for huge setups could be a real-time analytics approach [described here](../pro/analytics.md).
 
 :::
 
@@ -528,17 +528,17 @@ Empty object at the moment.
 
 ### Command pipelining
 
-It's possible to combine several commands into one request to Centrifugo. To do this use [JSON streaming](https://en.wikipedia.org/wiki/JSON_streaming) format. This can improve server throughput and reduce traffic travelling around.
+It's possible to combine several commands into one request to Centrifugo. To do this use [JSON streaming](https://en.wikipedia.org/wiki/JSON_streaming) format. This can improve server throughput and reduce traffic traveling around.
 
 ## GRPC API
 
-Centrifugo also supports [GRPC](https://grpc.io/) API. With GRPC it's possible to communicate with Centrifugo using more compact binary representation of commands and use the power of HTTP/2 which is the transport behind GRPC.
+Centrifugo also supports [GRPC](https://grpc.io/) API. With GRPC it's possible to communicate with Centrifugo using a more compact binary representation of commands and use the power of HTTP/2 which is the transport behind GRPC.
 
 GRPC API is also useful if you want to publish binary data to Centrifugo channels.
 
 :::tip
 
-GRPC API basically allows calling all commands described in [HTTP API doc](#http-api), actually both GRPC and HTTP API in Centrifugo based on the same Protobuf schema definition. So refer to the HTTP API description doc for parameter and result field description.
+GRPC API allows calling all commands described in [HTTP API doc](#http-api), actually both GRPC and HTTP API in Centrifugo based on the same Protobuf schema definition. So refer to the HTTP API description doc for the parameter and the result field description.
 
 :::
 
@@ -551,9 +551,9 @@ You can enable GRPC API in Centrifugo using `grpc_api` option:
 }
 ```
 
-By default, GRPC will be served on port `10000` but you can change it using `grpc_api_port` option.
+By default, GRPC will be served on port `10000` but you can change it using the `grpc_api_port` option.
 
-Now as soon as Centrifugo started you can send GRPC commands to it. To do this get our API Protocol Buffer definitions [from this file](https://github.com/centrifugal/centrifugo/blob/master/internal/apiproto/api.proto).
+Now, as soon as Centrifugo started – you can send GRPC commands to it. To do this get our API Protocol Buffer definitions [from this file](https://github.com/centrifugal/centrifugo/blob/master/internal/apiproto/api.proto).
 
 Then see [GRPC docs specific to your language](https://grpc.io/docs/) to find out how to generate client code from definitions and use generated code to communicate with Centrifugo.
 
@@ -566,7 +566,7 @@ pip install grpcio-tools
 python -m grpc_tools.protoc -I ./ --python_out=. --grpc_python_out=. api.proto
 ```
 
-As soon as you run command you will have 2 generated files: `api_pb2.py` and `api_pb2_grpc.py`. Now all you need is to write simple program that uses generated code and sends GRPC requests to Centrifugo:
+As soon as you run the command you will have 2 generated files: `api_pb2.py` and `api_pb2_grpc.py`. Now all you need is to write a simple program that uses generated code and sends GRPC requests to Centrifugo:
 
 ```python
 import grpc
@@ -589,11 +589,11 @@ else:
         print(resp.result)
 ```
 
-Note that you need to explicitly handle Centrifugo API level error which is not transformed automatically into GRPC protocol level error.
+Note that you need to explicitly handle Centrifugo API level error which is not transformed automatically into GRPC protocol-level error.
 
 ### GRPC example for Go
 
-Here is a simple example on how to run Centrifugo with GRPC Go client.
+Here is a simple example of how to run Centrifugo with the GRPC Go client.
 
 You need `protoc`, `protoc-gen-go` and `protoc-gen-go-grpc` installed.
 
@@ -621,45 +621,45 @@ Run `protoc` to generate code:
 protoc -I ./ api.proto --go_out=. --go-grpc_out=.
 ```
 
-Put the following code to `main.go` file (created on last step above):
+Put the following code to `main.go` file (created on the last step above):
 
 ```go
 package main
 
 import (
-	"context"
-	"log"
-	"time"
+    "context"
+    "log"
+    "time"
 
-	"centrifugo_example/apiproto"
+    "centrifugo_example/apiproto"
 
-	"google.golang.org/grpc"
+    "google.golang.org/grpc"
 )
 
 func main() {
-	conn, err := grpc.Dial("localhost:10000", grpc.WithInsecure())
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer conn.Close()
-	client := apiproto.NewCentrifugoApiClient(conn)
-	for {
-		resp, err := client.Publish(context.Background(), &apiproto.PublishRequest{
-			Channel: "chat:index",
-			Data:    []byte(`{"input": "hello from GRPC"}`),
-		})
-		if err != nil {
-			log.Printf("Transport level error: %v", err)
-		} else {
-			if resp.GetError() != nil {
+    conn, err := grpc.Dial("localhost:10000", grpc.WithInsecure())
+    if err != nil {
+        log.Fatalln(err)
+    }
+    defer conn.Close()
+    client := apiproto.NewCentrifugoApiClient(conn)
+    for {
+        resp, err := client.Publish(context.Background(), &apiproto.PublishRequest{
+            Channel: "chat:index",
+            Data:    []byte(`{"input": "hello from GRPC"}`),
+        })
+        if err != nil {
+            log.Printf("Transport level error: %v", err)
+        } else {
+            if resp.GetError() != nil {
                 respError := resp.GetError()
-				log.Printf("Error %d (%s)", respError.Code, respError.Message)
-			} else {
-				log.Println("Successfully published")
-			}
-		}
-		time.Sleep(time.Second)
-	}
+                log.Printf("Error %d (%s)", respError.Code, respError.Message)
+            } else {
+                log.Println("Successfully published")
+            }
+        }
+        time.Sleep(time.Second)
+    }
 }
 ```
 
@@ -673,59 +673,59 @@ The program starts and periodically publishes the same payload into `chat:index`
 
 ### GRPC API key authorization
 
-You can also set `grpc_api_key` (string) in Centrifugo configuration to protect GRPC API with key. In this case you should set per RPC metadata with key `authorization` and value `apikey <KEY>`. For example in Go language:
+You can also set `grpc_api_key` (string) in Centrifugo configuration to protect GRPC API with key. In this case, you should set per RPC metadata with key `authorization` and value `apikey <KEY>`. For example in Go language:
 
 ```go
 package main
 
 import (
-	"context"
-	"log"
-	"time"
+    "context"
+    "log"
+    "time"
 
-	"centrifugo_example/apiproto"
-	
-	"google.golang.org/grpc"
+    "centrifugo_example/apiproto"
+    
+    "google.golang.org/grpc"
 )
 
 type keyAuth struct {
-	key string
+    key string
 }
 
 func (t keyAuth) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
-	return map[string]string{
-		"authorization": "apikey " + t.key,
-	}, nil
+    return map[string]string{
+        "authorization": "apikey " + t.key,
+    }, nil
 }
 
 func (t keyAuth) RequireTransportSecurity() bool {
-	return false
+    return false
 }
 
 func main() {
-	conn, err := grpc.Dial("localhost:10000", grpc.WithInsecure(), grpc.WithPerRPCCredentials(keyAuth{"xxx"}))
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer conn.Close()
-	client := apiproto.NewCentrifugoClient(conn)
-	for {
-		resp, err := client.Publish(context.Background(), &PublishRequest{
-			Channel: "chat:index",
-			Data:    []byte(`{"input": "hello from GRPC"}`),
-		})
-		if err != nil {
-			log.Printf("Transport level error: %v", err)
-		} else {
-			if resp.GetError() != nil {
-				respError := resp.GetError()
-				log.Printf("Error %d (%s)", respError.Code, respError.Message)
-			} else {
-				log.Println("Successfully published")
-			}
-		}
-		time.Sleep(time.Second)
-	}
+    conn, err := grpc.Dial("localhost:10000", grpc.WithInsecure(), grpc.WithPerRPCCredentials(keyAuth{"xxx"}))
+    if err != nil {
+        log.Fatalln(err)
+    }
+    defer conn.Close()
+    client := apiproto.NewCentrifugoClient(conn)
+    for {
+        resp, err := client.Publish(context.Background(), &PublishRequest{
+            Channel: "chat:index",
+            Data:    []byte(`{"input": "hello from GRPC"}`),
+        })
+        if err != nil {
+            log.Printf("Transport level error: %v", err)
+        } else {
+            if resp.GetError() != nil {
+                respError := resp.GetError()
+                log.Printf("Error %d (%s)", respError.Code, respError.Message)
+            } else {
+                log.Println("Successfully published")
+            }
+        }
+        time.Sleep(time.Second)
+    }
 }
 ```
 

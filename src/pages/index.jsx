@@ -74,7 +74,7 @@ function Home() {
             <div className="row">
               <Feature title="Integrates with everything" imageUrl="img/integration.svg">
                 Centrifugo is language-agnostic. It's a standalone server with
-                a simple API which integrates well with an application written in
+                a simple API that integrates well with an application written in
                 any programming language. No need to change an existing application
                 architecture to introduce real-time features. Just add Centrifugo nearby
                 and let it deal with persistent connections.
@@ -83,7 +83,7 @@ function Home() {
                 Centrifugo is built in Go language with some smart optimizations inside.
                 It has good performance – see a <a href="/blog/2020/02/10/million-connections-with-centrifugo">description</a> of a
                 test stand with one million WebSocket connections and 30 million delivered
-                messages per minute with a hardware comparable to one modern server machine.
+                messages per minute with hardware comparable to one modern server machine.
               </Feature>
               <Feature title="Feature-rich" imageUrl="img/feature_rich.svg">
                 Many built-in features can help to build an attractive real-time
@@ -95,7 +95,7 @@ function Home() {
               <Feature title="Out-of-the-box scalability" imageUrl="img/scalability.svg">
                 Built-in Redis, KeyDB, Tarantool engines, or Nats broker make it possible
                 to scale connections over different machines. With consistent sharding
-                of Redis, KeyDB and Tarantool it's possible to handle millions of active
+                of Redis, KeyDB, and Tarantool it's possible to handle millions of active
                 connections with reasonable hardware requirements.
               </Feature>
               <Feature title="Used in production" imageUrl="img/production.svg">

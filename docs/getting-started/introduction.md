@@ -3,7 +3,7 @@ id: introduction
 title: Centrifugo introduction
 ---
 
-Centrifugo is an open-source scalable real-time messaging server in language-agnostic way.
+Centrifugo is an open-source scalable real-time messaging server in a language-agnostic way.
 
 :::info Real-time?
 
