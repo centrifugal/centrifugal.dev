@@ -15,6 +15,12 @@ The license key prices have the following gradations:
 * <em>???$</em> for 6 months license key
 * <em>???$</em> for 1 year license key
 
+:::info
+
+Prices will be defined upon Centrifugo PRO release, we still evaluating this.
+
+:::
+
 All license keys are bound to a unique owner. License key owner can use it in any amount of own projects, but must not share the license key publicly (can be blocked otherwise).
 
 :::info License key expiration
