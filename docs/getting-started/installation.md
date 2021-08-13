@@ -80,7 +80,7 @@ Note that docker allows setting `nofile` limits in command-line arguments which 
 
 :::caution
 
-Pin to exact Docker Image tag in production, for example: `centrifugo/centrifugo:v3.0.0`, this will help avoiding unexpected problems during re-deploy process. 
+Pin to exact Docker Image tag in production, for example: `centrifugo/centrifugo:v3.0.0`, this will help to avoid unexpected problems during re-deploy process. 
 
 :::
 
