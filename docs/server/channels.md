@@ -3,9 +3,9 @@ id: channels
 title: Channels
 ---
 
-Channel is a route for publications. Clients can subscribe to a channel to receive real-time messages published to this channel – new publications and join/leave events (if enabled for a channel namespace). Channel subscriber can also ask for channel presence or channel history information (if enabled for a channel namespace).
+Channel is a route for publications. Clients can be subscribed to a channel to receive real-time messages published to this channel – new publications and join/leave events (if enabled for a channel namespace). Channel subscriber can also ask for a channel presence or channel history information (if enabled for a channel namespace).
 
-Channel is just a string - `news`, `comments` are valid channel names. Though this string has some predefined rules as we will see below.
+Channel is just a string - `news`, `comments`, `personal_feed` are valid channel names. Though this string has some predefined rules as we will see below.
 
 Channel is an ephemeral entity – **you don't need to create it explicitly**. Channel created automatically by Centrifugo as soon as first client subscribes to it. As soon as last subscriber leaves channel - it's automatically cleaned up.
 

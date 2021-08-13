@@ -482,7 +482,7 @@ Date: Wed, 21 Jul 2021 05:30:48 GMT
 
 :::caution
 
-Keep in mind that since `channels` method by default returns all active channels it can be really heavy for massive deployments. Centrifugo does not provide a way to paginate over channels list. At the moment we mostly suppose that `channels` RPC extension will be used in development process and in not very massive Centrifugo setups (with no more than 10k active channels). A better and scalable approach for huge setups could be a real-time analytics approach [described here](../pro/analytics.md).
+Keep in mind that since `channels` method by default returns all active channels it can be really heavy for massive deployments. Centrifugo does not provide a way to paginate over channels list. At the moment we mostly suppose that `channels` RPC extension will be used in development process or for administrative/debug purposes, and in not very massive Centrifugo setups (with no more than 10k active channels). A better and scalable approach for huge setups could be a real-time analytics approach [described here](../pro/analytics.md).
 
 :::
 

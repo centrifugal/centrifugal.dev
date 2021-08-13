@@ -82,7 +82,7 @@ Channels method has new additional possibilities like showing the number of conn
 
 :::info
 
-Channels API call still has the same concern as before: this method does not scale well for many active channels in a system.
+Channels API call still has the same concern as before: this method does not scale well for many active channels in a system and mostly recommended for administrative/debug purposes.
 
 :::
 
