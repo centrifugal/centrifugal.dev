@@ -15,20 +15,25 @@ Our current client feature matrix looks like this:
 
 - [x] connect to server (both Centrifugo and Centrifuge-based) using JSON protocol format
 - [x] connect to server (both Centrifugo and Centrifuge-based) using Protobuf protocol format
-- [x] connect to server with token (JWT in Centrifugo case, any string token in Centrifuge library case)
+- [x] connect with token (JWT in Centrifugo case, any string token in Centrifuge library case)
 - [x] connect to server with custom headers (not available in a browser)
 - [x] automatic reconnect in case of dial problems (network)
 - [x] an exponential backoff for reconnect process
 - [x] possibility to set handlers for connect and disconnect events
 - [x] extract and expose disconnect reason
-- [x] subscribe on a channel and provide a way to handle asynchronous Publications coming from a channel
+- [x] subscribe to a channel and provide a way to handle asynchronous Publications coming from a channel
 - [x] handle Join and Leave messages from a channel
 - [x] handle Unsubscribe notifications
-- [x] publish method of Subscription
+- [x] publish method of Subscription object
 - [x] unsubscribe method of Subscription
 - [x] presence method of Subscription
 - [x] presence stats method of Subscription
 - [x] history method of Subscription
+- [x] publish method on top level
+- [x] unsubscribe method on top level
+- [x] presence method on top level
+- [x] presence stats method on top level
+- [x] history method on top level
 - [x] send asynchronous messages to server
 - [x] handle asynchronous messages from server
 - [x] send RPC requests to server
@@ -41,14 +46,16 @@ Our current client feature matrix looks like this:
 - [x] handle connection expired error
 - [x] handle subscription expired error
 - [x] server-side subscriptions
-- [x] message recovery mechanism
-
-Below I'll try to describe most of these points in detail.
+- [x] message recovery mechanism for client-side subscriptions
+- [x] message recovery mechanism for server-side subscriptions
 
 This document describes protocol specifics for Websocket transport which supports binary and text formats to transfer data. As Centrifugo and Centrifuge library for Go have various types of messages it serializes protocol messages using JSON or Protobuf formats.
 
-!!! note
-    SockJS works almost the same way as JSON websocket described here but has its own extra framing on top of Centrifuge protocol messages. SockJS can only work with JSON - it's not possible to transfer binary data over it. SockJS is only needed as fallback to Websocket in web browsers.
+:::info
+
+SockJS works almost the same way as JSON websocket described here but has its own extra framing on top of Centrifuge protocol messages. SockJS can only work with JSON - it's not possible to transfer binary data over it. SockJS is only needed as fallback to Websocket in browsers.
+
+:::
 
 ### Top level framing
 
@@ -79,11 +86,17 @@ function encodeCommands(commands) {
 }
 ```
 
-!!! note
-    This doc will use JSON format for examples because it's human-readable. Everything said here for JSON is also true for Protobuf encoded case. The only difference is how several individual `Command` or server `Reply` joined into one request – see details below.
+:::info
 
-!!! note
-    Method represented as a ENUM in protobuf schema and can be sent as integer value. Though it's possible to send it as string in JSON case – this was made to make JSON protocol human-friendly.
+This doc will use JSON format for examples because it's human-readable. Everything said here for JSON is also true for Protobuf encoded case. The only difference is how several individual `Command` or server `Reply` joined into one request – see details below.
+
+:::
+
+:::info
+
+Method represented as a ENUM in protobuf schema and can be sent as integer value. Though it's possible to send it as string in JSON case – this was made to make JSON protocol human-friendly.
+
+:::
 
 When Protobuf format used then many `Command` can be sent from client to server in length-delimited format where each individual `Command` marshaled to bytes prepended by `varint` length. See existing client implementations for encoding example.
 
@@ -243,9 +256,7 @@ After a client received a successful reply on `subscribe` command it will receiv
 * `Publication` message
 * `Join` message
 * `Leave` message
-* `Unsub` message
-* `Message` message
-* `Sub` message
+* `Unsubscribe` message
 
 See more about asynchronous messages below. 
 
@@ -291,16 +302,21 @@ The mechanics of these calls is simple - client sends command and expects respon
 
 `publish` command allows to publish a message into a channel from a client.
 
-!!! note
-    To publish from client `publish` option in server configuration must be set to `true`
+:::tip
+
+To publish from client `publish` option in Centrifugo configuration must be set to `true`
+
+:::
 
 `history` allows asking a server for channel history if enabled.
 
 `presence` allows asking a server for channel presence information if enabled.
 
+`presence_stats` allows asking for short presence info (num clients and unique users in a channel).
+
 ### Asynchronous server-to-client messages
 
-There are several types of asynchronous messages that can come from server to client. All of them relate to current client subscriptions.
+There are several types of asynchronous messages that can come from a server to a client. All of them relate to the current client subscriptions.
 
 The most important message is `Publication`:
 
@@ -345,8 +361,11 @@ Next message is `Join` message:
 
 `Join` messages sent when someone joined (subscribed on) channel.
 
-!!! note
-    To enable `Join` and `Leave` messages `join_leave` option must be enabled on server globally or for channel namespace.
+:::tip
+
+To enable `Join` and `Leave` messages `join_leave` option must be enabled in Centrifugo for a channel namespace.
+
+:::
 
 `Leave` messages sent when someone left (unsubscribed from) channel.
 
@@ -503,4 +522,4 @@ In case of Websocket it is sent by server in CLOSE Websocket frame. This is a st
 
 ### Additional notes
 
-Centrifugo and Centrifuge-based server do not allow one client connection to subscribe on the same channel twice. In this case client will receive `already subscribed` error in reply to subscribe command.
+Client protocol does not allow one client connection to subscribe to the same channel twice. In this case client will receive `already subscribed` error in reply to a subscribe command.

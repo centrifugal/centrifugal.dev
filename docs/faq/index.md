@@ -7,13 +7,15 @@ Answers to popular questions here.
 
 ### How many connections can one Centrifugo instance handle?
 
-This depends on many factors. Hardware, message rate, size of messages, Centrifugo features enabled, client distribution over channels, WebSocket compression on/off, etc. So no certain answer to this question exists. Common sense, tests, and monitoring can help here. Generally, we suggest not put more than 50-100k clients on one node - but you should measure for your own use case.
+This depends on many factors. Used transport, hardware, message rate, size of messages, Centrifugo features enabled, client distribution over channels, compression on/off, etc. So no certain answer to this question exists. Common sense, performance tests, and monitoring can help here. Generally, we suggest not put more than 50-100k clients on one node - but you should measure for your own use case.
 
 You can find a description of a test stand with million WebSocket connections in [this blog post](/blog/2020/02/10/million-connections-with-centrifugo) – though the point above is still valid, measure and monitor your own setup.
 
 ### Memory usage per connection?
 
-Depending on features enabled the amount of RAM required per each connection can vary. At moment, you can expect that each WebSocket connection will cost about 30-50 KB of RAM, thus a server with 1 GB of RAM can handle about 20-30k connections.
+Depending on transport used and features enabled the amount of RAM required per each connection can vary.
+
+For example, you can expect that each WebSocket connection will cost about 30-50 KB of RAM, thus a server with 1 GB of RAM can handle about 20-30k connections.
 
 For other real-time transports, the memory usage per connection can differ. So the best way is again – measure for your case since depending on Centrifugo features used memory usage can vary.
 
@@ -21,7 +23,7 @@ For other real-time transports, the memory usage per connection can differ. So t
 
 Yes, it can. It can do this using built-in engines: Redis, KeyDB, Tarantool, or Nats broker.
 
-All supported brokers are very fast – they can handle hundreds of thousands of requests per second. This should be OK for most applications. But, if you approach broker resource limits (CPU or memory) then it's possible to use Centrifugo consistent sharding support to balance queries between different broker instances (except for Nats at the moment which should scale well itself).
+All supported brokers are fast – they can handle hundreds of thousands of requests per second. This should be OK for most applications. But, if you approach broker resource limits (CPU or memory) then it's possible to use Centrifugo consistent sharding support to balance queries between different broker instances (except for Nats at the moment which should scale well itself).
 
 ### Message delivery model
 

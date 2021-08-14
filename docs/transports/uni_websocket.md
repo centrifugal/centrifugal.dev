@@ -16,6 +16,22 @@ While WebSocket is bidirectional transport in its nature Centrifugo provides its
 
 It's possible to send connect command as first WebSocket message (as JSON).
 
+| Field name | Field type | Required | Description  |
+| -------------- | -------------- | ------------ | ---- |
+| token       | string  | no | Connection JWT, not required when using the connect proxy feature.       |
+| data       | any JSON       | no | Custom JSON connection data        |
+| name  | string       | no |   Application name         |
+| version  | string       | no |   Application version         |
+| subs  | map of channel to SubscribeRequest       | no |   Pass an information about desired subscriptions to a server |
+
+### SubscribeRequest
+
+| Field name | Field type | Required | Description  |
+| -------------- | -------------- | ------------ | ---- |
+| recover       | boolean  | no | Whether a client wants to recover from a certain position       |
+| offset       | integer       | no | Known stream position offset when `recover` is used        |
+| epoch  | string       | no |   Known stream position epoch when `recover` is used         |
+
 ## Supported data formats
 
 JSON
@@ -38,6 +54,12 @@ Enables unidirectional WebSocket endpoint.
     "uni_websocket": true
 }
 ```
+
+### uni_websocket_message_size_limit
+
+Default: 65536 (64KB)
+
+Maximum allowed size of a first connect message received from WebSocket connection in bytes.
 
 ## Example
 

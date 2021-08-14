@@ -10,7 +10,7 @@ Default unidirectional SSE (EventSource) connection endpoint in Centrifugo is:
 /connection/uni_sse
 ```
 
-:::note
+:::info
 
 Only parts of EventSource spec that make sense for Centrifugo are implemented. For example `Last-Event-Id` header not supported (since one connection can be subscribed to many channels) and multiline strings (since we are passing JSON-encoded objects to the client) etc.
 
@@ -18,18 +18,26 @@ Only parts of EventSource spec that make sense for Centrifugo are implemented. F
 
 ## Connect command
 
-Unfortunately SSE specification does not allow POST requests from a web browser, so the only way to pass initial connect command is over URL params. Centrifugo is looking for `connect` URL param for connect command. Connect command value expected to be a JSON-encoded string, properly encoded into URL. For example:
+Unfortunately SSE specification does not allow POST requests from a web browser, so the only way to pass initial connect command is over URL params. Centrifugo is looking for `cf_connect` URL param for connect command. Connect command value expected to be a JSON-encoded string, properly encoded into URL. For example:
 
 ```javascript
 const url = new URL('http://localhost:8000/connection/uni_sse');
-url.searchParams.append("connect", JSON.stringify({
+url.searchParams.append("cf_connect", JSON.stringify({
     'token': '<JWT>'
 }));
 
 const eventSource = new EventSource(url);
 ```
 
+Refer to the full Connect command description – it's [the same as for unidirectional WebSocket](./uni_websocket.md#connect-command).
+
 The length of URL query should be kept less than 2048 characters to work throughout browsers. This should be more than enough for most use cases.  
+
+:::tip
+
+Centrifugo unidirectional SSE endpoint also supports POST requests. While it's not very useful for browsers which only allow GET requests for EventSource this can be useful when connecting from a mobile device. In this case you must send the connect object as a JSON body of a POST request (instead of using `cf_connect` URL parameter), similar to what we have in unidirectional HTTP streaming transport case.
+
+:::
 
 ## Supported data formats
 
@@ -44,7 +52,7 @@ event: ping
 data:
 ```
 
-I.e. with event name `ping` and empty data.
+I.e. with event name `ping` and empty data. You can ignore such messages or use them to detect broken connections (nothing received from a server for a long time).
 
 ## Options
 
@@ -60,6 +68,12 @@ Enables unidirectional SSE (EventSource) endpoint.
     "uni_sse": true
 }
 ```
+
+### uni_sse_max_request_body_size
+
+Default: 65536 (64KB)
+
+Maximum allowed size of a initial HTTP POST request in bytes (when using HTTP POST requests to connect).
 
 ## Example
 

@@ -224,15 +224,15 @@ All things together here is an example of `config.json` which includes some top-
     "presence": true,
     "join_leave": true,
     "history_size": 10,
-    "history_lifetime": 30,
+    "history_ttl": "30s",
     "namespaces": [
         {
           "name": "public",
           "publish": true,
           "anonymous": true,
           "history_size": 10,
-          "history_lifetime": 300,
-          "history_recover": true
+          "history_ttl": "300s",
+          "recover": true
         },
         {
           "name": "gossips",

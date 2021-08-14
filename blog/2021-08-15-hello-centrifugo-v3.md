@@ -57,7 +57,7 @@ For more details, refer to the [v3 migration guide](/docs/getting-started/migrat
 
 ### License change
 
-As some of you know we considered changing Centrifugo license to AGPL v3 for a new release. After thinking a lot about this we decided to not step into this area at the moment.
+As some of you know we considered changing Centrifugo license to AGPL v3 for a new release. After thinking a lot about this we decided to not step into this area.
 
 But the license has been changed: the license of OSS Centrifugo is now Apache 2.0 instead of MIT. Apache 2.0 is also a permissive OSS license, it's just a bit more concrete in some aspects.
 
@@ -75,9 +75,11 @@ Centrifugo users had to use special client connector libraries which abstracted 
 
 But what if a user just needs to receive real-time updates from a stable set of channels known in connection time? Can we simplify everything and avoid using custom software on a client-side?
 
-With unidirectional transports, the answer is yes. Clients can now connect to Centrifugo using a bunch of unidirectional transports. And the greatest thing is that in this case, developers should not depend on Centrifugo client connectors at all – just use native browser APIs or GRPC-generated code. It's finally possible to consume events from Centrifugo using CURL.
+With unidirectional transports, the answer is yes. Clients can now connect to Centrifugo using a bunch of unidirectional transports. And the greatest thing is that in this case, developers should not depend on Centrifugo client connectors at all – just use native browser APIs or GRPC-generated code. It's finally possible to consume events from Centrifugo using CURL (see [an example](/docs/transports/uni_http_stream#connecting-using-curl)).
 
-With subscribe server API (see below) it's even possible to subscribe unidirectional client to server-side channels dynamically.
+Using unidirectional transports you can still benefit from Centrifugo built-in scalability with various engines, utilize built-in authentication over JWT or the connect proxy feature.
+
+With subscribe server API (see below) it's even possible to subscribe unidirectional client to server-side channels dynamically. With refresh server API or the refresh proxy feature it's possible to manage a connection expiration.
 
 Centrifugo supports the following unidirectional transports:
 

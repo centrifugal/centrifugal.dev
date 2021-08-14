@@ -294,7 +294,7 @@ Unfortunately, it comes with some downsides. There are many ways to operate Tara
 
 :::info
 
-To be honest we bet on the community help to push this integration further. Tarantool provides an incredible performance boost for presence and history operations (up to 5x more RPS compared to Redis for history and presence Engine operations) and a pretty fast PUB/SUB (comparable to what Redis provides). Let's see what we can build together.
+To be honest we bet on the community help to push this integration further. Tarantool provides an incredible performance boost for presence and history operations (up to 5x more RPS compared to the Redis Engine) and a pretty fast PUB/SUB (comparable to what Redis Engine provides). Let's see what we can build together.
 
 :::
 

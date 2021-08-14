@@ -18,6 +18,8 @@ Streaming endpoint accepts HTTP POST requests and sends JSON messages to a conne
 
 It's possible to pass initial connect command by posting a JSON body to a streaming endpoint. 
 
+Refer to the full Connect command description – it's [the same as for unidirectional WebSocket](./uni_websocket.md#connect-command).
+
 ## Supported data formats
 
 JSON
@@ -40,6 +42,12 @@ Enables unidirectional HTTP streaming endpoint.
     "uni_http_stream": true
 }
 ```
+
+### uni_http_stream_max_request_body_size
+
+Default: 65536 (64KB)
+
+Maximum allowed size of a initial HTTP POST request in bytes.
 
 ## Connecting using CURL
 

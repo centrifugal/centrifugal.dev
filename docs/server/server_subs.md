@@ -76,7 +76,3 @@ Example config:
 Centrifugo can't guarantee that other user connections will be closed – since Disconnect messages are distributed around Centrifugo nodes with at most once guarantee. So don't add critical business logic based on this feature to your application. Though this should work just fine most of the time if the connection between the Centrifugo node and PUB/SUB broker is OK.
 
 :::
-
-### Mark namespace as server-side
-
-There is a channel namespace boolean option called `server_side` (default `false`). When on then all client-side subscription requests to channels in this namespace will be rejected with a `PermissionDenied` error.

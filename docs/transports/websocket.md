@@ -21,7 +21,7 @@ By default WebSocket connection uses JSON protocol internally.
 
 Default: 65536 (64KB)
 
-Maximum allowed size of message from websocket in bytes.
+Maximum allowed size of a message received from WebSocket connection in bytes.
 
 ### websocket_read_buffer_size
 
