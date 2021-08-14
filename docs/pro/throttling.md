@@ -3,13 +3,13 @@ id: throttling
 title: Operation throttling
 ---
 
-Throttling allows limit the number of operations each user can issue during a configured time interval. This is useful to protect the system from misusing or protect it from a bug in application frontend.
+The throttling feature allows limiting the number of operations each user can issue during a configured time interval. This is useful to protect the system from misusing or protect it from a bug in the application frontend code.
 
 ## Redis throttling
 
-At this moment Centrifugo PRO provides throttling over Redis. It's only possible to throttle by user ID, requests from anonymous users can't be throttled. Throttling with Redis uses [token bucket algorithm](https://en.wikipedia.org/wiki/Token_bucket) internally.
+At this moment Centrifugo PRO provides throttling over Redis. It's only possible to throttle by the user ID. Requests from anonymous users can't be throttled. Throttling with Redis uses [token bucket algorithm](https://en.wikipedia.org/wiki/Token_bucket) internally.
 
-Here is a list of operations which can be throttled:
+Here is a list of operations that can be throttled:
 
 * connect
 * subscribe

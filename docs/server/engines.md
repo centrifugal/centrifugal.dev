@@ -270,7 +270,7 @@ Centrifugo Redis engine seamlessly works with [KeyDB](https://keydb.dev/). KeyDB
 
 :::caution
 
-We can't give any promises about compatibility with KeyDB in future Centrifugo releases - while KeyDB is fully compatible with Redis things should work fine. That's why we consider this as **EXPERIMENTAL** feature.
+We can't give any promises about compatibility with KeyDB in the future Centrifugo releases - while KeyDB is fully compatible with Redis things should work just fine. That's why we consider this as **EXPERIMENTAL** feature.
 
 :::
 
@@ -292,9 +292,9 @@ To run Centrifugo with KeyDB all you need to do is use `redis` engine but run th
 
 Unfortunately, it comes with some downsides. There are many ways to operate Tarantool in production and it's hard to distribute Centrifugo Tarantool engine in a way that suits everyone. Centrifugo tried to fit standalone and [Cartridge](https://github.com/tarantool/cartridge) Tarantool setups by providing [centrifugal/tarantool-engine](https://github.com/centrifugal/tarantool-engine) repository. It's a project with a Tarantool module which you should run.
 
-:::note
+:::info
 
-To be honest we bet on the community help to push this integration further. Tarantool provides an incredible performance boost for presence and history operations (up to 5x more RPS compared to Redis) and a pretty fast PUB/SUB (comparable to what Redis provides). Let's see what we can build together.
+To be honest we bet on the community help to push this integration further. Tarantool provides an incredible performance boost for presence and history operations (up to 5x more RPS compared to Redis for history and presence Engine operations) and a pretty fast PUB/SUB (comparable to what Redis provides). Let's see what we can build together.
 
 :::
 

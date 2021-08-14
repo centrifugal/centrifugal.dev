@@ -17,7 +17,7 @@ The license key prices have the following gradations:
 
 :::info
 
-Prices will be defined upon Centrifugo PRO release, we still evaluating this.
+The license key prices will be defined upon Centrifugo PRO release. We are still evaluating this.
 
 :::
 
