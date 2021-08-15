@@ -21,9 +21,9 @@ For other real-time transports, the memory usage per connection can differ. So t
 
 ### Can Centrifugo scale horizontally?
 
-Yes, it can. It can do this using built-in engines: Redis, KeyDB, Tarantool, or Nats broker.
+Short answer: yes, it can. It can do this using built-in engines: Redis, KeyDB, Tarantool, or Nats broker.
 
-All supported brokers are fast – they can handle hundreds of thousands of requests per second. This should be OK for most applications. But, if you approach broker resource limits (CPU or memory) then it's possible to use Centrifugo consistent sharding support to balance queries between different broker instances (except for Nats at the moment which should scale well itself).
+See [engines](../server/engines.md) and [scalability considerations](../getting-started/design.md#scalability-considerations).
 
 ### Message delivery model
 
