@@ -45,9 +45,27 @@ Address to bind uni GRPC to.
 
 ### uni_grpc_max_receive_message_size
 
-Default: 65536 (64KB)
+Default: `65536` (64KB)
 
 Maximum allowed size of a first connect message received from GRPC connection in bytes.
+
+### uni_grpc_tls
+
+Boolean, default: `false`
+
+Enable custom TLS for unidirectional GRPC server.
+
+### uni_grpc_tls_cert
+
+String, default: `""`.
+
+Path to cert file.
+
+### uni_grpc_tls_key
+
+String, default: `""`.
+
+Path to key file.
 
 ## Example
 
