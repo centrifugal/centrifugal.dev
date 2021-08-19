@@ -116,11 +116,17 @@ Another important change is how Centrifugo proxies binary data over HTTP JSON pr
 
 Redis configuration was a bit messy - especially in the Redis sharding case, in v3 we decided to clean up it a bit. Make it more explicit and reduce the number of possible ways to configure.
 
+Refer to the [Redis Engine docs](../server/engines.md#redis-engine) for the new configuration details. The important thing is that there is no separate `redis_host` and `redis_port` option anymore – those are replaced with single `redis_address` option.
+
 ### Redis streams used by default
 
-Centrifugo v3 will use Redis Stream data structure to keep history instead of lists. This requires Redis >= 5 to work.
+Centrifugo v3 will use Redis Stream data structure to keep history instead of lists.
 
-If you still need List data structure or have an old Redis version you can use `"redis_use_lists": true` to mimic the default behavior of Centrifugo v2.
+:::danger
+
+This requires Redis >= 5.0.1 to work. If you still need List data structure or have an old Redis version you can use `"redis_use_lists": true` to mimic the default behavior of Centrifugo v2.
+
+:::
 
 ### SockJS disabled by default
 

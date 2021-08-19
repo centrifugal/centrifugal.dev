@@ -34,9 +34,13 @@ Disadvantages:
 * Does not allow scaling nodes (actually you still can scale Centrifugo with Memory engine but you have to publish data into each Centrifugo node and you won't have consistent history and presence state throughout Centrifugo nodes)
 * Does not persist message history in channels between Centrifugo restarts
 
-Configuration options related to Memory engine:
+### Options
 
-* `history_meta_ttl` (int, default `0`) - sets a time in seconds of history stream metadata expiration. Stream metadata is information about the current offset number in the channel and epoch value. By default, metadata for channels does not expire. Though in some cases – when channels are created for а short time and then not used anymore – created metadata can stay in memory while not useful. For example, you can have a personal user channel but after using your app for a while user left it forever. From a long-term perspective, this can be an unwanted memory leak. Setting a reasonable value to this option (usually much bigger than the history retention period) can help. In this case, unused channel metadata will eventually expire.
+#### history_meta_ttl
+
+Duration, default `0s`.
+
+`history_meta_ttl` sets a time in seconds of history stream metadata expiration. Stream metadata is information about the current offset number in the channel and epoch value. By default, metadata for channels does not expire. Though in some cases – when channels are created for а short time and then not used anymore – created metadata can stay in memory while not useful. For example, you can have a personal user channel but after using your app for a while user left it forever. From a long-term perspective, this can be an unwanted memory leak. Setting a reasonable value to this option (usually much bigger than the history retention period) can help. In this case, unused channel metadata will eventually expire.
 
 ## Redis engine
 
@@ -45,6 +49,8 @@ Configuration options related to Memory engine:
 Centrifugo Redis engine allows scaling Centrifugo nodes to different machines. Nodes will use Redis as a message broker (utilizing Redis PUB/SUB for node communication) and keep presence and history data in Redis.
 
 **Minimal Redis version is 5.0.1**
+
+### Options
 
 Several configuration options related to Redis engine:
 
@@ -320,16 +326,36 @@ There are several supported Tarantool topologies to which Centrifugo can connect
 * Many standalone Tarantool instances and consistently shard data between them
 * Tarantool running in Cartridge
 * Tarantool with replica and automatic failover in Cartridge
-* Many Tarantool instances (or leader-follower setup) in Cartridge and consistently shard data between them
-* To Tarantool with synchronous replication (Raft-based, Tarantool >= 2.7)
+* Many Tarantool instances (or leader-follower setup) in Cartridge with consistent client-side sharding between them
+* Tarantool with synchronous replication (Raft-based, Tarantool >= 2.7)
 
-See [centrifugal/tarantool-engine](https://github.com/centrifugal/tarantool-engine) repo readme for configuration examples.
+See [centrifugal/tarantool-engine-cartridge](https://github.com/centrifugal/tarantool-engine-cartridge) repo for ready-to-use engine based on Tarantool Cartridge framework.
 
-Options:
+See [centrifugal/tarantool-centrifuge](https://github.com/centrifugal/tarantool-centrifuge) repo for examples on how to run engine with Standalone single Tarantool instance or with Raft-based replication.
 
-* `tarantool_mode` (string, default `standalone`) – is a mode how to connect to Tarantool. Default is `standalone` which connects to a single Tarantool instance address. Possible values are: `leader-follower` (connects to a setup with Tarantool master and async replicas) and `leader-follower-raft` (connects to a Tarantool with synchronous Raft-based replication). All modes support client-side consistent sharding (similar to what Redis engine provides).
-* `tarantool_user` (string, default `""`) - allows to set a user.
-* `tarantool_password` (string, default `""`) - allows to set a password.
+### Options
+
+#### tarantool_address
+
+String or array of strings. Default `tcp://127.0.0.1:3301`.
+
+Connection address to Tarantool.
+
+#### tarantool_mode
+
+String, default `standalone`
+
+A mode how to connect to Tarantool. Default is `standalone` which connects to a single Tarantool instance address. Possible values are: `leader-follower` (connects to a setup with Tarantool master and async replicas) and `leader-follower-raft` (connects to a Tarantool with synchronous Raft-based replication).
+
+All modes support client-side consistent sharding (similar to what Redis engine provides).
+
+#### tarantool_user
+
+String, default `""`. Allows setting a user.
+
+#### tarantool_password
+
+String, default `""`. Allows setting a password.
 
 ## Nats broker
 
@@ -365,9 +391,28 @@ centrifugo --broker=nats --config=config.json --port=8001
 
 Now you can scale connections over Centrifugo instances, instances will be connected over Nats server.
 
-Available options:
+### Options
 
-* `nats_url` - connection url in format `nats://derek:pass@localhost:4222`, by default `nats://127.0.0.1:4222`.
-* `nats_prefix` - prefix for channels used by Centrifugo inside Nats. By default, `centrifugo`.
-* `nats_dial_timeout` - timeout for dialing to Nats in seconds, it's a duration, default `1s`.
-* `nats_write_timeout` - write (and flush) timeout on a connection to Nats, it's a duration, default `1s`.
+#### nats_url
+
+String, default `nats://127.0.0.1:4222`.
+
+Connection url in format `nats://derek:pass@localhost:4222`.
+
+#### nats_prefix
+
+String, default `centrifugo`.
+
+Prefix for channels used by Centrifugo inside Nats.
+
+#### nats_dial_timeout
+
+Duration, default `1s`.
+
+Timeout for dialing with Nats.
+
+#### nats_write_timeout
+
+Duration, default `1s`.
+
+Write (and flush) timeout for a connection to Nats.
