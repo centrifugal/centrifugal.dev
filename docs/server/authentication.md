@@ -13,6 +13,8 @@ If you prefer to avoid using JWT then look at [the proxy feature](proxy.md). It 
 
 Upon connecting to Centrifugo client should provide a connection JWT with several predefined credential claims. If you've never heard about JWT before - refer to [jwt.io](https://jwt.io/) page.
 
+![](/img/diagram_jwt_authentication.png)
+
 At the moment Centrifugo supports HMAC, RSA and ECDSA JWT algorithms - i.e. HS256, HS384, HS512, RSA256, RSA384, RSA512, EC256, EC384, EC512.
 
 We will use Javascript Centrifugo client here for example snippets for client-side and [PyJWT](https://github.com/jpadilla/pyjwt) Python library to generate a connection token on the backend side.

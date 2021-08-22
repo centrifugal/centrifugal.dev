@@ -81,6 +81,8 @@ Make sure you properly configured [allowed_origins](configuration.md#allowed_ori
 
 Yes, this means you don't need to generate JWT and pass it to a client-side and can rely on a cookie while authenticating the user. **Centrifugo should work on the same domain in this case so your site cookie could be passed to Centrifugo by browsers**. This also means that **every** new connection from a user will result in an HTTP POST request to your application backend. While with JWT token you usually generate it once on application page reload, if client reconnects due to Centrifugo restart or internet connection loss it uses the same JWT it had before thus usually no additional requests are generated during reconnect process (until JWT expired).
 
+![](/img/diagram_connect_proxy.png)
+
 Payload example that will be sent to app backend when client without token wants to establish a connection with Centrifugo and `proxy_connect_endpoint` is set to non-empty URL string:
 
 ```json
@@ -411,6 +413,8 @@ With the following option in the configuration file:
 – publish calls sent by a client will be proxied to `proxy_publish_endpoint`.
 
 This request happens BEFORE a message is published to a channel, so your backend can validate whether a client can publish data to a channel. An important thing here is that publication to the channel can fail after your backend successfully validated publish request (for example publish to Redis by Centrifugo returned an error). In this case, your backend won't know about the error that happened but this error will propagate to the client-side. 
+
+![](/img/diagram_publish_proxy.png)
 
 Like the subscribe proxy, publish proxy must be enabled per channel namespace. This means that every namespace (including the global/default one) has a boolean option `proxy_publish` that enables publish proxy for channels in the namespace. All other namespace options will be taken into account before making a proxy request, so you also need to turn on the `publish` option too.
 

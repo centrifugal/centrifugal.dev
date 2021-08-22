@@ -24,10 +24,12 @@ Centrifugo v2 life cycle has come to an end. Before discussing v3 let's look bac
 
 Centrifugo v2 was a pretty huge refactoring of v1. Since the v2 release, Centrifugo is built on top of  new [Centrifuge library](https://github.com/centrifugal/centrifuge) for Go language. Centrifuge library evolved significantly since its initial release and now powers Grafana v8 real-time streaming among other things.
 
+Here is an awesome demo made by my colleague <a href="https://github.com/alexanderzobnin">Alexander Zobnin</a> that demonstrates real-time telemetry of Assetto Corsa sports car streamed in real-time to Grafana dashboard: 
+
 <div class="vimeo-full-width">
    <iframe src="https://player.vimeo.com/video/570333329?title=0&byline=0&portrait=0" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
-</div>  
-<p><a href="https://vimeo.com/570333329">Grafana Racing Telemetry Demo</a> by my colleague <a href="https://vimeo.com/user54793063">Alexander Zobnin</a></p>
+</div>
+<p></p>
 
 Centrifugo integrated with Redis Streams, got Redis Cluster support, can now work with Nats server as a PUB/SUB broker. Notable additions of Centrifugo v2 were [server-side subscriptions](/docs/server/server_subs) with some interesting features on top – like maintaining a single global connection from one user and automatic personal channel subscription upon user connect.
 
@@ -164,7 +166,7 @@ For Redis engine:
 BenchmarkRedisRecover       26883 ns/op	    1204 B/op	   28 allocs/op
 ```
 
-Compare it with the same situation benchmarked with Tarantool engine:
+Compare it with the same operation measured with Tarantool engine:
 
 ```bash title="Tarantool engine, single Tarantool instance"
 BenchmarkTarantoolRecover    6292 ns/op	     563 B/op	   10 allocs/op
@@ -172,11 +174,11 @@ BenchmarkTarantoolRecover    6292 ns/op	     563 B/op	   10 allocs/op
 
 Tarantool can provide new storage properties (like synchronous replication), new adoption. We are pretty excited about adding it as an option.
 
-But you could notice that support is **experimental** for now. The reason for this is that Tarantool integration involves one more moving piece – the [Lua module](https://github.com/centrifugal/tarantool-engine) which should be run by a Tarantool server.
+But you could notice that support is **experimental** for now. The reason for this is that Tarantool integration involves one more moving piece – the [Centrifuge Lua module](https://github.com/centrifugal/tarantool-centrifuge) which should be run by a Tarantool server.
 
-This increases deployment complexity and given the fact that many users have their own best practices in Tarantool deployment we are still evaluating a sufficient way to distribute Lua part. For now, we are targeting standalone and Cartridge Tarantool setups.
+This increases deployment complexity and given the fact that many users have their own best practices in Tarantool deployment we are still evaluating a sufficient way to distribute Lua part. For now, we are targeting standalone (see examples in [centrifugal/tarantool-centrifuge](https://github.com/centrifugal/tarantool-centrifuge)) and Cartridge Tarantool setups (with [centrifugal/tarantool-engine-cartridge](https://github.com/centrifugal/tarantool-engine-cartridge)).
 
-Refer to the [Tarantool engine documentation](/docs/server/engines#tarantool-engine) for more details.  
+Refer to the [Tarantool Engine documentation](/docs/server/engines#tarantool-engine) for more details.
 
 ### GRPC proxy
 
@@ -261,13 +263,19 @@ Centrifugo Protobuf protocol is still faster than JSON for encoding/decoding on 
 
 Of course, JSON encoding is only one part of Centrifugo – so you should not expect overall 4x performance improvement. But loaded setups should notice the difference and this should also be a good thing for reducing garbage collection pauses.
 
-Centrifugo also inherited a couple of other improvements from the Centrifuge library. In-memory connection hub is now sharded – this should reduce lock contention between operations in different channels. Also, Centrifugo now allocates less during message broadcasting to a large number of subscribers.
+Centrifugo inherited a couple of other improvements from the Centrifuge library.
+
+In-memory connection hub is now sharded – this should reduce lock contention between operations in different channels. In [our artificial benchmarks](https://github.com/centrifugal/centrifuge/pull/184) we noticed a 3x better hub throughput, but in reality the benefit is heavily depends on the usage pattern.
+
+Centrifugo now allocates less during message broadcasting to a large number of subscribers.
+
+Also, an upgrade to Go 1.17 for builds results in ~5% performance boost overall, thanks to a new way of passing function arguments and results using registers instead of the stack introduced in Go 1.17.
 
 ### Centrifugo PRO
 
 The final notable thing is an introduction of Centrifugo PRO. This is an extended version of Centrifugo built on top of the OSS version. It provides some unique features targeting business adopters.
 
-Those who followed Centrifugo for a long time know that there were some attempts to make project development sustainable. Buy me a coffee and Opencollective approaches were not successful, during a year we got ~300$ of total contributions. While we appreciate these contributions a lot - this does not fairly justify a time spent on Centrifugo maintenance these days. So here is an another attempt to monetize Centrifugo.
+Those who followed Centrifugo for a long time know that there were some attempts to make project development sustainable. Buy me a coffee and Opencollective approaches were not successful, during a year we got ~300$ of total contributions. While we appreciate these contributions a lot - this does not fairly justify a time spent on Centrifugo maintenance these days and does not allow bringing it to the next level. So here is an another attempt to monetize Centrifugo.
 
 Centrifugo PRO details and features described [here in docs](/docs/pro/overview). Let's see how it goes. We believe that a set of additional functionality can provide great advantages for both small and large-scale Centrifugo setups. PRO features can give useful insights on a system, protect from client API misusing, reduce server resource usage, and more.
 

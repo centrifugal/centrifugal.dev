@@ -23,7 +23,7 @@ module.exports = {
     "server/admin_web",
     "server/monitoring",
     "server/infra_tuning",
-    "server/proxy_and_load_balancing",
+    "server/load_balancing",
     "server/tls",
     "server/codes",
   ],

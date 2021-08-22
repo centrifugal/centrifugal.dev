@@ -7,9 +7,19 @@ Let's discuss some architectural and design topics about Centrifugo.
 
 ## Idiomatic usage
 
-Originally Centrifugo was built with the unidirectional flow as the main approach (though Centrifugo itself used a bidirectional protocol between a client and a server to allow client dynamically create subscriptions). With this approach the application data travels only from server to a client. This means that all requests that generate new data first go to the application backend (for example over AJAX call of backend API), where a backend can validate the message, process it, save it into a database for long-term persistence – and then publish an event from a backend side to Centrifugo API. This is a pretty natural workflow for applications since this is how applications traditionally work (without real-time features) and Centrifugo is decoupled from the application in this case.
+Originally Centrifugo was built with the unidirectional flow as the main approach. Though Centrifugo itself used a bidirectional protocol between a client and a server to allow client dynamically create subscriptions, Centrifugo did not allow using it for sending data from client to server.
 
-During Centrifugo v2 life cycle this paradigm evolved a bit. It's now possible to send RPC requests from client to Centrifugo and the request will be then proxied to the application backend. Also, connection attempts and publications to channels can now be proxied. So at the moment, the number of possible integration ways increased.
+With this approach publications travel only from server to a client. All requests that generate new data first go to the application backend (for example over AJAX call of backend API). The backend can validate the message, process it, save it into a database for long-term persistence – and then publish an event from a backend side to Centrifugo API.
+
+This is a pretty natural workflow for applications since this is how applications traditionally work (without real-time features) and Centrifugo is decoupled from the application in this case.
+
+![diagram_unidirectional_publish](/img/diagram_unidirectional_publish.png)
+
+During Centrifugo v2 life cycle this paradigm evolved a bit. It's now possible to send RPC requests from client to Centrifugo and the request will be then proxied to the application backend. Also, connection attempts and publications to channels can now be proxied. So bidirectional connection between client and Centrifugo is now available for utilizing by developers in both directions. For example, here is how publish diagram could look like when using publish request proxy feature:
+
+![](/img/diagram_publish_proxy.png)
+
+So at the moment, the number of possible integration ways increased.
 
 ## Message history considerations
 

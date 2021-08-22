@@ -10,6 +10,7 @@ We have several official client libraries for different languages, so you don't 
 * [cent](https://github.com/centrifugal/cent) for Python
 * [phpcent](https://github.com/centrifugal/phpcent) for PHP
 * [gocent](https://github.com/centrifugal/gocent) for Go
+* [rubycent](https://github.com/centrifugal/rubycent) for Ruby
 
 Also, there are API libraries created by community:
 
