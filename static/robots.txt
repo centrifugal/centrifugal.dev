@@ -1,0 +1,6 @@
+User-agent: *
+
+Allow: /sitemap.xml
+Disallow: /__unused/
+Sitemap: https://centrifugal.dev/sitemap.xml
+Host: https://centrifugal.dev

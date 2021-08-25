@@ -36,7 +36,14 @@ html[data-theme="light"] .button--secondary:hover {
 
 .navbar__items a:nth-child(7) {
   color: #10bf39;
-  font-weight: bold;
+}
+
+.navbar__items a:nth-child(7):hover {
+  color: var(--ifm-color-primary);
+}
+
+.navbar__items a:nth-child(7).navbar__link--active {
+  color: var(--ifm-color-primary);
 }
 
 .doc-page em {
@@ -139,4 +146,13 @@ html[data-theme="dark"] .header-github-link:before {
 }
 .markdown table th:nth-child(3) {
   width: 10%;
+}
+.menu {
+  padding-top: 20px !important;
+}
+.navbar {
+  box-shadow: none !important;
+}
+.blog-wrapper .container {
+  margin-top: 1rem !important;
 }
