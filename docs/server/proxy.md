@@ -487,6 +487,7 @@ Response example:
 | ------------ | -------------- | ------------ | ---- |
 | data     | JSON object     | yes | an optional JSON data to send into a channel **instead of** original data sent by a client         |
 | b64data     | string     | yes | a binary data encoded in base64 format, the meaning is the same as for data above, will be decoded to raw bytes on Centrifugo side before publishing  |
+| skip_history     | bool     | yes | when set to `true` Centrifugo won't save publication to the channel history |
 
 See below on how to return an error in case you don't want to allow publishing.
 
@@ -552,7 +553,7 @@ GRPC proxy inherits all the fields for HTTP proxy – so you can refer to field 
 
 Every proxy call in this case is a unary GRPC call. Centrifugo puts client headers into GRPC metadata (since GRPC doesn't have headers concept).
 
-All you need to do to enable proxying over GRPC instead of HTTP is to change the schema part in endpoint options to `grpc`, for example for the connect proxy:
+All you need to do to enable proxying over GRPC instead of HTTP is to use `grpc` schema in endpoint, for example for the connect proxy:
 
 ```json title="config.json"
 {
@@ -561,6 +562,38 @@ All you need to do to enable proxying over GRPC instead of HTTP is to change the
   "proxy_connect_timeout":  "1s"
 }
 ```
+
+Or for RPC proxy:
+
+```json title="config.json"
+{
+  ...
+  "proxy_rpc_endpoint": "grpc://localhost:12000",
+  "proxy_rpc_timeout":  "1s"
+}
+```
+
+The same for publish, subscribe and refresh proxy types.
+
+### Options
+
+#### proxy_grpc_cert_file
+
+String, default: `""`.
+
+Path to cert file for secure TLS connection. If not set then an insecure connection with the backend endpoint is used.
+
+#### proxy_grpc_credentials_key
+
+String, default `""` (i.e. not used).
+
+Add custom key to per-RPC credentials.
+
+#### proxy_grpc_credentials_value
+
+String, default `""` (i.e. not used).
+
+A custom value for `proxy_grpc_credentials_key`.
 
 ## Header proxy rules
 

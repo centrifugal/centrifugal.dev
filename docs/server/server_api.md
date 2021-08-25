@@ -210,6 +210,30 @@ Similar to `publish` but allows to send the same data into many channels.
 | -------------- | -------------- | ------------ | ---- |
 | user       | string       | yes | User ID to subscribe        |
 | channel       | string  | yes | Name of channel to subscribe user to        |
+| info       | any JSON  | no | Attach custom data to subscription (will be used in presence and join/leave messages)        |
+| b64info       | string  | no | info in base64 for binary mode (will be decoded by Centrifugo)      |
+| client       | string  | no | Specific client ID to subscribe (user still required to be set, will ignore other user connections with different client IDs)       |
+| data       | any JSON  | no | Custom subscription data (will be sent to client in Subscribe push)        |
+| b64data       | string  | no | Same as data but in base64 format (will be decoded by Centrifugo)        |
+| recover_since       | StreamPosition object  | no | Stream position to recover from        |
+| override       | Override object       | no |  Allows dynamically override some channel options defined in Centrifugo configuration (see below available fields)  |
+
+#### Override object
+
+| Field | Type | Optional | Description  |
+| -------------- | -------------- | ------------ | ---- |
+| presence       | BoolValue       | yes | Override presence   |
+| join_leave       | BoolValue       | yes | Override join_leave   |
+| position       | BoolValue       | yes | Override position   |
+| recover       | BoolValue       | yes |  Override recover   |
+
+BoolValue is an object like this:
+
+```json
+{
+  "value": true/false
+}
+```
 
 #### Subscribe result
 
@@ -235,6 +259,7 @@ Empty object at the moment.
 | -------------- | -------------- | ------------ | ---- |
 | user       | string       | yes | User ID to subscribe        |
 | channel       | string  | yes | Name of channel to subscribe user to        |
+| client       | string  | no | Specific client ID to unsubscribe (user still required to be set)       |
 
 #### Unsubscribe result
 
@@ -257,7 +282,18 @@ Empty object at the moment.
 
 | Parameter name | Parameter type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
-| user       | string       | yes | User ID to subscribe        |
+| user       | string       | yes | User ID to disconnect        |
+| client       | string       | no | Specific client ID to disconnect (user still required to be set)       |
+| whitelist       | Array of strings       | no | Array of client IDs to keep       |
+| disconnect       | Disconnect object       | no | Provide custom disconnect object, see below      |
+
+#### Disconnect object
+
+| Field name | Field type | Required | Description  |
+| -------------- | -------------- | ------------ | ---- |
+| code       | int       | yes | Disconnect code        |
+| reason       | string       | yes | Disconnect reason       |
+| reconnect       | bool       | no | Reconnect advice       |
 
 #### Disconnect result
 

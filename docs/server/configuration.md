@@ -15,17 +15,35 @@ This chapter describes configuration principles and some important configuration
 
 Centrifugo can be configured in several ways.
 
-1. Over command-line flags. See `centrifugo -h` for available flags, command-line flags limited to most frequently used. Command-line options have the highest priority when set than other ways to configure Centrifugo.
-1. Over OS environment variables. All Centrifugo options can be set over env in the format `CENTRIFUGO_<OPTION_NAME>` (i.e. option name with `CENTRIFUGO_` prefix, all in uppercase). Setting options over env is mostly straightforward except namespaces – [see how to set namespaces via env](#setting-namespaces-over-env). Environment variables have the second priority after flags.
-1. Over configuration file, configuration file supports all options mentioned in Centrifugo documentation and can be in one of three supported formats: JSON, YAML, or TOML. Config file options have the lowest priority.
+### Command-line flags
 
-A simple way to start with Centrifugo is run:
+Centrifugo supports several command-line flags. See `centrifugo -h` for available flags. Command-line flags limited to most frequently used. In general, we suggest avoding using flags when developing Centrifugo into a production environment – prefer environment or configuration file sources.
+
+Command-line options have the highest priority when set than other ways to configure Centrifugo.
+
+### OS environment variables
+
+All Centrifugo options can be set over env in the format `CENTRIFUGO_<OPTION_NAME>` (i.e. option name with `CENTRIFUGO_` prefix, all in uppercase).
+
+Setting options over env is mostly straightforward except namespaces – [see how to set namespaces via env](#setting-namespaces-over-env). Environment variables have the second priority after flags.
+
+Also, array options, like `allowed_origins` can be set over environment variables as a single string where values separated by a space. For example:
+
+```bash
+export CENTRIFUGO_ALLOWED_ORIGINS="https://mysite1.example.com https://mysite2.example.com"
+```
+
+### Configuration file
+
+Configuration file supports all options mentioned in Centrifugo documentation and can be in one of three supported formats: JSON, YAML, or TOML. Config file options have the lowest priority among configuration sources (i.e. option set over environment variable prevails over the same option in config file).
+
+A simple way to start with Centrifugo is to run:
 
 ```bash
 centrifugo genconfig
 ```
 
-command which will generate `config.json` configuration file in a current directory. This file already has the minimal number of options set. So it's then possible to start Centrifugo:
+This command generates `config.json` configuration file in a current directory. This file already has the minimal number of options set. So it's then possible to start Centrifugo:
 
 ```bash
 centrifugo -c config.json
