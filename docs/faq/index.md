@@ -7,9 +7,9 @@ Answers to popular questions here.
 
 ### How many connections can one Centrifugo instance handle?
 
-This depends on many factors. Used transport, hardware, message rate, size of messages, Centrifugo features enabled, client distribution over channels, compression on/off, etc. So no certain answer to this question exists. Common sense, performance tests, and monitoring can help here. Generally, we suggest not put more than 50-100k clients on one node - but you should measure for your own use case.
+This depends on many factors. Real-time transport choice, hardware, message rate, size of messages, Centrifugo features enabled, client distribution over channels, compression on/off, etc. So no certain answer to this question exists. Common sense, performance measurements, and monitoring can help here. Generally, we suggest not put more than 50-100k clients on one node - but you should measure for your use case.
 
-You can find a description of a test stand with million WebSocket connections in [this blog post](/blog/2020/02/10/million-connections-with-centrifugo) – though the point above is still valid, measure and monitor your own setup.
+You can find a description of a test stand with million WebSocket connections in [this blog post](/blog/2020/02/10/million-connections-with-centrifugo) – though the point above is still valid, measure and monitor your setup.
 
 ### Memory usage per connection?
 
@@ -49,7 +49,7 @@ Channel is a very lightweight ephemeral entity - Centrifugo can deal with lots o
 
 While presence is a good feature it does not fit well for some apps. For example, if you make a chat app - you may probably use a single personal channel for each user. In this case, you cannot find who is online at moment using the built-in Centrifugo presence feature as users do not share a common channel.
 
-You can solve this using your own separate service that tracks the online status of your users (for example in Redis) and has a bulk API that returns online status approximation for a list of users. This way you will have an efficient scalable way to deal with online statuses. This is also available as [Centrifugo PRO feature](../pro/user_status.md).
+You can solve this using a separate service that tracks the online status of your users (for example in Redis) and has a bulk API that returns online status approximation for a list of users. This way you will have an efficient scalable way to deal with online statuses. This is also available as [Centrifugo PRO feature](../pro/user_status.md).
 
 ### Centrifugo stops accepting new connections, why?
 
@@ -81,7 +81,7 @@ Sometimes it's confusing to see a difference between real-time messages and push
 
 But the reasonable question here is how can you know when you need to send a real-time message to an online client or push notification to its device for an offline client. The solution is pretty simple. You can keep critical notifications for a client in the database. And when a client reads a message you should send an ack to your backend marking that notification as read by the client. Periodically you can check which notifications were sent to clients but they have not read it (no read ack received). For such notifications, you can send push notifications to its device using your own or another open-source solution. Look at Firebase for example.
 
-### How can I know a message is really delivered to a client?
+### How can I know a message is delivered to a client?
 
 You can, but Centrifugo does not have such an API. What you have to do to ensure your client has received a message is sending confirmation ack from your client to your application backend as soon as the client processed the message coming from the Centrifugo channel.
 
@@ -110,21 +110,19 @@ There are several ways to achieve it:
 
 In most situations, your application needs several different real-time features. We suggest using namespaces for every real-time feature if it requires some option enabled.
 
-For example, if you need join/leave messages for a chat app - create a special channel namespace with this `join_leave` option enabled. Otherwise, your other channels will receive join/leave messages too - increasing load and traffic in the system but not actually used by clients.
+For example, if you need join/leave messages for a chat app - create a special channel namespace with this `join_leave` option enabled. Otherwise, your other channels will receive join/leave messages too - increasing load and traffic in the system but not used by clients.
 
 The same relates to other channel options.
 
 ### Does Centrifugo support webhooks?
 
-Centrifugo was originally designed in a way where messages mostly flow in one direction: from server to client. In an idiomatic case you publish messages to your backend first, then after saving to your main database publish to channel over Centrifugo API to deliver a real-time message to all active channel subscribers. Now if you need any extra callbacks/webhooks you can call your application backend yourself from the client-side (for example just after connect event fired in the client library). There are several reasons why we can't simply add webhooks – some of them described in [this issue](https://github.com/centrifugal/centrifugo/issues/195).
+[Proxy feature](../server/proxy.md) allows integrating Centrifugo with your session mechanism (via connect proxy) and provides a way to react to connection events (rpc, subscribe, publish). Also, it opens a road for bidirectional communication with RPC calls.
 
-A bit tricky thing is disconnects. The difficulty is because there is no guarantee that the disconnect code will have time to execute on the client-side (as the client can just switch off its device or simply lose internet connection). If you need to know that client disconnected and program your business logic around this fact then the only reasonable approach is periodically to call your backend from the client-side and update user status somewhere on the backend (use Redis maybe). This is a pretty robust solution where you can't occasionally miss disconnect events.
-
-[Proxy feature](../server/proxy.md) allows integrating Centrifugo with your own session mechanism and provides a way to react to connection events. Also, it opens a road for bidirectional communication with RPC calls. But the note above about disconnects is still true - we can't simply call your app in case of client disconnects as losing one such event can result in broken business logic inside your app.
+A tricky thing is disconnects hooks. Centrifugo does not support them. There is no guarantee that the disconnect code will have a time to execute on the client-side (as the client can just switch off its device or simply lose internet connection). Also Centrifugo node can unexpectedly be killed. In both cases there is a chance that disconnect event will not be delivered to the backend. If you need to know that client disconnected and program your business logic around this fact then the only reasonable approach is periodically call your backend from the client-side and update user status somewhere on the backend (use Redis maybe). This is a pretty robust solution where you can't occasionally miss disconnect events. You can also utilize Centrifugo refresh proxy for the task of periodic backend pinging.
 
 ### How scalable is the presence and join/leave features?
 
-Presence is good for small channels with a reasonable number of subscribers, as soon as there are tons of subscribers presence information becomes very expensive in terms of bandwidth (as it contains full information about all clients in a channel). There is `presence_stats` API method that can be helpful if you only need to know a number of clients (or unique users) in a channel. But in the case of the Redis engine even `presence stats` are not optimized for channels with more than several thousand active subscribers. You may consider using a separate service to deal with presence status information that provides information in near real-time maybe with some reasonable approximation.
+Presence is good for small channels with a reasonable number of subscribers, as soon as there are tons of subscribers presence information becomes very expensive in terms of bandwidth (as it contains full information about all clients in a channel). There is `presence_stats` API method that can be helpful if you only need to know the number of clients (or unique users) in a channel. But in the case of the Redis engine even `presence stats` are not optimized for channels with more than several thousand active subscribers. You may consider using a separate service to deal with presence status information that provides information in near real-time maybe with some reasonable approximation.
 
 The same is true for join/leave messages - as soon as you turn on join/leave events for a channel with many subscribers every join/leave event (which generally happen relatively frequently) result in many messages sent to each subscriber in a channel, drastically multiplying amount of messages traveling through the system. So be careful and estimate possible load. There is no magic, unfortunately.
 

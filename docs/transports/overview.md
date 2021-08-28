@@ -31,3 +31,30 @@ Unidirectional transports suit well for simple use-cases with stable subscriptio
 The advantage is that unidirectional transports do not require special client connectors - developers can use native browser APIs (like WebSocket, SSE, HTTP streaming), or GRPC generated code to receive real-time updates from Centrifugo – thus avoiding dependency to a client connector that abstracts bidirectional communication.
 
 The drawback is that with unidirectional transports you are not inheriting all Centrifugo features out of the box (like dynamic subscriptions/unsubscriptions, automatic message recovery on reconnect, possibility to send RPC calls over persistent connection). But some of the missing client APIs can be mimicked by using calls to Centrifugo [server API](../server/server_api.md) (i.e. over client -> application backend -> Centrifugo).
+
+### Unidirectional message types
+
+In case of unidirectional transports Centrifugo will send `Push` frames to the connection. Push frames defined by [client protocol schema](https://github.com/centrifugal/protocol/blob/master/definitions/client.proto). I.e. Centrifugo reuses a part of its bidirectional protocol for unidirectional communication. Push message defined as:
+
+```
+message Push {
+  enum PushType {
+    PUBLICATION = 0;
+    JOIN = 1;
+    LEAVE = 2;
+    UNSUBSCRIBE = 3;
+    MESSAGE = 4;
+    SUBSCRIBE = 5;
+    CONNECT = 6;
+    DISCONNECT = 7;
+    REFRESH = 8;
+  }
+  PushType type = 1;
+  string channel = 2;
+  bytes data = 3;
+}
+```
+
+So unidirectional connection will receive various pushes. All you need to do is look at Push type and process it or skip it. In most cases you will be most interested in `CONNECT` and `PUBLICATION` types.
+
+Just try any unidirectional transport and you will quickly get the idea.
