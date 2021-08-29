@@ -25,6 +25,10 @@ html[data-theme="dark"] {
   --ifm-background-color: var(--palette-background-main);
 }
 
+html[data-theme="light"] .button--secondary {
+  border-color: #e6b8b8;
+}
+
 img[align='right'] {
   padding-left: 1em;
   padding-bottom: 1em;
@@ -69,6 +73,9 @@ html[data-theme="light"] .button--secondary:hover {
   }
   .markdown > h3 {
     font-size: 1.4rem !important;
+  }
+  .blog-list-page header h2 {
+    font-size: 2rem !important;
   }
 }
 
