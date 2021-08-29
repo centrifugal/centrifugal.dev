@@ -57,4 +57,10 @@ message Push {
 
 So unidirectional connection will receive various pushes. All you need to do is look at Push type and process it or skip it. In most cases you will be most interested in `CONNECT` and `PUBLICATION` types.
 
+:::tip
+
+In case of unidirectional WebSocket, EventSource and HTTP-streaming which currently work only with JSON `data` field of Push will come as an embedded JSON instead of `bytes` (again – the same mechanism as for Centrifugo bidirectional JSON protocol).
+
+:::
+
 Just try any unidirectional transport and you will quickly get the idea.

@@ -3,13 +3,13 @@ id: client_protocol
 title: Client protocol
 ---
 
-This chapter describes internal bidirectional client-server protocol in details to help developers build new client libraries and understand how existing client libraries work.
+This chapter describes internal bidirectional client-server protocol in details to help developers build new client libraries or understand how existing client connectors work.
 
 Note that you can always look at [existing client implementations](../ecosystem/client.md) in case of any questions. Not all clients support all available server features though.
 
 ### Client implementation feature matrix
 
-First we will look at list of features client library should support. Depending on client implementation some features can be not implemented. If you an author of client library you can use this list as checklist.
+First we will look at list of features bidirectional client library should support. If you are an author of client library you can use this list as a checklist.
 
 Our current client feature matrix looks like this:
 
@@ -17,31 +17,31 @@ Our current client feature matrix looks like this:
 - [x] connect to server (both Centrifugo and Centrifuge-based) using Protobuf protocol format
 - [x] connect with token (JWT in Centrifugo case, any string token in Centrifuge library case)
 - [x] connect to server with custom headers (not available in a browser)
-- [x] automatic reconnect in case of dial problems (network)
+- [x] automatic reconnect in case of connection problems (server restart, unavailable network)
 - [x] an exponential backoff for reconnect process
 - [x] possibility to set handlers for connect and disconnect events
-- [x] extract and expose disconnect reason
-- [x] subscribe to a channel and provide a way to handle asynchronous Publications coming from a channel
+- [x] extract and expose disconnect code and reason
+- [x] subscribe to a channel and provide a way to handle asynchronous Publications coming from it
 - [x] handle Join and Leave messages from a channel
 - [x] handle Unsubscribe notifications
-- [x] publish method of Subscription object
-- [x] unsubscribe method of Subscription
-- [x] presence method of Subscription
-- [x] presence stats method of Subscription
-- [x] history method of Subscription
-- [x] publish method on top level
-- [x] unsubscribe method on top level
-- [x] presence method on top level
-- [x] presence stats method on top level
-- [x] history method on top level
+- [x] provide publish method of Subscription object
+- [x] provide unsubscribe method of Subscription
+- [x] provide presence method of Subscription
+- [x] provide presence stats method of Subscription
+- [x] provide history method of Subscription
+- [x] provide publish method on top level
+- [x] provide unsubscribe method on top level
+- [x] provide presence method on top level
+- [x] provide presence stats method on top level
+- [x] provide history method on top level
 - [x] send asynchronous messages to server
 - [x] handle asynchronous messages from server
 - [x] send RPC requests to server
 - [x] publish to channel without being subscribed
-- [x] subscribe to private (token-protected) channels with token
-- [x] connection token refresh mechanism
-- [x] private channel subscription token refresh
-- [x] client protocol level ping/pong to find broken connection
+- [x] subscribe to private (token-protected) channels with a token
+- [x] implement client-side connection token refresh mechanism
+- [x] implement private channel subscription token refresh mechanism
+- [x] client protocol level ping/pong to find a broken connection
 - [x] automatic reconnect in case of connect or subscribe command timeouts
 - [x] handle connection expired error
 - [x] handle subscription expired error
@@ -53,23 +53,23 @@ This document describes protocol specifics for Websocket transport which support
 
 :::info
 
-SockJS works almost the same way as JSON websocket described here but has its own extra framing on top of Centrifuge protocol messages. SockJS can only work with JSON - it's not possible to transfer binary data over it. SockJS is only needed as fallback to Websocket in browsers.
+SockJS works almost the same way as JSON websocket described here but has its own extra framing on top of Centrifuge protocol messages. SockJS can only work with JSON - it's not possible to transfer binary data over it.
 
 :::
 
 ### Top level framing
 
-Centrifuge protocol defined in [Protobuf schema](https://github.com/centrifugal/protocol/blob/master/definitions/client.proto). That schema is a source of truth and all protocol description below describes messages from that schema.
+Centrifuge protocol defined in [Protobuf schema](https://github.com/centrifugal/protocol/blob/master/definitions/client.proto). That schema is a source of the truth. Below we describe messages from that schema.
 
-Client sends `Command` to server. Server sends `Reply` to client. All communication between client and server is a bidirectional exchange of `Command` and `Reply` messages.
+In bidirectional case client sends `Command` to server and server sends `Reply` to client. I.e. all communication between client and server is a bidirectional exchange of `Command` and `Reply` messages.
 
 One request from client to server and one response from server to client can have more than one `Command` or `Reply`. This allows reducing number of system calls for writing and reading data.
 
 When JSON format used then many `Command` can be sent from client to server in JSON streaming line-delimited format. I.e. each individual `Command` encoded to JSON and then commands joined together using new line symbol `\n`:
 
 ```text
-{"id": 1, "method": "subscribe", "params": {"channel": "ch1"}}
-{"id": 2, "method": "subscribe", "params": {"channel": "ch2"}}
+{"id": 1, "method": 1, "params": {"channel": "ch1"}}
+{"id": 2, "method": 1, "params": {"channel": "ch2"}}
 ```
 
 For example here is how we do this in Javascript client when JSON format used:
@@ -88,13 +88,7 @@ function encodeCommands(commands) {
 
 :::info
 
-This doc will use JSON format for examples because it's human-readable. Everything said here for JSON is also true for Protobuf encoded case. The only difference is how several individual `Command` or server `Reply` joined into one request – see details below.
-
-:::
-
-:::info
-
-Method represented as a ENUM in protobuf schema and can be sent as integer value. Though it's possible to send it as string in JSON case – this was made to make JSON protocol human-friendly.
+This doc will use JSON format for examples because it's human-readable. Everything said here for JSON is also true for Protobuf encoded case. There is a difference how several individual `Command` or server `Reply` joined into one request – see details below. Also, in JSON format `bytes` fields transformed into embedded JSON by Centrifugo.
 
 :::
 
@@ -176,7 +170,7 @@ After a successful dial to WebSocket endpoint client must send `connect` command
 ```json
 {
     "id": 1,
-    "method": "connect",
+    "method": 0,
     "params": {
         "token": "JWT",
         "data": {}
@@ -184,7 +178,33 @@ After a successful dial to WebSocket endpoint client must send `connect` command
 }
 ```
 
-Where params fields:
+All methods defined in Protobuf schema:
+
+```
+message Command {
+  uint32 id = 1;
+  enum MethodType {
+    CONNECT = 0;
+    SUBSCRIBE = 1;
+    UNSUBSCRIBE = 2;
+    PUBLISH = 3;
+    PRESENCE = 4;
+    PRESENCE_STATS = 5;
+    HISTORY = 6;
+    PING = 7;
+    SEND = 8;
+    RPC = 9;
+    REFRESH = 10;
+    SUB_REFRESH = 11;
+  }
+  MethodType method = 2;
+  bytes params = 3;
+}
+```
+
+So here we are using a enum value for `CONNECT` (`0`).
+
+Params fields:
 
 * optional string `token` - connection token. Can be omitted if token-based auth not used.
 * `data` - can contain custom connect data, for example it can contain client settings.
@@ -216,7 +236,7 @@ subscribe on channels. To do this it must send `subscribe` command to server:
 ```json
 {
     "id": 2,
-    "method": "subscribe",
+    "method": 1,
     "params": {
         "channel": "ch1"
     }
@@ -267,7 +287,7 @@ When client wants to unsubscribe from a channel and therefore stop receiving asy
 ```json
 {
     "id": 3,
-    "method": "unsubscribe",
+    "method": 2,
     "params": {
         "channel": "ch1"
     }
@@ -283,7 +303,7 @@ It's possible to turn on client connection expiration mechanism on a server. Whi
 ```json
 {
     "id": 4,
-    "method": "refresh",
+    "method": 10,
     "params": {
         "token": "<refreshed token>"
     }

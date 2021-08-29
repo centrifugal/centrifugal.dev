@@ -17,7 +17,7 @@ Centrifugo can be configured in several ways.
 
 ### Command-line flags
 
-Centrifugo supports several command-line flags. See `centrifugo -h` for available flags. Command-line flags limited to most frequently used. In general, we suggest avoding using flags when developing Centrifugo into a production environment – prefer environment or configuration file sources.
+Centrifugo supports several command-line flags. See `centrifugo -h` for available flags. Command-line flags limited to most frequently used. In general, we suggest to avoid using flags for configuring Centrifugo in a production environment – prefer environment or configuration file sources.
 
 Command-line options have the highest priority when set than other ways to configure Centrifugo.
 
