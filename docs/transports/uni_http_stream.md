@@ -115,3 +115,7 @@ null
 `null` messages are pings from a server.
 
 That's all, happy streaming!
+
+## Browser example
+
+A basic browser example can be found [here](https://github.com/centrifugal/examples/tree/master/unidirectional/http_stream).

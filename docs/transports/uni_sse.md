@@ -75,6 +75,6 @@ Default: 65536 (64KB)
 
 Maximum allowed size of a initial HTTP POST request in bytes (when using HTTP POST requests to connect).
 
-## Example
+## Browser example
 
-Coming soon.
+A basic browser example can be found [here](https://github.com/centrifugal/examples/tree/master/unidirectional/sse).

@@ -563,6 +563,17 @@ All you need to do to enable proxying over GRPC instead of HTTP is to use `grpc`
 }
 ```
 
+Refresh proxy:
+
+```json title="config.json"
+{
+  ...
+  "proxy_refresh_endpoint": "grpc://localhost:12000",
+  "proxy_refresh_timeout":  "1s"
+}
+```
+
+
 Or for RPC proxy:
 
 ```json title="config.json"
@@ -573,7 +584,35 @@ Or for RPC proxy:
 }
 ```
 
-The same for publish, subscribe and refresh proxy types.
+For publish proxy in namespace `chat`:
+
+```json title="config.json"
+{
+  ...
+  "proxy_publish_endpoint": "grpc://localhost:12000",
+  "proxy_publish_timeout":  "1s"
+  "namespaces": [
+    {
+      "name": "chat",
+      "publish": true,
+      "proxy_publish": true
+    }
+  ]
+}
+```
+
+Use subscribe proxy for all channels without namespaces:
+
+```json title="config.json"
+{
+  ...
+  "proxy_subscribe_endpoint": "grpc://localhost:12000",
+  "proxy_subscribe_timeout":  "1s",
+  "proxy_subscribe": true
+}
+```
+
+So the same as for HTTP, just the different endpoint scheme.
 
 ### Options
 
@@ -594,6 +633,15 @@ Add custom key to per-RPC credentials.
 String, default `""` (i.e. not used).
 
 A custom value for `proxy_grpc_credentials_key`.
+
+### GRPC proxy example
+
+We have [an example of backend server](https://github.com/centrifugal/examples/tree/master/proxy/grpc) (written in Go language) which can react to events from Centrifugo over GRPC. For other programming languages the approach is similar, i.e.:
+
+1. Copy proxy Protobuf definitions
+1. Generate GRPC code
+1. Run backend service with you custom business logic
+1. Point Centrifugo to it.
 
 ## Header proxy rules
 

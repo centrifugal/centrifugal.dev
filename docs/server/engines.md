@@ -292,11 +292,11 @@ To run Centrifugo with KeyDB all you need to do is use `redis` engine but run th
 
 :::caution
 
-**EXPERIMENTAL** status of Tarantool integration means that we are still going to improve it and there could be breaking changes in this way.
+**EXPERIMENTAL** status of Tarantool integration means that we are still going to improve it and there could be breaking changes as integration evolves.
 
 :::
 
-Unfortunately, it comes with some downsides. There are many ways to operate Tarantool in production and it's hard to distribute Centrifugo Tarantool engine in a way that suits everyone. Centrifugo tried to fit standalone and [Cartridge](https://github.com/tarantool/cartridge) Tarantool setups by providing [centrifugal/tarantool-engine](https://github.com/centrifugal/tarantool-engine) repository. It's a project with a Tarantool module which you should run.
+There are many ways to operate Tarantool in production and it's hard to distribute Centrifugo Tarantool engine in a way that suits everyone. Centrifugo tries to fit generic case by providing [centrifugal/tarantool-centrifuge](https://github.com/centrifugal/tarantool-centrifuge) module and by providing ready-to-use [centrifugal/rotor](https://github.com/centrifugal/rotor) project based on [centrifugal/tarantool-centrifuge](https://github.com/centrifugal/tarantool-centrifuge) and [Tarantool Cartridge](https://github.com/tarantool/cartridge).
 
 :::info
 
@@ -304,11 +304,14 @@ To be honest we bet on the community help to push this integration further. Tara
 
 :::
 
-The first thing is to run Tarantool with Centrifuge engine module from [centrifugal/tarantool-engine](https://github.com/centrifugal/tarantool-engine) repo. The basic example is:
+There are several supported Tarantool topologies to which Centrifugo can connect:
 
-```bash
-tarantool init_standalone.lua
-```
+* One standalone Tarantool instance
+* Many standalone Tarantool instances and consistently shard data between them
+* Tarantool running in Cartridge
+* Tarantool with replica and automatic failover in Cartridge
+* Many Tarantool instances (or leader-follower setup) in Cartridge with consistent client-side sharding between them
+* Tarantool with synchronous replication (Raft-based, Tarantool >= 2.7)
 
 After running Tarantool you can point Centrifugo to it (and of course scale Centrifugo nodes):
 
@@ -320,18 +323,9 @@ After running Tarantool you can point Centrifugo to it (and of course scale Cent
 }
 ```
 
-There are several supported Tarantool topologies to which Centrifugo can connect:
+See [centrifugal/rotor](https://github.com/centrifugal/rotor) repo for ready-to-use engine based on Tarantool Cartridge framework.
 
-* One standalone Tarantool instance
-* Many standalone Tarantool instances and consistently shard data between them
-* Tarantool running in Cartridge
-* Tarantool with replica and automatic failover in Cartridge
-* Many Tarantool instances (or leader-follower setup) in Cartridge with consistent client-side sharding between them
-* Tarantool with synchronous replication (Raft-based, Tarantool >= 2.7)
-
-See [centrifugal/tarantool-engine-cartridge](https://github.com/centrifugal/tarantool-engine-cartridge) repo for ready-to-use engine based on Tarantool Cartridge framework.
-
-See [centrifugal/tarantool-centrifuge](https://github.com/centrifugal/tarantool-centrifuge) repo for examples on how to run engine with Standalone single Tarantool instance or with Raft-based replication.
+See [centrifugal/tarantool-centrifuge](https://github.com/centrifugal/tarantool-centrifuge) repo for examples on how to run engine with Standalone single Tarantool instance or with Raft-based synchronous replication.
 
 ### Options
 

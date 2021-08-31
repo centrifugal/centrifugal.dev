@@ -152,11 +152,11 @@ In Centrifugo v3 Redis engine uses Redis Stream data structure by default for ke
 
 As you may know, Centrifugo has several built-in engines that allow scaling Centrifugo nodes (using PUB/SUB) and keep shared history and presence state. Before v3 Centrifugo had in-memory and Redis (or KeyDB) engines available.
 
-Introducing a new engine to Centrifugo is pretty hard since the engine should provide a very robust PUB/SUB performance, fast history and presence operations, possibility to publish a message to PUB/SUB and save to history atomically. It also should allow dealing with ephemeral frequently changing subscriptions. It's typical for Centrifugo use case to have millions of users each subscribed to their unique channel and constantly connecting/disconnecting.
+Introducing a new engine to Centrifugo is pretty hard since the engine should provide a very robust PUB/SUB performance, fast history and presence operations, possibility to publish a message to PUB/SUB and save to history atomically. It also should allow dealing with ephemeral frequently changing subscriptions. It's typical for Centrifugo use case to have millions of users each subscribed to a  unique channel and constantly connecting/disconnecting (thus subscribing/unsubscribing).
 
 ![](https://www.tadviser.ru/images/thumb/1/1a/Tarantool_%D0%A1%D0%A3%D0%91%D0%94_logo_2020.png/840px-Tarantool_%D0%A1%D0%A3%D0%91%D0%94_logo_2020.png)
 
-In v3 we added experimental support for the [Tarantool](https://www.tarantool.io/en/) engine. It fits nicely all the requirements above and provides a huge performance speedup for history and presence operations compared to Redis. According to our benchmarks, the speedup can be up to 4-10x depending on operation. The PUB/SUB performance of Tarantool is comparable with Redis (10-20% worse according to our internal benchmarks to be exact, but that's pretty much the same).
+In v3 we added **experimental** support for the [Tarantool](https://www.tarantool.io/en/) engine. It fits nicely all the requirements above and provides a huge performance speedup for history and presence operations compared to Redis. According to our benchmarks, the speedup can be up to 4-10x depending on operation. The PUB/SUB performance of Tarantool is comparable with Redis (10-20% worse according to our internal benchmarks to be exact, but that's pretty much the same).
 
 For example, let's look at Centrifugo benchmark where we recover zero messages (i.e. emulate a situations when many connections disconnected for a very short time interval due to load balancer reload).
 
@@ -174,9 +174,9 @@ BenchmarkTarantoolRecover    6292 ns/op	     563 B/op	   10 allocs/op
 
 Tarantool can provide new storage properties (like synchronous replication), new adoption. We are pretty excited about adding it as an option.
 
-But you could notice that support is **experimental** for now. The reason for this is that Tarantool integration involves one more moving piece – the [Centrifuge Lua module](https://github.com/centrifugal/tarantool-centrifuge) which should be run by a Tarantool server.
+The reason why Tarantool support is experimental is because Tarantool integration involves one more moving piece – the [Centrifuge Lua module](https://github.com/centrifugal/tarantool-centrifuge) which should be run by a Tarantool server.
 
-This increases deployment complexity and given the fact that many users have their own best practices in Tarantool deployment we are still evaluating a sufficient way to distribute Lua part. For now, we are targeting standalone (see examples in [centrifugal/tarantool-centrifuge](https://github.com/centrifugal/tarantool-centrifuge)) and Cartridge Tarantool setups (with [centrifugal/tarantool-engine-cartridge](https://github.com/centrifugal/tarantool-engine-cartridge)).
+This increases deployment complexity and given the fact that many users have their own best practices in Tarantool deployment we are still evaluating a sufficient way to distribute Lua part. For now, we are targeting standalone (see examples in [centrifugal/tarantool-centrifuge](https://github.com/centrifugal/tarantool-centrifuge)) and Cartridge Tarantool setups (with [centrifugal/rotor](https://github.com/centrifugal/rotor)).
 
 Refer to the [Tarantool Engine documentation](/docs/server/engines#tarantool-engine) for more details.
 
@@ -285,11 +285,17 @@ PRO version will be released soon after Centrifugo v3 OSS.
 
 There are some other changes introduced in v3 but not mentioned here. The full list can be found in the release notes and the migration guide.
 
-Hope we stepped into an exciting time of the v3 life cycle and many improvements will follow. Join our [communities](/docs/getting-started/introduction#join-community) in Telegram and Discord if you have questions or want to follow Centrifugo development.
+Hope we stepped into an exciting time of the v3 life cycle and many improvements will follow. Join our communities in Telegram and Discord if you have questions or want to follow Centrifugo development:
+
+[![Join the chat at https://t.me/joinchat/ABFVWBE0AhkyyhREoaboXQ](https://img.shields.io/badge/Telegram-Group-orange?style=flat&logo=telegram)](https://t.me/joinchat/ABFVWBE0AhkyyhREoaboXQ) &nbsp;[![Join the chat at https://discord.gg/tYgADKx](https://img.shields.io/discord/719186998686122046?style=flat&label=Discord&logo=discord)](https://discord.gg/tYgADKx)
 
 Enjoy Centrifugo v3, and let the Centrifugal force be with you.
 
-:::note
+:::note Special thanks
+
+Special thanks to [Anton Silischev](https://github.com/silischev) for the help with v3 tests, examples and CI. To [Leon Sorokin](https://github.com/leeoniya) for the spinning CSS Centrifugo logo. To [Michael Filonenko](https://github.com/filonenko-mikhail) for the help with Tarantool. To [German Saprykin](https://github.com/mogol) for Dart magic.
+
+Thanks to the community members who tested out Centrifugo v3 beta, found bugs and sent improvements.
 
 <div>Icons used here made by <a href="https://www.flaticon.com/authors/wanicon" title="wanicon">wanicon</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
 

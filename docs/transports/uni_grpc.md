@@ -69,4 +69,9 @@ Path to key file.
 
 ## Example
 
-Coming soon.
+A basic example can be found [here](https://github.com/centrifugal/examples/tree/master/unidirectional/grpc). It uses Go language, but for other languages approach is mostly the same:
+
+1. Copy Protobuf definitions
+1. Generate GRPC client code
+1. Use generated code to connect to Centrifugo
+1. Process Push messages, drop unknown Push types, handle those necessary for the application.
