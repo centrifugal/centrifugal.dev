@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkcentrifugal_dev=self.webpackChunkcentrifugal_dev||[]).push([[205],{4077:function(e){e.exports=JSON.parse('{"allTagsPath":"/blog/tags","slug":"release","name":"release","count":1,"permalink":"/blog/tags/release"}')}}]);

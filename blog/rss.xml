@@ -4,10 +4,17 @@
         <title>Centrifugo Blog</title>
         <link>https://centrifugal.dev/blog</link>
         <description>Centrifugo Blog</description>
-        <lastBuildDate>Fri, 15 Jan 2021 00:00:00 GMT</lastBuildDate>
+        <lastBuildDate>Tue, 31 Aug 2021 00:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <copyright>Centrifugal</copyright>
+        <item>
+            <title><![CDATA[Centrifugo v3 released]]></title>
+            <link>https://centrifugal.dev/blog/2021/08/31/hello-centrifugo-v3</link>
+            <guid>Centrifugo v3 released</guid>
+            <pubDate>Tue, 31 Aug 2021 00:00:00 GMT</pubDate>
+            <description><![CDATA[Centrifugo v3 released with lots of exciting improvements]]></description>
+        </item>
         <item>
             <title><![CDATA[Centrifuge – real-time messaging with Go]]></title>
             <link>https://centrifugal.dev/blog/2021/01/15/centrifuge-intro</link>
