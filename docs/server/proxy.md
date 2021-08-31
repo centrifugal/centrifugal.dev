@@ -543,7 +543,7 @@ Returning custom disconnect does not apply to response on refresh request as the
 
 Centrifugo can also proxy connection events to your backend over GRPC instead of HTTP. In this case, Centrifugo acts as a GRPC client and your backend acts as a GRPC server.
 
-GRPC service definitions can be found in the Centrifugo repository (TODO).
+GRPC service definitions can be found in the Centrifugo repository: [proxy.proto](https://github.com/centrifugal/centrifugo/blob/master/internal/proxyproto/proxy.proto).
 
 :::tip
 

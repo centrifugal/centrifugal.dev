@@ -8,8 +8,6 @@ It's possible to connect to GRPC unidirectional stream to consume real-time mess
 
 Protobuf definitions can be found [here](https://github.com/centrifugal/centrifugo/blob/master/internal/unigrpc/unistream/unistream.proto).
 
-See a Go based example that connects to a server: TODO.
-
 GRPC server will start on port `11000` (default).
 
 ## Supported data formats
