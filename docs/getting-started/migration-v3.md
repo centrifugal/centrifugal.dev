@@ -55,7 +55,14 @@ Configuring over command-line flags is not very convenient for production deploy
 
 In Centrifugo v3 you should explicitly [set a list of allowed origins](../server/configuration.md#allowed_origins) which are allowed to connect to client transport endpoints.
 
-There is a way to disable origin check, but it's discouraged and **insecure** in case you are using connect proxy feature:
+```json title="config.json"
+{
+    ...
+    "allowed_origins": ["https://mysite.com"]
+}
+```
+
+There is a way to disable origin check, but it's discouraged and **insecure** in case you are using connect proxy feature.
 
 ```json title="config.json"
 {
@@ -136,7 +143,7 @@ Our poll showed that most Centrifugo users do not use SockJS transport. In v3 it
 
 Here is a full list of configuration option changes. We provide a best-effort [configuration converter](#v2-to-v3-config-converter).
 
-`allowed_origins` is now required
+`allowed_origins` is now required to be set to authorize requests with `Origin` header
 
 `v3_use_offset` removed
 

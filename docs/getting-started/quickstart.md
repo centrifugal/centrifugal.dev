@@ -64,7 +64,7 @@ Now let's create `index.html` file with our simple app:
     </head>
     <body>
         <div id="counter">-</div>
-        <script src="https://cdn.jsdelivr.net/gh/centrifugal/centrifuge-js@2.7.6/dist/centrifuge.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/centrifugal/centrifuge-js@2.8.0/dist/centrifuge.min.js"></script>
         <script type="text/javascript">
             const container = document.getElementById('counter')
             const centrifuge = new Centrifuge("ws://localhost:8000/connection/websocket");
@@ -89,25 +89,31 @@ Now let's create `index.html` file with our simple app:
 </html>
 ```
 
-Note that we are using `centrifuge-js` 2.7.6 in this example, you better use its latest version at the moment of reading this tutorial.
+Note that we are using `centrifuge-js` 2.8.0 in this example, you better use its latest version at the moment of reading this tutorial.
 
 In `index.html` above we created an instance of a client (called `Centrifuge`) passing Centrifugo default WebSocket endpoint address to it, then we subscribed to a channel called `channel` and provided a callback function to process incoming real-time messages. Then we called `.connect()` method to start a WebSocket connection. 
 
 Now you need to serve this file with an HTTP server. In a real-world Javascript application, you will serve your HTML files with a web server of your choice – but for this simple example we can use a simple built-in Centrifugo static file server:
 
 ```bash
-centrifugo serve --port 3000
+./centrifugo serve --port 3000
 ```
 
-This command starts a simple static file web server that serves the current directory on port 3000. Make sure you still have Centrifugo server running. Open [http://localhost:3000/](http://localhost:3000/).
+Alternatively, if you have Python 3 installed:
+
+```bash
+python3 -m http.server 3000
+```
+
+These commands start a simple static file web server that serves the current directory on port 3000. Make sure you still have Centrifugo server running. Open [http://localhost:3000/](http://localhost:3000/).
 
 Now if you look at browser developer tools or in Centrifugo logs you will notice that a connection can not be successfully established:
 
 ```
-2021-02-26 17:37:47 [INF] error checking request origin error="request Origin \"http://localhost:3000\" is not authorized for Host \"localhost:8000\""
+2021-09-01 10:17:33 [INF] request Origin is not authorized due to empty allowed_origins origin=http://localhost:3000
 ```
 
-That's because we are connecting from an application on `localhost:3000` while Centrifugo runs on `localhost:8000`. We need to additionally configure `allowed_origins` option:
+That's because we have not set `allowed_origins` in the configuration. Modify `allowed_origins` like this:
 
 ```json title="config.json"
 {
@@ -118,7 +124,7 @@ That's because we are connecting from an application on `localhost:3000` while C
 }
 ```
 
-Allowed origins is a security option – see more details in server configuration docs. Restart Centrifugo after modifying `allowed_origins` in a configuration file.
+Allowed origins is a security option for request originating from web browsers – see [more details](../server/configuration.md#allowed_origins) in server configuration docs. Restart Centrifugo after modifying `allowed_origins` in a configuration file.
 
 Now if you reload a browser window with an application you should see new information logs in server output:
 

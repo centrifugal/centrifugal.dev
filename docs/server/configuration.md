@@ -110,11 +110,13 @@ Let's describe some important options you can configure when running Centrifugo.
 
 ### allowed_origins
 
-This option allows setting an array of allowed origin patterns (array of strings) for WebSocket and SockJS endpoints to prevent [CSRF](https://en.wikipedia.org/wiki/Cross-site_request_forgery) attack. Also, it's used for HTTP-based unidirectional transports to enable CORS for configured origins.
+This option allows setting an array of allowed origin patterns (array of strings) for WebSocket and SockJS endpoints to prevent [CSRF](https://en.wikipedia.org/wiki/Cross-site_request_forgery) or WebSocket hijacking attacks. Also, it's used for HTTP-based unidirectional transports to enable CORS for configured origins.
 
 As soon as `allowed_origins` is defined every connection request with `Origin` set will be checked against each pattern in an array.
 
-For example, a client connects to Centrifugo from an application on `http://localhost:3000`. In this case, `allowed_origins` should be configured in this way:
+Connection requests without `Origin` header set are passing through without any checks (i.e. always allowed).
+
+For example, a client connects to Centrifugo from a web browser application on `http://localhost:3000`. In this case, `allowed_origins` should be configured in this way:
 
 ```json
 "allowed_origins": [
@@ -147,8 +149,6 @@ It's also possible to allow all origins in the following way (but this is discou
     "*"
 ]
 ```
-
-Connection requests without `Origin` header set are passing through without any checks (i.e. always allowed).
 
 ### address
 
