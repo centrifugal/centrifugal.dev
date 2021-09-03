@@ -1,9 +1,9 @@
 module.exports = {
   Introduction: [
     "getting-started/introduction",
-    "getting-started/highlights",
     "getting-started/installation",
     "getting-started/quickstart",
+    "getting-started/highlights",
     "getting-started/client_api",
     "getting-started/integration",
     "getting-started/design",

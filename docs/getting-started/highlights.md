@@ -3,7 +3,7 @@ id: highlights
 title: Main highlights
 ---
 
-Here is a list with main Centrifugo ✨highlights✨. Every point is then extended throughout the documentation.
+At this point you know how to build the simplest real-time app with Centrifugo. Beyond the core PUB/SUB functionality Centrifugo provides more features and primitives to build scalable real-time applications. Let's summarize main Centrifugo ✨highlights✨ here. Every point is then extended throughout the documentation.
 
 ### Simple integration
 
