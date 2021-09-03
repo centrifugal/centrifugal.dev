@@ -199,7 +199,7 @@ To start Centrifugo with 2 Redis shards on localhost running on port 6379 and po
     "engine": "redis",
     "redis_address": [
         "127.0.0.1:6379",
-        "127.0.0.1:6379",
+        "127.0.0.1:6380",
     ]
 }
 ```
