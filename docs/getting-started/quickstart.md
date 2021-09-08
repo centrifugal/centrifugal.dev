@@ -1,17 +1,18 @@
 ---
-id: quick_start
-title: Quick start
+id: quickstart
+sidebar_label: Quickstart tutorial
+title: Quickstart tutorial ⏱️
 ---
 
-Here we will build a very simple browser application with Centrifugo. It works in a way that users connect to Centrifugo over WebSocket, subscribe to a channel and start receiving all messages published to that channel. In our case we will send a counter value to all channel subscribers to update it in all open browser tabs in real-time.
+Here we will build a very simple browser application with Centrifugo. It works in a way that users connect to Centrifugo over WebSocket, subscribe to a channel, and start receiving all messages published to that channel. In our case, we will send a counter value to all channel subscribers to update it in all open browser tabs in real-time.
 
-First you need to [install Centrifugo](installation.md). Below in this example we will use a binary file release for simplicity. Once you have Centrifugo available on your machine you can generate minimal required configuration file with the following command:
+First you need to [install Centrifugo](installation.md). Below in this example, we will use a binary file release for simplicity. Once you have Centrifugo available on your machine you can generate minimal required configuration file with the following command:
 
 ```
 ./centrifugo genconfig
 ```
 
-This helper command will generate `config.json` file in the working directory with a content like this:
+This helper command will generate `config.json` file in the working directory with content like this:
 
 ```json title="config.json"
 {
@@ -29,7 +30,7 @@ Now we can start a server. Let's start it with a built-in admin web interface:
 ./centrifugo --config=config.json --admin
 ```
 
-We could also enable admin web interface by not using `--admin` flag but by adding `"admin": true` option to JSON configuration file:
+We could also enable the admin web interface by not using `--admin` flag but by adding `"admin": true` option to the JSON configuration file:
 
 ```json title="config.json"
 {
@@ -52,7 +53,7 @@ Now open [http://localhost:8000](http://localhost:8000). You should see Centrifu
 
 ![Admin web panel](/img/quick_start_admin.png)
 
-Inside admin panel you should see that one Centrifugo node is running, and it does not have connected clients.
+Inside the admin panel, you should see that one Centrifugo node is running, and it does not have connected clients.
 
 Now let's create `index.html` file with our simple app:
 
@@ -63,7 +64,7 @@ Now let's create `index.html` file with our simple app:
     </head>
     <body>
         <div id="counter">-</div>
-        <script src="https://cdn.jsdelivr.net/gh/centrifugal/centrifuge-js@2.7.6/dist/centrifuge.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/centrifugal/centrifuge-js@2.8.0/dist/centrifuge.min.js"></script>
         <script type="text/javascript">
             const container = document.getElementById('counter')
             const centrifuge = new Centrifuge("ws://localhost:8000/connection/websocket");
@@ -88,25 +89,31 @@ Now let's create `index.html` file with our simple app:
 </html>
 ```
 
-Note that we are using `centrifuge-js` 2.7.6 in this example, you better use its latest version at the moment of reading this tutorial.
+Note that we are using `centrifuge-js` 2.8.0 in this example, you better use its latest version at the moment of reading this tutorial.
 
 In `index.html` above we created an instance of a client (called `Centrifuge`) passing Centrifugo default WebSocket endpoint address to it, then we subscribed to a channel called `channel` and provided a callback function to process incoming real-time messages. Then we called `.connect()` method to start a WebSocket connection. 
 
-Now you need to serve this file with HTTP server. In real-world Javascript application you will serve your HTML files with a web server of your choice – but for this simple example we can use a simple built-in Centrifugo static file server:
+Now you need to serve this file with an HTTP server. In a real-world Javascript application, you will serve your HTML files with a web server of your choice – but for this simple example we can use a simple built-in Centrifugo static file server:
 
 ```bash
-centrifugo serve --port 3000
+./centrifugo serve --port 3000
 ```
 
-This command starts a simple static file web server that serves current directory on port 3000. Make sure you still have Centrifugo server running. Open [http://localhost:3000/](http://localhost:3000/).
+Alternatively, if you have Python 3 installed:
+
+```bash
+python3 -m http.server 3000
+```
+
+These commands start a simple static file web server that serves the current directory on port 3000. Make sure you still have Centrifugo server running. Open [http://localhost:3000/](http://localhost:3000/).
 
 Now if you look at browser developer tools or in Centrifugo logs you will notice that a connection can not be successfully established:
 
 ```
-2021-02-26 17:37:47 [INF] error checking request origin error="request Origin \"http://localhost:3000\" is not authorized for Host \"localhost:8000\""
+2021-09-01 10:17:33 [INF] request Origin is not authorized due to empty allowed_origins origin=http://localhost:3000
 ```
 
-That's because we are connecting from an application on `localhost:3000` while Centrifugo runs on `localhost:8000`. We need to additionally configure `allowed_origins` option:
+That's because we have not set `allowed_origins` in the configuration. Modify `allowed_origins` like this:
 
 ```json title="config.json"
 {
@@ -117,7 +124,7 @@ That's because we are connecting from an application on `localhost:3000` while C
 }
 ```
 
-Allowed origins is a security option – see more details in server configuration docs. Restart Centrifugo after modifying `allowed_origins` in a configuration file.
+Allowed origins is a security option for request originating from web browsers – see [more details](../server/configuration.md#allowed_origins) in server configuration docs. Restart Centrifugo after modifying `allowed_origins` in a configuration file.
 
 Now if you reload a browser window with an application you should see new information logs in server output:
 
@@ -126,20 +133,20 @@ Now if you reload a browser window with an application you should see new inform
 2021-02-26 17:47:47 [INF] disconnect after handling command client=45a1b8f4-d6dc-4679-9927-93e41c14ad93 command="id:1 params:\"{\\\"token\\\":\\\"<TOKEN>\\\"}\" " reason="invalid token" user=
 ```
 
-We still can not connect. That's because client should provide a valid JWT (JSON Web Token) to authenticate itself. This token **must be generated on your backend** and passed to a client side (over template variables or using separate AJAX call – whatever way you prefer). Since in our simple example we don't have application backend we can quickly generate example token for a user using `centrifugo` sub-command `gentoken`. Like this:
+We still can not connect. That's because the client should provide a valid JWT (JSON Web Token) to authenticate itself. This token **must be generated on your backend** and passed to a client-side (over template variables or using separate AJAX call – whatever way you prefer). Since in our simple example we don't have an application backend we can quickly generate an example token for a user using `centrifugo` sub-command `gentoken`. Like this:
 
 ```bash
 ./centrifugo gentoken -u 123722
 ```
 
-– where `-u` flag sets user ID. The output should be like:
+– where `-u` flag sets user ID. The output should be like this:
 
 ```
 HMAC SHA-256 JWT for user 123722 with expiration TTL 168h0m0s:
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM3MjIiLCJleHAiOjE1OTAxODYzMTZ9.YMJVJsQbK_p1fYFWkcoKBYr718AeavAk3MAYvxcMk0M
 ```
 
-– you will have another token value since this one based on randomly generated `token_hmac_secret_key` from configuration file we created in the beginning of this tutorial. See [authentication docs](../server/authentication.md) for information about proper token generation in real app.
+– you will have another token value since this one is based on randomly generated `token_hmac_secret_key` from the configuration file we created at the beginning of this tutorial. See [authentication docs](../server/authentication.md) for information about proper token generation in real app.
 
 Now we can copy generated HMAC SHA-256 JWT and paste it into `centrifuge.setToken` call instead of `<TOKEN>` placeholder in `index.html` file. I.e.:
 
@@ -147,15 +154,15 @@ Now we can copy generated HMAC SHA-256 JWT and paste it into `centrifuge.setToke
 centrifuge.setToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM3MjIiLCJleHAiOjE1OTAxODYzMTZ9.YMJVJsQbK_p1fYFWkcoKBYr718AeavAk3MAYvxcMk0M");
 ```
 
-That's it! If you reload your browser tab – connection will be successfully established and client will subscribe to a channel.
+That's it! If you reload your browser tab – the connection will be successfully established and the client will subscribe to a channel.
 
 Open developer tools and look at WebSocket frames panel, you should see sth like this:
 
 ![Connected](/img/quick_start_connected.png)
 
-OK, the last thing we need to do here is to publish new counter value to a channel and make sure our app works properly.
+OK, the last thing we need to do here is to publish a new counter value to a channel and make sure our app works properly.
 
-We can do this over Centrifugo API sending HTTP request to default API endpoint `http://localhost:8000/api`, but let's do this over admin web panel first.
+We can do this over Centrifugo API sending an HTTP request to default API endpoint `http://localhost:8000/api`, but let's do this over the admin web panel first.
 
 Open Centrifugo admin web panel in another browser tab ([http://localhost:8000/](http://localhost:8000/)) and go to `Actions` section. Select publish action, insert channel name that you want to publish to – in our case this is a string `channel` and insert into `data` area JSON like this:
 
@@ -167,9 +174,9 @@ Open Centrifugo admin web panel in another browser tab ([http://localhost:8000/]
 
 ![Admin publish](/img/quick_start_publish.png)
 
-Click `Submit` button and check out application browser tab – counter value must be immediately received and displayed.
+Click `Submit` button and check out the application browser tab – counter value must be immediately received and displayed.
 
-Open several browser tabs with our app and make sure all tabs receive message as soon as you publish it.
+Open several browser tabs with our app and make sure all tabs receive a message as soon as you publish it.
 
 ![Message received](/img/quick_start_message.png)
 
@@ -185,8 +192,8 @@ curl --header "Content-Type: application/json" \
 
 – where for `Authorization` header we set `api_key` value from Centrifugo config file generated above.
 
-We did it! We built the simplest browser real-time app with Centrifugo and its Javascript client. It does not have backend, it's not very useful to be honest, but it should give you an insight on how to start working with Centrifugo server. Read more about Centrifugo server in next documentations chapters – it can do much much more than we just showed here. [Integration guide](integration.md) describes a process of idiomatic Centrifugo integration with your application backend.
+We did it! We built the simplest browser real-time app with Centrifugo and its Javascript client. It does not have a backend, it's not very useful, to be honest, but it should give you an insight on how to start working with Centrifugo server. Read more about Centrifugo server in the next documentations chapters – it can do much much more than we just showed here. [Integration guide](integration.md) describes a process of idiomatic Centrifugo integration with your application backend.
 
 ### More examples
 
-Several more examples located on Github – [check out this repo](https://github.com/centrifugal/examples)
+Several more examples are located on Github – [check out this repo](https://github.com/centrifugal/examples)

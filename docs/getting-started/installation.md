@@ -3,13 +3,13 @@ id: installation
 title: Install Centrifugo
 ---
 
-Centrifugo server is written in Go language. It's an open-source software (except some Pro parts), the source code is available [on Github](https://github.com/centrifugal/centrifugo).
+Centrifugo server is written in Go language. It's open-source software (except some Pro parts), the source code is available [on Github](https://github.com/centrifugal/centrifugo).
 
-Centrifugo is built around [Centrifuge](https://github.com/centrifugal/centrifuge) library for Go language. That library defines custom protocol and message types which must be sent over various real-time transports. Centrifugo bidirectional client connectors use that protocol internally and provide simple API for features - making persistent connection, subscribing on channels, calling RPC commands and more. When using unidirectional transports 
+Centrifugo is built around [Centrifuge](https://github.com/centrifugal/centrifuge) library for Go language. That library defines a custom protocol and message types that must be sent over various real-time transports. Centrifugo bidirectional client connectors use that protocol internally and provide simple API for features - making a persistent connection, subscribing on channels, calling RPC commands, and more. When using unidirectional transports 
 
 Server documentation covers a lot of server concepts in detail. Here we start with ways to install Centrifugo on your system. 
 
-## Install from binary release
+## Install from the binary release
 
 Binary releases available on Github. [Download latest release](https://github.com/centrifugal/centrifugo/releases) for your operating system, unpack it and you are done. Centrifugo is pre-built for:
 
@@ -22,19 +22,19 @@ Binary releases available on Github. [Download latest release](https://github.co
 * FreeBSD (freebsd_amd64)
 * ARM v6 (linux_armv6)
 
-Archives contain a single statically compiled binary `centrifugo` file which is ready to run: 
+Archives contain a single statically compiled binary `centrifugo` file that is ready to run: 
 
 ```
 ./centrifugo -h
 ```
 
-See version of Centrifugo:
+See the version of Centrifugo:
 
 ```
 ./centrifugo version
 ```
 
-Centrifugo requires configuration file with several secret keys. If you are new to Centrifugo then there is `genconfig` command which generates a minimal configuration file to get started:
+Centrifugo requires a configuration file with several secret keys. If you are new to Centrifugo then there is `genconfig` command which generates a minimal configuration file to get started:
 
 ```bash
 ./centrifugo genconfig
@@ -42,7 +42,7 @@ Centrifugo requires configuration file with several secret keys. If you are new 
 
 It generates random secret keys and creates configuration file `config.json` in a current directory (by default).
 
-:::note
+:::tip
 
 It's possible to generate file in YAML or TOML format, i.e. `./centrifugo genconfig -c config.toml`
 
@@ -54,7 +54,7 @@ Having a configuration file you can finally run Centrifugo instance:
 ./centrifugo --config=config.json
 ```
 
-We will talk about a configuration in detail in next sections.
+We will talk about a configuration in detail in the next sections.
 
 You can also put or symlink `centrifugo` into your `bin` OS directory and run it from anywhere:
 
@@ -64,7 +64,7 @@ centrifugo --config=config.json
 
 ## Docker image
 
-Centrifugo server has docker image [available on Docker Hub](https://hub.docker.com/r/centrifugo/centrifugo/).
+Centrifugo server has a docker image [available on Docker Hub](https://hub.docker.com/r/centrifugo/centrifugo/).
 
 ```
 docker pull centrifugo/centrifugo
@@ -77,6 +77,12 @@ docker run --ulimit nofile=65536:65536 -v /host/dir/with/config/file:/centrifugo
 ```
 
 Note that docker allows setting `nofile` limits in command-line arguments which is pretty important to handle lots of simultaneous persistent connections and not run out of open file limit (each connection requires one file descriptor). See also [infrastructure tuning chapter](../server/infra_tuning.md).
+
+:::caution
+
+Pin to the exact Docker Image tag in production, for example: `centrifugo/centrifugo:v3.0.0`, this will help to avoid unexpected problems during re-deploy process. 
+
+:::
 
 ## Docker-compose example
 
@@ -97,7 +103,7 @@ Create `docker-compose.yml`:
 ```yml
 centrifugo:
   container_name: centrifugo
-  image: centrifugo/centrifugo:latest
+  image: centrifugo/centrifugo:v3
   volumes:
     - ./config.json:/centrifugo/config.json
   command: centrifugo -c config.json
@@ -121,7 +127,7 @@ Official Kubernetes Helm chart available and [located on Github](https://github.
 
 ## RPM and DEB packages for Linux
 
-Every time we make new Centrifugo release we upload rpm and deb packages for popular linux distributions on [packagecloud.io](https://packagecloud.io/FZambia/centrifugo).
+Every time we make a new Centrifugo release we upload rpm and deb packages for popular Linux distributions on [packagecloud.io](https://packagecloud.io/FZambia/centrifugo).
 
 At moment, we support versions of the following distributions:
 
@@ -138,9 +144,9 @@ See [full list of available packages](https://packagecloud.io/FZambia/centrifugo
 
 Centrifugo also works on 32-bit architecture, but we don't support packaging for it since 64-bit is more convenient for servers today.
 
-## With brew on MacOS
+## With brew on macOS
 
-If you are developing on MacOS then you can install Centrifugo over `brew`:
+If you are developing on macOS then you can install Centrifugo over `brew`:
 
 ```
 brew tap centrifugal/centrifugo

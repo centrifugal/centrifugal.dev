@@ -1,9 +1,9 @@
 module.exports = {
   Introduction: [
     "getting-started/introduction",
-    "getting-started/highlights",
     "getting-started/installation",
-    "getting-started/quick_start",
+    "getting-started/quickstart",
+    "getting-started/highlights",
     "getting-started/client_api",
     "getting-started/integration",
     "getting-started/design",
@@ -23,7 +23,7 @@ module.exports = {
     "server/admin_web",
     "server/monitoring",
     "server/infra_tuning",
-    "server/proxy_and_load_balancing",
+    "server/load_balancing",
     "server/tls",
     "server/codes",
   ],
@@ -66,6 +66,7 @@ module.exports = {
         "pro/user_connections",
         "pro/performance",
         "pro/singleflight",
+        "pro/db_namespaces",
         "pro/process_stats",
       ],
     },

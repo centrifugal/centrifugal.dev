@@ -129,6 +129,7 @@ export default class ConfigConverter extends React.Component {
         rename('secret', 'token_hmac_secret_key');
         rename('history_lifetime', 'history_ttl');
         rename('history_recover', 'recover');
+        rename('server_side', 'protected');
         rename('client_presence_ping_interval', 'client_presence_update_interval');
         rename('client_ping_interval', 'websocket_ping_interval');
         rename('client_message_write_timeout', 'websocket_write_timeout');
@@ -174,6 +175,7 @@ export default class ConfigConverter extends React.Component {
                 rename('history_lifetime', 'history_ttl', namespace);
                 toDuration('history_ttl', namespace);
                 rename('history_recover', 'recover', namespace);
+                rename('server_side', 'protected', namespace);
                 newNamespaces.push(namespace);
             }
             config['namespaces'] = newNamespaces;

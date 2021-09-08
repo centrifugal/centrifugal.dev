@@ -2,7 +2,10 @@
 title: Experimenting with QUIC and WebTransport
 tags: [quic, webtransport, go]
 description: Experimenting with QUIC and WebTransport in Go
-image: /img/author.jpeg
+author: Alexander Emelin
+authorTitle: Creator of Centrifugo
+authorImageURL: https://github.com/FZambia.png
+image: https://i.imgur.com/sH9zfhe.jpg
 hide_table_of_contents: false
 ---
 

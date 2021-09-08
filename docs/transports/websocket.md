@@ -21,7 +21,7 @@ By default WebSocket connection uses JSON protocol internally.
 
 Default: 65536 (64KB)
 
-Maximum allowed size of message from websocket in bytes.
+Maximum allowed size of a message received from WebSocket connection in bytes.
 
 ### websocket_read_buffer_size
 
@@ -83,7 +83,7 @@ wss://centrifugo.example.com/connection/websocket?format=protobuf
 
 After doing this Centrifugo will use binary frames to pass data between client and server. Your application specific payload can be random bytes.
 
-:::note
+:::tip
 
 You still can continue to encode your application specific data as JSON when using Protobuf protocol thus have a possibility to co-exist with clients that use JSON protocol on the same Centrifugo installation inside the same channels.
 

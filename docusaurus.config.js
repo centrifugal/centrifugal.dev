@@ -1,6 +1,6 @@
 module.exports = {
   title: "Centrifugo",
-  tagline: "Scalable real-time messaging server in language-agnostic way.",
+  tagline: "Centrifugo – scalable real-time messaging server in a language-agnostic way. Set up once and forever.",
   url: "https://centrifugal.dev",
   baseUrl: "/",
   trailingSlash: false,
@@ -10,6 +10,9 @@ module.exports = {
   organizationName: "centrifugal",
   projectName: "centrifugal.dev",
   themeConfig: {
+    googleAnalytics: {
+      trackingID: 'UA-204787498-1',
+    },
     prism: {
 
     },
@@ -17,6 +20,7 @@ module.exports = {
       defaultMode: "light",
       respectPrefersColorScheme: true,
     },
+    image: "img/centrifugo_soc.png",
     navbar: {
       hideOnScroll: true,
       title: "Centrifugo",

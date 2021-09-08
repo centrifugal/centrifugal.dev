@@ -2,7 +2,10 @@
 title: Centrifugo v3 released
 tags: [centrifugo, release]
 description: Centrifugo v3 released with lots of exciting improvements
-image: /img/author.jpeg
+author: Centrifugal team
+authorTitle: Let the Centrifugal force be with you
+authorImageURL: /img/logo_animated.svg
+image: /img/v3_blog.jpg
 hide_table_of_contents: false
 ---
 
@@ -18,12 +21,14 @@ New Centrifugo v3 is targeting to improve Centrifugo adoption for basic real-tim
 
 Centrifugo v2 life cycle has come to an end. Before discussing v3 let's look back at what has been done during the last three years.
 
-Centrifugo v2 was a pretty huge refactoring of v1. Since the v2 release, Centrifugo is built on top of  new [Centrifuge library](https://github.com/centrifugal/centrifuge) for Go language. Centrifuge library elolved significantly since its initial release and now powers Grafana v8 real-time streaming among other things.
+Centrifugo v2 was a pretty huge refactoring of v1. Since the v2 release, Centrifugo is built on top of  new [Centrifuge library](https://github.com/centrifugal/centrifuge) for Go language. Centrifuge library evolved significantly since its initial release and now powers Grafana v8 real-time streaming among other things.
+
+Here is an awesome demo made by my colleague <a href="https://github.com/alexanderzobnin">Alexander Zobnin</a> that demonstrates real-time telemetry of Assetto Corsa sports car streamed in real-time to Grafana dashboard: 
 
 <div class="vimeo-full-width">
    <iframe src="https://player.vimeo.com/video/570333329?title=0&byline=0&portrait=0" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
-</div>  
-<p><a href="https://vimeo.com/570333329">Grafana Racing Telemetry Demo</a> by my collegue <a href="https://vimeo.com/user54793063">Alexander Zobnin</a></p>
+</div>
+<p></p>
 
 Centrifugo integrated with Redis Streams, got Redis Cluster support, can now work with Nats server as a PUB/SUB broker. Notable additions of Centrifugo v2 were [server-side subscriptions](/docs/server/server_subs) with some interesting features on top – like maintaining a single global connection from one user and automatic personal channel subscription upon user connect.
 
@@ -34,6 +39,10 @@ Client ecosystem improved significantly. The fact that client protocol migrated 
 We also have an [official Helm chart](https://github.com/centrifugal/helm-charts), [Grafana dashboard](https://grafana.com/grafana/dashboards/13039) for Prometheus datasource, and so on.
 
 ![](https://grafana.com/api/dashboards/13039/images/8950/image)
+
+Centrifugo is becoming more noticeable in a wider real-time technology community. For example, it was included in a [periodic table of real-time](https://ably.com/periodic-table-of-realtime) created by Ably.com (one of the most powerful real-time messaging cloud services at the moment):
+
+![](https://ik.imagekit.io/ably/ghost/prod/2021/08/periodic-table-screenshots-combined-without-banner-no-legend.jpg?tr=w-1520)
 
 Of course, there are many aspects where Centrifugo can be improved. And v3 addresses some of them. Below we will look at the most notable features and changes of the new major Centrifugo version.
 
@@ -49,7 +58,7 @@ For more details, refer to the [v3 migration guide](/docs/getting-started/migrat
 
 ### License change
 
-As some of you know we considered changing Centrifugo license to AGPL v3 for a new release. After thinking a lot about this we decided to not step into this area at the moment.
+As some of you know we considered changing Centrifugo license to AGPL v3 for a new release. After thinking a lot about this we decided to not step into this area.
 
 But the license has been changed: the license of OSS Centrifugo is now Apache 2.0 instead of MIT. Apache 2.0 is also a permissive OSS license, it's just a bit more concrete in some aspects.
 
@@ -59,23 +68,23 @@ But the license has been changed: the license of OSS Centrifugo is now Apache 2.
 
 Server-side subscriptions introduced in Centrifugo v2 and recent improvements in the underlying Centrifuge library opened a road for a unidirectional approach.
 
-This means that Centrifugo v3 provides several unidirectional real-time transports where messages flow only in one direction – from a server to a client. Why is this change important?
+This means that Centrifugo v3 provides a set of unidirectional real-time transports where messages flow only in one direction – from a server to a client. Why is this change important?
 
-<img src="/img/atom.svg" align="right" width="25%" />
-
-Centrifugo originally concentrated on using bidirectional transports for client-server communication. Like WebSocket and SockJS. Bidirectional transports allow implementing many great protocol features since a client can communicate with a server in various ways after establishing a persistent connection. While this is a great opportunity this also leads to an increased complexity.
+Centrifugo originally concentrated on using bidirectional transports for client-server communication. Like WebSocket and SockJS. Bidirectional transports allow implementing some great protocol features since a client can communicate with a server in various ways after establishing a persistent connection. While this is a great opportunity this also leads to an increased complexity.
 
 Centrifugo users had to use special client connector libraries which abstracted underlying work into a simple public API. But internally connectors do many things: matching requests to responses, handling timeouts, handling an ordering, queuing operations, error handling. So the client connector is a pretty complex piece of software.
 
 But what if a user just needs to receive real-time updates from a stable set of channels known in connection time? Can we simplify everything and avoid using custom software on a client-side?
 
-With unidirectional transports, the answer is yes. Clients can now connect to Centrifugo using a bunch of unidirectional transports. And the greatest thing is that in this case, developers should not depend on Centrifugo client connectors at all – just use native browser APIs or GRPC-generated code. It's finally possible to consume events from Centrifigo using CURL.
+With unidirectional transports, the answer is yes. Clients can now connect to Centrifugo using a bunch of unidirectional transports. And the greatest thing is that in this case, developers should not depend on Centrifugo client connectors at all – just use native browser APIs or GRPC-generated code. It's finally possible to consume events from Centrifugo using CURL (see [an example](/docs/transports/uni_http_stream#connecting-using-curl)).
 
-With subscribe server API (see below) it's even possible to subscribe unidirectional client to server-side channels dynamically.
+Using unidirectional transports you can still benefit from Centrifugo built-in scalability with various engines, utilize built-in authentication over JWT or the connect proxy feature.
+
+With subscribe server API (see below) it's even possible to subscribe unidirectional client to server-side channels dynamically. With refresh server API or the refresh proxy feature it's possible to manage a connection expiration.
 
 Centrifugo supports the following unidirectional transports:
 
-* [Eventsource (SSE)](/docs/transports/uni_sse)
+* [EventSource (SSE)](/docs/transports/uni_sse)
 * [HTTP streaming](/docs/transports/uni_http_stream)
 * [Unidirectional WebSocket](/docs/transports/uni_websocket)
 * [Unidirectional GRPC stream](/docs/transports/uni_grpc)
@@ -142,19 +151,33 @@ In Centrifugo v3 Redis engine uses Redis Stream data structure by default for ke
 
 As you may know, Centrifugo has several built-in engines that allow scaling Centrifugo nodes (using PUB/SUB) and keep shared history and presence state. Before v3 Centrifugo had in-memory and Redis (or KeyDB) engines available.
 
-Introducing a new engine to Centrifugo is pretty hard since the engine should provide a very robust PUB/SUB performance, fast history and presence operations, possibility to publish a message to PUB/SUB and save to history atomically. It also should allow dealing with ephemeral frequently changing subscriptions. It's typical for Centrifugo use case to have millions of users each subscribed to their unique channel and constantly connecting/disconnecting.
+Introducing a new engine to Centrifugo is pretty hard since the engine should provide a very robust PUB/SUB performance, fast history and presence operations, possibility to publish a message to PUB/SUB and save to history atomically. It also should allow dealing with ephemeral frequently changing subscriptions. It's typical for Centrifugo use case to have millions of users each subscribed to a  unique channel and constantly connecting/disconnecting (thus subscribing/unsubscribing).
 
 ![](https://www.tadviser.ru/images/thumb/1/1a/Tarantool_%D0%A1%D0%A3%D0%91%D0%94_logo_2020.png/840px-Tarantool_%D0%A1%D0%A3%D0%91%D0%94_logo_2020.png)
 
-In v3 we added experimental support for the [Tarantool](https://www.tarantool.io/en/) engine. It fits nicely all the requirements above and provides a huge performance speedup for history and presence operations compared to Redis. According to our benchmarks, the speedup can be up to 5-10x. The PUB/SUB performance of Tarantool is comparable with Redis (10-20% worse according to our internal benchmarks to be exact, but that's pretty much the same).
+In v3 we added **experimental** support for the [Tarantool](https://www.tarantool.io/en/) engine. It fits nicely all the requirements above and provides a huge performance speedup for history and presence operations compared to Redis. According to our benchmarks, the speedup can be up to 4-10x depending on operation. The PUB/SUB performance of Tarantool is comparable with Redis (10-20% worse according to our internal benchmarks to be exact, but that's pretty much the same).
 
-Tarantool can provide new storage properties, new adoption. We are pretty excited about adding it as an option.
+For example, let's look at Centrifugo benchmark where we recover zero messages (i.e. emulate a situations when many connections disconnected for a very short time interval due to load balancer reload).
 
-But you could notice that support is **experimental** for now. The reason for this is that Tarantool integration involves one more moving piece – the [Lua module](https://github.com/centrifugal/tarantool-engine) which should be run by a Tarantool server.
+For Redis engine:
 
-This increases deployment complexity and given the fact that many users have their own best practices in Tarantool deployment we are still evaluating a sufficient way to distribute Lua part. For now, we are targeting standalone and Cartridge Tarantool setups.
+```bash title="Redis engine, single Redis instance"
+BenchmarkRedisRecover       26883 ns/op	    1204 B/op	   28 allocs/op
+```
 
-Refer to the [Tarantool engine documentation](/docs/server/engines#tarantool-engine) for more details.  
+Compare it with the same operation measured with Tarantool engine:
+
+```bash title="Tarantool engine, single Tarantool instance"
+BenchmarkTarantoolRecover    6292 ns/op	     563 B/op	   10 allocs/op
+```
+
+Tarantool can provide new storage properties (like synchronous replication), new adoption. We are pretty excited about adding it as an option.
+
+The reason why Tarantool support is experimental is because Tarantool integration involves one more moving piece – the [Centrifuge Lua module](https://github.com/centrifugal/tarantool-centrifuge) which should be run by a Tarantool server.
+
+This increases deployment complexity and given the fact that many users have their own best practices in Tarantool deployment we are still evaluating a sufficient way to distribute Lua part. For now, we are targeting standalone (see examples in [centrifugal/tarantool-centrifuge](https://github.com/centrifugal/tarantool-centrifuge)) and Cartridge Tarantool setups (with [centrifugal/rotor](https://github.com/centrifugal/rotor)).
+
+Refer to the [Tarantool Engine documentation](/docs/server/engines#tarantool-engine) for more details.
 
 ### GRPC proxy
 
@@ -176,9 +199,9 @@ Publish API now returns the current top stream position (offset and epoch) for c
 
 Server history API inherited iteration possibilities described above.
 
-Centrifugo now supports API extensions in terms of the new `rpc` method. The purpose of this method is to have a way to quickly introduce JSON extensions for API without a need to update Protobuf definitions and add method implementation to API clients. It now serves a `getChannels` extension to get a list of active channels in a system with a number of connections in each and optionally filter channels by mask.
+Channels command now returns a number of clients in a channel, also supports channel filtering by a pattern. Since we changed how channels call implemented internally there is no limitation anymore to call it when using Redis cluster.
 
-// TODO: refactor getChannels result to have a map to be more extensible.
+Admin web UI has been updated too to support new API methods, so you can play with new API from its `actions` tab.
 
 ### Better clustering
 
@@ -198,6 +221,7 @@ A lot of documents were actualized, extended, and rewritten. We also now have ne
 
 * [Main highlights](/docs/getting-started/highlights)
 * [Design overview](/docs/getting-started/design)
+* [History and recovery](/docs/server/history_and_recovery)
 * [Error and disconnect codes](/docs/server/codes).
 
 Server API and proxy documentation have been improved significantly.
@@ -210,6 +234,26 @@ Centrifugo v3 has some notable performance improvements.
 
 JSON client protocol now utilizes a couple of libraries (`easyjson` for encoding and `segmentio/encoding` for unmarshaling). Actually we use a slightly customized version of `easyjson` library to achieve even faster performance than it provides out-of-the-box. Changes allowed to speed up JSON encoding and decoding up to 4-5x for small messages. For large payloads speed up can be even more noticeable – we observed up to 30x performance boost when serializing 5kb messages.
 
+For example, let's look at a JSON serialization benchmark result for 256 byte payload. Here is what we had before:
+
+```bash title="Centrifugo v2 JSON encoding/decoding"
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+BenchmarkMarshal-12              	 5883 ns/op	    1121 B/op	    6 allocs/op
+BenchmarkMarshalParallel-12      	 1009 ns/op	    1121 B/op	    6 allocs/op
+BenchmarkUnmarshal-12            	 1717 ns/op	    1328 B/op	   16 allocs/op
+BenchmarkUnmarshalParallel-12    	492.2 ns/op	    1328 B/op	   16 allocs/op
+```
+
+And what we have now with mentioned JSON optimizations:
+
+```bash title="Centrifugo v3 JSON encoding/decoding"
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+BenchmarkMarshal-12              	 461.3 ns/op	 928 B/op	    3 allocs/op
+BenchmarkMarshalParallel-12      	 250.6 ns/op	 928 B/op	    3 allocs/op
+BenchmarkUnmarshal-12            	 476.5 ns/op	 136 B/op	    3 allocs/op
+BenchmarkUnmarshalParallel-12    	 107.2 ns/op	 136 B/op	    3 allocs/op
+```
+
 :::tip
 
 Centrifugo Protobuf protocol is still faster than JSON for encoding/decoding on a server-side.
@@ -218,25 +262,39 @@ Centrifugo Protobuf protocol is still faster than JSON for encoding/decoding on 
 
 Of course, JSON encoding is only one part of Centrifugo – so you should not expect overall 4x performance improvement. But loaded setups should notice the difference and this should also be a good thing for reducing garbage collection pauses.
 
-Centrifugo also inherited a couple of other improvements from the Centrifuge library. In-memory connection hub is now sharded – this should reduce lock contention between operations in different channels. Also, Centrifugo now allocates less during message broadcasting to a large number of subscribers.
+Centrifugo inherited a couple of other improvements from the Centrifuge library.
+
+In-memory connection hub is now sharded – this should reduce lock contention between operations in different channels. In [our artificial benchmarks](https://github.com/centrifugal/centrifuge/pull/184) we noticed a 3x better hub throughput, but in reality the benefit is heavily depends on the usage pattern.
+
+Centrifugo now allocates less during message broadcasting to a large number of subscribers.
+
+Also, an upgrade to Go 1.17 for builds results in ~5% performance boost overall, thanks to a new way of passing function arguments and results using registers instead of the stack introduced in Go 1.17.
 
 ### Centrifugo PRO
 
 The final notable thing is an introduction of Centrifugo PRO. This is an extended version of Centrifugo built on top of the OSS version. It provides some unique features targeting business adopters.
 
-Those who followed Centrifugo for a long time know that there were some attempts to make project development sustainable. Buy me a coffee and Opencollective approaches were not successful, during a year we only got ~300$ of total contributions. While we appreciate these contributions a lot - this does not justify a time spent on Centrifugo maintenance these days and is not very helpful in the long-term. So here is another attempt to monetize Centrifugo.
+Those who followed Centrifugo for a long time know that there were some attempts to make project development sustainable. Buy me a coffee and Opencollective approaches were not successful, during a year we got ~300$ of total contributions. While we appreciate these contributions a lot - this does not fairly justify a time spent on Centrifugo maintenance these days and does not allow bringing it to the next level. So here is an another attempt to monetize Centrifugo.
 
-Centrifugo PRO details and features described [here in docs](/docs/pro/overview). Will see how it goes. We believe that a set of additional functionality can provide great advantages for both small and large-scale Centrifugo setups. PRO features can give useful insights on a system, protect from client API misusing, reduce server resource usage and more.
+Centrifugo PRO details and features described [here in docs](/docs/pro/overview). Let's see how it goes. We believe that a set of additional functionality can provide great advantages for both small and large-scale Centrifugo setups. PRO features can give useful insights on a system, protect from client API misusing, reduce server resource usage, and more.
+
+PRO version will be released soon after Centrifugo v3 OSS.
 
 ### Conclusion
 
 There are some other changes introduced in v3 but not mentioned here. The full list can be found in the release notes and the migration guide.
 
-Hope we stepped into an exciting time of the v3 life cycle and many improvements will follow. Join our communities in Telegram and Discord if you have questions or want to follow Centrifugo development.
+Hope we stepped into an exciting time of the v3 life cycle and many improvements will follow. Join our communities in Telegram and Discord if you have questions or want to follow Centrifugo development:
+
+[![Join the chat at https://t.me/joinchat/ABFVWBE0AhkyyhREoaboXQ](https://img.shields.io/badge/Telegram-Group-orange?style=flat&logo=telegram)](https://t.me/joinchat/ABFVWBE0AhkyyhREoaboXQ) &nbsp;[![Join the chat at https://discord.gg/tYgADKx](https://img.shields.io/discord/719186998686122046?style=flat&label=Discord&logo=discord)](https://discord.gg/tYgADKx)
 
 Enjoy Centrifugo v3, and let the Centrifugal force be with you.
 
-:::note
+:::note Special thanks
+
+Special thanks to [Anton Silischev](https://github.com/silischev) for the help with v3 tests, examples and CI. To [Leon Sorokin](https://github.com/leeoniya) for the spinning CSS Centrifugo logo. To [Michael Filonenko](https://github.com/filonenko-mikhail) for the help with Tarantool. To [German Saprykin](https://github.com/mogol) for Dart magic.
+
+Thanks to the community members who tested out Centrifugo v3 beta, found bugs and sent improvements.
 
 <div>Icons used here made by <a href="https://www.flaticon.com/authors/wanicon" title="wanicon">wanicon</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
 

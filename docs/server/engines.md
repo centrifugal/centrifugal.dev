@@ -3,13 +3,13 @@ id: engines
 title: "Engines, scalability"
 ---
 
-Engine in Centrifugo is responsible for publishing messages between nodes, handle PUB/SUB broker subscriptions, save/retrieve presence and history data.
+The Engine in Centrifugo is responsible for publishing messages between nodes, handle PUB/SUB broker subscriptions, save/retrieve presence and history data.
 
-By default, Centrifugo uses Memory engine. There is also Redis, KeyDB, Tarantool engines available. And Nats broker which also supports at most once PUB/SUB.
+By default, Centrifugo uses a Memory engine. There are also Redis, KeyDB, Tarantool engines available. And Nats broker which also supports at most once PUB/SUB.
 
 The difference between them - with Memory engine you can start only one node of Centrifugo, while Redis engine allows running several nodes on different machines and they all will be connected via PUB/SUB, will know about each other and will also keep history and presence data in Redis instead of Centrifugo node process memory so this data can be accessed from each node and won't be lost after Centrifugo server restart.
 
-To set engine you can use `engine` configuration option. Available values are `memory`, `redis`, `tarantool`. Default value is `memory`.
+To set engine you can use `engine` configuration option. Available values are `memory`, `redis`, `tarantool`. The default value is `memory`.
 
 For example to work with Redis engine:
 
@@ -34,17 +34,23 @@ Disadvantages:
 * Does not allow scaling nodes (actually you still can scale Centrifugo with Memory engine but you have to publish data into each Centrifugo node and you won't have consistent history and presence state throughout Centrifugo nodes)
 * Does not persist message history in channels between Centrifugo restarts
 
-Configuration options related to Memory engine:
+### Options
 
-* `history_meta_ttl` (int, default `0`) - sets a time in seconds of history stream metadata expiration. Stream metadata is an information about current offset number in channel and epoch value. By default, metadata for channels does not expire. Though in some cases – when channels created for а short time and then not used anymore – created metadata can stay in memory while not actually useful. For example, you can have a personal user channel but after using your app for a while user left it forever. In long-term perspective this can be an unwanted memory leak. Setting a reasonable value to this option (usually much bigger than history retention period) can help. In this case unused channel metadata will eventually expire.
+#### history_meta_ttl
+
+Duration, default `0s`.
+
+`history_meta_ttl` sets a time in seconds of history stream metadata expiration. Stream metadata is information about the current offset number in the channel and epoch value. By default, metadata for channels does not expire. Though in some cases – when channels are created for а short time and then not used anymore – created metadata can stay in memory while not useful. For example, you can have a personal user channel but after using your app for a while user left it forever. From a long-term perspective, this can be an unwanted memory leak. Setting a reasonable value to this option (usually much bigger than the history retention period) can help. In this case, unused channel metadata will eventually expire.
 
 ## Redis engine
 
-[Redis](https://redis.io/) is an open source, in-memory data structure store, used as a database, cache, and message broker.
+[Redis](https://redis.io/) is an open-source, in-memory data structure store, used as a database, cache, and message broker.
 
 Centrifugo Redis engine allows scaling Centrifugo nodes to different machines. Nodes will use Redis as a message broker (utilizing Redis PUB/SUB for node communication) and keep presence and history data in Redis.
 
 **Minimal Redis version is 5.0.1**
+
+### Options
 
 Several configuration options related to Redis engine:
 
@@ -56,38 +62,44 @@ Several configuration options related to Redis engine:
 * `redis_prefix` (string, default `"centrifugo"`) – custom prefix to use for channels and keys in Redis
 * `redis_use_lists` (boolean, default `false`) – turns on using Redis Lists instead of Stream data structure for keeping history (not recommended, keeping this for backwards compatibility mostly).
 
-Similar to a Memory engine Redis engine also looks at `history_meta_ttl` option (int, default `0`) - which sets a time in seconds of history stream metadata expiration in Redis Engine. Meta key in Redis is a HASH that contains current offset number in channel and epoch value. By default, metadata for channels does not expire. Though in some cases – when channels created for а short time and then not used anymore – created stream metadata can stay in memory while not actually useful. For example, you can have a personal user channel but after using your app for a while user left it forever. In long-term perspective this can be an unwanted memory leak. Setting a reasonable value to this option (usually much bigger than history retention period) can help. In this case unused channel metadata will eventually expire.
+Similar to a Memory engine Redis engine also looks at `history_meta_ttl` option (int, default `0`) - which sets a time in seconds of history stream metadata expiration in Redis Engine. Meta key in Redis is a HASH that contains the current offset number in channel and epoch value. By default, metadata for channels does not expire. Though in some cases – when channels are created for а short time and then not used anymore – created stream metadata can stay in memory while not useful. For example, you can have a personal user channel but after using your app for a while user left it forever. From a long-term perspective, this can be an unwanted memory leak. Setting a reasonable value to this option (usually much bigger than the history retention period) can help. In this case, unused channel metadata will eventually expire.
 
 ### Scaling with Redis tutorial
 
-Let's see how to start several Centrifugo nodes using Redis engine. We will start 3 Centrifugo nodes and all those nodes will be connected via Redis.
+Let's see how to start several Centrifugo nodes using the Redis Engine. We will start 3 Centrifugo nodes and all those nodes will be connected via Redis.
 
-First, you should have Redis running. As soon as it's running - we can launch 3 Centrifugo instances. Open your terminal and start first one:
+First, you should have Redis running. As soon as it's running - we can launch 3 Centrifugo instances. Open your terminal and start the first one:
 
 ```
-centrifugo --config=config.json --port=8000 --engine=redis --redis_host=127.0.0.1 --redis_port=6379
+centrifugo --config=config.json --port=8000 --engine=redis --redis_address=127.0.0.1:6379
 ```
 
-If your Redis on the same machine and runs on its default port you can omit `redis_host` and `redis_port` options in command above.
+If your Redis is on the same machine and runs on its default port you can omit `redis_address` option in the command above.
 
 Then open another terminal and start another Centrifugo instance:
 
 ```
-centrifugo --config=config.json --port=8001 --engine=redis --redis_host=127.0.0.1 --redis_port=6379
+centrifugo --config=config.json --port=8001 --engine=redis --redis_address=127.0.0.1:6379
 ```
 
-Note that we use another port number (`8001`) as port 8000 already busy by our first Centrifugo instance. If you are starting Centrifugo instances on different machines then you most probably can use
+Note that we use another port number (`8001`) as port 8000 is already busy by our first Centrifugo instance. If you are starting Centrifugo instances on different machines then you most probably can use
 the same port number (`8000` or whatever you want) for all instances.
 
-And finally let's start third instance:
+And finally, let's start the third instance:
 
 ```
-centrifugo --config=config.json --port=8002 --engine=redis --redis_host=127.0.0.1 --redis_port=6379
+centrifugo --config=config.json --port=8002 --engine=redis --redis_address=127.0.0.1:6379
 ```
 
 Now you have 3 Centrifugo instances running on ports 8000, 8001, 8002 and clients can connect to any of them. You can also send API requests to any of those nodes – as all nodes connected over Redis PUB/SUB message will be delivered to all interested clients on all nodes.
 
-To load balance clients between nodes you can use Nginx – you can find its configuration here in documentation.
+To load balance clients between nodes you can use Nginx – you can find its configuration here in the documentation.
+
+:::tip
+
+In the production environment you will most probably run Centrifugo nodes on different hosts, so there will be no need to use different `port` numbers. 
+
+:::
 
 Here is a live example where we locally start two Centrifugo nodes both connected to local Redis:
 
@@ -98,7 +110,7 @@ Here is a live example where we locally start two Centrifugo nodes both connecte
 
 ### Redis Sentinel for high availability
 
-Centrifugo supports official way to add high availability to Redis - Redis [Sentinel](http://redis.io/topics/sentinel).
+Centrifugo supports the official way to add high availability to Redis - Redis [Sentinel](http://redis.io/topics/sentinel).
 
 For this you only need to utilize 2 Redis Engine options: `redis_sentinel_address` and `redis_sentinel_master_name`:
 
@@ -109,7 +121,7 @@ Also:
 
 `redis_sentinel_password` – optional string password for your Sentinel, works with Redis Sentinel >= 5.0.1
 
-So you can start Centrifugo which will use Sentinels to discover redis master instance like this:
+So you can start Centrifugo which will use Sentinels to discover Redis master instances like this:
 
 ```
 centrifugo --config=config.json
@@ -135,17 +147,17 @@ sentinel down-after-milliseconds mymaster 10000
 sentinel failover-timeout mymaster 60000
 ```
 
-You can find how to properly setup Sentinels [in official documentation](http://redis.io/topics/sentinel).
+You can find how to properly set up Sentinels [in official documentation](http://redis.io/topics/sentinel).
 
-Note that when your redis master instance down there will be small downtime interval until Sentinels
-discover a problem and come to quorum decision about new master. The length of this period depends on
+Note that when your Redis master instance is down there will be a small downtime interval until Sentinels
+discover a problem and come to a quorum decision about a new master. The length of this period depends on
 Sentinel configuration.
 
 ### Haproxy instead of Sentinel configuration
 
-Alternatively you can use Haproxy between Centrifugo and Redis to let it properly balance traffic to Redis master. In this case you still need to configure Sentinels but you can omit Sentinel specifics from Centrifugo configuration and just use Redis address as in simple non-HA case.
+Alternatively, you can use Haproxy between Centrifugo and Redis to let it properly balance traffic to Redis master. In this case, you still need to configure Sentinels but you can omit Sentinel specifics from Centrifugo configuration and just use Redis address as in a simple non-HA case.
 
-For example you can use something like this in Haproxy config:
+For example, you can use something like this in Haproxy config:
 
 ```
 listen redis
@@ -173,11 +185,11 @@ centrifugo --config=config.json --engine=redis --redis_address="localhost:16379"
 
 ### Redis sharding
 
-Centrifugo has a built-in Redis sharding support.
+Centrifugo has built-in Redis sharding support.
 
-This resolves situation when Redis becoming a bottleneck on large Centrifugo setup. Redis is single-threaded server, it's very fast but it's power is not infinite so when your Redis approaches 100% CPU usage then sharding feature can help your application to scale.
+This resolves the situation when Redis becoming a bottleneck on a large Centrifugo setup. Redis is a single-threaded server, it's very fast but its power is not infinite so when your Redis approaches 100% CPU usage then the sharding feature can help your application to scale.
 
-At moment Centrifugo supports simple comma-based approach to configuring Redis shards. Let's just look on examples.
+At moment Centrifugo supports a simple comma-based approach to configuring Redis shards. Let's just look at examples.
 
 To start Centrifugo with 2 Redis shards on localhost running on port 6379 and port 6380 use config like this:
 
@@ -187,7 +199,7 @@ To start Centrifugo with 2 Redis shards on localhost running on port 6379 and po
     "engine": "redis",
     "redis_address": [
         "127.0.0.1:6379",
-        "127.0.0.1:6379",
+        "127.0.0.1:6380",
     ]
 }
 ```
@@ -209,15 +221,15 @@ If you also need to customize AUTH password, Redis DB number then you can use an
 
 :::note
 
-Due to how Redis PUB/SUB works it's not possible (and it's pretty useless anyway) to run shards in one Redis instances using different Redis DB numbers.
+Due to how Redis PUB/SUB works it's not possible (and it's pretty useless anyway) to run shards in one Redis instance using different Redis DB numbers.
 
 :::
 
-When sharding enabled Centrifugo will spread channels and history/presence keys over configured Redis instances using consistent hashing algorithm. At moment we use Jump consistent hash algorithm (see [paper](https://arxiv.org/pdf/1406.2294.pdf) and [implementation](https://github.com/dgryski/go-jump)).
+When sharding enabled Centrifugo will spread channels and history/presence keys over configured Redis instances using a consistent hashing algorithm. At moment we use Jump consistent hash algorithm (see [paper](https://arxiv.org/pdf/1406.2294.pdf) and [implementation](https://github.com/dgryski/go-jump)).
 
 ### Redis cluster
 
-Running Centrifugo with Redis cluster is simple and can be achieved using `redis_cluster_address` option. This is an array of strings. Each element of array is a comma-separated Redis cluster seed nodes. For example:
+Running Centrifugo with Redis cluster is simple and can be achieved using `redis_cluster_address` option. This is an array of strings. Each element of the array is a comma-separated Redis cluster seed node. For example:
 
 ```json
 {
@@ -228,7 +240,7 @@ Running Centrifugo with Redis cluster is simple and can be achieved using `redis
 }
 ```
 
-Actually you don't need to list all Redis cluster nodes in config – only several working nodes is enough to start.
+You don't need to list all Redis cluster nodes in config – only several working nodes are enough to start.
 
 To set the same over environment variable:
 
@@ -248,7 +260,7 @@ If you need to shard data between several Redis clusters then simply add one mor
 }
 ```
 
-Sharding between different Redis clusters can make sense due to the fact how PUB/SUB works in Redis cluster. It does not scale linearly when adding nodes as all PUB/SUB messages got copied to every cluster node. See [this discussion](https://github.com/antirez/redis/issues/2672) for more information on topic. To spread data between different Redis clusters Centrifugo uses the same consistent hashing algorithm described above (i.e. `Jump`).
+Sharding between different Redis clusters can make sense due to the fact how PUB/SUB works in the Redis cluster. It does not scale linearly when adding nodes as all PUB/SUB messages got copied to every cluster node. See [this discussion](https://github.com/antirez/redis/issues/2672) for more information on topic. To spread data between different Redis clusters Centrifugo uses the same consistent hashing algorithm described above (i.e. `Jump`).
 
 To reproduce the same over environment variable use `space` to separate different clusters:
 
@@ -264,41 +276,42 @@ Centrifugo Redis engine seamlessly works with [KeyDB](https://keydb.dev/). KeyDB
 
 :::caution
 
-We can't give any promises about compatibility with KeyDB in future Centrifugo releases - while KeyDB is fully compatible with Redis things should work fine. That's why we consider this as **EXPERIMENTAL** feature.
+We can't give any promises about compatibility with KeyDB in the future Centrifugo releases - while KeyDB is fully compatible with Redis things should work just fine. That's why we consider this as **EXPERIMENTAL** feature.
 
 :::
 
-Use KeyDB instead of Redis only if you are really sure you need it. Nothing stops you from running several Redis instances per each core you have, configure sharding and obtain even better performance that KeyDB can provide (due to lack of synchronization between threads in Redis).
+Use KeyDB instead of Redis only if you are sure you need it. Nothing stops you from running several Redis instances per each core you have, configure sharding, and obtain even better performance than KeyDB can provide (due to lack of synchronization between threads in Redis).
 
-In order to run Centrifugo with KeyDB all you need to do is use `redis` engine but run KeyDB server instead of Redis.
+To run Centrifugo with KeyDB all you need to do is use `redis` engine but run the KeyDB server instead of Redis.
 
 ## Tarantool engine
 
 **EXPERIMENTAL**
 
-Centrifugo v3 introduced experimental support for Tarantool as one more possible engine.
-
-[Tarantool](https://www.tarantool.io) is a fast and flexible in-memory storage with different persistence/replication schemes and LuaJIT for writing custom logic on Tarantool side. It allows implementing Centrifugo engine with uniques characteristics.
+[Tarantool](https://www.tarantool.io) is a fast and flexible in-memory storage with different persistence/replication schemes and LuaJIT for writing custom logic on the Tarantool side. It allows implementing Centrifugo engine with unique characteristics.
 
 :::caution
 
-**EXPERIMENTAL** status of Tarantool integration means that we are still going to improve it and there could be breaking changes on this way.
+**EXPERIMENTAL** status of Tarantool integration means that we are still going to improve it and there could be breaking changes as integration evolves.
 
 :::
 
-Unfortunately it comes with some downsides. There are many ways to operate Tarantool in production and its hard to distribute Centrifugo Tarantool engine in a way which suits everyone. Centrifugo tried to fit standalone and [Cartridge](https://github.com/tarantool/cartridge) Tarantool setups by providing [centrifugal/tarantool-engine](https://github.com/centrifugal/tarantool-engine) repository. It's a project with Tarantool module which you should run.
+There are many ways to operate Tarantool in production and it's hard to distribute Centrifugo Tarantool engine in a way that suits everyone. Centrifugo tries to fit generic case by providing [centrifugal/tarantool-centrifuge](https://github.com/centrifugal/tarantool-centrifuge) module and by providing ready-to-use [centrifugal/rotor](https://github.com/centrifugal/rotor) project based on [centrifugal/tarantool-centrifuge](https://github.com/centrifugal/tarantool-centrifuge) and [Tarantool Cartridge](https://github.com/tarantool/cartridge).
 
-:::note
+:::info
 
-To be honest we really bet on the community help to push this integration further. Tarantool provides an increadible performance boost for presence and history operations (up to 5x more rps compared to Redis) and a pretty fast PUB/SUB (comparable to what Redis provides). Let's see what we can build together.
+To be honest we bet on the community help to push this integration further. Tarantool provides an incredible performance boost for presence and history operations (up to 5x more RPS compared to the Redis Engine) and a pretty fast PUB/SUB (comparable to what Redis Engine provides). Let's see what we can build together.
 
 :::
 
-First thing is run Tarantool with Centrifuge engine module from [centrifugal/tarantool-engine](https://github.com/centrifugal/tarantool-engine) repo. The basic example is:
+There are several supported Tarantool topologies to which Centrifugo can connect:
 
-```bash
-tarantool init_standalone.lua
-```
+* One standalone Tarantool instance
+* Many standalone Tarantool instances and consistently shard data between them
+* Tarantool running in Cartridge
+* Tarantool with replica and automatic failover in Cartridge
+* Many Tarantool instances (or leader-follower setup) in Cartridge with consistent client-side sharding between them
+* Tarantool with synchronous replication (Raft-based, Tarantool >= 2.7)
 
 After running Tarantool you can point Centrifugo to it (and of course scale Centrifugo nodes):
 
@@ -310,24 +323,41 @@ After running Tarantool you can point Centrifugo to it (and of course scale Cent
 }
 ```
 
-There are several supported Tarantool topologies to which Centrifugo can connect to:
+See [centrifugal/rotor](https://github.com/centrifugal/rotor) repo for ready-to-use engine based on Tarantool Cartridge framework.
 
-* One standalone Tarantool instance
-* Many standalone Tarantool instances and consistently shard data between them
-* Tarantool running in Cartridge
-* Tarantool with replica and automatic failover in Cartridge
-* Many Tarantool instances (or leader-follower setup) in Cartridge and consistently shard data between them
-* To Tarantool with synchronous replication (Raft-based, Tarantool >= 2.7)
+See [centrifugal/tarantool-centrifuge](https://github.com/centrifugal/tarantool-centrifuge) repo for examples on how to run engine with Standalone single Tarantool instance or with Raft-based synchronous replication.
 
-See [centrifugal/tarantool-engine](https://github.com/centrifugal/tarantool-engine) repo readme for configuration examples.
+### Options
+
+#### tarantool_address
+
+String or array of strings. Default `tcp://127.0.0.1:3301`.
+
+Connection address to Tarantool.
+
+#### tarantool_mode
+
+String, default `standalone`
+
+A mode how to connect to Tarantool. Default is `standalone` which connects to a single Tarantool instance address. Possible values are: `leader-follower` (connects to a setup with Tarantool master and async replicas) and `leader-follower-raft` (connects to a Tarantool with synchronous Raft-based replication).
+
+All modes support client-side consistent sharding (similar to what Redis engine provides).
+
+#### tarantool_user
+
+String, default `""`. Allows setting a user.
+
+#### tarantool_password
+
+String, default `""`. Allows setting a password.
 
 ## Nats broker
 
-It's possible to scale with [Nats](https://nats.io/) PUB/SUB server. Keep in mind, that Nats called a **broker** here, **not an Engine** – Nats integration only implements PUB/SUB part of Engine, so carefully read limitations below.
+It's possible to scale with [Nats](https://nats.io/) PUB/SUB server. Keep in mind, that Nats is called a **broker** here, **not an Engine** – Nats integration only implements PUB/SUB part of Engine, so carefully read limitations below.
 
 Limitations:
 
-* Nats integration works only for unreliable at most once PUB/SUB. This means that history, presence and message recovery Centrifugo features won't be available.
+* Nats integration works only for unreliable at most once PUB/SUB. This means that history, presence, and message recovery Centrifugo features won't be available.
 * Nats wildcard channel subscriptions with symbols `*` and `>` not supported.
 
 First start Nats server:
@@ -355,9 +385,28 @@ centrifugo --broker=nats --config=config.json --port=8001
 
 Now you can scale connections over Centrifugo instances, instances will be connected over Nats server.
 
-Available options:
+### Options
 
-* `nats_url` - connection url in format `nats://derek:pass@localhost:4222`, by default `nats://127.0.0.1:4222`.
-* `nats_prefix` - prefix for channels used by Centrifugo inside Nats. By default, `centrifugo`.
-* `nats_dial_timeout` - timeout for dialing to Nats in seconds, it's a duration, default `1s`.
-* `nats_write_timeout` - write (and flush) timeout on a connection to Nats, it's a duration, default `1s`.
+#### nats_url
+
+String, default `nats://127.0.0.1:4222`.
+
+Connection url in format `nats://derek:pass@localhost:4222`.
+
+#### nats_prefix
+
+String, default `centrifugo`.
+
+Prefix for channels used by Centrifugo inside Nats.
+
+#### nats_dial_timeout
+
+Duration, default `1s`.
+
+Timeout for dialing with Nats.
+
+#### nats_write_timeout
+
+Duration, default `1s`.
+
+Write (and flush) timeout for a connection to Nats.

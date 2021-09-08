@@ -61,11 +61,11 @@ function Header() {
 
 function Home() {
   const context = useDocusaurusContext();
-  const { siteConfig = {} } = context;
+  const { siteConfig: { tagline } = {} } = context;
   return (
     <Layout
-      title={siteConfig.title}
-      description="Scalable real-time messaging server"
+      title={tagline}
+      description="Centrifugo is an open source server designed to help building interactive real-time messaging applications. Think chats, live comments, multiplayer games, streaming metrics etc. Centrifugo provides a variety of real-time transports, scales well and integrates with any application."
     >
       <Header />
       <main>
@@ -74,40 +74,39 @@ function Home() {
             <div className="row">
               <Feature title="Integrates with everything" imageUrl="img/integration.svg">
                 Centrifugo is language-agnostic. It's a standalone server with
-                simple API which can be integrated with an application written in
+                a simple API that integrates well with an application written in
                 any programming language. No need to change an existing application
                 architecture to introduce real-time features. Just add Centrifugo nearby
                 and let it deal with persistent connections.
               </Feature>
               <Feature title="Great performance" imageUrl="img/performance.svg">
                 Centrifugo is built in Go language with some smart optimizations inside.
-                It has good performance – see a <a href="/blog/2020/02/10/million-websocket-with-centrifugo">description</a> of a
+                It has good performance – see a <a href="/blog/2020/02/10/million-connections-with-centrifugo">description</a> of a
                 test stand with one million WebSocket connections and 30 million delivered
-                messages per minute with a hardware comparable to one modern server machine.
+                messages per minute with hardware comparable to one modern server machine.
               </Feature>
               <Feature title="Feature-rich" imageUrl="img/feature_rich.svg">
-                Many built-in features can help building an attractive real-time
+                Many built-in features can help to build an attractive real-time
                 application in a limited time. Centrifugo provides different types
-                of subscriptions, hot channel history and instant presence, RPC calls.
-                Also possibility to proxy WebSocket events to backend over HTTP or GRPC
-                and more.
+                of subscriptions, hot channel history, instant presence, RPC calls.
+                There is also the possibility to proxy WebSocket events to the application
+                backend over HTTP or GRPC and more.
               </Feature>
               <Feature title="Out-of-the-box scalability" imageUrl="img/scalability.svg">
-                Built-in Redis, KeyDB, Tarantool engines or Nats broker make it possible
+                Built-in Redis, KeyDB, Tarantool engines, or Nats broker make it possible
                 to scale connections over different machines. With consistent sharding
-                of Redis, KeyDB and Tarantool it's possible to handle millions of active
+                of Redis, KeyDB, and Tarantool it's possible to handle millions of active
                 connections with reasonable hardware requirements.
               </Feature>
               <Feature title="Used in production" imageUrl="img/production.svg">
                 Started almost 10 years back then Centrifugo (and Centrifuge library for Go
-                it's built on top of) is a mature server succesfully used in production by
-                many companies around the world: Mail.ru, Badoo, ManyChat, Grafana, Spot.im
-                and others.
+                it's built on top of) is a mature server successfully used in production by
+                many companies around the world: Mail.ru, Badoo, ManyChat, Grafana, and others.
               </Feature>
               <Feature title="Even more with Centrifugo PRO" imageUrl="img/pro2.svg">
-                Centrifugo PRO has even more unique features: real-time connection analylics
-                with Clickhouse, real-time user and channel tracing, token bucket operation
-                throttling, user last active status support, faster API and proxy performance etc.
+                Centrifugo PRO provides even more unique features: real-time connection analytics
+                with ClickHouse, real-time user and channel tracing, token bucket operation
+                throttling, user active status support, faster API, faster proxy performance, and more.
               </Feature>
             </div>
           </div>
@@ -117,12 +116,12 @@ function Home() {
             <h2>What is Centrifugo?</h2>
             <p>
               💠 Real-time messaging can help building interactive applications where data
-              delivered to users almost immediately after being acknowleded by application
+              delivered to users almost immediately after being acknowledged by application
               backend using push technologies.
             </p>
             <p>
               💠 Centrifugo handles persistent connections from clients over WebSocket, SockJS,
-              GRPC, SSE (Eventsource), HTTP-streaming transports and provides API to publish
+              GRPC, SSE (EventSource), HTTP-streaming transports and provides API to publish
               messages to clients in real-time.
             </p>
             <p>

@@ -7,7 +7,7 @@ SockJS is a polyfill browser library which provides HTTP-based fallback transpor
 
 If you have a requirement to work everywhere SockJS is the solution. SockJS will automatically choose best fallback transport if Websocket connection failed for some reason. Some of the fallback transports are:
 
-* Eventsource (SSE)
+* EventSource (SSE)
 * XHR-streaming
 * Long-polling
 * And more (see [SockJS docs](https://github.com/sockjs/sockjs-client))
@@ -58,8 +58,14 @@ One more thing to be aware of is that SockJS does not support binary data, so th
 
 ## Options
 
-### sockjs_heartbeat_delay
+### sockjs
 
-Default: 25
+Boolean, default: `false`.
 
-Interval in seconds how often to send SockJS h-frames to client.
+Enables SockJS transport.
+
+### sockjs_url
+
+Default: `https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js`
+
+Link to SockJS url which is required when iframe-based HTTP fallbacks are in use. 

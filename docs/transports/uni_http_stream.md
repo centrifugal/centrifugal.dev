@@ -10,7 +10,7 @@ Default unidirectional HTTP streaming connection endpoint in Centrifugo is:
 /connection/uni_http_stream
 ```
 
-This is basically a long-lived HTTP connection. You can consume it from a browser using `fetch` API - see an example: TODO.
+This is basically a long-lived HTTP connection. You can consume it from a browser using `fetch` API.
 
 Streaming endpoint accepts HTTP POST requests and sends JSON messages to a connection. These JSON messages can have different meaning according to Centrifuge protocol Protobuf definitions. But in most cases you will be interested in Publication push types.
 
@@ -18,13 +18,36 @@ Streaming endpoint accepts HTTP POST requests and sends JSON messages to a conne
 
 It's possible to pass initial connect command by posting a JSON body to a streaming endpoint. 
 
+Refer to the full Connect command description – it's [the same as for unidirectional WebSocket](./uni_websocket.md#connect-command).
+
 ## Supported data formats
 
 JSON
 
 ## Pings
 
-Centrifugo will send different message types to a connection. Every message is JSON encoded. A special JSON value `null` used as a PING message. You can simply ignore it on a client side upon receiving. 
+Centrifugo will send different message types to a connection. Every message is JSON encoded. A special JSON value `null` used as a PING message. You can simply ignore it on a client side upon receiving. You can ignore such messages or use them to detect broken connections (nothing received from a server for a long time).
+
+## Options
+
+### uni_http_stream
+
+Boolean, default: `false`.
+
+Enables unidirectional HTTP streaming endpoint.
+
+```json title="config.json"
+{
+    ...
+    "uni_http_stream": true
+}
+```
+
+### uni_http_stream_max_request_body_size
+
+Default: 65536 (64KB)
+
+Maximum allowed size of a initial HTTP POST request in bytes.
 
 ## Connecting using CURL
 
@@ -92,3 +115,7 @@ null
 `null` messages are pings from a server.
 
 That's all, happy streaming!
+
+## Browser example
+
+A basic browser example can be found [here](https://github.com/centrifugal/examples/tree/master/unidirectional/http_stream).

@@ -25,6 +25,10 @@ html[data-theme="dark"] {
   --ifm-background-color: var(--palette-background-main);
 }
 
+html[data-theme="light"] .button--secondary {
+  border-color: #e6b8b8;
+}
+
 img[align='right'] {
   padding-left: 1em;
   padding-bottom: 1em;
@@ -36,7 +40,14 @@ html[data-theme="light"] .button--secondary:hover {
 
 .navbar__items a:nth-child(7) {
   color: #10bf39;
-  font-weight: bold;
+}
+
+.navbar__items a:nth-child(7):hover {
+  color: var(--ifm-color-primary);
+}
+
+.navbar__items a:nth-child(7).navbar__link--active {
+  color: var(--ifm-color-primary);
 }
 
 .doc-page em {
@@ -62,6 +73,9 @@ html[data-theme="light"] .button--secondary:hover {
   }
   .markdown > h3 {
     font-size: 1.4rem !important;
+  }
+  .blog-list-page header h2 {
+    font-size: 2rem !important;
   }
 }
 
@@ -118,4 +132,34 @@ html[data-theme="dark"] .header-github-link:before {
   left: 0;
   width: 100%;
   height: 100%;
+}
+
+.docusaurus-mt-lg {
+  margin-top: 1rem !important;
+}
+
+.markdown table {
+  width: 100%;
+  display: inline-table;
+}
+.markdown table td {
+  text-align: left;
+}
+.markdown table th:first-child {
+  width: 15%;
+}
+.markdown table th:nth-child(2) {
+  width: 20%;
+}
+.markdown table th:nth-child(3) {
+  width: 10%;
+}
+.menu {
+  padding-top: 20px !important;
+}
+.navbar {
+  box-shadow: none !important;
+}
+.blog-wrapper .container {
+  margin-top: 1rem !important;
 }

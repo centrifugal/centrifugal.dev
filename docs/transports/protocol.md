@@ -3,66 +3,73 @@ id: client_protocol
 title: Client protocol
 ---
 
-This chapter describes internal bidirectional client-server protocol in details to help developers build new client libraries and understand how existing client libraries work.
+This chapter describes internal bidirectional client-server protocol in details to help developers build new client libraries or understand how existing client connectors work.
 
 Note that you can always look at [existing client implementations](../ecosystem/client.md) in case of any questions. Not all clients support all available server features though.
 
 ### Client implementation feature matrix
 
-First we will look at list of features client library should support. Depending on client implementation some features can be not implemented. If you an author of client library you can use this list as checklist.
+First we will look at list of features bidirectional client library should support. If you are an author of client library you can use this list as a checklist.
 
 Our current client feature matrix looks like this:
 
 - [x] connect to server (both Centrifugo and Centrifuge-based) using JSON protocol format
 - [x] connect to server (both Centrifugo and Centrifuge-based) using Protobuf protocol format
-- [x] connect to server with token (JWT in Centrifugo case, any string token in Centrifuge library case)
+- [x] connect with token (JWT in Centrifugo case, any string token in Centrifuge library case)
 - [x] connect to server with custom headers (not available in a browser)
-- [x] automatic reconnect in case of dial problems (network)
+- [x] automatic reconnect in case of connection problems (server restart, unavailable network)
 - [x] an exponential backoff for reconnect process
 - [x] possibility to set handlers for connect and disconnect events
-- [x] extract and expose disconnect reason
-- [x] subscribe on a channel and provide a way to handle asynchronous Publications coming from a channel
+- [x] extract and expose disconnect code and reason
+- [x] subscribe to a channel and provide a way to handle asynchronous Publications coming from it
 - [x] handle Join and Leave messages from a channel
 - [x] handle Unsubscribe notifications
-- [x] publish method of Subscription
-- [x] unsubscribe method of Subscription
-- [x] presence method of Subscription
-- [x] presence stats method of Subscription
-- [x] history method of Subscription
+- [x] provide publish method of Subscription object
+- [x] provide unsubscribe method of Subscription
+- [x] provide presence method of Subscription
+- [x] provide presence stats method of Subscription
+- [x] provide history method of Subscription
+- [x] provide publish method on top level
+- [x] provide unsubscribe method on top level
+- [x] provide presence method on top level
+- [x] provide presence stats method on top level
+- [x] provide history method on top level
 - [x] send asynchronous messages to server
 - [x] handle asynchronous messages from server
 - [x] send RPC requests to server
 - [x] publish to channel without being subscribed
-- [x] subscribe to private (token-protected) channels with token
-- [x] connection token refresh mechanism
-- [x] private channel subscription token refresh
-- [x] client protocol level ping/pong to find broken connection
+- [x] subscribe to private (token-protected) channels with a token
+- [x] implement client-side connection token refresh mechanism
+- [x] implement private channel subscription token refresh mechanism
+- [x] client protocol level ping/pong to find a broken connection
 - [x] automatic reconnect in case of connect or subscribe command timeouts
 - [x] handle connection expired error
 - [x] handle subscription expired error
 - [x] server-side subscriptions
-- [x] message recovery mechanism
-
-Below I'll try to describe most of these points in detail.
+- [x] message recovery mechanism for client-side subscriptions
+- [x] message recovery mechanism for server-side subscriptions
 
 This document describes protocol specifics for Websocket transport which supports binary and text formats to transfer data. As Centrifugo and Centrifuge library for Go have various types of messages it serializes protocol messages using JSON or Protobuf formats.
 
-!!! note
-    SockJS works almost the same way as JSON websocket described here but has its own extra framing on top of Centrifuge protocol messages. SockJS can only work with JSON - it's not possible to transfer binary data over it. SockJS is only needed as fallback to Websocket in web browsers.
+:::info
+
+SockJS works almost the same way as JSON websocket described here but has its own extra framing on top of Centrifuge protocol messages. SockJS can only work with JSON - it's not possible to transfer binary data over it.
+
+:::
 
 ### Top level framing
 
-Centrifuge protocol defined in [Protobuf schema](https://github.com/centrifugal/protocol/blob/master/definitions/client.proto). That schema is a source of truth and all protocol description below describes messages from that schema.
+Centrifuge protocol defined in [Protobuf schema](https://github.com/centrifugal/protocol/blob/master/definitions/client.proto). That schema is a source of the truth. Below we describe messages from that schema.
 
-Client sends `Command` to server. Server sends `Reply` to client. All communication between client and server is a bidirectional exchange of `Command` and `Reply` messages.
+In bidirectional case client sends `Command` to server and server sends `Reply` to client. I.e. all communication between client and server is a bidirectional exchange of `Command` and `Reply` messages.
 
 One request from client to server and one response from server to client can have more than one `Command` or `Reply`. This allows reducing number of system calls for writing and reading data.
 
 When JSON format used then many `Command` can be sent from client to server in JSON streaming line-delimited format. I.e. each individual `Command` encoded to JSON and then commands joined together using new line symbol `\n`:
 
 ```text
-{"id": 1, "method": "subscribe", "params": {"channel": "ch1"}}
-{"id": 2, "method": "subscribe", "params": {"channel": "ch2"}}
+{"id": 1, "method": 1, "params": {"channel": "ch1"}}
+{"id": 2, "method": 1, "params": {"channel": "ch2"}}
 ```
 
 For example here is how we do this in Javascript client when JSON format used:
@@ -79,11 +86,11 @@ function encodeCommands(commands) {
 }
 ```
 
-!!! note
-    This doc will use JSON format for examples because it's human-readable. Everything said here for JSON is also true for Protobuf encoded case. The only difference is how several individual `Command` or server `Reply` joined into one request – see details below.
+:::info
 
-!!! note
-    Method represented as a ENUM in protobuf schema and can be sent as integer value. Though it's possible to send it as string in JSON case – this was made to make JSON protocol human-friendly.
+This doc will use JSON format for examples because it's human-readable. Everything said here for JSON is also true for Protobuf encoded case. There is a difference how several individual `Command` or server `Reply` joined into one request – see details below. Also, in JSON format `bytes` fields transformed into embedded JSON by Centrifugo.
+
+:::
 
 When Protobuf format used then many `Command` can be sent from client to server in length-delimited format where each individual `Command` marshaled to bytes prepended by `varint` length. See existing client implementations for encoding example.
 
@@ -163,7 +170,7 @@ After a successful dial to WebSocket endpoint client must send `connect` command
 ```json
 {
     "id": 1,
-    "method": "connect",
+    "method": 0,
     "params": {
         "token": "JWT",
         "data": {}
@@ -171,9 +178,35 @@ After a successful dial to WebSocket endpoint client must send `connect` command
 }
 ```
 
-Where params fields:
+All methods defined in Protobuf schema:
 
-* optional string `token` - connection token. Can be ommited if token-based auth not used.
+```
+message Command {
+  uint32 id = 1;
+  enum MethodType {
+    CONNECT = 0;
+    SUBSCRIBE = 1;
+    UNSUBSCRIBE = 2;
+    PUBLISH = 3;
+    PRESENCE = 4;
+    PRESENCE_STATS = 5;
+    HISTORY = 6;
+    PING = 7;
+    SEND = 8;
+    RPC = 9;
+    REFRESH = 10;
+    SUB_REFRESH = 11;
+  }
+  MethodType method = 2;
+  bytes params = 3;
+}
+```
+
+So here we are using a enum value for `CONNECT` (`0`).
+
+Params fields:
+
+* optional string `token` - connection token. Can be omitted if token-based auth not used.
 * `data` - can contain custom connect data, for example it can contain client settings.
 
 In response to `connect` command server sends a connect reply. It looks this way:
@@ -203,7 +236,7 @@ subscribe on channels. To do this it must send `subscribe` command to server:
 ```json
 {
     "id": 2,
-    "method": "subscribe",
+    "method": 1,
     "params": {
         "channel": "ch1"
     }
@@ -243,9 +276,7 @@ After a client received a successful reply on `subscribe` command it will receiv
 * `Publication` message
 * `Join` message
 * `Leave` message
-* `Unsub` message
-* `Message` message
-* `Sub` message
+* `Unsubscribe` message
 
 See more about asynchronous messages below. 
 
@@ -256,7 +287,7 @@ When client wants to unsubscribe from a channel and therefore stop receiving asy
 ```json
 {
     "id": 3,
-    "method": "unsubscribe",
+    "method": 2,
     "params": {
         "channel": "ch1"
     }
@@ -272,7 +303,7 @@ It's possible to turn on client connection expiration mechanism on a server. Whi
 ```json
 {
     "id": 4,
-    "method": "refresh",
+    "method": 10,
     "params": {
         "token": "<refreshed token>"
     }
@@ -291,16 +322,21 @@ The mechanics of these calls is simple - client sends command and expects respon
 
 `publish` command allows to publish a message into a channel from a client.
 
-!!! note
-    To publish from client `publish` option in server configuration must be set to `true`
+:::tip
+
+To publish from client `publish` option in Centrifugo configuration must be set to `true`
+
+:::
 
 `history` allows asking a server for channel history if enabled.
 
 `presence` allows asking a server for channel presence information if enabled.
 
+`presence_stats` allows asking for short presence info (num clients and unique users in a channel).
+
 ### Asynchronous server-to-client messages
 
-There are several types of asynchronous messages that can come from server to client. All of them relate to current client subscriptions.
+There are several types of asynchronous messages that can come from a server to a client. All of them relate to the current client subscriptions.
 
 The most important message is `Publication`:
 
@@ -345,8 +381,11 @@ Next message is `Join` message:
 
 `Join` messages sent when someone joined (subscribed on) channel.
 
-!!! note
-    To enable `Join` and `Leave` messages `join_leave` option must be enabled on server globally or for channel namespace.
+:::tip
+
+To enable `Join` and `Leave` messages `join_leave` option must be enabled in Centrifugo for a channel namespace.
+
+:::
 
 `Leave` messages sent when someone left (unsubscribed from) channel.
 
@@ -367,7 +406,7 @@ Next message is `Join` message:
 }
 ```
 
-Finally `Unsub` message that means that server unsubscribed current client from a channel:
+Finally `Unsubscribe` message that means that server unsubscribed current client from a channel:
 
 ```json
 {
@@ -421,7 +460,7 @@ Errors during `subscribe` must result in full client reconnect in case of intern
 
 The special corner case is client-side timeout during `subscribe` operation. As protocol is asynchronous it's possible in this case that server will eventually subscribe client on channel but client will think that it's not subscribed. It's possible to retry subscription request and tolerate `already subscribed` (code `105`) error as expected. But the simplest solution is to reconnect entirely as this is simpler and gives client a chance to connect to working server instance.
 
-Errors during rpc-like operations can be just returned to caller - i.e. user javascript code. Calls like `history` and `presence` are idempotent. You should be accurate with unidempotent operations like `publish` - in case of client timeout it's possible to send the same message into channel twice if retry publish after timeout - so users of libraries must care about this case – making sure they have some protection from displaying message twice on client side (maybe some sort of unique key in payload).
+Errors during rpc-like operations can be just returned to caller - i.e. user javascript code. Calls like `history` and `presence` are idempotent. You should be accurate with non-idempotent operations like `publish` - in case of client timeout it's possible to send the same message into channel twice if retry publish after timeout - so users of libraries must care about this case – making sure they have some protection from displaying message twice on client side (maybe some sort of unique key in payload).
 
 ### Client implementation advices
 
@@ -457,7 +496,7 @@ centrifuge.on('disconnect', function(context) {
 });
 ```
 
-Client created in `disconnected` state with `reconnect` attribute set to `true` and `reconnecting` flag set to `false` . After `connect()` called state goes to `connecting`. It's only possible to connect from `disconnected` state. Every time `connect()` called `reconnect` flag of client must be set to `true`. After each failed connect attempt state must be set to `disconnected`, `disconnect` event must be emitted (only if `reconnecting` flag is `false`), and then `reconnecting` flag must be set to `true` (if client should continue reconnecting) to not emit `disconnect` event again after next in a row connect attempt failure. In case of failure next connection attempt must be scheduled automatically with backoff strategy. On successful connect `reconnecting` flag must be set to `false`, backoff retry must be resetted and `connect` event must be emitted. When connection lost then the same set of actions as when connect failed must be performed.
+Client created in `disconnected` state with `reconnect` attribute set to `true` and `reconnecting` flag set to `false` . After `connect()` called state goes to `connecting`. It's only possible to connect from `disconnected` state. Every time `connect()` called `reconnect` flag of client must be set to `true`. After each failed connect attempt state must be set to `disconnected`, `disconnect` event must be emitted (only if `reconnecting` flag is `false`), and then `reconnecting` flag must be set to `true` (if client should continue reconnecting) to not emit `disconnect` event again after next in a row connect attempt failure. In case of failure next connection attempt must be scheduled automatically with backoff strategy. On successful connect `reconnecting` flag must be set to `false`, backoff retry must be reset and `connect` event must be emitted. When connection lost then the same set of actions as when connect failed must be performed.
 
 Client must allow to subscribe on channels:
 
@@ -503,4 +542,4 @@ In case of Websocket it is sent by server in CLOSE Websocket frame. This is a st
 
 ### Additional notes
 
-Centrifugo and Centrifuge-based server do not allow one client connection to subscribe on the same channel twice. In this case client will receive `already subscribed` error in reply to subscribe command.
+Client protocol does not allow one client connection to subscribe to the same channel twice. In this case client will receive `already subscribed` error in reply to a subscribe command.

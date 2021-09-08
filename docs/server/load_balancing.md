@@ -1,6 +1,6 @@
 ---
-id: proxy_and_load_balancing
-title: Proxy / Load Balancing
+id: load_balancing
+title: Load Balancing
 ---
 
 This chapter shows how to deal with persistent connection load balancing.

@@ -3,9 +3,9 @@ id: integrations
 title: Framework integrations
 ---
 
-:::note
+:::tip
 
-In general integrating Centrifugo can be done in several steps even without third-party libraries – see our [integration guide](../getting-started/integration). But there are some communitity-driven projects that provide integration for more native experience or even some additional functionality on top of Centrifugo.
+In general, integrating Centrifugo can be done in several steps even without third-party libraries – see our [integration guide](../getting-started/integration.md). But there are some community-driven projects that provide integration for more native experience or even some additional functionality on top of Centrifugo.
 
 :::
 

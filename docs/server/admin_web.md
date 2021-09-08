@@ -5,12 +5,12 @@ title: Admin web UI
 
 Centrifugo comes with builtin admin web interface. It can:
 
-* Show general information and statistics from server nodes - number of connections, unique users, unique channels etc.
-* Call `publish`, `broadcast`, `subscribe`, `unsubscribe`, `disconnect`, `history`, `history_remove`, `presence`, `presence_stats`, `info`, `rpc` server API commands
-* Manage database-driven namespaces (Centrifugo PRO feature)
+* Show general information and statistics from server nodes - number of connections, unique users, number of subscriptions, unique channels etc.
+* Call `publish`, `broadcast`, `subscribe`, `unsubscribe`, `disconnect`, `history`, `history_remove`, `presence`, `presence_stats`, `info`, `channels` and some additional Centrifugo PRO server API commands.
+* Configure namespaces over a database (Centrifugo PRO feature)
 * Trace connections in real-time (Centrifugo PRO feature)
 
-To enable admin web UI you must run `centrifugo` with `admin` option enabled and provide some security options in configuration file:
+To enable admin web interface run Centrifugo with `admin` option enabled and provide some security options in configuration file:
 
 ```json title="config.json"
 {
@@ -21,9 +21,11 @@ To enable admin web UI you must run `centrifugo` with `admin` option enabled and
 }
 ```
 
-* `admin` – enables/disables admin web UI
-* `admin_password` – this is a password to log into admin web interface
-* `admin_secret` - this is a secret key for authentication token set on successful login.
+## Options
+
+* `admin` (boolean, default: `false`) – enables/disables admin web UI
+* `admin_password` (string, default: `""`) – this is a password to log into admin web interface
+* `admin_secret` (string, default: `""`) - this is a secret key for authentication token set on successful login.
 
 Make both `admin_password` and `admin_secret` strong and keep them in secret.
 
@@ -36,6 +38,8 @@ Although there is a password based authentication a good advice is to protect we
 :::
 
 ![Admin web panel](/img/quick_start_admin.png)
+
+## Using custom web interface
 
 If you want to use custom web interface you can specify path to web interface directory dist:
 
@@ -50,6 +54,8 @@ If you want to use custom web interface you can specify path to web interface di
 ```
 
 This can be useful if you want to modify official [web interface code](https://github.com/centrifugal/web) in some way and test it with Centrifugo.
+
+## Admin insecure mode
 
 There is also an option to run Centrifugo in insecure admin mode - in this case you don't need to set `admin_password` and `admin_secret` in config – in web interface you will be logged in automatically without any password. Note that this is only an option for production if you protected admin web interface with firewall rules. Otherwise anyone in internet will have full access to admin functionality described above. To enable insecure admin mode:
 

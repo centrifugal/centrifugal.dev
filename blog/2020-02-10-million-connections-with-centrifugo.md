@@ -2,7 +2,6 @@
 title: Million connections with Centrifugo
 tags: [centrifuge, go]
 description: Million WebSocket connections with Centrifugo
-image: /img/author.jpeg
 hide_table_of_contents: false
 ---
 
