@@ -43,6 +43,18 @@ Channel is a very lightweight ephemeral entity - Centrifugo can deal with lots o
 
 **But** keep in mind that one client should not be subscribed to lots of channels at the same moment (since this makes connection process heavy for a client). Using no more than several channels for a client is what you should try to achieve. A good analogy here is writing SQL queries – you need to make sure you return content using fixed amount of database queries, as soon as more entries on your page result in more queries - your pages start working very slow at some point. The same for channels - you better to deliver real-time events over fixed amount of channels. It takes a separate frame for a client to subscribe to single channel – more frames mean more heavy initial connection.
 
+### Can I have both binary and JSON clients in one channel?
+
+No. It's not possible to transparently encode binary data into JSON protocol (without converting binary to base64 for example which we don't want to do due to increased complexity and performance penalties). So if you have clients in a channel which work with JSON – you need to use JSON payloads everywhere.
+
+Most Centrifugo bidirectional connectors are using binary Protobuf protocol between a client and Centrifugo. But you can send JSON over Protobuf protocol just fine (since JSON is a UTF-8 encoded sequence of bytes in the end).
+
+To summarize:
+
+* if you are using binary Protobuf clients and binary payloads everywhere – you are fine.
+* if you are using binary or JSON clients and valid JSON payloads everywhere – you are fine.
+* if you try to send binary data to JSON protocol based clients – you will get errors from Centrifugo.
+
 ### Presence for chat apps - online status of your contacts
 
 While presence is a good feature it does not fit well for some apps. For example if you make chat app - you may probably use single personal channel for each user. In this case you cannot find who is online at moment using builtin Centrifugo presence feature as users do not share a common channel.

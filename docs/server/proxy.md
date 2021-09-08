@@ -22,15 +22,15 @@ At the moment Centrifugo can proxy these events over two protocols:
 
 ## HTTP proxy
 
-HTTP proxy in Centrifugo converts client connection events into HTTP call to application backend.
+HTTP proxy in Centrifugo converts client connection events into HTTP call to the application backend.
 
 ### HTTP request structure
 
-All proxy calls are **HTTP POST** requests that will be sent from Centrifugo to configured endpoints with a configured timeout. These requests will have some headers copied from original client request (see details below) and include JSON body which varies depending on call type (for example data sent by client in RPC call etc, see more details about JSON bodies below).
+All HTTP proxy calls are **HTTP POST** requests that will be sent from Centrifugo to configured endpoints with a configured timeout. These requests will have some headers copied from the original client request (see details below) and include JSON body which varies depending on call type (for example, request may contain data sent by client in RPC call, see more details about JSON bodies below).
 
 ### Proxy HTTP headers
 
-The good thing of Centrifugo HTTP proxy is that it transparently proxies original HTTP request headers in request to app backend. But it's required to provide an explicit list of HTTP headers you want to be proxied, for example:
+The good thing of Centrifugo HTTP proxy is that it transparently proxies original HTTP request headers in request to the application backend. In most cases this allows achieving transparent authentication on the application backend side. But it's required to provide an explicit list of HTTP headers you want to be proxied, for example:
 
 ```json title="config.json"
 {
@@ -47,7 +47,7 @@ The good thing of Centrifugo HTTP proxy is that it transparently proxies origina
 }
 ```
 
-Alternatively you can set list of headers via environment variable (space separated):
+Alternatively, you can set a list of headers via an environment variable (space separated):
 
 ```
 export CENTRIFUGO_PROXY_HTTP_HEADERS="Cookie User-Agent X-B3-TraceId X-B3-SpanId" ./centrifugo
@@ -55,7 +55,7 @@ export CENTRIFUGO_PROXY_HTTP_HEADERS="Cookie User-Agent X-B3-TraceId X-B3-SpanId
 
 :::note
 
-Centrifugo forces `Content-Type` header to be `application/json` in all HTTP proxy requests since it sends body in JSON format to application backend.
+Centrifugo forces `Content-Type` header to be `application/json` in all HTTP proxy requests since it sends body in JSON format to the application backend.
 
 :::
 
@@ -73,6 +73,12 @@ With the following options in configuration file:
 
 – connection requests **without JWT set** will be proxied to `proxy_connect_endpoint` URL endpoint. On your backend side you can authenticate incoming connection and return client credentials to Centrifugo in response to proxied request.
 
+:::tip
+
+If you still want to pass some token from a client side but force request to be proxied then use connection request custom `data` (available in all our transports). This `data` can contain arbitrary payload you want to pass from a client to a server. 
+
+:::
+
 :::danger
 
 Make sure you properly configured [allowed_origins](configuration.md#allowed_origins) Centrifugo option or check request origin on your backend side upon receiving connect request from Centrifugo. Otherwise your site can be vulnerable to CSRF attack if you are using WebSocket transport for client connections.
@@ -81,7 +87,7 @@ Make sure you properly configured [allowed_origins](configuration.md#allowed_ori
 
 Yes, this means you don't need to generate JWT and pass it to a client-side and can rely on cookie while authenticating user. **Centrifugo should work on same domain in this case so your site cookie could be passed to Centrifugo by browsers**. This also means that **every** new connection from a user will result in HTTP POST request to your application backend. While with JWT token you usually generate it once on application page reload, if client reconnects due to Centrifugo restart or internet connection loss it uses the same JWT it had before thus usually no additional requests generated during reconnect process (until JWT expired).
 
-Payload example that will be sent to app backend when client without token wants to establish connection with Centrifugo and `proxy_connect_endpoint` is set to non-empty URL string:
+Payload example that will be sent to the app backend when client without token wants to establish connection with Centrifugo and `proxy_connect_endpoint` is set to non-empty URL string:
 
 ```json
 {
@@ -92,15 +98,17 @@ Payload example that will be sent to app backend when client without token wants
 }
 ```
 
-Response expected:
+Expected response example:
 
 ```json
 {"result": {"user": "56"}}
 ```
 
-This response allows connecting and tells Centrifugo the ID of a user. See below full list of supported fields in result.
+This response allows connecting and tells Centrifugo the ID of a user. See below a full list of supported fields in result.
 
 #### Connect request fields
+
+This is what sent from Centrifugo to application backend in case of connect proxy request.
 
 | Field | Type | Optional | Description |
 | ------------ | -------------- | ------------ | ---- |
@@ -114,6 +122,8 @@ This response allows connecting and tells Centrifugo the ID of a user. See below
 | b64data      | JSON object     | yes | optional data from client in base64 format (if binary proxy mode is used)            |
 
 #### Connect result fields
+
+This is what application returns to Centrifugo inside `result` field in case of connect proxy request.
 
 | Field | Type | Optional | Description |
 | ------------ | -------------- | ------------ | ---- |
@@ -192,7 +202,7 @@ Payload sent to app backend in refresh request (when connection is going to expi
 }
 ```
 
-Response expected:
+Expected response example:
 
 ```json
 {"result": {"expire_at": 1565436268}}
@@ -208,7 +218,6 @@ Response expected:
 | encoding     | string     | no | protocol encoding type used (`json` or `binary` at moment)            |
 | user         | string     | no | a connection user ID obtained during authentication process         |
 | meta         | JSON object | yes | a connection attached meta (off by default, enable with `"proxy_include_connection_meta": true`)         |
-
 
 #### Refresh result fields
 
@@ -251,7 +260,7 @@ Payload example sent to app backend in RPC request:
 }
 ```
 
-Response expected:
+Expected response example:
 
 ```json
 {"result": {"data": {"answer": "2019"}}}
@@ -344,7 +353,7 @@ Payload example sent to app backend in subscribe request:
 }
 ```
 
-Response expected:
+Expected response example if subscription is allowed:
 
 ```json
 {"result": {}}
@@ -456,7 +465,7 @@ Payload example sent to app backend in publish request:
 }
 ```
 
-Response example:
+Expected response example if publish is allowed:
 
 ```json
 {"result": {}}
@@ -557,6 +566,14 @@ All you need to do to enable proxying over GRPC instead of HTTP is to change sch
 }
 ```
 
+### Options
+
+Some additional options exist to control GRPC proxy behavior.
+
+#### proxy_grpc_metadata
+
+An array of string keys to proxy from the original GRPC request metadata. By default no metadata keys are proxied.
+
 ## Header proxy rules
 
 Centrifugo not only supports HTTP-based client transports but also GRPC-based (for example GRPC unidirectional stream). Here is a table with rules used to proxy headers/metadata in various scenarios:
@@ -567,3 +584,28 @@ Centrifugo not only supports HTTP-based client transports but also GRPC-based (f
 | GRPC  | GRPC  |  N/A  |  In proxy request metadata  |
 | HTTP  | GRPC  |  In proxy request metadata  |    N/A  |
 | GRPC  | HTTP  |  N/A  |  In proxy request headers  |
+
+## Binary mode
+
+As you may noticed there are several fields in request/result description of various proxy calls which use `base64` encoding.
+
+Centrifugo can work with binary Protobuf protocol (in case of bidirectional WebSocket transport). All our bidirectional clients support this.
+
+Most Centrifugo users use JSON for custom payloads: i.e. for data sent to a channel, for connection info attached while authenticating (which becomes part of presence response, join/leave messages and added to Publication client info when message published from a client side).
+
+But since HTTP proxy works with JSON format (i.e. sends requests with JSON body) – it can not properly pass binary data to application backend. Arbitrary binary data can't be encoded into JSON.
+
+In this case it's possible to turn Centrifugo proxy into binary mode by using:
+
+```json title="config.json"
+{
+  ...
+  "proxy_binary_encoding": true
+}
+```
+
+Once enabled this option tells Centrifugo to use base64 format in requests and utilize fields like `b64data`, `b64info` with payloads encoded to base64 instead of their JSON field analogues.
+
+While this feature is useful for HTTP proxy it's not really required if you are using GRPC proxy – since GRPC allows passing binary data just fine.
+
+Regarding b64 fields in proxy results – just use base64 fields when required – Centrifugo is smart enough to detect that you are using base64 field and will pick payload from it, decode from base64 automatically and will pass further to connections in binary format.

@@ -15,7 +15,7 @@ Upon connecting to Centrifugo client should provide a connection JWT with severa
 
 At the moment Centrifugo supports HMAC, RSA and ECDSA JWT algorithms - i.e. HS256, HS384, HS512, RSA256, RSA384, RSA512, EC256, EC384, EC512.
 
-We will use Javascript Centrifugo client here for example snippets for client side and [PyJWT](https://github.com/jpadilla/pyjwt) Python library to generate connection token on backend side.
+We will use Javascript Centrifugo client here for example snippets for client side and [PyJWT](https://github.com/jpadilla/pyjwt) Python library to generate connection token on the backend side.
 
 To add HMAC secret key to Centrifugo add `token_hmac_secret_key` to configuration file:
 
@@ -50,7 +50,7 @@ Centrifugo uses the following claims in a JWT: `sub`, `exp`, `info`, `b64info`, 
 
 ### sub
 
-This is a standard JWT claim which must contain an ID of current application user (**as string**). 
+This is a standard JWT claim which must contain an ID of current application user (**as string**).
 
 If a user is not currently authenticated in an application, but you want to let him connect to Centrifugo anyway – you can use empty string as a user ID in `sub` claim. This is called anonymous access. In this case `anonymous` option must be enabled in Centrifugo configuration for channels that client will subscribe to.
 
@@ -129,7 +129,7 @@ BoolValue is an object like this:
 
 ### meta
 
-Meta is an addition JSON data that will be attached to a connection. Unlike `info` it's never exposed to clients and only accessible on a backend side. It will be included to proxy calls from Centrifugo to application backend. Also there is a `getUserConnections` RPC call in Centrifugo PRO that returns this data in user connection object.
+Meta is an addition JSON data that will be attached to a connection. Unlike `info` it's never exposed to clients and only accessible on a backend side. It will be included to proxy calls from Centrifugo to application backend. Also there is a `get_user_connections` API method in Centrifugo PRO that returns this data in user connection object.
 
 ### expire_at
 

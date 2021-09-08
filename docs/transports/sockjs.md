@@ -22,7 +22,7 @@ SockJS connection endpoint in Centrifugo is:
 
 :::caution
 
-There are two important caveats to know when using SockJS – see below.
+There are several important caveats to know when using SockJS – see below.
 
 :::
 
