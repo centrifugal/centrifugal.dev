@@ -28,7 +28,7 @@ Centrifugo has [client connector libraries](../ecosystem/client.md) for popular 
 
 Unidirectional transports suit well for simple use-cases with stable subscriptions, usually known at connection time.
 
-The advantage is that unidirectional transports do not require special client connectors - developers can use native browser APIs (like WebSocket, SSE, HTTP streaming), or GRPC generated code to receive real-time updates from Centrifugo – thus avoiding dependency to a client connector that abstracts bidirectional communication.
+The advantage is that unidirectional transports do not require special client connectors - developers can use native browser APIs (like WebSocket, EventSource, HTTP streaming), or GRPC generated code to receive real-time updates from Centrifugo – thus avoiding dependency to a client connector that abstracts bidirectional communication.
 
 The drawback is that with unidirectional transports you are not inheriting all Centrifugo features out of the box (like dynamic subscriptions/unsubscriptions, automatic message recovery on reconnect, possibility to send RPC calls over persistent connection). But some of the missing client APIs can be mimicked by using calls to Centrifugo [server API](../server/server_api.md) (i.e. over client -> application backend -> Centrifugo).
 
@@ -63,4 +63,4 @@ In case of unidirectional WebSocket, EventSource and HTTP-streaming which curren
 
 :::
 
-Just try any unidirectional transport and you will quickly get the idea.
+Just try using any unidirectional transport and you will quickly get the idea.

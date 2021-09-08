@@ -73,19 +73,21 @@ With the following options in the configuration file:
 
 – connection requests **without JWT set** will be proxied to `proxy_connect_endpoint` URL endpoint. On your backend side, you can authenticate the incoming connection and return client credentials to Centrifugo in response to the proxied request.
 
-:::tip
-
-If you still want to pass some token from a client side but force request to be proxied then use connection request custom `data` (available in all our transports). This `data` can contain arbitrary payload you want to pass from a client to a server.
-
-:::
-
 :::danger
 
 Make sure you properly configured [allowed_origins](configuration.md#allowed_origins) Centrifugo option or check request origin on your backend side upon receiving connect request from Centrifugo. Otherwise, your site can be vulnerable to CSRF attacks if you are using WebSocket transport for client connections.
 
 :::
 
-Yes, this means you don't need to generate JWT and pass it to a client-side and can rely on a cookie while authenticating the user. **Centrifugo should work on the same domain in this case so your site cookie could be passed to Centrifugo by browsers**. This also means that **every** new connection from a user will result in an HTTP POST request to your application backend. While with JWT token you usually generate it once on application page reload, if client reconnects due to Centrifugo restart or internet connection loss it uses the same JWT it had before thus usually no additional requests are generated during reconnect process (until JWT expired).
+Yes, this means you don't need to generate JWT and pass it to a client-side and can rely on a cookie while authenticating the user. **Centrifugo should work on the same domain in this case so your site cookie could be passed to Centrifugo by browsers**.
+
+:::tip
+
+If you want to pass some custom authentication token from a client side (not in Centrifugo JWT format) but force request to be proxied then you may put it in a cookie or use connection request custom `data` field (available in all our transports). This `data` can contain arbitrary payload you want to pass from a client to a server.
+
+:::
+
+This also means that **every** new connection from a user will result in an HTTP POST request to your application backend. While with JWT token you usually generate it once on application page reload, if client reconnects due to Centrifugo restart or internet connection loss it uses the same JWT it had before thus usually no additional requests are generated during reconnect process (until JWT expired).
 
 ![](/img/diagram_connect_proxy.png)
 
