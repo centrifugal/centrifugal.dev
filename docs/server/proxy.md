@@ -75,7 +75,7 @@ With the following options in the configuration file:
 
 :::tip
 
-If you still want to pass some token from a client side but force request to be proxied then use connection request custom `data` (available in all our transports). This `data` can contain arbitrary payload you want to pass from a client to a server. 
+If you still want to pass some token from a client side but force request to be proxied then use connection request custom `data` (available in all our transports). This `data` can contain arbitrary payload you want to pass from a client to a server.
 
 :::
 
