@@ -12,13 +12,7 @@ Centrifugo PRO requires a license key that can be purchased to unlock these addi
 The license key prices have the following gradations:
 
 * Free trial: a 2-month key to test out PRO features (**Centrifugo stops working after this key expires so it's only suitable for development**)
-* <em>???$</em> for 1 year license key
-
-:::info
-
-The license key prices will be defined upon Centrifugo PRO release. We are still evaluating this.
-
-:::
+* <em>950$</em> for 1 year license key
 
 All license keys are bound to a unique owner. License key owner can use it in any amount of own projects, but must not share the license key publicly (can be blocked otherwise).
 
