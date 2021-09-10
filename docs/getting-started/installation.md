@@ -3,13 +3,11 @@ id: installation
 title: Install Centrifugo
 ---
 
-Centrifugo server is written in Go language. It's open-source software (except some Pro parts), the source code is available [on Github](https://github.com/centrifugal/centrifugo).
-
-Centrifugo is built around [Centrifuge](https://github.com/centrifugal/centrifuge) library for Go language. That library defines a custom protocol and message types that must be sent over various real-time transports. Centrifugo bidirectional client connectors use that protocol internally and provide simple API for features - making a persistent connection, subscribing on channels, calling RPC commands, and more. When using unidirectional transports 
-
-Server documentation covers a lot of server concepts in detail. Here we start with ways to install Centrifugo on your system. 
+Centrifugo server is written in Go language. It's an open-source software, the source code is available [on Github](https://github.com/centrifugal/centrifugo).
 
 ## Install from the binary release
+
+For a local development the simplest way to get Centrifugo is from binary release (i.e. single all-contained executable file).
 
 Binary releases available on Github. [Download latest release](https://github.com/centrifugal/centrifugo/releases) for your operating system, unpack it and you are done. Centrifugo is pre-built for:
 
@@ -40,7 +38,7 @@ Centrifugo requires a configuration file with several secret keys. If you are ne
 ./centrifugo genconfig
 ```
 
-It generates random secret keys and creates configuration file `config.json` in a current directory (by default).
+It creates a configuration file `config.json` with some auto-generated option values in a current directory (by default).
 
 :::tip
 
