@@ -47,6 +47,8 @@ Channel is a very lightweight ephemeral entity - Centrifugo can deal with lots o
 
 But keep in mind that one client should not be subscribed to lots of channels at the same moment (since this makes the connection process heavy for a client). Using no more than several channels for a client is what you should try to achieve. A good analogy here is writing SQL queries – you need to make sure you return content using a fixed amount of database queries, as soon as more entries on your page result in more queries - your pages start working very slow at some point. The same for channels - you better deliver real-time events over a fixed amount of channels. It takes a separate frame for a client to subscribe to a single channel – more frames mean a more heavy initial connection.
 
+For example, when building a chat app where user can be part of many groups using a separate channel for each group is usually a bad approach. This does not scale well since user can have lots of active groups on chat list screen – thus lots of subscriptions. Also, to receive updates from old chats (not visible on a screen) – user will need to subscribe on them too (i.e. even more subscriptions). In this case using a single personal channel for each user is a preferred approach. As soon as you need to deliver a message to a group you can use Centrifugo `broadcast` API to send it to many users. If your chat groups are huge in size then you may also need additional queuing system between your application backend and Centrifugo to broadcast a message to many personal channels.
+
 ### Any way to exclude message publisher from receiving a message from a channel?
 
 Currently, no.
