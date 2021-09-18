@@ -34,11 +34,11 @@ Disadvantages:
 * Does not allow scaling nodes (actually you still can scale Centrifugo with Memory engine but you have to publish data into each Centrifugo node and you won't have consistent history and presence state throughout Centrifugo nodes)
 * Does not persist message history in channels between Centrifugo restarts
 
-### Options
+### Memory engine options
 
 #### history_meta_ttl
 
-Duration, default `0s`.
+[Duration](../server/configuration.md#setting-time-duration-options), default `0s`.
 
 `history_meta_ttl` sets a time in seconds of history stream metadata expiration. Stream metadata is information about the current offset number in the channel and epoch value. By default, metadata for channels does not expire. Though in some cases – when channels are created for а short time and then not used anymore – created metadata can stay in memory while not useful. For example, you can have a personal user channel but after using your app for a while user left it forever. From a long-term perspective, this can be an unwanted memory leak. Setting a reasonable value to this option (usually much bigger than the history retention period) can help. In this case, unused channel metadata will eventually expire.
 
@@ -50,19 +50,41 @@ Centrifugo Redis engine allows scaling Centrifugo nodes to different machines. N
 
 **Minimal Redis version is 5.0.1**
 
-### Options
+### Redis engine options
 
-Several configuration options related to Redis engine:
+Several configuration options related to Redis engine.
 
-* `redis_address` (string, default `"127.0.0.1:6379"`) - Redis server address
-* `redis_password` (string, default `""`) - Redis password
-* `redis_db` (int, default `0`) - number of Redis db to use
-* `redis_tls` (boolean, default `false`) - enable Redis TLS connection
-* `redis_tls_skip_verify` (boolean, default `false`) - disable Redis TLS host verification
-* `redis_prefix` (string, default `"centrifugo"`) – custom prefix to use for channels and keys in Redis
-* `redis_use_lists` (boolean, default `false`) – turns on using Redis Lists instead of Stream data structure for keeping history (not recommended, keeping this for backwards compatibility mostly).
+#### redis_address
 
-Similar to a Memory engine Redis engine also looks at `history_meta_ttl` option (int, default `0`) - which sets a time in seconds of history stream metadata expiration in Redis Engine. Meta key in Redis is a HASH that contains the current offset number in channel and epoch value. By default, metadata for channels does not expire. Though in some cases – when channels are created for а short time and then not used anymore – created stream metadata can stay in memory while not useful. For example, you can have a personal user channel but after using your app for a while user left it forever. From a long-term perspective, this can be an unwanted memory leak. Setting a reasonable value to this option (usually much bigger than the history retention period) can help. In this case, unused channel metadata will eventually expire.
+String, default `"127.0.0.1:6379"` - Redis server address.
+
+#### redis_password
+
+String, default `""` - Redis password.
+
+#### redis_db
+
+Integer, default `0` - number of Redis db to use.
+
+#### redis_tls
+
+Boolean, default `false` - enable Redis TLS connection.
+
+#### redis_tls_skip_verify
+
+Boolean, default `false` - disable Redis TLS host verification.
+
+#### redis_prefix
+
+String, default `"centrifugo"` – custom prefix to use for channels and keys in Redis
+
+#### redis_use_lists
+
+Boolean, default `false`) – turns on using Redis Lists instead of Stream data structure for keeping history (not recommended, keeping this for backwards compatibility mostly).
+
+#### history_meta_ttl
+
+Similar to a Memory engine Redis engine also looks at `history_meta_ttl` option ([duration](../server/configuration.md#setting-time-duration-options), default `0`) - which sets a time of history stream metadata expiration in Redis Engine (with seconds resolution). Meta key in Redis is a HASH that contains the current offset number in channel and epoch value. By default, metadata for channels does not expire. Though in some cases – when channels are created for а short time and then not used anymore – created stream metadata can stay in memory while not useful. For example, you can have a personal user channel but after using your app for a while user left it forever. From a long-term perspective, this can be an unwanted memory leak. Setting a reasonable value to this option (usually much bigger than the history retention period) can help. In this case, unused channel metadata will eventually expire.
 
 ### Scaling with Redis tutorial
 
@@ -327,7 +349,7 @@ See [centrifugal/rotor](https://github.com/centrifugal/rotor) repo for ready-to-
 
 See [centrifugal/tarantool-centrifuge](https://github.com/centrifugal/tarantool-centrifuge) repo for examples on how to run engine with Standalone single Tarantool instance or with Raft-based synchronous replication.
 
-### Options
+### Tarantool engine options
 
 #### tarantool_address
 
@@ -350,6 +372,12 @@ String, default `""`. Allows setting a user.
 #### tarantool_password
 
 String, default `""`. Allows setting a password.
+
+#### history_meta_ttl
+
+[Duration](../server/configuration.md#setting-time-duration-options), default `0s`.
+
+Same option as for Memory engine and Redis engine also applies to Tarantool case.
 
 ## Nats broker
 
