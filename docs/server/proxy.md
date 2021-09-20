@@ -624,7 +624,7 @@ Use subscribe proxy for all channels without namespaces:
 
 So the same as for HTTP, just the different endpoint scheme.
 
-### Options
+### GRPC proxy options
 
 Some additional options exist to control GRPC proxy behavior.
 
