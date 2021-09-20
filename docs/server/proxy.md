@@ -59,6 +59,12 @@ Centrifugo forces the` Content-Type` header to be `application/json` in all HTTP
 
 :::
 
+### Proxy GRPC metadata
+
+When [GRPC unidirectional stream](../transports/uni_grpc.md) is used as a client transport then you may want to proxy GRPC metadata from the client request. In this case you may configure `proxy_grpc_metadata` option. This is an array of string metadata keys which will be proxied. These metadata keys transformed to HTTP headers of proxy request. By default no metadata keys are proxied.
+
+See below [the table of rules](#header-proxy-rules) how metadata and headers proxied in transport/proxy different scenarios. 
+
 ### Connect proxy
 
 With the following options in the configuration file:
@@ -645,10 +651,6 @@ Add custom key to per-RPC credentials.
 String, default `""` (i.e. not used).
 
 A custom value for `proxy_grpc_credentials_key`.
-
-#### proxy_grpc_metadata
-
-An array of string keys to proxy from the original GRPC request metadata. By default no metadata keys are proxied.
 
 ### GRPC proxy example
 
