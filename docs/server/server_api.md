@@ -487,6 +487,43 @@ Date: Wed, 21 Jul 2021 05:30:48 GMT
 | offset       | integer  | yes | Top offset in history stream        |
 | epoch       | string       | yes |   Epoch of current stream        |
 
+### history_remove
+
+`history_remove` allows removing publications in channel history. Current top stream position meta data kept untouched to avoid client disconnects due to insufficient state.
+
+```json
+{
+    "method": "history_remove",
+    "params": {
+        "channel": "chat"
+    }
+}
+```
+
+Example:
+
+```bash
+echo '{"method": "history_remove", "params": {"channel": "chat"}}' | http "localhost:8000/api" Authorization:"apikey KEY"
+HTTP/1.1 200 OK
+Content-Length: 43
+Content-Type: application/json
+Date: Thu, 17 May 2018 22:09:44 GMT
+
+{
+    "result": {}
+}
+```
+
+#### History remove params
+
+| Parameter name | Parameter type | Required | Description  |
+| -------------- | -------------- | ------------ | ---- |
+| channel       | string  | yes | Name of channel to remove history        |
+
+#### History remove result
+
+Empty object at the moment.
+
 ### channels
 
 `channels` return active channels (with one or more active subscribers in it).
