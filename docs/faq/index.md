@@ -155,7 +155,7 @@ A tricky thing is disconnects hooks. Centrifugo does not support them. There is 
 
 ### Is it possible to listen to join/leave events on the app backend side?
 
-No, join/leave events are only available in the client protocol. In most cases join event can be handled by using [subscribe proxy](../server/proxy.md#subscribe-proxy). Leave events are harder – there is no unsubscribe hook availeble (mostly the same reasons as for disconnect hook described above). So the workaround here can be similar as for disconnect – ping app backend periodically while client is subscribed and thus know that client is currently in channel with some approximation in time.
+No, join/leave events are only available in the client protocol. In most cases join event can be handled by using [subscribe proxy](../server/proxy.md#subscribe-proxy). Leave events are harder – there is no unsubscribe hook available (mostly the same reasons as for disconnect hook described above). So the workaround here can be similar to one for disconnect – ping an app backend periodically while client is subscribed and thus know that client is currently in a channel with some approximation in time.
 
 ### How scalable is the presence and join/leave features?
 
