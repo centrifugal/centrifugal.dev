@@ -84,7 +84,7 @@ An optional array of strings with server-side channels to subscribe a client to.
 
 :::caution
 
-By providing a list of channels in JWT with `channels` claim you are not making them automatically unaccessible by other users. Other users can still call client-side `.subscribe()` method and subscribe to these channels if channel permissions allow doing this. If you need to protect channels from being subscribed by other connections then you can use private channels inside this `channels` array (i.e. starting with `$`) or turn on [protected](channels.md#protected) option for channels namespaces.
+By providing a list of channels in JWT with `channels` claim you are not making them automatically unaccessible by other users. Other users can still call a client-side `.subscribe()` method and subscribe to these channels if channel permissions allow doing this. If you need to protect channels from being subscribed by other connections then you can use private channels inside this `channels` array (i.e. starting with `$`) or turn on [protected](channels.md#protected) option for channels namespaces.
 
 :::
 
@@ -94,13 +94,13 @@ An optional map of channels with options. This is like a `channels` claim but al
 
 :::tip
 
-This claim is called `subs` as a shortcut from subscriptions. The claim `sub` described above is a standart JWT claim to provide a user ID (it's a shortcut from subject). While claims have similar names they have different purpose in connection JWT.
+This claim is called `subs` as a shortcut from subscriptions. The claim `sub` described above is a standart JWT claim to provide a user ID (it's a shortcut from subject). While claims have similar names they have different purpose in a connection JWT.
 
 :::
 
 :::caution
 
-By providing a map of channels in JWT with `subs` claim you are not making channels automatically unaccessible by other users. Other users can still call client-side `.subscribe()` method and subscribe to these channels if channel permissions allow doing this. If you need to protect channels from being subscribed by other connections then you can use private channels inside this `channels` array (i.e. starting with `$`) or turn on [protected](channels.md#protected) option for channels namespaces.
+By providing a map of channels in JWT with `subs` claim you are not making channels automatically unaccessible by other users. Other users can still call a client-side `.subscribe()` method and subscribe to these channels if channel permissions allow doing this. If you need to protect channels from being subscribed by other connections then you can use private channels inside this `subs` map (i.e. starting with `$`) or turn on [protected](channels.md#protected) option for channels namespaces.
 
 :::
 
