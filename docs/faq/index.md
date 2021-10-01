@@ -153,6 +153,10 @@ The same relates to other channel options.
 
 A tricky thing is disconnects hooks. Centrifugo does not support them. There is no guarantee that the disconnect code will have a time to execute on the client-side (as the client can just switch off its device or simply lose internet connection). Also Centrifugo node can unexpectedly be killed. In both cases there is a chance that disconnect event will not be delivered to the backend. If you need to know that client disconnected and program your business logic around this fact then the only reasonable approach is periodically call your backend from the client-side and update user status somewhere on the backend (use Redis maybe). This is a pretty robust solution where you can't occasionally miss disconnect events. You can also utilize Centrifugo refresh proxy for the task of periodic backend pinging.
 
+### Is it possible to listen to join/leave events on the app backend side?
+
+No, join/leave events are only available in the client protocol. In most cases join event can be handled by using [subscribe proxy](../server/proxy.md#subscribe-proxy). Leave events are harder – there is no unsubscribe hook availeble (mostly the same reasons as for disconnect hook described above). So the workaround here can be similar as for disconnect – ping app backend periodically while client is subscribed and thus know that client is currently in channel with some approximation in time.
+
 ### How scalable is the presence and join/leave features?
 
 Presence is good for channels with a reasonably small number of active subscribers. As soon as there are tons of active subscribers, presence information becomes very expensive in terms of bandwidth (as it contains full information about all clients in a channel).

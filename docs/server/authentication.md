@@ -82,9 +82,27 @@ This field contains a `base64` representation of your bytes. After receiving Cen
 
 An optional array of strings with server-side channels to subscribe a client to. See more details about [server-side subscriptions](server_subs.md).
 
+:::caution
+
+By providing a list of channels in JWT with `channels` claim you are not making them automatically unaccessible by other users. Other users can still call client-side `.subscribe()` method and subscribe to these channels if channel permissions allow doing this. If you need to protect channels from being subscribed by other connections then you can use private channels inside this `channels` array (i.e. starting with `$`) or turn on [protected](channels.md#protected) option for channels namespaces.
+
+:::
+
 ### subs
 
 An optional map of channels with options. This is like a `channels` claim but allows more control over server-side subscription since every channel can be annotated with info, data, and so on using options.
+
+:::tip
+
+This claim is called `subs` as a shortcut from subscriptions. The claim `sub` described above is a standart JWT claim to provide a user ID (it's a shortcut from subject). While claims have similar names they have different purpose in connection JWT.
+
+:::
+
+:::caution
+
+By providing a map of channels in JWT with `subs` claim you are not making channels automatically unaccessible by other users. Other users can still call client-side `.subscribe()` method and subscribe to these channels if channel permissions allow doing this. If you need to protect channels from being subscribed by other connections then you can use private channels inside this `channels` array (i.e. starting with `$`) or turn on [protected](channels.md#protected) option for channels namespaces.
+
+:::
 
 Example:
 
