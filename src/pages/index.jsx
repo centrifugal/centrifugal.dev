@@ -8,14 +8,6 @@ import styles from "./styles.module.css";
 import Logo from "./components/logo";
 import useThemeContext from '@theme/hooks/useThemeContext';
 
-// function ResponsiveEmbed({ src }) {
-//   return (
-//     <div className={clsx(styles.responsiveEmbed)}>
-//       <iframe src={src} frameBorder="0" allowFullScreen></iframe>
-//     </div>
-//   );
-// }
-
 function Feature({ imageUrl, title, children }) {
   const imgUrl = useBaseUrl(imageUrl);
   return (
@@ -133,6 +125,14 @@ function Home() {
               interactive applications can be quickly built using Centrifugo and a set of client
               libraries available for frontend (for both web and mobile experience).
             </p>
+            <p>
+              Looking for a cool demo? See how real-time telemetry is streamed from Assetto Corsa racing simulator towards Grafana dashboard with a help of our WebSocket technologies:
+            </p>
+            <p></p>
+            <div className="vimeo-full-width">
+              <iframe src="https://player.vimeo.com/video/570333329?title=0&byline=0&portrait=0" frameBorder="0" allow="autoplay; fullscreen" allowFullScreen></iframe>
+            </div>
+            <p></p>
           </div>
           <div className={styles.buttons}>
             <Link
@@ -142,7 +142,7 @@ function Home() {
               )}
               to={useBaseUrl("docs/getting-started/introduction")}
             >
-              Get Started
+              Impressive, right? Get Started.
             </Link>
           </div>
         </section>
