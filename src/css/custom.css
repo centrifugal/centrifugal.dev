@@ -121,6 +121,16 @@ html[data-theme="dark"] .header-github-link:before {
 
 .token.keyword { font-style: normal !important; }
 
+.vimeo-wrapper {
+  padding: 0 10%;
+}
+
+@media screen and (max-width: 996px) {
+  .vimeo-wrapper {
+    padding: 0 0;
+  }
+}
+
 .vimeo-full-width {
   padding: 56.25% 0 0 0;
   position: relative;

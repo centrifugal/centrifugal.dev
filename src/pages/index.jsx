@@ -129,8 +129,10 @@ function Home() {
               Looking for a cool demo? See how real-time telemetry is streamed from Assetto Corsa racing simulator towards Grafana dashboard with a help of our WebSocket technologies:
             </p>
             <p></p>
-            <div className="vimeo-full-width">
-              <iframe src="https://player.vimeo.com/video/570333329?title=0&byline=0&portrait=0" frameBorder="0" allow="autoplay; fullscreen" allowFullScreen></iframe>
+            <div className="vimeo-wrapper">
+              <div className="vimeo-full-width">
+                <iframe src="https://player.vimeo.com/video/570333329?title=0&byline=0&portrait=0" frameBorder="0" allow="autoplay; fullscreen" allowFullScreen></iframe>
+              </div>
             </div>
             <p></p>
           </div>
