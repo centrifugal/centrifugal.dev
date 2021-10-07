@@ -13,7 +13,7 @@ Centrifugo PRO distributed under [commercial license](/pro_license) which is dif
 
 ### Binary release
 
-Coming soon.
+Centrifugo binary releases [available on Github](https://github.com/centrifugal/centrifugo-pro/releases). Download latest release for your operating system, unpack it and run with license key.
 
 ### Docker image
 
@@ -34,17 +34,19 @@ image:
   repository: centrifugo/centrifugo-pro
 ```
 
-### Debian
+### Debian and Ubuntu
 
-Coming soon.
-
-### Ubuntu
-
-Coming soon.
+```
+wget https://github.com/centrifugal/centrifugo-pro/releases/download/v3.0.2-beta.1/centrifugo-pro_3.0.2-beta.1_amd64.deb
+sudo dpkg -i centrifugo-pro_3.0.2-beta.1_amd64.deb
+```
 
 ### Centos
 
-Coming soon.
+```
+wget https://github.com/centrifugal/centrifugo-pro/releases/download/v3.0.2-beta.1/centrifugo-pro-3.0.2-beta.1.x86_64.rpm
+sudo yum install centrifugo-pro-3.0.2-beta.1.x86_64.rpm
+```
 
 ## Running PRO version
 
