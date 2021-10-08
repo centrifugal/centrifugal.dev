@@ -7,6 +7,25 @@ Centrifugo PRO is an extended version of Centrifugo with some advanced features.
 
 Centrifugo PRO requires a license key that can be purchased to unlock these additional features. At this moment we form an invoice for payment with a payment link manually. Please contact over `centrifugal.dev@gmail.com` to buy a license key or request a trial license key. This process may be automated in the future.
 
+## Features
+
+Here is a list of all Pro features available at the moment.
+
+* [Channel and user tracing](./tracing.md) provides a way to look at all client protocol frames in the specified channel or per user ID.
+* [Real-time analytics with ClickHouse](./analytics.md) for a great system observability, reporting and trending. [Details]().
+* [User status](./user_status.md) feature to understand activity state for a list of users.
+* [Operation throttling](./throttling.md) to protect client API from misusing and frontend bugs.
+* [User connections API](./user_connections.md) to query for all active user sessions with additional information.
+* Even [faster performance](./performance.md) to reduce resource usage on server side.
+* [Singleflight](./singleflight.md) for presence and history to reduce load on broker.
+* Near real-time [CPU and RSS memory usage stats](./process_stats.md).
+
+:::info
+
+PRO features can change with time. We reserve a right to move features from PRO to OSS version if there is a clear signal that this is required to do for the Centrifugo ecosystem.
+
+:::
+
 ## Pricing
 
 The license key prices have the following gradations:
@@ -22,23 +41,4 @@ The license key has an expiration date. After the expiration date, Centrifugo PR
 
 :::
 
-Also, keep in mind that there is no refunding process for purchased license keys. 
-
-## Features
-
-Here is a list of all Pro features available at the moment. The list of PRO features may change with time.
-
-* Channel and user tracing - [details](./tracing.md)
-* Real-time analytics with ClickHouse – [details](./analytics.md)
-* User status – [details](./user_status.md)
-* Operation throttling – [details](./throttling.md)
-* User connections API – [details](./user_connections.md)
-* Faster performance – [details](./performance.md)
-* Singleflight for presence and history – [details](./singleflight.md)
-* Near real-time CPU and RSS memory usage stats – [details](./process_stats.md)
-
-:::info
-
-PRO features can change with time. We reserve a right to move features from PRO to OSS version if there is a clear signal that this is required to do for the Centrifugo ecosystem.
-
-:::
+Also, keep in mind that there is no refunding process for purchased license keys.
