@@ -12,7 +12,7 @@ Centrifugo PRO requires a license key that can be purchased to unlock these addi
 Here is a list of all Pro features available at the moment.
 
 * [Channel and user tracing](./tracing.md) provides a way to look at all client protocol frames in the specified channel or per user ID.
-* [Real-time analytics with ClickHouse](./analytics.md) for a great system observability, reporting and trending. [Details]().
+* [Real-time analytics with ClickHouse](./analytics.md) for a great system observability, reporting and trending.
 * [User status](./user_status.md) feature to understand activity state for a list of users.
 * [Operation throttling](./throttling.md) to protect client API from misusing and frontend bugs.
 * [User connections API](./user_connections.md) to query for all active user sessions with additional information.
