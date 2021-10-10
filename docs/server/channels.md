@@ -3,11 +3,19 @@ id: channels
 title: Channels
 ---
 
-Channel is a route for publications. Clients can be subscribed to a channel to receive real-time messages published to this channel – new publications and join/leave events (if enabled for a channel namespace). A channel subscriber can also ask for a channel presence or channel history information (if enabled for a channel namespace).
+Channel is a route for publications. Clients can be subscribed to a channel to receive real-time messages published to a channel – new publications and join/leave events (if enabled for a channel namespace). A channel subscriber can also ask for a channel presence or channel history information (if enabled for a channel namespace).
 
-Channel is just a string - `news`, `comments`, `personal_feed` are valid channel names. Though this string has some predefined rules as we will see below.
+Channel is just a string - `news`, `comments`, `personal_feed` are valid channel names. Though this string has some predefined rules as we will see below. You can define different channel behavior using a set of available channel options.
 
-Channel is an ephemeral entity – **you don't need to create it explicitly**. Channel created automatically by Centrifugo as soon as the first client subscribes to it. As soon as the last subscriber leaves the channel - it's automatically cleaned up.
+Channels are ephemeral – you don't need to create them explicitly. Channels created automatically by Centrifugo as soon as the first client subscribes to a channel. As soon as the last subscriber leaves a channel - it's automatically cleaned up.
+
+Channel can belong to a channel namespace. [Channel namespacing](#channel-namespaces) is a mechanism to define different behavior for different channels in Centrifugo. Using namespaces is a recommended way to manage channels – to turn on only those channel options which are required for a specific real-time feature you are implementing on top of Centrifugo.
+
+:::caution
+
+When using channel namespaces make sure you defined a namespace in configuration. Subscription attempts to a channel within a non-defined namespace will result into [102: unknown channel](codes.md#unknown-channel) errors.
+
+:::
 
 ## Channel name rules
 
