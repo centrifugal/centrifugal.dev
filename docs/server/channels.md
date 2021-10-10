@@ -5,7 +5,7 @@ title: Channels
 
 Channel is a route for publications. Clients can be subscribed to a channel to receive real-time messages published to a channel – new publications and join/leave events (if enabled for a channel namespace). A channel subscriber can also ask for a channel presence or channel history information (if enabled for a channel namespace).
 
-Channel is just a string - `news`, `comments`, `personal_feed` are valid channel names. Though this string has some predefined rules as we will see below. You can define different channel behavior using a set of available channel options.
+Channel is just a string - `news`, `comments`, `personal_feed` are valid channel names. Though this string has some [predefined rules](#channel-name-rules) as we will see below. You can define different channel behavior using a set of available [channel options](#channel-options).
 
 Channels are ephemeral – you don't need to create them explicitly. Channels created automatically by Centrifugo as soon as the first client subscribes to a channel. As soon as the last subscriber leaves a channel - it's automatically cleaned up.
 
