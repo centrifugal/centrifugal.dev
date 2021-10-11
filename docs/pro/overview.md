@@ -5,7 +5,11 @@ title: Centrifugo PRO overview
 
 Centrifugo PRO is an extended version of Centrifugo with some advanced features.
 
-Centrifugo PRO requires a license key that can be purchased to unlock these additional features. At this moment we form an invoice for payment with a payment link manually. Please contact over `centrifugal.dev@gmail.com` to buy a license key or request a trial license key. This process may be automated in the future.
+:::caution
+
+Centrifugo PRO distributed under [commercial license](/pro_license) which is different from OSS version. Using Centrifugo PRO means you accept this license.
+
+:::
 
 ## Features
 
@@ -26,14 +30,26 @@ PRO features can change with time. We reserve a right to move features from PRO 
 
 :::
 
+## Sandbox mode
+
+You can try out Centrifugo PRO for free. When you start Centrifugo PRO without license key then it's running in a sandbox mode. Sandbox mode limits the usage of Centrifigo PRO in several ways. For example:
+
+* Centrifugo handles up to 50 concurrent connections
+* up to 2 server nodes supported
+* up to 20 API requests per second allowed
+
+This mode should be enough for development, but must not be used in production environment.
+
 ## Pricing
+
+To run without limits Centrifugo PRO requires a license key that can be purchased. At this moment we form an invoice for a payment with a payment link manually. Please contact over `centrifugal.dev@gmail.com` to buy a license key or request a trial license key. This process may be automated in the future.
 
 The license key prices have the following gradations:
 
-* Free trial: a 2-month key to test out PRO features (**Centrifugo stops working after this key expires so it's only suitable for development**)
+* Free trial key: a 2-month key to test out PRO features without sandbox limitations (**Centrifugo stops working after this key expires**)
 * <em>950$</em> for 1 year license key
 
-All license keys are bound to a unique owner. License key owner can use it in any amount of own projects, but must not share the license key publicly (can be blocked otherwise).
+License keys are bound to a unique owner. License key owner can use it in any amount of own projects, but must not share the license key publicly (can be blocked otherwise).
 
 :::info License key expiration
 

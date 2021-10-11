@@ -3,12 +3,6 @@ id: install_and_run
 title: Install and run PRO version
 ---
 
-:::note
-
-Centrifugo PRO distributed under [commercial license](/pro_license) which is different from OSS version.
-
-:::
-
 ## Installing PRO version
 
 ### Binary release
