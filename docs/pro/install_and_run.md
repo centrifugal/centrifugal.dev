@@ -37,8 +37,8 @@ image:
 DEB package [available in release assets](https://github.com/centrifugal/centrifugo-pro/releases).
 
 ```
-wget https://github.com/centrifugal/centrifugo-pro/releases/download/v3.0.2-beta.1/centrifugo-pro_3.0.2-beta.1_amd64.deb
-sudo dpkg -i centrifugo-pro_3.0.2-beta.1_amd64.deb
+wget https://github.com/centrifugal/centrifugo-pro/releases/download/v3.0.3-beta.1/centrifugo-pro_3.0.3-beta.1_amd64.deb
+sudo dpkg -i centrifugo-pro_3.0.3-beta.1_amd64.deb
 ```
 
 ### Centos
@@ -46,8 +46,8 @@ sudo dpkg -i centrifugo-pro_3.0.2-beta.1_amd64.deb
 RPM package [available in release assets](https://github.com/centrifugal/centrifugo-pro/releases).
 
 ```
-wget https://github.com/centrifugal/centrifugo-pro/releases/download/v3.0.2-beta.1/centrifugo-pro-3.0.2-beta.1.x86_64.rpm
-sudo yum install centrifugo-pro-3.0.2-beta.1.x86_64.rpm
+wget https://github.com/centrifugal/centrifugo-pro/releases/download/v3.0.3-beta.1/centrifugo-pro-3.0.3-beta.1.x86_64.rpm
+sudo yum install centrifugo-pro-3.0.3-beta.1.x86_64.rpm
 ```
 
 ## Setting PRO license key
