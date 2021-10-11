@@ -3,13 +3,7 @@ id: overview
 title: Centrifugo PRO overview
 ---
 
-Centrifugo PRO is an extended version of Centrifugo with some advanced features.
-
-:::caution
-
-Centrifugo PRO distributed under [commercial license](/pro_license) which is different from OSS version. Using Centrifugo PRO means you accept this license.
-
-:::
+Centrifugo PRO is an extended version of Centrifugo with a set of additional features. These features can provide your business with unique benefits – drastically save development time, reduce resource usage on a server, protect your backend from misusing, and put the system observability to the next level.
 
 ## Features
 

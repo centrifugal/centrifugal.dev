@@ -3,11 +3,15 @@ id: install_and_run
 title: Install and run PRO version
 ---
 
-## Installing PRO version
+:::caution
+
+Centrifugo PRO is distributed under [commercial license](/pro_license) which is different from OSS version. By downloading Centrifugo PRO you automatically accept license terms.
+
+:::
 
 ### Binary release
 
-Centrifugo PRO binary releases [available on Github](https://github.com/centrifugal/centrifugo-pro/releases). Note that we use a separate repo for PRO releases. Download latest release for your operating system, unpack it and run with license key.
+Centrifugo PRO binary releases [available on Github](https://github.com/centrifugal/centrifugo-pro/releases). Note that we use a separate repo for PRO releases. Download latest release for your operating system, unpack it and run (see how to set license key [below](#setting-pro-license-key)).
 
 ### Docker image
 
@@ -46,9 +50,9 @@ wget https://github.com/centrifugal/centrifugo-pro/releases/download/v3.0.2-beta
 sudo yum install centrifugo-pro-3.0.2-beta.1.x86_64.rpm
 ```
 
-## Running PRO version
+## Setting PRO license key
 
-Centrifugo PRO inherits all features and configuration options from open-source version. The only difference is that it expects a valid license key on start.
+Centrifugo PRO inherits all features and configuration options from open-source version. The only difference is that it expects a valid license key on start to avoid sandbox mode limits.
 
 Once you have installed a PRO version and have a license key you can set it in configuration over `license` field, or pass over environment variables as `CENTRIFUGO_LICENSE`. Like this:
 
@@ -61,6 +65,6 @@ Once you have installed a PRO version and have a license key you can set it in c
 
 :::tip
 
-If license properly set then on Centrifugo PRO start you should see license information in logs: owner, license type and expiration date. All PRO features should be unlocked at this point.
+If license properly set then on Centrifugo PRO start you should see license information in logs: owner, license type and expiration date. All PRO features should be unlocked at this point. Warning about sandbox mode in logs on server start must disappear.
 
 :::
