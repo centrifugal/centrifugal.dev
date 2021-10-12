@@ -121,7 +121,7 @@ docker-compose up
 
 ## Kubernetes Helm chart
 
-Official Kubernetes Helm chart available and [located on Github](https://github.com/centrifugal/helm-charts). Follow instructions in repository README to bootstrap Centrifugo inside your Kubernetes cluster.
+See our [official Kubernetes Helm chart](https://github.com/centrifugal/helm-charts). Follow instructions in a Centrifugo chart README to bootstrap Centrifugo inside your Kubernetes cluster.
 
 ## RPM and DEB packages for Linux
 

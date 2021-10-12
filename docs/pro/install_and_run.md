@@ -15,7 +15,7 @@ Centrifugo PRO binary releases [available on Github](https://github.com/centrifu
 
 ### Docker image
 
-Centrifugo PRO uses a different image from OSS version:
+Centrifugo PRO uses a [different image](https://hub.docker.com/repository/docker/centrifugo/centrifugo-pro) from OSS version:
 
 ```
 docker pull centrifugo/centrifugo-pro
@@ -23,13 +23,14 @@ docker pull centrifugo/centrifugo-pro
 
 ### Kubernetes
 
-You can use our official Helm chart but make sure you changed Docker image to use PRO version:
+You can use our [official Helm chart](https://github.com/centrifugal/helm-charts) but make sure you changed Docker image to use PRO version and point to the correct image tag:
 
 ```yaml title="values.yaml"
 ...
 image:
   registry: docker.io
   repository: centrifugo/centrifugo-pro
+  tag: v3.0.3-beta.1
 ```
 
 ### Debian and Ubuntu
