@@ -39,6 +39,12 @@ All ClickHouse analytics options scoped to `clickhouse_analytics` section of con
 
 Toggle this feature using `enabled` boolean option.
 
+:::tip
+
+While we have a nested configuration here it's still possible to use environment variables to set options. For example, use `CENTRIFUGO_CLICKHOUSE_ANALYTICS_ENABLED` env var name for configure `enabled` option mentioned above. I.e. nesting expressed as `_` in Centrifugo.
+
+:::
+
 Centrifugo can export data to different ClickHouse instances, addresses of ClickHouse can be set over `clickhouse_dsn` option.
 
 You also need to set a ClickHouse cluster name (`clickhouse_cluster`) and database name `clickhouse_database`.
