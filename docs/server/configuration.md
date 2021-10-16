@@ -41,7 +41,7 @@ export CENTRIFUGO_ALLOWED_ORIGINS="https://mysite1.example.com https://mysite2.e
 
 For a nested object configuration (which we have, for example, in [Centrifugo PRO ClickHouse analytics](../pro/analytics.md)) it's still possible to use environment variables to set options. In this case replace nesting with `_` when constructing environment variable name.
 
-Empty environment variables are considered unset (not as `false`!) and will fall back to the next configuration source.
+Empty environment variables are considered unset (!) and will fall back to the next configuration source.
 
 ### Configuration file
 
