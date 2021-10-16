@@ -27,11 +27,21 @@ All Centrifugo options can be set over env in the format `CENTRIFUGO_<OPTION_NAM
 
 Setting options over env is mostly straightforward except namespaces – [see how to set namespaces via env](#setting-namespaces-over-env). Environment variables have the second priority after flags.
 
+Boolean options can be set using strings according to Go language [ParseBool](https://pkg.go.dev/strconv#ParseBool) function. I.e. to set `true` you can just use `"true"` value for an environment variable (or simply `"1"`). To set `false` use `"false"` or `"0"`. Example:
+
+```bash
+export CENTRIFUGO_PROMETHEUS="1"
+```
+
 Also, array options, like `allowed_origins` can be set over environment variables as a single string where values separated by a space. For example:
 
 ```bash
 export CENTRIFUGO_ALLOWED_ORIGINS="https://mysite1.example.com https://mysite2.example.com"
 ```
+
+For a nested object configuration (which we have, for example, in [Centrifugo PRO ClickHouse analytics](../pro/analytics.md)) it's still possible to use environment variables to set options. In this case replace nesting with `_` when constructing environment variable name.
+
+Empty environment variables are considered unset (not as `false`!) and will fall back to the next configuration source.
 
 ### Configuration file
 
