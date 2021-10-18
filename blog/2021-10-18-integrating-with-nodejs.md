@@ -5,8 +5,11 @@ description: In this tutorial we are integrating Centrifugo with NodeJS. We are 
 author: Alexander Emelin
 authorTitle: Creator of Centrifugo
 authorImageURL: https://github.com/FZambia.png
+image: /img/keyboard.png
 hide_table_of_contents: false
 ---
+
+![Centrifuge](/img/keyboard.png)
 
 Centrifugo is a scalable real-time messaging server in a language-agnostic way. In this tutorial we will integrate Centrifugo with NodeJS backend using a connect proxy feature of Centrifugo for user authentication and native session middleware of ExpressJS framework.
 
