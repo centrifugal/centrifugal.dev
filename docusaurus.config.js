@@ -162,7 +162,7 @@ module.exports = {
            * 'ALL' to show all blog posts
            * 0 to disable
            */
-          blogSidebarCount: 5,
+          blogSidebarCount: 'ALL',
           /**
            * Title of the blog sidebar
            */
