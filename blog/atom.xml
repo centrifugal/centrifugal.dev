@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://centrifugal.dev/blog</id>
     <title>Centrifugo Blog</title>
-    <updated>2021-10-25T00:00:00.000Z</updated>
+    <updated>2021-10-18T00:00:00.000Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://centrifugal.dev/blog"/>
     <subtitle>Centrifugo Blog</subtitle>
@@ -11,8 +11,8 @@
     <entry>
         <title type="html"><![CDATA[Centrifugo integration with NodeJS tutorial]]></title>
         <id>Centrifugo integration with NodeJS tutorial</id>
-        <link href="https://centrifugal.dev/blog/2021/10/25/integrating-with-nodejs"/>
-        <updated>2021-10-25T00:00:00.000Z</updated>
+        <link href="https://centrifugal.dev/blog/2021/10/18/integrating-with-nodejs"/>
+        <updated>2021-10-18T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[In this tutorial we are integrating Centrifugo with NodeJS. We are using Centrifugo connect proxy feature to authenticate connections over standard Express.js session middleware.]]></summary>
     </entry>
     <entry>

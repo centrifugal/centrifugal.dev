@@ -4,15 +4,15 @@
         <title>Centrifugo Blog</title>
         <link>https://centrifugal.dev/blog</link>
         <description>Centrifugo Blog</description>
-        <lastBuildDate>Mon, 25 Oct 2021 00:00:00 GMT</lastBuildDate>
+        <lastBuildDate>Mon, 18 Oct 2021 00:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <copyright>Centrifugal</copyright>
         <item>
             <title><![CDATA[Centrifugo integration with NodeJS tutorial]]></title>
-            <link>https://centrifugal.dev/blog/2021/10/25/integrating-with-nodejs</link>
+            <link>https://centrifugal.dev/blog/2021/10/18/integrating-with-nodejs</link>
             <guid>Centrifugo integration with NodeJS tutorial</guid>
-            <pubDate>Mon, 25 Oct 2021 00:00:00 GMT</pubDate>
+            <pubDate>Mon, 18 Oct 2021 00:00:00 GMT</pubDate>
             <description><![CDATA[In this tutorial we are integrating Centrifugo with NodeJS. We are using Centrifugo connect proxy feature to authenticate connections over standard Express.js session middleware.]]></description>
         </item>
         <item>
