@@ -696,3 +696,179 @@ Once enabled this option tells Centrifugo to use base64 format in requests and u
 While this feature is useful for HTTP proxy it's not really required if you are using GRPC proxy – since GRPC allows passing binary data just fine.
 
 Regarding b64 fields in proxy results – just use base64 fields when required – Centrifugo is smart enough to detect that you are using base64 field and will pick payload from it, decode from base64 automatically and will pass further to connections in binary format.
+
+## Granular proxy mode
+
+New in Centrifugo v3.1.0.
+
+By default, with proxy configuration shown above, you can only define a global proxy settings and one endpoint for each type of proxy (i.e. one for connect proxy, one for subscribe proxy, and so on). Also, you can configure only one set of headers to proxy which will be used by each proxy type. This may be sufficient for many use cases, but what if you need a more granular control? For example, use different subscribe proxy endpoints for different channel namespaces (i.e. when using microservice architecture).
+
+Centrifugo v3.1.0 introduced a new mode for proxy configuration called granular proxy mode. In this mode it's possible to configure subscribe and publish proxy behaviour on per-namespace level, use different set of headers passed to the proxy endpoint in each proxy type. Also, Centrifugo v3.1.0 introduced a concept of rpc namespaces (in addition to channel namespaces) – together with granular proxy mode this allows configuring rpc proxies on per rpc namespace basis.
+
+### Enable granular proxy mode
+
+Since the change is rather radical it requires a separate boolean option `use_granular_proxies` to be enabled. As soon as this option set Centrifugo does not use proxy configuration rules described above and follows the rules described below.
+
+```json title="config.json"
+{
+  ...
+  "use_granular_proxies": true
+}
+```
+
+### Defining a list of proxies
+
+When using granular proxy mode on configuration top level you can define `"proxies"` array with a list of different proxy objects. Each proxy object in an array should have at least three required fields: `name`, `type` and `endpoint`.
+
+Here is an example:
+
+```json title="config.json"
+{
+  ...
+  "use_granular_proxies": true,
+  "proxies": [
+    {
+      "name": "connect",
+      "type": "http",
+      "endpoint": "http://localhost:3000/centrifugo/connect",
+      "timeout": "500ms",
+      "http_headers": ["Cookie"]
+    },
+    {
+      "name": "refresh",
+      "type": "http",
+      "endpoint": "http://localhost:3000/centrifugo/refresh",
+      "timeout": "500ms"
+    },
+    {
+      "name": "subscribe1",
+      "type": "http",
+      "endpoint": "http://localhost:3001/centrifugo/subscribe"
+    },
+    {
+      "name": "publish1",
+      "type": "http",
+      "endpoint": "http://localhost:3001/centrifugo/publish"
+    },
+    {
+      "name": "rpc1",
+      "type": "http",
+      "endpoint": "http://localhost:3001/centrifugo/rpc"
+    },
+    {
+      "name": "subscribe2",
+      "type": "http",
+      "endpoint": "http://localhost:3002/centrifugo/subscribe"
+    },
+    {
+      "name": "publish2",
+      "type": "http",
+      "endpoint": "http://localhost:3002/centrifugo/publish"
+    }
+    {
+      "name": "rpc2",
+      "type": "http",
+      "endpoint": "http://localhost:3002/centrifugo/rpc"
+    }
+  ]
+}
+```
+
+Let's look at all fields for a proxy object which is possible to set for each proxy inside `"proxies"` array.
+
+| Field name | Field type | Required | Description  |
+| -------------- | -------------- | ------------ | ---- |
+| name       | string  | yes | Unique name of proxy used for referencing in configuration, must match regexp `^[-a-zA-Z0-9_.]{2,}$`      |
+| type       | string  | yes | Type of proxy: `http` or `grpc`       |
+| endpoint       | string  | yes | HTTP or GRPC endpoint (same format as in default proxy mode)      |
+| timeout       | duration (string)  | no | Proxy request timeout, default `"1s"`       |
+| http_headers       | array of strings  | no | List of headers to proxy, by default no headers       |
+| grpc_metadata       | array of strings  | no | List of GRPC metadata keys to proxy, by default no metadata keys   |
+| binary_encoding       | bool  | no | Use base64 for payloads       |
+| include_connection_meta | bool  | no | Include meta information (attached on connect)       |
+| grpc_cert_file       | string  | no | Path to cert file for secure TLS connection. If not set then an insecure connection with the backend endpoint is used.       |
+| grpc_credentials_key       | string  | no | Add custom key to per-RPC credentials.       |
+| grpc_credentials_value       | string  | no | A custom value for `proxy_grpc_credentials_key`.       |
+
+### Granular connect and refresh
+
+As soon as you defined a list of proxies you can reference them by a name to use a specific proxy configuration for a specific event.
+
+To enable connect proxy:
+
+```json title="config.json"
+{
+  ...
+  "use_granular_proxies": true,
+  "proxies": [...],
+  "connect_proxy_name": "connect",
+  "refresh_proxy_name": "refresh"
+}
+```
+
+### Granular subscribe and publish
+
+Subscribe and publish proxy work per-namespace. This means that `subscribe_proxy_name` and `publish_proxy_name` are just a channel namespace options. So it's possible to define these options on congiguration top-level (for channels in default top-level namespace) or inside namespace object.
+
+```json title="config.json"
+{
+  ...
+  "use_granular_proxies": true,
+  "proxies": [...],
+  "namespaces": [
+    {
+      "name": "ns1",
+      "subscribe_proxy_name": "subscribe1",
+      "publish_proxy_name": "publish1"
+    },
+    {
+      "name": "ns2",
+      "subscribe_proxy_name": "subscribe2",
+      "publish_proxy_name": "publish2"
+    }
+  ]
+}
+```
+
+If namespace does not have `"subscribe_proxy_name"` or `"subscribe_proxy_name"` is empty then no subscribe proxy will be used for a namespace.
+
+If namespace does not have `"publish_proxy_name"` or `"publish_proxy_name"` is empty then no publish proxy will be used for a namespace.
+
+:::tip
+
+You can define `subscribe_proxy_name` and `publish_proxy_name` on configuration top level – and in this case publish and subscribe requests for channels without explicit namespace will be proxied using this proxy. The same mechanics as for other channel options in Centrifugo.
+
+:::
+
+### Granular RPC
+
+Analogous to channel namespaces it's possible to configure rpc namespaces:
+
+```json title="config.json"
+{
+  ...
+  "use_granular_proxies": true,
+  "proxies": [...],
+  "namespaces": [...],
+  "rpc_namespaces": [
+    {
+      "name": "rpc_ns1",
+      "rpc_proxy_name": "rpc1",
+    },
+    {
+      "name": "rpc_ns2",
+      "rpc_proxy_name": "rpc2"
+    }
+  ]
+}
+```
+
+The mechanics is the same as for channel namespaces. RPC requests with RPC method like `rpc_ns1:test` will use rpc proxy `rpc1`, RPC requests with RPC method like `rpc_ns2:test` will use rpc proxy `rpc2`. So Centrifugo uses `:` as RPC namespace boundary in RPC method (just like it does for channel namespaces).
+
+Just like channel namespaces RPC namespaces should have a name which match `^[-a-zA-Z0-9_.]{2,}$` regexp pattern – this is validated on Centrifugo start.
+
+:::tip
+
+The same as for channel namespaces and channel options you can define `rpc_proxy_name` on configuration top level – and in this case RPC calls without explicit namespace in RPC method will be proxied using this proxy.
+
+:::
