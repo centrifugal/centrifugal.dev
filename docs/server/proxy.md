@@ -5,8 +5,6 @@ title: Proxy to backend
 
 It's possible to proxy some client connection events from Centrifugo to the application backend and react to them in a custom way. For example, it's possible to authenticate connection via request from Centrifugo to application backend, refresh client sessions and answer to RPC calls sent by a client over bidirectional connection.
 
-## Proxy overview
-
 The list of events that can be proxied:
 
 * Connect – called when a client connects to Centrifugo, so it's possible to authenticate user, return custom data to a client, attach meta information to the connection, and so on. Works for bidirectional and unidirectional transports.
@@ -707,12 +705,12 @@ Centrifugo v3.1.0 introduced a new mode for proxy configuration called granular 
 
 ### Enable granular proxy mode
 
-Since the change is rather radical it requires a separate boolean option `use_granular_proxies` to be enabled. As soon as this option set Centrifugo does not use proxy configuration rules described above and follows the rules described below.
+Since the change is rather radical it requires a separate boolean option `granular_proxy_mode` to be enabled. As soon as this option set Centrifugo does not use proxy configuration rules described above and follows the rules described below.
 
 ```json title="config.json"
 {
   ...
-  "use_granular_proxies": true
+  "granular_proxy_mode": true
 }
 ```
 
@@ -725,7 +723,7 @@ Here is an example:
 ```json title="config.json"
 {
   ...
-  "use_granular_proxies": true,
+  "granular_proxy_mode": true,
   "proxies": [
     {
       "name": "connect",
@@ -799,7 +797,18 @@ To enable connect proxy:
 ```json title="config.json"
 {
   ...
-  "use_granular_proxies": true,
+  "granular_proxy_mode": true,
+  "proxies": [...],
+  "connect_proxy_name": "connect"
+}
+```
+
+Let's also add refresh proxy:
+
+```json title="config.json"
+{
+  ...
+  "granular_proxy_mode": true,
   "proxies": [...],
   "connect_proxy_name": "connect",
   "refresh_proxy_name": "refresh"
@@ -808,12 +817,12 @@ To enable connect proxy:
 
 ### Granular subscribe and publish
 
-Subscribe and publish proxy work per-namespace. This means that `subscribe_proxy_name` and `publish_proxy_name` are just a channel namespace options. So it's possible to define these options on congiguration top-level (for channels in default top-level namespace) or inside namespace object.
+Subscribe and publish proxy work per-namespace. This means that `subscribe_proxy_name` and `publish_proxy_name` are just a channel namespace options. So it's possible to define these options on configuration top-level (for channels in default top-level namespace) or inside namespace object.
 
 ```json title="config.json"
 {
   ...
-  "use_granular_proxies": true,
+  "granular_proxy_mode": true,
   "proxies": [...],
   "namespaces": [
     {
@@ -847,7 +856,7 @@ Analogous to channel namespaces it's possible to configure rpc namespaces:
 ```json title="config.json"
 {
   ...
-  "use_granular_proxies": true,
+  "granular_proxy_mode": true,
   "proxies": [...],
   "namespaces": [...],
   "rpc_namespaces": [
