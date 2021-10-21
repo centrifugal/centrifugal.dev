@@ -803,6 +803,8 @@ To enable connect proxy:
 }
 ```
 
+We have an [example of Centrifugo integration with NodeJS](https://github.com/centrifugal/examples/tree/master/nodejs_granular_proxy) which uses granular proxy mode. Even if you are not using NodeJS on a backend an example can help you understand the idea.
+
 Let's also add refresh proxy:
 
 ```json title="config.json"
