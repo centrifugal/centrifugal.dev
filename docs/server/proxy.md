@@ -187,6 +187,8 @@ if __name__ == '__main__':
 
 This example should help you to implement a similar HTTP handler in any language/framework you are using on the backend side.
 
+We also have a tutorial in the blog about [Centrifugo integration with NodeJS](/blog/2021/10/18/integrating-with-nodejs) which uses connect proxy and native session middleware of Express.js to authenticate connections. Even if you are not using NodeJS on a backend a tutorial can help you understand the idea.
+
 ### Refresh proxy
 
 With the following options in the configuration file:
