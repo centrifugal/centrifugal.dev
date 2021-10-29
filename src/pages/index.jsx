@@ -65,11 +65,10 @@ function Home() {
           <div className="container">
             <div className="row">
               <Feature title="Integrates with everything" imageUrl="img/integration.svg">
-                Centrifugo is language-agnostic. It's a standalone server with
-                a simple API that integrates well with an application written in
-                any programming language. No need to change an existing application
-                architecture to introduce real-time features. Just add Centrifugo nearby
-                and let it deal with persistent connections.
+                Centrifugo is a self-hosted service which can handle connections over <a href="/docs/transports/overview">a variety of real-time transports</a> and provides a simple <a href="/docs/server/server_api">publish API</a>.
+                Centrifugo integrates well with any application – no need to change an
+                existing application architecture to introduce real-time features.
+                Just let Centrifugo deal with persistent connections.
               </Feature>
               <Feature title="Great performance" imageUrl="img/performance.svg">
                 Centrifugo is built in Go language with some smart optimizations inside.
@@ -81,7 +80,7 @@ function Home() {
                 Many built-in features can help to build an attractive real-time
                 application in a limited time. Centrifugo provides different types
                 of subscriptions, hot channel history, instant presence, RPC calls.
-                There is also the possibility to proxy WebSocket events to the application
+                There is also the possibility to proxy connection events to the application
                 backend over HTTP or GRPC and more.
               </Feature>
               <Feature title="Out-of-the-box scalability" imageUrl="img/scalability.svg">
