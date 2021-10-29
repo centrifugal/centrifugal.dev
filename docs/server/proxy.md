@@ -716,7 +716,7 @@ Since the change is rather radical it requires a separate boolean option `granul
 
 ### Defining a list of proxies
 
-When using granular proxy mode on configuration top level you can define `"proxies"` array with a list of different proxy objects. Each proxy object in an array should have at least three required fields: `name`, `type` and `endpoint`.
+When using granular proxy mode on configuration top level you can define `"proxies"` array with a list of different proxy objects. Each proxy object in an array should have at least two required fields: `name` and `endpoint`.
 
 Here is an example:
 
@@ -727,46 +727,38 @@ Here is an example:
   "proxies": [
     {
       "name": "connect",
-      "type": "http",
       "endpoint": "http://localhost:3000/centrifugo/connect",
       "timeout": "500ms",
       "http_headers": ["Cookie"]
     },
     {
       "name": "refresh",
-      "type": "http",
       "endpoint": "http://localhost:3000/centrifugo/refresh",
       "timeout": "500ms"
     },
     {
       "name": "subscribe1",
-      "type": "http",
       "endpoint": "http://localhost:3001/centrifugo/subscribe"
     },
     {
       "name": "publish1",
-      "type": "http",
       "endpoint": "http://localhost:3001/centrifugo/publish"
     },
     {
       "name": "rpc1",
-      "type": "http",
       "endpoint": "http://localhost:3001/centrifugo/rpc"
     },
     {
       "name": "subscribe2",
-      "type": "http",
       "endpoint": "http://localhost:3002/centrifugo/subscribe"
     },
     {
       "name": "publish2",
-      "type": "http",
-      "endpoint": "http://localhost:3002/centrifugo/publish"
+      "endpoint": "grpc://localhost:3002"
     }
     {
       "name": "rpc2",
-      "type": "http",
-      "endpoint": "http://localhost:3002/centrifugo/rpc"
+      "endpoint": "grpc://localhost:3002"
     }
   ]
 }
@@ -777,8 +769,7 @@ Let's look at all fields for a proxy object which is possible to set for each pr
 | Field name | Field type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | name       | string  | yes | Unique name of proxy used for referencing in configuration, must match regexp `^[-a-zA-Z0-9_.]{2,}$`      |
-| type       | string  | yes | Type of proxy: `http` or `grpc`       |
-| endpoint       | string  | yes | HTTP or GRPC endpoint (same format as in default proxy mode)      |
+| endpoint       | string  | yes | HTTP or GRPC endpoint in the same format as in default proxy mode. For example, `http://localhost:3000/path` for HTTP or `grpc://localhost:3000` for GRPC.      |
 | timeout       | duration (string)  | no | Proxy request timeout, default `"1s"`       |
 | http_headers       | array of strings  | no | List of headers to proxy, by default no headers       |
 | grpc_metadata       | array of strings  | no | List of GRPC metadata keys to proxy, by default no metadata keys   |
@@ -786,7 +777,7 @@ Let's look at all fields for a proxy object which is possible to set for each pr
 | include_connection_meta | bool  | no | Include meta information (attached on connect)       |
 | grpc_cert_file       | string  | no | Path to cert file for secure TLS connection. If not set then an insecure connection with the backend endpoint is used.       |
 | grpc_credentials_key       | string  | no | Add custom key to per-RPC credentials.       |
-| grpc_credentials_value       | string  | no | A custom value for `proxy_grpc_credentials_key`.       |
+| grpc_credentials_value       | string  | no | A custom value for `grpc_credentials_key`.       |
 
 ### Granular connect and refresh
 
