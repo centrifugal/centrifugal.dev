@@ -821,11 +821,13 @@ Subscribe and publish proxy work per-namespace. This means that `subscribe_proxy
     {
       "name": "ns1",
       "subscribe_proxy_name": "subscribe1",
+      "publish": true,
       "publish_proxy_name": "publish1"
     },
     {
       "name": "ns2",
       "subscribe_proxy_name": "subscribe2",
+      "publish": true,
       "publish_proxy_name": "publish2"
     }
   ]
