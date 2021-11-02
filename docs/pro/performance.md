@@ -1,6 +1,6 @@
 ---
 id: performance
-title: PRO performance
+title: Faster performance
 ---
 
 Centrifugo PRO has performance improvements for several server parts. These improvements can help to reduce tail end-to-end latencies in application, increase server throughput and/or reduce CPU usage on server machines.

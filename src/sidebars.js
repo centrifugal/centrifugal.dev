@@ -64,6 +64,8 @@ module.exports = {
         "pro/user_status",
         "pro/throttling",
         "pro/user_connections",
+        "pro/user_block",
+        "pro/token_revocation",
         "pro/performance",
         "pro/singleflight",
         "pro/process_stats",
