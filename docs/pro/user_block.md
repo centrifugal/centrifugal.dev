@@ -50,7 +50,7 @@ curl --header "Content-Type: application/json" \
 | Parameter name | Parameter type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | user       | string  | yes | User ID to block       |
-| expire_at       | int  | no | Unix time in the future when user blocking information should expire (Unix seconds). While optional we recommend to use a reasonably small expiration time to keep working set of blocked users small    |
+| expire_at       | int  | no | Unix time in the future when user blocking information should expire (Unix seconds). While optional **we recommend to use a reasonably small expiration time to keep working set of blocked users small**    |
 
 #### Block user result
 
