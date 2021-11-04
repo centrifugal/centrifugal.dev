@@ -4,10 +4,17 @@
         <title>Centrifugo Blog</title>
         <link>https://centrifugal.dev/blog</link>
         <description>Centrifugo Blog</description>
-        <lastBuildDate>Mon, 18 Oct 2021 00:00:00 GMT</lastBuildDate>
+        <lastBuildDate>Thu, 04 Nov 2021 00:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <copyright>Centrifugal</copyright>
+        <item>
+            <title><![CDATA[Centrifugo integration with Django – building a basic chat application]]></title>
+            <link>https://centrifugal.dev/blog/2021/11/04/integrating-with-django-building-chat-application</link>
+            <guid>Centrifugo integration with Django – building a basic chat application</guid>
+            <pubDate>Thu, 04 Nov 2021 00:00:00 GMT</pubDate>
+            <description><![CDATA[In this tutorial, we are integrating Django with Centrifugo to make a basic chat application. We are using Centrifugo proxy feature to proxy WebSocket connection events to a Django backend.]]></description>
+        </item>
         <item>
             <title><![CDATA[Centrifugo integration with NodeJS tutorial]]></title>
             <link>https://centrifugal.dev/blog/2021/10/18/integrating-with-nodejs</link>
