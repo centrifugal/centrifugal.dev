@@ -14,7 +14,7 @@ hide_table_of_contents: false
 In this tutorial, we will create a basic chat server using the [Django framework](https://www.djangoproject.com/) and [Centrifugo](https://centrifugal.dev/). Our chat application will have two pages:
 
 1. A page that lets you type the name of a chat room to join.
-1. A room view that lets you see messages posted in a particular chat room.
+1. A room view that lets you see messages posted in a chat room you joined.
 
 The room view will use a WebSocket to communicate with the Django server (with help from Centrifugo) and listen for any messages that are published to the room channel.
 
@@ -43,7 +43,9 @@ I found several points which could be a good motivation:
 
 ## Prerequisites
 
-We assume that you are familiar with basic concepts for building a Django site. If not we recommend you complete the [Django tutorial](https://docs.djangoproject.com/en/stable/intro/tutorial01/) first and then come back to this tutorial.
+We assume that you are already familiar with basic Django concepts. If not take a look at the official [Django tutorial](https://docs.djangoproject.com/en/stable/intro/tutorial01/) first and then come back to this tutorial.
+
+Also, make sure you read a bit about Centrifugo – [introduction](https://centrifugal.dev/docs/getting-started/introduction) and [quickstart tutorial](https://centrifugal.dev/docs/getting-started/quickstart).
 
 We also assume that you have [Django installed](https://docs.djangoproject.com/en/stable/intro/install/) already.
 
@@ -55,7 +57,7 @@ python3 -m venv env
 pip install django
 ```
 
-We also assume that you have Centrifugo v3 [installed](/docs/getting-started/installation) already.
+Alos, make sure you have Centrifugo v3 [installed](/docs/getting-started/installation) already.
 
 This tutorial also uses Docker to run Redis. We use Redis as a Centrifugo engine – this allows us to have a scalable solution in the end. Using Redis is optional actually, Centrifugo uses a Memory engine by default (but it does not allow scaling Centrifugo nodes). We will also run Nginx with Docker to serve the entire app. [Install Docker](https://www.docker.com/get-started) from its official website but I am sure you already have one.
 
