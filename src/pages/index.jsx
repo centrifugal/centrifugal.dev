@@ -7,6 +7,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 import styles from "./styles.module.css";
 import Logo from "./components/logo";
 import useThemeContext from '@theme/hooks/useThemeContext';
+import Highlight from './components/Highlight'
 
 function Feature({ imageUrl, title, children }) {
   const imgUrl = useBaseUrl(imageUrl);
@@ -102,51 +103,67 @@ function Home() {
             </div>
           </div>
         </section>
-        <section className={clsx(styles.section, styles.sectionAlt)}>
-          <div className="container">
-            <h2>What is Centrifugo?</h2>
-            <p>
-              💠 Real-time messaging can help building interactive applications where data
-              delivered to users almost immediately after being acknowledged by application
-              backend using push technologies.
-            </p>
-            <p>
-              💠 Centrifugo handles persistent connections from clients over WebSocket, SockJS,
-              GRPC, SSE (EventSource), HTTP-streaming transports and provides API to publish
-              messages to clients in real-time.
-            </p>
-            <p>
-              💠 Clients subscribe to channels to receive an interesting subset of messages. So
-              Centrifugo acts as a user facing PUB/SUB server.
-            </p>
-            <p>
-              💠 Chats, live comments, multiplayer games, streaming metrics and other types of
-              interactive applications can be quickly built using Centrifugo and a set of client
-              libraries available for frontend (for both web and mobile experience).
-            </p>
-            <p>
-              Looking for a cool demo? See how real-time telemetry is streamed from Assetto Corsa racing simulator towards Grafana dashboard with a help of our WebSocket technologies:
-            </p>
-            <p></p>
-            <div className="vimeo-wrapper">
-              <div className="vimeo-full-width">
-                <iframe src="https://player.vimeo.com/video/570333329?title=0&byline=0&portrait=0" frameBorder="0" allow="autoplay; fullscreen" allowFullScreen></iframe>
+        <Highlight
+          img={
+            <img src="/img/scheme_sketch.png" />
+          }
+          reversed
+          title="What is real-time messaging?"
+          text={
+            <>
+              <p>
+                💠 Real-time messaging can help building interactive applications where data
+                delivered to users almost immediately after being acknowledged by application
+                backend using push technologies.
+              </p>
+              <p>
+                💠 Centrifugo handles persistent connections from clients over WebSocket, SockJS,
+                GRPC, SSE (EventSource), HTTP-streaming transports and provides API to publish
+                messages to clients in real-time.
+              </p>
+              <p>
+                💠 Clients subscribe to channels to receive an interesting subset of messages. So
+                Centrifugo acts as a user facing PUB/SUB server.
+              </p>
+            </>
+          }
+        />
+        <Highlight
+          img={
+            <iframe
+              width="560"
+              height="355"
+              src="https://player.vimeo.com/video/570333329?title=0&byline=0&portrait=0"
+              frameBorder="0"
+              allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          }
+          isDark
+          title="Looking for a cool demo?"
+          text={
+            <>
+              <p>
+                Here is a real-time telemetry streamed from Assetto Corsa racing simulator towards Grafana dashboard with a help of our WebSocket technologies.
+              </p>
+              <p>This demonstrates that you can stream 60Hz data towards client connections and thus provide an instant visual feedback about system state.</p>
+              <p>
+                Chats, live comments, multiplayer games, streaming metrics and other types of interactive applications can be quickly built using Centrifugo and a set of client libraries available for frontend (for both web and mobile experience).
+              </p>
+              <div className={styles.buttons}>
+                <Link
+                  className={clsx(
+                    "button button--outline button--secondary button--lg",
+                    styles.getStarted
+                  )}
+                  to={useBaseUrl("docs/getting-started/introduction")}
+                >
+                  Impressive? Get Started.
+                </Link>
               </div>
-            </div>
-            <p></p>
-          </div>
-          <div className={styles.buttons}>
-            <Link
-              className={clsx(
-                "button button--outline button--secondary button--lg",
-                styles.getStarted
-              )}
-              to={useBaseUrl("docs/getting-started/introduction")}
-            >
-              Impressive, right? Get Started.
-            </Link>
-          </div>
-        </section>
+            </>
+          }
+        />
       </main>
     </Layout>
   );

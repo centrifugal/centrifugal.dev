@@ -17,6 +17,12 @@
   --ifm-color-primary-lighter: #b54747;
   --ifm-color-primary-lightest: #bf5d5d;  
   --ifm-code-font-size: 85%;
+
+  --cf-spacing-vertical: 60px;
+  --cf-link-background-color: #eee0d7;
+  --cf-link-color: #000;
+  --cf-section-background-color: #fff;
+  --cf-dark-section-background-color: #efefef;
 }
 
 html[data-theme="dark"] {
