@@ -96,4 +96,6 @@ Each connection can be annotated with meta JSON information which is set during 
 | app_version       | string  | yes | client app version (if provided by client)         |
 | transport       | string  | no | client connection transport         |
 | protocol       | string  | no | client connection protocol (json or protobuf) |
+| token_uid       | string  | yes | client JWT unique ID (if set) |
+| token_issued_at       | int  | yes | client JWT issued at time as Unix seconds (if set) |
 | meta       | JSON  | yes | meta information attached to a connection |
