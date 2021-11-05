@@ -289,3 +289,13 @@ Issue queries:
 │ bd55ae3a-dd44-47cb-a4cc-c41f8e33803b │ 2694 │ subscribe   │ test3       │        │     0 │          0 │      412 │ 2021-07-31 08:15:12 │
 └──────────────────────────────────────┴──────┴─────────────┴─────────────┴────────┴───────┴────────────┴──────────┴─────────────────────┘
 ```
+
+## How export works
+
+When ClickHouse analytics enabled Centrifugo nodes start exporting events to ClickHouse. Each node  issues insert with events once in 5 seconds (flushing collected events in batches thus making insertion in ClickHouse efficient). Maximum batch size is 100k for each table at the momemt. If insert to ClickHouse failed Centrifugo retries it once and then buffers events in memory (up to 1 million entries). If ClickHouse still unavailable after collecting 1 million events then new events will be dropped until buffer has space. These limits are not configurable at the moment but just reach us out if you need to tune these values.
+
+Several metrics are exposed to monitor export process health:
+
+* centrifugo_clickhouse_analytics_flush_duration_seconds summary
+* centrifugo_clickhouse_analytics_batch_size summary
+* centrifugo_clickhouse_analytics_drop_count counter
