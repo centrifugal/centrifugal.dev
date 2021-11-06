@@ -38,3 +38,5 @@ If you need to change this aggregation interval use the `graphite_interval` opti
 ### Grafana dashboard
 
 Check out Centrifugo [official Grafana dashboard](https://grafana.com/grafana/dashboards/13039) for Prometheus storage. You can import that dashboard to your Grafana, point to Prometheus storage – and enjoy visualized metrics.
+
+![](https://grafana.com/api/dashboards/13039/images/8950/image)
