@@ -45,7 +45,7 @@ Centrifugo PRO supports only PostgreSQL as a storage backend.
 
 ## Revoke token API
 
-Allows revoking individual tokens.
+Allows revoking individual tokens. For example, this may be useful when token leakage has been detected and you want to revoke access for a particular tokens. BTW Centrifugo PRO provides `user_connections` API which has an information about tokens for active users connections (if set in JWT). 
 
 :::caution
 
@@ -68,7 +68,7 @@ curl --header "Content-Type: application/json" \
 | Parameter name | Parameter type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | uid       | string  | yes | Token unique ID (JTI claim in case of JWT)        |
-| expire_at       | int  | no | Unix time in the future when revocation information should expire (Unix seconds). While optional **we recommend to use a reasonably small expiration time to keep working set of revocations small**     |
+| expire_at       | int  | no | Unix time in the future when revocation information should expire (Unix seconds). While optional **we recommend to use a reasonably small expiration time to keep working set of revocations reasonably small (since Centrifugo nodes load all entries from the database table to construct in-memory cache)**     |
 
 #### Revoke token result
 
@@ -76,7 +76,7 @@ Empty object at the moment.
 
 ## Invalidate user tokens API
 
-Allows revoking all tokens for a user which were issued before a certain time.
+Allows revoking all tokens for a user which were issued before a certain time. For example, this may be useful after user changed a password in an application.
 
 :::caution
 
@@ -100,7 +100,7 @@ curl --header "Content-Type: application/json" \
 | -------------- | -------------- | ------------ | ---- |
 | user       | string  | yes | User ID to invalidate tokens for       |
 | issued_before       | int  | yes | All tokens issued at before this time will be considered revoked (in case of JWT this requires `iat` to be properly set in JWT)         |
-| expire_at       | int  | no | Unix time in the future when revocation information should expire (Unix seconds). While optional **we recommend to use a reasonably small expiration time to keep working set of revocations small**     |
+| expire_at       | int  | no | Unix time in the future when revocation information should expire (Unix seconds). While optional **we recommend to use a reasonably small expiration time to keep working set of revocations reasonably small (since Centrifugo nodes load all entries from the database table to construct in-memory cache)**     |
 
 #### Invalidate user tokens result
 

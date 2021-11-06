@@ -13,7 +13,7 @@ By default, information about user block/unblock requests shared throughout Cent
 
 But it's possible to enable blocking information persistence – in this case information will survive Centrifugo restarts.
 
-Centrifugo also automatically expires entries in the database to keep working set of blocked users reasonably small. Keeping pool of blocked users small allows avoiding expensive database lookups on every check – information is loaded periodically from the database and all checks performed over in-memory data structure – thus user blocking checks are cheap and have a small impact on overall system performance.
+Centrifugo also automatically expires entries in the database (as soon as you provide `expire_at` in API request) to keep working set of blocked users reasonably small. Keeping pool of blocked users small allows avoiding expensive database lookups on every check – information is loaded periodically from the database and all checks performed over in-memory data structure – thus user blocking checks are cheap and have a small impact on overall system performance.
 
 ## Configure
 
@@ -50,7 +50,7 @@ curl --header "Content-Type: application/json" \
 | Parameter name | Parameter type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | user       | string  | yes | User ID to block       |
-| expire_at       | int  | no | Unix time in the future when user blocking information should expire (Unix seconds). While optional **we recommend to use a reasonably small expiration time to keep working set of blocked users small**    |
+| expire_at       | int  | no | Unix time in the future when user blocking information should expire (Unix seconds). While optional **we recommend to use a reasonably small expiration time to keep working set of blocked users reasonably small (since Centrifugo nodes load all entries from the database table to construct in-memory cache)**    |
 
 #### Block user result
 
