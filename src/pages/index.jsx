@@ -73,8 +73,8 @@ function Home() {
               </Feature>
               <Feature title="Great performance" imageUrl="img/performance.svg">
                 Centrifugo is built in Go language with some smart optimizations inside.
-                It has good performance – see a <a href="/blog/2020/02/10/million-connections-with-centrifugo">description</a> of a
-                test stand with one million WebSocket connections and 30 million delivered
+                It has good performance – see a description of a
+                test stand with <a href="/blog/2020/02/10/million-connections-with-centrifugo">one million WebSocket</a> connections and 30 million delivered
                 messages per minute with hardware comparable to one modern server machine.
               </Feature>
               <Feature title="Feature-rich" imageUrl="img/feature_rich.svg">
@@ -112,25 +112,24 @@ function Home() {
           text={
             <>
               <p>
-                💠 Real-time messaging can help building interactive applications where data
-                delivered to users almost immediately after being acknowledged by application
-                backend using push technologies.
+                Real-time messaging can help building interactive applications where events
+                can be delivered to users almost immediately after being acknowledged by application
+                backend by pushing data into persistent connection – thus achieving minimal delivery latency.
               </p>
               <p>
-                💠 Centrifugo handles persistent connections from clients over WebSocket, SockJS,
-                GRPC, SSE (EventSource), HTTP-streaming transports and provides API to publish
-                messages to clients in real-time.
+                Chats, live comments, multiplayer games, streaming metrics can be built on top of a real-time messaging system.
               </p>
               <p>
-                💠 Clients subscribe to channels to receive an interesting subset of messages. So
-                Centrifugo acts as a user facing PUB/SUB server.
+                Centrifugo handles persistent connections from clients over bidirectional <a href="/docs/transports/websocket">WebSocket</a>, <a href="/docs/transports/sockjs">SockJS</a>
+                , and unidirectional <a href="/docs/transports/uni_sse">SSE (EventSource)</a>, <a href="/docs/transports/uni_http_stream">HTTP-streaming</a>, <a href="/docs/transports/uni_grpc">GRPC</a> transports and provides <a href="/docs/server/server_api">API</a> to publish
+                messages to online clients in real-time.
               </p>
             </>
           }
         />
-        <Highlight
+        < Highlight
           img={
-            <iframe
+            < iframe
               width="560"
               height="355"
               src="https://player.vimeo.com/video/570333329?title=0&byline=0&portrait=0"
@@ -148,7 +147,7 @@ function Home() {
               </p>
               <p>This demonstrates that you can stream 60Hz data towards client connections and thus provide an instant visual feedback about system state.</p>
               <p>
-                Chats, live comments, multiplayer games, streaming metrics and other types of interactive applications can be quickly built using Centrifugo and a set of client libraries available for frontend (for both web and mobile experience).
+                Various types of interactive real-time applications can be quickly built using Centrifugo and a set of client connector libraries (for both web and mobile experience). With unidirectional transports you can avoid dependency to Centrifugo connectors and just use native browser APIs or GRPC generated code.
               </p>
               <div className={styles.buttons}>
                 <Link
@@ -164,8 +163,8 @@ function Home() {
             </>
           }
         />
-      </main>
-    </Layout>
+      </main >
+    </Layout >
   );
 }
 
