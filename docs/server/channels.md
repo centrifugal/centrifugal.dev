@@ -182,6 +182,14 @@ History recovery mechanism if enabled will continue to work for clients anyway e
 
 `proxy_publish` (boolean, default `false`) – turns on publish proxy, more info in [proxy chapter](proxy.md)
 
+### subscribe_proxy_name
+
+`subscribe_proxy_name` (string, default `""`) – turns on subscribe proxy when [granular proxy mode](proxy.md#granular-proxy-mode) is used. Note that `proxy_subscribe` option defined above is ignored in granular proxy mode.
+
+### publish_proxy_name
+
+`publish_proxy_name` (string, default `""`) – turns on publish proxy when [granular proxy mode](proxy.md#granular-proxy-mode) is used. Note that `proxy_publish` option defined above is ignored in granular proxy mode.
+
 ## Channel options config example
 
 Let's look at how to set some of these options in a config:

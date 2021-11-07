@@ -1,6 +1,6 @@
 ---
 id: load_balancing
-title: Load Balancing
+title: Load balancing
 ---
 
 This chapter shows how to deal with persistent connection load balancing.
