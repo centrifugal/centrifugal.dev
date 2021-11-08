@@ -48,7 +48,7 @@ To add ECDSA public key (must be PEM encoded string) add `token_ecdsa_public_key
 
 ## Claims
 
-Centrifugo uses the following claims in a JWT: `sub`, `exp`, `info`, `b64info`, `channels`, `subs`.
+Centrifugo uses the following claims in a JWT: `sub`, `exp`, `iat`, `jti`, `info`, `b64info`, `channels`, `subs`.
 
 ### sub
 
@@ -67,6 +67,14 @@ You can use the connection expiration mechanism in cases when you don't want use
 Choose `exp` value wisely, you don't need small values because the refresh mechanism will hit your application often with refresh requests. But setting this value too large can lead to slow user connection deactivation. This is a trade-off.
 
 Read more about connection expiration [below](#connection-expiration).
+
+### iat
+
+This is a UNIX time when token was issued (seconds). See [definition in RFC](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.6). This claim is optional but can be useful together with [Centrifugo PRO token revocation features](../pro/token_revocation.md).
+
+### jti
+
+This is a token unique ID. See [definition in RFC](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.7). This claim is optional but can be useful together with [Centrifugo PRO token revocation features](../pro/token_revocation.md). 
 
 ### info
 
