@@ -11,13 +11,50 @@ When user is blocked it will be disconnected from Centrifugo immediately and als
 
 By default, information about user block/unblock requests shared throughout Centrifugo cluster and kept in memory. So user will be blocked until Centrifugo restart.
 
-But it's possible to enable blocking information persistence – in this case information will survive Centrifugo restarts.
+But it's possible to enable blocking information persistence by configuring a persistence storage – in this case information will survive Centrifugo restarts.
 
-Centrifugo also automatically expires entries in the database (as soon as you provide `expire_at` in API request) to keep working set of blocked users reasonably small. Keeping pool of blocked users small allows avoiding expensive database lookups on every check – information is loaded periodically from the database and all checks performed over in-memory data structure – thus user blocking checks are cheap and have a small impact on overall system performance.
+Centrifugo also automatically expires entries in the storage to keep working set of blocked users reasonably small. Keeping pool of blocked users small allows avoiding expensive database lookups on every check – information is loaded periodically from the storage and all checks performed over in-memory data structure – thus user blocking checks are cheap and have a small impact on the overall system performance.
 
 ## Configure
 
-User block feature is enabled by default in Centrifugo PRO (blocking information will be stored in process memory). To keep blocking information persistently you need configuration like this:
+User block feature is enabled by default in Centrifugo PRO (blocking information will be stored in process memory). To keep blocking information persistently you need to configure persistence engine.
+
+There are two types of persistent engines supported at the moment:
+
+1. `redis`
+1. `database`
+
+### Redis persistence engine
+
+Blocking data can be kept in Redis. To enable this configuration should be:
+
+```json
+{
+    ...
+    "user_block": {
+        "persistence_engine": "redis",
+        "redis_address": "localhost:6379"
+    }
+}
+```
+
+:::danger
+
+Unlike many other Redis features in Centrifugo consistent sharding is not supported for blocking data. The reason is that we don't want to loose blocking information when additional Redis node added. So only one Redis shard can be provided for `user_block` feature. This should be fine given that working set of blocked users should be reasonably small and old entries expire. If you try to set several Redis shards here Centrifugo will exit with an error on start.
+
+:::
+
+:::caution
+
+One more thing you may notice is that Redis configuration here does not have `use_redis_from_engine` option. The reason is that since Redis is not shardable here reusing Redis configuration here could cause problems at the moment of Redis scaling – which we want to avoid thus require explicit configuration here.
+
+:::
+
+### Database persistence engine
+
+Blocking data can be kept in the relational database. Only PostgreSQL is supported.
+
+To enable this configuration should be like:
 
 ```json
 {
@@ -26,12 +63,10 @@ User block feature is enabled by default in Centrifugo PRO (blocking information
         "dsn": "postgresql://postgres:test@127.0.0.1:5432/postgres"
     },
     "user_block": {
-        "persist": true
+        "persistence_engine": "database"
     }
 }
 ```
-
-Centrifugo PRO supports only PostgreSQL as a storage backend.
 
 ## Block user API
 
@@ -50,7 +85,7 @@ curl --header "Content-Type: application/json" \
 | Parameter name | Parameter type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | user       | string  | yes | User ID to block       |
-| expire_at       | int  | no | Unix time in the future when user blocking information should expire (Unix seconds). While optional **we recommend to use a reasonably small expiration time to keep working set of blocked users reasonably small (since Centrifugo nodes load all entries from the database table to construct in-memory cache)**    |
+| expire_at       | int  | no | Unix time in the future when user blocking information should expire (Unix seconds). While optional **we recommend to use a reasonably small expiration time** to keep working set of blocked users small (since Centrifugo nodes periodically load all entries from the storage to construct in-memory cache). |
 
 #### Block user result
 

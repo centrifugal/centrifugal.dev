@@ -18,7 +18,7 @@ Centrifugo PRO binary releases [available on Github](https://github.com/centrifu
 Centrifugo PRO uses a different image from OSS version – [centrifugo/centrifugo-pro](https://hub.docker.com/repository/docker/centrifugo/centrifugo-pro):
 
 ```
-docker run --ulimit nofile=65536:65536 -v /host/dir/with/config/file:/centrifugo -p 8000:8000 centrifugo/centrifugo-pro:v3.1.0-rc.1 centrifugo -c config.json
+docker run --ulimit nofile=65536:65536 -v /host/dir/with/config/file:/centrifugo -p 8000:8000 centrifugo/centrifugo-pro:v3.1.0-rc.2 centrifugo -c config.json
 ```
 
 ### Kubernetes
@@ -30,7 +30,7 @@ You can use our [official Helm chart](https://github.com/centrifugal/helm-charts
 image:
   registry: docker.io
   repository: centrifugo/centrifugo-pro
-  tag: v3.1.0-rc.1
+  tag: v3.1.0-rc.2
 ```
 
 ### Debian and Ubuntu
@@ -38,8 +38,8 @@ image:
 DEB package [available in release assets](https://github.com/centrifugal/centrifugo-pro/releases).
 
 ```
-wget https://github.com/centrifugal/centrifugo-pro/releases/download/v3.1.0-rc.1/centrifugo-pro_3.1.0-rc.1_amd64.deb
-sudo dpkg -i centrifugo-pro_3.1.0-rc.1_amd64.deb
+wget https://github.com/centrifugal/centrifugo-pro/releases/download/v3.1.0-rc.2/centrifugo-pro_3.1.0-rc.2_amd64.deb
+sudo dpkg -i centrifugo-pro_3.1.0-rc.2_amd64.deb
 ```
 
 ### Centos
@@ -47,8 +47,8 @@ sudo dpkg -i centrifugo-pro_3.1.0-rc.1_amd64.deb
 RPM package [available in release assets](https://github.com/centrifugal/centrifugo-pro/releases).
 
 ```
-wget https://github.com/centrifugal/centrifugo-pro/releases/download/v3.1.0-rc.1/centrifugo-pro-3.1.0-rc.1.x86_64.rpm
-sudo yum install centrifugo-pro-3.1.0-rc.1.x86_64.rpm
+wget https://github.com/centrifugal/centrifugo-pro/releases/download/v3.1.0-rc.2/centrifugo-pro-3.1.0-rc.2.x86_64.rpm
+sudo yum install centrifugo-pro-3.1.0-rc.2.x86_64.rpm
 ```
 
 ## Setting PRO license key
