@@ -470,7 +470,11 @@ events {
     worker_connections 1024;
 }
 
+error_log /dev/stdout info;
+
 http {
+    access_log /dev/stdout;
+
     server {
         listen 9000;
 
