@@ -7,8 +7,9 @@ Centrifugo PRO is an extended version of Centrifugo with a set of additional fea
 
 ## Features
 
-Here is a list of all Pro features available at the moment.
+Centrifugo PRO includes the following features:
 
+* Everything from Centrifugo OSS
 * [Channel and user tracing](./tracing.md) provides a way to look at all client protocol frames in the specified channel or per user ID.
 * [Real-time analytics with ClickHouse](./analytics.md) for a great system observability, reporting and trending.
 * [User status](./user_status.md) feature to understand activity state for a list of users.
