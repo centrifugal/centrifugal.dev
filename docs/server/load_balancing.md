@@ -5,6 +5,12 @@ title: Load balancing
 
 This chapter shows how to deal with persistent connection load balancing.
 
+:::caution
+
+Regardless which reverse proxy / load balancer you are using make sure that you tuned open file limit for its process too since it will also need to handle many persistent connections. See [Infrastructure tuning](./infra_tuning.md).
+
+:::
+
 ## Nginx configuration
 
 Although it's possible to use Centrifugo without any reverse proxy before it,
