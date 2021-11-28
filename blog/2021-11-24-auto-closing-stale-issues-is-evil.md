@@ -35,7 +35,7 @@ Just a couple of examples that hurt me personally. The first case is an issue in
 
 Or let's look at a couple of issues in Istio Github issue tracker: [first](https://github.com/istio/istio/issues/33534) and [second](https://github.com/istio/istio/issues/29427). They signal about the same problem I also came across in Centrifugo Helm chart recently. Several other issues linked there that discuss the same problem. Again - closed without resolution by a policy bot.
 
-And these are only two examples I came across **during the last week**. Believe me - I am not alone, and if you don't feel my pain at the moment – I promise you'll be in the same boat with me soon!
+And those are only two examples I came across **during the last week**. Believe me - I am not alone, and if you don't feel my pain at the moment – I promise you'll be in the same boat with me soon!
 
 ### When stale bots are useful
 
@@ -50,7 +50,5 @@ Some people remove GitHub issue templates, not trying to minimally follow it. So
 ### But for normal issues and pull requests?
 
 I think in most other cases closing a properly formatted issue or pull request should be performed manually by maintainers. If possible – with a resolution message. Even if the resolution sounds like `this is out of the scope for this project`, or `nothing actionable left here, so closing`, and so on.
-
-### Conclusion
 
 I call everyone to avoid using stale bot/actions without taking into account labels or some other mechanisms which can help to avoid frustration for users when the "normal" issue closed without any resolution.
