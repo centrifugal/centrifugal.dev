@@ -5,11 +5,11 @@ description: In this tutorial, we are integrating Laravel framework with Centrif
 author: Anton Silischev
 authorTitle: Centrifugo contributor
 authorImageURL: https://github.com/silischev.png
-image: /img/laravel_centrifugo.png
+image: /img/laravel_centrifugo.jpg
 hide_table_of_contents: false
 ---
 
-![Image](/img/laravel_centrifugo.png)
+![Image](/img/laravel_centrifugo.jpg)
 
 In this tutorial, we will create a multi-room chat server using the [Laravel framework](https://laravel.com/) and [Centrifugo](https://centrifugal.dev/).
 
