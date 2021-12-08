@@ -64,7 +64,7 @@ Now let's create `index.html` file with our simple app:
     </head>
     <body>
         <div id="counter">-</div>
-        <script src="https://cdn.jsdelivr.net/gh/centrifugal/centrifuge-js@2.8.0/dist/centrifuge.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/centrifugal/centrifuge-js@2.8.4/dist/centrifuge.min.js"></script>
         <script type="text/javascript">
             const container = document.getElementById('counter')
             const centrifuge = new Centrifuge("ws://localhost:8000/connection/websocket");
@@ -89,7 +89,7 @@ Now let's create `index.html` file with our simple app:
 </html>
 ```
 
-Note that we are using `centrifuge-js` 2.8.0 in this example, you better use its latest version at the moment of reading this tutorial.
+Note that we are using `centrifuge-js` 2.8.4 in this example, you better use its latest version at the moment of reading this tutorial.
 
 In `index.html` above we created an instance of a client (called `Centrifuge`) passing Centrifugo default WebSocket endpoint address to it, then we subscribed to a channel called `channel` and provided a callback function to process incoming real-time messages. Then we called `.connect()` method to start a WebSocket connection. 
 
