@@ -55,10 +55,8 @@ server {
 
     #listen 443 ssl;
     #ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
-    #ssl_ciphers AES128-SHA:AES256-SHA:RC4-SHA:DES-CBC3-SHA:RC4-MD5;
-    #ssl_certificate /etc/nginx/ssl/wildcard.example.com.crt;
-    #ssl_certificate_key /etc/nginx/ssl/wildcard.example.com.key;
-    #ssl_session_cache shared:SSL:10m;ssl_session_timeout 10m;
+    #ssl_certificate /etc/nginx/ssl/server.crt;
+    #ssl_certificate_key /etc/nginx/ssl/server.key;
 
     include /etc/nginx/mime.types;
     default_type application/octet-stream;
@@ -71,7 +69,7 @@ server {
     gzip_proxied any;
 
     # Only retry if there was a communication error, not a timeout
-    # on the Tornado server (to avoid propagating "queries of death"
+    # on the Centrifugo server (to avoid propagating "queries of death"
     # to all frontends)
     proxy_next_upstream error;
 
@@ -124,24 +122,19 @@ server {
 
     location /centrifugo/ {
         rewrite ^/centrifugo/(.*)        /$1 break;
+        proxy_pass http://centrifugo;
         proxy_pass_header Server;
         proxy_set_header Host $http_host;
         proxy_redirect off;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Scheme $scheme;
-        proxy_pass http://centrifugo;
     }
 
     location /centrifugo/connection {
         rewrite ^/centrifugo(.*)        $1 break;
-
-        proxy_next_upstream error;
-        gzip on;
-        gzip_min_length 1000;
-        gzip_proxied any;
+        proxy_pass http://centrifugo;
         proxy_buffering off;
         keepalive_timeout 65;
-        proxy_pass http://centrifugo;
         proxy_read_timeout 60s;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Scheme $scheme;
