@@ -57,9 +57,9 @@ You also need to set a ClickHouse cluster name (`clickhouse_cluster`) and databa
 
 `export_grpc_metadata` is a list of metadata keys to export for connection information for GRPC unidirectional transport.
 
-`skip_schema_initialization` - boolean, default `false`. By default Centrifugo tries to initialize table schema on start (if not exists). This flag allows skipping initialization process.
+`skip_schema_initialization` (new in Centrifugo PRO v3.1.1) - boolean, default `false`. By default Centrifugo tries to initialize table schema on start (if not exists). This flag allows skipping initialization process.
 
-`skip_ping_on_start` - boolean, default `false`. Centrifugo pings Clickhouse servers by default on start, if any of servers is unavailable – Centrifugo fails to start. This option allow skipping this check thus Centrifugo is able to start even if Clickhouse cluster not working correctly.
+`skip_ping_on_start` (new in Centrifugo PRO v3.1.1) - boolean, default `false`. Centrifugo pings Clickhouse servers by default on start, if any of servers is unavailable – Centrifugo fails to start. This option allow skipping this check thus Centrifugo is able to start even if Clickhouse cluster not working correctly.
 
 ## Connections table
 

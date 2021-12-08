@@ -381,8 +381,8 @@ Expected response example if subscription is allowed:
 | user         | string     | no |  a connection user ID obtained during authentication process         |
 | channel         | string     | no |  a string channel client wants to subscribe to        |
 | meta         | JSON | yes | a connection attached meta (off by default, enable with `"proxy_include_connection_meta": true`)         |
-| data         | JSON     | yes | custom data from client sent with subscription request (this field will only be set if provided by a client on subscribe)            |
-| b64data      | string     | yes | optional subscription data from the client in base64 format (if the binary proxy mode is used)            |
+| data         | JSON     | yes | custom data from client sent with subscription request (this field will only be set if provided by a client on subscribe). Available since Centrifugo v3.1.1            |
+| b64data      | string     | yes | optional subscription data from the client in base64 format (if the binary proxy mode is used). Available since Centrifugo v3.1.1            |
 
 #### Subscribe result fields
 
