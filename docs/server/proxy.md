@@ -7,16 +7,16 @@ It's possible to proxy some client connection events from Centrifugo to the appl
 
 The list of events that can be proxied:
 
-* Connect – called when a client connects to Centrifugo, so it's possible to authenticate user, return custom data to a client, attach meta information to the connection, and so on. Works for bidirectional and unidirectional transports.
-* Refresh - called when a client session is going to expire, so it's possible to prolong it or just let it expire. Works for bidirectional and unidirectional transports.
+* Connect – called when a client connects to Centrifugo, so it's possible to authenticate user, return custom data to a client, subscribe connection to several channels, attach meta information to the connection, and so on. Works for bidirectional and unidirectional transports.
+* Refresh - called when a client session is going to expire, so it's possible to prolong it or just let it expire. Can also be used just as a periodical connection liveness callback from Centrifugo to app backend. Works for bidirectional and unidirectional transports.
 * Subscribe - called when clients try to subscribe on a channel, so it's possible to check permissions and return custom initial subscription data. Works for bidirectional transports only.
 * Publish - called when a client tries to publish into a channel, so it's possible to check permissions and optionally modify publication data. Works for bidirectional transports only.
 * RPC - called when a client sends RPC, you can do whatever logic you need based on a client-provided RPC method and params. Works for bidirectional transports only.
 
 At the moment Centrifugo can proxy these events over two protocols:
 
-* HTTP
-* GRPC
+* HTTP (JSON payloads)
+* GRPC (Protobuf messages)
 
 ## HTTP proxy
 
@@ -126,8 +126,8 @@ This is what sent from Centrifugo to application backend in case of connect prox
 | encoding     | string     | no | protocol encoding type used (`json` or `binary` at moment)            |
 | name         | string     | yes | optional name of the client (this field will only be set if provided by a client on connect)            |
 | version      | string     | yes | optional version of the client (this field will only be set if provided by a client on connect)            |
-| data         | JSON object     | yes | optional data from client (this field will only be set if provided by a client on connect)            |
-| b64data      | JSON object     | yes | optional data from the client in base64 format (if the binary proxy mode is used)            |
+| data         | JSON     | yes | optional data from client (this field will only be set if provided by a client on connect)            |
+| b64data      | string     | yes | optional data from the client in base64 format (if the binary proxy mode is used)            |
 | channels      | Array of strings     | yes | list of server-side channels client want to subscribe to, the application server must check permissions and add allowed channels to result               |
 
 #### Connect result fields
@@ -138,13 +138,13 @@ This is what application returns to Centrifugo inside `result` field in case of 
 | ------------ | -------------- | ------------ | ---- |
 | user       | string     | no |  user ID (calculated on app backend based on request cookie header for example). Return it as an empty string for accepting unauthenticated requests |
 | expire_at    | integer     | yes | a timestamp when connection must be considered expired. If not set or set to `0` connection won't expire at all        |
-| info     | JSON object     | yes | a connection info JSON            |
+| info     | JSON     | yes | a connection info JSON            |
 | b64info     | string     | yes | binary connection info encoded in base64 format, will be decoded to raw bytes on Centrifugo before using in messages            |
-| data         | JSON object     | yes | a custom data to send to the client in connect command response.           |
+| data         | JSON     | yes | a custom data to send to the client in connect command response.           |
 | b64data      | string     | yes | a custom data to send to the client in the connect command response for binary connections, will be decoded to raw bytes on Centrifugo side before sending to client            |
 | channels      | array of strings     | yes | allows providing a list of server-side channels to subscribe connection to. See more details about [server-side subscriptions](server_subs.md)       |
 | subs         | map of SubscribeOptions     | yes | map of channels with options to subscribe connection to. See more details about [server-side subscriptions](server_subs.md)           |
-| meta         | JSON object     | yes | a custom data to attach to connection (this **won't be exposed to client-side**)  |
+| meta         | JSON     | yes | a custom data to attach to connection (this **won't be exposed to client-side**)  |
 
 #### Options
 
@@ -228,7 +228,7 @@ Expected response example:
 | protocol     | string     | no | protocol type used by client (`json` or `protobuf` at moment)            |
 | encoding     | string     | no | protocol encoding type used (`json` or `binary` at moment)            |
 | user         | string     | no | a connection user ID obtained during authentication process         |
-| meta         | JSON object | yes | a connection attached meta (off by default, enable with `"proxy_include_connection_meta": true`)         |
+| meta         | JSON | yes | a connection attached meta (off by default, enable with `"proxy_include_connection_meta": true`)         |
 
 #### Refresh result fields
 
@@ -236,7 +236,7 @@ Expected response example:
 | ------------ | -------------- | ------------ | ---- |
 | expired       | bool     | yes |  a flag to mark the connection as expired - the client will be disconnected  |
 | expire_at    | integer     | yes | a timestamp in the future when connection must be considered expired       |
-| info     | JSON object     | yes | a connection info JSON            |
+| info     | JSON     | yes | a connection info JSON            |
 | b64info     | string     | yes | binary connection info encoded in base64 format, will be decoded to raw bytes on Centrifugo before using in messages            |
 
 #### Options
@@ -287,15 +287,15 @@ Expected response example:
 | encoding     | string     | no | protocol encoding type used (`json` or `binary` at moment)            |
 | user         | string     | no |  a connection user ID obtained during authentication process         |
 | method         | string     | yes |  an RPC method string, if the client does not use named RPC call then method will be omitted      |
-| data         | JSON object     | yes |  RPC custom data sent by client       |
+| data         | JSON     | yes |  RPC custom data sent by client       |
 | b64data         | string     | yes |  will be set instead of `data` field for binary proxy mode       |
-| meta         | JSON object | yes | a connection attached meta (off by default, enable with `"proxy_include_connection_meta": true`)         |
+| meta         | JSON | yes | a connection attached meta (off by default, enable with `"proxy_include_connection_meta": true`)         |
 
 #### RPC result fields
 
 | Field | Type | Optional | Description |
 | ------------ | -------------- | ------------ | ---- |
-| data     | JSON object     | yes | RPC response - any valid JSON is supported            |
+| data     | JSON     | yes | RPC response - any valid JSON is supported            |
 | b64data     | string     | yes | can be set instead of `data` for binary response encoded in base64 format   |
 
 #### Options
@@ -380,15 +380,17 @@ Expected response example if subscription is allowed:
 | encoding     | string     | no | protocol encoding type used (`json` or `binary` at moment)            |
 | user         | string     | no |  a connection user ID obtained during authentication process         |
 | channel         | string     | no |  a string channel client wants to subscribe to        |
-| meta         | JSON object | yes | a connection attached meta (off by default, enable with `"proxy_include_connection_meta": true`)         |
+| meta         | JSON | yes | a connection attached meta (off by default, enable with `"proxy_include_connection_meta": true`)         |
+| data         | JSON     | yes | custom data from client sent with subscription request (this field will only be set if provided by a client on subscribe). Available since Centrifugo v3.1.1            |
+| b64data      | string     | yes | optional subscription data from the client in base64 format (if the binary proxy mode is used). Available since Centrifugo v3.1.1            |
 
 #### Subscribe result fields
 
 | Field | Type | Optional | Description |
 | ------------ | -------------- | ------------ | ---- |
-| info     | JSON object     | yes | a channel info JSON         |
+| info     | JSON     | yes | a channel info JSON         |
 | b64info     | string     | yes | a binary connection channel info encoded in base64 format, will be decoded to raw bytes on Centrifugo before using   |
-| data         | JSON object     | yes | a custom data to send to the client in subscribe command reply.           |
+| data         | JSON     | yes | a custom data to send to the client in subscribe command reply.           |
 | b64data      | string     | yes | a custom data to send to the client in subscribe command reply, will be decoded to raw bytes on Centrifugo side before sending to client |
 | override       | Override object       | yes |  Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields)  |
 
@@ -494,15 +496,15 @@ Expected response example if publish is allowed:
 | encoding     | string     | no | protocol encoding type used (`json` or `binary` at moment)            |
 | user         | string     | no |  a connection user ID obtained during authentication process         |
 | channel         | string     | no |  a string channel client wants to publish to        |
-| data     | JSON object     | yes | data sent by client        |
+| data     | JSON     | yes | data sent by client        |
 | b64data     | string     | yes |  will be set instead of `data` field for binary proxy mode   |
-| meta         | JSON object | yes | a connection attached meta (off by default, enable with `"proxy_include_connection_meta": true`)         |
+| meta         | JSON | yes | a connection attached meta (off by default, enable with `"proxy_include_connection_meta": true`)         |
 
 #### Publish result fields
 
 | Field | Type | Optional | Description |
 | ------------ | -------------- | ------------ | ---- |
-| data     | JSON object     | yes | an optional JSON data to send into a channel **instead of** original data sent by a client         |
+| data     | JSON     | yes | an optional JSON data to send into a channel **instead of** original data sent by a client         |
 | b64data     | string     | yes | a binary data encoded in base64 format, the meaning is the same as for data above, will be decoded to raw bytes on Centrifugo side before publishing  |
 | skip_history     | bool     | yes | when set to `true` Centrifugo won't save publication to the channel history |
 
