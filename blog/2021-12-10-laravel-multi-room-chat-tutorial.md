@@ -87,4 +87,6 @@ See more information about laravel broadcasting [here](https://laravel.com/docs/
 
 ### Proxy controller
 ### Room controller
+### Interaction with Centrifugo (???) proxy, personal channel, etc. 
 ### View (some js description)
+### Possible improvements
