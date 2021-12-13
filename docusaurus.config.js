@@ -14,7 +14,7 @@ module.exports = {
       trackingID: 'UA-204787498-1',
     },
     prism: {
-
+      additionalLanguages: ['php'],
     },
     colorMode: {
       defaultMode: "light",
