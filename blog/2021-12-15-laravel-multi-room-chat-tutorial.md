@@ -90,7 +90,7 @@ Pay attention to the [configuration](https://github.com/centrifugal/examples/tre
 
 ## Application structure
 
-We suppose you already know Laravel concepts, so we will just point you to some core aspects of the application structure and will pay more attention to Centrifugo integration parts. 
+We assume you already familar with Laravel concepts, so we will just point you to some core aspects of the application structure and will pay more attention to Centrifugo integration parts. 
 
 ### Environment settings
 
@@ -113,15 +113,15 @@ For broadcasting we are using [laravel-centrifugo](https://github.com/denis660/l
 
 Step-by-step configuration can be viewed in the readme file of this library.
 
-Pay attention to the `CENTRIFUGO_API_KEY` setting. It must match in the file `.env` and `centrifugo.json`.
+Pay attention to the `CENTRIFUGO_API_KEY` setting. It must match in the file `.env` and `centrifugo.json`. And we also telling `laravel-centrifugo` the URL of Centrifugo. That's all we need to configure for this example.
+
+See more information about Laravel broadcasting [here](https://laravel.com/docs/8.x/broadcasting).
 
 :::tip
 
-As an alternative to `laravel-centrifugo`, you can use [phpcent](https://github.com/centrifugal/phpcent) – it's an official generic API client which allows publishing to Centrifugo HTTP API.
+As an alternative to `laravel-centrifugo`, you can use [phpcent](https://github.com/centrifugal/phpcent) – it's an official generic API client which allows publishing to Centrifugo HTTP API. But it does know nothing about Laravel broadcasting specifics.
 
 :::
-
-See more information about Laravel broadcasting [here](https://laravel.com/docs/8.x/broadcasting).
 
 ### Interaction with Centrifugo
 
@@ -149,9 +149,9 @@ When user opens a chat app it connects to Centrifugo. Let's take a closer look a
 
 This configuration defines a connect proxy endpoint which is targeting Nginx and then proxied to Laravel. Centrifugo will proxy `Cookie` header of WebSocket HTTP Upgrade requests to Laravel – this allows using native Laravel authentication.
 
-We also defined a `"personal"` namespace – we will subscribe each user to a personal channel in this namespace inside connect proxy handler.
+We also defined a `"personal"` namespace – we will subscribe each user to a personal channel in this namespace inside connect proxy handler. Using namespaces for different real-time features is one of Centrifugo best-practices.
 
-Allowed origins required to prevent WebSocket connection hijacking.
+Allowed origins must be properly set to prevent [cross-site WebSocket connection hijacking](https://christian-schneider.net/CrossSiteWebSocketHijacking.html).
 
 ### Connect proxy controller
 
