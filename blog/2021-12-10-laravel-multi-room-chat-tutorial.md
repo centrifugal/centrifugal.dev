@@ -104,14 +104,93 @@ In the service we are using Laravel breeze. For more information see official do
 
 For broadcasting as library we are using [laravel-centrifugo](https://github.com/denis660/laravel-centrifugo)
 
+It helps to make the interaction between the laravel and the centrifugo simple.
+
+Step-by-step configuration can be viewed in the readme file of this library.
+
 Pay attention to the `CENTRIFUGO_TOKEN_HMAC_SECRET_KEY` and `CENTRIFUGO_API_KEY` settings. They must match in the file `.env` and `centrifugo.json`.
 
 As an alternative to this library, you can use [phpcent](https://github.com/centrifugal/phpcent) – it allows publishing to Centrifugo directly.
 
 See more information about Laravel broadcasting [here](https://laravel.com/docs/8.x/broadcasting).
 
+### Interaction with Centrifugo
+We use a subscription to a personal channel (https://centrifugal.dev/docs/server/server_subs).
+
+This will allow us to scale more easily in the future, as well as reduce overhead compared to a separate subscription for each room.
+
+You can read more about this in the [documentation](https://centrifugal.dev/docs/faq/index#what-about-best-practices-with-the-number-of-channels)
+
+### Models
+Based on the migrations, we will create the corresponding models.
+
+Also, we do not forget to prescribe the necessary relationships.
+
 ### Proxy controller
+To simplify user authentication, we will use [proxy api](https://centrifugal.dev/docs/server/proxy).
+In [proxy controller](https://github.com/centrifugal/examples/blob/master/php_laravel_chat_tutorial/app/app/Http/Controllers/CentrifugoProxyController.php)
+We use auth middleware on the [route](https://github.com/centrifugal/examples/blob/master/php_laravel_chat_tutorial/app/routes/api.php).
+
+In the response from this endpoint in the channel list, we transmit information that the client subscribes to a personal channel.
+
 ### Room controller
-### Interaction with Centrifugo (???) proxy, personal channel, etc. 
-### View (some js description)
+[Here](https://github.com/centrifugal/examples/blob/master/php_laravel_chat_tutorial/app/app/Http/Controllers/RoomController.php) 
+we perform various actions with rooms: create rooms, add users to them, publish messages.
+When we publish a message in a room, we send a message to the personal channel of all users subscribed to this room using the `broadcast` method (https://centrifugal.dev/docs/server/server_api#broadcast).
+We also add some fields in the response that will be used by us when dynamically displaying content (see [Client side](#client-side)).
+
+### Client side
+To simplify, we use the same [view](https://github.com/centrifugal/examples/blob/master/php_laravel_chat_tutorial/app/resources/views/rooms/index.blade.php) 
+to create rooms, send/receive messages in a specific room.
+On the page we have a form for creating rooms.
+The user who created the room automatically subscribes to it.
+Other users need to subscribe manually (with `join` button).
+
+When sending a message in the form, we make an ajax request that makes a broadcast message to all users subscribed to this room (see [Room controller](#room-controller)):
+```js
+messageInput.onkeyup = function(e) {
+    if (e.keyCode === 13) {
+        e.preventDefault();
+        const message = messageInput.value;
+        if (!message) {
+            return;
+        }
+        const xhttp = new XMLHttpRequest();
+        xhttp.open("POST", "/rooms/" + roomId + "/publish");
+        xhttp.setRequestHeader("X-CSRF-TOKEN", csrfToken);
+        xhttp.send(JSON.stringify({
+            message: message
+        }));
+        messageInput.value = '';
+    }
+};
+```
+After the message is processed on the server and enters the centrifugo, we can process it in the event handler
+```js
+centrifuge.on('publish', function(ctx) {
+    if (ctx.data.roomId.toString() === roomId) {
+        const isSelf = ctx.data.senderId.toString() === userId;
+        addMessage(ctx.data.text, ctx.data.createdAtFormatted, ctx.data.senderName, isSelf);
+        scrollToLastMessage();
+    }
+    const lastRoomMessageText = document.querySelector('#room-' + ctx.data.roomId + ' .status');
+    const lastRoomMessageUserName = document.querySelector('#room-' + ctx.data.roomId + ' .user-name');
+    var text = ctx.data.text.substr(0, 15);
+    if (ctx.data.text.length > 15) {
+        text += "..."
+    }
+    lastRoomMessageText.innerHTML = text;
+    lastRoomMessageUserName.innerHTML = ctx.data.senderName;
+});
+```
+Here we check whether the message belongs to the room the user is currently in.
+If yes, then we add it to the message history of the room.
+We also add this message to the chat in the list on the left as the last chat message.
+If necessary, we crop the text for normal display.
+
 ### Possible improvements
+* User status (online/offline)
+* Pagination of the message history and their auto-loading
+* Horizontal scaling (using multiple nodes of the centrifugo)
+* Replacing the engine with some other supported one (for example, redis) for better scalability (https://centrifugal.dev/docs/server/engines)
+* Replacing connect proxy with JWT to reduce HTTP calls from Centrifugo to Laravel (https://centrifugal.dev/docs/server/authentication)
