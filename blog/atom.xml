@@ -2,12 +2,19 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://centrifugal.dev/blog</id>
     <title>Centrifugo Blog</title>
-    <updated>2021-11-04T00:00:00.000Z</updated>
+    <updated>2021-12-14T00:00:00.000Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://centrifugal.dev/blog"/>
     <subtitle>Centrifugo Blog</subtitle>
     <icon>https://centrifugal.dev/img/favicon.png</icon>
     <rights>Centrifugal</rights>
+    <entry>
+        <title type="html"><![CDATA[Building a multi-room chat application with Laravel and Centrifugo]]></title>
+        <id>Building a multi-room chat application with Laravel and Centrifugo</id>
+        <link href="https://centrifugal.dev/blog/2021/12/14/laravel-multi-room-chat-tutorial"/>
+        <updated>2021-12-14T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[In this tutorial, we are integrating Laravel framework with Centrifugo real-time messaging server to make a multi-room chat application.]]></summary>
+    </entry>
     <entry>
         <title type="html"><![CDATA[Centrifugo integration with Django – building a basic chat application]]></title>
         <id>Centrifugo integration with Django – building a basic chat application</id>
