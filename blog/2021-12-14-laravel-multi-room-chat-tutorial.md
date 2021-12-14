@@ -22,7 +22,7 @@ Authenticated users of our chat app will be able to create new chat rooms, join 
 The result will look like this:
 
 <video width="100%" controls>
-  <source src="/img/laravel_chat.mp4" type="video/mp4" />
+  <source src="/img/laravel_chat_demo.mp4" type="video/mp4" />
   Sorry, your browser doesn't support embedded video.
 </video>
 
