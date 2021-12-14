@@ -28,11 +28,11 @@ The result will look like this:
 
 For the backend, we are using Laravel (version 8.65) as one of the most popular PHP frameworks. Centrifugo v3 will accept WebSocket client connections. And we will implement an integration layer between Laravel and Centrifugo.
 
-For CSS styles we are using recently released Bootstrap 5. Some vanilla JS instead of frameworks like React/Vue/whatever to make frontend Javascript code simple to understand for most developers out there. 
+For CSS styles we are using recently released Bootstrap 5. Also, some vanilla JS instead of frameworks like React/Vue/whatever to make frontend Javascript code simple – so most developers out there could understand the mechanics. 
 
-We also using a bit old-fashioned server rendering here where server renders templates for different rooms/URLs – i.e. our app is not a SPA app – mostly for the same reasons: to not overcomplicate things and let reader focus on Centrifugo and Laravel integration parts.
+We are also using a bit old-fashioned server rendering here where server renders templates for different room routes (URLs) – i.e. our app is not a SPA app – mostly for the same reasons: to keep example short and let reader focus on Centrifugo and Laravel integration parts.
 
-To generate fake user avatars we are asking images from https://robohash.org/ which can generate unique robot puctures based on some input string (username in our case). Robots like to chat with each other!
+To generate fake user avatars we are requesting images from https://robohash.org/ which can generate unique robot puctures based on some input string (username in our case). Robots like to chat with each other!
 
 <img src="https://robohash.org/1.png" width="30%" />
 <img src="https://robohash.org/2.png" width="30%" />
@@ -90,7 +90,7 @@ Pay attention to the [configuration](https://github.com/centrifugal/examples/tre
 
 ## Application structure
 
-We assume you already familar with Laravel concepts, so we will just point you to some core aspects of the application structure and will pay more attention to Centrifugo integration parts. 
+We assume you already familar with Laravel concepts, so we will just point you to some core aspects of the Laravel application structure and will pay more attention to Centrifugo integration parts.
 
 ### Environment settings
 
@@ -111,9 +111,9 @@ We will use the following tables which will be then translated to the applicatio
 
 For broadcasting we are using [laravel-centrifugo](https://github.com/denis660/laravel-centrifugo) library. It helps to simplify interaction between Laravel and Centrifugo by providing some convenient wrappers.
 
-Step-by-step configuration can be viewed in the readme file of this library.
+Step-by-step configuration can be viewed in the [readme](https://github.com/denis660/laravel-centrifugo) file of this library.
 
-Pay attention to the `CENTRIFUGO_API_KEY` setting. It must match in the file `.env` and `centrifugo.json`. And we also telling `laravel-centrifugo` the URL of Centrifugo. That's all we need to configure for this example.
+Pay attention to the `CENTRIFUGO_API_KEY` setting. It is used to send API requests from Laravel to Centrifugo and must match in `.env` and `centrifugo.json` files. And we also telling `laravel-centrifugo` the URL of Centrifugo. That's all we need to configure for this example app.
 
 See more information about Laravel broadcasting [here](https://laravel.com/docs/8.x/broadcasting).
 
@@ -125,7 +125,9 @@ As an alternative to `laravel-centrifugo`, you can use [phpcent](https://github.
 
 ### Interaction with Centrifugo
 
-When user opens a chat app it connects to Centrifugo. Let's take a closer look at Centrifugo configuration file we use for this example app:
+When user opens a chat app it connects to Centrifugo using `centrifuge-js` client connector library.
+
+Let's take a closer look at Centrifugo server configuration file we use for this example app:
 
 ```json
 {
@@ -180,7 +182,7 @@ In the response from controller we tell Centrifugo the ID of connecting user and
 
 :::tip
 
-Note, that in our chat app we are using a single personal channel for each user to receive real-time updates from all rooms. We are not creating separate subscriptions for each room user joined too. This will allow us to scale more easily in the future, and basically the only viable solution in case of room list pagination in chat application like this. 
+Note, that in our chat app we are using a single personal channel for each user to receive real-time updates from all rooms. We are not creating separate subscriptions for each room user joined too. This will allow us to scale more easily in the future, and basically the only viable solution in case of room list pagination in chat application like this. It does not mean you can not combine personal user channels and separate room channels for different tasks though.
 
 Some additional tips can be found in [Centrifugo FAQ](https://centrifugal.dev/docs/faq/index#what-about-best-practices-with-the-number-of-channels).
 
