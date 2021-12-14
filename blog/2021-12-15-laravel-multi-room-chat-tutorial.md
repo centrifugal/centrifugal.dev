@@ -1,7 +1,7 @@
 ---
 title: Building a multi-room chat application with Laravel and Centrifugo
 tags: [centrifugo, tutorial, laravel, php]
-description: In this tutorial, we are integrating Laravel framework with Centrifugo to make a multi-room chat application.
+description: In this tutorial, we are integrating Laravel framework with Centrifugo real-time messaging server to make a multi-room chat application.
 author: Anton Silischev
 authorTitle: Centrifugo contributor
 authorImageURL: https://github.com/silischev.png
@@ -11,7 +11,7 @@ hide_table_of_contents: false
 
 ![Image](/img/laravel_centrifugo.jpg)
 
-In this tutorial, we will create a multi-room chat server using [Laravel framework](https://laravel.com/) and [Centrifugo](https://centrifugal.dev/).
+In this tutorial, we will create a multi-room chat server using [Laravel framework](https://laravel.com/) and [Centrifugo](https://centrifugal.dev/) real-time messaging server.
 
 Authenticated users of our chat app will be able to create new chat rooms, join existing rooms and instantly communicate inside rooms with the help of Centrifugo WebSocket real-time transport.
 
@@ -178,6 +178,8 @@ class CentrifugoProxyController extends Controller
 
 This controller [protected by auth middleware](https://github.com/centrifugal/examples/blob/master/php_laravel_chat_tutorial/app/routes/api.php).
 
+Since Centrifugo proxies `Cookie` header of initial WebSocket HTTP Upgrade request Laravel auth layer will work just fine. So in a controller you already has access to the current authenticated user.
+
 In the response from controller we tell Centrifugo the ID of connecting user and subscribe user to its personal channel (using [user-limited channel](https://centrifugal.dev/docs/server/channels#user-channel-boundary-) feature of Centrifugo). Returning a channel in such way will subscribe user to it using [server-side subscriptions](https://centrifugal.dev/docs/server/server_subs) mechanism.
 
 :::tip
@@ -192,6 +194,7 @@ Some additional tips can be found in [Centrifugo FAQ](https://centrifugal.dev/do
 
 In [RoomController](https://github.com/centrifugal/examples/blob/master/php_laravel_chat_tutorial/app/app/Http/Controllers/RoomController.php) we perform various actions with rooms:
 
+* displaying rooms
 * create rooms
 * join users to rooms
 * publish messages
@@ -285,9 +288,11 @@ In our example we only subscribe each user to a single channel, but user can be 
 
 :::
 
-That's it – we went through all the main parts of integration. If somethng is unclear – just run the docker compose example and experiment with it.  
+And that's it! We went through all the main parts of the integration.
 
 ## Possible improvements
+
+As promised, here is a list with several possible app improvements:
 
 * Transform to a single page app, use productive Javascript frameworks like React or VueJS instead of vanilla JS.
 * Add message read statuses - as soon as one of the chat participants read the message mark it read in the database.
@@ -295,11 +300,12 @@ That's it – we went through all the main parts of integration. If somethng is 
 * Support pagination for the message history, maybe for chat room list also.
 * Don't show all rooms in the system – add functionality to search room by name.
 * Horizontal scaling (using multiple nodes of Centrifugo, for example with [Redis Engine](https://centrifugal.dev/docs/server/engines#redis-engine)) – mostly one line in Centrifugo config if you have Redis running.
+* Gracefully handle temporary disconnects by loading missed messages from the database or Centrifugo channel history cache.
 * Optionally replace connect proxy with [JWT authentication](https://centrifugal.dev/docs/server/authentication) to reduce HTTP calls from Centrifugo to Laravel. This may drastically reduce resources for Laravel backend at scale.
-* Try using [Centrifugo RPC proxy](https://centrifugal.dev/docs/server/proxy#rpc-proxy) feature to use WebSocket connection for message publish instead of issuing AJAX request. 
+* Try using [Centrifugo RPC proxy](https://centrifugal.dev/docs/server/proxy#rpc-proxy) feature to use WebSocket connection for message publish instead of issuing AJAX request.
 
 ## Conclusion
 
-We built a chat app with Laravel and Centrifugo. While there are still an area to improve, this example is not really the basic. It's already valuable in the current form and may be transformed into part of your production system with minimal tweaks.
+We built a chat app with Laravel and Centrifugo. While there is still an area for improvements, this example is not really the basic. It's already valuable in the current form and may be transformed into part of your production system with minimal tweaks.
 
 Hope you enjoyed this tutorial. If you have any questions after reading – join our [community channels](/docs/getting-started/introduction#join-community). We touched only part of Centrifugo concepts here – take a look at detailed Centrifugo docs nearby. And let the Centrifugal force be with you!
