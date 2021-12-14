@@ -125,7 +125,7 @@ As an alternative to `laravel-centrifugo`, you can use [phpcent](https://github.
 
 ### Interaction with Centrifugo
 
-When user opens a chat app it connects to Centrifugo using `centrifuge-js` client connector library.
+When user opens a chat app it connects to Centrifugo over WebSocket transport.
 
 Let's take a closer look at Centrifugo server configuration file we use for this example app:
 
@@ -159,7 +159,7 @@ Allowed origins must be properly set to prevent [cross-site WebSocket connection
 
 To use native Laravel user authentication middlewares, we will use [Centrifugo proxy feature](https://centrifugal.dev/docs/server/proxy).
 
-When user connects to Centrifugo it's connection attempt will be transformed to HTTP request from Centrifugo to Laravel and will hit the [connect proxy controller](https://github.com/centrifugal/examples/blob/master/php_laravel_chat_tutorial/app/app/Http/Controllers/CentrifugoProxyController.php):
+When user connects to Centrifugo it's connection attempt will be transformed into HTTP request from Centrifugo to Laravel and will hit the [connect proxy controller](https://github.com/centrifugal/examples/blob/master/php_laravel_chat_tutorial/app/app/Http/Controllers/CentrifugoProxyController.php):
 
 ```php
 class CentrifugoProxyController extends Controller
@@ -275,6 +275,8 @@ centrifuge.on('publish', function(ctx) {
 centrifuge.connect();
 ```
 
+We are using [centrifuge-js](https://github.com/centrifugal/centrifuge-js) client connector library to communicate with Centrifugo. This client abstracts away bidirectional asynchronous protocol complexity for us providing a simple way to listen connect, disconnect events and communicate with a server in various ways.
+
 In publish event handler we check whether the message belongs to the room the user is currently in. If yes, then we add it to the message history of the room. We also add this message to the room in the list on the left as the last chat message in room. If necessary, we crop the text for normal display.
 
 :::tip
@@ -298,6 +300,6 @@ That's it – we went through all the main parts of integration. If somethng is 
 
 ## Conclusion
 
-We built a chat app with Laravel and Centrifugo – while there are still an area to improve this example is not really the basic. It's pretty valuable in this form and may be transformed into part of your production system with minimal tweaks.
+We built a chat app with Laravel and Centrifugo. While there are still an area to improve, this example is not really the basic. It's already valuable in the current form and may be transformed into part of your production system with minimal tweaks.
 
 Hope you enjoyed this tutorial. If you have any questions after reading – join our [community channels](/docs/getting-started/introduction#join-community). We touched only part of Centrifugo concepts here – take a look at detailed Centrifugo docs nearby. And let the Centrifugal force be with you!
