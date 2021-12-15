@@ -133,7 +133,7 @@ Let's take a closer look at Centrifugo server configuration file we use for this
 {
   "port": 8000,
   "engine": "memory",
-  "api_key": "some-key",
+  "api_key": "some-long-api-key-which-you-should-keep-secret",
   "allowed_origins": [
     "http://localhost",
   ],
