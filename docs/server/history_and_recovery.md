@@ -15,6 +15,12 @@ When history is on every publication is published into a channel saved into hist
 
 Each publication when added to history has an `offset` field. This is an incremental `uint64` field. Each stream is identified by the `epoch` field - which is an arbitrary string. As soon as the underlying engine loses data epoch field will change for a stream thus letting consumers know that stream can't be used as the source of truth anymore.
 
+:::tip
+
+History in channels is not enabled by default. See how to enable it over [channel options](./channels.md#channel-options). History is available in both server and client API.
+
+:::
+
 ## History iteration API
 
 History iteration based on three fields:
@@ -65,6 +71,42 @@ Get up to 10 publications since known stream position (described by offset and e
 
 ```
 history(limit: 10, since: {offset: 11, epoch: "epoch"}, reverse: true)
+```
+
+Here is an example program in Go which endlessly iterates over stream both ends (using [gocent](https://github.com/centrifugal/gocent) API library), upon reaching the end of stream the iteration goes in reversed direction (not really useful in real world but fun): 
+
+```go
+// Iterate by 10.
+limit := 10
+// Paginate in reversed order first, then invert it.
+reverse := true
+// Start with nil StreamPosition, then fill it with value while paginating.
+var sp *gocent.StreamPosition
+
+for {
+	historyResult, err = c.History(
+        ctx,
+        channel,
+		gocent.WithLimit(limit),
+		gocent.WithReverse(reverse),
+        gocent.WithSince(sp),
+	)
+	if err != nil {
+		log.Fatalf("Error calling history: %v", err)
+	}
+	for _, pub := range historyResult.Publications {
+		log.Println(pub.Offset, "=>", string(pub.Data))
+		sp = &gocent.StreamPosition{
+			Offset: pub.Offset,
+			Epoch:  historyResult.Epoch,
+		}
+	}
+	if len(historyResult.Publications) < limit {
+		// Got all pubs, invert pagination direction.
+		reverse = !reverse
+		log.Println("end of stream reached, change iteration direction")
+	}
+}
 ```
 
 ## Automatic message recovery

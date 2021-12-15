@@ -320,6 +320,12 @@ Empty object at the moment.
 
 `presence` allows getting channel presence information (all clients currently subscribed on this channel).
 
+:::tip
+
+Presence in channels is not enabled by default. See how to enable it over [channel options](./channels.md#channel-options).
+
+:::
+
 ```json
 {
     "method": "presence",
@@ -420,14 +426,21 @@ Date: Thu, 17 May 2018 22:09:44 GMT
 
 ### history
 
-`history` allows getting channel history information (list of last messages published into the channel).
+`history` allows getting channel history information (list of last messages published into the channel). By default if no `limit` parameter set in request `history` call will only return current stream position information - i.e. `offset` and `epoch` fields. To get publications you must explicitly provide `limit` parameter. See also history API description in [special doc chapter](./history_and_recovery.md#history-iteration-api).
+
+:::tip
+
+History in channels is not enabled by default. See how to enable it over [channel options](./channels.md#channel-options).
+
+:::
+
 
 ```json
 {
     "method": "history",
     "params": {
         "channel": "chat",
-        "limit": 1
+        "limit": 2
     }
 }
 ```
@@ -468,7 +481,7 @@ Date: Wed, 21 Jul 2021 05:30:48 GMT
 | Parameter name | Parameter type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | channel       | string  | yes | Name of channel to call history from        |
-| limit       | int  | no | Limit number of returned publications        |
+| limit       | int  | no | Limit number of returned publications, if not set in request then only current stream position information will present in result (without any publications)         |
 | since       | StreamPosition object  | no | To return publications after this position        |
 | reverse       | bool  | no | Iterate in reversed order (from latest to earliest)        |
 
