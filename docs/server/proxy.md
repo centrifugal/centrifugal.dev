@@ -114,6 +114,12 @@ Expected response example:
 
 This response allows connecting and tells Centrifugo the ID of a user. See below the full list of supported fields in the result.
 
+Several app examples which use connect proxy can be found in our blog:
+
+* [With NodeJS](/blog/2021/10/18/integrating-with-nodejs)
+* [With Django](/blog/2021/11/04/integrating-with-django-building-chat-application)
+* [With Laravel](/blog/2021/12/14/laravel-multi-room-chat-tutorial)
+
 #### Connect request fields
 
 This is what sent from Centrifugo to application backend in case of connect proxy request.

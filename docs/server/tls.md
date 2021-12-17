@@ -15,8 +15,7 @@ In most situations you better put TLS termination task on your reverse proxy/loa
 There are situations though when you want to serve secure connections by Centrifugo itself.
 
 There are two ways to do this: using TLS certificate `cert` and `key` files that you've got
-from your CA provider or using automatic certificate handling via [ACME](https://datatracker.ietf.org/doc/html/rfc8555) provider (only
-[Let's Encrypt](https://letsencrypt.org/) at this moment).
+from your CA provider or using automatic certificate handling via [ACME](https://datatracker.ietf.org/doc/html/rfc8555) provider (only [Let's Encrypt](https://letsencrypt.org/) at this moment).
 
 ### Using crt and key files
 

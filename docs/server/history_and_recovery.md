@@ -3,7 +3,7 @@ id: history_and_recovery
 title: History and recovery
 ---
 
-Centrifugo engines can maintain publication stream with configured size and TTL.
+Centrifugo engines can maintain publication history for channels with configured history size and TTL.
 
 ## History design
 

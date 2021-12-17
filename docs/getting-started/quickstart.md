@@ -198,4 +198,4 @@ We did it! We built the simplest browser real-time app with Centrifugo and its J
 
 Several more examples are located on Github – [check out this repo](https://github.com/centrifugal/examples).
 
-Also, check out [our blog](/blog) with several tutorials. 
+Also, check out [our blog](/blog) with several tutorials.
