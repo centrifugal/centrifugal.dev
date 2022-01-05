@@ -120,9 +120,13 @@ Keep in mind that join/leave messages can generate a big number of messages in a
 
 `history_size` (integer, default `0`) – history size (amount of messages) for channels. As Centrifugo keeps all history messages in process memory (or in a broker memory) it's very important to limit the maximum amount of messages in channel history with a reasonable value. `history_size` defines the maximum amount of messages that Centrifugo will keep for **each** channel in the namespace. As soon as history has more messages than defined by history size – old messages will be evicted.
 
-By default history size is `0` - this means that channel history is disabled.
+Setting only `history_size` is not enough to enable history in channels – you also need to wisely configure `history_ttl` option (see below). 
+
+:::caution
 
 Enabling channel history adds some overhead (both memory and CPU) since Centrifugo needs to maintain an additional data structure (in a process memory or a broker memory/disk).
+
+:::
 
 ### history_ttl
 
@@ -132,7 +136,7 @@ As all history is storing in process memory (or in a broker memory) it is also v
 
 By default history TTL duration is zero – this means that channel history is disabled.
 
-**So to turn on history you should wisely configure both `history_size` and `history_ttl` options**.
+**Again – to turn on history you should wisely configure both `history_size` and `history_ttl` options**.
 
 For example for top-level channels (which do not belong to a namespace):
 
