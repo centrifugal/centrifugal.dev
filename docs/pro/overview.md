@@ -37,6 +37,12 @@ You can try out Centrifugo PRO for free. When you start Centrifugo PRO without l
 
 This mode should be enough for development, but must not be used in production environment.
 
+:::caution
+
+Centrifugo PRO is distributed under [commercial license](/pro_license) which is different from OSS version. By downloading Centrifugo PRO you automatically accept license terms.
+
+:::
+
 ## Pricing
 
 To run without limits Centrifugo PRO requires a license key that can be purchased. At this moment we form an invoice for a payment with a payment link manually. Please contact over `centrifugal.dev@gmail.com` to buy a license key or request a trial license key. This process may be automated in the future.
@@ -55,3 +61,11 @@ The license key has an expiration date. After the expiration date, Centrifugo PR
 :::
 
 Also, keep in mind that there is no refunding process for purchased license keys.
+
+## Seller information
+
+Individual Entrepreneur Emelin Alexander Urievich.
+
+Primary State Registration Number of Individual Entrepreneur: 321508100046231
+
+Tax Identity Number: 504214264139
