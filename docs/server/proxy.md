@@ -150,7 +150,7 @@ This is what application returns to Centrifugo inside `result` field in case of 
 | b64data      | string     | yes | a custom data to send to the client in the connect command response for binary connections, will be decoded to raw bytes on Centrifugo side before sending to client            |
 | channels      | array of strings     | yes | allows providing a list of server-side channels to subscribe connection to. See more details about [server-side subscriptions](server_subs.md)       |
 | subs         | map of SubscribeOptions     | yes | map of channels with options to subscribe connection to. See more details about [server-side subscriptions](server_subs.md)           |
-| meta         | JSON     | yes | a custom data to attach to connection (this **won't be exposed to client-side**)  |
+| meta         | JSON object (ex. `{"key": "value"}`) | yes | a custom data to attach to connection (this **won't be exposed to client-side**)  |
 
 #### Options
 

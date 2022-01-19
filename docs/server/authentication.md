@@ -157,7 +157,7 @@ BoolValue is an object like this:
 
 ### meta
 
-Meta is an additional JSON data that will be attached to a connection. Unlike `info` it's never exposed to clients and only accessible on a backend side. It will be included in proxy calls from Centrifugo to the application backend. Also, there is a `get_user_connections` API method in Centrifugo PRO that returns this data in the user connection object.
+Meta is an additional JSON object (ex. `{"key": "value"}`) that will be attached to a connection. Unlike `info` it's never exposed to clients and only accessible on a backend side. It will be included in proxy calls from Centrifugo to the application backend. Also, there is a `get_user_connections` API method in Centrifugo PRO that returns this data in the user connection object.
 
 ### expire_at
 
