@@ -68,6 +68,7 @@ module.exports = {
         "pro/token_revocation",
         "pro/performance",
         "pro/singleflight",
+        "pro/cel_expressions",
         "pro/process_stats",
       ],
     },
