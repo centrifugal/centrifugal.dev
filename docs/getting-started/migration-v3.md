@@ -17,7 +17,7 @@ Client protocol has some backward incompatible changes regarding working with hi
 
 Call to `history` API from client-side now does not return all publications from history cache. It returns only information about a stream with zero publications. Clients should explicitly provide a limit when calling history API. Also, the maximum allowed limit can be set by `client_history_max_publication_limit` option (by default `300`).
 
-We provide a boolean flag `use_unlimited_history_by_default` to enable previous behavior while you migrate client applications to use explicit limit.
+We provide a boolean flag `use_unlimited_history_by_default` on configuration file top level to enable previous behavior while you migrate client applications to use explicit limit.
 
 ### Publication limit for recovery
 
