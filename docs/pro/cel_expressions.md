@@ -57,15 +57,13 @@ An expression is evaluated for every subscription attempt to a channel in a name
 
 To make expression concept even more powerful Centrifugo PRO extends channel name syntax with channel labels.
 
-Channel labels are the pairs of key=value (where key and value must be urlencoded), separated by comma.
+Channel labels are the pairs of key=value (where key and value must be urlencoded), separated by comma and put inside curly brackets.
 
-:::tip
+:::note
 
-Note that both key and value of channel label must be in [URL-encoded format](https://en.wikipedia.org/wiki/Percent-encoding) (i.e. escaped). 
+Note that both key and value of channel label must be in [URL-encoded format](https://en.wikipedia.org/wiki/Percent-encoding) (i.e. escaped). Below we show several examples for different programming languages. 
 
 :::
-
-These labels are extracted from the channel name by Centrifugo before evaluating CEL expression and passed to the expression context.
 
 For example, here is a channel with channel labels set:
 
@@ -73,7 +71,9 @@ For example, here is a channel with channel labels set:
 admin:events{instance=42,project=x1}
 ```
 
-Labels must be put into curly brackets. Labels can be placed at any place after namespace separator (i.e. after `:` symbol).
+Labels can be placed at any place after namespace separator (i.e. after `:` symbol).
+
+These labels are extracted from the channel name by Centrifugo before evaluating CEL expression and passed to the expression context.
 
 Each label key can have multiple values:
 
@@ -105,19 +105,59 @@ For the expression above to evaluate to True for channel `admin:events{instance=
 }
 ```
 
-:::danger
-
-Note that the order of labels in a channel name is important. In Centrifugo channel is just a string, so channels `events{instance=42,project=x1}` and `events{project=x1,instance=42}` are totally different! Channel labels are just part of a channel string, not stripped or modified in any way by Centrifugo. The ordering concern was the reason why we decided to not use `&` to separate key/value pairs in channel labels. Because this could lead to many mistakes when using URL query string builders which behave differently in various programming languages and libraries.
-
-:::
-
 Let's take a look on one more example. Here is how we could implement [user-limited](../server/channels.md#user-channel-boundary-) channels functionality using CEL expression and channel labels. We could have channel like:
 
 ```
 users{user=user1,user=user2}
 ```
 
-Then by using `subscribe_expression` like `"user in labels.user"` we can make sure that only user which is part of channel labels will be able to subscribe on this channel. `user` variable is the current user ID and it's available in a subscribe expression context, see below all available variables you can use.
+Then by using `subscribe_expression` like `"user in labels.user"` we can make sure that only user which is part of channel labels will be able to subscribe on this channel. `user` variable is the current user ID and it's available in a subscribe expression context, see [all available variables](#subscribe-expression-variables) you can use.
+
+:::danger
+
+Note that the order of labels in a channel name is important. In Centrifugo channel is just a string, so channels `events{instance=42,project=x1}` and `events{project=x1,instance=42}` are totally different! Channel labels are just part of a channel string, not stripped or modified in any way by Centrifugo. The ordering concern was the reason why we decided to not use `&` to separate key/value pairs in channel labels. Because this could lead to many mistakes when using URL query string builders which behave differently in various programming languages and libraries.
+
+:::
+
+Here we show label construction examples for different languages (note, we avoid using maps since in many languages maps do not guarantee iteration order):
+
+````mdx-code-block
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs
+  className="unique-tabs"
+  defaultValue="python"
+  values={[
+    {label: 'Python', value: 'python'},
+    {label: 'Javascript', value: 'javascript'},
+  ]
+}>
+<TabItem value="python">
+
+```python
+from urllib.parse import quote
+values = [("project", "p1"), ("project", "p2"), ("instance", "42")]
+labels = "{" + ",".join(quote(k) + "=" + quote(v) for k, v in values) + "}"
+print(labels)
+# {project=p1,project=p2,instance=42}
+```
+
+</TabItem>
+<TabItem value="javascript">
+
+```javascript
+let parts = [];
+const values = [["project", "p1"], ["project", "p2"], ["instance", "42"]]
+values.forEach(function(i) { parts.push(encodeURIComponent(i[0]) + "=" + encodeURIComponent(i[1]));})
+const labels = "{" + parts.join(",") + "}";
+console.log(labels)
+// {project=p1,project=p2,instance=42}
+```
+
+</TabItem>
+</Tabs>
+````
 
 ### Subscribe expression variables
 
