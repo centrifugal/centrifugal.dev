@@ -6,7 +6,7 @@ import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import styles from "./styles.module.css";
 import Logo from "./components/logo";
-import useThemeContext from '@theme/hooks/useThemeContext';
+import { useColorMode } from '@docusaurus/theme-common';
 import Highlight from './components/Highlight'
 
 function Feature({ imageUrl, title, children }) {
@@ -25,7 +25,7 @@ function Feature({ imageUrl, title, children }) {
 }
 
 function Header() {
-  const { isDarkTheme } = useThemeContext();
+  const { isDarkTheme } = useColorMode();
   return (
     <header id="hero" className={clsx("hero hero--primary", styles.heroBanner)}>
       <Logo isDarkTheme={isDarkTheme} />

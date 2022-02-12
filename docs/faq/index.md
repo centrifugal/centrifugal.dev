@@ -1,5 +1,5 @@
 ---
-id: index
+id: faq_index
 title: Frequently Asked Questions
 ---
 
