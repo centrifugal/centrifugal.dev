@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkcentrifugal_dev=self.webpackChunkcentrifugal_dev||[]).push([[9934],{2626:function(e){e.exports=JSON.parse('{"allTagsPath":"/blog/tags","slug":"quic","name":"quic","count":1,"permalink":"/blog/tags/quic"}')}}]);

@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkcentrifugal_dev=self.webpackChunkcentrifugal_dev||[]).push([[1178],{8235:function(e){e.exports=JSON.parse('{"allTagsPath":"/blog/tags","slug":"webtransport","name":"webtransport","count":1,"permalink":"/blog/tags/webtransport"}')}}]);
