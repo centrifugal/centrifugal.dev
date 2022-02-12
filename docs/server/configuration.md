@@ -180,7 +180,13 @@ These options allow tweaking server behavior, in most cases default values are g
 
 Default: 128
 
-Sets the maximum number of different channel subscriptions a single client can have. Having many channels per client is not a good thing since this increases connection establishment time. In most cases, you should design your app to use only several channels per client.
+Sets the maximum number of different channel subscriptions a single client can have.
+
+:::tip
+
+When designing an application avoid subscribing to an unlimited number of channels per one client. Keep number of subscriptions for each client reasonably small – this will help keeping handshake process lightweight and fast.
+
+:::
 
 ### channel_max_length
 
