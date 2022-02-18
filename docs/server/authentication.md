@@ -166,7 +166,7 @@ By default, Centrifugo looks on `exp` claim to configure connection expiration. 
 `expire_at` is a UNIX timestamp seconds when the connection should expire.
 
 * Set it to the future time for expiring connection at some point
-* Set it to `0` to disable connection expiration (but since check token `exp`).
+* Set it to `0` to disable connection expiration (but still check token `exp` claim).
 
 ## Connection expiration
 
