@@ -318,7 +318,7 @@ Empty object at the moment.
 
 ### presence
 
-`presence` allows getting channel presence information (all clients currently subscribed on this channel).
+`presence` allows getting channel online presence information (all clients currently subscribed on this channel).
 
 :::tip
 
@@ -383,7 +383,7 @@ Date: Thu, 17 May 2018 22:13:17 GMT
 
 ### presence_stats
 
-`presence_stats` allows getting short channel presence information.
+`presence_stats` allows getting short channel presence information - number of clients and number of unique users (based on user ID).
 
 ```json
 {

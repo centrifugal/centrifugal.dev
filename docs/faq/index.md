@@ -78,9 +78,9 @@ To summarize:
 * if you are using binary or JSON clients and valid JSON payloads everywhere – you are fine.
 * if you try to send binary data to JSON protocol based clients – you will get errors from Centrifugo.
 
-### Presence for chat apps - online status of your contacts
+### Online presence for chat apps - online status of your contacts
 
-While presence is a good feature it does not fit well for some apps. For example, if you make a chat app - you may probably use a single personal channel for each user. In this case, you cannot find who is online at moment using the built-in Centrifugo presence feature as users do not share a common channel.
+While online presence is a good feature it does not fit well for some apps. For example, if you make a chat app - you may probably use a single personal channel for each user. In this case, you cannot find who is online at moment using the built-in Centrifugo presence feature as users do not share a common channel.
 
 You can solve this using a separate service that tracks the online status of your users (for example in Redis) and has a bulk API that returns online status approximation for a list of users. This way you will have an efficient scalable way to deal with online statuses. This is also available as [Centrifugo PRO feature](../pro/user_status.md).
 
@@ -157,9 +157,9 @@ A tricky thing is disconnects hooks. Centrifugo does not support them. There is 
 
 No, join/leave events are only available in the client protocol. In most cases join event can be handled by using [subscribe proxy](../server/proxy.md#subscribe-proxy). Leave events are harder – there is no unsubscribe hook available (mostly the same reasons as for disconnect hook described above). So the workaround here can be similar to one for disconnect – ping an app backend periodically while client is subscribed and thus know that client is currently in a channel with some approximation in time.
 
-### How scalable is the presence and join/leave features?
+### How scalable is the online presence and join/leave features?
 
-Presence is good for channels with a reasonably small number of active subscribers. As soon as there are tons of active subscribers, presence information becomes very expensive in terms of bandwidth (as it contains full information about all clients in a channel).
+Online presence is good for channels with a reasonably small number of active subscribers. As soon as there are tons of active subscribers, presence information becomes very expensive in terms of bandwidth (as it contains full information about all clients in a channel).
 
 There is `presence_stats` API method that can be helpful if you only need to know the number of clients (or unique users) in a channel. But in the case of the Redis engine even `presence_stats` call is not optimized for channels with more than several thousand active subscribers.
 

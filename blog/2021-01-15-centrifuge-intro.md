@@ -311,13 +311,13 @@ client.OnSubscribe(func(e centrifuge.SubscribeEvent, cb centrifuge.SubscribeCall
 
 Obviously, recovery will work only for channels where history stream maintained. The limitation in recovery is that all missed publications sent to client in one protocol frame – pagination is not supported during recovery process. This means that recovery is mostly effective for not too long offline time without tons of missed messages.
 
-## Presence and presence stats
+## Online presence and presence stats
 
-Another cool thing Centrifuge exposes to developers is presence information for channels. Presence information contains a list of active channel subscribers. This is useful to show the online status of players in a game for example.
+Another cool thing Centrifuge exposes to developers is online presence information for channels. Presence information contains a list of active channel subscribers. This is useful to show the online status of players in a game for example.
 
 Also, it's possible to turn on Join/Leave message feature inside channels: so each time connection subscribes to a channel all channel subscribers receive a Join message with client information (client ID, user ID). As soon as the client unsubscribes Leave message is sent to remaining channel subscribers with information who left a channel.
 
-Here is how to enable both presence and join/leave features for a subscription to channel:
+Here is how to enable both online presence and join/leave features for a subscription to channel:
 
 ```go
 client.OnSubscribe(func(e centrifuge.SubscribeEvent, cb centrifuge.SubscribeCallback) {
@@ -334,9 +334,9 @@ On a client-side then it's possible to call for the presence and setting event h
 
 The important thing to be aware of when using Join/Leave messages is that this feature can dramatically increase CPU utilization and overall traffic in channels with a big number of active subscribers – since on every client connect/disconnect event such Join or Leave message must be sent to all subscribers. The advice here – avoid using Join/Leave messages or be ready to scale (Join/Leave messages scale well when adding more Centrifuge Nodes – more about scalability below).
 
-One more thing to remember is that presence information can also be pretty expensive to request in channels with many active subscribers – since it returns information about all connections – thus payload in response can be large. To help a bit with this situation Centrifuge has a presence stats client API method. Presence stats only contain two counters: the number of active connections in the channel and amount of unique users in the channel.
+One more thing to remember is that online presence information can also be pretty expensive to request in channels with many active subscribers – since it returns information about all connections – thus payload in response can be large. To help a bit with this situation Centrifuge has a presence stats client API method. Presence stats only contain two counters: the number of active connections in the channel and amount of unique users in the channel.
 
-If you still need to somehow process presence in rooms with a massive number of active subscribers – then I think you better do it in near real-time - for example with fast OLAP like [ClickHouse](https://clickhouse.tech/).
+If you still need to somehow process online presence in rooms with a massive number of active subscribers – then I think you better do it in near real-time - for example with fast OLAP like [ClickHouse](https://clickhouse.tech/).
 
 ## Scalability aspects
 
@@ -368,7 +368,7 @@ Every Centrifuge Node subscribes to channels via a broker. This provides a possi
 
 It's and important thing to combine PUB/SUB with history inside a Broker implementation to achieve an atomicity of saving message into history stream and publishing it to PUB/SUB with generated offset.
 
-PresenceManager is responsible for presence information management:
+PresenceManager is responsible for online presence information management:
 
 ```go
 type PresenceManager interface {

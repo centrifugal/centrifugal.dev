@@ -51,9 +51,9 @@ Centrifugo is unique in terms of the fact that it supports both client-side and 
 
 You can fully utilize bidirectional persistent connections by sending RPC calls from the client-side to a configured endpoint on your backend. Calling RPC over WebSocket avoids sending headers on each request – thus reducing external traffic and, in most cases, provides better latency characteristics.
 
-### Presence information
+### Online presence information
 
-It's possible to turn on a presence feature for channels so you will have information about active channel subscribers. Channel join and leave events (when a user subscribes/unsubscribes) can also be sent.
+It's possible to turn on an online presence feature for channels so you will have information about active channel subscribers. Channel join and leave events (when a user subscribes/unsubscribes) can also be sent.
 
 ### Message history in channels
 
