@@ -51,7 +51,7 @@ Before looking at all available commands here is a CURL that calls `info` comman
 ```bash
 curl --header "Authorization: apikey <API_KEY>" \
   --request POST \
-  --data '{"method": "info", "params": {}' \
+  --data '{"method": "info", "params": {}}' \
   http://localhost:8000/api
 ```
 
