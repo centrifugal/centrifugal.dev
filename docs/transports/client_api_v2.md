@@ -3,11 +3,11 @@ id: client_api_v2
 title: Client API V2
 ---
 
-Centrifugo has several client SDKs to establish a realtime connection with a server. Most of our libraries use WebSocket transport and send messages encoded with our own bidirectional protocol. That protocol allows asynchronous communication, sending RPC, multiplexing subscriptions to channels.
+Centrifugo has several client SDKs to establish a realtime connection with a server. Most of our libraries use WebSocket transport and send/receive messages encoded according to our own bidirectional protocol. That protocol is built on top of Protobuf schema (both JSON and binary Protobuf formats are supported). It provides asynchronous communication, sending RPC, multiplexing subscriptions to channels, etc.
 
-For Centrifugo v4 we are introducing a new generation of SDKs for Javascript, Dart, Go, Swift and Java.
+For Centrifugo v4 we are introducing a new generation of SDKs for Javascript, Dart, Go, Swift and Java based on new client protocol iteration.
 
-This chapter describes core concepts of client SDKs which work according new concepts. Here we show examples using our Javascript client (`centrifuge-js`), but all other connectors now have similar semantics and API.
+This chapter describes core concepts of client SDKs. Here we show examples using our Javascript client (`centrifuge-js`), but all other Centrifugo connectors now have very similar semantics and API very close to each other.
 
 ### Client connection states
 
@@ -30,30 +30,34 @@ If connection is lost (due to missing network for example, or due to reconnect a
 
 Client state can become `disconnected`. This happens when Client's `disconnect()` method was called by a developer, also this can happen due to advice from a server, or due to terminal problem happened on client side.
 
-```javascript
-const centrifuge = new Centrifuge('ws://localhost:8000/connection/websocket', {});
+Here is a program where we create Client instance, set callbacks to listen state updates and establishing a connection with a server: 
 
-centrifuge.on('connecting', function(ctx) {
+```javascript
+const client = new Centrifuge('ws://localhost:8000/connection/websocket', {});
+
+client.on('connecting', function(ctx) {
     console.log('connecting');
 });
 
-centrifuge.on('connected', function(ctx) {
+client.on('connected', function(ctx) {
     console.log('connected');
 });
 
-centrifuge.on('disconnected', function(ctx) {
+client.on('disconnected', function(ctx) {
     console.log('disconnected');
 });
 
-centrifuge.connect();
+client.connect();
 ```
 
-In case of successful connection client states will transition like this: `disconnected` (initial) -> `connecting` (`on('connecting')` callback called) -> `connected` (`on('connected')` callback called).
+In case of successful connection Client states will transition like this:
+
+`disconnected` (initial) -> `connecting` (`on('connecting')` called) -> `connected` (`on('connected')` called).
 
 You can listen for all errors happening internally while client works by using `error` event:
 
 ```javascript
-centrifuge.on('error', function(ctx) {
+client.on('error', function(ctx) {
     console.log('client error', ctx);
 });
 ```
@@ -61,12 +65,12 @@ centrifuge.on('error', function(ctx) {
 If you want to disconnect from a server call `.disconnect()` method:
 
 ```javascript
-centrifuge.disconnect();
+client.disconnect();
 ```
 
 In this case `on('disconnected')` will be called. You can call `connect()` again when you need to establish connection.
 
-`closed` state implemented in SDKs where resources like internal queues, thread executors, etc must be cleaned up when client is not needed anymore. 
+`closed` state implemented in SDKs where resources like internal queues, thread executors, etc must be cleaned up when client is not needed anymore. All subscriptions should automatically go to `unsubscribed` state upon closing. Client is not usable after going to `closed` state.
 
 ### Client common options
 
@@ -74,6 +78,9 @@ There are several common options available when creating Client instance.
 
 ### Client methods
 
+* `connect`
+* `disconnect`
+* `close`
 * `send`
 * `rpc`
 * `publish`
@@ -115,7 +122,7 @@ To initiate actual process of subscribing to a channel `subscribe()` method of S
 If subscription to a channel is not successful then depending on error type subscription can automatically resubscribe (with exponential backoff) or go to `unsubscribed` state (upon non-temporary error). If subscription to a channel is successful then the state becomes `subscribed`.
 
 ```javascript
-const sub = centrifuge.newSubscription(channel);
+const sub = client.newSubscription(channel);
 
 sub.on('subscribing', function(ctx) {
     console.log('subscribing');
@@ -182,15 +189,15 @@ Publication context has several fields:
 So minimal code where we connect to a server and listen for messages published into `example` channel may look like:
 
 ```javascript
-const centrifuge = new Centrifuge('ws://localhost:8000/connection/websocket', {});
+const client = new Centrifuge('ws://localhost:8000/connection/websocket', {});
 
-const sub = centrifuge.newSubscription('example').on('publication', function(ctx) {
+const sub = client.newSubscription('example').on('publication', function(ctx) {
     console.log("received publication from a channel", ctx.data);
 });
 
 sub.subscribe();
 
-centrifuge.connect();
+client.connect();
 ```
 
 Note, that we can call `subscribe()` before making a connection to a server – at this will work just fine, subscription goes to `subscribing` state and will be subscribed upon succesfull connection.
@@ -212,6 +219,8 @@ There are several common options available when creating Subscription instance.
 
 ### Subscription methods
 
+* `subscribe`
+* `unsubscribe`
 * `publish`
 * `history`
 * `presence`
@@ -223,9 +232,12 @@ Can be set.
 
 Will be refreshed.
 
-### Best practices working with SDKs
+### Server-side subscriptions
+
+TODO.
+
+### SDK common best practices
 
 * Callbacks must be fast. Avoid blocking operations inside event handlers.
-* Log `error` events of Client and Subscription
-* Do not blindly rely on current Client or Subscription state when making API call – state can change at any moment, so handle errors
+* Do not blindly rely on current Client or Subscription state when making client API calls – state can change at any moment, so don't forget to handle errors. 
 * Disconnect from a server when mobile application goes to background since mobile OS can kill the connection at some point without any callbacks called.
