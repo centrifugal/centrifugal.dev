@@ -98,9 +98,9 @@ But the `publish` option still can be useful to send something without backend-s
 
 ### presence
 
-`presence` (boolean, default `false`) – enable/disable presence information for channels. Presence is information about clients currently subscribed to the channel. It contains each subscriber's client ID, user ID, connection info, and channel info. By default, this option is off so no presence information will be available for channels.
+`presence` (boolean, default `false`) – enable/disable online presence information for channels. Online presence is information about clients currently subscribed to the channel. It contains each subscriber's client ID, user ID, connection info, and channel info. By default, this option is off so no presence information will be available for channels.
 
-Enabling channel presence adds some overhead since Centrifugo needs to maintain an additional data structure (in a process memory or a broker memory/disk).
+Enabling channel online presence adds some overhead since Centrifugo needs to maintain an additional data structure (in a process memory or a broker memory/disk).
 
 ### presence_disable_for_client
 
@@ -272,6 +272,6 @@ All things together here is an example of `config.json` which includes some top-
 
 :::note
 
-There is no inheritance in channel options and namespaces – for example, you defined `presence: true` on a top level of configuration and then defined a namespace – that namespace won't have presence enabled - you must enable it for a namespace explicitly. 
+There is no inheritance in channel options and namespaces – for example, you defined `presence: true` on a top level of configuration and then defined a namespace – that namespace won't have online presence enabled - you must enable it for a namespace explicitly. 
 
 :::

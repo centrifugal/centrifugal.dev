@@ -3,7 +3,7 @@ id: singleflight
 title: Singleflight
 ---
 
-Centrifugo PRO provides an additional boolean option `use_singleflight` (default `false`). When this option enabled Centrifugo will automatically try to merge identical requests to history, presence or presence stats issued at the same time into one real network request.
+Centrifugo PRO provides an additional boolean option `use_singleflight` (default `false`). When this option enabled Centrifugo will automatically try to merge identical requests to history, online presence or presence stats issued at the same time into one real network request.
 
 This option can radically reduce a load on a broker in the following situations:
 

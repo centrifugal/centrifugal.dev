@@ -1,5 +1,5 @@
 ---
-id: index
+id: faq_index
 title: Frequently Asked Questions
 ---
 
@@ -43,11 +43,11 @@ When history inside the channel is on then a window of last messages is kept aut
 
 ### What about best practices with the number of channels?
 
-Channel is a very lightweight ephemeral entity - Centrifugo can deal with lots of channels, don't be afraid to have many channels.
+Channel is a very lightweight ephemeral entity - Centrifugo can deal with lots of channels, don't be afraid to have many channels in an application.
 
-But keep in mind that one client should not be subscribed to lots of channels at the same moment (since this makes the connection process heavy for a client). Using no more than several channels for a client is what you should try to achieve. A good analogy here is writing SQL queries – you need to make sure you return content using a fixed amount of database queries, as soon as more entries on your page result in more queries - your pages start working very slow at some point. The same for channels - you better deliver real-time events over a fixed amount of channels. It takes a separate frame for a client to subscribe to a single channel – more frames mean a more heavy initial connection.
+But keep in mind that one client should be subscribed to a reasonable number of channels at one moment. Client-side subscription to a channel requires a separate frame from client to server – more frames mean more heavy initial connection, more heavy reconnect, etc.
 
-For example, when building a chat app where user can be part of many groups using a separate channel for each group is usually a bad approach. This does not scale well since user can have lots of active groups on chat list screen – thus lots of subscriptions. Also, to receive updates from old chats (not visible on a screen) – user will need to subscribe on them too (i.e. even more subscriptions). In this case using a single personal channel for each user is a preferred approach. As soon as you need to deliver a message to a group you can use Centrifugo `broadcast` API to send it to many users. If your chat groups are huge in size then you may also need additional queuing system between your application backend and Centrifugo to broadcast a message to many personal channels.
+One example which may lead to channel misusing is a messenger app where user can be part of many groups. In this case, using a separate channel for each group/chat in a messenger may be a bad approach. The problem is that messenger app may have chat list screen – a view that displays all user groups (probably with pagination). If you are using separate channel for each group then this may lead to lots of subscriptions. Also, with pagination, to receive updates from older chats (not visible on a screen due to pagination) – user may need to subscribe on their channels too. In this case, using a single personal channel for each user is a preferred approach. As soon as you need to deliver a message to a group you can use Centrifugo `broadcast` API to send it to many users. If your chat groups are huge in size then you may also need additional queuing system between your application backend and Centrifugo to broadcast a message to many personal channels.
 
 ### Any way to exclude message publisher from receiving a message from a channel?
 
@@ -78,9 +78,9 @@ To summarize:
 * if you are using binary or JSON clients and valid JSON payloads everywhere – you are fine.
 * if you try to send binary data to JSON protocol based clients – you will get errors from Centrifugo.
 
-### Presence for chat apps - online status of your contacts
+### Online presence for chat apps - online status of your contacts
 
-While presence is a good feature it does not fit well for some apps. For example, if you make a chat app - you may probably use a single personal channel for each user. In this case, you cannot find who is online at moment using the built-in Centrifugo presence feature as users do not share a common channel.
+While online presence is a good feature it does not fit well for some apps. For example, if you make a chat app - you may probably use a single personal channel for each user. In this case, you cannot find who is online at moment using the built-in Centrifugo presence feature as users do not share a common channel.
 
 You can solve this using a separate service that tracks the online status of your users (for example in Redis) and has a bulk API that returns online status approximation for a list of users. This way you will have an efficient scalable way to deal with online statuses. This is also available as [Centrifugo PRO feature](../pro/user_status.md).
 
@@ -157,9 +157,9 @@ A tricky thing is disconnects hooks. Centrifugo does not support them. There is 
 
 No, join/leave events are only available in the client protocol. In most cases join event can be handled by using [subscribe proxy](../server/proxy.md#subscribe-proxy). Leave events are harder – there is no unsubscribe hook available (mostly the same reasons as for disconnect hook described above). So the workaround here can be similar to one for disconnect – ping an app backend periodically while client is subscribed and thus know that client is currently in a channel with some approximation in time.
 
-### How scalable is the presence and join/leave features?
+### How scalable is the online presence and join/leave features?
 
-Presence is good for channels with a reasonably small number of active subscribers. As soon as there are tons of active subscribers, presence information becomes very expensive in terms of bandwidth (as it contains full information about all clients in a channel).
+Online presence is good for channels with a reasonably small number of active subscribers. As soon as there are tons of active subscribers, presence information becomes very expensive in terms of bandwidth (as it contains full information about all clients in a channel).
 
 There is `presence_stats` API method that can be helpful if you only need to know the number of clients (or unique users) in a channel. But in the case of the Redis engine even `presence_stats` call is not optimized for channels with more than several thousand active subscribers.
 

@@ -74,7 +74,7 @@ Optional. By default, Centrifugo looks on `exp` claim to both check token expira
 `expire_at` is a UNIX timestamp seconds when the subscription should expire.
 
 * Set it to the future time for expiring subscription at some point
-* Set it to `0` to disable subscription expiration (but since check token `exp`). This allows implementing a one-time subscription token. 
+* Set it to `0` to disable subscription expiration (but still check token `exp` claim). This allows implementing a one-time subscription token. 
 
 ## Example
 

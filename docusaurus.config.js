@@ -10,9 +10,6 @@ module.exports = {
   organizationName: "centrifugal",
   projectName: "centrifugal.dev",
   themeConfig: {
-    googleAnalytics: {
-      trackingID: 'UA-204787498-1',
-    },
     prism: {
       additionalLanguages: ['php'],
     },
@@ -60,7 +57,7 @@ module.exports = {
           position: "left",
         },
         {
-          to: "docs/faq/index",
+          to: "docs/faq",
           activeBasePath: "docs/faq",
           label: "FAQ",
           position: "left",
@@ -121,9 +118,14 @@ module.exports = {
       "@docusaurus/preset-classic",
       {
         docs: {
+          breadcrumbs: false,
           sidebarPath: require.resolve("./src/sidebars"),
           editUrl:
             "https://github.com/centrifugal/centrifugal.dev/edit/main",
+        },
+        gtag: {
+          trackingID: 'G-NZRQD92LEX',
+          anonymizeIP: true,
         },
         blog: {
           showReadingTime: true,
