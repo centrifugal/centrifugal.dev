@@ -123,8 +123,9 @@ module.exports = {
           editUrl:
             "https://github.com/centrifugal/centrifugal.dev/edit/main",
         },
-        googleAnalytics: {
-          trackingID: 'UA-204787498-1',
+        gtag: {
+          trackingID: 'G-NZRQD92LEX',
+          anonymizeIP: true,
         },
         blog: {
           showReadingTime: true,
