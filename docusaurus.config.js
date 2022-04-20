@@ -118,6 +118,7 @@ module.exports = {
       "@docusaurus/preset-classic",
       {
         docs: {
+          breadcrumbs: false,
           sidebarPath: require.resolve("./src/sidebars"),
           editUrl:
             "https://github.com/centrifugal/centrifugal.dev/edit/main",
