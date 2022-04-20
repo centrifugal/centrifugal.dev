@@ -50,6 +50,8 @@ module.exports = {
       ],
     },
     "transports/client_protocol",
+    "transports/client_protocol_v2",
+    "transports/client_api_v2",
   ],
   Pro: [
     "pro/overview",
