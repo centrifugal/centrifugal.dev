@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkcentrifugal_dev=self.webpackChunkcentrifugal_dev||[]).push([[7482],{6658:function(a){a.exports=JSON.parse('{"allTagsPath":"/blog/tags","slug":"/blog/tags/php","name":"php","count":1,"permalink":"/blog/tags/php"}')}}]);
