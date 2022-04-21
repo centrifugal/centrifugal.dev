@@ -54,7 +54,15 @@ In case of successful connection Client states will transition like this:
 
 `disconnected` (initial) -> `connecting` (`on('connecting')` called) -> `connected` (`on('connected')` called).
 
-You can listen for all errors happening internally while client works by using `error` event:
+In case of already connected Client temporary lost a connection with a server and then succesfully reconnected:
+
+`connected` -> `connecting` (`on('connecting')` called) -> `connected` (`on('connected')` called).
+
+In case of already connected Client temporary lost a connection with a server, but got a terminal error upon reconnection:
+
+`connected` -> `connecting` (`on('connecting')` called) -> `disconnected` (`on('disconnected')` called).
+
+You can also listen for all errors happening internally while client works by using `error` event:
 
 ```javascript
 client.on('error', function(ctx) {
@@ -182,6 +190,14 @@ sub.subscribe();
 ```
 
 Subscriptions also go to `subscribing` state when Client connection (i.e. transport) becomes unavailable. Upon connection re-establishement all subscriptions which are not in `unsubscribed` state will resubscribe automatically.
+
+In case of successful subscription states will transition like this:
+
+`unsubscribed` (initial) -> `subscribing` (`on('subscribing')` called) -> `subscribed` (`on('subscribed')` called).
+
+In case of connected and subscribed Client temporary lost a connection with a server and then succesfully reconnected and resubscribed:
+
+`subscribed` -> `subscribing` (`on('subscribing')` called) -> `subscribed` (`on('subscribed')` called).
 
 You can listen for all errors happening internally in Subscription by using `error` event:
 
