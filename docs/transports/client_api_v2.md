@@ -84,17 +84,22 @@ In this case `on('disconnected')` will be called. You can call `connect()` again
 
 There are several common options available when creating Client instance.
 
+* option to set connection token
+* option to set connect data
+* option to configure operation timeout
+* tweaks for reconnect backoff algorithm (min delay, max delay)
+* configure private channel prefix
+* configure max delay of server pings (to detect broken connection)
+* configure headers to send in WebSocket upgrade request (except `centrifuge-js`)
+* configure client name and version for analytics purpose
+
 ### Client methods
 
-* `connect`
-* `disconnect`
-* `close`
-* `send`
-* `rpc`
-* `publish`
-* `history`
-* `presence`
-* `presenceStats`
+* `connect()`
+* `disconnect()`
+* `close()`
+* `send(data)`
+* `rpc(method, data)`
 
 ### Client connection token
 
@@ -258,7 +263,7 @@ sub.subscribe();
 client.connect();
 ```
 
-Note, that we can call `subscribe()` before making a connection to a server – at this will work just fine, subscription goes to `subscribing` state and will be subscribed upon succesfull connection.
+Note, that we can call `subscribe()` before making a connection to a server – and this will work just fine, subscription goes to `subscribing` state and will be subscribed upon succesfull connection.
 
 ### Subscription recovery state
 
@@ -275,14 +280,18 @@ The recovery process result – i.e. whether all missed publications recovered o
 
 There are several common options available when creating Subscription instance.
 
+* option to set subscription token (for private channels)
+* option to set subscription data (attached to every subscribe/resubscribe request)
+* options to tweak resubscribe backoff algorithm
+
 ### Subscription methods
 
-* `subscribe`
-* `unsubscribe`
-* `publish`
-* `history`
-* `presence`
-* `presenceStats`
+* `subscribe()`
+* `unsubscribe()`
+* `publish(data)`
+* `history(options)`
+* `presence()`
+* `presenceStats()`
 
 ### Subscription token
 
@@ -382,6 +391,13 @@ client.connect();
 ```
 
 Server-side subscription events mostly mimic events of client-side subscriptions. But again – they do not provide control to the client and managed entirely by a server side.
+
+Additionally, Client has several top-level methods to call with server-side subscription related operations:
+
+* `publish(channel, data)`
+* `history(channel, options)`
+* `presence(channel)`
+* `presenceStats(channel)`
 
 ### SDK common best practices
 
