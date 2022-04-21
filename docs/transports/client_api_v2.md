@@ -90,9 +90,51 @@ There are several common options available when creating Client instance.
 
 ### Client connection token
 
-Can be set.
+All SDKs support connecting to Centrifugo with JWT. Connection token can be set in Client option upon initialization. Example:
 
-Will be refreshed.
+```javascript
+const client = new Centrifuge('ws://localhost:8000/connection/websocket', {
+    token: 'JWT-GENERATED-ON-BACKEND-SIDE'
+});
+```
+
+If token sets connection expiration client SDK will keep token refreshed. It does this by calling special callback function. This callback must return a new token. If new token with updated connection expiration returned from calbback then it's sent to Centrifugo. If your callback returns an empty string – this means user has no permission to connect to Centrifugo and Client will move to disconnected state. In case of error returned by your callback SDK will retry operation after some jittered time. 
+
+An example:
+
+```javascript
+function getConnectionToken(url, ctx) {
+    return new Promise((resolve, reject) => {
+        fetch(url, {
+            method: 'POST',
+            headers: new Headers({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify(ctx)
+        })
+        .then(res => {
+            if (!res.ok) {
+                throw new Error(`Unexpected status code ${res.statusCode}`);
+            }
+            return res.json();
+        })
+        .then(data => {
+            resolve(data.token);
+        })
+        .catch(err => {
+            reject();
+        });
+    });
+}
+
+const client = new Centrifuge(
+    'ws://localhost:8000/connection/websocket',
+    {
+        token: 'JWT-GENERATED-ON-BACKEND-SIDE',
+        getConnectionToken: function (ctx) {
+            return getToken('/centrifuge/connection_token', ctx);
+        }
+    }
+);
+```
 
 ### Client-server PING/PONG
 
@@ -228,13 +270,102 @@ There are several common options available when creating Subscription instance.
 
 ### Subscription token
 
-Can be set.
+All SDKs support subscribing to Centrifugo private channels with JWT. Private channel subscription token can be set as a Subscription option upon initialization. Example:
 
-Will be refreshed.
+```javascript
+const sub = centrifuge.newSubscription(channel, {
+    token: 'JWT-GENERATED-ON-BACKEND-SIDE'
+});
+sub.subscribe();
+```
+
+If token sets subscription expiration client SDK will keep token refreshed. It does this by calling special callback function. This callback must return a new token. If new token with updated subscription expiration returned from a calbback then it's sent to Centrifugo. If your callback returns an empty string – this means user has no permission to subscribe to a channel anymore and subscription will be unsubscribed. In case of error returned by your callback SDK will retry operation after some jittered time. 
+
+An example:
+
+```javascript
+function getToken(url, ctx) {
+    return new Promise((resolve, reject) => {
+        fetch(url, {
+            method: 'POST',
+            headers: new Headers({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify(ctx)
+        })
+        .then(res => {
+            if (!res.ok) {
+                throw new Error(`Unexpected status code ${res.statusCode}`);
+            }
+            return res.json();
+        })
+        .then(data => {
+            resolve(data.token);
+        })
+        .catch(err => {
+            reject();
+        });
+    });
+}
+
+const client = new Centrifuge(
+    'ws://localhost:8000/connection/websocket',
+    {
+        token: 'JWT-GENERATED-ON-BACKEND-SIDE',
+        getConnectionToken: function (ctx) {
+            return getToken('/centrifuge/connection_token', ctx);
+        },
+        getSubscriptionToken: function (ctx) {
+            // ctx has channel in the Subscription token case.
+            return getToken('/centrifuge/subscription_token', ctx);
+        },
+    }
+);
+
+const sub = centrifuge.newSubscription(channel, {
+    token: 'JWT-GENERATED-ON-BACKEND-SIDE'
+});
+sub.subscribe();
+```
 
 ### Server-side subscriptions
 
-TODO.
+We encourage using client-side subscriptions where possible as they provide a better control and isolation from connection. But in some cases you may want to use server-side subscriptions (i.e. subscriptions created by server upon connection establishment).
+
+Technically, client SDK keeps server-side subscriptions in internal registry (similar to client-side subscriptions but without possibility to control them).
+
+To listen for server-side subscription events use callbacks as shown in example below:
+
+```javascript
+const client = new Centrifuge('ws://localhost:8000/connection/websocket', {});
+
+client.on('subscribed', function(ctx) {
+    // Called when subscribed to a server-side channel upon Client moving to
+    // connected state or during connection lifetime if server sends Subscribe
+    // push message.
+    console.log('subscribed to server-side channel', ctx.channel);
+});
+
+client.on('subscribing', function(ctx) {
+    // Called when existing connection lost (Client reconnects) or Client
+    // explicitly disconnected. Client continue keeping server-side subscription
+    // registry with stream position information where applicable.
+    console.log('subscribing to server-side channel', ctx.channel);
+});
+
+client.on('unsubscribed', function(ctx) {
+    // Called when server sent unsubscribe push or server-side subscription
+    // previously existed in SDK registry disappeared upon Client reconnect.
+    console.log('unsubscribed from server-side channel', ctx.channel);
+});
+
+client.on('publication', function(ctx) {
+    // Called when server sends Publication over server-side subscription.
+    console.log('publication receive from server-side channel', ctx.channel, ctx.data);
+});
+
+client.connect();
+```
+
+Server-side subscription events mostly mimic events of client-side subscriptions. But again – they do not provide control to the client and managed entirely by a server side.
 
 ### SDK common best practices
 
