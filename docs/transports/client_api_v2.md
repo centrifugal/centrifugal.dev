@@ -32,6 +32,23 @@ Client state can become `disconnected`. This happens when Client's `disconnect()
 
 Here is a program where we create Client instance, set callbacks to listen state updates and establishing a connection with a server: 
 
+````mdx-code-block
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs
+  className="unique-tabs"
+  defaultValue="javascript"
+  values={[
+    {label: 'Javascript', value: 'javascript'},
+    {label: 'Dart', value: 'dart'},
+    {label: 'Swift', value: 'swift'},
+    {label: 'Java', value: 'java'},
+    {label: 'Go', value: 'go'},
+  ]
+}>
+<TabItem value="javascript">
+
 ```javascript
 const client = new Centrifuge('ws://localhost:8000/connection/websocket', {});
 
@@ -49,6 +66,111 @@ client.on('disconnected', function(ctx) {
 
 client.connect();
 ```
+
+</TabItem>
+<TabItem value="dart">
+
+```dart
+final onEvent = (dynamic event) {
+    print('client event> $event');
+};
+
+final client = centrifuge.createClient(
+    'ws://localhost:8000/connection/websocket',
+    centrifuge.ClientConfig(),
+);
+
+client.connecting.listen(onEvent);
+client.connected.listen(onEvent);
+client.disconnected.listen(onEvent);
+
+client.connect();
+```
+
+</TabItem>
+<TabItem value="swift">
+
+```swift
+extension ViewController: CentrifugeClientDelegate {
+    func onConnected(_ c: CentrifugeClient, _ e: CentrifugeConnectedEvent) {
+        print("connected")
+    }
+    func onDisconnected(_ c: CentrifugeClient, _ e: CentrifugeDisconnectedEvent) {
+        print("disconnected")
+    }
+    func onConnecting(_ c: CentrifugeClient, _ e: CentrifugeConnectingEvent) {
+        print("connecting")
+    }
+}
+
+class ViewController: UIViewController {
+
+    private var client: CentrifugeClient?
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        let config = CentrifugeClientConfig()
+        let url = "ws://127.0.0.1:8000/connection/websocket"
+        self.client = CentrifugeClient(endpoint: url, config: config, delegate: self)
+        self.client.connect()
+    }
+}
+```
+
+</TabItem>
+<TabItem value="java">
+
+```java
+EventListener listener = new EventListener() {
+    @Override
+    public void onConnected(Client client, ConnectedEvent event) {
+        System.out.println("connected");
+    }
+    @Override
+    public void onConnecting(Client client, ConnectingEvent event) {
+        System.out.printf("connecting: %s%n", event.getReason());
+    }
+    @Override
+    public void onDisconnected(Client client, DisconnectedEvent event) {
+        System.out.printf("disconnected %d %s", event.getCode(), event.getReason());
+    }
+};
+
+Options opts = new Options();
+
+Client client = new Client("ws://localhost:8000/connection/websocket", opts, listener);
+
+client.connect();
+```
+
+</TabItem>
+<TabItem value="go">
+
+```go
+client := centrifuge.NewJsonClient(
+    "ws://localhost:8000/connection/websocket",
+    centrifuge.Config{},
+)
+defer client.Close()
+
+client.OnConnecting(func(e centrifuge.ConnectingEvent) {
+    log.Printf("Connecting - %d (%s)", e.Code, e.Reason)
+})
+client.OnConnected(func(e centrifuge.ConnectedEvent) {
+    log.Printf("Connected with ID %s", e.ClientID)
+})
+client.OnDisconnected(func(e centrifuge.DisconnectedEvent) {
+    log.Printf("Disconnected: %d (%s)", e.Code, e.Reason)
+})
+
+_ = client.connect()
+```
+
+</TabItem>
+</Tabs>
+````
+
+
 
 In case of successful connection Client states will transition like this:
 
