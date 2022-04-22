@@ -91,30 +91,24 @@ client.connect();
 <TabItem value="swift">
 
 ```swift
-extension ViewController: CentrifugeClientDelegate {
-    func onConnected(_ c: CentrifugeClient, _ e: CentrifugeConnectedEvent) {
-        print("connected")
-    }
-    func onDisconnected(_ c: CentrifugeClient, _ e: CentrifugeDisconnectedEvent) {
-        print("disconnected")
-    }
+import SwiftCentrifuge
+
+class ClientDelegate : NSObject, CentrifugeClientDelegate {
     func onConnecting(_ c: CentrifugeClient, _ e: CentrifugeConnectingEvent) {
-        print("connecting")
+        print("connecting", e.code, e.reason)
+    }
+    func onConnected(_ client: CentrifugeClient, _ e: CentrifugeConnectedEvent) {
+        print("connected with id", e.client)
+    }
+    func onDisconnected(_ client: CentrifugeClient, _ e: CentrifugeDisconnectedEvent) {
+        print("disconnected", e.code, e.reason)
     }
 }
 
-class ViewController: UIViewController {
-
-    private var client: CentrifugeClient?
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        let config = CentrifugeClientConfig()
-        let url = "ws://127.0.0.1:8000/connection/websocket"
-        self.client = CentrifugeClient(endpoint: url, config: config, delegate: self)
-        self.client.connect()
-    }
-}
+let config = CentrifugeClientConfig()
+let endpoint = "ws://localhost:8000/connection/websocket"
+let client = CentrifugeClient(endpoint: endpoint, config: config, delegate: ClientDelegate())
+client.connect()
 ```
 
 </TabItem>
