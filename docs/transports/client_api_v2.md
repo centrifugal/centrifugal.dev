@@ -164,8 +164,6 @@ _ = client.connect()
 </Tabs>
 ````
 
-
-
 In case of successful connection Client states will transition like this:
 
 `disconnected` (initial) -> `connecting` (`on('connecting')` called) -> `connected` (`on('connected')` called).
@@ -177,6 +175,12 @@ In case of already connected Client temporary lost a connection with a server an
 In case of already connected Client temporary lost a connection with a server, but got a terminal error upon reconnection:
 
 `connected` -> `connecting` (`on('connecting')` called) -> `disconnected` (`on('disconnected')` called).
+
+In case of already connected Client came across terminal condition (for example, on connection token refresh application found that user has no permission to connect anymore):
+
+`connected` -> `disconnected` (`on('disconnected')` called).
+
+Both `connecting` and `disconnected` events have numeric `code` and human-readable string `reason` in their context, so you can look at them and find the exact reason why Client went to connecting state or to disconnected state.
 
 You can also listen for all errors happening internally while client works by using `error` event:
 
@@ -319,6 +323,8 @@ In case of successful subscription states will transition like this:
 In case of connected and subscribed Client temporary lost a connection with a server and then succesfully reconnected and resubscribed:
 
 `subscribed` -> `subscribing` (`on('subscribing')` called) -> `subscribed` (`on('subscribed')` called).
+
+Both `subscribing` and `unsubscribed` events have numeric `code` and human-readable string `reason` in their context, so you can look at them and find the exact reason why Subscription went to subscribing state or to unsubscribed state.
 
 You can listen for all errors happening internally in Subscription by using `error` event:
 
