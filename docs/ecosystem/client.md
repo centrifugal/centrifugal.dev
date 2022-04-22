@@ -1,9 +1,9 @@
 ---
 id: client
-title: Client API connectors
+title: Client real-time SDKs
 ---
 
-The following libraries allow connecting to Centrifugo from application frontend:
+The following SDKs allow connecting to Centrifugo from the application frontend:
 
 :::info No need in clients for unidirectional approach
 
