@@ -257,8 +257,8 @@ Empty object at the moment.
 
 | Parameter name | Parameter type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
-| user       | string       | yes | User ID to subscribe        |
-| channel       | string  | yes | Name of channel to subscribe user to        |
+| user       | string       | yes | User ID to unsubscribe        |
+| channel       | string  | yes | Name of channel to unsubscribe user to        |
 | client       | string  | no | Specific client ID to unsubscribe (user still required to be set)       |
 
 #### Unsubscribe result
