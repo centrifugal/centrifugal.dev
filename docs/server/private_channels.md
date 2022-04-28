@@ -76,6 +76,18 @@ Optional. By default, Centrifugo looks on `exp` claim to both check token expira
 * Set it to the future time for expiring subscription at some point
 * Set it to `0` to disable subscription expiration (but still check token `exp` claim). This allows implementing a one-time subscription token. 
 
+### aud
+
+Handled since Centrifugo v3.2.0
+
+By default, Centrifugo does not check JWT audience ([rfc7519 aud](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.3) claim). But if you set `token_audience` option as described in [client authentication](authentication.md#aud) then audience for subscription JWT will also be checked.
+
+### iss
+
+Handled since Centrifugo v3.2.0
+
+By default, Centrifugo does not check JWT issuer ([rfc7519 iss](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.1) claim). But if you set `token_issuer` option as described in [client authentication](authentication.md#iss) then issuer for subscription JWT will also be checked.
+
 ## Example
 
 So to generate a subscription token you can use something like this in Python (assuming client ID is `xxxx-xxx-xxx-xxxx` and the private channel is `$gossips`):

@@ -76,6 +76,46 @@ This is a UNIX time when token was issued (seconds). See [definition in RFC](htt
 
 This is a token unique ID. See [definition in RFC](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.7). This claim is optional but can be useful together with [Centrifugo PRO token revocation features](../pro/token_revocation.md). 
 
+### aud
+
+Handled since Centrifugo v3.2.0
+
+By default, Centrifugo does not check JWT audience ([rfc7519 aud](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.3) claim).
+
+But you can force this check by setting `token_audience` string option:
+
+```json title="config.json"
+{
+  "token_audience": "centrifugo"
+}
+```
+
+:::caution
+
+Setting `token_audience` will also affect subscription tokens (used for [private channels](private_channels.md)).
+
+:::
+
+### iss
+
+Handled since Centrifugo v3.2.0
+
+By default, Centrifugo does not check JWT issuer ([rfc7519 iss](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.1) claim).
+
+But you can force this check by setting `token_issuer` string option:
+
+```json title="config.json"
+{
+  "token_issuer": "my_app"
+}
+```
+
+:::caution
+
+Setting `token_issuer` will also affect subscription tokens (used for [private channels](private_channels.md)).
+
+:::
+
 ### info
 
 This claim is optional - this is additional information about client connection that can be provided for Centrifugo. This information will be included in presence information, join/leave events, and channel publication if it was published from a client-side.
