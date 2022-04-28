@@ -61,11 +61,3 @@ The license key has an expiration date. After the expiration date, Centrifugo PR
 :::
 
 Also, keep in mind that there is no refunding process for purchased license keys.
-
-## Seller information
-
-Individual Entrepreneur Emelin Alexander Urievich.
-
-Primary State Registration Number of Individual Entrepreneur: 321508100046231
-
-Tax Identity Number: 504214264139

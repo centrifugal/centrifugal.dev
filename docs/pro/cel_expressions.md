@@ -4,6 +4,12 @@ title: CEL expressions
 draft: true
 ---
 
+:::danger
+
+This feature is under construction and not available yet.
+
+:::
+
 Centrifugo PRO supports [CEL expressions](https://opensource.google/projects/cel) (Common Expression Language) for checking subscription permissions. CEL expressions provide a developer-friendly, fast and secure way to evaluate some conditions predefined in the configuration. They are used in some Google services (ex. Firebase), in Envoy RBAC configuration, etc.
 
 For Centrifugo this is a flexible mechanism which can help to avoid using private subscriptions or using subscribe proxy in some cases. This means you can avoid sending an additional HTTP request to the backend for a channel subscription attempt. As the result less resources may be used and smaller latencies may be achieved.
