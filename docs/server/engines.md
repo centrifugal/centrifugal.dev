@@ -62,7 +62,7 @@ String, default `"127.0.0.1:6379"` - Redis server address.
 
 String, default `""` - Redis password.
 
-### redis_user
+#### redis_user
 
 Available since Centrifugo v3.2.0
 
