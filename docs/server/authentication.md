@@ -3,7 +3,7 @@ id: authentication
 title: Client authentication
 ---
 
-Centrifugo should know the ID of a user who is connecting. This chapter describes a mechanism of authenticating users over JSON Web Token (JWT) passing.
+To authenticate incoming connection (client) Centrifugo can use [JSON Web Token](https://jwt.io/introduction) (JWT) passed from the client-side. This way Centrifugo may know the ID of user in your application, also application can pass additional data to Centrifugo inside JWT claims. This chapter describes this authentication mechanism.
 
 :::tip
 
