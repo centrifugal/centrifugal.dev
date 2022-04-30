@@ -16,6 +16,7 @@ Also, there are API libraries created by community:
 
 * [crystalcent](https://github.com/devops-israel/crystalcent) API client for Crystal language
 * [cent.js](https://github.com/SocketSomeone/cent.js) API client for NodeJS
+* [Centrifugo.AspNetCore](https://github.com/ismkdc/Centrifugo.AspNetCore) API client for ASP.NET Core
 
 :::tip
 

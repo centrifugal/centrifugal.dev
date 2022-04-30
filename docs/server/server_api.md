@@ -162,6 +162,7 @@ Date: Thu, 17 May 2018 22:03:09 GMT
 | channel       | string  | yes | Name of channel to publish        |
 | data       | any JSON       | yes | Custom JSON data to publish into a channel        |
 | skip_history  | bool       | no | Skip adding publication to history for this request            |
+| tags  | map[string]string  | no | Publication tags - map with arbitrary string keys and values which is attached to publication and will be delivered to clients (available since v3.2.0)            |
 
 #### Publish result
 
@@ -193,6 +194,7 @@ Similar to `publish` but allows to send the same data into many channels.
 | channels       | Array of strings  | yes | List of channels to publish data to        |
 | data       | any JSON       | yes | Custom JSON data to publish into each channel        |
 | skip_history  | bool       | no | Skip adding publications to channels' history for this request            |
+| tags  | map[string]string  | no | Publication tags (available since v3.2.0) - map with arbitrary string keys and values which is attached to publication and will be delivered to clients           |
 
 #### Broadcast result
 
@@ -213,6 +215,7 @@ Similar to `publish` but allows to send the same data into many channels.
 | info       | any JSON  | no | Attach custom data to subscription (will be used in presence and join/leave messages)        |
 | b64info       | string  | no | info in base64 for binary mode (will be decoded by Centrifugo)      |
 | client       | string  | no | Specific client ID to subscribe (user still required to be set, will ignore other user connections with different client IDs)       |
+| session       | string       | no | Specific client session to subscribe (user still required to be set). Available since Centrifugo v3.2.0      |
 | data       | any JSON  | no | Custom subscription data (will be sent to client in Subscribe push)        |
 | b64data       | string  | no | Same as data but in base64 format (will be decoded by Centrifugo)        |
 | recover_since       | StreamPosition object  | no | Stream position to recover from        |
@@ -257,9 +260,10 @@ Empty object at the moment.
 
 | Parameter name | Parameter type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
-| user       | string       | yes | User ID to subscribe        |
-| channel       | string  | yes | Name of channel to subscribe user to        |
+| user       | string       | yes | User ID to unsubscribe        |
+| channel       | string  | yes | Name of channel to unsubscribe user to        |
 | client       | string  | no | Specific client ID to unsubscribe (user still required to be set)       |
+| session       | string | no | Specific client session to disconnect (user still required to be set). Available since Centrifugo v3.2.0      |
 
 #### Unsubscribe result
 
@@ -284,6 +288,7 @@ Empty object at the moment.
 | -------------- | -------------- | ------------ | ---- |
 | user       | string       | yes | User ID to disconnect        |
 | client       | string       | no | Specific client ID to disconnect (user still required to be set)       |
+| session       | string       | no | Specific client session to disconnect (user still required to be set). Available since Centrifugo v3.2.0      |
 | whitelist       | Array of strings       | no | Array of client IDs to keep       |
 | disconnect       | Disconnect object       | no | Provide custom disconnect object, see below      |
 
@@ -308,7 +313,8 @@ Empty object at the moment.
 | Parameter name | Parameter type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | user       | string       | yes | User ID to refresh       |
-| client       | string       | no | Client ID to refresh        |
+| client       | string       | no | Client ID to refresh  (user still required to be set)      |
+| session       | string       | no | Specific client session to refresh (user still required to be set). Available since Centrifugo v3.2.0      |
 | expired       | bool       | no | Mark connection as expired and close with Disconnect Expired reason |
 | expire_at       | int       | no | Unix time (in seconds) in the future when the connection will expire        |
 

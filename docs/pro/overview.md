@@ -18,7 +18,7 @@ Centrifugo PRO includes the following features:
 * [User blocking API](./user_block.md) to block/unblock abusive users by ID.
 * [JWT revoking and invalidation](./token_revocation.md) to revoking tokens by token ID (JTI) and invalidating user's tokens on issue time basis.
 * [Faster performance](./performance.md) to reduce resource usage on server side.
-* [Singleflight](./singleflight.md) for online presence and history to reduce load on broker.
+* [Singleflight](./singleflight.md) for online presence and history to reduce load on the broker.
 * Near real-time [CPU and RSS memory usage stats](./process_stats.md).
 
 :::info
@@ -61,11 +61,3 @@ The license key has an expiration date. After the expiration date, Centrifugo PR
 :::
 
 Also, keep in mind that there is no refunding process for purchased license keys.
-
-## Seller information
-
-Individual Entrepreneur Emelin Alexander Urievich.
-
-Primary State Registration Number of Individual Entrepreneur: 321508100046231
-
-Tax Identity Number: 504214264139

@@ -3,7 +3,7 @@ id: authentication
 title: Client authentication
 ---
 
-Centrifugo should know the ID of a user who is connecting. This chapter describes a mechanism of authenticating users over JSON Web Token (JWT) passing.
+To authenticate incoming connection (client) Centrifugo can use [JSON Web Token](https://jwt.io/introduction) (JWT) passed from the client-side. This way Centrifugo may know the ID of user in your application, also application can pass additional data to Centrifugo inside JWT claims. This chapter describes this authentication mechanism.
 
 :::tip
 
@@ -75,6 +75,46 @@ This is a UNIX time when token was issued (seconds). See [definition in RFC](htt
 ### jti
 
 This is a token unique ID. See [definition in RFC](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.7). This claim is optional but can be useful together with [Centrifugo PRO token revocation features](../pro/token_revocation.md). 
+
+### aud
+
+Handled since Centrifugo v3.2.0
+
+By default, Centrifugo does not check JWT audience ([rfc7519 aud](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.3) claim).
+
+But you can force this check by setting `token_audience` string option:
+
+```json title="config.json"
+{
+  "token_audience": "centrifugo"
+}
+```
+
+:::caution
+
+Setting `token_audience` will also affect subscription tokens (used for [private channels](private_channels.md)).
+
+:::
+
+### iss
+
+Handled since Centrifugo v3.2.0
+
+By default, Centrifugo does not check JWT issuer ([rfc7519 iss](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.1) claim).
+
+But you can force this check by setting `token_issuer` string option:
+
+```json title="config.json"
+{
+  "token_issuer": "my_app"
+}
+```
+
+:::caution
+
+Setting `token_issuer` will also affect subscription tokens (used for [private channels](private_channels.md)).
+
+:::
 
 ### info
 
