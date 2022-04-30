@@ -402,9 +402,12 @@ The recovery process result – i.e. whether all missed publications recovered o
 
 There are several common options available when creating Subscription instance.
 
-* option to set subscription token (for private channels)
-* option to set subscription data (attached to every subscribe/resubscribe request)
+* option to set subscription `token` (for private channels, see [below more details](#subscription-token))
+* option to set subscription `data` (attached to every subscribe/resubscribe request)
 * options to tweak resubscribe backoff algorithm
+* option to start Subscription `since` known Stream Position (i.e. attempt recovery on first subscribe)
+* option to ask server to make subscription `positioned`
+* option to ask server to make subscription `recoverable`
 
 ### Subscription methods
 
@@ -520,6 +523,30 @@ Additionally, Client has several top-level methods to call with server-side subs
 * `history(channel, options)`
 * `presence(channel)`
 * `presenceStats(channel)`
+
+### Error codes
+
+Server can return error codes in range 100-1999. Error codes in interval 0-399 reserved by Centrifuge/Centrifugo server. Codes in range [400, 1999] may be returned by application code built on top of Centrifuge/Centrifugo.
+
+Server errors contain `temporary` boolean flag which works as a signal that error may be fixed by a later retry.
+
+Errors with codes 0-100 can be used by client-side implementation. Client-side errors may not have code attached at all since in many languages error can be distinguished by its type.
+
+### Unsubscribe codes
+
+Server may return unsubscribe codes. Server unsubscribe codes must be in range [2000, 2999].
+
+Unsubscribe codes >= 2500 coming from server to client result into automatic resubscribe attempt (i.e. client goes to `subscribing` state). Codes < 2500 result into going to `unsubscribed` state.
+
+Client implementation can use codes <2000 for client-side specific unsubscribe reasons. 
+
+### Disconnect codes
+
+Server may send custom disconnect codes to a client. Custom disconnect codes must be in range [3000, 4999].
+
+Client automatically reconnects upon receiving code in range 3000-3499, 4000-4499 (i.e. Client goes to `connecting` state). Other codes result into going to `disconnected` state.
+
+Client implementation can use codes <3000 for client-side specific disconnect reasons. 
 
 ### SDK common best practices
 
