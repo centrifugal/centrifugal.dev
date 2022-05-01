@@ -3,11 +3,11 @@ id: client_api_v2
 title: Client API V2
 ---
 
-Centrifugo has several client SDKs to establish a realtime connection with a server. Most of our libraries use WebSocket transport and send/receive messages encoded according to our own bidirectional protocol. That protocol is built on top of Protobuf schema (both JSON and binary Protobuf formats are supported). It provides asynchronous communication, sending RPC, multiplexing subscriptions to channels, etc.
+Centrifugo has several client SDKs to establish a real-time connection with a server. Most of our libraries use WebSocket transport and send/receive messages encoded according to our bidirectional protocol. That protocol is built on top of the Protobuf schema (both JSON and binary Protobuf formats are supported). It provides asynchronous communication, sending RPC, multiplexing subscriptions to channels, etc.
 
-For Centrifugo v4 we are introducing a new generation of SDKs for Javascript, Dart, Go, Swift and Java based on new client protocol iteration.
+For Centrifugo v4 we are introducing a new generation of SDKs for Javascript, Dart, Go, Swift, and Java – all based on new client protocol and client API iteration.
 
-This chapter describes core concepts of client SDKs. Here we show examples using our Javascript client (`centrifuge-js`), but all other Centrifugo connectors now have very similar semantics and API very close to each other.
+This chapter describes the core concepts of client SDKs API. Here we show examples using our Javascript client (`centrifuge-js`), but all other Centrifugo connectors now have very similar semantics and APIs very close to each other.
 
 ### Client connection states
 
@@ -24,13 +24,13 @@ Client connection has 4 states:
 
 :::
 
-When new Client created it has `disconnected` state. To connect to a server `connect()` method should be called. After calling connect Client moves to `connecting` state. If Client can't connect to a server it attempts to create a connection with exponential backoff algorithm (with jitter). If connection to a server is successful then the state becomes `connected`.
+When a new Client is created it has a `disconnected` state. To connect to a server `connect()` method must be called. After calling connect Client moves to the `connecting` state. If a Client can't connect to a server it attempts to create a connection with an exponential backoff algorithm (with jitter). If a connection to a server is successful then the state becomes `connected`.
 
-If connection is lost (due to missing network for example, or due to reconnect advice received from a server, or due to some client-side error which can't be recovered without reconnect) Client goes to `connecting` state again. In this state Client tries to reconnect (again, with exponential backoff algorithm).
+If a connection is lost (due to a missing network for example, or due to reconnect advice received from a server, or due to some client-side error that can't be recovered without reconnecting) Client goes to the `connecting` state again. In this state Client tries to reconnect (again, with an exponential backoff algorithm).
 
-Client state can become `disconnected`. This happens when Client's `disconnect()` method was called by a developer, also this can happen due to advice from a server, or due to terminal problem happened on client side.
+The Client's state can become `disconnected`. This happens when Client's `disconnect()` method was called by a developer. Also, this can happen due to server advice from a server, or due to a terminal problem that happened on the client-side.
 
-Here is a program where we create Client instance, set callbacks to listen state updates and establishing a connection with a server: 
+Here is a program where we create a Client instance, set callbacks to listen to state updates and establish a connection with a server:
 
 ````mdx-code-block
 import Tabs from '@theme/Tabs';
@@ -168,7 +168,7 @@ In case of successful connection Client states will transition like this:
 
 `disconnected` (initial) -> `connecting` (`on('connecting')` called) -> `connected` (`on('connected')` called).
 
-In case of already connected Client temporary lost a connection with a server and then succesfully reconnected:
+In case of already connected Client temporary lost a connection with a server and then successfully reconnected:
 
 `connected` -> `connecting` (`on('connecting')` called) -> `connected` (`on('connected')` called).
 
@@ -176,13 +176,13 @@ In case of already connected Client temporary lost a connection with a server, b
 
 `connected` -> `connecting` (`on('connecting')` called) -> `disconnected` (`on('disconnected')` called).
 
-In case of already connected Client came across terminal condition (for example, on connection token refresh application found that user has no permission to connect anymore):
+In case of already connected Client came across terminal condition (for example, during a connection token refresh application found that user has no permission to connect anymore):
 
 `connected` -> `disconnected` (`on('disconnected')` called).
 
-Both `connecting` and `disconnected` events have numeric `code` and human-readable string `reason` in their context, so you can look at them and find the exact reason why Client went to connecting state or to disconnected state.
+Both `connecting` and `disconnected` events have numeric `code` and human-readable string `reason` in their context, so you can look at them and find the exact reason why the Client went to the `connecting` state or to the `disconnected` state.
 
-You can also listen for all errors happening internally while client works by using `error` event:
+You can also listen for all errors happening internally (which are not reflected by state changes, for example, transport errors happening on initial connect, transport during reconnect, connection token refresh related errors, etc) while the client works by using `error` event:
 
 ```javascript
 client.on('error', function(ctx) {
@@ -196,9 +196,9 @@ If you want to disconnect from a server call `.disconnect()` method:
 client.disconnect();
 ```
 
-In this case `on('disconnected')` will be called. You can call `connect()` again when you need to establish connection.
+In this case `on('disconnected')` will be called. You can call `connect()` again when you need to establish a connection.
 
-`closed` state implemented in SDKs where resources like internal queues, thread executors, etc must be cleaned up when client is not needed anymore. All subscriptions should automatically go to `unsubscribed` state upon closing. Client is not usable after going to `closed` state.
+`closed` state implemented in SDKs where resources like internal queues, thread executors, etc must be cleaned up when the Client is not needed anymore. All subscriptions should automatically go to the `unsubscribed` state upon closing. The client is not usable after going to a `closed` state.
 
 ### Client common options
 
@@ -231,7 +231,7 @@ const client = new Centrifuge('ws://localhost:8000/connection/websocket', {
 });
 ```
 
-If token sets connection expiration client SDK will keep token refreshed. It does this by calling special callback function. This callback must return a new token. If new token with updated connection expiration returned from calbback then it's sent to Centrifugo. If your callback returns an empty string – this means user has no permission to connect to Centrifugo and Client will move to disconnected state. In case of error returned by your callback SDK will retry operation after some jittered time. 
+If the token sets connection expiration then the client SDK will keep the token refreshed. It does this by calling a special callback function. This callback must return a new token. If a new token with updated connection expiration is returned from callback then it's sent to Centrifugo. If your callback returns an empty string – this means the user has no permission to connect to Centrifugo and the Client will move to a disconnected state. In case of error returned by your callback SDK will retry the operation after some jittered time.
 
 An example:
 
@@ -271,7 +271,7 @@ const client = new Centrifuge(
 
 ### Client-server PING/PONG
 
-PINGs sent by a server, client should answer with PONGs upon receivng PING. If client does not receive PING from a server for a long time (ping interval + configured delay) – then connection is considered broken and will be re-established.
+PINGs sent by a server, a client should answer with PONGs upon receiving PING. If a client does not receive PING from a server for a long time (ping interval + configured delay) – the connection is considered broken and will be re-established.
 
 ### Subscription states
 
@@ -282,7 +282,7 @@ const sub = centrifuge.newSubscription(channel);
 sub.subscribe();
 ```
 
-When `newSubscription` called Client allocates new Subscription instance and saves it in internal subscription registry. Having registry of allocated subscriptions allows SDK to manage resubscribes upon reconnect to a server. Centrifugo connectors do not allow creating two subscrptions to the same channel – in this case `newSubscription` can throw exception.
+When a`newSubscription` method is called Client allocates a new Subscription instance and saves it in the internal subscription registry. Having a registry of allocated subscriptions allows SDK to manage resubscribes upon reconnecting to a server. Centrifugo connectors do not allow creating two subscriptions to the same channel – in this case, `newSubscription` can throw an exception.
 
 Subscription has 3 states:
 
@@ -290,11 +290,11 @@ Subscription has 3 states:
 * `subscribing`
 * `subscribed`
 
-When new Subscription created it has `unsubscribed` state.
+When a new Subscription is created it has an `unsubscribed` state.
 
-To initiate actual process of subscribing to a channel `subscribe()` method of Subscription instance should be called. After calling `subscribe()` Subscription moves to `subscribing` state.
+To initiate the actual process of subscribing to a channel `subscribe()` method of Subscription instance should be called. After calling `subscribe()` Subscription moves to `subscribing` state.
 
-If subscription to a channel is not successful then depending on error type subscription can automatically resubscribe (with exponential backoff) or go to `unsubscribed` state (upon non-temporary error). If subscription to a channel is successful then the state becomes `subscribed`.
+If subscription to a channel is not successful then depending on error type subscription can automatically resubscribe (with exponential backoff) or go to an `unsubscribed` state (upon non-temporary error). If subscription to a channel is successful then the state becomes `subscribed`.
 
 ```javascript
 const sub = client.newSubscription(channel);
@@ -326,7 +326,7 @@ In case of connected and subscribed Client temporary lost a connection with a se
 
 Both `subscribing` and `unsubscribed` events have numeric `code` and human-readable string `reason` in their context, so you can look at them and find the exact reason why Subscription went to subscribing state or to unsubscribed state.
 
-You can listen for all errors happening internally in Subscription by using `error` event:
+You can listen for all errors happening internally in Subscription (which are not reflacted by state changes, for example, temporary subscribe errors, subscription token related errors, etc) by using `error` event:
 
 ```javascript
 sub.on('error', function(ctx) {
@@ -344,13 +344,13 @@ In this case `on('unsubscribed')` will be called. Subscription still kept in Cli
 
 ### Subscription management
 
-Client provides several methods to manage internal registry of client-side subscriptions.
+The client SDK provides several methods to manage the internal registry of client-side subscriptions.
 
-`newSubscription(channel, options)` allocates new Subscription in registry of throws exception if Subscription already there. We will discuss common Subscription options below. 
+`newSubscription(channel, options)` allocates a new Subscription in the registry or throws an exception if the Subscription is already there. We will discuss common Subscription options below. 
 
-`getSubscription(channel)` returns existing Subscription by channel from registry (or null if it does not exist).
+`getSubscription(channel)` returns the existing Subscription by a channel from the registry (or null if it does not exist).
 
-`removeSubscription(sub)` removes Subscription from Client's registry. Subscription is automatically unsubscribed before being removed. Use this to free resources if you don't need Subscription to a channel anymore.
+`removeSubscription(sub)` removes Subscription from Client's registry. Subscription is automatically unsubscribed before being removed. Use this to free resources if you don't need a Subscription to a channel anymore.
 
 `subscriptions()` returns all registered subscriptions, so you can iterate over all and do some action if required (for example, you want to unsubscribe/remove all subscriptions).
 
@@ -528,7 +528,7 @@ Additionally, Client has several top-level methods to call with server-side subs
 
 Server can return error codes in range 100-1999. Error codes in interval 0-399 reserved by Centrifuge/Centrifugo server. Codes in range [400, 1999] may be returned by application code built on top of Centrifuge/Centrifugo.
 
-Server errors contain `temporary` boolean flag which works as a signal that error may be fixed by a later retry.
+Server errors contain a `temporary` boolean flag which works as a signal that error may be fixed by a later retry.
 
 Errors with codes 0-100 can be used by client-side implementation. Client-side errors may not have code attached at all since in many languages error can be distinguished by its type.
 
