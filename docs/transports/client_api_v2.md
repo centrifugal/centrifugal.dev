@@ -3,11 +3,11 @@ id: client_api_v2
 title: Client API V2
 ---
 
-Centrifugo has several client SDKs to establish a real-time connection with a server. SDKs use WebSocket as the main data transport and send/receive messages encoded according to our bidirectional protocol. That protocol is built on top of the Protobuf schema (both JSON and binary Protobuf formats are supported). It provides asynchronous communication, sending RPC, multiplexing subscriptions to channels, etc.
+Centrifugo has several client SDKs to establish a real-time connection with a server. SDKs use WebSocket as the main data transport and send/receive messages encoded according to our bidirectional protocol. That protocol is built on top of the Protobuf schema (both JSON and binary Protobuf formats are supported). It provides asynchronous communication, sending RPC, multiplexing subscriptions to channels, etc. Client SDK wraps the protocol and exposes a set of APIs to developers.
 
 For Centrifugo v4 we are introducing a new generation of SDKs for Javascript, Dart, Go, Swift, and Java – all based on new client protocol and client API iteration.
 
-This chapter describes the core concepts of client SDKs API. If you want to find out client protocol framing details then look at [client protocol v2](client_protocol_v2.md) document.
+This chapter describes the core concepts of client SDKs API. If you want to find out lower-level client protocol framing details then look at [client protocol v2](client_protocol_v2.md) document.
 
 Here we show examples using our Javascript client (`centrifuge-js`), but all other Centrifugo connectors now have very similar semantics and APIs very close to each other.
 

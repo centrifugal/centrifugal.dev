@@ -3,13 +3,16 @@ id: client_protocol_v2
 title: Client protocol V2
 ---
 
-Centrifugo has several client SDKs to establish a real-time connection with a server. SDKs use WebSocket as the main data transport and send/receive messages encoded according to our bidirectional protocol. That protocol is built on top of the Protobuf schema (both JSON and binary Protobuf formats are supported). It provides asynchronous communication, sending RPC, multiplexing subscriptions to channels, etc.
-
-For Centrifugo v4 we are introducing a new generation of SDKs for Javascript, Dart, Go, Swift, and Java – all based on new client protocol and client API iteration.
-
 This chapter describes the core concepts of Centrifugo bidirectional client protocol – concentrating on framing level. If you want to find out details about exposed client API then look at [client API v2](client_api_v2.md) document.
 
-:::note
+We need our own protocol on top of real-time transport due to several reasons:
+
+* We want request-response semantics (while our main transport – WebSocket – does not provide this out of the box)
+* Multiplex many subscriptions over a single physical connection
+* Efficient ping-pong support
+* Handle server disconnect advices
+
+:::tip
 
 In case of questions on how client protocol works/structured you can always look at [existing client SDKs](../ecosystem/client.md).
 
@@ -21,9 +24,15 @@ Centrifugo is built on top of Centrifuge library for Go. Centrifuge library uses
 
 Centrifuge client protocol is defined by a [Protobuf schema](https://github.com/centrifugal/protocol/blob/master/definitions/client.proto). This is the source of truth.
 
+:::tip
+
+At the moment Protobuf schema contains some fields which are only used in client protocol v1. This is for backwards compatibility – server supports clients connecting over both client protocol v2 and client protocol v1. Client protocol v1 is considered deprecated and will be removed at some point in the future (giving enough time to our users to migrate). 
+
+:::
+
 ## Command-Reply
 
-In bidirectional case client sends `Command` to a server and server sends `Reply` to client. I.e. all communication between client and server is a bidirectional exchange of `Command` and `Reply` messages.
+In bidirectional case client sends `Command` to a server and server sends `Reply` to a client. I.e. all communication between client and server is a bidirectional exchange of `Command` and `Reply` messages.
 
 Each `Command` has `id` field. This is an incremental `uint32` field. This field will be echoed in a server replies to commands so client could match a certain `Reply` to `Command` sent before. This is important since Websocket is an asynchronous transport where server and client both send messages at any moment and there is no builtin request-response matching. Having `id` allows matching a reply with a command send before on SDK level.
 
