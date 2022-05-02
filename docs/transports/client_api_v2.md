@@ -3,13 +3,15 @@ id: client_api_v2
 title: Client API V2
 ---
 
-Centrifugo has several client SDKs to establish a real-time connection with a server. Most of our libraries use WebSocket transport and send/receive messages encoded according to our bidirectional protocol. That protocol is built on top of the Protobuf schema (both JSON and binary Protobuf formats are supported). It provides asynchronous communication, sending RPC, multiplexing subscriptions to channels, etc.
+Centrifugo has several client SDKs to establish a real-time connection with a server. SDKs use WebSocket as the main data transport and send/receive messages encoded according to our bidirectional protocol. That protocol is built on top of the Protobuf schema (both JSON and binary Protobuf formats are supported). It provides asynchronous communication, sending RPC, multiplexing subscriptions to channels, etc.
 
 For Centrifugo v4 we are introducing a new generation of SDKs for Javascript, Dart, Go, Swift, and Java – all based on new client protocol and client API iteration.
 
-This chapter describes the core concepts of client SDKs API. Here we show examples using our Javascript client (`centrifuge-js`), but all other Centrifugo connectors now have very similar semantics and APIs very close to each other.
+This chapter describes the core concepts of client SDKs API. If you want to find out client protocol framing details then look at [client protocol v2](client_protocol_v2.md) document.
 
-### Client connection states
+Here we show examples using our Javascript client (`centrifuge-js`), but all other Centrifugo connectors now have very similar semantics and APIs very close to each other.
+
+## Client connection states
 
 Client connection has 4 states:
 
@@ -53,15 +55,15 @@ import TabItem from '@theme/TabItem';
 const client = new Centrifuge('ws://localhost:8000/connection/websocket', {});
 
 client.on('connecting', function(ctx) {
-    console.log('connecting');
+    console.log('connecting', ctx);
 });
 
 client.on('connected', function(ctx) {
-    console.log('connected');
+    console.log('connected', ctx);
 });
 
 client.on('disconnected', function(ctx) {
-    console.log('disconnected');
+    console.log('disconnected', ctx);
 });
 
 client.connect();
@@ -200,7 +202,7 @@ In this case `on('disconnected')` will be called. You can call `connect()` again
 
 `closed` state implemented in SDKs where resources like internal queues, thread executors, etc must be cleaned up when the Client is not needed anymore. All subscriptions should automatically go to the `unsubscribed` state upon closing. The client is not usable after going to a `closed` state.
 
-### Client common options
+## Client common options
 
 There are several common options available when creating Client instance.
 
@@ -213,17 +215,17 @@ There are several common options available when creating Client instance.
 * configure headers to send in WebSocket upgrade request (except `centrifuge-js`)
 * configure client name and version for analytics purpose
 
-### Client methods
+## Client methods
 
-* `connect()`
-* `disconnect()`
-* `close()`
-* `send(data)`
-* `rpc(method, data)`
+* `connect()` – connect to a server
+* `disconnect()` - disconnect from a server
+* `close()` - close Client if not needed anymore
+* `send(data)` - send asynchronous message to a server
+* `rpc(method, data)` - send arbitrary RPC and wait for response
 
-### Client connection token
+## Client connection token
 
-All SDKs support connecting to Centrifugo with JWT. Connection token can be set in Client option upon initialization. Example:
+All SDKs support connecting to Centrifugo with JWT. Initial connection token can be set in Client option upon initialization. Example:
 
 ```javascript
 const client = new Centrifuge('ws://localhost:8000/connection/websocket', {
@@ -269,11 +271,17 @@ const client = new Centrifuge(
 );
 ```
 
-### Client-server PING/PONG
+:::note
+
+If initial token is not provided, but `getConnectionToken` is specified – then SDK should assume that developer wants to use token authentication. In this case SDK should attempt to get a connection token before establishing an initial connection.
+
+:::
+
+## Client-server PING/PONG
 
 PINGs sent by a server, a client should answer with PONGs upon receiving PING. If a client does not receive PING from a server for a long time (ping interval + configured delay) – the connection is considered broken and will be re-established.
 
-### Subscription states
+## Subscription states
 
 Client allows subscribing on channels. This can be done by creating `Subscription` object.
 
@@ -342,7 +350,7 @@ sub.unsubscribe();
 
 In this case `on('unsubscribed')` will be called. Subscription still kept in Client's registry, but no resubscription attempts will be made. You can call `subscribe()` again when you need Subscription again. Or you can remove Subscription from Client's registry (see below).
 
-### Subscription management
+## Subscription management
 
 The client SDK provides several methods to manage the internal registry of client-side subscriptions.
 
@@ -354,7 +362,7 @@ The client SDK provides several methods to manage the internal registry of clien
 
 `subscriptions()` returns all registered subscriptions, so you can iterate over all and do some action if required (for example, you want to unsubscribe/remove all subscriptions).
 
-### Listen to channel publications
+## Listen to channel publications
 
 Of course the main point of having Subscriptions is the ability to listen for publications (i.e. messages published to a channel).
 
@@ -387,7 +395,7 @@ client.connect();
 
 Note, that we can call `subscribe()` before making a connection to a server – and this will work just fine, subscription goes to `subscribing` state and will be subscribed upon succesfull connection.
 
-### Subscription recovery state
+## Subscription recovery state
 
 Subscriptions to channels with `recover` option enabled maintain stream position information internally. On every publication received this information updated and used to recover missed publications upon resubscribe (caused by reconnect for example).
 
@@ -398,7 +406,7 @@ The recovery process result – i.e. whether all missed publications recovered o
 * `wasRecovering` - boolean flag that tells whether recovery was used during subscription process resulted into subscribed state. Can be useful if you want to distinguish first subscribe attempt (when subscription does not have any position information yet)
 * `recovered` - boolean flag that tells whether Centrifugo thinks that all missed publications can be successfully recovered and there is no need to load state from the main application database. It's always `false` when `wasRecovering` is `false`.
 
-### Subscription common options
+## Subscription common options
 
 There are several common options available when creating Subscription instance.
 
@@ -409,16 +417,16 @@ There are several common options available when creating Subscription instance.
 * option to ask server to make subscription `positioned`
 * option to ask server to make subscription `recoverable`
 
-### Subscription methods
+## Subscription methods
 
-* `subscribe()`
-* `unsubscribe()`
-* `publish(data)`
-* `history(options)`
-* `presence()`
-* `presenceStats()`
+* `subscribe()` – start subscribing to a channel
+* `unsubscribe()` - unsubscribe from a channel
+* `publish(data)` - publish data to Subscription channel
+* `history(options)` - request Subscription channel history
+* `presence()` - request Subscription channel online presence information
+* `presenceStats()` - request Subscription channel online presence stats information (number of client connections and unique users in a channel).
 
-### Subscription token
+## Subscription token
 
 All SDKs support subscribing to Centrifugo private channels with JWT. Private channel subscription token can be set as a Subscription option upon initialization. Example:
 
@@ -476,7 +484,7 @@ const sub = centrifuge.newSubscription(channel, {
 sub.subscribe();
 ```
 
-### Server-side subscriptions
+## Server-side subscriptions
 
 We encourage using client-side subscriptions where possible as they provide a better control and isolation from connection. But in some cases you may want to use server-side subscriptions (i.e. subscriptions created by server upon connection establishment).
 
@@ -524,7 +532,7 @@ Additionally, Client has several top-level methods to call with server-side subs
 * `presence(channel)`
 * `presenceStats(channel)`
 
-### Error codes
+## Error codes
 
 Server can return error codes in range 100-1999. Error codes in interval 0-399 reserved by Centrifuge/Centrifugo server. Codes in range [400, 1999] may be returned by application code built on top of Centrifuge/Centrifugo.
 
@@ -532,7 +540,7 @@ Server errors contain a `temporary` boolean flag which works as a signal that er
 
 Errors with codes 0-100 can be used by client-side implementation. Client-side errors may not have code attached at all since in many languages error can be distinguished by its type.
 
-### Unsubscribe codes
+## Unsubscribe codes
 
 Server may return unsubscribe codes. Server unsubscribe codes must be in range [2000, 2999].
 
@@ -540,7 +548,7 @@ Unsubscribe codes >= 2500 coming from server to client result into automatic res
 
 Client implementation can use codes <2000 for client-side specific unsubscribe reasons. 
 
-### Disconnect codes
+## Disconnect codes
 
 Server may send custom disconnect codes to a client. Custom disconnect codes must be in range [3000, 4999].
 
@@ -548,8 +556,50 @@ Client automatically reconnects upon receiving code in range 3000-3499, 4000-449
 
 Client implementation can use codes <3000 for client-side specific disconnect reasons. 
 
-### SDK common best practices
+## SDK common best practices
 
-* Callbacks must be fast. Avoid blocking operations inside event handlers.
-* Do not blindly rely on current Client or Subscription state when making client API calls – state can change at any moment, so don't forget to handle errors. 
-* Disconnect from a server when mobile application goes to background since mobile OS can kill the connection at some point without any callbacks called.
+* Callbacks must be fast. Avoid blocking operations inside event handlers. Callbacks caused by protocol messages received from a server are called synchronously and connection read loop is blocked while such callbacks are being executed. Consider doing heavy work asynchronously.
+* Do not blindly rely on the current Client or Subscription state when making client API calls – state can change at any moment, so don't forget to handle errors.
+* Disconnect from a server when a mobile application goes to the background since a mobile OS can kill the connection at some point without any callbacks called.
+
+## SDK feature matrix
+
+Below you can find an information regarding support of different features in our official client SDKs
+
+### Connection related features
+
+<div class="features">
+
+| Client feature  | js  | dart | swift | go | java |
+| ------ | ------ | ------ | ------- | ------- | ------- |
+| connect to a server | ✅ | ✅  |  ✅  | ✅  |  ✅  |
+| setting client options | ✅ | ✅  |  ✅  | ✅  |  ✅  |
+| automatic reconnect with backoff algorithm  | ✅  | ✅  | ✅ | ✅  |  ✅  |
+| client state changes  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |
+| command-reply  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |
+| command timeouts  | ✅  | ✅  | ✅ | ✅  |  ✅  |
+| async pushes  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |
+| ping-pong  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |
+| connection token refresh  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |
+| handle disconnect advice from server  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |
+| server-side subscriptions  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |
+
+</div>
+
+### Client-side subscription related features
+
+<div class="features">
+
+| Client feature  | js  | dart | swift | go | java |
+| ------- | ------- | ------- | ------- | ------- | ------- |
+| subscrbe to a channel  | ✅  | ✅  | ✅ | ✅  |  ✅  |
+| setting subscription options  | ✅  | ✅  | ✅ | ✅  |  ✅  |
+| automatic resubscribe with backoff algorithm  | ✅  | ✅  | ✅ | ✅  |  ✅  |
+| subscription state changes  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |
+| subscription command-reply  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |
+| subscription async pushes  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |
+| subscription token refresh  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |
+| handle unsubscribe advice from server  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |
+| manage subscription registry  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |
+
+</div>
