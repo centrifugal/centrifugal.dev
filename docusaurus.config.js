@@ -27,47 +27,57 @@ module.exports = {
       },
       items: [
         {
-          to: "docs/getting-started/introduction",
-          activeBasePath: "docs/getting-started",
+          type: 'doc',
+          docId: 'getting-started/introduction',
           label: "Getting Started",
           position: "left",
         },
         {
-          to: "docs/server/configuration",
-          activeBasePath: "docs/server",
+          type: 'doc',
+          docId: 'server/configuration',
           label: "Server guide",
           position: "left",
         },
         {
-          to: "docs/transports/overview",
-          activeBasePath: "docs/transports",
+          type: 'doc',
+          docId: 'transports/overview',
           label: "Transports",
           position: "left",
         },
         {
-          to: "docs/ecosystem/client",
-          activeBasePath: "docs/ecosystem",
+          type: 'doc',
+          docId: 'ecosystem/client',
           label: "Ecosystem",
           position: "left",
         },
         {
-          to: "docs/pro/overview",
-          activeBasePath: "docs/pro",
+          type: 'doc',
+          docId: 'pro/overview',
           label: "Centrifugo PRO",
           position: "left",
         },
         {
-          to: "docs/faq",
-          activeBasePath: "docs/faq",
+          type: 'doc',
+          docId: "faq/faq_index",
           label: "FAQ",
           position: "left",
         },
-        { to: 'blog', label: 'Blog', position: 'left' },
+        {
+          to: 'blog',
+          label: 'Blog',
+          position: 'left'
+        },
         {
           href: "https://github.com/centrifugal/centrifugo",
           position: "right",
           className: "header-github-link",
           "aria-label": "GitHub repository",
+        },
+        {
+          type: 'docsVersionDropdown',
+          position: 'right',
+          //dropdownItemsAfter: [{to: '/versions', label: 'All versions'}],
+          dropdownActiveClassDisabled: true,
         },
       ],
     },
@@ -119,6 +129,8 @@ module.exports = {
       {
         docs: {
           breadcrumbs: false,
+          //disableVersioning: true,
+          lastVersion: "3.0.0",
           sidebarPath: require.resolve("./src/sidebars"),
           editUrl:
             "https://github.com/centrifugal/centrifugal.dev/edit/main",
