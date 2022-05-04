@@ -5,11 +5,11 @@ title: Client API V2
 
 Centrifugo has several client SDKs to establish a real-time connection with a server. SDKs use WebSocket as the main data transport and send/receive messages encoded according to our bidirectional protocol. That protocol is built on top of the Protobuf schema (both JSON and binary Protobuf formats are supported). It provides asynchronous communication, sending RPC, multiplexing subscriptions to channels, etc. Client SDK wraps the protocol and exposes a set of APIs to developers.
 
-For Centrifugo v4 we are introducing a new generation of SDKs for Javascript, Dart, Go, Swift, and Java – all based on new client protocol and client API iteration.
+For Centrifugo v4 we are introducing a new generation of SDKs for Javascript, Dart, Go, Swift, and Java – all based on updated client protocol and new client API iteration.
 
 This chapter describes the core concepts of client SDKs API. If you want to find out lower-level client protocol framing details then look at [client protocol v2](client_protocol_v2.md) document.
 
-Here we show examples using our Javascript client (`centrifuge-js`), but all other Centrifugo connectors now have very similar semantics and APIs very close to each other.
+Most examples here are written using our Javascript client (`centrifuge-js`), but all other Centrifugo connectors now have very similar semantics and APIs very close to each other.
 
 ## Client connection states
 
@@ -86,7 +86,7 @@ client.connecting.listen(onEvent);
 client.connected.listen(onEvent);
 client.disconnected.listen(onEvent);
 
-client.connect();
+await client.connect();
 ```
 
 </TabItem>
@@ -178,7 +178,7 @@ In case of already connected Client temporary lost a connection with a server, b
 
 `connected` -> `connecting` (`on('connecting')` called) -> `disconnected` (`on('disconnected')` called).
 
-In case of already connected Client came across terminal condition (for example, during a connection token refresh application found that user has no permission to connect anymore):
+In case of already connected Client came across terminal condition (for example, if during a connection token refresh application found that user has no permission to connect anymore):
 
 `connected` -> `disconnected` (`on('disconnected')` called).
 
@@ -277,7 +277,7 @@ If initial token is not provided, but `getConnectionToken` is specified – then
 
 :::
 
-## Client-server PING/PONG
+## Connection PING/PONG
 
 PINGs sent by a server, a client should answer with PONGs upon receiving PING. If a client does not receive PING from a server for a long time (ping interval + configured delay) – the connection is considered broken and will be re-established.
 
@@ -304,6 +304,20 @@ To initiate the actual process of subscribing to a channel `subscribe()` method 
 
 If subscription to a channel is not successful then depending on error type subscription can automatically resubscribe (with exponential backoff) or go to an `unsubscribed` state (upon non-temporary error). If subscription to a channel is successful then the state becomes `subscribed`.
 
+````mdx-code-block
+<Tabs
+  className="unique-tabs"
+  defaultValue="javascript"
+  values={[
+    {label: 'Javascript', value: 'javascript'},
+    {label: 'Dart', value: 'dart'},
+    {label: 'Swift', value: 'swift'},
+    {label: 'Java', value: 'java'},
+    {label: 'Go', value: 'go'},
+  ]
+}>
+<TabItem value="javascript">
+
 ```javascript
 const sub = client.newSubscription(channel);
 
@@ -322,6 +336,104 @@ sub.on('unsubscribed', function(ctx) {
 sub.subscribe();
 ```
 
+</TabItem>
+<TabItem value="dart">
+
+```dart
+final onSubscriptionEvent = (dynamic event) async {
+  print('subscription $channel> $event');
+};
+
+final subscription = client.newSubscription(channel);
+
+subscription.subscribing.listen(onSubscriptionEvent);
+subscription.subscribed.listen(onSubscriptionEvent);
+subscription.unsubscribed.listen(onSubscriptionEvent);
+
+await subscription.subscribe();
+```
+
+</TabItem>
+<TabItem value="swift">
+
+```swift
+class SubscriptionDelegate : NSObject, CentrifugeSubscriptionDelegate {
+    func onSubscribing(_ s: CentrifugeSubscription, _ e: CentrifugeSubscribingEvent) {
+        print("subscribing", e.code, e.reason)
+    }
+    func onSubscribed(_ s: CentrifugeSubscription, _ e: CentrifugeSubscribedEvent) {
+        print("subscribed")
+    }
+    func onUnsubscribed(_ s: CentrifugeSubscription, _ e: CentrifugeUnsubscribedEvent) {
+        print("unsubscribed", e.code, e.reason)
+    }
+}
+
+do {
+    sub = try self.client?.newSubscription(channel: "example", delegate: SubscriptionDelegate())
+    sub!.subscribe()
+} catch {
+    print("Can not create subscription: \(error)")
+}
+```
+
+</TabItem>
+<TabItem value="java">
+
+```java
+SubscriptionEventListener subListener = new SubscriptionEventListener() {
+    @Override
+    public void onSubscribed(Subscription sub, SubscribedEvent event) {
+        System.out.println("subscribed to " + sub.getChannel());
+    }
+    @Override
+    public void onSubscribing(Subscription sub, SubscribingEvent event) {
+        System.out.printf("subscribing " + sub.getChannel());
+    }
+    @Override
+    public void onUnsubscribed(Subscription sub, UnsubscribedEvent event) {
+        System.out.println("unsubscribed " + sub.getChannel());
+    }
+};
+
+Subscription sub;
+try {
+    sub = client.newSubscription("example", subListener);
+    sub.subscribe();
+} catch (DuplicateSubscriptionException e) {
+    e.printStackTrace();
+}
+```
+
+</TabItem>
+<TabItem value="go">
+
+```go
+sub, err := client.NewSubscription("example")
+if err != nil {
+	log.Fatalln(err)
+}
+
+sub.OnSubscribing(func(e centrifuge.SubscribingEvent) {
+	log.Printf("Subscribing on channel %s - %d (%s)", sub.Channel, e.Code, e.Reason)
+})
+sub.OnSubscribed(func(e centrifuge.SubscribedEvent) {
+	log.Printf("Subscribed on channel %s", sub.Channel)
+})
+sub.OnUnsubscribed(func(e centrifuge.UnsubscribedEvent) {
+	log.Printf("Unsubscribed from channel %s - %d (%s)", sub.Channel, e.Code, e.Reason)
+})
+
+err = sub.Subscribe()
+if err != nil {
+	log.Fatalln(err)
+}
+```
+
+</TabItem>
+</Tabs>
+````
+
 Subscriptions also go to `subscribing` state when Client connection (i.e. transport) becomes unavailable. Upon connection re-establishement all subscriptions which are not in `unsubscribed` state will resubscribe automatically.
 
 In case of successful subscription states will transition like this:
@@ -334,7 +446,7 @@ In case of connected and subscribed Client temporary lost a connection with a se
 
 Both `subscribing` and `unsubscribed` events have numeric `code` and human-readable string `reason` in their context, so you can look at them and find the exact reason why Subscription went to subscribing state or to unsubscribed state.
 
-You can listen for all errors happening internally in Subscription (which are not reflacted by state changes, for example, temporary subscribe errors, subscription token related errors, etc) by using `error` event:
+You can listen for all errors happening internally in Subscription (which are not reflected by state changes, for example, temporary subscribe errors, subscription token related errors, etc) by using `error` event:
 
 ```javascript
 sub.on('error', function(ctx) {
@@ -381,6 +493,20 @@ Publication context has several fields:
 
 So minimal code where we connect to a server and listen for messages published into `example` channel may look like:
 
+````mdx-code-block
+<Tabs
+  className="unique-tabs"
+  defaultValue="javascript"
+  values={[
+    {label: 'Javascript', value: 'javascript'},
+    {label: 'Dart', value: 'dart'},
+    {label: 'Swift', value: 'swift'},
+    {label: 'Java', value: 'java'},
+    {label: 'Go', value: 'go'},
+  ]
+}>
+<TabItem value="javascript">
+
 ```javascript
 const client = new Centrifuge('ws://localhost:8000/connection/websocket', {});
 
@@ -393,7 +519,112 @@ sub.subscribe();
 client.connect();
 ```
 
-Note, that we can call `subscribe()` before making a connection to a server – and this will work just fine, subscription goes to `subscribing` state and will be subscribed upon succesfull connection.
+</TabItem>
+<TabItem value="dart">
+
+```dart
+final client = centrifuge.createClient(
+    'ws://localhost:8000/connection/websocket',
+    centrifuge.ClientConfig(),
+);
+
+final subscription = client.newSubscription(channel);
+subscription.publication.listen((event) {
+    print(event);
+});
+await subscription.subscribe();
+
+await client.connect();
+```
+
+</TabItem>
+<TabItem value="swift">
+
+```swift
+import SwiftCentrifuge
+
+class ClientDelegate : NSObject, CentrifugeClientDelegate {}
+
+let config = CentrifugeClientConfig()
+let endpoint = "ws://localhost:8000/connection/websocket"
+let client = CentrifugeClient(endpoint: endpoint, config: config, delegate: ClientDelegate())
+
+class SubscriptionDelegate : NSObject, CentrifugeSubscriptionDelegate {
+    func onPublication(_ s: CentrifugeSubscription, _ e: CentrifugePublicationEvent) {
+        print("publication", e.data)
+    }
+}
+
+do {
+    sub = try self.client?.newSubscription(channel: "example", delegate: SubscriptionDelegate())
+    sub!.subscribe()
+} catch {
+    print("Can not create subscription: \(error)")
+}
+
+client.connect()
+```
+
+</TabItem>
+<TabItem value="java">
+
+```java
+EventListener listener = new EventListener() {};
+Options opts = new Options();
+Client client = new Client("ws://localhost:8000/connection/websocket", opts, listener);
+
+SubscriptionEventListener subListener = new SubscriptionEventListener() {
+    @Override
+    public void onPublication(Subscription sub, PublicationEvent event) {
+        System.out.println("publication from " + sub.getChannel());
+    }
+};
+
+Subscription sub;
+try {
+    sub = client.newSubscription("example", subListener);
+    sub.subscribe();
+} catch (DuplicateSubscriptionException e) {
+    e.printStackTrace();
+}
+
+client.connect();
+```
+
+</TabItem>
+<TabItem value="go">
+
+```go
+client := centrifuge.NewJsonClient(
+    "ws://localhost:8000/connection/websocket",
+    centrifuge.Config{},
+)
+// defer client.Close()
+
+sub, err := client.NewSubscription("example")
+if err != nil {
+	log.Fatalln(err)
+}
+
+sub.OnPublication(func(e centrifuge.PublicationEvent) {
+	log.Printf("Publication from channel")
+})
+
+err = sub.Subscribe()
+if err != nil {
+	log.Fatalln(err)
+}
+
+if err = client.connect(); err != nil {
+    log.Fatalln(err)
+}
+```
+
+</TabItem>
+</Tabs>
+````
+
+Note, that we can call `subscribe()` before making a connection to a server – and this will work just fine, subscription goes to `subscribing` state and will be subscribed upon succesfull connection. And of course, it's possible to call `.subscribe()` after `.connect()`. 
 
 ## Subscription recovery state
 
