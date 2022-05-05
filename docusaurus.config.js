@@ -11,7 +11,7 @@ module.exports = {
   projectName: "centrifugal.dev",
   themeConfig: {
     prism: {
-      additionalLanguages: ['php'],
+      additionalLanguages: ["php", "dart", "swift", "java"],
     },
     colorMode: {
       defaultMode: "light",

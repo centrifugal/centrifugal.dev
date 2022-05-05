@@ -79,7 +79,5 @@ module.exports = {
   Ecosystem: [
     "ecosystem/centrifuge",
     "ecosystem/integrations",
-    // "ecosystem/client",
-    // "ecosystem/api"
   ],
 };
