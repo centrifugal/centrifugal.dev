@@ -7,7 +7,7 @@ module.exports = {
     "getting-started/client_api",
     "getting-started/integration",
     "getting-started/design",
-    "getting-started/migration_v3",
+    "getting-started/migration_v4",
   ],
   Guides: [
     "server/configuration",

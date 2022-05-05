@@ -5,7 +5,7 @@ title: Client protocol
 
 This chapter describes internal bidirectional client-server protocol in details to help developers build new client libraries or understand how existing client connectors work.
 
-Note that you can always look at [existing client implementations](../ecosystem/client.md) in case of any questions. Not all clients support all available server features though.
+Note that you can always look at [existing client implementations](../transports/client_sdk.md) in case of any questions. Not all clients support all available server features though.
 
 ### Client implementation feature matrix
 

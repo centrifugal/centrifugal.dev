@@ -14,7 +14,7 @@ We need our own protocol on top of real-time transport due to several reasons:
 
 :::tip
 
-In case of questions on how client protocol works/structured you can always look at [existing client SDKs](../ecosystem/client.md).
+In case of questions on how client protocol works/structured you can always look at [existing client SDKs](../transports/client_sdk.md).
 
 :::
 

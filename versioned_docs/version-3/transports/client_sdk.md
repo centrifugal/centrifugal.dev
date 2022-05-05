@@ -1,5 +1,5 @@
 ---
-id: client
+id: client_sdk
 title: Client real-time SDKs
 ---
 

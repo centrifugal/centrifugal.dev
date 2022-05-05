@@ -34,8 +34,10 @@
       "label": "Bidirectional",
       "collapsed": false,
       "items": [
+        "transports/client_sdk",
         "transports/websocket",
-        "transports/sockjs"
+        "transports/sockjs",
+        "transports/client_protocol"
       ]
     },
     {
@@ -48,8 +50,7 @@
         "transports/uni_http_stream",
         "transports/uni_grpc"
       ]
-    },
-    "transports/client_protocol"
+    }
   ],
   "Pro": [
     "pro/overview",
@@ -73,9 +74,7 @@
     }
   ],
   "Ecosystem": [
-    "ecosystem/client",
-    "ecosystem/api",
-    "ecosystem/integrations",
-    "ecosystem/centrifuge"
+    "ecosystem/centrifuge",
+    "ecosystem/integrations"
   ]
 }

@@ -16,7 +16,7 @@ Here we will look at available methods and parameters
 
 :::tip
 
-In some cases, you can just use one of our [available HTTP API libraries](../ecosystem/api.md) or use Centrifugo [GRPC API](#grpc-api) to avoid manually constructing requests.
+In some cases, you can just use one of our [available HTTP API libraries](../server/server_api.md#http-api-libraries) or use Centrifugo [GRPC API](#grpc-api) to avoid manually constructing requests.
 
 :::
 

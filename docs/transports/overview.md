@@ -20,9 +20,9 @@ The important distinction here is that all supported transports belong to one of
 
 Bidirectional transports are capable to serve all Centrifugo features. These transports are the main Centrifugo focus.
 
-Bidirectional transports come with a cost that developers need to use a special client connector library which speaks Centrifugo [client protocol](./protocol.md). The reason why we need a special client connector library is that a bidirectional connection is asynchronous – it's required to match requests to responses, properly manage connection state and request queueing/timeouts/errors.
+Bidirectional transports come with a cost that developers need to use a special client connector library which speaks Centrifugo [client protocol](./client_protocol.md). The reason why we need a special client connector library is that a bidirectional connection is asynchronous – it's required to match requests to responses, properly manage connection state and request queueing/timeouts/errors.
 
-Centrifugo has [client connector libraries](../ecosystem/client.md) for popular environments.
+Centrifugo has [client connector libraries](../transports/client_sdk.md) for popular environments.
 
 ## Unidirectional
 

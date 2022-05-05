@@ -11,9 +11,9 @@ It's also possible to avoid using the client library at all [with unidirectional
 
 :::
 
-This is a formal description – we use Javascript client `centrifuge-js` for examples here. Refer to each specific client implementation for concrete method names and possibilities. See [full list of Centrifugo client connectors](../ecosystem/client.md). This description does not cover all protocol possibilities – just the most important to start with.
+This is a formal description – we use Javascript client `centrifuge-js` for examples here. Refer to each specific client implementation for concrete method names and possibilities. See [full list of Centrifugo client SDKs](../transports/client_sdk.md). This description does not cover all protocol possibilities – just the most important to start with.
 
-If you are looking for detailed information about client-server protocol internals then [client protocol description](../transports/protocol.md) chapter can help.
+If you are looking for detailed information about client-server protocol internals then [client protocol description](../transports/client_protocol.md) chapter can help.
 
 ## Connecting to a server
 
