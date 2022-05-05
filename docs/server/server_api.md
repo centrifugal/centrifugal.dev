@@ -622,6 +622,29 @@ Empty object at the moment.
 
 It's possible to combine several commands into one request to Centrifugo. To do this use [JSON streaming](https://en.wikipedia.org/wiki/JSON_streaming) format. This can improve server throughput and reduce traffic traveling around.
 
+### HTTP API libraries
+
+Sending an API request to Centrifugo is a simple task to do in any programming language - this is just a POST request with JSON payload in body and `Authorization` header.
+
+But we have several official HTTP API libraries for different languages, to help developers to avoid constructing proper HTTP requests manually:
+
+* [cent](https://github.com/centrifugal/cent) for Python
+* [phpcent](https://github.com/centrifugal/phpcent) for PHP
+* [gocent](https://github.com/centrifugal/gocent) for Go
+* [rubycent](https://github.com/centrifugal/rubycent) for Ruby
+
+Also, there are API libraries created by community:
+
+* [crystalcent](https://github.com/devops-israel/crystalcent) API client for Crystal language
+* [cent.js](https://github.com/SocketSomeone/cent.js) API client for NodeJS
+* [Centrifugo.AspNetCore](https://github.com/ismkdc/Centrifugo.AspNetCore) API client for ASP.NET Core
+
+:::tip
+
+Also, keep in mind that Centrifugo [has GRPC API](#grpc-api) so you can automatically generate client API code for your language.
+
+:::
+
 ## GRPC API
 
 Centrifugo also supports [GRPC](https://grpc.io/) API. With GRPC it's possible to communicate with Centrifugo using a more compact binary representation of commands and use the power of HTTP/2 which is the transport behind GRPC.

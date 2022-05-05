@@ -46,7 +46,7 @@ module.exports = {
         },
         {
           type: 'doc',
-          docId: 'ecosystem/client',
+          docId: 'ecosystem/centrifuge',
           label: "Ecosystem",
           position: "left",
         },

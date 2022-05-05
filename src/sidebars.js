@@ -34,8 +34,13 @@ module.exports = {
       label: 'Bidirectional',
       collapsed: false,
       items: [
+        "transports/client_api",
+        "transports/client_sdk",
         "transports/websocket",
-        "transports/sockjs"
+        "transports/http_stream",
+        "transports/sse",
+        "transports/sockjs",
+        "transports/client_protocol"
       ],
     },
     {
@@ -49,7 +54,6 @@ module.exports = {
         "transports/uni_grpc",
       ],
     },
-    "transports/client_protocol",
   ],
   Pro: [
     "pro/overview",
@@ -73,9 +77,9 @@ module.exports = {
     },
   ],
   Ecosystem: [
-    "ecosystem/client",
-    "ecosystem/api",
-    "ecosystem/integrations",
     "ecosystem/centrifuge",
+    "ecosystem/integrations",
+    // "ecosystem/client",
+    // "ecosystem/api"
   ],
 };
