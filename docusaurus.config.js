@@ -130,10 +130,20 @@ module.exports = {
         docs: {
           breadcrumbs: false,
           //disableVersioning: true,
-          lastVersion: "3.0.0",
+          lastVersion: "3",
           sidebarPath: require.resolve("./src/sidebars"),
           editUrl:
             "https://github.com/centrifugal/centrifugal.dev/edit/main",
+          versions: {
+            3: {
+              label: "v3",
+              banner: "none"
+            },
+            4: {
+              label: "v4",
+              banner: "none"
+            },
+          },
         },
         gtag: {
           trackingID: 'G-NZRQD92LEX',
