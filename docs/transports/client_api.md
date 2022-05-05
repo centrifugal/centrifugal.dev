@@ -1,6 +1,6 @@
 ---
 id: client_api
-title: Client API
+title: Client SDK API
 ---
 
 Centrifugo has several client SDKs to establish a real-time connection with a server. Centrifugo SDKs use WebSocket as the main data transport and send/receive messages encoded according to our bidirectional protocol. That protocol is built on top of the [Protobuf schema](https://github.com/centrifugal/protocol/blob/master/definitions/client.proto) (both JSON and binary Protobuf formats are supported). It provides asynchronous communication, sending RPC, multiplexing subscriptions to channels, etc. Client SDK wraps the protocol and exposes a set of APIs to developers.
@@ -275,7 +275,7 @@ const client = new Centrifuge(
 );
 ```
 
-:::note
+:::tip
 
 If initial token is not provided, but `getConnectionToken` is specified – then SDK should assume that developer wants to use token authentication. In this case SDK should attempt to get a connection token before establishing an initial connection.
 
