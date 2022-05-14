@@ -62,7 +62,7 @@ An expression is evaluated for every subscription attempt to a channel in a name
 
 To make expression concept even more powerful Centrifugo PRO extends channel name syntax with channel labels.
 
-Channel labels are the pairs of key=value (where key and value must be urlencoded), separated by comma and put inside curly brackets.
+Channel labels are the pairs of `key=value` separated by comma and put inside curly brackets.
 
 :::note
 
@@ -101,7 +101,7 @@ In CEL expression you can then make decisions based on channel labels:
 
 The reason why we use `[0]` in an expression is because labels decoded by Centrifugo into `map[string][]string`, as the same key can have several values.
 
-For the expression above to evaluate to True for channel `admin:events{instance=42&project=x1}`, `meta` should be like:
+For the expression above to evaluate to `True` for channel `admin:events{instance=42&project=x1}`, `meta` should be like:
 
 ```json
 {

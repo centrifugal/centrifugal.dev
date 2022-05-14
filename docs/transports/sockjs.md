@@ -5,7 +5,7 @@ title: SockJS
 
 SockJS is a polyfill browser library which provides HTTP-based fallback transports in case when it's not possible to establish Websocket connection. This can happen in old client browsers or because of some proxy behind client and server that cuts of Websocket traffic. You can find more information on [SockJS project Github page](https://github.com/sockjs/sockjs-client).
 
-:::caution
+:::info
 
 This transport is only implemented by our Javascript SDK at this point – as it mostly makes sense as a fallback for WebSocket to have real-time connection in an environment where WebSocket is unavailable. These days those envs are mostly corporate networks which can block WebSocket traffic (even TLS-based).
 

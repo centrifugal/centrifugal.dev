@@ -30,8 +30,8 @@ Channel name length limited by `255` characters by default (can be changed via c
 Several symbols in channel names reserved for Centrifugo internal needs:
 
 * `:` – for namespace channel boundary (see below)
-* `$` – for private channel prefix (see below)
 * `#` – for user channel boundary (see below)
+* `$` – for private channel prefix (see below)
 * `*` – for the future Centrifugo needs
 * `&` – for the future Centrifugo needs
 * `/` – for the future Centrifugo needs
@@ -325,7 +325,6 @@ By default, client's attempt to subscribe on a channel will be rejected by a ser
 * [Subscribe capabilities in connection token](#subscribe-capabilities-in-connection-token)
 * [Subscribe capabilities in connect proxy](#subscribe-capabilities-in-connect-proxy)
 * [Use user-limited channels](#use-user-limited-channels)
-* [Use subscribe CEL expression](#use-subscribe-cel-expression)
 * [Use subscribe_allowed_for_client namespace option](#use-subscribeallowedforclient-namespace-option)
 
 Below, we are describing those in detail.
@@ -366,13 +365,15 @@ Connection token can contain a capability object to allow user subscribe to chan
 
 Connect proxy can return capability object to allow user subscribe to channels.
 
-#### Use subscribe CEL expression
+#### Use allow_subscribe_for_client namespace option
 
-If namespace contains subscribe expression then it's checked to return `true`
+`allow_subscribe_for_client` allows all connections to subscribe on all channels in a namespace.
 
-#### Use subscribe_allowed_for_client namespace option
+:::caution
 
-`subscribe_allowed_for_client` allows all connections to subscribe on all channels in a namespace.
+Turning this option on effectively makes namespace public – no subscribe permissions will be checked. Make sure this is really what you want in terms of channels security. 
+
+:::
 
 ### Publish permission model
 
@@ -389,8 +390,8 @@ By default, client's attempt to publish data into a channel will be rejected by 
 * [Publish capabilities in connect proxy](#publish-capabilities-in-connect-proxy)
 * [Publish capability in subscribe proxy](#publish-capability-in-subscribe-proxy)
 * [Configure publish proxy](#configure-publish-proxy)
-* [Use publish_allowed_for_subscriber namespace option](#use-publishallowedforsubscriber-namespace-option)
-* [Use publish_allowed_for_client namespace option](#use-publishallowedforclient-namespace-option)
+* [Use allow_publish_for_subscriber namespace option](#use-allowpublishforsubscriber-namespace-option)
+* [Use allow_publish_for_client namespace option](#use-allowpublishforclient-namespace-option)
 
 #### Publish capabilities in connection token
 
@@ -408,32 +409,24 @@ Connect proxy can return capability object to allow client publish to certain ch
 
 Subscribe proxy can return capability object to allow subscriber publish to channel.
 
-#### Use publish_allowed_for_client namespace option
+#### Use allow_publish_for_client namespace option
 
-`publish_allowed_for_client` allows publications to channels of a namespace for all client connections. 
+`allow_publish_for_client` allows publications to channels of a namespace for all client connections. 
 
-#### Use publish_allowed_for_subscriber namespace option
+#### Use allow_publish_for_subscriber namespace option
 
-`publish_allowed_for_subscriber` allows publications to channels of a namespace for all connections subscribed on a channel they want to publish data into.
+`allow_publish_for_subscriber` allows publications to channels of a namespace for all connections subscribed on a channel they want to publish data into.
 
 #### Configure publish proxy
 
 If client publishes to a namespace with configured publish proxy then depending on proxy response publication will be accepted or not.
 
-Configured publish proxy always used??? (what if user has permission in token or publish_allowed_for_client?)
+Configured publish proxy always used??? (what if user has permission in token or allow_publish_for_client?)
 
 ### History permission model
 
 By default, client's attempt to call history from a channel (with history retention configured) will be rejected by a server with `103: permission denied` error. There are several approaches how to control channel history permissions.
-
-#### Use history_allowed_for_client namespace option
-
-`history_allowed_for_client` allows history requests to all channels in a namespace for all client connections. 
-
-#### Use history_allowed_for_subscriber namespace option
-
-`history_allowed_for_subscriber` allows history requests to all channels in a namespace for all client connections subscribed on a channel they want to call history for.
-
+ 
 #### History capabilities in connection token
 
 Connection token can contain a capability object to allow user call history for channels.
@@ -449,6 +442,14 @@ Connect proxy can return capability object to allow client call history from cer
 #### History capability in subscribe proxy response
 
 Subscribe proxy can return capability object to allow subscriber call history from channel.
+
+#### Use allow_history_for_subscriber namespace option
+
+`allow_history_for_subscriber` allows history requests to all channels in a namespace for all client connections subscribed on a channel they want to call history for.
+
+#### Use allow_history_for_client namespace option
+
+`allow_history_for_client` allows history requests to all channels in a namespace for all client connections.
 
 ### Presence permission model
 
@@ -470,18 +471,18 @@ Connect proxy can return capability object to allow client call presence from ce
 
 Subscribe proxy can return capability object to allow subscriber call presence from channel.
 
-#### Use presence_allowed_for_client namespace option
+#### Use allow_presence_for_subscriber namespace option
 
-`presence_allowed_for_client` allows presence requests to all channels in a namespace for all client connections. 
+`allow_presence_for_subscriber` allows presence requests to all channels in a namespace for all client connections subscribed on a channel they want to call presence for.
 
-#### Use presence_allowed_for_subscriber namespace option
+#### Use allow_presence_for_client namespace option
 
-`presence_allowed_for_subscriber` allows presence requests to all channels in a namespace for all client connections subscribed on a channel they want to call presence for.
+`allow_presence_for_client` allows presence requests to all channels in a namespace for all client connections. 
 
 ### Positioning permission model
 
-Server can whether turn on positioning for all channels in a namespace using `"position": true` option or client can create positioned subscriptions (but in this case it should have `history` capability).
+Server can whether turn on positioning for all channels in a namespace using `"force_positioning": true` option or client can create positioned subscriptions (but in this case it should have `history` capability).
 
 ### Recovery permission model
 
-Server can whether turn on automatic recovery for all channels in a namespace using `"recover": true` option or client can create recoverable subscriptions (but in this case it should have `history` capability).
+Server can whether turn on automatic recovery for all channels in a namespace using `"force_recovery": true` option or client can create recoverable subscriptions (but in this case it should have `history` capability).
