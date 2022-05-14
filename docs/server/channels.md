@@ -158,15 +158,15 @@ Not all real-time events require this feature turned on so think wisely when you
 
 :::
 
-### enable_user_limited_channels
-
-TBD
-
 ### allow_subscribe_for_client
 
-TBD
+`allow_subscribe_for_client` (boolean, default `false`) – when on all clients will be able to subscribe to any channel in a namespace.
 
-<!-- `protected` (boolean, default `false`) – when on will prevent a client to subscribe to arbitrary channels in a namespace. In this case, Centrifugo will only allow a client to subscribe on user-limited channels, on channels returned by the proxy response, or channels listed inside JWT. Client-side subscriptions to arbitrary channels will be rejected with PermissionDenied error. Server-side channels belonging to the protected namespace passed by the client itself during connect will be ignored. -->
+:::caution
+
+Turning this option on effectively makes namespace public – no subscribe permissions will be checked. Make sure this is really what you want in terms of channels security. 
+
+:::
 
 ### allow_anonymous_access
 
@@ -186,26 +186,29 @@ But the `publish` option still can be useful to send something without backend-s
 
 ### allow_history_for_subscriber
 
-`history_disable_for_client` (boolean, default `false`) – allows making history available only for a server-side API. By default `false` – i.e. history calls are available for both client and server-side APIs.
-
-:::note
-
-History recovery mechanism if enabled will continue to work for clients anyway even if `history_disable_for_client` is on.
-
-:::
+`allow_history_for_subscriber` (boolean, default `false`) – allows clients who subscribed on a channel to call history API from that channel.
 
 ### allow_history_for_client
 
-TBD
+`history_disable_for_client` (boolean, default `false`) – allows all clients to call history information in a namespace.
 
 ### allow_presence_for_subscriber
 
-TBD
+`allow_presence_for_subscriber` (boolean, default `false`) – allows clients who subscribed on a channel to call presence information from that channel.
 
 ### allow_presence_for_client
 
-`presence_disable_for_client` (boolean, default `false`) – allows making presence calls available only for a server-side API. By default, presence information is available for both client and server-side APIs.
+`allow_presence_for_client` (boolean, default `false`) – allows all clients to call presence information in a namespace.
 
+### enable_user_limited_channels
+
+`enable_user_limited_channels` (boolean, default `false`) - enables using user-limited channels in a namespace for checking subscribe permission.
+
+:::note
+
+If client subscribes to a user-limited channel while this option is off then server rejects subscription with `103: permission denied` error.
+
+:::
 
 ### proxy_subscribe
 
@@ -225,7 +228,7 @@ TBD
 
 ### Config example
 
-Let's look at how to set some of these options in a config:
+Let's look at how to set some of these options in a config. In this example we turning on presence, history features, forcing publication recovery. Also allowing all client connections (including anonymous users) to subscribe to channels and call publish, history, presence APIs if subscribed.
 
 ```json title="config.json"
 {
@@ -234,10 +237,12 @@ Let's look at how to set some of these options in a config:
     "presence": true,
     "history_size": 10,
     "history_ttl": "300s",
-    "recover": true,
-    "allow_subscribe_for_client": true,
+    "force_recovery": true,
     "allow_anonymous_access": true,
+    "allow_subscribe_for_client": true,
     "allow_publish_for_subscriber": true,
+    "allow_history_for_subscriber": true,
+    "allow_presence_for_subscriber": true
 }
 ```
 
@@ -259,7 +264,7 @@ If you want to use namespace options for a channel - you must include namespace 
 
 `gossips:messages`
 
-Where `public` and `gossips` are namespace names. Centrifugo will look for `:` symbol in the channel name, will extract the namespace name, and will apply namespace options whenever required.
+Where `public` and `gossips` are namespace names. Centrifugo looks for `:` symbol in the channel name, if found – extracts the namespace name, and applies namespace options while processing protocol commands from a client.
 
 All things together here is an example of `config.json` which includes some top-level channel options set and has 2 additional channel namespaces configured:
 
@@ -306,7 +311,7 @@ There is no inheritance in channel options and namespaces – for example, you d
 
 ## Channel permissions for server API
 
-When using Centrifugo server API you don't need to think about channel permissions at all – everything is allowed. In case of server API request to Centrifugo must be issued by your application backend – so you have all the power to check any required permissions before issuing API request to Centrifugo.
+When using Centrifugo server API you don't need to think about channel permissions at all – everything is allowed. In server API case, request to Centrifugo must be issued by your application backend – so you have all the power to check any required permissions before issuing API request to Centrifugo.
 
 The situation is different when we are talking about client real-time API. See details below.
 
@@ -481,8 +486,8 @@ Subscribe proxy can return capability object to allow subscriber call presence f
 
 ### Positioning permission model
 
-Server can whether turn on positioning for all channels in a namespace using `"force_positioning": true` option or client can create positioned subscriptions (but in this case it should have `history` capability).
+Server can whether turn on positioning for all channels in a namespace using `"force_positioning": true` option or client can create positioned subscriptions (but in this case a client should have `history` capability).
 
 ### Recovery permission model
 
-Server can whether turn on automatic recovery for all channels in a namespace using `"force_recovery": true` option or client can create recoverable subscriptions (but in this case it should have `history` capability).
+Server can whether turn on automatic recovery for all channels in a namespace using `"force_recovery": true` option or client can create recoverable subscriptions (but in this case a client should have `history` capability).
