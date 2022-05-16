@@ -83,6 +83,10 @@ html[data-theme="light"] .button--secondary:hover {
     font-size: 1.4rem !important;
   }
 
+  .markdown>h4 {
+    font-size: 1.2rem !important;
+  }
+
   .blog-list-page header h2 {
     font-size: 2rem !important;
   }
@@ -99,6 +103,10 @@ html[data-theme="light"] .button--secondary:hover {
 
   .markdown>h3 {
     font-size: 1.4rem !important;
+  }
+
+  .markdown>h4 {
+    font-size: 1.2rem !important;
   }
 
   .blog-list-page header h2 {

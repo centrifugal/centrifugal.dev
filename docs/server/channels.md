@@ -1,13 +1,13 @@
 ---
 id: channels
-title: Channels
+title: Channels and namespaces
 ---
 
-One of the core concepts of Centrifugo is a `channel`. Most of the time you will work with them and decide what is the best channel configuration for your application.
+Upon connecting to a server clients can subscribe to channels. Channel is one of the core concepts of Centrifugo. Most of the time you will work with channels and decide what is the best channel configuration for your application.
 
 ## What is channel
 
-Channel is a route for publications. Clients can subscribe to a channel to receive real-time messages published to a channel – new publications and join/leave events. In other PUB/SUB systems similar concept can be called a `topic`. A channel subscriber can also ask for a channel presence or channel history information.
+Centrifugo is a PUB/SUB system - it has publishers and subscribers. Channel is a route for publications. Clients can subscribe to a channel to receive all real-time messages published to a channel. A channel subscriber can also ask for a channel online presence or channel history information.
 
 Channel is just a string - `news`, `comments`, `personal_feed` are valid channel names. Though this string has some [predefined rules](#channel-name-rules) as we will see below. You can define different channel behavior using a set of available [channel options](#channel-options).
 
@@ -36,7 +36,7 @@ Several symbols in channel names reserved for Centrifugo internal needs:
 * `&` – for the future Centrifugo needs
 * `/` – for the future Centrifugo needs
 
-### namespace boundary (`:`)
+#### namespace boundary (`:`)
 
 ``:`` – is a channel namespace boundary. Namespaces are used to set custom options to a group of channels. Each channel belonging to the same namespace will have the same channel options. Read more about available [channel options](#channel-options) and more about [namespaces](#channel-namespaces) below.
 
@@ -48,7 +48,7 @@ A namespace is part of the channel name. If a user subscribed to a channel with 
 
 :::
 
-### user channel boundary (`#`)
+#### user channel boundary (`#`)
 
 `#` – is a user channel boundary. This is a separator to create personal channels for users (we call this *user-limited channels*) without the need to provide a subscription token.
 
@@ -62,7 +62,7 @@ This is useful for channels with a static list of allowed users, for example for
 
 User-limited channels must be enabled for a channel namespace using `enable_user_limit_channels` option. See below more information about channel options and channel namespaces. 
 
-### private channel prefix (`$`)
+#### private channel prefix (`$`)
 
 Centrifugo v4 has this option to achieve compatibility with previous Centrifugo versions. Previously (in Centrifugo v1, v2 and v3) only channels starting with `$` could be subscribed using a subscription token. In Centrifugo v4 that's not the case anymore – clients can subscribe to any channel with a subscription token (and if the token is valid – then subscription is accepted).
 
@@ -74,11 +74,72 @@ Use private channels if you pass sensitive data inside the channel and want to c
 
 For example `$secrets` is a private channel, `$public:chat` - is a private channel that belongs to namespace `public`.
 
-Subscription request to private channels requires additional JWT from your application backend. Read [detailed chapter about private channels](private_channels.md).
+Subscription request to private channels requires additional JWT from your application backend. Read [detailed chapter about private channels](channel_token_auth.md).
 
 If you need a personal channel for a single user (or maybe a channel for a short and stable set of users) then consider using a `user-limited` channel (see below) as a simpler alternative that does not require an additional subscription token from your backend.
 
 Also, consider using server-side subscriptions or subscribe proxy feature of Centrifugo to model channels with restrictive access.  -->
+
+## Channel namespaces
+
+It's possible to configure a list of channel namespaces. Namespaces are optional but very useful. 
+
+A namespace allows setting custom options for channels starting with the namespace name. This provides great control over channel behavior so you have a flexible way to define different channel options for different real-time features in the application.
+
+Namespace has a name, and the same channel options (with the same defaults) as described above.
+
+* `name` - unique namespace name (name must consist of letters, numbers, underscores, or hyphens and be more than 2 symbols length i.e. satisfy regexp `^[-a-zA-Z0-9_]{2,}$`).
+
+If you want to use namespace options for a channel - you must include namespace name into channel name with `:` as a separator:
+
+`public:messages`
+
+`gossips:messages`
+
+Where `public` and `gossips` are namespace names. Centrifugo looks for `:` symbol in the channel name, if found – extracts the namespace name, and applies namespace options while processing protocol commands from a client.
+
+All things together here is an example of `config.json` which includes some top-level channel options set and has 2 additional channel namespaces configured:
+
+```json title="config.json"
+{
+    "token_hmac_secret_key": "very-long-secret-key",
+    "api_key": "secret-api-key",
+    "anonymous": true,
+    "publish": true,
+    "presence": true,
+    "join_leave": true,
+    "history_size": 10,
+    "history_ttl": "30s",
+    "namespaces": [
+        {
+          "name": "public",
+          "publish": true,
+          "anonymous": true,
+          "history_size": 10,
+          "history_ttl": "300s",
+          "recover": true
+        },
+        {
+          "name": "gossips",
+          "presence": true,
+          "join_leave": true
+        }
+    ]
+}
+```
+
+* Channel `news` will use globally defined channel options.
+* Channel `public:news` will use `public` namespace options.
+* Channel `gossips:news` will use `gossips` namespace options.
+* Channel `xxx:hello` will result into subscription error since there is no `xxx` namespace defined inn configuration above.
+
+**Channel namespaces also work with private channels and user-limited channels**. For example, if you have a namespace called `dialogs` then the private channel can be constructed as `$dialogs:gossips`, user-limited channel can be constructed as `dialogs:dialog#1,2`.
+
+:::note
+
+There is no inheritance in channel options and namespaces – for example, you defined `presence: true` on a top level of configuration and then defined a namespace – that namespace won't have online presence enabled - you must enable it for a namespace explicitly. 
+
+:::
 
 ## Channel options
 
@@ -210,6 +271,32 @@ If client subscribes to a user-limited channel while this option is off then ser
 
 :::
 
+### channel_regex
+
+`channel_regex` (string, default `""`) – is an option to set a regular expression for channels allowed in the namespace. By default Centrifugo does not limit channel name variations. For example, if you have a namespace `chat`, then channel names inside this namespace are not really limited, it can be `chat:index`, `chat:1`, `chat:2`, `chat:zzz` and so on. But if you want to be strict and know possible channel patterns you can use `channel_regex` option. This is especially useful in namespaces where all clients can subscribe to channels. 
+
+For example, let's only allow digits after `chat:` for channel names in a `chat` namespace:
+
+```json
+{
+  "namespaces": [
+    {
+      "name": "chat",
+      "allow_subscribe_for_client": true,
+      "channel_regex": "^[\d+]$"
+    }
+  ]
+}
+```
+
+:::danger
+
+Note, that we are skipping `chat:` part in regex. Since namespace prefix is the same for all channels in a namespace we only match the rest (after the prefix) of channel name.
+
+:::
+
+Channel regex only checked for client-side subscriptions, if you are using server-side subscriptions Centrifugo won't check the regex.
+
 ### proxy_subscribe
 
 `proxy_subscribe` (boolean, default `false`) – turns on subscribe proxy, more info in [proxy chapter](proxy.md)
@@ -226,7 +313,7 @@ If client subscribes to a user-limited channel while this option is off then ser
 
 `publish_proxy_name` (string, default `""`) – turns on publish proxy when [granular proxy mode](proxy.md#granular-proxy-mode) is used. Note that `proxy_publish` option defined above is ignored in granular proxy mode.
 
-### Config example
+## Channel config examples
 
 Let's look at how to set some of these options in a config. In this example we turning on presence, history features, forcing publication recovery. Also allowing all client connections (including anonymous users) to subscribe to channels and call publish, history, presence APIs if subscribed.
 
@@ -247,247 +334,3 @@ Let's look at how to set some of these options in a config. In this example we t
 ```
 
 Here we set channel options on config top-level – these options will affect channels without namespace. Below we describe namespaces and how to define channel options for a namespace.
-
-## Channel namespaces
-
-It's possible to configure a list of channel namespaces. Namespaces are optional but very useful. 
-
-A namespace allows setting custom options for channels starting with the namespace name. This provides great control over channel behavior so you have a flexible way to define different channel options for different real-time features in the application.
-
-Namespace has a name, and the same channel options (with the same defaults) as described above.
-
-* `name` - unique namespace name (name must consist of letters, numbers, underscores, or hyphens and be more than 2 symbols length i.e. satisfy regexp `^[-a-zA-Z0-9_]{2,}$`).
-
-If you want to use namespace options for a channel - you must include namespace name into channel name with `:` as a separator:
-
-`public:messages`
-
-`gossips:messages`
-
-Where `public` and `gossips` are namespace names. Centrifugo looks for `:` symbol in the channel name, if found – extracts the namespace name, and applies namespace options while processing protocol commands from a client.
-
-All things together here is an example of `config.json` which includes some top-level channel options set and has 2 additional channel namespaces configured:
-
-```json title="config.json"
-{
-    "token_hmac_secret_key": "very-long-secret-key",
-    "api_key": "secret-api-key",
-    "anonymous": true,
-    "publish": true,
-    "presence": true,
-    "join_leave": true,
-    "history_size": 10,
-    "history_ttl": "30s",
-    "namespaces": [
-        {
-          "name": "public",
-          "publish": true,
-          "anonymous": true,
-          "history_size": 10,
-          "history_ttl": "300s",
-          "recover": true
-        },
-        {
-          "name": "gossips",
-          "presence": true,
-          "join_leave": true
-        }
-    ]
-}
-```
-
-* Channel `news` will use globally defined channel options.
-* Channel `public:news` will use `public` namespace options.
-* Channel `gossips:news` will use `gossips` namespace options.
-* Channel `xxx:hello` will result into subscription error since there is no `xxx` namespace defined inn configuration above.
-
-**Channel namespaces also work with private channels and user-limited channels**. For example, if you have a namespace called `dialogs` then the private channel can be constructed as `$dialogs:gossips`, user-limited channel can be constructed as `dialogs:dialog#1,2`.
-
-:::note
-
-There is no inheritance in channel options and namespaces – for example, you defined `presence: true` on a top level of configuration and then defined a namespace – that namespace won't have online presence enabled - you must enable it for a namespace explicitly. 
-
-:::
-
-## Channel permissions for server API
-
-When using Centrifugo server API you don't need to think about channel permissions at all – everything is allowed. In server API case, request to Centrifugo must be issued by your application backend – so you have all the power to check any required permissions before issuing API request to Centrifugo.
-
-The situation is different when we are talking about client real-time API. See details below.
-
-## Channel permissions for client API
-
-In order to configure which client (i.e. connection established using one of supported bidirectional real-time transports) can subscribe to channels and call publish, history and presence real-time APIs Centrifugo provides several ways to configure the desired behavior.
-
-Let's start from looking at Centrifugo subscribe permission model.
-
-### Subscribe permission model
-
-By default, client's attempt to subscribe on a channel will be rejected by a server with `103: permission denied` error. There are several approaches how to control channel subscribe permissions:
-
-* [Provide subscription token](#provide-subscription-token)
-* [Configure subscribe proxy](#configure-subscribe-proxy)
-* [Subscribe capabilities in connection token](#subscribe-capabilities-in-connection-token)
-* [Subscribe capabilities in connect proxy](#subscribe-capabilities-in-connect-proxy)
-* [Use user-limited channels](#use-user-limited-channels)
-* [Use subscribe_allowed_for_client namespace option](#use-subscribeallowedforclient-namespace-option)
-
-Below, we are describing those in detail.
-
-#### Provide subscription token
-
-A client can provide a subscription token in subscribe request. See the format of the token.
-
-If client provides a valid token then subscription will be accepted. Token can additionally grant `publish`, `history` and `presence` permissions to a client.
-
-:::caution
-
-For namespaces with `allow_subscribe_for_client` option ON Centrifugo does not allow subscribing on channels starting with `private_channel_prefix` (`$` by default) without token. This limitation exists to help users migrate to Centrifugo v4 without security risks. You can disable this limitation by setting `private_channel_prefix` option to `""` (empty string).
-
-:::
-
-#### Configure subscribe proxy
-
-If client subscribes on a namespace with configured subscribe proxy then depending on proxy response subscription will be accepted or not.
-
-If a namespace has configured subscribe proxy, but user came with a token – then subscribe proxy is not used, we are relying on token in this case. If a namespace has subscribe proxy, but user subscribes on a user-limited channel – then subscribe proxy is not used also.
-
-#### Use user-limited channels
-
-If client subscribes on a user-limited channel and there is a user ID match then subscription will be accepted.
-
-:::caution
-
-User-limited channels must be enabled in a namespace using `enable_user_limited_channels` option.
-
-:::
-
-#### Subscribe capabilities in connection token
-
-Connection token can contain a capability object to allow user subscribe to channels.
-
-#### Subscribe capabilities in connect proxy
-
-Connect proxy can return capability object to allow user subscribe to channels.
-
-#### Use allow_subscribe_for_client namespace option
-
-`allow_subscribe_for_client` allows all connections to subscribe on all channels in a namespace.
-
-:::caution
-
-Turning this option on effectively makes namespace public – no subscribe permissions will be checked. Make sure this is really what you want in terms of channels security. 
-
-:::
-
-### Publish permission model
-
-:::tip
-
-In idiomatic Centrifugo use case data should be published to channels from the application backend (over server API). In this case backend can validate data, save it into persistent storage before publishing in real-time towards connections. When publishing from the client-side backend does not receive publication data at all – it just goes through Centrifugo (except using publish proxy). There are cases when direct publications from the client-side are desired (like typing indicators in chat applications) though.
-
-:::
-
-By default, client's attempt to publish data into a channel will be rejected by a server with `103: permission denied` error. There are several approaches how to control channel publish permissions:
-
-* [Publish capabilities in connection token](#publish-capabilities-in-connection-token)
-* [Publish capability in subscription token](#publish-capability-in-subscription-token)
-* [Publish capabilities in connect proxy](#publish-capabilities-in-connect-proxy)
-* [Publish capability in subscribe proxy](#publish-capability-in-subscribe-proxy)
-* [Configure publish proxy](#configure-publish-proxy)
-* [Use allow_publish_for_subscriber namespace option](#use-allowpublishforsubscriber-namespace-option)
-* [Use allow_publish_for_client namespace option](#use-allowpublishforclient-namespace-option)
-
-#### Publish capabilities in connection token
-
-Connection token can contain a capability object to allow client to publish to channels.
-
-#### Publish capability in subscription token
-
-Connection token can contain a capability object to allow client to publish to a channel.
-
-#### Publish capabilities in connect proxy
-
-Connect proxy can return capability object to allow client publish to certain channels.
-
-#### Publish capability in subscribe proxy
-
-Subscribe proxy can return capability object to allow subscriber publish to channel.
-
-#### Use allow_publish_for_client namespace option
-
-`allow_publish_for_client` allows publications to channels of a namespace for all client connections. 
-
-#### Use allow_publish_for_subscriber namespace option
-
-`allow_publish_for_subscriber` allows publications to channels of a namespace for all connections subscribed on a channel they want to publish data into.
-
-#### Configure publish proxy
-
-If client publishes to a namespace with configured publish proxy then depending on proxy response publication will be accepted or not.
-
-Configured publish proxy always used??? (what if user has permission in token or allow_publish_for_client?)
-
-### History permission model
-
-By default, client's attempt to call history from a channel (with history retention configured) will be rejected by a server with `103: permission denied` error. There are several approaches how to control channel history permissions.
- 
-#### History capabilities in connection token
-
-Connection token can contain a capability object to allow user call history for channels.
-
-#### History capabilities in subscription token
-
-Connection token can contain a capability object to allow user call history from a channel.
-
-#### History capabilities in connect proxy
-
-Connect proxy can return capability object to allow client call history from certain channels.
-
-#### History capability in subscribe proxy response
-
-Subscribe proxy can return capability object to allow subscriber call history from channel.
-
-#### Use allow_history_for_subscriber namespace option
-
-`allow_history_for_subscriber` allows history requests to all channels in a namespace for all client connections subscribed on a channel they want to call history for.
-
-#### Use allow_history_for_client namespace option
-
-`allow_history_for_client` allows history requests to all channels in a namespace for all client connections.
-
-### Presence permission model
-
-By default, client's attempt to call presence from a channel (with channel presence configured) will be rejected by a server with `103: permission denied` error. There are several approaches how to control channel presence permissions.
-
-#### Presence capabilities in connection token
-
-Connection token can contain a capability object to allow user call presence for channels.
-
-#### Presence capabilities in subscription token
-
-Connection token can contain a capability object to allow user call presence of a channel.
-
-#### Presence capabilities in connect proxy
-
-Connect proxy can return capability object to allow client call presence from certain channels.
-
-#### Presence capability in subscribe proxy response
-
-Subscribe proxy can return capability object to allow subscriber call presence from channel.
-
-#### Use allow_presence_for_subscriber namespace option
-
-`allow_presence_for_subscriber` allows presence requests to all channels in a namespace for all client connections subscribed on a channel they want to call presence for.
-
-#### Use allow_presence_for_client namespace option
-
-`allow_presence_for_client` allows presence requests to all channels in a namespace for all client connections. 
-
-### Positioning permission model
-
-Server can whether turn on positioning for all channels in a namespace using `"force_positioning": true` option or client can create positioned subscriptions (but in this case a client should have `history` capability).
-
-### Recovery permission model
-
-Server can whether turn on automatic recovery for all channels in a namespace using `"force_recovery": true` option or client can create recoverable subscriptions (but in this case a client should have `history` capability).

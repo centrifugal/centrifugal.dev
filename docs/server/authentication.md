@@ -1,6 +1,6 @@
 ---
 id: authentication
-title: Client authentication
+title: Client token authentication
 ---
 
 To authenticate incoming connection (client) Centrifugo can use [JSON Web Token](https://jwt.io/introduction) (JWT) passed from the client-side. This way Centrifugo may know the ID of user in your application, also application can pass additional data to Centrifugo inside JWT claims. This chapter describes this authentication mechanism.
@@ -46,9 +46,9 @@ To add ECDSA public key (must be PEM encoded string) add `token_ecdsa_public_key
 }
 ```
 
-## Claims
+## Connection JWT claims
 
-Centrifugo uses the following claims in a JWT: `sub`, `exp`, `iat`, `jti`, `info`, `b64info`, `channels`, `subs`.
+For connection JWT Centrifugo uses the some standart claims defined in [rfc7519](https://datatracker.ietf.org/doc/html/rfc7519), also some custom Centrifugo-specific.
 
 ### sub
 
@@ -92,7 +92,7 @@ But you can force this check by setting `token_audience` string option:
 
 :::caution
 
-Setting `token_audience` will also affect subscription tokens (used for [private channels](private_channels.md)).
+Setting `token_audience` will also affect subscription tokens (used for [channel token authorization](channel_token_auth.md)).
 
 :::
 
@@ -112,7 +112,7 @@ But you can force this check by setting `token_issuer` string option:
 
 :::caution
 
-Setting `token_issuer` will also affect subscription tokens (used for [private channels](private_channels.md)).
+Setting `token_issuer` will also affect subscription tokens (used for [channel token authorization](channel_token_auth.md)).
 
 :::
 

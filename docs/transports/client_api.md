@@ -210,11 +210,10 @@ In this case `on('disconnected')` will be called. You can call `connect()` again
 
 There are several common options available when creating Client instance.
 
-* option to set connection token
+* option to set connection token and callback to get connection token upon expiration (see below [mode details](#client-connection-token))
 * option to set connect data
 * option to configure operation timeout
 * tweaks for reconnect backoff algorithm (min delay, max delay)
-* configure private channel prefix
 * configure max delay of server pings (to detect broken connection)
 * configure headers to send in WebSocket upgrade request (except `centrifuge-js`)
 * configure client name and version for analytics purpose
@@ -242,7 +241,7 @@ If the token sets connection expiration then the client SDK will keep the token 
 An example:
 
 ```javascript
-function getConnectionToken(url, ctx) {
+function getToken(url, ctx) {
     return new Promise((resolve, reject) => {
         fetch(url, {
             method: 'POST',
@@ -251,7 +250,7 @@ function getConnectionToken(url, ctx) {
         })
         .then(res => {
             if (!res.ok) {
-                throw new Error(`Unexpected status code ${res.statusCode}`);
+                throw new Error(`Unexpected status code ${res.status}`);
             }
             return res.json();
         })
@@ -259,7 +258,7 @@ function getConnectionToken(url, ctx) {
             resolve(data.token);
         })
         .catch(err => {
-            reject();
+            reject(err);
         });
     });
 }
@@ -268,7 +267,7 @@ const client = new Centrifuge(
     'ws://localhost:8000/connection/websocket',
     {
         token: 'JWT-GENERATED-ON-BACKEND-SIDE',
-        getConnectionToken: function (ctx) {
+        getToken: function (ctx) {
             return getToken('/centrifuge/connection_token', ctx);
         }
     }
@@ -277,7 +276,7 @@ const client = new Centrifuge(
 
 :::tip
 
-If initial token is not provided, but `getConnectionToken` is specified – then SDK should assume that developer wants to use token authentication. In this case SDK should attempt to get a connection token before establishing an initial connection.
+If initial token is not provided, but `getToken` is specified – then SDK should assume that developer wants to use token authentication. In this case SDK should attempt to get a connection token before establishing an initial connection.
 
 :::
 
@@ -645,7 +644,7 @@ The recovery process result – i.e. whether all missed publications recovered o
 
 There are several common options available when creating Subscription instance.
 
-* option to set subscription `token` (for private channels, see [below more details](#subscription-token))
+* option to set subscription token and callback to get subscription token upon expiration (see [below more details](#subscription-token))
 * option to set subscription `data` (attached to every subscribe/resubscribe request)
 * options to tweak resubscribe backoff algorithm
 * option to start Subscription `since` known Stream Position (i.e. attempt recovery on first subscribe)
@@ -663,7 +662,7 @@ There are several common options available when creating Subscription instance.
 
 ## Subscription token
 
-All SDKs support subscribing to Centrifugo private channels with JWT. Private channel subscription token can be set as a Subscription option upon initialization. Example:
+All SDKs support subscribing to Centrifugo channels with JWT. Channel subscription token can be set as a Subscription option upon initialization. Example:
 
 ```javascript
 const sub = centrifuge.newSubscription(channel, {
@@ -686,7 +685,7 @@ function getToken(url, ctx) {
         })
         .then(res => {
             if (!res.ok) {
-                throw new Error(`Unexpected status code ${res.statusCode}`);
+                throw new Error(`Unexpected status code ${res.status}`);
             }
             return res.json();
         })
@@ -694,30 +693,28 @@ function getToken(url, ctx) {
             resolve(data.token);
         })
         .catch(err => {
-            reject();
+            reject(err);
         });
     });
 }
 
-const client = new Centrifuge(
-    'ws://localhost:8000/connection/websocket',
-    {
-        token: 'JWT-GENERATED-ON-BACKEND-SIDE',
-        getConnectionToken: function (ctx) {
-            return getToken('/centrifuge/connection_token', ctx);
-        },
-        getSubscriptionToken: function (ctx) {
-            // ctx has channel in the Subscription token case.
-            return getToken('/centrifuge/subscription_token', ctx);
-        },
-    }
-);
+const client = new Centrifuge('ws://localhost:8000/connection/websocket', {});
 
 const sub = centrifuge.newSubscription(channel, {
-    token: 'JWT-GENERATED-ON-BACKEND-SIDE'
+    token: 'JWT-GENERATED-ON-BACKEND-SIDE',
+    getToken: function (ctx) {
+        // ctx has channel in the Subscription token case.
+        return getToken('/centrifuge/subscription_token', ctx);
+    },
 });
 sub.subscribe();
 ```
+
+:::tip
+
+If initial token is not provided, but `getToken` is specified – then SDK should assume that developer wants to use token authorization for a channel subscription. In this case SDK should attempt to get a subscription token before initial subscribe.
+
+:::
 
 ## Server-side subscriptions
 

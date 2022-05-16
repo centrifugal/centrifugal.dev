@@ -1,9 +1,9 @@
 ---
 id: console_commands
-title: Console commands
+title: CLI commands
 ---
 
-Here is a list of console commands that come with Centrifugo executable.
+Here is a list of helpful command-line commands that come with Centrifugo executable.
 
 ## version command
 

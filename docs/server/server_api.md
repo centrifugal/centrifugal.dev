@@ -1,6 +1,6 @@
 ---
 id: server_api
-title: Server API
+title: Server API walkthrough
 ---
 
 Server API is a way to send various commands to Centrifugo. For example, server API allows publishing messages to channels, get server statistics, etc. There are two kinds of API available at the moment:

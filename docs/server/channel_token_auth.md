@@ -1,9 +1,9 @@
 ---
-id: private_channels
-title: Private channels
+id: channel_token_auth
+title: Channel token authorization
 ---
 
-In the [channels](channels.md) chapter we mentioned private channels. This chapter has more information about the private channel mechanism in Centrifugo.
+In the chapter about [channel permissions](channel_permissions.md) we mentioned that to subscribe on a channel client can provide subscription token. This chapter has more information about the subscription token mechanism in Centrifugo.
 
 All channels starting with `$` are considered private. Your backend should additionally provide a token for every subscription request to a private channel. This way you can control subscription permissions and only allow certain users to subscribe to a channel.
 
@@ -33,9 +33,9 @@ When you need to use namespace for a private channel then the name of a namespac
 
 Supported JWT algorithms for private subscription tokens match algorithms to create connection JWT. The same HMAC secret key, RSA, and ECDSA public keys set for authentication tokens are re-used to check subscription JWT.
 
-## Claims
+## Subscription JWT claims
 
-Private channel subscription token claims are: `client`, `channel`, `info`, `b64info`, `exp` and `expire_at`. What do they mean? Let's describe it in detail.
+For subscription JWT Centrifugo uses the some standart claims defined in [rfc7519](https://datatracker.ietf.org/doc/html/rfc7519), also some custom Centrifugo-specific.
 
 ### client
 
