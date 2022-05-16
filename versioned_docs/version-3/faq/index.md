@@ -149,9 +149,23 @@ The same relates to other channel options.
 
 ### Does Centrifugo support webhooks?
 
-[Proxy feature](../server/proxy.md) allows integrating Centrifugo with your session mechanism (via connect proxy) and provides a way to react to connection events (rpc, subscribe, publish). Also, it opens a road for bidirectional communication with RPC calls.
+[Proxy feature](../server/proxy.md) allows integrating Centrifugo with your session mechanism (via connect proxy) and provides a way to react to connection events (rpc, subscribe, publish). Also, it opens a road for bidirectional communication with RPC calls. And periodic connection refresh hooks are also there.
 
-A tricky thing is disconnects hooks. Centrifugo does not support them. There is no guarantee that the disconnect code will have a time to execute on the client-side (as the client can just switch off its device or simply lose internet connection). Also Centrifugo node can unexpectedly be killed. In both cases there is a chance that disconnect event will not be delivered to the backend. If you need to know that client disconnected and program your business logic around this fact then the only reasonable approach is periodically call your backend from the client-side and update user status somewhere on the backend (use Redis maybe). This is a pretty robust solution where you can't occasionally miss disconnect events. You can also utilize Centrifugo refresh proxy for the task of periodic backend pinging.
+Centrifugo does not support unsubscribe/disconnect hooks – see the reasoning below.
+
+### Why Centrifugo does not have disconnect hooks?
+
+Centrifugo does not support disconnect hooks at this point.
+
+First of all, there is no guarantee that the disconnect process will have a time to execute on the client-side (as the client can just switch off its device or simply lose internet connection). This means that a server may notice a connection loss with some delay (thanks to PING/PONG).
+
+Also, Centrifugo node can be unexpectedly killed. So there is a chance that disconnect event won't have a chance to be emitted to the backend.
+
+One more reason is that Centrifugo designed to scale to many concurrent connections. Think millions of them. As we [mentioned in our blog](https://centrifugal.dev/blog/2020/11/12/scaling-websocket#massive-reconnect) there are cases when all connections start reconnecting at the same time. In this case Centrifugo could potentially generate lots of disconnect events. To reduce the load during connect process Centrifugo has JWT authentication. Even if disconnect events were queued/rate-limited there could be situations when your app processes disconnect hook while user already reconnected and connect event processed. This is a racy situation which you will need to handle somehow (possibly based on unique client ID attached to each connection).
+
+If you need to know that client disconnected and program your business logic around this fact then the reasonable approach could be periodically call your backend from the client-side and update user status somewhere on the backend (use Redis maybe). This is a pretty robust solution where you can't occasionally miss disconnect events. You can also utilize Centrifugo refresh proxy for the task of periodic backend pinging. In this case you will notice that user (or particular client) left app with some delay – this may be a acceptable trade-off in many cases.
+
+Having said that, processing disconnect events may be reasonable – as a best-effort solution while taking into account everything said above. [Centrifuge](https://github.com/centrifugal/centrifuge) library for Go language (which is the core of Centrifugo) supports client disconnect callbacks on a server-side – so technically the possibility exists. If someone comes with a use case which definitely wins from having disconnect hooks in Centrifugo we are ready to discuss this and try to design a proper solution together.
 
 ### Is it possible to listen to join/leave events on the app backend side?
 
