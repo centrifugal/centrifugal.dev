@@ -17,6 +17,7 @@ module.exports = {
     "server/channels",
     "server/channel_permissions",
     "server/channel_token_auth",
+    "server/capabilities",
     "server/server_subs",
     "server/engines",
     "server/proxy",

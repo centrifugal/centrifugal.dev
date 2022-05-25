@@ -30,7 +30,7 @@ Client connection has 4 states:
 
 :::
 
-When a new Client is created it has a `disconnected` state. To connect to a server `connect()` method must be called. After calling connect Client moves to the `connecting` state. If a Client can't connect to a server it attempts to create a connection with an exponential backoff algorithm (with jitter). If a connection to a server is successful then the state becomes `connected`.
+When a new Client is created it has a `disconnected` state. To connect to a server `connect()` method must be called. After calling connect Client moves to the `connecting` state. If a Client can't connect to a server it attempts to create a connection with an exponential backoff algorithm (with [full jitter](https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/)). If a connection to a server is successful then the state becomes `connected`.
 
 If a connection is lost (due to a missing network for example, or due to reconnect advice received from a server, or due to some client-side error that can't be recovered without reconnecting) Client goes to the `connecting` state again. In this state Client tries to reconnect (again, with an exponential backoff algorithm).
 
