@@ -45,19 +45,4 @@ Centrifugo PRO is distributed under [commercial license](/pro_license) which is 
 
 ## Pricing
 
-To run without limits Centrifugo PRO requires a license key that can be purchased. At this moment we form an invoice for a payment with a payment link manually. Please contact over `centrifugal.dev@gmail.com` to buy a license key or request a trial license key. This process may be automated in the future.
-
-The license key prices have the following gradations:
-
-* Free trial key: a 2-month key to test out PRO features without sandbox limitations (**Centrifugo stops working after this key expires**)
-* <em>950$</em> for 1 year license key
-
-License keys are bound to a unique owner. License key owner can use it in any amount of own projects, but must not share the license key publicly (can be blocked otherwise).
-
-:::info License key expiration
-
-The license key has an expiration date. After the expiration date, Centrifugo PRO continues to work with all PRO features available but you won't be able to update to a newer Centrifugo version (released after key expiration date) until buying a new license key. This means you should not worry that an expired license key will result in a broken service at some point. You will also be able to restart Centrifugo without any problem. The only exception is the trial license key which is not suitable for production usage.
-
-:::
-
-Also, keep in mind that there is no refunding process for purchased license keys.
+At this point we are not issuing license keys for Centrifugo PRO as we are in the process of defining the pricing strategy for it. Please contact us over `centrifugal.dev@gmail.com`, we can add you to the list of interested customers and will appreciate if you share which features you are mostly interested in.
