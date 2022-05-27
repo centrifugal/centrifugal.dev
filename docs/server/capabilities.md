@@ -20,37 +20,69 @@ For example, here we are issuing permissions to subscribe on channel `news` and 
 {
     "caps": [
         {
-            "channel": "news",
+            "channels": ["news", "user_42"],
             "allow": ["sub"]
-        },
-        {
-            "channel": "user_42",
-            "allow": ["sub"]
-        },
+        }
     ]
 }
 ```
 
 ### Caps processing behavior
 
-Centrifugo processes caps objects till it finds a match to a channel. At this point it applies permissions in the matched object and stops processing remaining caps. If no match found – then `103 permission denied` returned to a client (of course if namespace does not have other permission-related options related). Let's consider example like this:
+Centrifugo processes caps objects till it finds a match to a channel. At this point it applies permissions in the matched object and stops processing remaining caps. If no match found – then `103 permission denied` returned to a client (of course if namespace does not have other permission-related options enabled). Let's consider example like this:
 
 ```json
 {
     "caps": [
         {
-            "channel": "news",
+            "channels": ["news"],
             "allow": ["pub"]
         },
         {
-            "channel": "news",
+            "channels": ["news"],
             "allow": ["sub"]
         },
     ]
 }
 ```
 
-Here we have two entries for channel `news`, but when client subscribes on `news` only the first entry will be taken into considiration by Centrifugo – so Subscription attempt will be rejected (since first cap object does not have `sub` capability).
+Here we have two entries for channel `news`, but when client subscribes on `news` only the first entry will be taken into considiration by Centrifugo – so Subscription attempt will be rejected (since first cap object does not have `sub` capability). In real life you don't really want to have cap objects with identical channels – but below we will introduce wildcard matching where understanding how caps processed becomes important.
+
+Another example:
+
+```json title="WRONG!"
+{
+    "caps": [
+        {
+            "channels": ["news", "user_42"],
+            "allow": ["sub"]
+        },
+        {
+            "channels": ["user_42"],
+            "allow": ["pub", "hst", "prs"]
+        },
+    ]
+}
+```
+
+One could expect that client will have `["sub", "pub", "hst", "prs"]` capabilities for a channel `user_42`. But it's not true since Centrifugo processes caps objects and channels inside caps object in order – it finds a match to `user_42` in first caps object, it contains only `"sub"` capability, processing stops. So user can subscribe to a channel, but can not publish, can not call history and presence APIs even though those capabilities are mentioned in `caps` object. The correct way to give all caps to the channel `user_42` would be to split channels into different caps objects:
+
+```json title="CORRECT"
+{
+    "caps": [
+        {
+            "channels": ["news"],
+            "allow": ["sub"]
+        },
+        {
+            "channels": ["user_42"],
+            "allow": ["sub", "pub", "hst", "prs"]
+        },
+    ]
+}
+```
+
+The processing behaves like this to avoid potential problems with possibly conflicting matches (mostly when using wildcard and regex matching – see below) and still allow overriding capabilities for specific channels.
 
 ### Expiration considirations
 
@@ -67,25 +99,6 @@ If at some point you need to revoke some capability from a client:
 * In case of using connect proxy – you can disconnect a user (or client) with a reconnect code. New capabilities will be asked upon reconnection.
 * In case of using token auth – revoke token (Centrifugo PRO feature) and disconnect user (or client) with reconnect code. Upon reconnection user will receive an error that token revoked and will try to load a new one.
 
-### Example: different caps
-
-In this example we are issuing permissions to subscribe on channel `news` and channel `user_42` to a client, but for channel `user_42` we additionally give capabilities to publish, call presence and history API.
-
-```json
-{
-    "caps": [
-        {
-            "channel": "news",
-            "allow": ["sub"]
-        },
-        {
-            "channel": "user_42",
-            "allow": ["sub", "pub", "hst", "prs"]
-        },
-    ]
-}
-```
-
 ### Example: wildcard match
 
 It's possible to use wildcards in channel resource names. For example, let's give a permission to subscribe on all channels in `news` namespace.
@@ -94,13 +107,19 @@ It's possible to use wildcards in channel resource names. For example, let's giv
 {
     "caps": [
         {
-            "channel": "news:*",
+            "channels": ["news:*"],
             "match": "wildcard",
             "allow": ["sub"]
         }
     ]
 }
 ```
+
+:::note
+
+Match type is used for all `channels` in caps object. If you need different matching behavior for different channels then split them on different caps objects.
+
+:::
 
 ### Example: regex match
 
@@ -110,7 +129,7 @@ Or regex:
 {
     "caps": [
         {
-            "channel": "^news:[.*]$",
+            "channels": ["^posts_[\d]+$"],
             "match": "regex",
             "allow": ["sub"]
         }
@@ -126,12 +145,12 @@ Of course it's possible to combine different types of match inside one `caps` ar
 {
     "caps": [
         {
-            "channel": "^news:[.*]$",
+            "channels": ["^posts_[\d]+$"],
             "match": "regex",
             "allow": ["sub"]
         }
         {
-            "channel": "user_42",
+            "channels": ["user_42"],
             "allow": ["sub"]
         }
     ]
@@ -146,13 +165,19 @@ Let's look how to allow all permissions to a client:
 {
     "caps": [
         {
-            "channel": "*",
+            "channels": ["*"],
             "match": "wildcard",
             "allow": ["sub", "pub", "hst", "prs"]
         }
     ]
 }
 ```
+
+:::danger Full access warn
+
+Should we mention that giving full access to a client is something to wisely consider? 🤔
+
+:::
 
 ## Subscription capabilities
 

@@ -16,7 +16,7 @@ Centrifugo PRO includes the following features:
 * [Operation throttling](./throttling.md) to protect client API from misusing and frontend bugs.
 * [User connections API](./user_connections.md) to query for all active user sessions with additional information.
 * [User blocking API](./user_block.md) to block/unblock abusive users by ID.
-* [JWT revoking and invalidation](./token_revocation.md) to revoking tokens by token ID (JTI) and invalidating user's tokens on issue time basis.
+* [JWT revoking and invalidation](./token_revocation.md) to revoke tokens by token ID (JTI) and invalidate user's tokens on issue time basis.
 * [Faster performance](./performance.md) to reduce resource usage on server side.
 * [Singleflight](./singleflight.md) for online presence and history to reduce load on the broker.
 * Near real-time [CPU and RSS memory usage stats](./process_stats.md).
