@@ -5,29 +5,27 @@ title: Channel token authorization
 
 In the chapter about [channel permissions](channel_permissions.md) we mentioned that to subscribe on a channel client can provide subscription token. This chapter has more information about the subscription token mechanism in Centrifugo.
 
-All channels starting with `$` are considered private. Your backend should additionally provide a token for every subscription request to a private channel. This way you can control subscription permissions and only allow certain users to subscribe to a channel.
+Subscription token is also JWT. Very similar to [connection token](authentication.md), but with specific custom claims.
 
-The way how this token is obtained varies depending on a client connector implementation. 
+Valid subscription token passed to Centrifugo in subscribe request will tell Centrifugo that subscription must be accepted.
 
-For example, in Javascript client, AJAX POST request is automatically sent to `/centrifuge/subscribe` endpoint on every private channel subscription attempt. Other client libraries provide a hook for your custom code that will obtain a private channel subscription token from the application backend (so you need manually implement HTTP call to your backend for example).
-
-Private channel subscription token is also JWT (like connection JWT described in [authentication chapter](authentication.md)). But it has its specific claims.
+The way how this token is obtained on the frontend side varies depending on a client SDK implementation. 
 
 :::tip
 
-Connection token and private channel subscription token are both JWT and both can be generated with any JWT library.
-
-:::
-
-:::note
-
-Even when authorizing a subscription to a private channel with a private subscription JWT you should set a proper connection JWT for a client as it provides user authentication details to Centrifugo.
+Connection token and subscription token are both JWT and both can be generated with any JWT library.
 
 :::
 
 :::tip
 
-When you need to use namespace for a private channel then the name of a namespace should be written after a `$` symbol, i.e. if you have a namespace name `chat` – then the private channel which belongs to that namespace must be written as sth like `$chat:stream`.
+Even when authorizing a subscription to a channel with a subscription JWT you should still set a proper connection JWT for a client as it provides user authentication details to Centrifugo.
+
+:::
+
+:::tip
+
+Just like connection JWT using subscription JWT with a reasonable expiration time may help you have a good level of security in channels and still survive massive reconnect scenario – when many clients resubscribe alltogether.
 
 :::
 
@@ -37,19 +35,15 @@ Supported JWT algorithms for private subscription tokens match algorithms to cre
 
 For subscription JWT Centrifugo uses the some standart claims defined in [rfc7519](https://datatracker.ietf.org/doc/html/rfc7519), also some custom Centrifugo-specific.
 
-### client
+### sub
 
-Required. Client ID which wants to subscribe on a channel (**string**).
+This is a standard JWT claim which must contain an ID of the current application user (**as string**). 
 
-:::note
-
-Centrifugo server generates a unique client ID for each incoming connection. This client ID regenerated for a client on every reconnect. You must use this client ID for a private channel subscription token. If you are using [centrifuge-js](https://github.com/centrifugal/centrifuge-js) library then Client ID and channels that the user wants to subscribe will be automatically added to AJAX POST request to application backend. In other cases refer to specific client documentation (in most cases you will have client ID and channel in private subscription event context).
-
-:::
+The value must match a user in connection JWT – since it's the same real-time connection. The missing claim will mean that token issued for anonymous user (i.e. with empty user ID).
 
 ### channel
 
-Required. Channel that client tries to subscribe to (**string**).
+Required. Channel that client tries to subscribe to with this token (**string**).
 
 ### info
 
@@ -78,25 +72,29 @@ Optional. By default, Centrifugo looks on `exp` claim to both check token expira
 
 ### aud
 
-Handled since Centrifugo v3.2.0
-
 By default, Centrifugo does not check JWT audience ([rfc7519 aud](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.3) claim). But if you set `token_audience` option as described in [client authentication](authentication.md#aud) then audience for subscription JWT will also be checked.
 
 ### iss
 
-Handled since Centrifugo v3.2.0
-
 By default, Centrifugo does not check JWT issuer ([rfc7519 iss](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.1) claim). But if you set `token_issuer` option as described in [client authentication](authentication.md#iss) then issuer for subscription JWT will also be checked.
+
+### iat
+
+This is a UNIX time when token was issued (seconds). See [definition in RFC](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.6). This claim is optional but can be useful together with [Centrifugo PRO token revocation features](../pro/token_revocation.md).
+
+### jti
+
+This is a token unique ID. See [definition in RFC](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.7). This claim is optional but can be useful together with [Centrifugo PRO token revocation features](../pro/token_revocation.md).
 
 ## Example
 
-So to generate a subscription token you can use something like this in Python (assuming client ID is `xxxx-xxx-xxx-xxxx` and the private channel is `$gossips`):
+So to generate a subscription token you can use something like this in Python (assuming user ID is `42` and the channel is `gossips`):
 
 ```python
 import jwt
 
 token = jwt.encode({
-    "client": "xxxx-xxx-xxx-xxxx",
+    "sub": "42",
     "channel": "$gossips"
 }, "secret", algorithm="HS256").decode()
 

@@ -3,7 +3,9 @@ id: server_subs
 title: Server-side subscriptions
 ---
 
-Centrifugo clients can initiate a subscription to a channel by calling the `Subscribe` method of client protocol. In most cases, this is the most flexible approach since a client-side usually knows which channels it needs to consume at a concrete moment. But in some situations, all you need is to subscribe your connections to several channels on a server-side at the moment of connection establishment. So client effectively starts receiving publications from those channels without calling the `Subscribe` method at all.
+Centrifugo clients can initiate a subscription to a channel by calling the `subscribe` method of client API. In most cases, this is the most flexible and **recommended** approach since a client-side usually knows which channels it needs to consume at a concrete moment.
+
+But in some situations, all you need is to subscribe your connections to several channels on a server-side at the moment of connection establishment. So client effectively starts receiving publications from those channels without calling the `subscribe` API at all.
 
 You can set a list of channels for a connection in two ways at the moment:
 
@@ -14,9 +16,9 @@ You can set a list of channels for a connection in two ways at the moment:
 On the client-side, you need to listen for publications from server-side channels using a top-level client event handler. For example with `centrifuge-js`:
 
 ```javascript
-var centrifuge = new Centrifuge(address);
+const centrifuge = new Centrifuge(address);
 
-centrifuge.on('publish', function(ctx) {
+centrifuge.on('publication', function(ctx) {
     const channel = ctx.channel;
     const payload = JSON.stringify(ctx.data);
     console.log('Publication from server-side channel', channel, payload);

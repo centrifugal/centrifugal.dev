@@ -11,7 +11,13 @@ If you prefer to avoid using JWT then look at [the proxy feature](proxy.md). It 
 
 :::
 
-Upon connecting to Centrifugo client should provide a connection JWT with several predefined credential claims. If you've never heard about JWT before - refer to [jwt.io](https://jwt.io/) page.
+:::tip
+
+Using JWT auth can be nice in terms of massive reconnect scenario. Since authentication information is encoded directly in the token this may help to reduce load on your application session backend drastically. See in our [blog post](http://localhost:3000/blog/2020/11/12/scaling-websocket#massive-reconnect).
+
+:::
+
+Upon connecting to Centrifugo client should provide a connection JWT with several predefined credential claims. Here is a diagram:
 
 ![](/img/diagram_jwt_authentication.png)
 
@@ -74,7 +80,7 @@ This is a UNIX time when token was issued (seconds). See [definition in RFC](htt
 
 ### jti
 
-This is a token unique ID. See [definition in RFC](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.7). This claim is optional but can be useful together with [Centrifugo PRO token revocation features](../pro/token_revocation.md). 
+This is a token unique ID. See [definition in RFC](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.7). This claim is optional but can be useful together with [Centrifugo PRO token revocation features](../pro/token_revocation.md).
 
 ### aud
 
