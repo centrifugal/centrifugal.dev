@@ -31,7 +31,7 @@ Another command is `genconfig`:
 centrifugo genconfig -c config.json
 ```
 
-It will automatically generate the minimal required configuration file.
+It will automatically generate the minimal required configuration file. This is mostly useful for development.
 
 If any errors happen – program will exit with error message and exit code 1.
 
@@ -61,6 +61,8 @@ This way generated token will be valid for 1 hour.
 
 If any errors happen – program will exit with error message and exit code 1.
 
+This command is mostly useful for development.
+
 ## checktoken command
 
 One more command is `checktoken`:
@@ -72,3 +74,5 @@ centrifugo checktoken -c config.json <TOKEN>
 It will validate your connection JWT, so you can test it before using while developing application.
 
 If any errors happen or validation failed – program will exit with error message and exit code 1.
+
+This is mostly useful for development.
