@@ -33,7 +33,7 @@ Supported JWT algorithms for private subscription tokens match algorithms to cre
 
 ## Subscription JWT claims
 
-For subscription JWT Centrifugo uses the some standart claims defined in [rfc7519](https://datatracker.ietf.org/doc/html/rfc7519), also some custom Centrifugo-specific.
+For subscription JWT Centrifugo uses some standard claims defined in [rfc7519](https://datatracker.ietf.org/doc/html/rfc7519), also some custom Centrifugo-specific.
 
 ### sub
 
