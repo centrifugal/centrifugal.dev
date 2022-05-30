@@ -266,7 +266,7 @@ All things together here is an example of `config.json` which includes some top-
 * Channel `news` will use globally defined channel options.
 * Channel `public:news` will use `public` namespace options.
 * Channel `gossips:news` will use `gossips` namespace options.
-* Channel `xxx:hello` will result into subscription error since there is no `xxx` namespace defined inn configuration above.
+* Channel `xxx:hello` will result into subscription error since there is no `xxx` namespace defined in configuration above.
 
 **Channel namespaces also work with private channels and user-limited channels**. For example, if you have a namespace called `dialogs` then the private channel can be constructed as `$dialogs:gossips`, user-limited channel can be constructed as `dialogs:dialog#1,2`.
 
