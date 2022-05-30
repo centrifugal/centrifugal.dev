@@ -188,6 +188,10 @@ In case of already connected Client came across terminal condition (for example,
 
 Both `connecting` and `disconnected` events have numeric `code` and human-readable string `reason` in their context, so you can look at them and find the exact reason why the Client went to the `connecting` state or to the `disconnected` state.
 
+This diagram demonstrates possible Client state transitions:
+
+![Centrifugo scheme](/img/client_state.png)
+
 You can also listen for all errors happening internally (which are not reflected by state changes, for example, transport errors happening on initial connect, transport during reconnect, connection token refresh related errors, etc) while the client works by using `error` event:
 
 ```javascript
@@ -448,6 +452,10 @@ In case of connected and subscribed Client temporary lost a connection with a se
 `subscribed` -> `subscribing` (`on('subscribing')` called) -> `subscribed` (`on('subscribed')` called).
 
 Both `subscribing` and `unsubscribed` events have numeric `code` and human-readable string `reason` in their context, so you can look at them and find the exact reason why Subscription went to subscribing state or to unsubscribed state.
+
+This diagram demonstrates possible Subscription state transitions:
+
+![Centrifugo scheme](/img/sub_state.png)
 
 You can listen for all errors happening internally in Subscription (which are not reflected by state changes, for example, temporary subscribe errors, subscription token related errors, etc) by using `error` event:
 
