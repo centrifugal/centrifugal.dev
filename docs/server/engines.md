@@ -82,11 +82,11 @@ Boolean, default `false` - disable Redis TLS host verification.
 
 #### redis_prefix
 
-String, default `"centrifugo"` – custom prefix to use for channels and keys in Redis
+String, default `"centrifugo"` – custom prefix to use for channels and keys in Redis.
 
 #### redis_use_lists
 
-Boolean, default `false`) – turns on using Redis Lists instead of Stream data structure for keeping history (not recommended, keeping this for backwards compatibility mostly).
+Boolean, default `false` – turns on using Redis Lists instead of Stream data structure for keeping history (not recommended, keeping this for backwards compatibility mostly).
 
 #### history_meta_ttl
 
