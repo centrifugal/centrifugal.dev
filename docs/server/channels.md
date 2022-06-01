@@ -207,6 +207,10 @@ If Centrifugo detects a bad position of the client (i.e. potential message loss)
 
 `force_positioning` option must be used in conjunction with reasonably configured message history for a channel i.e. `history_size` and `history_ttl` **must be set** (because Centrifugo uses channel history to check client position in a stream).
 
+### allow_positioning
+
+`allow_positioning` (boolean, default `false`) - when `allow_positioning` is enabled then Centrifugo will only enable positioning in a channel if requested by a client (in subscription options).
+
 ### force_recovery
 
 `force_recovery` (boolean, default `false`) – when the `position` option is on Centrifugo forces all subscriptions in a namespace to be `recoverable`. When enabled Centrifugo will try to recover missed publications in channels after a client reconnects for some reason (bad internet connection for example). Also when the recovery feature is on Centrifugo automatically enables properties of the `force_positioning` option described above.
@@ -219,9 +223,13 @@ Not all real-time events require this feature turned on so think wisely when you
 
 :::
 
+### allow_recovery
+
+`allow_recovery` (boolean, default `false`) - when `allow_recovery` is enabled then Centrifugo will only enable recovery in a channel if requested by a client (in subscription options).
+
 ### allow_subscribe_for_client
 
-`allow_subscribe_for_client` (boolean, default `false`) – when on all clients will be able to subscribe to any channel in a namespace.
+`allow_subscribe_for_client` (boolean, default `false`) – when on all non-anonymous clients will be able to subscribe to any channel in a namespace. To additionally allow anonymous users to subscribe turn on `allow_subscribe_for_anonymous` (see below).
 
 :::caution
 
@@ -229,9 +237,9 @@ Turning this option on effectively makes namespace public – no subscribe permi
 
 :::
 
-### allow_anonymous_access
+### allow_subscribe_for_anonymous
 
-`allow_anonymous_access` (boolean, default `false`) – this option enables anonymous user access (i.e. for a user with an empty user ID). In most situations, your application works with authenticated users so every user has its unique user ID (set inside JWT `sub` claim or provided by backend when using connect proxy). But if you provide real-time features for public access you may need unauthenticated access to some channels. Turn on this option and use an empty string as a user ID. See also related global option [client_anonymous](./configuration.md#client_anonymous) which allows anonymous users to connect without JWT. 
+`allow_subscribe_for_anonymous` (boolean, default `false`) – turn on if anonymous clients should be able to subscribe on channels in a namespace.
 
 ### allow_publish_for_subscriber
 
@@ -245,6 +253,10 @@ Keep in mind that your application will never receive such messages. In an idiom
 
 But the `publish` option still can be useful to send something without backend-side validation and saving it into a database. This option can also be handy for demos and quick prototyping real-time app ideas.
 
+### allow_publish_for_anonymous
+
+`allow_publish_for_anonymous` (boolean, default `false`) – turn on if anonymous clients should be able to publish into channels in a namespace.
+
 ### allow_history_for_subscriber
 
 `allow_history_for_subscriber` (boolean, default `false`) – allows clients who subscribed on a channel to call history API from that channel.
@@ -253,6 +265,10 @@ But the `publish` option still can be useful to send something without backend-s
 
 `history_disable_for_client` (boolean, default `false`) – allows all clients to call history information in a namespace.
 
+### allow_history_for_anonymous
+
+`allow_history_for_anonymous` (boolean, default `false`) – turn on if anonymous clients should be able to call history from channels in a namespace.
+
 ### allow_presence_for_subscriber
 
 `allow_presence_for_subscriber` (boolean, default `false`) – allows clients who subscribed on a channel to call presence information from that channel.
@@ -260,6 +276,10 @@ But the `publish` option still can be useful to send something without backend-s
 ### allow_presence_for_client
 
 `allow_presence_for_client` (boolean, default `false`) – allows all clients to call presence information in a namespace.
+
+### allow_presence_for_client
+
+`allow_presence_for_client` (boolean, default `false`) – turn on if anonymous clients should be able to call presence from channels in a namespace.
 
 ### enable_user_limited_channels
 
