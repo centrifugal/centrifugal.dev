@@ -28,7 +28,7 @@ Below, we are describing those in detail.
 
 A client can provide a subscription token in subscribe request. See [the format of the token](channel_token_auth.md).
 
-If client provides a valid token then subscription will be accepted. Token can additionally grant `publish`, `history` and `presence` permissions to a client.
+If client provides a valid token then subscription will be accepted. In Centrifugo PRO subscription token can additionally grant `publish`, `history` and `presence` permissions to a client.
 
 :::caution
 
@@ -54,9 +54,13 @@ User-limited channels must be enabled in a namespace using `enable_user_limited_
 
 #### Subscribe capabilities in connection token
 
+**This is a Centrifugo PRO feature.**
+
 Connection token can contain a capability object to allow user subscribe to channels.
 
 #### Subscribe capabilities in connect proxy
+
+**This is a Centrifugo PRO feature.**
 
 Connect proxy can return capability object to allow user subscribe to channels.
 
@@ -90,17 +94,25 @@ By default, client's attempt to publish data into a channel will be rejected by 
 
 #### Publish capabilities in connection token
 
+**This is a Centrifugo PRO feature.**
+
 Connection token can contain a capability object to allow client to publish to channels.
 
 #### Publish capability in subscription token
+
+**This is a Centrifugo PRO feature.**
 
 Connection token can contain a capability object to allow client to publish to a channel.
 
 #### Publish capabilities in connect proxy
 
+**This is a Centrifugo PRO feature.**
+
 Connect proxy can return capability object to allow client publish to certain channels.
 
 #### Publish capability in subscribe proxy
+
+**This is a Centrifugo PRO feature.**
 
 Subscribe proxy can return capability object to allow subscriber publish to channel.
 
@@ -124,17 +136,25 @@ By default, client's attempt to call history from a channel (with history retent
  
 #### History capabilities in connection token
 
+**This is a Centrifugo PRO feature.**
+
 Connection token can contain a capability object to allow user call history for channels.
 
 #### History capabilities in subscription token
+
+**This is a Centrifugo PRO feature.**
 
 Connection token can contain a capability object to allow user call history from a channel.
 
 #### History capabilities in connect proxy
 
+**This is a Centrifugo PRO feature.**
+
 Connect proxy can return capability object to allow client call history from certain channels.
 
 #### History capability in subscribe proxy response
+
+**This is a Centrifugo PRO feature.**
 
 Subscribe proxy can return capability object to allow subscriber call history from channel.
 
@@ -152,13 +172,19 @@ By default, client's attempt to call presence from a channel (with channel prese
 
 #### Presence capabilities in connection token
 
+**This is a Centrifugo PRO feature.**
+
 Connection token can contain a capability object to allow user call presence for channels.
 
 #### Presence capabilities in subscription token
 
+**This is a Centrifugo PRO feature.**
+
 Connection token can contain a capability object to allow user call presence of a channel.
 
 #### Presence capabilities in connect proxy
+
+**This is a Centrifugo PRO feature.**
 
 Connect proxy can return capability object to allow client call presence from certain channels.
 
@@ -176,8 +202,8 @@ Subscribe proxy can return capability object to allow subscriber call presence f
 
 ### Positioning permission model
 
-Server can whether turn on positioning for all channels in a namespace using `"force_positioning": true` option or client can create positioned subscriptions (but in this case a client should have `history` capability).
+Server can whether turn on positioning for all channels in a namespace using `"force_positioning": true` option or client can create positioned subscriptions (in namespaces with `"allow_possitioning": true` or if client has `history` capability).
 
 ### Recovery permission model
 
-Server can whether turn on automatic recovery for all channels in a namespace using `"force_recovery": true` option or client can create recoverable subscriptions (but in this case a client should have `history` capability).
+Server can whether turn on automatic recovery for all channels in a namespace using `"force_recovery": true` option or client can create recoverable subscriptions (in namespaces with `"allow_possitioning": true` or if client has `history` capability).
