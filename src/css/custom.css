@@ -225,3 +225,10 @@ html[data-theme="dark"] .header-github-link:before {
 .blog-wrapper .container {
   margin-top: 1rem !important;
 }
+
+mark {
+  padding: 3px 7px;
+  background: #c65d5d;
+  border-radius: 2px;
+  color: white;
+}

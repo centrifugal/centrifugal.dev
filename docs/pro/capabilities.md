@@ -3,7 +3,7 @@ id: capabilities
 title: Channel capabilities
 ---
 
-At this point you know that Centrifugo allows configuring channel permissions on a per-namespace level. When creating a new real-time feature it's recommended to create a new namespace for it and configure permissions. To achieve a better channel permission control inside a namespace Centrifugo provides possibility to set capabilities on individual connection basis, or individual channel subscription basis.
+At this point you know that Centrifugo allows configuring channel permissions on a per-namespace level. When creating a new real-time feature it's recommended to create a new namespace for it and configure permissions. To achieve a better channel permission control inside a namespace Centrifugo PRO provides possibility to set capabilities on individual connection basis, or individual channel subscription basis.
 
 Let's start by looking at connection-wide capabilities first.
 

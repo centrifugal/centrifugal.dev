@@ -17,10 +17,10 @@ By default, client's attempt to subscribe on a channel will be rejected by a ser
 
 * [Provide subscription token](#provide-subscription-token)
 * [Configure subscribe proxy](#configure-subscribe-proxy)
-* [Subscribe capabilities in connection token](#subscribe-capabilities-in-connection-token)
-* [Subscribe capabilities in connect proxy](#subscribe-capabilities-in-connect-proxy)
 * [Use user-limited channels](#use-user-limited-channels)
 * [Use subscribe_allowed_for_client namespace option](#use-subscribeallowedforclient-namespace-option)
+* [Subscribe capabilities in connection token](#subscribe-capabilities-in-connection-token)
+* [Subscribe capabilities in connect proxy](#subscribe-capabilities-in-connect-proxy)
 
 Below, we are describing those in detail.
 
@@ -52,18 +52,6 @@ User-limited channels must be enabled in a namespace using `enable_user_limited_
 
 :::
 
-#### Subscribe capabilities in connection token
-
-**This is a Centrifugo PRO feature.**
-
-Connection token can contain a capability object to allow user subscribe to channels.
-
-#### Subscribe capabilities in connect proxy
-
-**This is a Centrifugo PRO feature.**
-
-Connect proxy can return capability object to allow user subscribe to channels.
-
 #### Use allow_subscribe_for_client namespace option
 
 `allow_subscribe_for_client` allows all connections to subscribe on all channels in a namespace.
@@ -73,6 +61,18 @@ Connect proxy can return capability object to allow user subscribe to channels.
 Turning this option on effectively makes namespace public – no subscribe permissions will be checked. Make sure this is really what you want in terms of channels security. 
 
 :::
+
+#### Subscribe capabilities in connection token
+
+<p><mark>Centrifugo PRO only</mark></p>
+
+Connection token can contain a capability object to allow user subscribe to channels.
+
+#### Subscribe capabilities in connect proxy
+
+<p><mark>Centrifugo PRO only</mark></p>
+
+Connect proxy can return capability object to allow user subscribe to channels.
 
 ### Publish permission model
 
@@ -84,37 +84,13 @@ In idiomatic Centrifugo use case data should be published to channels from the a
 
 By default, client's attempt to publish data into a channel will be rejected by a server with `103: permission denied` error. There are several approaches how to control channel publish permissions:
 
+* [Configure publish proxy](#configure-publish-proxy)
+* [Use allow_publish_for_subscriber namespace option](#use-allowpublishforsubscriber-namespace-option)
+* [Use allow_publish_for_client namespace option](#use-allowpublishforclient-namespace-option)
 * [Publish capabilities in connection token](#publish-capabilities-in-connection-token)
 * [Publish capability in subscription token](#publish-capability-in-subscription-token)
 * [Publish capabilities in connect proxy](#publish-capabilities-in-connect-proxy)
 * [Publish capability in subscribe proxy](#publish-capability-in-subscribe-proxy)
-* [Configure publish proxy](#configure-publish-proxy)
-* [Use allow_publish_for_subscriber namespace option](#use-allowpublishforsubscriber-namespace-option)
-* [Use allow_publish_for_client namespace option](#use-allowpublishforclient-namespace-option)
-
-#### Publish capabilities in connection token
-
-**This is a Centrifugo PRO feature.**
-
-Connection token can contain a capability object to allow client to publish to channels.
-
-#### Publish capability in subscription token
-
-**This is a Centrifugo PRO feature.**
-
-Connection token can contain a capability object to allow client to publish to a channel.
-
-#### Publish capabilities in connect proxy
-
-**This is a Centrifugo PRO feature.**
-
-Connect proxy can return capability object to allow client publish to certain channels.
-
-#### Publish capability in subscribe proxy
-
-**This is a Centrifugo PRO feature.**
-
-Subscribe proxy can return capability object to allow subscriber publish to channel.
 
 #### Use allow_publish_for_client namespace option
 
@@ -130,19 +106,51 @@ If client publishes to a namespace with configured publish proxy then depending 
 
 Configured publish proxy always used??? (what if user has permission in token or allow_publish_for_client?)
 
+#### Publish capabilities in connection token
+
+<p><mark>Centrifugo PRO only</mark></p>
+
+Connection token can contain a capability object to allow client to publish to channels.
+
+#### Publish capability in subscription token
+
+<p><mark>Centrifugo PRO only</mark></p>
+
+Connection token can contain a capability object to allow client to publish to a channel.
+
+#### Publish capabilities in connect proxy
+
+<p><mark>Centrifugo PRO only</mark></p>
+
+Connect proxy can return capability object to allow client publish to certain channels.
+
+#### Publish capability in subscribe proxy
+
+<p><mark>Centrifugo PRO only</mark></p>
+
+Subscribe proxy can return capability object to allow subscriber publish to channel.
+
 ### History permission model
 
 By default, client's attempt to call history from a channel (with history retention configured) will be rejected by a server with `103: permission denied` error. There are several approaches how to control channel history permissions.
- 
+
+#### Use allow_history_for_subscriber namespace option
+
+`allow_history_for_subscriber` allows history requests to all channels in a namespace for all client connections subscribed on a channel they want to call history for.
+
+#### Use allow_history_for_client namespace option
+
+`allow_history_for_client` allows history requests to all channels in a namespace for all client connections.
+
 #### History capabilities in connection token
 
-**This is a Centrifugo PRO feature.**
+<p><mark>Centrifugo PRO only</mark></p>
 
 Connection token can contain a capability object to allow user call history for channels.
 
 #### History capabilities in subscription token
 
-**This is a Centrifugo PRO feature.**
+<p><mark>Centrifugo PRO only</mark></p>
 
 Connection token can contain a capability object to allow user call history from a channel.
 
@@ -154,39 +162,13 @@ Connect proxy can return capability object to allow client call history from cer
 
 #### History capability in subscribe proxy response
 
-**This is a Centrifugo PRO feature.**
+<p><mark>Centrifugo PRO only</mark></p>
 
 Subscribe proxy can return capability object to allow subscriber call history from channel.
-
-#### Use allow_history_for_subscriber namespace option
-
-`allow_history_for_subscriber` allows history requests to all channels in a namespace for all client connections subscribed on a channel they want to call history for.
-
-#### Use allow_history_for_client namespace option
-
-`allow_history_for_client` allows history requests to all channels in a namespace for all client connections.
 
 ### Presence permission model
 
 By default, client's attempt to call presence from a channel (with channel presence configured) will be rejected by a server with `103: permission denied` error. There are several approaches how to control channel presence permissions.
-
-#### Presence capabilities in connection token
-
-**This is a Centrifugo PRO feature.**
-
-Connection token can contain a capability object to allow user call presence for channels.
-
-#### Presence capabilities in subscription token
-
-**This is a Centrifugo PRO feature.**
-
-Connection token can contain a capability object to allow user call presence of a channel.
-
-#### Presence capabilities in connect proxy
-
-**This is a Centrifugo PRO feature.**
-
-Connect proxy can return capability object to allow client call presence from certain channels.
 
 #### Presence capability in subscribe proxy response
 
@@ -199,6 +181,24 @@ Subscribe proxy can return capability object to allow subscriber call presence f
 #### Use allow_presence_for_client namespace option
 
 `allow_presence_for_client` allows presence requests to all channels in a namespace for all client connections. 
+
+#### Presence capabilities in connection token
+
+<p><mark>Centrifugo PRO only</mark></p>
+
+Connection token can contain a capability object to allow user call presence for channels.
+
+#### Presence capabilities in subscription token
+
+<p><mark>Centrifugo PRO only</mark></p>
+
+Connection token can contain a capability object to allow user call presence of a channel.
+
+#### Presence capabilities in connect proxy
+
+<p><mark>Centrifugo PRO only</mark></p>
+
+Connect proxy can return capability object to allow client call presence from certain channels.
 
 ### Positioning permission model
 
