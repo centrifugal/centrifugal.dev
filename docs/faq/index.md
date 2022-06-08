@@ -181,6 +181,12 @@ You may consider using a separate service to deal with presence status informati
 
 The same is true for join/leave messages - as soon as you turn on join/leave events for a channel with many active subscribers each subscriber starts generating indiviaual join/leave events. This may result in many messages sent to each subscriber in a channel, drastically multiplying amount of messages traveling through the system. Especially when all clients reconnect simulteniously. So be careful and estimate the possible load. There is no magic, unfortunately.
 
+### Does Centrifugo support multitenancy?
+
+No, if you want to use Centrifugo with different projects then the recommended approach is to have different Centrifugo installations for each project. Multitenancy is better to solve on infrastructure level in case of Centrifugo.
+
+It's possible to share one Redis setup though by setting unique `redis_prefix`. But completely isolated setups are still better.
+
 ### I have not found an answer to my question here:
 
 Ask in our community rooms:

@@ -15,7 +15,7 @@ Centrifugo PRO includes the following features:
 * [Channel capabilities](./capabilities.md) for controlling channel permissions per connection or per subscription.
 * [User status](./user_status.md) feature to understand activity state for a list of users.
 * [Operation throttling](./throttling.md) to protect client API from misusing and frontend bugs.
-* [User connections API](./user_connections.md) to query for all active user sessions with additional information.
+* [Connections API](./connections.md) to filter and inspect active connections.
 * [User blocking API](./user_block.md) to block/unblock abusive users by ID.
 * [JWT revoking and invalidation](./token_revocation.md) to revoke tokens by token ID (JTI) and invalidate user's tokens on issue time basis.
 * [Faster performance](./performance.md) to reduce resource usage on server side.
@@ -32,11 +32,11 @@ PRO features can change with time. We reserve a right to move features from PRO 
 
 You can try out Centrifugo PRO for free. When you start Centrifugo PRO without license key then it's running in a sandbox mode. Sandbox mode limits the usage of Centrifigo PRO in several ways. For example:
 
-* Centrifugo handles up to 50 concurrent connections
+* Centrifugo handles up to 20 concurrent connections
 * up to 2 server nodes supported
 * up to 20 API requests per second allowed
 
-This mode should be enough for development, but must not be used in production environment.
+This mode should be enough for development and trying out PRO features, but must not be used in production environment as we can introduce additional limitations in the future.
 
 :::caution
 

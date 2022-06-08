@@ -184,7 +184,7 @@ module.exports = {
           /**
            * Title of the blog sidebar
            */
-          blogSidebarTitle: 'All our posts',
+          blogSidebarTitle: 'All blog posts',
           /**
            * URL route for the blog section of your site.
            * *DO NOT* include a trailing slash.

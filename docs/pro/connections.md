@@ -1,18 +1,11 @@
 ---
-id: user_connections
-title: User connections API
+id: connections
+title: Connections API
 ---
 
-Centrifugo PRO provides an additional API call `user_connections`. It allows getting all active sessions of the user (by user ID) without turning on presence feature for channels at all. It's also possible to attach any JSON payload to a connection which will be then visible in the result of `user_connections` call. The important thing is that this additional meta information won't be exposed to a client-side (unlike connection `info` for example).
+Centrifugo PRO provides an additional API call `connections`. It allows getting all active sessions of the user (by user ID) without turning on presence feature for channels at all. It's also possible to attach any JSON payload to a connection which will be then visible in the result of `connections` call. The important thing is that this additional meta information won't be exposed to a client-side (unlike connection `info` for example).
 
 This feature can be useful to manage active user sessions – for example in a messenger application. Users can look at a list of own current sessions and close some of them (possible with Centrifugo disconnect server API).
-
-Below is a feature showcase using admin web UI, but this call is available over HTTP or GRPC server API.
-
-<video width="100%" controls>
-  <source src="/img/user_connections.mp4" type="video/mp4" />
-  Sorry, your browser doesn't support embedded video.
-</video>
 
 Let's look at example. Generate a JWT for user 42:
 
@@ -41,13 +34,13 @@ In another terminal create one more connection:
 curl -X POST http://localhost:8000/connection/uni_http_stream --data '{"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MiIsImV4cCI6MTYyNzcxMzMzNX0.s3eOhujiyBjc4u21nuHkbcWJll4Um0QqGU3PF-6Mf7Y", "name": "terminal"}'
 ```
 
-Now let's call `user_connections` over HTTP API:
+Now let's call `connections` over HTTP API:
 
 ```bash
 curl --header "Content-Type: application/json" \
   --header "Authorization: apikey <API_KEY>" \
   --request POST \
-  --data '{"method": "user_connections", "params": {"user": "42"}}' \
+  --data '{"method": "connections", "params": {"user": "42"}}' \
   http://localhost:8000/api
 ```
 

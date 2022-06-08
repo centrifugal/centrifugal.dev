@@ -11,7 +11,6 @@ module.exports = {
   ],
   Guides: [
     "server/configuration",
-    "server/console_commands",
     "server/server_api",
     "server/authentication",
     "server/channels",
@@ -27,6 +26,7 @@ module.exports = {
     "server/load_balancing",
     "server/tls",
     "server/codes",
+    "server/console_commands",
   ],
   Transports: [
     "transports/overview",
@@ -69,7 +69,7 @@ module.exports = {
         "pro/capabilities",
         "pro/user_status",
         "pro/throttling",
-        "pro/user_connections",
+        "pro/connections",
         "pro/user_block",
         "pro/token_revocation",
         "pro/performance",
