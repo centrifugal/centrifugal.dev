@@ -64,34 +64,41 @@ Now let's create `index.html` file with our simple app:
     </head>
     <body>
         <div id="counter">-</div>
-        <script src="https://cdn.jsdelivr.net/gh/centrifugal/centrifuge-js@2.8.4/dist/centrifuge.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/centrifuge/3.0.0/centrifuge.js"></script>
         <script type="text/javascript">
-            const container = document.getElementById('counter')
-            const centrifuge = new Centrifuge("ws://localhost:8000/connection/websocket");
-            centrifuge.setToken("<TOKEN>");
+            const container = document.getElementById('counter');
             
-            centrifuge.on('connect', function(ctx) {
-                console.log("connected", ctx);
+            const centrifuge = new Centrifuge("ws://localhost:8000/connection/websocket", {
+              token: "<TOKEN>"
             });
 
-            centrifuge.on('disconnect', function(ctx) {
-                console.log("disconnected", ctx);
-            });
+            centrifuge.on('connecting', function(ctx) {
+                console.log(`connecting: ${ctx.code}, ${ctx.reason}`);
+            }).on('connected', function(ctx) {
+                console.log(`connected over ${ctx.transport}`);
+            }).on('disconnected', function(ctx) {
+                console.log(`disconnected: ${ctx.code}, ${ctx.reason}`);
+            }).connect();
 
-            centrifuge.subscribe("channel", function(ctx) {
+            const sub = centrifuge.newSubscription("channel");
+            sub.on('publication', function(ctx) {
                 container.innerHTML = ctx.data.value;
                 document.title = ctx.data.value;
-            });
-
-            centrifuge.connect();
+            }).on('subscribing', function(ctx) {
+                console.log(`subscribing: ${ctx.code}, ${ctx.reason}`);
+            }).on('subscribed', function(ctx) {
+                console.log('subscribed', ctx);
+            }).on('unsubscribed', function(ctx) {
+                console.log(`unsubscribed: ${ctx.code}, ${ctx.reason}`);
+            }).subscribe();
         </script>
     </body>
 </html>
 ```
 
-Note that we are using `centrifuge-js` 2.8.4 in this example, you better use its latest version at the moment of reading this tutorial.
+Note that we are using `centrifuge-js` 3.0.0 in this example, you better use its latest version at the moment of reading this tutorial.
 
-In `index.html` above we created an instance of a client (called `Centrifuge`) passing Centrifugo default WebSocket endpoint address to it, then we subscribed to a channel called `channel` and provided a callback function to process incoming real-time messages. Then we called `.connect()` method to start a WebSocket connection. 
+In `index.html` above we created an instance of a client (called `Centrifuge`) passing Centrifugo default WebSocket endpoint address to it, then we subscribed to a channel called `channel` and provided a callback function to process incoming real-time messages (publications). Then we called `.subscribe()` to initialte subscription and then `.connect()` method of client to start a WebSocket connection. 
 
 Now you need to serve this file with an HTTP server. In a real-world Javascript application, you will serve your HTML files with a web server of your choice – but for this simple example we can use a simple built-in Centrifugo static file server:
 
@@ -142,23 +149,52 @@ We still can not connect. That's because the client should provide a valid JWT (
 – where `-u` flag sets user ID. The output should be like this:
 
 ```
-HMAC SHA-256 JWT for user 123722 with expiration TTL 168h0m0s:
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM3MjIiLCJleHAiOjE1OTAxODYzMTZ9.YMJVJsQbK_p1fYFWkcoKBYr718AeavAk3MAYvxcMk0M
+HMAC SHA-256 JWT for user "123722" with expiration TTL 168h0m0s:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM3MjIiLCJleHAiOjE2NTUzNjAyODR9.fvlHvZ6o4W7fVUtuu51Mej_JmDfmRR9Qp9yAetl6nLY
 ```
 
 – you will have another token value since this one is based on randomly generated `token_hmac_secret_key` from the configuration file we created at the beginning of this tutorial. See [authentication docs](../server/authentication.md) for information about proper token generation in real app.
 
-Now we can copy generated HMAC SHA-256 JWT and paste it into `centrifuge.setToken` call instead of `<TOKEN>` placeholder in `index.html` file. I.e.:
+Now we can copy generated HMAC SHA-256 JWT and paste it into Centrifugo constructor instead of `<TOKEN>` placeholder in `index.html` file. I.e.:
+
+```javascript
+const centrifuge = new Centrifuge("ws://localhost:8000/connection/websocket", {
+    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM3MjIiLCJleHAiOjE2NTUzNjAyODR9.fvlHvZ6o4W7fVUtuu51Mej_JmDfmRR9Qp9yAetl6nLY"
+});
+```
+
+If you reload your browser tab – the connection will be successfully established, but the client still can not subscribe to a channel.
+
+We need to give a client permission to subscribe on channel `channel`. Let's do this by issuing subscription token for user using one more command-line helper `gensubtoken`:
 
 ```
-centrifuge.setToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM3MjIiLCJleHAiOjE1OTAxODYzMTZ9.YMJVJsQbK_p1fYFWkcoKBYr718AeavAk3MAYvxcMk0M");
+./centrifugo gensubtoken -u 123722 -s channel
 ```
 
-That's it! If you reload your browser tab – the connection will be successfully established and the client will subscribe to a channel.
+You should see an output like this:
+
+```
+HMAC SHA-256 JWT for user "123722" and channel "channel" with expiration TTL 168h0m0s:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM3MjIiLCJleHAiOjE2NTUzNjE1MTQsImNoYW5uZWwiOiJjaGFubmVsIn0.fDI9u692WSnzBmeaWZRqXykPa_emomvtySguUKbojAw
+```
+
+Now add the initial subscription token to the example above:
+
+```javascript
+const sub = centrifuge.newSubscription("channel", {
+  token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM3MjIiLCJleHAiOjE2NTUzNjE1MTQsImNoYW5uZWwiOiJjaGFubmVsIn0.fDI9u692WSnzBmeaWZRqXykPa_emomvtySguUKbojAw"
+});
+```
+
+And that's it, now everything should work.
 
 Open developer tools and look at WebSocket frames panel, you should see sth like this:
 
 ![Connected](/img/quick_start_connected.png)
+
+Note, that in this example we generated both connection and subscription JWT – but they have expiration time, so after some time Centrifugo stops accepting those tokens. In real-life you need to add a token refresh function to client to rotate tokens.
+
+Also note, that token auth is not the only way to connect to Centrifugo or to subscribe on a channel. There are other ways described throughout documentation.
 
 OK, the last thing we need to do here is to publish a new counter value to a channel and make sure our app works properly.
 

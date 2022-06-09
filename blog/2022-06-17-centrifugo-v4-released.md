@@ -111,11 +111,11 @@ We are using explicit transport endpoints in the example above due to the fact t
 
 :::
 
-SockJS is still supported by Centrifugo and `centrifuge-js`. For how long? Not sure – but now we have a good alternative to offer.
+SockJS is still supported by Centrifugo and `centrifuge-js`, but it's now DEPRECATED.
 
 :::tip
 
-BTW, it's worth mentioning that our Javascript SDK is now fully written in Typescript. This was a long-awaited improvement, and it finally happened! The entire public API (including EventEmitter events and event handlers) is strictly typed.
+BTW, it's worth mentioning that our Javascript SDK is now fully written in Typescript. This was a long-awaited improvement, and it finally happened! The entire public API is strictly typed (including EventEmitter events and event handlers).
 
 :::
 

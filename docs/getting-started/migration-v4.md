@@ -55,13 +55,17 @@ Client protocol framing also changed in unidirectional transports. The good news
 
 When you are enabling `use_client_protocol_v1_by_default` option described above you also make unidirectional transports to work over old protocol format. So your existing clients will continue working just fine with Centrifugo v4. Then the same steps to migrate described above can be applied to unidirectional transport case. The only difference that in unidirectional approach you are not using Centrifugo SDKs.
 
+## SockJS migration
+
+SockJS is now DEPRECATED in Centrifugo. Centrifugo v4 may be the last release which supports it. We now offer our own bidirectional emulation layer on top of HTTP-streaming and EventSource. See additional information in Centrifugo v4 introduction post.
+
 ## Channel ASCII enforced
 
 Centrifugo v2 and v3 docs mentioned the fact that channels must contain only ASCII characters. But it was not actually enforced by a server. Now Centrifugo is more strict. If a channel has non-ASCII characters then the `102 unknown channel` error will be returned to the client. Please reach us out if this behavior is not suitable for your use case – we can discuss the use case and think on a proper solution together.
 
-## Private channel migration
+## Subscription token migration
 
-In Centrifugo v4 concept of private channel (i.e. channel starting from `$`) was removed. The reasons are described in v4 introduction post.
+Subscription token now requires `sub` claim (current user ID) to be set.
 
 In most cases the only change which is required to smoothly migrate to v4 without breaking things is to add a boolean option `"skip_user_check_in_subscription_token": true` to a Centrifugo v4 configuration. This skips the check of `sub` claim to contain the current user ID set to a connection during authentication.
 
