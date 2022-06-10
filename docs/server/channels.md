@@ -60,7 +60,7 @@ Moreover, you can provide several user IDs in channel name separated by a comma:
 
 This is useful for channels with a static list of allowed users, for example for single user personal messages channel, for dialog channel between certainly defined users. As soon as you need to manage access to a channel dynamically for many users this channel type does not suit well.
 
-User-limited channels must be enabled for a channel namespace using `enable_user_limit_channels` option. See below more information about channel options and channel namespaces. 
+User-limited channels must be enabled for a channel namespace using `allow_user_limit_channels` option. See below more information about channel options and channel namespaces. 
 
 #### private channel prefix (`$`)
 
@@ -104,34 +104,27 @@ All things together here is an example of `config.json` which includes some top-
 {
     "token_hmac_secret_key": "very-long-secret-key",
     "api_key": "secret-api-key",
-    "anonymous": true,
-    "publish": true,
     "presence": true,
     "join_leave": true,
     "history_size": 10,
     "history_ttl": "30s",
     "namespaces": [
         {
-          "name": "public",
-          "publish": true,
-          "anonymous": true,
+          "name": "facts",
           "history_size": 10,
           "history_ttl": "300s",
-          "recover": true
         },
         {
           "name": "gossips",
-          "presence": true,
-          "join_leave": true
         }
     ]
 }
 ```
 
 * Channel `news` will use globally defined channel options.
-* Channel `public:news` will use `public` namespace options.
-* Channel `gossips:news` will use `gossips` namespace options.
-* Channel `xxx:hello` will result into subscription error since there is no `xxx` namespace defined in configuration above.
+* Channel `facts:sport` will use `facts` namespace options.
+* Channel `gossips:sport` will use `gossips` namespace options.
+* Channel `xxx:hello` will result into subscription error since there is no `xxx` namespace defined in the configuration above.
 
 **Channel namespaces also work with private channels and user-limited channels**. For example, if you have a namespace called `dialogs` then the private channel can be constructed as `$dialogs:gossips`, user-limited channel can be constructed as `dialogs:dialog#1,2`.
 
@@ -140,6 +133,8 @@ All things together here is an example of `config.json` which includes some top-
 There is no inheritance in channel options and namespaces – for example, you defined `presence: true` on a top level of configuration and then defined a namespace – that namespace won't have online presence enabled - you must enable it for a namespace explicitly. 
 
 :::
+
+There are many options which can be set for channel namespace (on top-level and to named one) to modify behavior of channels belonging to a namespace. Below we describe all these options. 
 
 ## Channel options
 
@@ -277,13 +272,13 @@ But the `publish` option still can be useful to send something without backend-s
 
 `allow_presence_for_client` (boolean, default `false`) – allows all clients to call presence information in a namespace.
 
-### allow_presence_for_client
+### allow_presence_for_anonymous
 
-`allow_presence_for_client` (boolean, default `false`) – turn on if anonymous clients should be able to call presence from channels in a namespace.
+`allow_presence_for_anonymous` (boolean, default `false`) – turn on if anonymous clients should be able to call presence from channels in a namespace.
 
-### enable_user_limited_channels
+### allow_user_limited_channels
 
-`enable_user_limited_channels` (boolean, default `false`) - enables using user-limited channels in a namespace for checking subscribe permission.
+`allow_user_limited_channels` (boolean, default `false`) - allows using user-limited channels in a namespace for checking subscribe permission.
 
 :::note
 
@@ -345,11 +340,14 @@ Let's look at how to set some of these options in a config. In this example we t
     "history_size": 10,
     "history_ttl": "300s",
     "force_recovery": true,
-    "allow_anonymous_access": true,
     "allow_subscribe_for_client": true,
+    "allow_subscribe_for_anonymous": true,
     "allow_publish_for_subscriber": true,
+    "allow_publish_for_anonymous": true,
     "allow_history_for_subscriber": true,
-    "allow_presence_for_subscriber": true
+    "allow_history_for_anonymous": true,
+    "allow_presence_for_subscriber": true,
+    "allow_presence_for_anonymous": true
 }
 ```
 

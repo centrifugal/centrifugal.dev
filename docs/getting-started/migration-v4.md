@@ -77,7 +77,7 @@ It's worth mentioning that Centrifugo v4 does not allow subscribing on channels 
 
 ## User limited channel migration
 
-User-limited channel support should now be enabled over separate channel namespace option. See below the namespace option converter which takes this change into account. 
+User-limited channel support should now be allowed over a separate channel namespace option `allow_user_limited_channels`. See below the namespace option converter which takes this change into account.
 
 ## Namespace configuration migration
 
@@ -90,6 +90,16 @@ Then you can use the following converter which will transform your old namespace
 Do not blindly deploy things to production – test your system first, go through the possible usage scenarios and/or test cases.
 
 :::
+
+:::tip
+
+It's fully client-side: your data won't be sent anywhere.
+
+:::
+
+import ConfigConverter from "@site/src/components/converterv4"
+
+<ConfigConverter />
 
 ## Other configuration option changes
 

@@ -4,7 +4,7 @@ sidebar_label: Quickstart tutorial
 title: Quickstart tutorial ⏱️
 ---
 
-Here we will build a very simple browser application with Centrifugo. It works in a way that users connect to Centrifugo over WebSocket, subscribe to a channel, and start receiving all messages published to that channel. In our case, we will send a counter value to all channel subscribers to update it in all open browser tabs in real-time.
+Here we will build a very simple browser application with Centrifugo. It works in a way that users connect to Centrifugo over WebSocket, subscribe to a channel, and start receiving all channel publications (messages published to that channel). In our case, we will send a counter value to all channel subscribers to update counter value in all open browser tabs in real-time.
 
 First you need to [install Centrifugo](installation.md). Below in this example, we will use a binary file release for simplicity. Once you have Centrifugo available on your machine you can generate minimal required configuration file with the following command:
 
@@ -16,10 +16,10 @@ This helper command will generate `config.json` file in the working directory wi
 
 ```json title="config.json"
 {
-  "token_hmac_secret_key": "46b38493-147e-4e3f-86e0-dc5ec54f5133",
-  "admin_password": "ad0dff75-3131-4a02-8d64-9279b4f1c57b",
-  "admin_secret": "583bc4b7-0fa5-4c4a-8566-16d3ce4ad401",
-  "api_key": "aaaf202f-b5f8-4b34-bf88-f6c03a1ecda6",
+  "token_hmac_secret_key": "bbe7d157-a253-4094-9759-06a8236543f9",
+  "admin_password": "d0683813-0916-4c49-979f-0e08a686b727",
+  "admin_secret": "4e9eafcf-0120-4ddd-b668-8dc40072c78e",
+  "api_key": "d7627bb6-2292-4911-82e1-615c0ed3eebb",
   "allowed_origins": []
 }
 ```
@@ -34,65 +34,70 @@ We could also enable the admin web interface by not using `--admin` flag but by 
 
 ```json title="config.json"
 {
-  "token_hmac_secret_key": "46b38493-147e-4e3f-86e0-dc5ec54f5133",
+  "token_hmac_secret_key": "bbe7d157-a253-4094-9759-06a8236543f9",
   "admin": true,
-  "admin_password": "ad0dff75-3131-4a02-8d64-9279b4f1c57b",
-  "admin_secret": "583bc4b7-0fa5-4c4a-8566-16d3ce4ad401",
-  "api_key": "aaaf202f-b5f8-4b34-bf88-f6c03a1ecda6",
+  "admin_password": "d0683813-0916-4c49-979f-0e08a686b727",
+  "admin_secret": "4e9eafcf-0120-4ddd-b668-8dc40072c78e",
+  "api_key": "d7627bb6-2292-4911-82e1-615c0ed3eebb",
   "allowed_origins": []
 }
 ```
 
-And then running only with a path to a configuration file:
+And then running Centrifugo only with a path to a configuration file:
 
 ```console
 ./centrifugo --config=config.json
 ```
 
-Now open [http://localhost:8000](http://localhost:8000). You should see Centrifugo admin web panel. Enter `admin_password` value from the configuration file to log in.
+Now open [http://localhost:8000](http://localhost:8000). You should see Centrifugo admin web panel. Enter `admin_password` value from the configuration file to log in (in this case it's `d0683813-0916-4c49-979f-0e08a686b727`, but will have a different value).
 
 ![Admin web panel](/img/quick_start_admin.png)
 
-Inside the admin panel, you should see that one Centrifugo node is running, and it does not have connected clients.
+Inside the admin panel, you should see that one Centrifugo node is running, and it does not have connected clients:
+
+![Admin web panel](/img/quick_start_logged_in.png)
 
 Now let's create `index.html` file with our simple app:
 
 ```html title="index.html"
 <html>
-    <head>
-        <title>Centrifugo quick start</title>
-    </head>
-    <body>
-        <div id="counter">-</div>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/centrifuge/3.0.0/centrifuge.js"></script>
-        <script type="text/javascript">
-            const container = document.getElementById('counter');
-            
-            const centrifuge = new Centrifuge("ws://localhost:8000/connection/websocket", {
-              token: "<TOKEN>"
-            });
 
-            centrifuge.on('connecting', function(ctx) {
-                console.log(`connecting: ${ctx.code}, ${ctx.reason}`);
-            }).on('connected', function(ctx) {
-                console.log(`connected over ${ctx.transport}`);
-            }).on('disconnected', function(ctx) {
-                console.log(`disconnected: ${ctx.code}, ${ctx.reason}`);
-            }).connect();
+<head>
+  <title>Centrifugo quick start</title>
+</head>
 
-            const sub = centrifuge.newSubscription("channel");
-            sub.on('publication', function(ctx) {
-                container.innerHTML = ctx.data.value;
-                document.title = ctx.data.value;
-            }).on('subscribing', function(ctx) {
-                console.log(`subscribing: ${ctx.code}, ${ctx.reason}`);
-            }).on('subscribed', function(ctx) {
-                console.log('subscribed', ctx);
-            }).on('unsubscribed', function(ctx) {
-                console.log(`unsubscribed: ${ctx.code}, ${ctx.reason}`);
-            }).subscribe();
-        </script>
-    </body>
+<body>
+  <div id="counter">-</div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/centrifuge/3.0.0/centrifuge.js"></script>
+  <script type="text/javascript">
+    const container = document.getElementById('counter');
+
+    const centrifuge = new Centrifuge("ws://localhost:8000/connection/websocket", {
+      token: "<TOKEN>"
+    });
+
+    centrifuge.on('connecting', function (ctx) {
+      console.log(`connecting: ${ctx.code}, ${ctx.reason}`);
+    }).on('connected', function (ctx) {
+      console.log(`connected over ${ctx.transport}`);
+    }).on('disconnected', function (ctx) {
+      console.log(`disconnected: ${ctx.code}, ${ctx.reason}`);
+    }).connect();
+
+    const sub = centrifuge.newSubscription("channel");
+    sub.on('publication', function (ctx) {
+      container.innerHTML = ctx.data.value;
+      document.title = ctx.data.value;
+    }).on('subscribing', function (ctx) {
+      console.log(`subscribing: ${ctx.code}, ${ctx.reason}`);
+    }).on('subscribed', function (ctx) {
+      console.log('subscribed', ctx);
+    }).on('unsubscribed', function (ctx) {
+      console.log(`unsubscribed: ${ctx.code}, ${ctx.reason}`);
+    }).subscribe();
+  </script>
+</body>
+
 </html>
 ```
 
@@ -131,13 +136,13 @@ That's because we have not set `allowed_origins` in the configuration. Modify `a
 }
 ```
 
-Allowed origins is a security option for request originating from web browsers – see [more details](../server/configuration.md#allowed_origins) in server configuration docs. Restart Centrifugo after modifying `allowed_origins` in a configuration file.
+Allowed origins is a security option for request originating from web browsers – see [more details](../server/configuration.md#allowed_origins) in server configuration docs. **Restart Centrifugo** after modifying `allowed_origins` in a configuration file.
 
 Now if you reload a browser window with an application you should see new information logs in server output:
 
 ```
-2021-02-26 17:47:47 [INF] invalid connection token error="jwt: token format is not valid" client=45a1b8f4-d6dc-4679-9927-93e41c14ad93
-2021-02-26 17:47:47 [INF] disconnect after handling command client=45a1b8f4-d6dc-4679-9927-93e41c14ad93 command="id:1 params:\"{\\\"token\\\":\\\"<TOKEN>\\\"}\" " reason="invalid token" user=
+2022-06-10 09:44:21 [INF] invalid connection token error="invalid token: token format is not valid" client=a65a8463-6a36-421d-814a-0083c8836529
+2022-06-10 09:44:21 [INF] disconnect after handling command client=a65a8463-6a36-421d-814a-0083c8836529 command="id:1  connect:{token:\"<TOKEN>\"  name:\"js\"}" reason="invalid token" user=
 ```
 
 We still can not connect. That's because the client should provide a valid JWT (JSON Web Token) to authenticate itself. This token **must be generated on your backend** and passed to a client-side (over template variables or using separate AJAX call – whatever way you prefer). Since in our simple example we don't have an application backend we can quickly generate an example token for a user using `centrifugo` sub-command `gentoken`. Like this:
@@ -150,7 +155,7 @@ We still can not connect. That's because the client should provide a valid JWT (
 
 ```
 HMAC SHA-256 JWT for user "123722" with expiration TTL 168h0m0s:
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM3MjIiLCJleHAiOjE2NTUzNjAyODR9.fvlHvZ6o4W7fVUtuu51Mej_JmDfmRR9Qp9yAetl6nLY
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM3MjIiLCJleHAiOjE2NTU0NDgyOTl9.mUU9s5kj3yqp-SAEqloGy8QBgsLg0llA7lKUNwtHRnw
 ```
 
 – you will have another token value since this one is based on randomly generated `token_hmac_secret_key` from the configuration file we created at the beginning of this tutorial. See [authentication docs](../server/authentication.md) for information about proper token generation in real app.
@@ -159,13 +164,17 @@ Now we can copy generated HMAC SHA-256 JWT and paste it into Centrifugo construc
 
 ```javascript
 const centrifuge = new Centrifuge("ws://localhost:8000/connection/websocket", {
-    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM3MjIiLCJleHAiOjE2NTUzNjAyODR9.fvlHvZ6o4W7fVUtuu51Mej_JmDfmRR9Qp9yAetl6nLY"
+    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM3MjIiLCJleHAiOjE2NTU0NDgyOTl9.mUU9s5kj3yqp-SAEqloGy8QBgsLg0llA7lKUNwtHRnw"
 });
 ```
 
-If you reload your browser tab – the connection will be successfully established, but the client still can not subscribe to a channel.
+If you reload your browser tab – the connection will be successfully established, but the client still can not subscribe to a channel:
 
-We need to give a client permission to subscribe on channel `channel`. Let's do this by issuing subscription token for user using one more command-line helper `gensubtoken`:
+```
+2022-06-10 09:45:49 [INF] client command error error="permission denied" client=88116489-350f-447f-9ff3-ab61c9341efe code=103 command="id:2  subscribe:{channel:\"channel\"}" reply="id:2  error:{code:103  message:\"permission denied\"}" user=123722
+```
+
+We need to give client a permission to subscribe on channel `channel`. Let's do this by issuing subscription token for user using one more command-line helper `gensubtoken`:
 
 ```
 ./centrifugo gensubtoken -u 123722 -s channel
@@ -175,24 +184,46 @@ You should see an output like this:
 
 ```
 HMAC SHA-256 JWT for user "123722" and channel "channel" with expiration TTL 168h0m0s:
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM3MjIiLCJleHAiOjE2NTUzNjE1MTQsImNoYW5uZWwiOiJjaGFubmVsIn0.fDI9u692WSnzBmeaWZRqXykPa_emomvtySguUKbojAw
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM3MjIiLCJleHAiOjE2NTU0NDg0MzgsImNoYW5uZWwiOiJjaGFubmVsIn0.JyRI3ovNV-abV8VxCmZCD556o2F2mNL1UoU58gNR-uI
 ```
 
 Now add the initial subscription token to the example above:
 
 ```javascript
 const sub = centrifuge.newSubscription("channel", {
-  token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM3MjIiLCJleHAiOjE2NTUzNjE1MTQsImNoYW5uZWwiOiJjaGFubmVsIn0.fDI9u692WSnzBmeaWZRqXykPa_emomvtySguUKbojAw"
+  token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM3MjIiLCJleHAiOjE2NTU0NDg0MzgsImNoYW5uZWwiOiJjaGFubmVsIn0.JyRI3ovNV-abV8VxCmZCD556o2F2mNL1UoU58gNR-uI"
 });
 ```
 
 And that's it, now everything should work.
 
+:::tip
+
+Alternatively, we could avoid using subscription token at all and allow all authenticated users to subscribe on channels by just adding `allow_subscribe_for_client` option into configuration:
+
+```json title="config.json"
+{
+  "token_hmac_secret_key": "bbe7d157-a253-4094-9759-06a8236543f9",
+  "admin": true,
+  "admin_password": "d0683813-0916-4c49-979f-0e08a686b727",
+  "admin_secret": "4e9eafcf-0120-4ddd-b668-8dc40072c78e",
+  "api_key": "d7627bb6-2292-4911-82e1-615c0ed3eebb",
+  "allowed_origins": [
+    "http://localhost:3000"
+  ],
+  "allow_subscribe_for_client": true
+}
+```
+
+This makes Centrifugo less strict in channel permission checks as all clients with valid tokens will be able to subscribe on all channels. Depending on a permission logic in your application you should decide which way is reasonable for your specific use case. There are also other ways to authorize subscriptions not mentioned here but described later in the documentation.
+
+:::
+
 Open developer tools and look at WebSocket frames panel, you should see sth like this:
 
-![Connected](/img/quick_start_connected.png)
+![Connected](/img/quick_start_ws_frames.png)
 
-Note, that in this example we generated both connection and subscription JWT – but they have expiration time, so after some time Centrifugo stops accepting those tokens. In real-life you need to add a token refresh function to client to rotate tokens.
+Note, that in this example we generated both connection and subscription JWT – but they have expiration time, so after some time Centrifugo stops accepting those tokens. In real-life you need to add a token refresh function to a client to rotate tokens. See out [client API SDK spec](../transports/client_api.md).
 
 Also note, that token auth is not the only way to connect to Centrifugo or to subscribe on a channel. There are other ways described throughout documentation.
 
@@ -220,7 +251,7 @@ BTW, let's also look at how you can publish data to channel over Centrifugo API 
 
 ```bash
 curl --header "Content-Type: application/json" \
-  --header "Authorization: apikey aaaf202f-b5f8-4b34-bf88-f6c03a1ecda6" \
+  --header "Authorization: apikey d7627bb6-2292-4911-82e1-615c0ed3eebb" \
   --request POST \
   --data '{"method": "publish", "params": {"channel": "channel", "data": {"value": 2}}}' \
   http://localhost:8000/api

@@ -48,7 +48,7 @@ If client subscribes on a user-limited channel and there is a user ID match then
 
 :::caution
 
-User-limited channels must be enabled in a namespace using `enable_user_limited_channels` option.
+User-limited channels must be enabled in a namespace using `allow_user_limited_channels` option.
 
 :::
 
