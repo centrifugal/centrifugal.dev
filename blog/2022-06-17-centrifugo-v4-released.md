@@ -78,7 +78,7 @@ We were dancing around the idea to replace SockJS for a long time. But only now 
 * HTTP-streaming (using modern browser [ReadableStream API](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream), supports both binary Protobuf and JSON transfer)
 * Eventsource (Server-Sent Events, SSE) – while a bit older choice and works with JSON only EventSource transport is loved by many developers, so we implemented bidirectional emulation with it too.
 
-So when the fallback is used you always have a persistent real-time connection in server -> to -> client direction. Requests in client -> to -> server direction are ordinary HTTP – similar to how SockJS works. But our bidirectional emulation layer does not require sticky session at all – Centrifugo can proxy client-to-server requests to the correct node in a cluster. **Sticky session is an optimization** for Centrifugo bidirectional emulation layer, **not a requirement**. We believe that this is a game changer – no need to bother about proper load balancing, especially due to the fact that in most cases 95% or even more users will be able to connect with WebSocket transport.
+So when the fallback is used you always have a persistent real-time connection in server -> to -> client direction. Requests in client -> to -> server direction are ordinary HTTP – similar to how SockJS works. But our bidirectional emulation layer does not require sticky session at all – Centrifugo can proxy client-to-server requests to the correct node in a cluster. **Having sticky sessions is an optimization** for Centrifugo bidirectional emulation layer, **not a requirement**. We believe that this is a game changer – no need to bother about proper load balancing, especially due to the fact that in most cases 95% or even more users will be able to connect with WebSocket transport.
 
 Here is a simplified scheme of how this works:
 
@@ -145,11 +145,13 @@ Previously clients could subcribe to all channels in a namespace by default (exc
 
 Also, a common confusion we met: if server-side subscriptions were dictated by JWT many users expected that client-side subscriptions to those channels won't work. But without `protected` option enabled that was not actually true.
 
-In Centrifugo v4 it's not possible to subscribe on a channel in a namespace by default. Namespace must be configured to allow subscriptions from clients or token authorization should be used. There are a bunch of new namespace options to tune namespace behavior. Also a possibility to provide a regular expression for channels in a namspace.
+In Centrifugo v4 it's not possible to subscribe on a channel in a namespace by default. Namespace must be configured to allow subscriptions from clients or token authorization should be used. There are a bunch of new namespace options to tune namespace behavior. Also a possibility to provide a regular expression for channels in a namespace.
 
-Centrifugo is now more strict when checking channel name by default. Only ASCII symbols allowed – it was already mentioned in docs before, but never actually enforced. Now we are fixing this.
+New permission-related channel option names now better reflect the purpose of option. For example, compare `"publish": true` and `"allow_publish_for_client": true`. The second one is more readable and provides a better understanding of the effect after enabling.
 
-Check out updated documentation about [channels and namespaces](/docs/server/channels). Our v4 migration guide contains a converter for channel namespace options.
+Centrifugo is now more strict when checking channel name by default. Only ASCII symbols allowed – it was already mentioned in docs before, but wasn't actually enforced. Now we are fixing this.
+
+Check out updated documentation about [channels and namespaces](/docs/server/channels). Our v4 migration guide contains an **automatic converter** for channel namespace options.
 
 ## Private channel concept revised
 
@@ -162,9 +164,9 @@ This means 2 things:
 
 One more notable change in subscription JWT – `client` claim now DEPRECATED. It's not necessary to put it into the subscription token. Centrifugo supports it only for backwards compatibility, but it will be entirely removed in the next releases. The reason why we removed it is interesting actually.
 
-Due to the fact `client` claim was a required part of subscription JWT applications could come across the situation when during [massive reconnect scenario](/blog/2020/11/12/scaling-websocket#massive-reconnect) (say million connections reconnect) a ton of requests to get new subscription tokens could be generated – thus making it unusually hard for a backend to handle the load. With connection JWT we had not such problem – as connections could simply reuse previous token to reconnect to Centrifugo.
+Due to the fact `client` claim was a required part of subscription JWT applications could come across the situation when during [massive reconnect scenario](/blog/2020/11/12/scaling-websocket#massive-reconnect) (say million connections reconnect) a ton of requests to get new subscription tokens could be generated – thus making it unusually hard for a backend to handle the load. With connection JWT we had no such problem – as connections could simply reuse previous token to reconnect to Centrifugo.
 
-Now subscription token behaves just like the connection token – so we get a scalable solution for token-based subscriptions.
+Now subscription token behaves just like the connection token – so we get a scalable solution for token-based subscriptions too.
 
 Moreover, this change opened a road to one more great improvement...
 
@@ -176,7 +178,7 @@ Previously we we sending subscriptions only after receiving a successful connect
 
 ![](/img/optimistic_subs.png)
 
-The benefit is super-cool – in most scenarios we are saving one RTT of latency when connecting to Centrifugo. While not visible on localhost – this may be pretty important in real-life. And this is less syscalls for a server after all – i.e. less CPU usage at the end.
+The benefit is super-cool – in most scenarios we are saving one RTT of latency when connecting to Centrifugo. While not visible on localhost – this may be pretty important in real-life. And this is less syscalls for a server after all – which leads to less CPU usage.
 
 Optimistic subscriptions are now part of `centrifuge-js` only. At some point we are planning to extend this important optimization to all other client SDKs. 
 
@@ -207,11 +209,11 @@ And this tells Centrifugo that the connection is able to subscribe on channels `
 
 One more addition to Centrifugo PRO is an improved connection API. Previously we could only return all connections from a certain user. Now API supports filtering all connections: by user ID, by subscribed channel, by additional meta information attached to a connection.
 
-The filtering works with a help of [CEL expressions](https://opensource.google/projects/cel) (Common Expression Language). CEL expressions provide a developer-friendly, fast and secure (as they are not Turing-complete) way to evaluate some conditions. They are used in some Google services (ex. Firebase), in Envoy RBAC configuration, etc. If you've never seen it before – take a look, pretty cool project. 
+The filtering works with a help of [CEL expressions](https://opensource.google/projects/cel) (Common Expression Language). CEL expressions provide a developer-friendly, fast and secure (as they are not Turing-complete) way to evaluate some conditions. They are used in some Google services (ex. Firebase), in Envoy RBAC configuration, etc. If you've never seen it before – take a look, pretty cool project. And now it helps us to filter connections in a flexible way.
 
 ## Javascript client moved to Typescript
 
-No secret that `centrifuge-js` is our most popular SDK. We put some additional love to it – and `centrifuge-js` is now fully written in Typescript ❤️
+No secret that `centrifuge-js` is the most popular SDK in Centrifugo ecosystem. We put some additional love to it – and `centrifuge-js` is now fully written in Typescript ❤️
 
 This was a long-awaited improvement, and it finally happened! The entire public API is strictly typed. The cool thing is that even EventEmitter events and event handlers is a subject to type checks - this should drastically simplify and speedup development and also help to reduce error possibility.
 
@@ -219,23 +221,27 @@ This was a long-awaited improvement, and it finally happened! The entire public 
 
 [Migration guide](/docs/next/getting-started/migration_v4) contains all the steps to upgrade your Centrifugo from v3 to v4. While there are many changes it v4 release it should be possible to migrate to Centrifugo v4 without changing the client-side code at all. And then after updating a server gradually upgrade the client-side to the latest stack.
 
-Enjoy Centrifugo v4, and let the Centrifugal force be with you.
-
 ## Centrifuge library for Go
 
-As some of you know Centrifugo server is built on top of [Centrifuge](https://github.com/centrifugal/centrifuge) library for Go. Most of the things described here are now also part of Centrifuge library. With bidirectional emulation layer it seems a robust alternative to Socket.IO in Go language ecosystem. It's generic enough to build real-time applications of any kind and comes with Redis broker support to scale connections to many machines – the feature usually not available in other open-source real-time messaging libraries. In some cases Centrifuge library can be a more flexible solution than Centrifugo since Centrifugo (as a standalone server) dictates some mechanics and rules to follow.
+As some of you know Centrifugo server is built on top of [Centrifuge](https://github.com/centrifugal/centrifuge) library for Go. Most of the things described here are now also part of Centrifuge library.
+
+With bidirectional emulation layer it seems a robust alternative to Socket.IO in Go language ecosystem. It's generic enough to build real-time applications of any kind and comes with Redis broker support to scale connections to many machines – the feature usually not available in other open-source real-time messaging libraries.
+
+In some cases Centrifuge library can be a more flexible solution than Centrifugo since Centrifugo (as a standalone server) dictates some mechanics and rules to follow.
 
 ## Special thanks
 
-The refactoring of client SDKs and introducing unified behavior based on the common spec was the hardest part of Centrifugo v4 release. Many thanks to [Vitaly Puzrin](https://github.com/puzrin) (who is an author of several popular open-source libraries – like [markdown-it](https://github.com/markdown-it/markdown-it), [fontello](https://github.com/fontello/fontello), and others). We had several super-productive sessions with him regarding client SDK API design. Several great ideas araised from those sessions, and the result seems a huge step forward for Centrifugal projects.
+The refactoring of client SDKs and introducing unified behavior based on the common spec was the hardest part of Centrifugo v4 release. Many thanks to [Vitaly Puzrin](https://github.com/puzrin) (who is an author of several popular open-source libraries – like [markdown-it](https://github.com/markdown-it/markdown-it), [fontello](https://github.com/fontello/fontello), and others). We had a series of super-productive sessions with him regarding client SDK API design. Several great ideas araised from those sessions, and the result seems a huge step forward for Centrifugal projects.
 
 ## Join community
 
-That's it. We now begin the era of v4 and it is going to be awesome.
+That's it. We now begin the era of v4 and it is going to be awesome. We believe that with v4 release Centrifugo has further strengthened its position in the open-source real-time messaging market and still provides a clear cost benefits comparing to paid cloud solutions in the area while being mature and robust enough for a production usage.
 
-As you can see the release contains many changes that strongly affect developing with Centrifugo. And of course you may have some questions regarding new or changed concepts. Don't hesitate to join our communities in Telegram (most active) and Discord:
+The release contains many changes that strongly affect developing with Centrifugo. And of course you may have some questions regarding new or changed concepts. Don't hesitate to join our communities in Telegram (most active) and Discord:
 
 [![Join the chat at https://t.me/joinchat/ABFVWBE0AhkyyhREoaboXQ](https://img.shields.io/badge/Telegram-Group-orange?style=flat&logo=telegram)](https://t.me/joinchat/ABFVWBE0AhkyyhREoaboXQ) &nbsp;[![Join the chat at https://discord.gg/tYgADKx](https://img.shields.io/discord/719186998686122046?style=flat&label=Discord&logo=discord)](https://discord.gg/tYgADKx)
+
+Enjoy Centrifugo v4, and let the Centrifugal force be with you.
 
 :::note Attributions
 

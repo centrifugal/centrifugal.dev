@@ -392,7 +392,7 @@ Centrifugo tries to gracefully shut down client connections when SIGINT or SIGTE
 
 ### Insecure client connection
 
-The boolean option `client_insecure` (default `false`) allows connecting to Centrifugo without JWT token. In this mode, there is no user authentication involved. This mode can be useful for demo projects based on Centrifugo, local projects, or real-time application prototyping. Don't use it in production.
+The boolean option `client_insecure` (default `false`) allows connecting to Centrifugo without JWT token. In this mode, there is no user authentication involved. It also disables permission checks on client API level - for presence and history calls. This mode can be useful for demo projects based on Centrifugo, integration tests, local projects, or real-time application prototyping. Don't use it in production until you 100% know what you are doing.
 
 ### Insecure API mode
 

@@ -32,7 +32,7 @@ If you have a production system where you want to upgrade Centrifugo from v3 to 
 
 :::danger
 
-If you are using private channels (starting with `$`) or user-limited channels (containing `#`) then additionally read about private channel migration below.
+If you are using private channels (starting with `$`) or user-limited channels (containing `#`) then carefully read about subscription token migration and user-limited channels migration below.
 
 :::
 
@@ -61,7 +61,7 @@ SockJS is now DEPRECATED in Centrifugo. Centrifugo v4 may be the last release wh
 
 ## Channel ASCII enforced
 
-Centrifugo v2 and v3 docs mentioned the fact that channels must contain only ASCII characters. But it was not actually enforced by a server. Now Centrifugo is more strict. If a channel has non-ASCII characters then the `102 unknown channel` error will be returned to the client. Please reach us out if this behavior is not suitable for your use case – we can discuss the use case and think on a proper solution together.
+Centrifugo v2 and v3 docs mentioned the fact that channels must contain only ASCII characters. But it was not actually enforced by a server. Now Centrifugo is more strict. If a channel has non-ASCII characters then the `107: bad request` error will be returned to the client. Please reach us out if this behavior is not suitable for your use case – we can discuss the use case and think on a proper solution together.
 
 ## Subscription token migration
 
@@ -75,7 +75,7 @@ One more important note is that `client` claim in subscription token in Centrifu
 
 It's worth mentioning that Centrifugo v4 does not allow subscribing on channels starting with `$` without token even if namespace marked as available for subscribing using sth like `allow_subscribe_for_client` option. This is done to prevent potential security risk during v3 -> v4 migration when client previously not available to subscribe to channels starting with `$` in any case may get permissions to do so.
 
-## User limited channel migration
+## User-limited channel migration
 
 User-limited channel support should now be allowed over a separate channel namespace option `allow_user_limited_channels`. See below the namespace option converter which takes this change into account.
 
