@@ -73,7 +73,8 @@ Each connection can be annotated with meta JSON information which is set during 
 
 | Parameter name | Parameter type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
-| user       | string  | yes | User ID        |
+| user       | string  | no | fast filter by User ID        |
+| expression       | string  | no | CEL expression to filter users        |
 
 #### User connections result
 
@@ -89,6 +90,5 @@ Each connection can be annotated with meta JSON information which is set during 
 | app_version       | string  | yes | client app version (if provided by client)         |
 | transport       | string  | no | client connection transport         |
 | protocol       | string  | no | client connection protocol (json or protobuf) |
-| token_uid       | string  | yes | client JWT unique ID (if set) |
-| token_issued_at       | int  | yes | client JWT issued at time as Unix seconds (if set) |
-| meta       | JSON  | yes | meta information attached to a connection |
+| state       | ConnectionState  | yes | connection state |
+| meta       | JSON object  | yes | meta information attached to a connection |

@@ -19,7 +19,7 @@ Client libraries listed here speak Centrifugo bidirectional protocol (WebSocket)
 * [centrifuge-swift](https://github.com/centrifugal/centrifuge-swift) – for native iOS development
 * [centrifuge-java](https://github.com/centrifugal/centrifuge-java) – for native Android development and general Java
 
-See a description of [client protocol](./client_protocol.md) if you want to write a custom client bidirectional connector.
+See a description of [client protocol](./client_protocol.md) if you want to write a custom bidirectional connector.
 
 ## SDK feature matrix
 
@@ -42,6 +42,8 @@ Below you can find an information regarding support of different features in our
 | connection token refresh  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |
 | handle disconnect advice from server  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |
 | server-side subscriptions  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |
+| batching API  | ✅  |    |    |   |    |
+| bidirectional WebSocket emulation  | ✅  |    |    |   |    |
 
 </div>
 
@@ -60,5 +62,6 @@ Below you can find an information regarding support of different features in our
 | subscription token refresh  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |
 | handle unsubscribe advice from server  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |
 | manage subscription registry  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |
+| optimistic subscriptions  | ✅  |    |    |   |    |
 
 </div>

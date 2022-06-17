@@ -37,24 +37,25 @@ In the configuration file **of your application backend** register several varia
 
 ## 3. Connect to Centrifugo
 
-Now your users can start connecting to Centrifugo. You should get a client library (see [list of available client SDKs](../transports/client_sdk.md)) for your application frontend. Every library has a method to connect to Centrifugo. See information about Centrifugo connection endpoints [here](https://centrifugal.github.io/centrifugo/server/configuration/#advanced-endpoint-configuration). Every client should provide a connection token (JWT) on connect. You must generate this token on your backend side using Centrifugo secret key you set to backend configuration (note that in the case of RSA tokens you are generating JWT with a private key). See how to generate this JWT [in special chapter](../server/authentication.md). You pass this token from the backend to your frontend app (pass it in template context or use separate request from client-side to get user-specific JWT from backend side). And use this token when connecting to Centrifugo (for example browser client has a special method `setToken`).
+Now your users can start connecting to Centrifugo. You should get a client library (see [list of available client SDKs](../transports/client_sdk.md)) for your application frontend. Every library has a method to connect to Centrifugo. See information about Centrifugo connection endpoints [here](../server/configuration.md#endpoint-configuration). Every client should provide a connection token (JWT) on connect. You must generate this token on your backend side using Centrifugo secret key you set to backend configuration (note that in the case of RSA tokens you are generating JWT with a private key). See how to generate this JWT [in special chapter](../server/authentication.md). You pass this token from the backend to your frontend app (pass it in template context or use separate request from client-side to get user-specific JWT from backend side). And use this token when connecting to Centrifugo (for example browser client has a special method `setToken`).
 
 There is also a way to authenticate connections without using JWT - see [chapter about proxying to backend](../server/proxy.md).
 
-You are connecting to Centrifugo using one of the available transports. At this moment you can choose from:
-
-* WebSocket, with JSON or binary protobuf protocol. See more info in a chapter about [WebSocket transport](../transports/websocket.md)
-* SockJS (only supports JSON protocol). See more info about [SockJS transport](../transports/sockjs.md)
+You are connecting to Centrifugo using one of the available [transports](../transports/overview.md).
 
 ## 4. Subscribe to channels
 
-After connecting to Centrifugo subscribe clients to channels they are interested in. See more about channels in [special chapter](../server/channels.md). All client libraries provide a way to handle messages coming to a client from a channel after subscribing to it.
+After connecting to Centrifugo subscribe clients to channels they are interested in. See more about channels in [special chapter](../server/channels.md). All bidirectional client SDKs provide a way to handle messages coming to a client from a channel after subscribing to it. Learn more about client SDK possibilities from [client SDK API spec](../transports/client_api.md).
 
 There is also a way to subscribe connection to a list of channels on the server side at the moment of connection establishment. See chapter about [server-side subscriptions](../server/server_subs.md).
 
 ## 5. Publish to channel
 
-So everything should work now – as soon as a user opens some page of your application it must successfully connect to Centrifugo and subscribe to a channel (or channels). Now let's imagine you want to send a real-time message to users subscribed on a specific channel. This message can be a reaction to some event that happened in your app: someone posted a new comment, the administrator just created a new post, the user pressed the like button, etc. Anyway, this is an event your backend just got, and you want to immediately share it with interested users. You can do this using Centrifugo [HTTP API](../server/server_api.md). To simplify your life [we have several API libraries](../server/server_api.md#http-api-libraries) for different languages. You can publish messages into a channel using one of those libraries or you can simply [follow API description](../server/server_api.md#http-api) to construct API requests yourself - this is very simple. Also Centrifugo supports [GRPC API](../server/server_api.md#grpc-api). As soon as you published a message to the channel it must be delivered to your client.
+Everything should work now – as soon as a user opens some page of your application it must successfully connect to Centrifugo and subscribe to a channel (or channels).
+
+Now let's imagine you want to send a real-time message to users subscribed on a specific channel. This message can be a reaction to some event that happened in your app: someone posted a new comment, the administrator just created a new post, the user pressed the like button, etc. Anyway, this is an event your backend just got, and you want to immediately share it with interested users.
+
+You can do this using Centrifugo [HTTP API](../server/server_api.md). To simplify your life [we have several API libraries](../server/server_api.md#http-api-libraries) for different languages. You can publish messages into a channel using one of those libraries or you can simply [follow API description](../server/server_api.md#http-api) to construct API requests yourself - this is very simple. Also Centrifugo supports [GRPC API](../server/server_api.md#grpc-api). As soon as you published a message to the channel it must be delivered to your client.
 
 ## 6. Deploy to production
 

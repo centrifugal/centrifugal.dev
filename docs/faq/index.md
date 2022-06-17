@@ -94,7 +94,7 @@ Yes, you can - Go standard library designed to allow this. Though proxy before C
 
 ### Does Centrifugo work with HTTP/2?
 
-Yes, Centrifugo works with HTTP/2.
+Yes, Centrifugo works with HTTP/2. This is provided by built-in Go http server implementation.
 
 You can disable HTTP/2 running Centrifugo server with `GODEBUG` environment variable:
 
@@ -103,6 +103,14 @@ GODEBUG="http2server=0" centrifugo -c config.json
 ```
 
 Keep in mind that when using WebSocket you are working only over HTTP/1.1, so HTTP/2 support mostly makes sense for SockJS HTTP transports and unidirectional transports: like EventSource (SSE) and HTTP-streaming.
+
+### Does Centrifugo work with HTTP/3?
+
+Centrifugo v4 added an **experimental** HTTP/3 support. As soon as you enabled TLS and provided `"http3": true` option all endpoints on external port will be served by HTTP/3 server based on [lucas-clemente/quic-go](https://github.com/lucas-clemente/quic-go) implementation. This (among other benefits which HTTP/3 can provide) is a first step towards [WebTransport](https://web.dev/webtransport/) support in the future.
+
+It's worth noting that WebSocket transport does not work over HTTP/3, it still starts with HTTP/1.1 Upgrade request (there is an interesting IETF draft BTW about [Bootstrapping WebSockets with HTTP/3](https://www.ietf.org/archive/id/draft-ietf-httpbis-h3-websockets-02.html)). But HTTP-streaming and Eventsource should work just fine with HTTP/3.
+
+HTTP/3 does not work with ACME autocert TLS at the moment - i.e. you need to explicitly provide paths to cert and key files [as described here](../server/tls.md#using-crt-and-key-files).
 
 ### Is there a way to use a single connection to Centrifugo from different browser tabs?
 

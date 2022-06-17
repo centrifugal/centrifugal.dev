@@ -55,7 +55,9 @@ A few things that have been revised from scratch:
 * Resubscribe logic (SDKs can now resubscribe with backoff)
 * Error handling
 
-The mechanics described in the spec is now implemented by all our official SDKs. SDKs now support all the core protocol features existing at this point – without exception. We believe this is a great step forward for Centrifugo ecosystem and community.
+We now have a separation between temporary and non-temporary prrotocol errors – this allows handling internal server errors during subscribing making subscriptions more reliable with automatic resubscribtions and make individual subscription failures to not affect the entire connection.  
+
+The mechanics described in the client SDK API spec is now implemented by all our official SDKs. SDKs now support all the core client protocol features existing at this point – without exception. We believe this is a great step forward for Centrifugo ecosystem and community.
 
 ## Modern bidirectional emulation in Javascript
 
@@ -135,6 +137,8 @@ One more optimization comes from revised PING-PONG behaviour. Previous Centrifug
 
 In Centrifugo v4 we only send pings from a server to a client and expect pong from a client. On the client-side we have a timer which fires if there were no pings from a server for a configured amount of time. Sending pings only in one direction results in 2 times less ping-pong messages - and this should be really noticable for Centrifugo setups with thousands of concurrent connections. In our experiments with 10k connections server CPU usage dropped on up to 30% compared to Centrifugo v3.
 
+![Scheme](/img/ping_pong_v3_v4.png)
+
 Pings and pongs are application-level messages, just an empty command – for example in JSON case it's a 2-byte message: `{}`.
 
 ## Secure by default channel namespaces
@@ -150,6 +154,8 @@ In Centrifugo v4 it's not possible to subscribe on a channel in a namespace by d
 New permission-related channel option names now better reflect the purpose of option. For example, compare `"publish": true` and `"allow_publish_for_client": true`. The second one is more readable and provides a better understanding of the effect after enabling.
 
 Centrifugo is now more strict when checking channel name by default. Only ASCII symbols allowed – it was already mentioned in docs before, but wasn't actually enforced. Now we are fixing this.
+
+We understand that these changes will make starting with Centrifugo a more complex task when all you want is a public access to all the channels without worrying too much about permissions. It's still possible to achieve – but now intent should be explicitly expressed in the configuration.
 
 Check out updated documentation about [channels and namespaces](/docs/server/channels). Our v4 migration guide contains an **automatic converter** for channel namespace options.
 
@@ -203,7 +209,9 @@ For example, in connection JWT developers can set sth like:
 }
 ```
 
-And this tells Centrifugo that the connection is able to subscribe on channels `news` or `user_42` using client-side subscriptions at any point while token is active. See more details about this mechanism in [Channel capabilities](/docs/pro/capabilities) chapter.
+And this tells Centrifugo that the connection is able to subscribe on channels `news` or `user_42` using client-side subscriptions at any point while token is active.
+
+Subscription JWT can provide capabilities for the channel too, Centrifugo also supports wildcard and regex channel matches. See more details about this mechanism in [Channel capabilities](/docs/pro/capabilities) chapter.
 
 ## Better connections API
 
@@ -216,6 +224,14 @@ The filtering works with a help of [CEL expressions](https://opensource.google/p
 No secret that `centrifuge-js` is the most popular SDK in Centrifugo ecosystem. We put some additional love to it – and `centrifuge-js` is now fully written in Typescript ❤️
 
 This was a long-awaited improvement, and it finally happened! The entire public API is strictly typed. The cool thing is that even EventEmitter events and event handlers is a subject to type checks - this should drastically simplify and speedup development and also help to reduce error possibility.
+
+## Start experimenting with HTTP/3
+
+Centrifugo v4 has an **experimental** HTTP/3 support. As soon as you enabled TLS and provided `"http3": true` option all endpoints on external port will be served by HTTP/3 server based on [lucas-clemente/quic-go](https://github.com/lucas-clemente/quic-go) implementation. This (among other benefits which HTTP/3 can provide) is a first step towards [WebTransport](https://web.dev/webtransport/) support in the future.
+
+It's worth noting that WebSocket transport does not work over HTTP/3, it still starts with HTTP/1.1 Upgrade request (there is an interesting IETF draft BTW about [Bootstrapping WebSockets with HTTP/3](https://www.ietf.org/archive/id/draft-ietf-httpbis-h3-websockets-02.html)). But HTTP-streaming and Eventsource should work just fine with HTTP/3.
+
+HTTP/3 does not work with ACME autocert TLS at the moment - i.e. you need to explicitly provide paths to cert and key files [as described here](/docs/server/tls#using-crt-and-key-files).
 
 ## Migration guide
 

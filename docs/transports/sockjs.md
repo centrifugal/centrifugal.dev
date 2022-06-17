@@ -7,7 +7,7 @@ SockJS is a polyfill browser library which provides HTTP-based fallback transpor
 
 :::caution
 
-SockJS transport is DEPRECATED. It will be supported during Centrifugo v4 life cycle, but removed in the next major releases. 
+SockJS transport is DEPRECATED. It may be removed in the next major releases. Consider using our own WebSocket emulation layer based on HTTP-streaming and EventSource instead. If you know a use case where SockJS is still prefferred – reach us out to discuss this use case. 
 
 :::
 
