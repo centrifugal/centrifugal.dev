@@ -41,7 +41,7 @@ To generate fake user avatars we are requesting images from https://robohash.org
 
 :::tip
 
-We also have some ideas on furher possible app improvements at the end of this post.
+We also have some ideas on further possible app improvements at the end of this post.
 
 :::
 
