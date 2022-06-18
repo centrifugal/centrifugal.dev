@@ -20,15 +20,15 @@ The important distinction here is that all supported transports belong to one of
 
 Bidirectional transports are capable to serve all Centrifugo features. These transports are the main Centrifugo focus.
 
-Bidirectional transports come with a cost that developers need to use a special client connector library which speaks Centrifugo [client protocol](./client_protocol.md). The reason why we need a special client connector library is that a bidirectional connection is asynchronous – it's required to match requests to responses, properly manage connection state and request queueing/timeouts/errors.
+Bidirectional transports come with a cost that developers need to use a special client connector library (SDK) which speaks Centrifugo [client protocol](./client_protocol.md). The reason why we need a special client connector library is that a bidirectional connection is asynchronous – it's required to match requests to responses, properly manage connection state, handle request queueing/timeouts/errors, etc.
 
-Centrifugo has [client connector libraries](../transports/client_sdk.md) for popular environments.
+Centrifugo has several official [client SDKs](../transports/client_sdk.md) for popular environments.
 
 ## Unidirectional
 
 Unidirectional transports suit well for simple use-cases with stable subscriptions, usually known at connection time.
 
-The advantage is that unidirectional transports do not require special client connectors - developers can use native browser APIs (like WebSocket, EventSource, HTTP streaming), or GRPC generated code to receive real-time updates from Centrifugo – thus avoiding dependency to a client connector that abstracts bidirectional communication.
+The advantage is that unidirectional transports do not require special client connectors - developers can use native browser APIs (like WebSocket, EventSource, HTTP streaming), or GRPC generated code to receive real-time updates from Centrifugo. Thus avoiding dependency to a client connector that abstracts bidirectional communication.
 
 The drawback is that with unidirectional transports you are not inheriting all Centrifugo features out of the box (like dynamic subscriptions/unsubscriptions, automatic message recovery on reconnect, possibility to send RPC calls over persistent connection). But some of the missing client APIs can be mimicked by using calls to Centrifugo [server API](../server/server_api.md) (i.e. over client -> application backend -> Centrifugo).
 
@@ -38,28 +38,56 @@ In case of unidirectional transports Centrifugo will send `Push` frames to the c
 
 ```
 message Push {
-  enum PushType {
-    PUBLICATION = 0;
-    JOIN = 1;
-    LEAVE = 2;
-    UNSUBSCRIBE = 3;
-    MESSAGE = 4;
-    SUBSCRIBE = 5;
-    CONNECT = 6;
-    DISCONNECT = 7;
-    REFRESH = 8;
-  }
-  PushType type = 1;
   string channel = 2;
-  bytes data = 3;
+
+  Publication pub = 4;
+  Join join = 5;
+  Leave leave = 6;
+  Unsubscribe unsubscribe = 7;
+  Message message = 8;
+  Subscribe subscribe = 9;
+  Connect connect = 10;
+  Disconnect disconnect = 11;
+  Refresh refresh = 12;
 }
 ```
 
-So unidirectional connection will receive various pushes. All you need to do is look at Push type and process it or skip it. In most cases you will be most interested in `CONNECT` and `PUBLICATION` types.
+:::tip
+
+Some numbers in Protobuf definitions skipped for backwards compatibility with previous client protocol version.
+
+:::
+
+So unidirectional connection will receive various pushes. Every push contains **one of** the following objects:
+
+* Publication
+* Join
+* Leave
+* Unsubscribe
+* Message
+* Subscribe
+* Connect
+* Disconnect
+* Refresh
+
+Some pushes belong to a `channel` which may be set on Push top level.
+
+All you need to do is look at Push, process messages you are interested in and ignore others. In most cases you will be most interested in pushes which contain `Connect` or `Publication` messages.
+
+For example, according to [protocol schema](https://github.com/centrifugal/protocol/blob/master/definitions/client.proto) Publication message type looks like this:
+
+```
+message Publication {
+  bytes data = 4;
+  ClientInfo info = 5;
+  uint64 offset = 6;
+  map<string, string> tags = 7;
+}
+```
 
 :::tip
 
-In case of unidirectional WebSocket, EventSource and HTTP-streaming which currently work only with JSON `data` field of Push will come as an embedded JSON instead of `bytes` (again – the same mechanism as for Centrifugo bidirectional JSON protocol).
+In JSON protocol case Centrifugo replaces `bytes` type with embedded JSON.
 
 :::
 
