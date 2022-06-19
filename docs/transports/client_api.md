@@ -11,7 +11,7 @@ For Centrifugo v4 we introduced a new generation of SDKs for Javascript, Dart, G
 
 :::
 
-This chapter describes the core concepts of client SDKs API. If you want to find out lower-level client protocol framing details then look at [client protocol v2](client_protocol.md) document.
+This chapter describes the core concepts of client SDKs API. If you want to find out lower-level client protocol framing details then look at [client protocol](client_protocol.md) document.
 
 Most examples here are written using our Javascript client (`centrifuge-js`), but all other Centrifugo connectors now have very similar semantics and APIs very close to each other.
 
