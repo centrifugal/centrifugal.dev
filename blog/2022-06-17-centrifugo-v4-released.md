@@ -135,11 +135,13 @@ We also simplified [client protocol](/docs/transports/client_protocol) docs over
 
 One more optimization comes from revised PING-PONG behaviour. Previous Centrifugo versions sent ping/pong in both directions (for WebSocket transport). This allowed finding non-active connections on both client and server sides.
 
-In Centrifugo v4 we only send pings from a server to a client and expect pong from a client. On the client-side we have a timer which fires if there were no pings from a server for a configured amount of time. Sending pings only in one direction results in 2 times less ping-pong messages - and this should be really noticable for Centrifugo setups with thousands of concurrent connections. In our experiments with 10k connections server CPU usage dropped on up to 30% compared to Centrifugo v3.
+In Centrifugo v4 we only send pings from a server to a client and expect pong from a client. On the client-side we have a timer which fires if there were no pings from a server for a configured amount of time.
+
+Sending pings only in one direction results in 2 times less ping-pong messages - and this should be really noticable for Centrifugo setups with thousands of concurrent connections. In our experiments with 10k connections server CPU usage dropped on up to 30% compared to Centrifugo v3.
 
 ![Scheme](/img/ping_pong_v3_v4.png)
 
-Pings and pongs are application-level messages, just an empty command – for example in JSON case it's a 2-byte message: `{}`.
+Pings and pongs are application-level messages. Ping is just an empty asynchronous reply – for example in JSON case it's a 2-byte message: `{}`. Pong is an empty command – also, `{}` in JSON case. Having application-level pings from a server also allows unifying PING format for all unidirectional transports.
 
 ## Secure by default channel namespaces
 
@@ -215,9 +217,13 @@ Subscription JWT can provide capabilities for the channel too, Centrifugo also s
 
 ## Better connections API
 
-One more addition to Centrifugo PRO is an improved connection API. Previously we could only return all connections from a certain user. Now API supports filtering all connections: by user ID, by subscribed channel, by additional meta information attached to a connection.
+One more addition to Centrifugo PRO is an improved connection API. Previously we could only return all connections from a certain user. 
+
+Now API supports filtering all connections: by user ID, by subscribed channel, by additional meta information attached to a connection.
 
 The filtering works with a help of [CEL expressions](https://opensource.google/projects/cel) (Common Expression Language). CEL expressions provide a developer-friendly, fast and secure (as they are not Turing-complete) way to evaluate some conditions. They are used in some Google services (ex. Firebase), in Envoy RBAC configuration, etc. If you've never seen it before – take a look, pretty cool project. And now it helps us to filter connections in a flexible way.
+
+The connections API call result contains more useful information: list of client's active channels, information about tokens used to connect and subscribe.
 
 ## Javascript client moved to Typescript
 
