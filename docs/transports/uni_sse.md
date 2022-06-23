@@ -43,17 +43,6 @@ Centrifugo unidirectional SSE endpoint also supports POST requests. While it's n
 
 JSON
 
-## Pings
-
-Centrifugo sends SSE data like this as pings:
-
-```
-event: ping
-data:
-```
-
-I.e. with event name `ping` and empty data. You can ignore such messages or use them to detect broken connections (nothing received from a server for a long time).
-
 ## Options
 
 ### uni_sse

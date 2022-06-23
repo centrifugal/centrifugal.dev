@@ -13,7 +13,7 @@ Default WebSocket connection endpoint in Centrifugo is:
 /connection/websocket
 ```
 
-By default WebSocket connection uses JSON protocol internally.
+By default, WebSocket connection uses JSON protocol internally.
 
 ## Options
 

@@ -19,7 +19,7 @@ Client libraries listed here speak Centrifugo bidirectional protocol (WebSocket)
 * [centrifuge-swift](https://github.com/centrifugal/centrifuge-swift) – for native iOS development
 * [centrifuge-java](https://github.com/centrifugal/centrifuge-java) – for native Android development and general Java
 
-See a description of [client protocol](./client_protocol.md) if you want to write a custom bidirectional connector.
+See a description of [client protocol](./client_protocol.md) if you want to write a custom bidirectional connector or eager to learn how Centrifugo protocol internals are structured.
 
 ## SDK feature matrix
 

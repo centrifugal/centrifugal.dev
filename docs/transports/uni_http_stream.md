@@ -98,24 +98,12 @@ curl -X POST http://localhost:8000/api \
     -H "Authorization: apikey 9230f514-34d2-4971-ace2-851c656e81dc"
 ```
 
-You should see this message received in a terminal window with established connection to HTTP streaming endpoint:
+You should see this messages coming from server.
 
-```bash
-❯ curl -X POST http://localhost:8000/connection/uni_http_stream \
-    -d '{"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIiLCJleHAiOjE2MjUwNzMyODh9.BxmS4R-X6YXMxLfXNhYRzeHvtu_M2NCaXF6HNu7VnDM"}'
-{"type":6,"data":{"client":"cf5dc239-83ac-4d0f-b9ed-9733d7f7b61b","version":"dev","subs":{"#user12":{}}}}
-null
-null
-null
-null
-null
-{"channel":"#user12","data":{"data":{"input": "hello"}}}
-```
-
-`null` messages are pings from a server.
+`{}` messages are pings from a server.
 
 That's all, happy streaming!
 
 ## Browser example
 
-A basic browser example can be found [here](https://github.com/centrifugal/examples/tree/master/unidirectional/http_stream).
+A basic browser will come soon as we update docs for v4.

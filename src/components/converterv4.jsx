@@ -83,7 +83,7 @@ export default class ConfigConverter extends React.Component {
         if (namespace['protected'] === true) {
             remove('protected');
         } else {
-            setIfNotDefined('allow_subsribe_for_client', true);
+            setIfNotDefined('allow_subscribe_for_client', true);
             rename('anonymous', 'allow_subscribe_for_anonymous');
         }
 
@@ -131,7 +131,7 @@ export default class ConfigConverter extends React.Component {
                 if (namespace['protected'] === true) {
                     remove('protected', namespace);
                 } else {
-                    setIfNotDefined('allow_subsribe_for_client', true, namespace);
+                    setIfNotDefined('allow_subscribe_for_client', true, namespace);
                     rename('anonymous', 'allow_subscribe_for_anonymous', namespace);
                 }
 
