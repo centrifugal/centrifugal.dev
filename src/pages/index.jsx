@@ -18,7 +18,7 @@ function Feature({ imageUrl, title, children }) {
           <img className={styles.featureImage} src={imgUrl} alt={title} />
         </div>
       )}
-      <h3>{title}</h3>
+      <h2 className="text--center">{title}</h2>
       <p>{children}</p>
     </div>
   );
@@ -65,37 +65,37 @@ function Home() {
         <section className={styles.features}>
           <div className="container">
             <div className="row">
-              <Feature title="Integrates with everything" imageUrl="img/integration.svg">
+              <Feature title="Integrates with everything" imageUrl="img/feature_integration.png">
                 Centrifugo is a self-hosted service which can handle connections over <a href="/docs/transports/overview">a variety of real-time transports</a> and provides a simple <a href="/docs/server/server_api">publish API</a>.
                 Centrifugo integrates well with any application – no need to change an
                 existing application architecture to introduce real-time features.
                 Just let Centrifugo deal with persistent connections.
               </Feature>
-              <Feature title="Great performance" imageUrl="img/performance.svg">
+              <Feature title="Great performance" imageUrl="img/feature_performance.png">
                 Centrifugo is built in Go language with some smart optimizations inside.
                 It has good performance – see a description of a
                 test stand with <a href="/blog/2020/02/10/million-connections-with-centrifugo">one million WebSocket</a> connections and 30 million delivered
                 messages per minute with hardware comparable to one modern server machine.
               </Feature>
-              <Feature title="Feature-rich" imageUrl="img/feature_rich.svg">
+              <Feature title="Feature-rich" imageUrl="img/feature_rich.png">
                 Many built-in features can help to build an attractive real-time
                 application in a limited time. Centrifugo provides different types
                 of subscriptions, hot channel history, instant presence, RPC calls.
                 There is also the possibility to proxy connection events to the application
-                backend over HTTP or GRPC and more.
+                backend over HTTP or GRPC, and more.
               </Feature>
-              <Feature title="Out-of-the-box scalability" imageUrl="img/scalability.svg">
+              <Feature title="Out-of-the-box scalability" imageUrl="img/feature_scalability.png">
                 Built-in Redis, KeyDB, Tarantool engines, or Nats broker make it possible
                 to scale connections over different machines. With consistent sharding
                 of Redis, KeyDB, and Tarantool it's possible to handle millions of active
                 connections with reasonable hardware requirements.
               </Feature>
-              <Feature title="Used in production" imageUrl="img/production.svg">
+              <Feature title="Used in production" imageUrl="img/feature_production.png">
                 Started almost 10 years back then Centrifugo (and Centrifuge library for Go
                 it's built on top of) is a mature server successfully used in production by
                 many companies around the world: Mail.ru, Badoo, ManyChat, Grafana, and others.
               </Feature>
-              <Feature title="Even more with Centrifugo PRO" imageUrl="img/pro2.svg">
+              <Feature title="Even more with Centrifugo PRO" imageUrl="img/feature_pro.png">
                 Centrifugo PRO provides even more unique features: real-time connection analytics
                 with ClickHouse, real-time user and channel tracing, token bucket operation
                 throttling, user active status support, faster API, faster proxy performance, and more.
