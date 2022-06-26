@@ -120,7 +120,7 @@ function Home() {
                 Chats, live comments, multiplayer games, streaming metrics can be built on top of a real-time messaging system.
               </p>
               <p>
-                Centrifugo handles persistent connections from clients over bidirectional <a href="/docs/transports/websocket">WebSocket</a>, <a href="/docs/transports/sockjs">SockJS</a>
+                Centrifugo handles persistent connections from clients over bidirectional <a href="/docs/transports/websocket">WebSocket</a>, using bidirectional emulation with <a href="/docs/transports/http_stream">HTTP-streaming</a>, <a href="/docs/transports/sse">SSE (EventSource)</a>, <a href="/docs/transports/sockjs">SockJS</a>
                 , or unidirectional <a href="/docs/transports/uni_sse">SSE (EventSource)</a>, <a href="/docs/transports/uni_http_stream">HTTP-streaming</a>, <a href="/docs/transports/uni_grpc">GRPC</a> transports. Server <a href="/docs/server/server_api">API</a> allows publishing
                 messages to online clients in real-time.
               </p>
