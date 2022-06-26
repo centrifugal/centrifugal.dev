@@ -59,7 +59,7 @@ This feature works with a help of presence information inside a personal channel
 
 Example config:
 
-```
+```json title="config.json"
 {
   "user_subscribe_to_personal": true,
   "user_personal_single_connection": true,

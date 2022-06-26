@@ -46,4 +46,4 @@ Centrifugo PRO is distributed under [commercial license](/pro_license) which is 
 
 ## Pricing
 
-To run without limits Centrifugo PRO requires a license key. At this point we are not issuing license keys for Centrifugo PRO as we are in the process of defining the pricing strategy for it. Please contact us over `centrifugal.dev@gmail.com`, we can add you to the list of interested customers and will appreciate if you share which features you are mostly interested in.
+To run without limits Centrifugo PRO requires a license key. At this point we are not issuing license keys for Centrifugo PRO as we are in the process of defining pricing and distribution strategy for it. Please contact us over `centrifugal.dev@gmail.com`, we can add you to the list of interested customers and will appreciate if you share which PRO features you are mostly interested in.

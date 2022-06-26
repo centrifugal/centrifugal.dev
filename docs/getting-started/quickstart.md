@@ -4,15 +4,15 @@ sidebar_label: Quickstart tutorial
 title: Quickstart tutorial ⏱️
 ---
 
-Here we will build a very simple browser application with Centrifugo. It works in a way that users connect to Centrifugo over WebSocket, subscribe to a channel, and start receiving all channel publications (messages published to that channel). In our case, we will send a counter value to all channel subscribers to update counter value in all open browser tabs in real-time.
+Here we will build a very simple browser application with Centrifugo. Users will connect to Centrifugo over WebSocket, subscribe to a channel, and start receiving all channel publications (messages published to that channel). In our case, we will send a counter value to all channel subscribers to update counter widget in all open browser tabs in real-time.
 
-First you need to [install Centrifugo](installation.md). Below in this example, we will use a binary file release for simplicity. Once you have Centrifugo available on your machine you can generate minimal required configuration file with the following command:
+First you need to [install Centrifugo](installation.md). In this example, we are using a binary file release which is fine for development. Once you have Centrifugo binary available on your machine you can generate minimal required configuration file with the following command:
 
 ```
 ./centrifugo genconfig
 ```
 
-This helper command will generate `config.json` file in the working directory with content like this:
+This helper command will generate `config.json` file in the working directory with a content like this:
 
 ```json title="config.json"
 {
@@ -24,7 +24,7 @@ This helper command will generate `config.json` file in the working directory wi
 }
 ```
 
-Now we can start a server. Let's start it with a built-in admin web interface:
+Now we can start a server. Let's start Centrifugo with a built-in admin web interface:
 
 ```console
 ./centrifugo --config=config.json --admin
@@ -49,7 +49,7 @@ And then running Centrifugo only with a path to a configuration file:
 ./centrifugo --config=config.json
 ```
 
-Now open [http://localhost:8000](http://localhost:8000). You should see Centrifugo admin web panel. Enter `admin_password` value from the configuration file to log in (in this case it's `d0683813-0916-4c49-979f-0e08a686b727`, but will have a different value).
+Now open [http://localhost:8000](http://localhost:8000). You should see Centrifugo admin web panel. Enter `admin_password` value from the configuration file to log in (in our case it's `d0683813-0916-4c49-979f-0e08a686b727`, but you will have a different value).
 
 ![Admin web panel](/img/quick_start_admin.png)
 
@@ -85,6 +85,7 @@ Now let's create `index.html` file with our simple app:
     }).connect();
 
     const sub = centrifuge.newSubscription("channel");
+
     sub.on('publication', function (ctx) {
       container.innerHTML = ctx.data.value;
       document.title = ctx.data.value;
@@ -103,7 +104,7 @@ Now let's create `index.html` file with our simple app:
 
 Note that we are using `centrifuge-js` 3.0.0 in this example, you better use its latest version at the moment of reading this tutorial.
 
-In `index.html` above we created an instance of a client (called `Centrifuge`) passing Centrifugo default WebSocket endpoint address to it, then we subscribed to a channel called `channel` and provided a callback function to process incoming real-time messages (publications). Then we called `.subscribe()` to initialte subscription and then `.connect()` method of client to start a WebSocket connection. 
+In `index.html` above we created an instance of a Centrifuge client passing Centrifugo server default WebSocket endpoint address to it, then we subscribed to a channel called `channel` and provided a callback function to process incoming real-time messages (publications). Upon receiving a new publication we update page HTML and setting counter value to page title. Then we call `.subscribe()` to initialte subscription and then `.connect()` method of client to start a WebSocket connection. 
 
 Now you need to serve this file with an HTTP server. In a real-world Javascript application, you will serve your HTML files with a web server of your choice – but for this simple example we can use a simple built-in Centrifugo static file server:
 
@@ -130,9 +131,7 @@ That's because we have not set `allowed_origins` in the configuration. Modify `a
 ```json title="config.json"
 {
   ...
-  "allowed_origins": [
-    "http://localhost:3000"
-  ]
+  "allowed_origins": ["http://localhost:3000"]
 }
 ```
 
@@ -158,7 +157,7 @@ HMAC SHA-256 JWT for user "123722" with expiration TTL 168h0m0s:
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM3MjIiLCJleHAiOjE2NTU0NDgyOTl9.mUU9s5kj3yqp-SAEqloGy8QBgsLg0llA7lKUNwtHRnw
 ```
 
-– you will have another token value since this one is based on randomly generated `token_hmac_secret_key` from the configuration file we created at the beginning of this tutorial. See [authentication docs](../server/authentication.md) for information about proper token generation in real app.
+– you will have another token value since this one is based on randomly generated `token_hmac_secret_key` from the configuration file we created at the beginning of this tutorial. See [token authentication docs](../server/authentication.md) for information about proper token generation in a real application.
 
 Now we can copy generated HMAC SHA-256 JWT and paste it into Centrifugo constructor instead of `<TOKEN>` placeholder in `index.html` file. I.e.:
 
@@ -174,32 +173,9 @@ If you reload your browser tab – the connection will be successfully establish
 2022-06-10 09:45:49 [INF] client command error error="permission denied" client=88116489-350f-447f-9ff3-ab61c9341efe code=103 command="id:2  subscribe:{channel:\"channel\"}" reply="id:2  error:{code:103  message:\"permission denied\"}" user=123722
 ```
 
-We need to give client a permission to subscribe on channel `channel`. Let's do this by issuing subscription token for user using one more command-line helper `gensubtoken`:
+We need to give client a permission to subscribe on the channel `channel`. There are several ways to do this. For example, client can provide [subscription JWT](../server/channel_token_auth.md) for a channel. But here we will use an option to allow all authenticated clients subscribe to any channel.
 
-```
-./centrifugo gensubtoken -u 123722 -s channel
-```
-
-You should see an output like this:
-
-```
-HMAC SHA-256 JWT for user "123722" and channel "channel" with expiration TTL 168h0m0s:
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM3MjIiLCJleHAiOjE2NTU0NDg0MzgsImNoYW5uZWwiOiJjaGFubmVsIn0.JyRI3ovNV-abV8VxCmZCD556o2F2mNL1UoU58gNR-uI
-```
-
-Now add the initial subscription token to the example above:
-
-```javascript
-const sub = centrifuge.newSubscription("channel", {
-  token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM3MjIiLCJleHAiOjE2NTU0NDg0MzgsImNoYW5uZWwiOiJjaGFubmVsIn0.JyRI3ovNV-abV8VxCmZCD556o2F2mNL1UoU58gNR-uI"
-});
-```
-
-And that's it, now everything should work.
-
-:::tip
-
-Alternatively, we could avoid using subscription token at all and allow all authenticated users to subscribe on channels by just adding `allow_subscribe_for_client` option into configuration:
+To do this let's extend a server configuration with `allow_subscribe_for_client` option: 
 
 ```json title="config.json"
 {
@@ -208,24 +184,24 @@ Alternatively, we could avoid using subscription token at all and allow all auth
   "admin_password": "d0683813-0916-4c49-979f-0e08a686b727",
   "admin_secret": "4e9eafcf-0120-4ddd-b668-8dc40072c78e",
   "api_key": "d7627bb6-2292-4911-82e1-615c0ed3eebb",
-  "allowed_origins": [
-    "http://localhost:3000"
-  ],
+  "allowed_origins": ["http://localhost:3000"],
   "allow_subscribe_for_client": true
 }
 ```
 
-This makes Centrifugo less strict in channel permission checks as all clients with valid tokens will be able to subscribe on all channels. Depending on a permission logic in your application you should decide which way is reasonable for your specific use case. There are also other ways to authorize subscriptions not mentioned here but described later in the documentation.
+:::tip
+
+A good practice with Centrifugo is configuring [channel namespaces](../server/channels.md#channel-namespaces) for different types of real-time features you have in the application. By defining namespaces you can achieve a granular control over channel behavior and permissions. 
 
 :::
 
+Restart Centrifugo – and after doing this everything should start working. Client can successfully connect and successfully subscribe to a channel now.
+
 Open developer tools and look at WebSocket frames panel, you should see sth like this:
 
-![Connected](/img/quick_start_ws_frames.png)
+![Connected](/img/quick_start_ws_frames_v4.png)
 
-Note, that in this example we generated both connection and subscription JWT – but they have expiration time, so after some time Centrifugo stops accepting those tokens. In real-life you need to add a token refresh function to a client to rotate tokens. See out [client API SDK spec](../transports/client_api.md).
-
-Also note, that token auth is not the only way to connect to Centrifugo or to subscribe on a channel. There are other ways described throughout documentation.
+Note, that in this example we generated connection JWT – but it has expiration time, so after some time Centrifugo stops accepting those tokens. In real-life you need to add a token refresh function to a client to rotate tokens. See out [client API SDK spec](../transports/client_api.md).
 
 OK, the last thing we need to do here is to publish a new counter value to a channel and make sure our app works properly.
 
@@ -245,9 +221,9 @@ Click `Submit` button and check out the application browser tab – counter valu
 
 Open several browser tabs with our app and make sure all tabs receive a message as soon as you publish it.
 
-![Message received](/img/quick_start_message.png)
+![Message received](/img/quick_start_message_v4.png)
 
-BTW, let's also look at how you can publish data to channel over Centrifugo API from a terminal using `curl` tool:
+BTW, let's also look at how you can publish data to a channel over Centrifugo server API from a terminal using `curl` tool:
 
 ```bash
 curl --header "Content-Type: application/json" \
@@ -260,9 +236,3 @@ curl --header "Content-Type: application/json" \
 – where for `Authorization` header we set `api_key` value from Centrifugo config file generated above.
 
 We did it! We built the simplest browser real-time app with Centrifugo and its Javascript client. It does not have a backend, it's not very useful, to be honest, but it should give you an insight on how to start working with Centrifugo server. Read more about Centrifugo server in the next documentations chapters – it can do much much more than we just showed here. [Integration guide](integration.md) describes a process of idiomatic Centrifugo integration with your application backend.
-
-### More examples
-
-Several more examples are located on Github – [check out this repo](https://github.com/centrifugal/examples).
-
-Also, check out [our blog](/blog) with several tutorials.

@@ -74,7 +74,7 @@ export default class ConfigConverter extends React.Component {
         }
 
         remove('use_unlimited_history_by_default');
-        rename('client_anonymous', 'client_connect_without_token');
+        rename('client_anonymous', 'allow_anonymous_connect_without_token');
 
         let namespace = config;
 

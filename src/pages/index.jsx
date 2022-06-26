@@ -113,15 +113,15 @@ function Home() {
             <>
               <p>
                 Real-time messaging can help building interactive applications where events
-                can be delivered to users almost immediately after being acknowledged by application
+                are delivered to users immediately after being acknowledged by application
                 backend by pushing data into persistent connection – thus achieving minimal delivery latency.
               </p>
               <p>
                 Chats, live comments, multiplayer games, streaming metrics can be built on top of a real-time messaging system.
               </p>
               <p>
-                Centrifugo handles persistent connections from clients over bidirectional <a href="/docs/transports/websocket">WebSocket</a>, <a href="/docs/transports/sockjs">SockJS</a>
-                , and unidirectional <a href="/docs/transports/uni_sse">SSE (EventSource)</a>, <a href="/docs/transports/uni_http_stream">HTTP-streaming</a>, <a href="/docs/transports/uni_grpc">GRPC</a> transports and provides <a href="/docs/server/server_api">API</a> to publish
+                Centrifugo handles persistent connections from clients over bidirectional <a href="/docs/transports/websocket">WebSocket</a>, using bidirectional emulation with <a href="/docs/transports/http_stream">HTTP-streaming</a>, <a href="/docs/transports/sse">SSE (EventSource)</a>, <a href="/docs/transports/sockjs">SockJS</a>
+                , or unidirectional <a href="/docs/transports/uni_sse">SSE (EventSource)</a>, <a href="/docs/transports/uni_http_stream">HTTP-streaming</a>, <a href="/docs/transports/uni_grpc">GRPC</a> transports. Server <a href="/docs/server/server_api">API</a> allows publishing
                 messages to online clients in real-time.
               </p>
             </>
@@ -147,7 +147,7 @@ function Home() {
               </p>
               <p>This demonstrates that you can stream 60Hz data towards client connections and thus provide an instant visual feedback about system state.</p>
               <p>
-                Various types of interactive real-time applications can be quickly built using Centrifugo and a set of client connector libraries (for both web and mobile experience). With unidirectional transports you can avoid dependency to Centrifugo connectors and just use native browser APIs or GRPC generated code.
+                Various types of interactive real-time applications can be quickly built using Centrifugo and a set of client SDK libraries (for both web and mobile experience). With unidirectional transports you can avoid dependency to Centrifugo SDK libraries and just use native browser APIs or GRPC generated code.
               </p>
               <div className={styles.buttons}>
                 <Link

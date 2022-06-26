@@ -32,7 +32,7 @@ If client provides a valid token then subscription will be accepted. In Centrifu
 
 :::caution
 
-For namespaces with `allow_subscribe_for_client` option ON Centrifugo does not allow subscribing on channels starting with `private_channel_prefix` (`$` by default) without token. This limitation exists to help users migrate to Centrifugo v4 without security risks. You can disable this limitation by setting `private_channel_prefix` option to `""` (empty string).
+For namespaces with `allow_subscribe_for_client` option ON Centrifugo does not allow subscribing on channels starting with `private_channel_prefix` (`$` by default) without token. This limitation exists to help users migrate to Centrifugo v4 without security risks.
 
 :::
 

@@ -22,6 +22,8 @@ If you've never heard about Centrifugo before – it's a scalable **soft real-ti
 
 Let's start from looking back a bit. Centrifugo v3 was released last year. It had a great list of improvements – like unidirectional transports support (EventSource, HTTP-streaming and GRPC), GRPC transport for proxy, history iteration API, faster JSON protocol, super-fast but experimental Tarantool engine implementation, and others.
 
+![Centrifuge](/img/v3_blog.jpg)
+
 During Centrifugo v3 lifecycle we added even more JSON protocol optimizations and introduced a granular proxy mode. Experimental Tarantool engine evolved a bit also.
 
 But Centrifugo v3 did not contain nothing... let's say **revolutional**. Revolutional for Centrifugo itself, community, or even for the entire open-source real-time messaging area.
@@ -54,6 +56,7 @@ A few things that have been revised from scratch:
 * Ping-pong behavior (see details below)
 * Resubscribe logic (SDKs can now resubscribe with backoff)
 * Error handling
+* Unified backoff behavior (based on [full jitter technique](https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/)) 
 
 We now have a separation between temporary and non-temporary prrotocol errors – this allows handling internal server errors during subscribing making subscriptions more reliable with automatic resubscribtions and make individual subscription failures to not affect the entire connection.  
 
@@ -157,7 +160,7 @@ New permission-related channel option names now better reflect the purpose of op
 
 Centrifugo is now more strict when checking channel name by default. Only ASCII symbols allowed – it was already mentioned in docs before, but wasn't actually enforced. Now we are fixing this.
 
-We understand that these changes will make starting with Centrifugo a more complex task when all you want is a public access to all the channels without worrying too much about permissions. It's still possible to achieve – but now intent should be explicitly expressed in the configuration.
+We understand that these changes will make starting with Centrifugo a more complex task when all you want is a public access to all the channels without worrying too much about permissions. It's still possible to achieve – but now the intent should be explicitly expressed in the configuration.
 
 Check out updated documentation about [channels and namespaces](/docs/server/channels). Our v4 migration guide contains an **automatic converter** for channel namespace options.
 
@@ -192,7 +195,7 @@ Optimistic subscriptions are now part of `centrifuge-js` only. At some point we 
 
 ## Channel capabilities
 
-Channel capabilities feature is introduced as part of Centrifugo PRO. Initially we aimed to make it a part of the OSS version. But the lack of feedback from the community made us nervous it's really needed. So adding it to PRO seemed a safer decision for a moment.
+Channel capabilities feature is introduced as part of [Centrifugo PRO](/docs/pro/overview). Initially we aimed to make it a part of the OSS version. But the lack of feedback about the feature made us nervous it's really needed. So adding it to PRO seemed a safer decision for a moment.
 
 Centrifugo allows configuring channel permissions on a per-namespace level. When creating a new real-time feature it's recommended to create a new namespace for it and configure permissions. But to achieve a better channel permission control inside a namespace Channel capabilities can be used now.
 

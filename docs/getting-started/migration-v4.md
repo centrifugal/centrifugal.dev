@@ -105,7 +105,7 @@ import ConfigConverter from "@site/src/components/converterv4"
 
 Several other non-namespace related options have been renamed or removed:
 
-* `client_anonymous` option renamed to `allow_connect_without_token` – new name better describes the purpose of this option which was previously not clear. Converter above takes this into account.
+* `client_anonymous` option renamed to `allow_anonymous_connect_without_token` – new name better describes the purpose of this option which was previously not clear. Converter above takes this into account.
 * `use_unlimited_history_by_default` option was removed. It was used to help migrating from Centrifugo v2 to v3.
 
 ## Server API changes

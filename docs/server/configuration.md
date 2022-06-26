@@ -208,12 +208,6 @@ Default: 1048576
 
 Maximum client message queue size in bytes to close slow reader connections. By default - 1mb.
 
-### client_anonymous
-
-Default: false
-
-Enable a mode when all clients can connect to Centrifugo without JWT. In this case, all connections without a token will be treated as anonymous (i.e. with empty user ID) and only can subscribe to channels with `anonymous` option enabled.
-
 ### client_concurrency
 
 Default: 0
@@ -221,6 +215,12 @@ Default: 0
 `client_concurrency` when set tells Centrifugo that commands from a client must be processed concurrently.
 
 By default, concurrency disabled – Centrifugo processes commands received from a client one by one. This means that if a client issues two RPC requests to a server then Centrifugo will process the first one, then the second one. If the first RPC call is slow then the client will wait for the second RPC response much longer than it could (even if the second RPC is very fast). If you set `client_concurrency` to some value greater than 1 then commands will be processed concurrently (in parallel) in separate goroutines (with maximum concurrency level capped by `client_concurrency` value). Thus, this option can effectively reduce the latency of individual requests. Since separate goroutines are involved in processing this mode adds some performance and memory overhead – though it should be pretty negligible in most cases. This option applies to all commands from a client (including subscribe, publish, presence, etc).
+
+### allow_anonymous_connect_without_token
+
+Default: false
+
+Enable a mode when all clients can connect to Centrifugo without JWT. In this case, all connections without a token will be treated as anonymous (i.e. with empty user ID). Access to channel operations should be explicitly enabled for anonymous connections.
 
 ### gomaxprocs
 
@@ -238,6 +238,18 @@ Bidirectional WebSocket default endpoint:
 
 ```
 ws://localhost:8000/connection/websocket
+```
+
+Bidirectional emulation with HTTP-streaming (disabled by default):
+
+```
+ws://localhost:8000/connection/http_stream
+```
+
+Bidirectional emulation with SSE (EventSource) (disabled by default):
+
+```
+ws://localhost:8000/connection/sse
 ```
 
 Bidirectional SockJS default endpoint (disabled by default):
@@ -264,7 +276,7 @@ Unidirectional WebSocket endpoint (disabled by default):
 http://localhost:8000/connection/uni_websocket
 ```
 
-Unidirectional EventSource (SSE) endpoint (disabled by default):
+Unidirectional SSE (EventSource) endpoint (disabled by default):
 
 ```
 http://localhost:8000/connection/uni_sse
@@ -368,6 +380,8 @@ It's possible to customize server HTTP handler endpoints. To do this Centrifugo 
 
 * `admin_handler_prefix` (default `""`) - to control Admin panel URL prefix
 * `websocket_handler_prefix` (default `"/connection/websocket"`) - to control WebSocket URL prefix
+* `http_stream_handler_prefix` (default `"/connection/http_stream"`) - to control HTTP-streaming URL prefix
+* `sse_handler_prefix` (default `"/connection/sse"`) - to control SSE/EventSource URL prefix
 * `sockjs_handler_prefix` (default `"/connection/sockjs"`) - to control SockJS URL prefix
 * `uni_sse_handler_prefix` (default `"/connection/uni_sse"`) - to control unidirectional Eventsource URL prefix
 * `uni_http_stream_handler_prefix` (default `"/connection/uni_http_stream"`) - to control unidirectional HTTP streaming URL prefix

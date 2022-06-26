@@ -7,7 +7,9 @@ The Engine in Centrifugo is responsible for publishing messages between nodes, h
 
 By default, Centrifugo uses a Memory engine. There are also Redis, KeyDB, Tarantool engines available. And Nats broker which also supports at most once PUB/SUB.
 
-The difference between them - with Memory engine you can start only one node of Centrifugo, while Redis engine allows running several nodes on different machines and they all will be connected via PUB/SUB, will know about each other and will also keep history and presence data in Redis instead of Centrifugo node process memory so this data can be accessed from each node and won't be lost after Centrifugo server restart.
+With default Memory engine you can start only one node of Centrifugo, while other engines allow running several nodes on different machines to scale client connections and for Centrifugo node high availability. In distributed case all Centrifugo nodes will be connected via broker PUB/SUB, will discover each other and deliver publications to the node where active channel subscribers exist.
+
+Memory engine keeps history and presence data in process memory, so the data is lost upon server restart. When using Redis Engine the data is kept in Redis (where you can configure desired persistence properties) instead of Centrifugo node process memory, so channel history data won't be lost after Centrifugo server restart.
 
 To set engine you can use `engine` configuration option. Available values are `memory`, `redis`, `tarantool`. The default value is `memory`.
 
@@ -32,7 +34,7 @@ Advantages:
 Disadvantages:
 
 * Does not allow scaling nodes (actually you still can scale Centrifugo with Memory engine but you have to publish data into each Centrifugo node and you won't have consistent history and presence state throughout Centrifugo nodes)
-* Does not persist message history in channels between Centrifugo restarts
+* Does not persist message history in channels between Centrifugo restarts.
 
 ### Memory engine options
 
