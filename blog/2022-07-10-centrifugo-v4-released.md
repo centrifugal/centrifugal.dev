@@ -58,7 +58,7 @@ A few things that have been revised from scratch:
 * Error handling
 * Unified backoff behavior (based on [full jitter technique](https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/)) 
 
-We now have a separation between temporary and non-temporary prrotocol errors – this allows handling internal server errors during subscribing making subscriptions more reliable with automatic resubscribtions and make individual subscription failures to not affect the entire connection.  
+We now have a separation between temporary and non-temporary prrotocol errors – this allows handling internal server errors during subscribing making subscriptions more resilient with automatic resubscribtions and make individual subscription failures to not affect the entire connection.  
 
 The mechanics described in the client SDK API spec is now implemented by all our official SDKs. SDKs now support all the core client protocol features existing at this point – without exception. We believe this is a great step forward for Centrifugo ecosystem and community.
 
@@ -250,7 +250,7 @@ HTTP/3 does not work with ACME autocert TLS at the moment - i.e. you need to exp
 
 As some of you know Centrifugo server is built on top of [Centrifuge](https://github.com/centrifugal/centrifuge) library for Go. Most of the things described here are now also part of Centrifuge library.
 
-With bidirectional emulation layer it seems a robust alternative to Socket.IO in Go language ecosystem. It's generic enough to build real-time applications of any kind and comes with Redis broker support to scale connections to many machines – the feature usually not available in other open-source real-time messaging libraries.
+With new unified SDK behavior and bidirectional emulation layer it seems a robust alternative to Socket.IO in Go language ecosystem. It's generic enough to build real-time applications of any kind and comes with Redis broker support to scale connections to many machines – the feature usually not available in other open-source real-time messaging libraries.
 
 In some cases Centrifuge library can be a more flexible solution than Centrifugo since Centrifugo (as a standalone server) dictates some mechanics and rules to follow.
 

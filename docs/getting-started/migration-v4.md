@@ -101,6 +101,10 @@ import ConfigConverter from "@site/src/components/converterv4"
 
 <ConfigConverter />
 
+## Proxy disconnect code changes
+
+`reconnect` flag from custom disconnect code is removed. Reconnect advice is now determined by disconnect code value. See [proxy docs](../server/proxy.md#return-custom-disconnect) docs for more details.  
+
 ## Other configuration option changes
 
 Several other non-namespace related options have been renamed or removed:
