@@ -533,7 +533,7 @@ Application backend can return JSON object that contains an error to return it t
 }
 ```
 
-Application **should use error codes >= 1000**, error codes in the range 0-999 are reserved by Centrifugo internal protocol. Error code field is `uint32` internally.
+Applications **must use error codes in range [400, 1999]**. Error code field is `uint32` internally.
 
 :::note
 
@@ -548,21 +548,24 @@ Application backend can return JSON object that contains a custom disconnect obj
 ```json
 {
   "disconnect": {
-    "code": 4000,
-    "reconnect": false,
+    "code": 4500,
     "reason": "custom disconnect"
   }
 }
 ```
 
-Application **must use numbers in the range 4000-4999 for custom disconnect codes**. Code is `uint32` internally. Numbers below 4000 are reserved by Centrifugo internal protocol. Keep in mind that **due to WebSocket protocol limitations and Centrifugo internal protocol needs you need to keep disconnect reason string no longer than 32 symbols**.
+Application **must use numbers in the range 4000-4999 for custom disconnect codes**:
+
+* codes in range [4000, 4499] give client an advice to reconnect
+* codes in range [4500, 4999] are terminal codes – client won't reconnect upon receiving it.
+
+Code is `uint32` internally. Numbers outside of 4000-4999 range are reserved by Centrifugo internal protocol. Keep in mind that **due to WebSocket protocol limitations and Centrifugo internal protocol needs you need to keep disconnect reason string no longer than 32 symbols**.
 
 :::note
 
 Returning custom disconnect does not apply to response on refresh request as there is no way to control disconnect at moment - the client will always be disconnected with `expired` disconnect reason.
 
 :::
-
 
 ## GRPC proxy
 

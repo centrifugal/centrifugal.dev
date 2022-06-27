@@ -19,6 +19,7 @@ Centrifugo PRO includes the following features:
 * [User blocking API](./user_block.md) to block/unblock abusive users by ID.
 * [JWT revoking and invalidation](./token_revocation.md) to revoke tokens by token ID (JTI) and invalidate user's tokens on issue time basis.
 * [Faster performance](./performance.md) to reduce resource usage on server side.
+* [Optimized Redis Engine](./redis_engine.md) to reduce CPU and Redis Cluster [sharded PUB/SUB](https://redis.io/docs/manual/pubsub/#sharded-pubsub) support.
 * [Singleflight](./singleflight.md) for online presence and history to reduce load on the broker.
 * Near real-time [CPU and RSS memory usage stats](./process_stats.md).
 
@@ -46,4 +47,6 @@ Centrifugo PRO is distributed under [commercial license](/pro_license) which is 
 
 ## Pricing
 
-To run without limits Centrifugo PRO requires a license key. At this point we are not issuing license keys for Centrifugo PRO as we are in the process of defining pricing and distribution strategy for it. Please contact us over `centrifugal.dev@gmail.com`, we can add you to the list of interested customers and will appreciate if you share which PRO features you are mostly interested in.
+To run without limits Centrifugo PRO requires a license key.
+
+At this point we are not issuing license keys for Centrifugo PRO as we are in the process of defining pricing strategy and distribution model for it. Please contact us over `centrifugal.dev@gmail.com` – so we can add you to the list of interested customers. Will appreciate if you share which PRO features you are mostly interested in.

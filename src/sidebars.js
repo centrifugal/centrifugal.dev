@@ -49,8 +49,8 @@ module.exports = {
       collapsed: false,
       items: [
         "transports/uni_websocket",
-        "transports/uni_sse",
         "transports/uni_http_stream",
+        "transports/uni_sse",
         "transports/uni_grpc",
       ],
     },
@@ -72,6 +72,7 @@ module.exports = {
         "pro/user_block",
         "pro/token_revocation",
         "pro/performance",
+        "pro/redis_engine",
         "pro/singleflight",
         "pro/process_stats",
       ],
