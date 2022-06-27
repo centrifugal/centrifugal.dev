@@ -20,11 +20,11 @@ What we would like to emphasize is that even there are many backwards incompatib
 
 New generation of client protocol requires using the latest versions of client SDKs. During the next several days we will release the following SDK versions which are compatible with Centrifugo v4:
 
-* centrifuge-js v3.0.0
-* centrifuge-go v?
-* centrifuge-dart v?
-* centrifuge-swift v?
-* centrifuge-java v?
+* centrifuge-js >= v3.0.0
+* centrifuge-go >= v0.9.0
+* centrifuge-dart >= v0.9.0
+* centrifuge-swift >= v0.5.0
+* centrifuge-java >= v0.2.0
 
 New client SDKs **support only new client protocol** – you can not connect to Centrifugo v3 with them.
 
@@ -103,7 +103,7 @@ import ConfigConverter from "@site/src/components/converterv4"
 
 ## Proxy disconnect code changes
 
-`reconnect` flag from custom disconnect code is removed. Reconnect advice is now determined by disconnect code value. See [proxy docs](../server/proxy.md#return-custom-disconnect) docs for more details.  
+`reconnect` flag from custom disconnect code is removed. Reconnect advice is now determined by disconnect code value. This allowed us avoiding using JSON in WebSocket CLOSE frame reason. See [proxy docs](../server/proxy.md#return-custom-disconnect) docs for more details.  
 
 ## Other configuration option changes
 
