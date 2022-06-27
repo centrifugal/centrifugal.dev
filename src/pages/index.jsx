@@ -91,14 +91,13 @@ function Home() {
                 connections with reasonable hardware requirements.
               </Feature>
               <Feature title="Used in production" imageUrl="img/feature_production.png">
-                Started almost 10 years back then Centrifugo (and Centrifuge library for Go
-                it's built on top of) is a mature server successfully used in production by
-                many companies around the world: Mail.ru, Badoo, ManyChat, Grafana, and others.
+                Started a decade ago Centrifugo (and Centrifuge library for Go
+                it's built on top of) is a mature battle-tested software successfully used in
+                production by many companies around the world: VK, Badoo, ManyChat, OpenWeb, Grafana, and others.
               </Feature>
               <Feature title="Even more with Centrifugo PRO" imageUrl="img/feature_pro.png">
-                Centrifugo PRO provides even more unique features: real-time connection analytics
-                with ClickHouse, real-time user and channel tracing, token bucket operation
-                throttling, user active status support, faster API, faster proxy performance, and more.
+                Centrifugo PRO provides a set of unique features on top of the OSS version: connection analytics
+                with ClickHouse, real-time user and channel tracing, operation throttling, faster performance, optimized Redis communication, and more.
               </Feature>
             </div>
           </div>
