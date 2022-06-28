@@ -1,19 +1,21 @@
 .featureTitle {
     font-size: 36px;
-    font-weight: 500;
+    font-weight: 600;
+    text-align: center;
 }
 
 .featureContent {
-    padding: var(--cf-spacing-vertical) 0 var(--cf-spacing-vertical) calc(var(--ifm-spacing-horizontal) + 20px)!important;
+    font-size: 1.2em;
+    padding: var(--cf-spacing-vertical) 0 var(--cf-spacing-vertical) calc(var(--ifm-spacing-horizontal) + 20px) !important;
 }
 
 .featureContentReversed {
-    padding: var(--cf-spacing-vertical) calc(var(--ifm-spacing-horizontal) + 20px) var(--cf-spacing-vertical) var(--ifm-spacing-horizontal)!important;
+    padding: var(--cf-spacing-vertical) calc(var(--ifm-spacing-horizontal) + 20px) var(--cf-spacing-vertical) var(--ifm-spacing-horizontal) !important;
 }
 
 .featureImage {
     height: 100%;
-    padding: var(--cf-spacing-vertical) var(--ifm-spacing-horizontal)!important;
+    padding: var(--cf-spacing-vertical) var(--ifm-spacing-horizontal) !important;
 }
 
 .featureImage iframe {

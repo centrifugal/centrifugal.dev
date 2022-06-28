@@ -238,3 +238,69 @@ mark {
     margin: auto !important;
   }
 }
+
+html[data-theme="dark"] .features_src-pages-styles-module p {
+  color: #cbcbcb;
+}
+
+.feature-media {
+  position: relative;
+  isolation: isolate;
+  display: inline-block;
+}
+
+.feature-item:nth-child(even) {
+  flex-direction: row-reverse;
+}
+
+@media (min-width: 996px) {
+  .feature-media:before {
+    content: " ";
+    position: absolute;
+    top: 0%;
+    left: 0%;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    opacity: 0.5;
+    border-radius: 40% 60% 60% 40% / 70% 30% 70% 30%;
+  }
+}
+
+html[data-theme="light"] .feature-media:before {
+  background: #e0e0e0;
+}
+
+html[data-theme="dark"] .feature-media:before {
+  background: #000000;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .feature-media:before {
+    animation: morph 5s linear infinite alternate, flatify-spin 10s linear infinite reverse;
+  }
+}
+
+@keyframes morph {
+  0% {
+    border-radius: 40% 60% 60% 40% / 70% 30% 70% 30%;
+  }
+
+  50% {
+    border-radius: 40% 60%;
+  }
+}
+
+@keyframes flatify-spin {
+  from {
+    transform: rotate(0);
+  }
+
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+.footer--dark {
+  background-color: #000;
+}

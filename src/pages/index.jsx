@@ -15,7 +15,9 @@ function Feature({ imageUrl, title, children }) {
     <div className={clsx("col col--4", styles.feature)}>
       {imgUrl && (
         <div className="text--center">
-          <img className={styles.featureImage} src={imgUrl} alt={title} />
+          <div className="feature-media">
+            <img className={styles.featureImage} src={imgUrl} alt={title} />
+          </div>
         </div>
       )}
       <h2 className="text--center">{title}</h2>
@@ -66,23 +68,19 @@ function Home() {
           <div className="container">
             <div className="row">
               <Feature title="Integrates with everything" imageUrl="img/feature_integration.png">
-                Centrifugo is a self-hosted service which can handle connections over <a href="/docs/transports/overview">a variety of real-time transports</a> and provides a simple <a href="/docs/server/server_api">publish API</a>.
+                Centrifugo is a self-hosted service which can handle connections over a variety of <a href="/docs/transports/overview">real-time transports</a> and provides a simple <a href="/docs/server/server_api">publish API</a>.
                 Centrifugo integrates well with any application – no need to change an
                 existing application architecture to introduce real-time features.
-                Just let Centrifugo deal with persistent connections.
               </Feature>
               <Feature title="Great performance" imageUrl="img/feature_performance.png">
                 Centrifugo is built in Go language with some smart optimizations inside.
-                It has good performance – see a description of a
-                test stand with <a href="/blog/2020/02/10/million-connections-with-centrifugo">one million WebSocket</a> connections and 30 million delivered
+                See a description of a test stand with <a href="/blog/2020/02/10/million-connections-with-centrifugo">one million WebSocket</a> connections and 30 million delivered
                 messages per minute with hardware comparable to one modern server machine.
               </Feature>
               <Feature title="Feature-rich" imageUrl="img/feature_rich.png">
-                Many built-in features can help to build an attractive real-time
-                application in a limited time. Centrifugo provides different types
-                of subscriptions, hot channel history, instant presence, RPC calls.
-                There is also the possibility to proxy connection events to the application
-                backend over HTTP or GRPC, and more.
+                Centrifugo provides flexible authentication, different types
+                of subscriptions, hot channel history, online presence, possibility to proxy connection events to the application
+                backend and more. It comes with official SDK libraries for both web and mobile development.
               </Feature>
               <Feature title="Out-of-the-box scalability" imageUrl="img/feature_scalability.png">
                 Built-in Redis, KeyDB, Tarantool engines, or Nats broker make it possible
@@ -95,7 +93,7 @@ function Home() {
                 it's built on top of) is a mature battle-tested software successfully used in
                 production by many companies around the world: VK, Badoo, ManyChat, OpenWeb, Grafana, and others.
               </Feature>
-              <Feature title="Even more with Centrifugo PRO" imageUrl="img/feature_pro.png">
+              <Feature title="Centrifugo PRO" imageUrl="img/feature_pro.png">
                 Centrifugo PRO provides a set of unique features on top of the OSS version: connection analytics
                 with ClickHouse, real-time user and channel tracing, operation throttling, faster performance, optimized Redis communication, and more.
               </Feature>
@@ -107,21 +105,19 @@ function Home() {
             <img src="/img/scheme_sketch.png" />
           }
           reversed
+          isDark
           title="What is real-time messaging?"
           text={
             <>
               <p>
                 Real-time messaging can help building interactive applications where events
-                are delivered to users immediately after being acknowledged by application
-                backend by pushing data into persistent connection – thus achieving minimal delivery latency.
+                are delivered to online users with a minimal latency.
               </p>
               <p>
-                Chats, live comments, multiplayer games, streaming metrics can be built on top of a real-time messaging system.
+                Chats apps, live comments, collaborative tools, multiplayer games, streaming metrics can be built on top of a real-time messaging system.
               </p>
               <p>
-                Centrifugo handles persistent connections from clients over bidirectional <a href="/docs/transports/websocket">WebSocket</a>, using bidirectional emulation with <a href="/docs/transports/http_stream">HTTP-streaming</a>, <a href="/docs/transports/sse">SSE (EventSource)</a>, <a href="/docs/transports/sockjs">SockJS</a>
-                , or unidirectional <a href="/docs/transports/uni_sse">SSE (EventSource)</a>, <a href="/docs/transports/uni_http_stream">HTTP-streaming</a>, <a href="/docs/transports/uni_grpc">GRPC</a> transports. Server <a href="/docs/server/server_api">API</a> allows publishing
-                messages to online clients in real-time.
+                Centrifugo is a user facing PUB/SUB server that handles persistent connections over a variety of real-time transports – WebSocket, HTTP-streaming, EventSource (Server-Sent Events), SockJS, or GRPC.
               </p>
             </>
           }
@@ -137,17 +133,13 @@ function Home() {
               allowFullScreen
             />
           }
-          isDark
           title="Looking for a cool demo?"
           text={
             <>
               <p>
                 Here is a real-time telemetry streamed from Assetto Corsa racing simulator towards Grafana dashboard with a help of our WebSocket technologies.
               </p>
-              <p>This demonstrates that you can stream 60Hz data towards client connections and thus provide an instant visual feedback about system state.</p>
-              <p>
-                Various types of interactive real-time applications can be quickly built using Centrifugo and a set of client SDK libraries (for both web and mobile experience). With unidirectional transports you can avoid dependency to Centrifugo SDK libraries and just use native browser APIs or GRPC generated code.
-              </p>
+              <p>This demonstrates that you can stream <b>60Hz</b> data towards client connections and thus provide an instant visual feedback about system state.</p>
               <div className={styles.buttons}>
                 <Link
                   className={clsx(
