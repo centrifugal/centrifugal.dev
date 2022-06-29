@@ -60,7 +60,7 @@ For connection JWT Centrifugo uses the some standart claims defined in [rfc7519]
 
 This is a standard JWT claim which must contain an ID of the current application user (**as string**). 
 
-If a user is not currently authenticated in an application, but you want to let him connect to Centrifugo anyway – you can use an empty string as a user ID in `sub` claim. This is called anonymous access. In this case, the `anonymous` option must be enabled in Centrifugo configuration for channels that the client will subscribe to.
+If a user is not currently authenticated in an application, but you want to let him connect to Centrifugo anyway – you can use an empty string as a user ID in `sub` claim. This is called anonymous access. In this case, you may need to enable corresponding channel namespace options which enable access to protocol features for anonymous users.
 
 ### exp
 

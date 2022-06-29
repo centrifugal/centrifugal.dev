@@ -68,18 +68,6 @@ Centrifugo v4 has this option to achieve compatibility with previous Centrifugo 
 
 But for namespaces with `allow_subscribe_for_client` option enabled Centrifugo does not allow subscribing on channels starting with `private_channel_prefix` (`$` by default) without a subscription token. This limitation exists to help users migrate to Centrifugo v4 without security risks.
 
-<!-- If the channel starts with `$` then it is considered *private*. The subscription on a private channel must be properly signed by your backend.
-
-Use private channels if you pass sensitive data inside the channel and want to control access permissions on your backend.
-
-For example `$secrets` is a private channel, `$public:chat` - is a private channel that belongs to namespace `public`.
-
-Subscription request to private channels requires additional JWT from your application backend. Read [detailed chapter about private channels](channel_token_auth.md).
-
-If you need a personal channel for a single user (or maybe a channel for a short and stable set of users) then consider using a `user-limited` channel (see below) as a simpler alternative that does not require an additional subscription token from your backend.
-
-Also, consider using server-side subscriptions or subscribe proxy feature of Centrifugo to model channels with restrictive access.  -->
-
 ## Channel namespaces
 
 It's possible to configure a list of channel namespaces. Namespaces are optional but very useful. 
@@ -146,6 +134,37 @@ Channel behavior can be modified by using channel options. Channel options can b
 
 Online presence is information about clients currently subscribed to the channel. It contains each subscriber's client ID, user ID, connection info, and channel info. By default, this option is off so no presence information will be available for channels.
 
+Let's say you have a channel `chat:index` and 2 users (with ID `2694` and `56`) subscribed to it. And user `2694` has 2 connections to Centrifugo in different browser tabs. In presence data you may see sth like this:
+
+```bash
+curl --header "Content-Type: application/json" \
+  --header "Authorization: apikey <API_KEY>" \
+  --request POST \
+  --data '{"method": "presence", "params": {"channel": "chat:index"}}' \
+  http://localhost:8000/api
+{
+    "result": {
+        "presence": {
+            "66fdf8d1-06f0-4375-9fac-db959d6ee8d6": {
+                "user": "2694",
+                "client": "66fdf8d1-06f0-4375-9fac-db959d6ee8d6",
+                "conn_info": {"name": "Alex"}
+            },
+            "d4516dd3-0b6e-4cfe-84e8-0342fd2bb20c": {
+                "user": "2694",
+                "client": "d4516dd3-0b6e-4cfe-84e8-0342fd2bb20c",
+                "conn_info": {"name": "Alex"}
+            }
+            "g3216dd3-1b6e-tcfe-14e8-1342fd2bb20c": {
+                "user": "56",
+                "client": "g3216dd3-1b6e-tcfe-14e8-1342fd2bb20c",
+                "conn_info": {"name": "Alice"}
+            }
+        }
+    }
+}
+```
+
 :::caution
 
 Enabling channel online presence adds some overhead since Centrifugo needs to maintain an additional data structure (in a process memory or in a broker memory/disk). So only use it for channels where presence is required.
@@ -156,11 +175,25 @@ Enabling channel online presence adds some overhead since Centrifugo needs to ma
 
 `join_leave` (boolean, default `false`) – enable/disable sending join and leave messages when the client subscribes to a channel (unsubscribes from a channel). Join/leave event includes information about the connection that triggered an event – client ID, user ID, connection info, and channel info (similar to entry inside presence information).
 
+Enabling `join_leave` means that Join/Leave messages will start being emitted, but by default they are not delivered to clients subscribed to a channel. You need to force this using namespace option [force_consuming_join_leave](#forceconsumingjoinleave) or explicitly provide intent from a client-side (in this case client must have permission to receive join/leave messages, or [allow_consuming_join_leave](#allowconsumingjoinleave) namespace option should be on).
+
 :::caution
 
 Keep in mind that join/leave messages can generate a huge number of messages in a system if turned on for channels with a large number of active subscribers. If you have channels with a large number of subscribers consider avoiding using this feature. It's hard to say what is "large" for you though – just estimate the load based on the fact that each subscribe/unsubscribe event in a channel with N subscribers will result into N messages broadcasted to all. If all clients reconnect at the same time the amount of generated messages is N^2.
 
 :::
+
+Join/leave messages distributed only with at most once delivery guarantee. 
+
+### force_consuming_join_leave
+
+Boolean, default `false`.
+
+When on all clients will receive join/leave events for a channel in a namespace automatically – without explicit intent to consume join/leave messages from the client side.
+
+### allow_consuming_join_leave
+
+When on all clients may receive join/leave events for a channel in a namespace by providing the corresponding Subscrption option upon subscribing.
 
 ### history_size
 
@@ -193,6 +226,38 @@ For example for top-level channels (which do not belong to a namespace):
     "history_ttl": "60s"
 }
 ```
+
+Let's look at example. You enabled history for a namespace `chat` and sent two messages in channel `chat:index`. Then history will contain sth like this:
+
+```bash
+curl --header "Content-Type: application/json" \
+  --header "Authorization: apikey <API_KEY>" \
+  --request POST \
+  --data '{"method": "history", "params": {"channel": "chat:index", "limit": 100}}' \
+  http://localhost:8000/api
+{
+    "result": {
+        "publications": [
+            {
+                "data": {
+                    "input": "1"
+                },
+                "offset": 1
+            },
+            {
+                "data": {
+                    "input": "2"
+                },
+                "offset": 2
+            }
+        ],
+        "epoch": "gWuY",
+        "offset": 2
+    }
+}
+```
+
+See additional information about offsets and epoch in [History and recovery](./history_and_recovery.md) chapter.
 
 ### force_positioning
 
