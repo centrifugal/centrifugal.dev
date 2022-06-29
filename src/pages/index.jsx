@@ -117,7 +117,7 @@ function Home() {
                 Chats apps, live comments, collaborative tools, multiplayer games, streaming metrics can be built on top of a real-time messaging system.
               </p>
               <p>
-                Centrifugo is a user facing PUB/SUB server that handles persistent connections over a variety of real-time transports – WebSocket, HTTP-streaming, EventSource (Server-Sent Events), SockJS, or GRPC.
+                Centrifugo is a user facing <b>PUB/SUB</b> server that handles persistent connections over a variety of real-time transports – <b>WebSocket</b>, HTTP-streaming, EventSource (Server-Sent Events), SockJS, or GRPC.
               </p>
             </>
           }
