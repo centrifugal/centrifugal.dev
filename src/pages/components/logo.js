@@ -159,12 +159,12 @@ function draw(canvas, X, Y, isDarkTheme) {
         segmentColor = '#ffd4d4';
     }
 
-    const linesNum = 3;
+    const linesNum = 4;
     const lines = [];
 
     const segments = [];
     const radius = Y / 7;
-    const lw = radius / 16;
+    const lw = radius / 15;
 
     const requestAnimationFrame = global.requestAnimationFrame || global.mozRequestAnimationFrame
         || global.webkitRequestAnimationFrame || global.msRequestAnimationFrame
