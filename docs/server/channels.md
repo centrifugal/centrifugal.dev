@@ -25,7 +25,7 @@ When using channel namespaces make sure you defined a namespace in configuration
 
 **Only ASCII symbols must be used in a channel string**.
 
-Channel name length limited by `255` characters by default (can be changed via configuration file option `channel_max_length`).
+Channel name length limited by `255` characters by default (controlled by configuration option `channel_max_length`).
 
 Several symbols in channel names reserved for Centrifugo internal needs:
 
@@ -171,11 +171,13 @@ Enabling channel online presence adds some overhead since Centrifugo needs to ma
 
 :::
 
+See more details about [online presence design](../getting-started/design.md#online-presence-considerations).
+
 ### join_leave
 
 `join_leave` (boolean, default `false`) – enable/disable sending join and leave messages when the client subscribes to a channel (unsubscribes from a channel). Join/leave event includes information about the connection that triggered an event – client ID, user ID, connection info, and channel info (similar to entry inside presence information).
 
-Enabling `join_leave` means that Join/Leave messages will start being emitted, but by default they are not delivered to clients subscribed to a channel. You need to force this using namespace option [force_consuming_join_leave](#forceconsumingjoinleave) or explicitly provide intent from a client-side (in this case client must have permission to receive join/leave messages, or [allow_consuming_join_leave](#allowconsumingjoinleave) namespace option should be on).
+Enabling `join_leave` means that Join/Leave messages will start being emitted, but by default they are not delivered to clients subscribed to a channel. You need to force this using namespace option [force_consuming_join_leave](#forceconsumingjoinleave) or explicitly provide intent from a client-side (in this case client must have permission to call presence API).
 
 :::caution
 
@@ -191,9 +193,7 @@ Boolean, default `false`.
 
 When on all clients will receive join/leave events for a channel in a namespace automatically – without explicit intent to consume join/leave messages from the client side.
 
-### allow_consuming_join_leave
-
-When on all clients may receive join/leave events for a channel in a namespace by providing the corresponding Subscrption option upon subscribing.
+If consuming join/leave is not forced then client can provide a corresponding Subscription option to enable it – but it should have permissions to access channel presence (by having an explicit capability or if allowed on a namespace level).
 
 ### history_size
 
@@ -267,9 +267,7 @@ If Centrifugo detects a bad position of the client (i.e. potential message loss)
 
 `force_positioning` option must be used in conjunction with reasonably configured message history for a channel i.e. `history_size` and `history_ttl` **must be set** (because Centrifugo uses channel history to check client position in a stream).
 
-### allow_positioning
-
-`allow_positioning` (boolean, default `false`) - when `allow_positioning` is enabled then Centrifugo will only enable positioning in a channel if requested by a client (in subscription options).
+If positioning is not forced then client can provide a corresponding Subscription option to enable it – but it should have permissions to access channel history (by having an explicit capability or if allowed on a namespace level).
 
 ### force_recovery
 
@@ -277,15 +275,13 @@ If Centrifugo detects a bad position of the client (i.e. potential message loss)
 
 `force_recovery` option must be used in conjunction with reasonably configured message history for channel i.e. `history_size` and `history_ttl` **must be set** (because Centrifugo uses channel history to recover messages).
 
+If recovery is not forced then client can provide a corresponding Subscription option to enable it – but it should have permissions to access channel history (by having an explicit capability or if allowed on a namespace level).
+
 :::tip
 
 Not all real-time events require this feature turned on so think wisely when you need this. When this option is turned on your application should be designed in a way to tolerate duplicate messages coming from a channel (currently Centrifugo returns recovered publications in order and without duplicates but this is an implementation detail that can be theoretically changed in the future). See more details about how recovery works in [special chapter](history_and_recovery.md).
 
 :::
-
-### allow_recovery
-
-`allow_recovery` (boolean, default `false`) - when `allow_recovery` is enabled then Centrifugo will only enable recovery in a channel if requested by a client (in subscription options).
 
 ### allow_subscribe_for_client
 

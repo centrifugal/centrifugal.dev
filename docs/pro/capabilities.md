@@ -27,6 +27,13 @@ For example, here we are issuing permissions to subscribe on channel `news` and 
 }
 ```
 
+Known capabilities:
+
+* `sub` - subscribe to a channel to receive publications from it
+* `pub` - publish into a channel (your backend won't be able to process the publication in this case)
+* `prs` - call presence and presence stats API, also consume join/leave events upon subscribing
+* `hst` - call history API, also make Subscription positioned or recoverable upon subscribing
+
 ### Caps processing behavior
 
 Centrifugo processes caps objects till it finds a match to a channel. At this point it applies permissions in the matched object and stops processing remaining caps. If no match found – then `103 permission denied` returned to a client (of course if namespace does not have other permission-related options enabled). Let's consider example like this:
