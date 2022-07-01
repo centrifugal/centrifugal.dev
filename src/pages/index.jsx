@@ -46,7 +46,7 @@ function Header() {
             )}
             to={useBaseUrl("docs/getting-started/introduction")}
           >
-            Get Started
+            GET STARTED
           </Link>
         </div>
       </div>
