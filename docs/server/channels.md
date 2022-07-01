@@ -25,7 +25,7 @@ When using channel namespaces make sure you defined a namespace in configuration
 
 **Only ASCII symbols must be used in a channel string**.
 
-Channel name length limited by `255` characters by default (can be changed via configuration file option `channel_max_length`).
+Channel name length limited by `255` characters by default (controlled by configuration option `channel_max_length`).
 
 Several symbols in channel names reserved for Centrifugo internal needs:
 
@@ -36,9 +36,9 @@ Several symbols in channel names reserved for Centrifugo internal needs:
 * `&` – for the future Centrifugo needs
 * `/` – for the future Centrifugo needs
 
-#### namespace boundary (`:`)
+### namespace boundary (`:`)
 
-``:`` – is a channel namespace boundary. Namespaces are used to set custom options to a group of channels. Each channel belonging to the same namespace will have the same channel options. Read more about available [channel options](#channel-options) and more about [namespaces](#channel-namespaces) below.
+``:`` – is a channel namespace boundary. Namespaces are used to set custom options to a group of channels. Each channel belonging to the same namespace will have the same channel options. Read more about about [namespaces](#channel-namespaces) and [channel options](#channel-options) below.
 
 If the channel is `public:chat` - then Centrifugo will apply options to this channel from the channel namespace with the name `public`.
 
@@ -48,7 +48,7 @@ A namespace is part of the channel name. If a user subscribed to a channel with 
 
 :::
 
-#### user channel boundary (`#`)
+### user channel boundary (`#`)
 
 `#` – is a user channel boundary. This is a separator to create personal channels for users (we call this *user-limited channels*) without the need to provide a subscription token.
 
@@ -60,25 +60,17 @@ Moreover, you can provide several user IDs in channel name separated by a comma:
 
 This is useful for channels with a static list of allowed users, for example for single user personal messages channel, for dialog channel between certainly defined users. As soon as you need to manage access to a channel dynamically for many users this channel type does not suit well.
 
-User-limited channels must be enabled for a channel namespace using `allow_user_limit_channels` option. See below more information about channel options and channel namespaces. 
+:::tip
 
-#### private channel prefix (`$`)
+User-limited channels must be enabled for a channel namespace using [allow_user_limited_channels](#allow_user_limited_channels) option. See below more information about channel options and channel namespaces. 
 
-Centrifugo v4 has this option to achieve compatibility with previous Centrifugo versions. Previously (in Centrifugo v1, v2 and v3) only channels starting with `$` could be subscribed using a subscription token. In Centrifugo v4 that's not the case anymore – clients can subscribe to any channel with a subscription token (and if the token is valid – then subscription is accepted).
+:::
+
+### private channel prefix (`$`)
+
+Centrifugo v4 has this option to achieve compatibility with previous Centrifugo versions. Previously (in Centrifugo v1, v2 and v3) only channels starting with `$` could be subscribed with a subscription JWT. In Centrifugo v4 that's not the case anymore – clients can subscribe to any channel with a subscription token (if the token is valid – then subscription to a channel is accepted).
 
 But for namespaces with `allow_subscribe_for_client` option enabled Centrifugo does not allow subscribing on channels starting with `private_channel_prefix` (`$` by default) without a subscription token. This limitation exists to help users migrate to Centrifugo v4 without security risks.
-
-<!-- If the channel starts with `$` then it is considered *private*. The subscription on a private channel must be properly signed by your backend.
-
-Use private channels if you pass sensitive data inside the channel and want to control access permissions on your backend.
-
-For example `$secrets` is a private channel, `$public:chat` - is a private channel that belongs to namespace `public`.
-
-Subscription request to private channels requires additional JWT from your application backend. Read [detailed chapter about private channels](channel_token_auth.md).
-
-If you need a personal channel for a single user (or maybe a channel for a short and stable set of users) then consider using a `user-limited` channel (see below) as a simpler alternative that does not require an additional subscription token from your backend.
-
-Also, consider using server-side subscriptions or subscribe proxy feature of Centrifugo to model channels with restrictive access.  -->
 
 ## Channel namespaces
 
@@ -104,10 +96,11 @@ All things together here is an example of `config.json` which includes some top-
 {
     "token_hmac_secret_key": "very-long-secret-key",
     "api_key": "secret-api-key",
+
     "presence": true,
-    "join_leave": true,
     "history_size": 10,
     "history_ttl": "30s",
+    
     "namespaces": [
         {
           "name": "facts",
@@ -146,21 +139,68 @@ Channel behavior can be modified by using channel options. Channel options can b
 
 Online presence is information about clients currently subscribed to the channel. It contains each subscriber's client ID, user ID, connection info, and channel info. By default, this option is off so no presence information will be available for channels.
 
+Let's say you have a channel `chat:index` and 2 users (with ID `2694` and `56`) subscribed to it. And user `2694` has 2 connections to Centrifugo in different browser tabs. In presence data you may see sth like this:
+
+```bash
+curl --header "Content-Type: application/json" \
+  --header "Authorization: apikey <API_KEY>" \
+  --request POST \
+  --data '{"method": "presence", "params": {"channel": "chat:index"}}' \
+  http://localhost:8000/api
+{
+    "result": {
+        "presence": {
+            "66fdf8d1-06f0-4375-9fac-db959d6ee8d6": {
+                "user": "2694",
+                "client": "66fdf8d1-06f0-4375-9fac-db959d6ee8d6",
+                "conn_info": {"name": "Alex"}
+            },
+            "d4516dd3-0b6e-4cfe-84e8-0342fd2bb20c": {
+                "user": "2694",
+                "client": "d4516dd3-0b6e-4cfe-84e8-0342fd2bb20c",
+                "conn_info": {"name": "Alex"}
+            }
+            "g3216dd3-1b6e-tcfe-14e8-1342fd2bb20c": {
+                "user": "56",
+                "client": "g3216dd3-1b6e-tcfe-14e8-1342fd2bb20c",
+                "conn_info": {"name": "Alice"}
+            }
+        }
+    }
+}
+```
+
+To call presence API from the client connection side client must have permission to do so. See [presence permission model](./channel_permissions.md#presence-permission-model).
+
 :::caution
 
 Enabling channel online presence adds some overhead since Centrifugo needs to maintain an additional data structure (in a process memory or in a broker memory/disk). So only use it for channels where presence is required.
 
 :::
 
+See more details about [online presence design](../getting-started/design.md#online-presence-considerations).
+
 ### join_leave
 
 `join_leave` (boolean, default `false`) – enable/disable sending join and leave messages when the client subscribes to a channel (unsubscribes from a channel). Join/leave event includes information about the connection that triggered an event – client ID, user ID, connection info, and channel info (similar to entry inside presence information).
+
+Enabling `join_leave` means that Join/Leave messages will start being emitted, but by default they are not delivered to clients subscribed to a channel. You need to force this using namespace option [force_push_join_leave](#forcepushjoinleave) or explicitly provide intent from a client-side (in this case client must have permission to call presence API).
 
 :::caution
 
 Keep in mind that join/leave messages can generate a huge number of messages in a system if turned on for channels with a large number of active subscribers. If you have channels with a large number of subscribers consider avoiding using this feature. It's hard to say what is "large" for you though – just estimate the load based on the fact that each subscribe/unsubscribe event in a channel with N subscribers will result into N messages broadcasted to all. If all clients reconnect at the same time the amount of generated messages is N^2.
 
 :::
+
+Join/leave messages distributed only with at most once delivery guarantee. 
+
+### force_push_join_leave
+
+Boolean, default `false`.
+
+When on all clients will receive join/leave events for a channel in a namespace automatically – without explicit intent to consume join/leave messages from the client side.
+
+If pushing join/leave is not forced then client can provide a corresponding Subscription option to enable it – but it should have permissions to access channel presence (by having an explicit capability or if allowed on a namespace level).
 
 ### history_size
 
@@ -194,6 +234,40 @@ For example for top-level channels (which do not belong to a namespace):
 }
 ```
 
+Let's look at example. You enabled history for a namespace `chat` and sent two messages in channel `chat:index`. Then history will contain sth like this:
+
+```bash
+curl --header "Content-Type: application/json" \
+  --header "Authorization: apikey <API_KEY>" \
+  --request POST \
+  --data '{"method": "history", "params": {"channel": "chat:index", "limit": 100}}' \
+  http://localhost:8000/api
+{
+    "result": {
+        "publications": [
+            {
+                "data": {
+                    "input": "1"
+                },
+                "offset": 1
+            },
+            {
+                "data": {
+                    "input": "2"
+                },
+                "offset": 2
+            }
+        ],
+        "epoch": "gWuY",
+        "offset": 2
+    }
+}
+```
+
+To call history API from the client connection side client must have permission to do so. See [history permission model](./channel_permissions.md#history-permission-model).
+
+See additional information about offsets and epoch in [History and recovery](./history_and_recovery.md) chapter.
+
 ### force_positioning
 
 `force_positioning` (boolean, default `false`) – when the `force_positioning` option is on Centrifugo forces all subscriptions in a namespace to be `positioned`. I.e. Centrifugo will try to compensate at most once delivery of PUB/SUB broker checking client position inside a stream.
@@ -202,9 +276,7 @@ If Centrifugo detects a bad position of the client (i.e. potential message loss)
 
 `force_positioning` option must be used in conjunction with reasonably configured message history for a channel i.e. `history_size` and `history_ttl` **must be set** (because Centrifugo uses channel history to check client position in a stream).
 
-### allow_positioning
-
-`allow_positioning` (boolean, default `false`) - when `allow_positioning` is enabled then Centrifugo will only enable positioning in a channel if requested by a client (in subscription options).
+If positioning is not forced then client can provide a corresponding Subscription option to enable it – but it should have permissions to access channel history (by having an explicit capability or if allowed on a namespace level).
 
 ### force_recovery
 
@@ -212,15 +284,13 @@ If Centrifugo detects a bad position of the client (i.e. potential message loss)
 
 `force_recovery` option must be used in conjunction with reasonably configured message history for channel i.e. `history_size` and `history_ttl` **must be set** (because Centrifugo uses channel history to recover messages).
 
+If recovery is not forced then client can provide a corresponding Subscription option to enable it – but it should have permissions to access channel history (by having an explicit capability or if allowed on a namespace level).
+
 :::tip
 
 Not all real-time events require this feature turned on so think wisely when you need this. When this option is turned on your application should be designed in a way to tolerate duplicate messages coming from a channel (currently Centrifugo returns recovered publications in order and without duplicates but this is an implementation detail that can be theoretically changed in the future). See more details about how recovery works in [special chapter](history_and_recovery.md).
 
 :::
-
-### allow_recovery
-
-`allow_recovery` (boolean, default `false`) - when `allow_recovery` is enabled then Centrifugo will only enable recovery in a channel if requested by a client (in subscription options).
 
 ### allow_subscribe_for_client
 

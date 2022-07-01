@@ -1,6 +1,6 @@
 ---
 id: channel_token_auth
-title: Channel token authorization
+title: Channel JWT authorization
 ---
 
 In the chapter about [channel permissions](channel_permissions.md) we mentioned that to subscribe on a channel client can provide subscription token. This chapter has more information about the subscription token mechanism in Centrifugo.
