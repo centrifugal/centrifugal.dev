@@ -1,6 +1,6 @@
 ---
 id: console_commands
-title: CLI commands
+title: Helper CLI commands
 ---
 
 Here is a list of helpful command-line commands that come with Centrifugo executable.

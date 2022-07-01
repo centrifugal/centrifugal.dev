@@ -36,9 +36,9 @@ Several symbols in channel names reserved for Centrifugo internal needs:
 * `&` – for the future Centrifugo needs
 * `/` – for the future Centrifugo needs
 
-#### namespace boundary (`:`)
+### namespace boundary (`:`)
 
-``:`` – is a channel namespace boundary. Namespaces are used to set custom options to a group of channels. Each channel belonging to the same namespace will have the same channel options. Read more about available [channel options](#channel-options) and more about [namespaces](#channel-namespaces) below.
+``:`` – is a channel namespace boundary. Namespaces are used to set custom options to a group of channels. Each channel belonging to the same namespace will have the same channel options. Read more about about [namespaces](#channel-namespaces) and [channel options](#channel-options) below.
 
 If the channel is `public:chat` - then Centrifugo will apply options to this channel from the channel namespace with the name `public`.
 
@@ -48,7 +48,7 @@ A namespace is part of the channel name. If a user subscribed to a channel with 
 
 :::
 
-#### user channel boundary (`#`)
+### user channel boundary (`#`)
 
 `#` – is a user channel boundary. This is a separator to create personal channels for users (we call this *user-limited channels*) without the need to provide a subscription token.
 
@@ -60,11 +60,15 @@ Moreover, you can provide several user IDs in channel name separated by a comma:
 
 This is useful for channels with a static list of allowed users, for example for single user personal messages channel, for dialog channel between certainly defined users. As soon as you need to manage access to a channel dynamically for many users this channel type does not suit well.
 
-User-limited channels must be enabled for a channel namespace using `allow_user_limit_channels` option. See below more information about channel options and channel namespaces. 
+:::tip
 
-#### private channel prefix (`$`)
+User-limited channels must be enabled for a channel namespace using [allow_user_limited_channels](#allow_user_limited_channels) option. See below more information about channel options and channel namespaces. 
 
-Centrifugo v4 has this option to achieve compatibility with previous Centrifugo versions. Previously (in Centrifugo v1, v2 and v3) only channels starting with `$` could be subscribed using a subscription token. In Centrifugo v4 that's not the case anymore – clients can subscribe to any channel with a subscription token (and if the token is valid – then subscription is accepted).
+:::
+
+### private channel prefix (`$`)
+
+Centrifugo v4 has this option to achieve compatibility with previous Centrifugo versions. Previously (in Centrifugo v1, v2 and v3) only channels starting with `$` could be subscribed with a subscription JWT. In Centrifugo v4 that's not the case anymore – clients can subscribe to any channel with a subscription token (if the token is valid – then subscription to a channel is accepted).
 
 But for namespaces with `allow_subscribe_for_client` option enabled Centrifugo does not allow subscribing on channels starting with `private_channel_prefix` (`$` by default) without a subscription token. This limitation exists to help users migrate to Centrifugo v4 without security risks.
 
@@ -92,10 +96,11 @@ All things together here is an example of `config.json` which includes some top-
 {
     "token_hmac_secret_key": "very-long-secret-key",
     "api_key": "secret-api-key",
+
     "presence": true,
-    "join_leave": true,
     "history_size": 10,
     "history_ttl": "30s",
+    
     "namespaces": [
         {
           "name": "facts",
@@ -165,6 +170,8 @@ curl --header "Content-Type: application/json" \
 }
 ```
 
+To call presence API from the client connection side client must have permission to do so. See [presence permission model](./channel_permissions.md#presence-permission-model).
+
 :::caution
 
 Enabling channel online presence adds some overhead since Centrifugo needs to maintain an additional data structure (in a process memory or in a broker memory/disk). So only use it for channels where presence is required.
@@ -177,7 +184,7 @@ See more details about [online presence design](../getting-started/design.md#onl
 
 `join_leave` (boolean, default `false`) – enable/disable sending join and leave messages when the client subscribes to a channel (unsubscribes from a channel). Join/leave event includes information about the connection that triggered an event – client ID, user ID, connection info, and channel info (similar to entry inside presence information).
 
-Enabling `join_leave` means that Join/Leave messages will start being emitted, but by default they are not delivered to clients subscribed to a channel. You need to force this using namespace option [force_consuming_join_leave](#forceconsumingjoinleave) or explicitly provide intent from a client-side (in this case client must have permission to call presence API).
+Enabling `join_leave` means that Join/Leave messages will start being emitted, but by default they are not delivered to clients subscribed to a channel. You need to force this using namespace option [force_push_join_leave](#forcepushjoinleave) or explicitly provide intent from a client-side (in this case client must have permission to call presence API).
 
 :::caution
 
@@ -187,13 +194,13 @@ Keep in mind that join/leave messages can generate a huge number of messages in 
 
 Join/leave messages distributed only with at most once delivery guarantee. 
 
-### force_consuming_join_leave
+### force_push_join_leave
 
 Boolean, default `false`.
 
 When on all clients will receive join/leave events for a channel in a namespace automatically – without explicit intent to consume join/leave messages from the client side.
 
-If consuming join/leave is not forced then client can provide a corresponding Subscription option to enable it – but it should have permissions to access channel presence (by having an explicit capability or if allowed on a namespace level).
+If pushing join/leave is not forced then client can provide a corresponding Subscription option to enable it – but it should have permissions to access channel presence (by having an explicit capability or if allowed on a namespace level).
 
 ### history_size
 
@@ -256,6 +263,8 @@ curl --header "Content-Type: application/json" \
     }
 }
 ```
+
+To call history API from the client connection side client must have permission to do so. See [history permission model](./channel_permissions.md#history-permission-model).
 
 See additional information about offsets and epoch in [History and recovery](./history_and_recovery.md) chapter.
 

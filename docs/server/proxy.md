@@ -1,6 +1,6 @@
 ---
 id: proxy
-title: Proxy to backend
+title: Proxy events to the backend
 ---
 
 It's possible to proxy some client connection events from Centrifugo to the application backend and react to them in a custom way. For example, it's possible to authenticate connection via request from Centrifugo to application backend, refresh client sessions and answer to RPC calls sent by a client over bidirectional connection.

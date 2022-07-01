@@ -1,6 +1,6 @@
 ---
 id: monitoring
-title: Monitoring
+title: Metrics monitoring
 ---
 
 Centrifugo supports reporting metrics in Prometheus format and can automatically export metrics to Graphite.
