@@ -261,7 +261,7 @@ const Logo = (props) => {
 
     if (props.isDarkTheme) {
         const imageUrl = '/img/bg.jpg';
-        return <canvas ref={canvas} style={{ width: "100%", height: "100%", background: "url('" + imageUrl + "')", backgroundSize: "100%", backgroundPosition: "center" }} />;
+        return <canvas ref={canvas} style={{ width: "100%", height: "100%", background: "url('" + imageUrl + "') no-repeat", backgroundSize: "100%", backgroundPosition: "center" }} />;
     } else {
         return <canvas ref={canvas} style={{ width: "100%", height: "100%" }} />;
     }

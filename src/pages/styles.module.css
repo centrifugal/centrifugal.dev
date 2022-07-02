@@ -14,6 +14,12 @@
   color: var(--ifm-font-color-base);
 }
 
+@media screen and (max-width: 996px) {
+  .heroBanner {
+    padding: 1rem 0;
+  }
+}
+
 .heroBanner canvas {
   z-index: 0;
   position: absolute;
