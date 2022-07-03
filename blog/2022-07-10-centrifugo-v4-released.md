@@ -146,6 +146,8 @@ Sending pings only in one direction results in 2 times less ping-pong messages -
 
 Pings and pongs are application-level messages. Ping is just an empty asynchronous reply – for example in JSON case it's a 2-byte message: `{}`. Pong is an empty command – also, `{}` in JSON case. Having application-level pings from a server also allows unifying PING format for all unidirectional transports.
 
+One more improvement is that Centrifugo now randomizes the time it sends first ping to a client (but no more than a configured ping interval). This allows to spread ping-pongs in time, providing a smoother CPU profile, especially after massive reconnect scenario.
+
 ## Secure by default channel namespaces
 
 Security and data privacy are important in the modern world, more than ever. And as Centrifugo becomes more popular and widely-used the need to be `secure by default` only increases. 
