@@ -656,8 +656,9 @@ There are several common options available when creating Subscription instance.
 * option to set subscription `data` (attached to every subscribe/resubscribe request)
 * options to tweak resubscribe backoff algorithm
 * option to start Subscription `since` known Stream Position (i.e. attempt recovery on first subscribe)
-* option to ask server to make subscription `positioned`
-* option to ask server to make subscription `recoverable`
+* option to ask server to make subscription `positioned` (if not forced by a server)
+* option to ask server to make subscription `recoverable` (if not forced by a server)
+* option to ask server to push Join/Leave messages (if not forced by a server)
 
 ## Subscription methods
 
