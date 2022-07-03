@@ -159,10 +159,8 @@ function draw(canvas, X, Y, isDarkTheme) {
         segmentColor = '#ffd4d4';
     }
 
-    let linesNum = 3;
-    if (isDarkTheme) {
-        linesNum = 0;
-    }
+    const linesNum = 3;
+
     const lines = [];
 
     const segments = [];
@@ -259,12 +257,7 @@ const Logo = (props) => {
         draw(canvas.current, scale.x, scale.y, props.isDarkTheme);
     }, [scale]);
 
-    if (props.isDarkTheme) {
-        const imageUrl = '/img/bg.jpg';
-        return <canvas ref={canvas} style={{ width: "100%", height: "100%", background: "url('" + imageUrl + "') no-repeat", backgroundSize: "100%", backgroundPosition: "center" }} />;
-    } else {
-        return <canvas ref={canvas} style={{ width: "100%", height: "100%" }} />;
-    }
+    return <canvas ref={canvas} style={{ width: "100%", height: "100%" }} />;
 }
 
 export default Logo;
