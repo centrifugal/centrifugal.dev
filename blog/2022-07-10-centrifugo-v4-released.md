@@ -136,6 +136,8 @@ We also simplified [client protocol](/docs/transports/client_protocol) docs over
 
 ## Redesigned PING-PONG
 
+In many cases in practice when dealing with persistent connections like WebSocket pings and pongs are the most dominant types of messages travelling between a client and a server. Your app can have many concurrent connections, but only few of them are getting useful payload. But at the same time we still need to send pings and respon with pongs. So optimizing ping-pong process may reduce server resource usage significantly.
+
 One more optimization comes from revised PING-PONG behaviour. Previous Centrifugo versions sent ping/pong in both directions (for WebSocket transport). This allowed finding non-active connections on both client and server sides.
 
 In Centrifugo v4 we only send pings from a server to a client and expect pong from a client. On the client-side we have a timer which fires if there were no pings from a server for a configured amount of time.
