@@ -13,6 +13,6 @@ Many Centrifugo features should be re-implemented when using Centrifuge - like A
 
 :::tip
 
-Many things said in Centrifugo doc can be considered as extra documentation for Centrifuge library (for example part about infrastructure tuning or transport description). But not all of them.
+Many things said in Centrifugo doc can be considered as an extra documentation for Centrifuge library (for example part about infrastructure tuning or transport description). But not all of them.
 
 :::
