@@ -11,19 +11,19 @@ By real-time, we indicate a soft real-time. Due to network latencies, garbage co
 
 :::
 
-It can be a missing piece in your application architecture to send real-time updates to users. Think chats, live comments, multiplayer games, streaming metrics – you'll be able to build amazing web and mobile real-time apps with a help of Centrifugo.
+It can be a missing piece in your application architecture to send real-time updates to users. Think chats or messengers, live comments, multiplayer games, collaborative tools, streaming metrics – you'll be able to build amazing web and mobile real-time apps with a help of Centrifugo as a real-time transport layer.
 
-Centrifugo works in conjunction with applications written in any programming language – both on the backend and frontend sides. It runs as a standalone service hosted on your hardware and fits well to both monolithic and microservice architectures. 
+Centrifugo works in conjunction with applications written in any programming language – both on the backend and frontend sides. It runs as a standalone service hosted on your hardware and fits well to both monolithic and microservice architectures.
 
 Centrifugo is fast and scales well to support millions of concurrent client connections. It provides several real-time transports to choose from and a set of features to simplify building real-time applications.
 
-## Motivation
+## Centrifugo background
 
-Centrifugo was born to help applications with a server-side written in a language or a framework without built-in concurrency support. In this case, dealing with persistent connections is a real headache that usually can only be resolved by introducing a shift in the technology stack and spending enough time to create a production-ready solution.
+Centrifugo was born a decade ago to help applications with a server-side written in a language or a framework without built-in concurrency support. In this case, dealing with persistent connections is a real headache that usually can only be resolved by introducing a shift in the technology stack and spending enough time to create a production-ready solution.
 
-For example, frameworks like Django, Flask, Yii, Laravel, Ruby on Rails, and others have poor and not performant support of working with many persistent connections for the real-time messaging task.
+For example, frameworks like Django, Flask, Yii, Laravel, Ruby on Rails, and others have poor and not really performant support of working with many persistent connections for the real-time messaging tasks.
 
-In this case, Centrifugo is a very straightforward and non-obtrusive way to introduce real-time updates and handle lots of persistent connections without radical changes in application backend architecture. Developers could proceed writing a backend with a favorite language or favorite framework, keep existing architecture – and just let Centrifugo deal with persistent connections.
+In this case, Centrifugo is a straightforward and non-obtrusive way to introduce real-time updates and handle lots of persistent connections without radical changes in application backend architecture. Developers could proceed writing a backend with a favorite language or favorite framework, keep existing architecture – and just let Centrifugo deal with persistent connections.
 
 At the moment, Centrifugo provides some advanced and unique features that can simplify a developer's life and save months of development, even if the application backend is built with the asynchronous concurrent language. One example is that Centrifugo can scale out-of-the-box to many machines with several supported brokers. And there are more things to mention – see detailed highlights further in the docs.
 

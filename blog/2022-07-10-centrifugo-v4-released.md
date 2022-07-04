@@ -262,6 +262,17 @@ In some cases Centrifuge library can be a more flexible solution than Centrifugo
 
 The refactoring of client SDKs and introducing unified behavior based on the common spec was the hardest part of Centrifugo v4 release. Many thanks to [Vitaly Puzrin](https://github.com/puzrin) (who is an author of several popular open-source libraries – like [markdown-it](https://github.com/markdown-it/markdown-it), [fontello](https://github.com/fontello/fontello), and others). We had a series of super-productive sessions with him regarding client SDK API design. Several great ideas araised from those sessions, and the result seems a huge step forward for Centrifugal projects.
 
+## Conclusion
+
+To summarise, here are some benefits Centrifugo v4 provides:
+
+* unified experience thoughout application frontend environments
+* optimized protocol which is faster in general, more compact and human-readable in JSON case
+* revised channel namespace security model, more granular permission control
+* more efficient and flexible usage of subscription tokens
+* better initial latency – thanks to optimistic subscriptions and possibility to pre-build subscription tokens (as `client` claim not needed anymore) 
+* possibility to utilize a more efficient bidirectional emulation in the browser, without worrying about sticky sessions unless you want to optimize real-time infrastructure
+
 ## Join community
 
 That's it. We now begin the era of v4 and it is going to be awesome. We believe that with v4 release Centrifugo has further strengthened its position in the open-source real-time messaging market and still provides a clear cost benefits comparing to paid cloud solutions in the area while being mature and robust enough for a production usage.

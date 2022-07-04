@@ -11,9 +11,15 @@ Let's look again at a simplified scheme:
 
 ![Centrifugo scheme](/img/scheme_sketch.png)
 
-There are three parts involved in the idiomatic Centrifugo usage scenario: your clients (frontend application), your application backend, and Centrifugo. It's possible to use Centrifugo without any application backend involved but here we won't consider this use case. 
+There are three parts involved in the idiomatic Centrifugo usage scenario:
 
-Here let's suppose you already have 2 of 3 elements: clients and backend. Now you want to add Centrifugo to receive real-time events on the client-side.
+1. Your clients (frontend application)
+1. Your application backend
+1. Centrifugo.
+
+It's possible to use Centrifugo without any application backend involved but here we won't consider this use case. 
+
+Here let's suppose you already have 2 of 3 elements: clients and the backend. Now you want to add Centrifugo to receive real-time events on the client-side.
 
 ## 0. Install
 
@@ -27,17 +33,21 @@ Create basic configuration file with `token_hmac_secret_key` (or `token_rsa_publ
 ./centrifugo genconfig
 ```
 
-– which will generate `config.json` file for you with all required fields.
+– which will generate `config.json` file for you with a minimal set of fields to start from.
 
 Properly configure [allowed_origins](../server/configuration.md#allowed_origins) option.
 
 ## 2. Configure your backend
 
-In the configuration file **of your application backend** register several variables: Centrifugo secret and Centrifugo API key you set on a previous step and Centrifugo API address. By default, the API address is `http://localhost:8000/api`. You **must never reveal token secret and API key to your users**.
+In the configuration file **of your application backend** register several variables: Centrifugo token secret (if you decided to stick with JWT authentication) and Centrifugo API key you set on a previous step, also Centrifugo API endpoint address. By default, the API address is `http://localhost:8000/api`. You **must never reveal token secret and API key to your users**.
 
 ## 3. Connect to Centrifugo
 
-Now your users can start connecting to Centrifugo. You should get a client library (see [list of available client SDKs](../transports/client_sdk.md)) for your application frontend. Every library has a method to connect to Centrifugo. See information about Centrifugo connection endpoints [here](../server/configuration.md#endpoint-configuration). Every client should provide a connection token (JWT) on connect. You must generate this token on your backend side using Centrifugo secret key you set to backend configuration (note that in the case of RSA tokens you are generating JWT with a private key). See how to generate this JWT [in special chapter](../server/authentication.md). You pass this token from the backend to your frontend app (pass it in template context or use separate request from client-side to get user-specific JWT from backend side). And use this token when connecting to Centrifugo (for example browser client has a special method `setToken`).
+Now your users can start connecting to Centrifugo. You should get a client library (see [list of available client SDKs](../transports/client_sdk.md)) for your application frontend. Every library has a method to connect to Centrifugo. See information about Centrifugo connection endpoints [here](../server/configuration.md#endpoint-configuration).
+
+Every client should provide a connection token (JWT) on connect. You must generate this token on your backend side using Centrifugo secret key you set to backend configuration (note that in the case of RSA tokens you are generating JWT with a private key). See how to generate this JWT [in special chapter](../server/authentication.md).
+
+You pass this token from the backend to your frontend app (pass it in template context or use separate request from client-side to get user-specific JWT from backend side). And use this token when connecting to Centrifugo (for example browser client has a special method `setToken`).
 
 There is also a way to authenticate connections without using JWT - see [chapter about proxying to backend](../server/proxy.md).
 
@@ -53,9 +63,9 @@ There is also a way to subscribe connection to a list of channels on the server 
 
 Everything should work now – as soon as a user opens some page of your application it must successfully connect to Centrifugo and subscribe to a channel (or channels).
 
-Now let's imagine you want to send a real-time message to users subscribed on a specific channel. This message can be a reaction to some event that happened in your app: someone posted a new comment, the administrator just created a new post, the user pressed the like button, etc. Anyway, this is an event your backend just got, and you want to immediately share it with interested users.
+Now let's imagine you want to send a real-time message to users subscribed on a specific channel. This message can be a reaction to some event that happened in your app: someone posted a new comment, the administrator just created a new post, the user pressed the "like" button, etc. Anyway, this is an event your backend just got, and you want to immediately send it to interested users.
 
-You can do this using Centrifugo [HTTP API](../server/server_api.md). To simplify your life [we have several API libraries](../server/server_api.md#http-api-libraries) for different languages. You can publish messages into a channel using one of those libraries or you can simply [follow API description](../server/server_api.md#http-api) to construct API requests yourself - this is very simple. Also Centrifugo supports [GRPC API](../server/server_api.md#grpc-api). As soon as you published a message to the channel it must be delivered to your client.
+You can do this using Centrifugo [HTTP API](../server/server_api.md). To simplify your life [we have several API libraries](../server/server_api.md#http-api-libraries) for different languages. You can publish messages into a channel using one of those libraries or you can simply [follow API description](../server/server_api.md#http-api) to construct API requests yourself - this is very simple. Also Centrifugo supports [GRPC API](../server/server_api.md#grpc-api). As soon as you published a message to the channel it must be delivered to your online client subscribed to that channel.
 
 ## 6. Deploy to production
 
@@ -63,12 +73,12 @@ To put this all into production you need to deploy Centrifugo on your production
 
 ## 7. Monitor Centrifugo
 
-Don't forget to [monitor](../server/monitoring.md) your production Centrifugo setup.
+Don't forget to configure [metrics monitoring](../server/monitoring.md) your production Centrifugo setup. This may help you to understand what's going on with Centrifugo setup, understand number of connections, operation count and latency distributions, etc.
 
 ## 8. Scale Centrifugo
 
-As soon as you are close to machine resource limits you may want to scale Centrifugo – you can run many Centrifugo instances and load-balance clients between them using [Redis engine](../server/engines.md).
+As soon as you are close to machine resource limits you may want to scale Centrifugo – you can run many Centrifugo instances and load-balance clients between them using Redis engine, or with KeyDB, or with Tarantool, or with Nats broker. [Engines and scalability]((../server/engines.md)) chapter describes available options in detail.
 
 ## 9. Read FAQ
 
-That's all for basics. The documentation actually covers lots of other concepts Centrifugo server has: scalability, private channels, admin web interface, SockJS fallback, Protobuf support, and more. And don't forget to read our [FAQ](../faq/index.md).
+That's all for basics. The documentation actually covers lots of other concepts Centrifugo server has: scalability, private channels, admin web interface, SockJS fallback, Protobuf support, and more. And don't forget to read our [FAQ](../faq/index.md) – it contains lot of useful information.

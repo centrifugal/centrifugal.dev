@@ -3,11 +3,13 @@ id: channels
 title: Channels and namespaces
 ---
 
-Upon connecting to a server clients can subscribe to channels. Channel is one of the core concepts of Centrifugo. Most of the time you will work with channels and decide what is the best channel configuration for your application.
+Upon connecting to a server clients can subscribe to channels. Channel is one of the core concepts of Centrifugo. Most of the time when integrating Centrifugo you will work with channels and decide what is the best channel configuration for your application.
 
 ## What is channel
 
 Centrifugo is a PUB/SUB system - it has publishers and subscribers. Channel is a route for publications. Clients can subscribe to a channel to receive all real-time messages published to a channel. A channel subscriber can also ask for a channel online presence or channel history information.
+
+![pub_sub](/img/pub_sub.png)
 
 Channel is just a string - `news`, `comments`, `personal_feed` are valid channel names. Though this string has some [predefined rules](#channel-name-rules) as we will see below. You can define different channel behavior using a set of available [channel options](#channel-options).
 
@@ -123,7 +125,7 @@ All things together here is an example of `config.json` which includes some top-
 
 :::note
 
-There is no inheritance in channel options and namespaces – for example, you defined `presence: true` on a top level of configuration and then defined a namespace – that namespace won't have online presence enabled - you must enable it for a namespace explicitly. 
+There is **no inheritance** in channel options and namespaces – for example, you defined `presence: true` on a top level of configuration and then defined a namespace – that namespace won't have online presence enabled - you must enable it for a namespace explicitly.
 
 :::
 
