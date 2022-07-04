@@ -44,10 +44,6 @@ html[data-theme="light"] .button--secondary:hover {
   background-color: #f5c1c1;
 }
 
-.navbar__items a:nth-child(7) {
-  color: #10bf39;
-}
-
 .navbar__items a:nth-child(7):hover {
   color: var(--ifm-color-primary);
 }

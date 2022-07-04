@@ -17,7 +17,7 @@ Centrifugo works in conjunction with applications written in any programming lan
 
 Centrifugo is fast and scales well to support millions of concurrent client connections. It provides several real-time transports to choose from and a set of features to simplify building real-time applications.
 
-## Centrifugo background
+## Background
 
 Centrifugo was born a decade ago to help applications with a server-side written in a language or a framework without built-in concurrency support. In this case, dealing with persistent connections is a real headache that usually can only be resolved by introducing a shift in the technology stack and spending enough time to create a production-ready solution.
 

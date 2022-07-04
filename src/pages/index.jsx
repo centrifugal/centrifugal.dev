@@ -27,7 +27,7 @@ function Feature({ imageUrl, title, children }) {
 }
 
 function Header() {
-  const { isDarkTheme } = useColorMode();
+  const isDarkTheme = useColorMode().colorMode == 'dark';
   return (
     <header id="hero" className={clsx("hero hero--primary", styles.heroBanner)}>
       <Logo isDarkTheme={isDarkTheme} />
@@ -41,8 +41,7 @@ function Header() {
         <div className={styles.buttons}>
           <Link
             className={clsx(
-              "button button--outline button--secondary button--lg",
-              styles.getStarted
+              "button button--outline button--secondary button--lg"
             )}
             to={useBaseUrl("docs/getting-started/introduction")}
           >
@@ -94,7 +93,7 @@ function Home() {
                 production by many companies around the world: VK, Badoo, ManyChat, OpenWeb, Grafana, and others.
               </Feature>
               <Feature title="Centrifugo PRO" imageUrl="img/feature_pro.png">
-                Centrifugo PRO provides a set of unique features on top of the OSS version: connection analytics
+                <a href="/docs/pro/overview">Centrifugo PRO</a> provides a set of unique features on top of the OSS version: connection analytics
                 with ClickHouse, real-time user and channel tracing, operation throttling, faster performance, optimized Redis communication, and more.
               </Feature>
             </div>
