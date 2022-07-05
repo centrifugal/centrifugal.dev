@@ -406,8 +406,9 @@ Expected response example if subscription is allowed:
 | -------------- | -------------- | ------------ | ---- |
 | presence       | BoolValue       | yes | Override presence   |
 | join_leave       | BoolValue       | yes | Override join_leave   |
-| position       | BoolValue       | yes | Override position   |
-| recover       | BoolValue       | yes |  Override recover   |
+| force_push_join_leave       | BoolValue       | yes | Override force_push_join_leave   |
+| force_positioning       | BoolValue       | yes | Override force_positioning   |
+| force_recovery       | BoolValue       | yes |  Override force_recovery   |
 
 BoolValue is an object like this:
 

@@ -3,7 +3,7 @@ id: server_api
 title: Server API walkthrough
 ---
 
-Server API is a way to send various commands to Centrifugo. For example, server API allows publishing messages to channels, get server statistics, etc. There are two kinds of API available at the moment:
+Server API provides a way to send various commands to Centrifugo. For example, server API allows publishing messages to channels, get server statistics, etc. There are two kinds of API available at the moment:
 
 * HTTP API
 * GRPC API
@@ -12,7 +12,7 @@ Server API is a way to send various commands to Centrifugo. For example, server 
 
 Server HTTP API works on `/api` endpoint (by default). It has a simple request format: this is an HTTP POST request with `application/json` Content-Type and with JSON command body.
 
-Here we will look at available methods and parameters
+Here we will look at available command methods and parameters.
 
 :::tip
 
@@ -22,7 +22,7 @@ In some cases, you can just use one of our [available HTTP API libraries](../ser
 
 ### HTTP API authorization
 
-HTTP API protected by `api_key` set in Centrifugo configuration. I.e. `api_key` option must be added to config, like:
+HTTP API is protected by `api_key` set in Centrifugo configuration. I.e. `api_key` option must be added to config, like:
 
 ```json title="config.json"
 {
@@ -37,9 +37,9 @@ This API key must be set in the request `Authorization` header in this way:
 Authorization: apikey <KEY>
 ```
 
-It's also possible to pass API key over URL query param. This solves some edge cases where it's not possible to use the `Authorization` header. Simply add `?api_key=<YOUR API KEY>` query param to the API endpoint. Keep in mind that passing the API key in the `Authorization` header is a recommended way. 
+It's also possible to pass API key over URL query param. This solves some edge cases where it's not possible to use the `Authorization` header. Simply add `?api_key=<YOUR API KEY>` query param to the API endpoint. Keep in mind that passing the API key in the `Authorization` header is a recommended way.
 
-It's possible to disable API key check on Centrifugo side using the `api_insecure` configuration option. Be sure to protect the API endpoint by firewall rules, in this case, to prevent anyone on the internet to send commands over your unprotected Centrifugo API endpoint. API key auth is not very safe for man-in-the-middle so we also recommended running Centrifugo with TLS.
+It's possible to disable API key check on Centrifugo side using the `api_insecure` configuration option. Be sure to protect the API endpoint by firewall rules in this case – to prevent anyone on the internet to send commands over your unprotected Centrifugo API endpoint. API key auth is not very safe for man-in-the-middle so we also recommended running Centrifugo with TLS.
 
 A command is a JSON object with two properties: `method` and `params`.
 
@@ -63,7 +63,7 @@ Now let's investigate each API method in detail.
 
 ### publish
 
-Publish command allows publishing data into a channel. Most probably this is a command you'll use most.
+Publish command allows publishing data into a channel (we call this message `publication` in Centrifugo). Most probably this is a command you'll use most of the time.
 
 It looks like this:
 
@@ -75,7 +75,7 @@ It looks like this:
         "data": {
             "text": "hello"
         }
-    } 
+    }
 }
 ```
 
@@ -136,7 +136,7 @@ Date: Thu, 17 May 2018 22:01:42 GMT
 }
 ```
 
-In case of error response object can contain `error` field (here we artificially publishing to a channel with unknown namespace):
+In case of error response object can contain `error` field. For example, let's publish to a channel with unknown namespace:
 
 ```bash
 echo '{"method": "publish", "params": {"channel": "unknown:chat", "data": {"text": "hello"}}}' | http "localhost:8000/api" Authorization:"apikey <YOUR_API_KEY>"
@@ -163,6 +163,7 @@ Date: Thu, 17 May 2018 22:03:09 GMT
 | data       | any JSON       | yes | Custom JSON data to publish into a channel        |
 | skip_history  | bool       | no | Skip adding publication to history for this request            |
 | tags  | map[string]string  | no | Publication tags - map with arbitrary string keys and values which is attached to publication and will be delivered to clients (available since v3.2.0)            |
+| b64data       | string       | no | Custom binary data to publish into a channel encoded to base64 so it's possible to use HTTP API to send binary to clients. Centrifugo will decode it from base64 before publishing. In case of GRPC you can publish binary using `data` field.        |
 
 #### Publish result
 
@@ -195,6 +196,7 @@ Similar to `publish` but allows to send the same data into many channels.
 | data       | any JSON       | yes | Custom JSON data to publish into each channel        |
 | skip_history  | bool       | no | Skip adding publications to channels' history for this request            |
 | tags  | map[string]string  | no | Publication tags (available since v3.2.0) - map with arbitrary string keys and values which is attached to publication and will be delivered to clients           |
+| b64data       | string       | no | Custom binary data to publish into a channel encoded to base64 so it's possible to use HTTP API to send binary to clients. Centrifugo will decode it from base64 before publishing. In case of GRPC you can publish binary using `data` field.        |
 
 #### Broadcast result
 
@@ -215,7 +217,7 @@ Similar to `publish` but allows to send the same data into many channels.
 | info       | any JSON  | no | Attach custom data to subscription (will be used in presence and join/leave messages)        |
 | b64info       | string  | no | info in base64 for binary mode (will be decoded by Centrifugo)      |
 | client       | string  | no | Specific client ID to subscribe (user still required to be set, will ignore other user connections with different client IDs)       |
-| session       | string       | no | Specific client session to subscribe (user still required to be set). Available since Centrifugo v3.2.0      |
+| session       | string       | no | Specific client session to subscribe (user still required to be set) |
 | data       | any JSON  | no | Custom subscription data (will be sent to client in Subscribe push)        |
 | b64data       | string  | no | Same as data but in base64 format (will be decoded by Centrifugo)        |
 | recover_since       | StreamPosition object  | no | Stream position to recover from        |
@@ -227,8 +229,9 @@ Similar to `publish` but allows to send the same data into many channels.
 | -------------- | -------------- | ------------ | ---- |
 | presence       | BoolValue       | yes | Override presence   |
 | join_leave       | BoolValue       | yes | Override join_leave   |
-| position       | BoolValue       | yes | Override position   |
-| recover       | BoolValue       | yes |  Override recover   |
+| force_push_join_leave       | BoolValue       | yes | Override force_push_join_leave   |
+| force_positioning       | BoolValue       | yes | Override force_positioning   |
+| force_recovery       | BoolValue       | yes |  Override force_recovery   |
 
 BoolValue is an object like this:
 
@@ -263,7 +266,7 @@ Empty object at the moment.
 | user       | string       | yes | User ID to unsubscribe        |
 | channel       | string  | yes | Name of channel to unsubscribe user to        |
 | client       | string  | no | Specific client ID to unsubscribe (user still required to be set)       |
-| session       | string | no | Specific client session to disconnect (user still required to be set). Available since Centrifugo v3.2.0      |
+| session       | string | no | Specific client session to disconnect (user still required to be set).  |
 
 #### Unsubscribe result
 
@@ -297,8 +300,7 @@ Empty object at the moment.
 | Field name | Field type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | code       | int       | yes | Disconnect code        |
-| reason       | string       | yes | Disconnect reason       |
-| reconnect       | bool       | no | Reconnect advice       |
+| reason       | string       | yes | Disconnect reason   |
 
 #### Disconnect result
 
@@ -314,7 +316,7 @@ Empty object at the moment.
 | -------------- | -------------- | ------------ | ---- |
 | user       | string       | yes | User ID to refresh       |
 | client       | string       | no | Client ID to refresh  (user still required to be set)      |
-| session       | string       | no | Specific client session to refresh (user still required to be set). Available since Centrifugo v3.2.0      |
+| session       | string       | no | Specific client session to refresh (user still required to be set).    |
 | expired       | bool       | no | Mark connection as expired and close with Disconnect Expired reason |
 | expire_at       | int       | no | Unix time (in seconds) in the future when the connection will expire        |
 
@@ -621,6 +623,19 @@ Empty object at the moment.
 ### Command pipelining
 
 It's possible to combine several commands into one request to Centrifugo. To do this use [JSON streaming](https://en.wikipedia.org/wiki/JSON_streaming) format. This can improve server throughput and reduce traffic traveling around.
+
+Example:
+
+```bash
+curl --header "Authorization: apikey <API_KEY>" \
+  --request POST \
+  --data $'{"method": "publish", "params": {"channel": "test1", "data": {"test": 1}}}\n{"method": "publish", "params": {"channel": "test2", "data": {"test": 2}}}' \
+  http://localhost:8000/api
+{"result":{}}
+{"result":{}}
+```
+
+Note that with CURL we had to use `$` to properly send new line `\n` character in data.
 
 ### HTTP API libraries
 
