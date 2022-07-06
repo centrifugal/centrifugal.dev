@@ -86,6 +86,39 @@ This is a UNIX time when token was issued (seconds). See [definition in RFC](htt
 
 This is a token unique ID. See [definition in RFC](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.7). This claim is optional but can be useful together with [Centrifugo PRO token revocation features](../pro/token_revocation.md).
 
+### override
+
+One more claim is `override`. This is an object which allows overriding channel options for the particular channel subscriber which comes with subscription token.
+
+| Field | Type | Optional | Description |
+| ------------ | -------------- | ------------ | ---- |
+| presence     | BoolValue     | yes | override `presence` channel option        |
+| join_leave     | BoolValue     | yes | override `join_leave` channel option   |
+| force_push_join_leave         | BoolValue     | yes | override `force_push_join_leave` channel option          |
+| force_recovery      | BoolValue     | yes | override `force_recovery` channel option |
+| force_positioning       | BoolValue       | yes |  override `force_positioning` channel option  |
+
+`BoolValue` is an object like this:
+
+```json
+{
+  "value": true/false
+}
+```
+
+So for example, you want to turn off emitting a presence information for a particular subscriber in a channel:
+
+```json
+{
+    ...
+    "override": {
+        "presence": {
+            "value": false
+        }
+    }
+}
+```
+
 ## Example
 
 So to generate a subscription token you can use something like this in Python (assuming user ID is `42` and the channel is `gossips`):

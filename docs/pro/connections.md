@@ -7,6 +7,8 @@ Centrifugo PRO provides an additional API call `connections`. It allows getting 
 
 This feature can be useful to manage active user sessions – for example in a messenger application. Users can look at a list of own current sessions and close some of them (possible with Centrifugo disconnect server API).
 
+Also, it can help developers to understand the system state during issue investigations.
+
 Let's look at example. Generate a JWT for user 42:
 
 ```

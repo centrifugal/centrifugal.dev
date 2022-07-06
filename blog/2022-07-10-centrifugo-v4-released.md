@@ -1,11 +1,11 @@
 ---
-title: Centrifugo v4 released
+title: Centrifugo v4 released – little revolution
 tags: [centrifugo, release]
-description: Centrifugo v4 released – providing modern bidirectional emulation layer, improved channel security, and redesigned client SDK behavior.
+description: Centrifugo v4 released – providing optimized client protocol, modern bidirectional emulation layer, improved channel security, and redesigned client SDK behavior.
 author: Centrifugal team
 authorTitle: Let the Centrifugal force be with you
 authorImageURL: /img/logo_animated.svg
-image: /img/v3_blog.jpg
+image: /img/v4.jpg
 hide_table_of_contents: false
 draft: true
 ---
@@ -16,15 +16,19 @@ Today we are happy to announce the next generation of Centrifugo – Centrifugo 
 
 <!--truncate-->
 
-If you've never heard about Centrifugo before – it's a scalable **soft real-time messaging** server written in Go language. It can deliver messages to online application users super-fast. It has channel concept – so it's actually a **user-facing PUB/SUB server**. Centrifugo is **language-agnostic** and can be used to implement chat applications, live comments, multiplayer games, streaming metrics, etc in conjunction with any backend. It's especially useful when your backend does not have built-in concurrency support or dealing with many persistent connections is a challenge you are not going to take part in. Centrifugo has a **variety of real-time transports** and several official client SDKs for popular application environments (for **browser and mobile development**).
+:::info About Centrifugo
+
+If you've never heard about Centrifugo before – it's a scalable soft **real-time messaging** server written in Go language. Centrifugo can instantly deliver messages to application online users connected over a **variety of real-time transports** (like WebSocket, HTTP-streaming, SSE/EventSource, GRPC). Centrifugo has channel concept – so it's actually a **user-facing PUB/SUB server**. Centrifugo is **language-agnostic** and can be used to implement chat applications, live comments, multiplayer games, streaming metrics, etc in conjunction with any backend. It's especially useful when the application backend does not have built-in concurrency support, or dealing with many persistent connections is a challenge you are not going to take part in. Several official client SDKs for **browser and mobile development** wrap bidirectional protocol, also Centrifugo supports unidirectional approach for simple zero-sdk-dependency use cases.
+
+:::
 
 ## Centrifugo v3 flashbacks
 
 Let's start from looking back a bit. Centrifugo v3 was released last year. It had a great list of improvements – like unidirectional transports support (EventSource, HTTP-streaming and GRPC), GRPC transport for proxy, history iteration API, faster JSON protocol, super-fast but experimental Tarantool engine implementation, and others.
 
-![Centrifuge](/img/v3_blog.jpg)
-
 During Centrifugo v3 lifecycle we added even more JSON protocol optimizations and introduced a granular proxy mode. Experimental Tarantool engine evolved a bit also.
+
+![](/img/v3_blog.jpg)
 
 But Centrifugo v3 did not contain nothing... let's say **revolutional**. Revolutional for Centrifugo itself, community, or even for the entire open-source real-time messaging area.
 
@@ -218,13 +222,13 @@ For example, in connection JWT developers can set sth like:
 }
 ```
 
-And this tells Centrifugo that the connection is able to subscribe on channels `news` or `user_42` using client-side subscriptions at any point while token is active.
+And this tells Centrifugo that the connection is able to subscribe on channels `news` or `user_42` using client-side subscriptions at any point while connection is active.
 
 Subscription JWT can provide capabilities for the channel too, Centrifugo also supports wildcard and regex channel matches. See more details about this mechanism in [Channel capabilities](/docs/pro/capabilities) chapter.
 
 ## Better connections API
 
-One more addition to Centrifugo PRO is an improved connection API. Previously we could only return all connections from a certain user. 
+One more addition to Centrifugo PRO is an improved [connection API](/docs/pro/connections). Previously we could only return all connections from a certain user. 
 
 Now API supports filtering all connections: by user ID, by subscribed channel, by additional meta information attached to a connection.
 
@@ -232,13 +236,17 @@ The filtering works with a help of [CEL expressions](https://opensource.google/p
 
 The connections API call result contains more useful information: list of client's active channels, information about tokens used to connect and subscribe.
 
-## Javascript client moved to Typescript
+## Optimized Redis engine
+
+One more story which landed to a PRO version for now is an optimized Redis Engine. Make it allocate less and support [sharded PUB/SUB](https://redis.io/docs/manual/pubsub/#sharded-pubsub) in Redis Cluster (introduced recently as part of Redis v7). You can read what we have in [Optimized Redis engine](/docs/pro/redis_engine) docs.
+
+## Javascript client moved to TypeScript
 
 No secret that `centrifuge-js` is the most popular SDK in Centrifugo ecosystem. We put some additional love to it – and `centrifuge-js` is now fully written in Typescript ❤️
 
 This was a long-awaited improvement, and it finally happened! The entire public API is strictly typed. The cool thing is that even EventEmitter events and event handlers is a subject to type checks - this should drastically simplify and speedup development and also help to reduce error possibility.
 
-## Start experimenting with HTTP/3
+## Experimenting with HTTP/3
 
 Centrifugo v4 has an **experimental** HTTP/3 support. As soon as you enabled TLS and provided `"http3": true` option all endpoints on external port will be served by HTTP/3 server based on [lucas-clemente/quic-go](https://github.com/lucas-clemente/quic-go) implementation. This (among other benefits which HTTP/3 can provide) is a first step towards [WebTransport](https://web.dev/webtransport/) support in the future.
 
@@ -258,33 +266,35 @@ With new unified SDK behavior and bidirectional emulation layer it seems a robus
 
 In some cases Centrifuge library can be a more flexible solution than Centrifugo since Centrifugo (as a standalone server) dictates some mechanics and rules to follow.
 
-## Special thanks
-
-The refactoring of client SDKs and introducing unified behavior based on the common spec was the hardest part of Centrifugo v4 release. Many thanks to [Vitaly Puzrin](https://github.com/puzrin) (who is an author of several popular open-source libraries – like [markdown-it](https://github.com/markdown-it/markdown-it), [fontello](https://github.com/fontello/fontello), and others). We had a series of super-productive sessions with him regarding client SDK API design. Several great ideas araised from those sessions, and the result seems a huge step forward for Centrifugal projects.
-
 ## Conclusion
+
+![](/img/bg_cat.jpg)
 
 To summarise, here are some benefits Centrifugo v4 provides:
 
 * unified experience thoughout application frontend environments
-* optimized protocol which is faster in general, more compact and human-readable in JSON case
+* optimized protocol which is faster in general, more compact and human-readable in JSON case, provides more resilient behavior for subscriptions
 * revised channel namespace security model, more granular permission control
 * more efficient and flexible usage of subscription tokens
-* better initial latency – thanks to optimistic subscriptions and possibility to pre-build subscription tokens (as `client` claim not needed anymore) 
-* possibility to utilize a more efficient bidirectional emulation in the browser, without worrying about sticky sessions unless you want to optimize real-time infrastructure
+* better initial latency – thanks to optimistic subscriptions and possibility to pre-build subscription tokens (as `client` claim not needed anymore)
+* possibility to utilize a more efficient bidirectional emulation in the browser, without worrying about sticky sessions unless you want to optimize real-time infrastructure.
+
+That's it. We now begin the era of v4 and it is going to be awesome, no doubt. We believe that with v4 release Centrifugo has further strengthened its position in the open-source real-time messaging market and still provides cost benefits comparing to paid cloud solutions in the area, while being mature and robust enough for a production usage.
 
 ## Join community
 
-That's it. We now begin the era of v4 and it is going to be awesome. We believe that with v4 release Centrifugo has further strengthened its position in the open-source real-time messaging market and still provides a clear cost benefits comparing to paid cloud solutions in the area while being mature and robust enough for a production usage.
-
-The release contains many changes that strongly affect developing with Centrifugo. And of course you may have some questions regarding new or changed concepts. Don't hesitate to join our communities in Telegram (most active) and Discord:
+The release contains many changes that strongly affect developing with Centrifugo. And of course you may have some questions or issues regarding new or changed concepts. Don't hesitate to join our communities in Telegram (most active) and Discord:
 
 [![Join the chat at https://t.me/joinchat/ABFVWBE0AhkyyhREoaboXQ](https://img.shields.io/badge/Telegram-Group-orange?style=flat&logo=telegram)](https://t.me/joinchat/ABFVWBE0AhkyyhREoaboXQ) &nbsp;[![Join the chat at https://discord.gg/tYgADKx](https://img.shields.io/discord/719186998686122046?style=flat&label=Discord&logo=discord)](https://discord.gg/tYgADKx)
 
 Enjoy Centrifugo v4, and let the Centrifugal force be with you.
 
+## Special thanks
+
+The refactoring of client SDKs and introducing unified behavior based on the common spec was the hardest part of Centrifugo v4 release. Many thanks to [Vitaly Puzrin](https://github.com/puzrin) (who is an author of several popular open-source libraries – like [markdown-it](https://github.com/markdown-it/markdown-it), [fontello](https://github.com/fontello/fontello), and others). We had a series of super-productive sessions with him regarding client SDK API design. Several great ideas araised from those sessions, and the result seems a huge step forward for Centrifugal projects.
+
 :::note Attributions
 
-This post used images from freepik.com: by [liuzishan](https://www.freepik.com/author/liuzishan).
+This post used images from freepik.com: [background](https://www.freepik.com/free-vector/abstract-background-consisting-colorful-arcs-illustration_14803794.htm#&position=5&from_view=author) by [liuzishan](https://www.freepik.com/author/liuzishan). Also [image](https://www.freepik.com/free-vector/abstract-black-circles-layers-dark-background-paper-cut_17303270.htm) by [kenshinstock](https://www.freepik.com/author/kenshinstock).
 
 :::
