@@ -122,6 +122,10 @@ export default class ConfigConverter extends React.Component {
             remove('recover');
         }
 
+        if (namespace['join_leave'] === true) {
+            setIfNotDefined('force_push_join_leave', true);
+        }
+
         if (config['namespaces'] !== undefined) {
             let newNamespaces = [];
             for (let namespace of config['namespaces']) {
@@ -168,6 +172,10 @@ export default class ConfigConverter extends React.Component {
                     rename('recover', 'force_recovery', namespace);
                 } else {
                     remove('recover', namespace);
+                }
+
+                if (namespace['join_leave'] === true) {
+                    setIfNotDefined('force_push_join_leave', true);
                 }
 
                 newNamespaces.push(namespace);

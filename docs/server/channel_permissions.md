@@ -3,7 +3,7 @@ id: channel_permissions
 title: Channel permission model
 ---
 
-When using Centrifugo server API you don't need to think about channel permissions at all – everything is allowed. In server API case, request to Centrifugo must be issued by your application backend – so you have all the power to check any required permissions before issuing API request to Centrifugo.
+When using Centrifugo [server API](./server_api.md) you don't need to think about channel permissions at all – everything is allowed. In server API case, request to Centrifugo must be issued by your application backend – so you have all the power to check any required permissions before issuing API request to Centrifugo.
 
 The situation is different when we are talking about client real-time API.
 
@@ -18,7 +18,7 @@ By default, client's attempt to subscribe on a channel will be rejected by a ser
 * [Provide subscription token](#provide-subscription-token)
 * [Configure subscribe proxy](#configure-subscribe-proxy)
 * [Use user-limited channels](#use-user-limited-channels)
-* [Use subscribe_allowed_for_client namespace option](#use-subscribeallowedforclient-namespace-option)
+* [Use subscribe_allowed_for_client namespace option](#use-allow_subscribe_for_client-namespace-option)
 * [Subscribe capabilities in connection token](#subscribe-capabilities-in-connection-token)
 * [Subscribe capabilities in connect proxy](#subscribe-capabilities-in-connect-proxy)
 
@@ -85,8 +85,8 @@ In idiomatic Centrifugo use case data should be published to channels from the a
 By default, client's attempt to publish data into a channel will be rejected by a server with `103: permission denied` error. There are several approaches how to control channel publish permissions:
 
 * [Configure publish proxy](#configure-publish-proxy)
-* [Use allow_publish_for_subscriber namespace option](#use-allowpublishforsubscriber-namespace-option)
-* [Use allow_publish_for_client namespace option](#use-allowpublishforclient-namespace-option)
+* [Use allow_publish_for_subscriber namespace option](#use-allow_publish_for_subscriber-namespace-option)
+* [Use allow_publish_for_client namespace option](#use-allow_publish_for_client-namespace-option)
 * [Publish capabilities in connection token](#publish-capabilities-in-connection-token)
 * [Publish capability in subscription token](#publish-capability-in-subscription-token)
 * [Publish capabilities in connect proxy](#publish-capabilities-in-connect-proxy)
@@ -202,8 +202,12 @@ Connect proxy can return capability object to allow client call presence from ce
 
 ### Positioning permission model
 
-Server can whether turn on positioning for all channels in a namespace using `"force_positioning": true` option or client can create positioned subscriptions (in namespaces with `"allow_possitioning": true` or if client has `history` capability).
+Server can whether turn on positioning for all channels in a namespace using `"force_positioning": true` option or client can create positioned subscriptions (but in this case client must have access to `history` capability).
 
 ### Recovery permission model
 
-Server can whether turn on automatic recovery for all channels in a namespace using `"force_recovery": true` option or client can create recoverable subscriptions (in namespaces with `"allow_possitioning": true` or if client has `history` capability).
+Server can whether turn on automatic recovery for all channels in a namespace using `"force_recovery": true` option or client can create recoverable subscriptions (but in this case client must have access to `history` capability).
+
+### Join/Leave permission model
+
+Server can whether force sending join/leave messages to all subscribers for all channels in a namespace using `"force_push_join_leave": true` option or client can ask server to include join/leave messages upon subscribing (but in this case client must have access to `presence` capability).
