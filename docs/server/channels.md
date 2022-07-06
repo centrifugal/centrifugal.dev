@@ -270,6 +270,12 @@ To call history API from the client connection side client must have permission 
 
 See additional information about offsets and epoch in [History and recovery](./history_and_recovery.md) chapter.
 
+:::tip
+
+History persistence properties are dictated by Centrifugo [engine](./engines.md) used. For example, when using memory engine history is only kept till Centrifugo node restart. In Redis engine case persistence is determined by a Redis server persistence configuration (same for KeyDB and Tarantool).
+
+:::
+
 ### force_positioning
 
 `force_positioning` (boolean, default `false`) – when the `force_positioning` option is on Centrifugo forces all subscriptions in a namespace to be `positioned`. I.e. Centrifugo will try to compensate at most once delivery of PUB/SUB broker checking client position inside a stream.
@@ -423,4 +429,30 @@ Let's look at how to set some of these options in a config. In this example we t
 }
 ```
 
-Here we set channel options on config top-level – these options will affect channels without namespace. Below we describe namespaces and how to define channel options for a namespace.
+Here we set channel options on config top-level – these options will affect channels without namespace. In many cases defining namespaces is a recommended approach so you can manage options for every real-time feature separately. With namespaces the above config may transform to:
+
+```json title="config.json"
+{
+    "token_hmac_secret_key": "my-secret-key",
+    "api_key": "secret-api-key",
+    "namespaces": [
+        {
+            "name": "feed",
+            "presence": true,
+            "history_size": 10,
+            "history_ttl": "300s",
+            "force_recovery": true,
+            "allow_subscribe_for_client": true,
+            "allow_subscribe_for_anonymous": true,
+            "allow_publish_for_subscriber": true,
+            "allow_publish_for_anonymous": true,
+            "allow_history_for_subscriber": true,
+            "allow_history_for_anonymous": true,
+            "allow_presence_for_subscriber": true,
+            "allow_presence_for_anonymous": true
+        }
+    ]
+}
+```
+
+In this case channels should be prefixed with `feed:` to follow the behavior configured for a `feed` namespace.

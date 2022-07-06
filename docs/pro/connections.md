@@ -91,4 +91,26 @@ Each connection can be annotated with meta JSON information which is set during 
 | transport       | string  | no | client connection transport         |
 | protocol       | string  | no | client connection protocol (json or protobuf) |
 | state       | ConnectionState  | yes | connection state |
+
+#### ConnectionState object
+
+| Field name   | Field type     | Optional | Description  |
+| -------------- | -------------- | ------ | ------------ |
+| channels       | array of strings  | yes | Channels client subscribed to         |
+| connection_token       | ConnectionTokenInfo  | yes | information about connection token         |
+| subscription_tokens       | map<string, SubscriptionTokenInfo>  | yes |  information about channel tokens used to subscribe         |
 | meta       | JSON object  | yes | meta information attached to a connection |
+
+#### ConnectionTokenInfo object
+
+| Field name   | Field type     | Optional | Description  |
+| -------------- | -------------- | ------ | ------------ |
+| uid       | string  | yes | unique token ID (jti)         |
+| issued_at       | int  | yes | time (Unix seconds) when token was issued         |
+
+#### SubscriptionTokenInfo object
+
+| Field name   | Field type     | Optional | Description  |
+| -------------- | -------------- | ------ | ------------ |
+| uid       | string  | yes | unique token ID (jti)         |
+| issued_at       | int  | yes | time (Unix seconds) when token was issued         |
