@@ -18,7 +18,11 @@ Today we are happy to announce the next generation of Centrifugo – Centrifugo 
 
 :::info About Centrifugo
 
-If you've never heard about Centrifugo before – it's a scalable soft **real-time messaging** server written in Go language. Centrifugo can instantly deliver messages to application online users connected over a **variety of real-time transports** (like WebSocket, HTTP-streaming, SSE/EventSource, GRPC). Centrifugo has channel concept – so it's actually a **user-facing PUB/SUB server**. Centrifugo is **language-agnostic** and can be used to implement chat applications, live comments, multiplayer games, streaming metrics, etc in conjunction with any backend. It's especially useful when the application backend does not have built-in concurrency support, or dealing with many persistent connections is a challenge you are not going to take part in. Several official client SDKs for **browser and mobile development** wrap bidirectional protocol, also Centrifugo supports unidirectional approach for simple zero-sdk-dependency use cases.
+If you've never heard about Centrifugo before – it's a scalable real-time messaging server written in Go language. Centrifugo can instantly deliver messages to application online users connected over supported real-time transports (WebSocket, HTTP-streaming, SSE/EventSource, GRPC, SockJS). Centrifugo has a channel concept – so it's a user-facing PUB/SUB server.
+
+Centrifugo is language-agnostic and can be used to build chat applications, live comments, multiplayer games, streaming metrics, etc., in conjunction with any backend. It fits well modern architectures and allows decoupling business logic from the real-time transport layer.
+
+Several official client SDKs for browser and mobile development wrap bidirectional protocol. Also, Centrifugo supports a unidirectional approach for simple zero-SDK-dependency use cases.
 
 :::
 
@@ -66,7 +70,7 @@ We now have a separation between temporary and non-temporary prrotocol errors �
 
 The mechanics described in the client SDK API spec is now implemented by all our official SDKs. SDKs now support all the core client protocol features existing at this point – without exception. We believe this is a great step forward for Centrifugo ecosystem and community.
 
-## Modern bidirectional emulation in Javascript
+## Modern WebSocket emulation in Javascript
 
 WebSocket is supported almost everywhere these days. But, there is a case which we believe is the last one preventing users to connect over WebSocket - corporate proxies. With installed root certificate on an employee's machines those proxies can block WebSocket traffic, even if it's wrapped into TLS layer. That's really annoying and often developers choose to not support clients connecting from such "broken" environments at all.
 
@@ -203,7 +207,7 @@ Optimistic subscriptions are now part of `centrifuge-js` only. At some point we 
 
 ## Channel capabilities
 
-Channel capabilities feature is introduced as part of [Centrifugo PRO](/docs/pro/overview). Initially we aimed to make it a part of the OSS version. But the lack of feedback about the feature made us nervous it's really needed. So adding it to PRO seemed a safer decision for a moment.
+Channel capabilities feature is introduced as part of [Centrifugo PRO](/docs/pro/overview). Initially we aimed to make it a part of the OSS version. But the lack of feedback about the feature made us nervous it's really needed. So adding it to PRO where we still have a room for evaluating the idea seemed a safer decision for a moment.
 
 Centrifugo allows configuring channel permissions on a per-namespace level. When creating a new real-time feature it's recommended to create a new namespace for it and configure permissions. But to achieve a better channel permission control inside a namespace Channel capabilities can be used now.
 
@@ -232,13 +236,13 @@ One more addition to Centrifugo PRO is an improved [connection API](/docs/pro/co
 
 Now API supports filtering all connections: by user ID, by subscribed channel, by additional meta information attached to a connection.
 
-The filtering works with a help of [CEL expressions](https://opensource.google/projects/cel) (Common Expression Language). CEL expressions provide a developer-friendly, fast and secure (as they are not Turing-complete) way to evaluate some conditions. They are used in some Google services (ex. Firebase), in Envoy RBAC configuration, etc. If you've never seen it before – take a look, pretty cool project. And now it helps us to filter connections in a flexible way.
+The filtering works by user ID or with a help of [CEL expressions](https://opensource.google/projects/cel) (Common Expression Language). CEL expressions provide a developer-friendly, fast and secure (as they are not Turing-complete) way to evaluate some conditions. They are used in some Google services (ex. Firebase), in Envoy RBAC configuration, etc. If you've never seen it before – take a look, cool project. We also evaluating how to use CEL expressions for a dynamic efficient channel permission checks – but that's an early story.
 
-The connections API call result contains more useful information: list of client's active channels, information about tokens used to connect and subscribe.
+The connections API call results contain more useful information: list of client's active channels, information about tokens used to connect and subscribe, meta information attached to a connection.
 
 ## Optimized Redis engine
 
-One more story which landed to a PRO version for now is an optimized Redis Engine. Make it allocate less and support [sharded PUB/SUB](https://redis.io/docs/manual/pubsub/#sharded-pubsub) in Redis Cluster (introduced recently as part of Redis v7). You can read what we have in [Optimized Redis engine](/docs/pro/redis_engine) docs.
+One more story which landed to a PRO version for now is an optimized Redis Engine. The optimized version allocates less (thus you can expect a reduced CPU usage for Centrifugo node) and supports [sharded PUB/SUB](https://redis.io/docs/manual/pubsub/#sharded-pubsub) in Redis Cluster (introduced recently as part of Redis v7). You can read what we have in [Optimized Redis engine](/docs/pro/redis_engine) docs.
 
 ## Javascript client moved to TypeScript
 
@@ -256,15 +260,15 @@ HTTP/3 does not work with ACME autocert TLS at the moment - i.e. you need to exp
 
 ## Migration guide
 
-[Migration guide](/docs/next/getting-started/migration_v4) contains all the steps to upgrade your Centrifugo from v3 to v4. While there are many changes it v4 release it should be possible to migrate to Centrifugo v4 without changing the client-side code at all. And then after updating a server gradually upgrade the client-side to the latest stack.
+[Migration guide](/docs/next/getting-started/migration_v4) contains all the steps to upgrade your Centrifugo from v3 to v4. While there are many changes in v4 release it should be possible to migrate to Centrifugo v4 without changing the client-side code at all. And then after updating a server gradually upgrade the client-side to the latest stack.
 
 ## Centrifuge library for Go
 
-As some of you know Centrifugo server is built on top of [Centrifuge](https://github.com/centrifugal/centrifuge) library for Go. Most of the things described here are now also part of Centrifuge library.
+As some of you know Centrifugo server is built on top of [Centrifuge](https://github.com/centrifugal/centrifuge) library for Go. Most of the optimizations and improvements described here are now also part of Centrifuge library.
 
-With new unified SDK behavior and bidirectional emulation layer it seems a robust alternative to Socket.IO in Go language ecosystem. It's generic enough to build real-time applications of any kind and comes with Redis broker support to scale connections to many machines – the feature usually not available in other open-source real-time messaging libraries.
+With new unified SDK behavior and bidirectional emulation layer it seems a robust alternative to Socket.IO in Go language ecosystem.
 
-In some cases Centrifuge library can be a more flexible solution than Centrifugo since Centrifugo (as a standalone server) dictates some mechanics and rules to follow.
+In some cases Centrifuge library can be a more flexible solution than Centrifugo since Centrifugo (as a standalone server) dictates some mechanics and rules to follow. In Centrifugo case business logic should live on the application backend side, with Centrifugo library it can be kept closer to the real-time transport layer.
 
 ## Conclusion
 
@@ -279,7 +283,7 @@ To summarise, here are some benefits Centrifugo v4 provides:
 * better initial latency – thanks to optimistic subscriptions and possibility to pre-build subscription tokens (as `client` claim not needed anymore)
 * possibility to utilize a more efficient bidirectional emulation in the browser, without worrying about sticky sessions unless you want to optimize real-time infrastructure.
 
-That's it. We now begin the era of v4 and it is going to be awesome, no doubt. We believe that with v4 release Centrifugo has further strengthened its position in the open-source real-time messaging market and still provides cost benefits comparing to paid cloud solutions in the area, while being mature and robust enough for a production usage.
+That's it. We now begin the era of v4 and it is going to be awesome, no doubt. 
 
 ## Join community
 
