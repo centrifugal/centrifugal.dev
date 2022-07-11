@@ -666,7 +666,7 @@ A custom value for `proxy_grpc_credentials_key`.
 
 ### GRPC proxy example
 
-We have [an example of backend server](https://github.com/centrifugal/examples/tree/master/proxy/grpc) (written in Go language) which can react to events from Centrifugo over GRPC. For other programming languages the approach is similar, i.e.:
+We have [an example of backend server](https://github.com/centrifugal/examples/tree/master/v3/proxy/grpc) (written in Go language) which can react to events from Centrifugo over GRPC. For other programming languages the approach is similar, i.e.:
 
 1. Copy proxy Protobuf definitions
 1. Generate GRPC code
@@ -808,7 +808,7 @@ To enable connect proxy:
 }
 ```
 
-We have an [example of Centrifugo integration with NodeJS](https://github.com/centrifugal/examples/tree/master/nodejs_granular_proxy) which uses granular proxy mode. Even if you are not using NodeJS on a backend an example can help you understand the idea.
+We have an [example of Centrifugo integration with NodeJS](https://github.com/centrifugal/examples/tree/master/v3/nodejs_granular_proxy) which uses granular proxy mode. Even if you are not using NodeJS on a backend an example can help you understand the idea.
 
 Let's also add refresh proxy:
 

@@ -605,7 +605,7 @@ One more thing I'd like to note is that if you aim to build a chat application l
 
 ## Tutorial source code with docker-compose
 
-The full example which can run by issuing a single `docker compose up` [can be found on Github](https://github.com/centrifugal/examples/tree/master/python_django_chat_tutorial). It also has some CSS styles so that the chat looks like shown in the beginning.
+The full example which can run by issuing a single `docker compose up` [can be found on Github](https://github.com/centrifugal/examples/tree/master/v3/python_django_chat_tutorial). It also has some CSS styles so that the chat looks like shown in the beginning.
 
 ## Conclusion
 

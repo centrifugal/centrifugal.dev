@@ -32,7 +32,7 @@ Not a super-cool app to be honest. Our goal here is to give a reader an idea how
 
 The end result here will allow application user to authenticate and once authenticated – connect to Centrifugo. Centrifugo will proxy connection requests to NodeJS backend and native ExpressJS session middleware will be used for connection authentication. We will also send some periodical real-time messages to a user personal channel.
 
-The [full source code of this tutorial](https://github.com/centrifugal/examples/tree/master/nodejs_proxy) located on Github. You can clone examples repo and run this demo by simply writing:
+The [full source code of this tutorial](https://github.com/centrifugal/examples/tree/master/v3/nodejs_proxy) located on Github. You can clone examples repo and run this demo by simply writing:
 
 ```bash
 docker compose up

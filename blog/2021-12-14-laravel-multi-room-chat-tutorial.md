@@ -58,9 +58,9 @@ Hope this makes sense as a good motivation to give Centrifugo a try in your Lara
 
 ## Setup and start a project
 
-For the convenience of working with the example, we [wrapped the end result into docker compose](https://github.com/centrifugal/examples/blob/master/php_laravel_chat_tutorial/docker-compose.yml).
+For the convenience of working with the example, we [wrapped the end result into docker compose](https://github.com/centrifugal/examples/blob/master/v3/php_laravel_chat_tutorial/docker-compose.yml).
 
-To start the app clone [examples repo](https://github.com/centrifugal/examples), cd into `php_laravel_chat_tutorial` directory and run:
+To start the app clone [examples repo](https://github.com/centrifugal/examples), cd into `v3/php_laravel_chat_tutorial` directory and run:
 
 ```bash
 docker compose up
@@ -81,7 +81,7 @@ Then go to [http://localhost/](http://localhost/) – you should see:
 
 Register (using some fake credentials) or sign up – and proceed to the chat rooms.
 
-Pay attention to the [configuration](https://github.com/centrifugal/examples/tree/master/php_laravel_chat_tutorial/docker/conf) of Centrifugo and Nginx. Also, on [entrypoint](https://github.com/centrifugal/examples/blob/master/php_laravel_chat_tutorial/docker/entrypoints/app.sh) which does some things:
+Pay attention to the [configuration](https://github.com/centrifugal/examples/tree/master/v3/php_laravel_chat_tutorial/docker/conf) of Centrifugo and Nginx. Also, on [entrypoint](https://github.com/centrifugal/examples/blob/master/v3/php_laravel_chat_tutorial/docker/entrypoints/app.sh) which does some things:
 
 - dependencies are installed via composer
 - copying settings from .env.example
@@ -94,18 +94,18 @@ We assume you already familar with Laravel concepts, so we will just point you t
 
 ### Environment settings
 
-After the first launch of the application, all settings will be copied from the file [`.env.example`](https://github.com/centrifugal/examples/blob/master/php_laravel_chat_tutorial/app/.env.example) to `.env`. Next, we will take a closer look at some settings.
+After the first launch of the application, all settings will be copied from the file [`.env.example`](https://github.com/centrifugal/examples/blob/master/v3/php_laravel_chat_tutorial/app/.env.example) to `.env`. Next, we will take a closer look at some settings.
 
 ### Database migrations and models
 
-You can view the database structure [here](https://github.com/centrifugal/examples/tree/master/php_laravel_chat_tutorial/app/database/migrations).
+You can view the database structure [here](https://github.com/centrifugal/examples/tree/master/v3/php_laravel_chat_tutorial/app/database/migrations).
 
 We will use the following tables which will be then translated to the application models:
 
 - Laravel standard user authentication tables. See https://laravel.com/docs/8.x/authentication. In the service we are using Laravel Breeze. For more information [see official docs](https://laravel.com/docs/8.x/starter-kits#laravel-breeze).
-- [rooms](https://github.com/centrifugal/examples/blob/master/php_laravel_chat_tutorial/app/database/migrations/2021_11_21_000001_create_rooms_table.php) table. Basically - describes different rooms in the app every user can create.
-- rooms [many-to-many relation](https://github.com/centrifugal/examples/blob/master/php_laravel_chat_tutorial/app/database/migrations/2021_11_21_000002_create_users_rooms_table.php) to users. Allows to add users into rooms when `join` button clicked or automatically upon room creation.
-- [messages](https://github.com/centrifugal/examples/blob/master/php_laravel_chat_tutorial/app/database/migrations/2021_11_21_000003_create_messages_table.php). Keeps message history in rooms.
+- [rooms](https://github.com/centrifugal/examples/blob/master/v3/php_laravel_chat_tutorial/app/database/migrations/2021_11_21_000001_create_rooms_table.php) table. Basically - describes different rooms in the app every user can create.
+- rooms [many-to-many relation](https://github.com/centrifugal/examples/blob/master/v3/php_laravel_chat_tutorial/app/database/migrations/2021_11_21_000002_create_users_rooms_table.php) to users. Allows to add users into rooms when `join` button clicked or automatically upon room creation.
+- [messages](https://github.com/centrifugal/examples/blob/master/v3/php_laravel_chat_tutorial/app/database/migrations/2021_11_21_000003_create_messages_table.php). Keeps message history in rooms.
 
 ### Broadcasting
 
@@ -159,7 +159,7 @@ Allowed origins must be properly set to prevent [cross-site WebSocket connection
 
 To use native Laravel user authentication middlewares, we will use [Centrifugo proxy feature](https://centrifugal.dev/docs/server/proxy).
 
-When user connects to Centrifugo it's connection attempt will be transformed into HTTP request from Centrifugo to Laravel and will hit the [connect proxy controller](https://github.com/centrifugal/examples/blob/master/php_laravel_chat_tutorial/app/app/Http/Controllers/CentrifugoProxyController.php):
+When user connects to Centrifugo it's connection attempt will be transformed into HTTP request from Centrifugo to Laravel and will hit the [connect proxy controller](https://github.com/centrifugal/examples/blob/master/v3/php_laravel_chat_tutorial/app/app/Http/Controllers/CentrifugoProxyController.php):
 
 ```php
 class CentrifugoProxyController extends Controller
@@ -176,7 +176,7 @@ class CentrifugoProxyController extends Controller
 }
 ```
 
-This controller [protected by auth middleware](https://github.com/centrifugal/examples/blob/master/php_laravel_chat_tutorial/app/routes/api.php).
+This controller [protected by auth middleware](https://github.com/centrifugal/examples/blob/master/v3/php_laravel_chat_tutorial/app/routes/api.php).
 
 Since Centrifugo proxies `Cookie` header of initial WebSocket HTTP Upgrade request Laravel auth layer will work just fine. So in a controller you already has access to the current authenticated user.
 
@@ -192,7 +192,7 @@ Some additional tips can be found in [Centrifugo FAQ](https://centrifugal.dev/do
 
 ### Room controller
 
-In [RoomController](https://github.com/centrifugal/examples/blob/master/php_laravel_chat_tutorial/app/app/Http/Controllers/RoomController.php) we perform various actions with rooms:
+In [RoomController](https://github.com/centrifugal/examples/blob/master/v3/php_laravel_chat_tutorial/app/app/Http/Controllers/RoomController.php) we perform various actions with rooms:
 
 * displaying rooms
 * create rooms
@@ -228,7 +228,7 @@ We also add some fields to the published message which will be used when dynamic
 
 ### Client side
 
-Our chat is basically a one page with some variations dependng on the current route. So we use [a single view](https://github.com/centrifugal/examples/blob/master/php_laravel_chat_tutorial/app/resources/views/rooms/index.blade.php) for the entire chat app.
+Our chat is basically a one page with some variations dependng on the current route. So we use [a single view](https://github.com/centrifugal/examples/blob/master/v3/php_laravel_chat_tutorial/app/resources/views/rooms/index.blade.php) for the entire chat app.
 
 On the page we have a form for creating rooms. The user who created the room automatically joins it upon creation. Other users need to join manually (using `join` button in the room).
 

@@ -77,4 +77,4 @@ Maximum allowed size of a initial HTTP POST request in bytes (when using HTTP PO
 
 ## Browser example
 
-A basic browser example can be found [here](https://github.com/centrifugal/examples/tree/master/unidirectional/sse).
+A basic browser example can be found [here](https://github.com/centrifugal/examples/tree/master/v3/unidirectional/sse).
