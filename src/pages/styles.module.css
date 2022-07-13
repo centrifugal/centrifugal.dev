@@ -16,7 +16,7 @@
 
 @media screen and (max-width: 996px) {
   .heroBanner {
-    padding: 1rem 0;
+    padding: 2rem 0;
   }
 }
 
@@ -72,6 +72,12 @@
   width: 100%;
 }
 
+@media screen and (max-width: 996px) {
+  .features {
+    margin: auto !important;
+  }
+}
+
 .featureImage {
   height: 125px;
   width: 125px;
@@ -124,13 +130,9 @@
 }
 
 @media screen and (max-width: 996px) {
-  .feature {
-    margin: 2.5em;
-  }
-
   .featureImage {
     float: left;
-    margin: 0 3em 0 0;
+    margin: 0 0 0 0;
   }
 }
 

@@ -63,7 +63,7 @@ function Home() {
     >
       <Header />
       <main>
-        <section className={styles.features}>
+        <section className={clsx("features-wrapper", styles.features)}>
           <div className="container">
             <div className="row">
               <Feature title="Integrates with everything" imageUrl="img/feature_integration.png">

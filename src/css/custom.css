@@ -229,12 +229,6 @@ mark {
   color: white;
 }
 
-@media screen and (max-width: 996px) {
-  .feature_src-pages-styles-module {
-    margin: auto !important;
-  }
-}
-
 html[data-theme="dark"] .features_src-pages-styles-module p {
   color: #cbcbcb;
 }

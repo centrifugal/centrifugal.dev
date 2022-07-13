@@ -40,6 +40,7 @@ module.exports = {
         "transports/http_stream",
         "transports/sse",
         "transports/sockjs",
+        "transports/webtransport",
         "transports/client_protocol"
       ],
     },
