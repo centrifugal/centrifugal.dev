@@ -12,7 +12,7 @@ draft: true
 
 ![Centrifuge](/img/v4.jpg)
 
-Today we are excited to announce the next generation of Centrifugo – Centrifugo v4. The release takes Centrifugo to the next level in terms of client protocol performance, WebSocket fallback simplicity, SDK ecosystem and channel security model. It also comes with a couple of experimental features such as HTTP/3 and WebTransport support.
+Today we are excited to announce the next generation of Centrifugo – Centrifugo v4. The release takes Centrifugo to the next level in terms of client protocol performance, WebSocket fallback simplicity, SDK ecosystem and channel security model. It also comes with a couple of cutting-edge technologies to experiment with such as HTTP/3 and WebTransport.
 
 <!--truncate-->
 
@@ -122,7 +122,7 @@ centrifuge.connect()
 
 :::note
 
-We are using explicit transport endpoints in the above example due to the fact that transport endpoints can be configured separately in Centrifugo – there is no single entry point for all transports. Like the one in Socket.IO or SockJS when developer can only point client to the base address. In this case, we are requesting an explicit transport/endpoint configuration.
+We are using explicit transport endpoints in the above example due to the fact that transport endpoints can be configured separately in Centrifugo – there is no single entry point for all transports. Like the one in Socket.IO or SockJS when developer can only point client to the base address. In Centrifugo case, we are requesting an explicit transport/endpoint configuration from the SDK user.
 
 :::
 
@@ -232,9 +232,17 @@ For example, in a connection JWT developers can set sth like:
 }
 ```
 
-And this tells Centrifugo that the connection is able to subscribe on channels `news` or `user_42` using client-side subscriptionsat any time while the connection is active.
+And this tells Centrifugo that the connection is able to subscribe on channels `news` or `user_42` using client-side subscriptionsat any time while the connection is active. Centrifugo also supports wildcard and regex channel matches.
 
-Subscription JWT can provide capabilities for the channel too, Centrifugo also supports wildcard and regex channel matches. Read more about this mechanism in [Channel capabilities](/docs/pro/capabilities) chapter.
+Subscription JWT can provide capabilities for the channel too, so permissions may be controlled on an individual subscription basis, ex. the ability to publish and call history API may be expressed with `allow` claim in subscription JWT:
+
+```json
+{
+    "allow": ["pub", "hst"]
+}
+```
+
+Read more about this mechanism in [Channel capabilities](/docs/pro/capabilities) chapter.
 
 ## Better connections API
 
@@ -244,7 +252,7 @@ The API now supports filtering all connections: by user ID, by subscribed channe
 
 The filtering works by user ID or with a help of [CEL expressions](https://opensource.google/projects/cel) (Common Expression Language). CEL expressions provide a developer-friendly, fast and secure (as they are not Turing-complete) way to evaluate some conditions. They are used in some Google services (ex. Firebase), in Envoy RBAC configuration, etc. If you've never seen it before – take a look, cool project. We are also evaluating how to use CEL expressions for a dynamic and efficient channel permission checks, but that's an early story.
 
-The `connections` API call results contain more useful information: a list of client's active channels, information about the tokens used to connect and subscribe, meta information attached to the connection.
+The `connections` API call result contains more useful information: a list of client's active channels, information about the tokens used to connect and subscribe, meta information attached to the connection.
 
 ## Optimized Redis engine
 
@@ -256,7 +264,7 @@ It's no secret that `centrifuge-js` is the most popular SDK in the Centrifugo ec
 
 This was a long awaited improvement, and it finally happened! The entire public API is strictly typed. The cool thing is that even `EventEmitter` events and event handlers are the subject to type checks - this should drastically simplify and speedup development and also help to reduce error possibility.
 
-## Experimenting with HTTP/3 and WebTransport
+## Experimenting with HTTP/3
 
 Centrifugo v4 has an **experimental** HTTP/3 support. Once TLS is enabled and `"http3": true` option is set all the endpoints on an external port will be served by a HTTP/3 server based on [lucas-clemente/quic-go](https://github.com/lucas-clemente/quic-go) implementation.
 
@@ -264,9 +272,11 @@ It's worth noting that WebSocket will still use HTTP/1.1 for its Upgrade request
 
 HTTP/3 does not currently work with our ACME autocert TLS - i.e. you need to explicitly provide paths to cert and key files [as described here](/docs/server/tls#using-crt-and-key-files).
 
-Having HTTP/3 on board allowed us to make one more thing. Some of you may remember the post [Experimenting with QUIC and WebTransport](/blog/2020/10/16/experimenting-with-quic-transport) published in our blog before. We danced around the idea to add [WebTransport](https://web.dev/webtransport/) to Centrifugo since then. [WebTransport IETF specification](https://datatracker.ietf.org/doc/draft-ietf-webtrans-http3/) is still a work in progress, it changed a lot since our first blog post about it. But WebTransport object is already part of Chrome and things seem to be very close to the release.
+## Experimenting with WebTransport
 
-So we added experimental WebTransport support to Centrifugo v4. This became possible with the help of [marten-seemann/webtransport-go](https://github.com/marten-seemann/webtransport-go) library.
+Having HTTP/3 on board allowed us to make one more thing. Some of you may remember the post [Experimenting with QUIC and WebTransport](/blog/2020/10/16/experimenting-with-quic-transport) published in our blog before. We danced around the idea to add [WebTransport](https://web.dev/webtransport/) to Centrifugo since then. [WebTransport IETF specification](https://datatracker.ietf.org/doc/draft-ietf-webtrans-http3/) is still a draft, it changed a lot since our first blog post about it. But WebTransport object is already part of Chrome (since v97) and things seem to be very close to the release.
+
+So we added experimental WebTransport support to Centrifugo v4. This is made possible with the help of the [marten-seemann/webtransport-go](https://github.com/marten-seemann/webtransport-go) library.
 
 To use WebTransport you need to run HTTP/3 experimental server and enable WebTransport endpoint with `"webtransport": true` option in the configuration. Then you can connect to that endpoint using `centrifuge-js`. For example, let's enable WebTransport and use WebSocket as a fallback option:
 
@@ -289,7 +299,7 @@ Note, that we are using secure schemes here – `https://` and `wss://`. While i
 
 In Centrifugo case, we utilize the bidirectional reliable stream of WebTransport to pass our protocol between client and server. Both JSON and Protobuf communication formats are supported. There are some issues with the proper passing of the disconnect advice in some cases, otherwise it's fully functional.
 
-Obviously, due to the limited WebTransport support in browsers at the moment, possible breaking changes in the WebTransport specification we can not recommended it for production usage for now. At some point in the future it may become a reasonable alternative to WebSocket, now we are more confident that Centrifugo will be able to provide a proper support of it.
+Obviously, due to the limited WebTransport support in browsers at the moment, possible breaking changes in the WebTransport specification we can not recommended it for production usage for now. At some point in the future, it may become a reasonable alternative to WebSocket, now we are more confident that Centrifugo will be able to provide a proper support of it.
 
 ## Migration guide
 

@@ -7,7 +7,7 @@ WebTransport is an API offering low-latency, bidirectional, client-server messag
 
 :::danger
 
-WebTransport support in Centrifugo is EXPERIMENTAL and not recommended for production usage. [WebTransport IETF specification](https://datatracker.ietf.org/doc/draft-ietf-webtrans-http3/) is not even finished yet.
+WebTransport support in Centrifugo is EXPERIMENTAL and not recommended for production usage. [WebTransport IETF specification](https://datatracker.ietf.org/doc/draft-ietf-webtrans-http3/) is not finished yet and may have breaking changes.
 
 :::
 
@@ -23,11 +23,11 @@ To use WebTransport you first need to run HTTP/3 experimental server and enable 
 }
 ```
 
-In HTTP3 and WebTransport case TLS is required.
+In HTTP/3 and WebTransport case TLS is required.
 
 :::tip
 
-At the time of writing only Chrome supports WebTransport API. If you are experimenting with self-signed certificates you may need to run Chrome with flags to force HTTP/3 on origin and ignore certificate errors:
+At the time of writing only Chrome (since v97) supports WebTransport API. If you are experimenting with self-signed certificates you may need to run Chrome with flags to force HTTP/3 on origin and ignore certificate errors:
 
 ```
 /path/to/your/Chrome --origin-to-force-quic-on=localhost:8000 --ignore-certificate-errors-spki-list=TSZTiMjLG+DNjESXdJh3f+S8C+RhsFCav7T24VNuCPQ=
@@ -68,6 +68,6 @@ Make sure you run Centrifugo without load balancer or reverse proxy in front, or
 
 :::
 
-In Centrifugo case, we utilize the bidirectional stream of WebTransport to pass our protocol between client and server. Both JSON and Protobuf communication are supported. There are some issues with the proper passing of the disconnect advice in some cases, otherwise it's fully functional.
+In Centrifugo case, we utilize a single bidirectional stream of WebTransport to pass our protocol between client and server. Both JSON and Protobuf communication are supported. There are some issues with the proper passing of the disconnect advice in some cases, otherwise it's fully functional.
 
-Obviously, due to the limited WebTransport support in browsers at the moment, possible breaking changes in the WebTransport specification it's an **experimental** feature. And it's not recommended for production usage for now. At some point in the future it may become a reasonable alternative to WebSocket, now we are more confident that Centrifugo will be able to provide a proper support of it.
+Obviously, due to the limited WebTransport support in browsers at the moment, possible breaking changes in the WebTransport specification it's an **experimental** feature. And it's not recommended for production usage for now. At some point in the future, it may become a reasonable alternative to WebSocket.
