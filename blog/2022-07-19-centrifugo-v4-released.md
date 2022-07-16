@@ -7,7 +7,6 @@ authorTitle: Let the Centrifugal force be with you
 authorImageURL: /img/logo_animated.svg
 image: /img/v4.jpg
 hide_table_of_contents: false
-draft: true
 ---
 
 ![Centrifuge](/img/v4.jpg)
