@@ -147,12 +147,40 @@ function Home() {
                   )}
                   to={useBaseUrl("docs/getting-started/introduction")}
                 >
-                  Impressive? Get Started.
+                  Impressive? Get Started!
                 </Link>
               </div>
             </>
           }
         />
+        <Highlight
+          img={
+            <video width="100%" loop="true" autoplay="autoplay" muted controls="" src="/img/logo.mp4"></video>
+          }
+          reversed
+          isDark
+          title="What users ❤️ in Centrifugo"
+          text={
+            <div class="quotes">
+              <code>Simplicity, stability, speed</code>
+              <code>It's simple and powerful</code>
+              <code>Stability. It just works without restarts, for few years already</code>
+              <code>Scalability and integration with Redis</code>
+              <code>Open source</code>
+              <code>Very simple integration</code>
+              <code>It's really well written. Super easy to setup, especially for auth!</code>
+            </div>
+          }
+        />
+        <div className="container get-started-row">
+          <div className="row">
+            <Link
+              to={useBaseUrl("docs/getting-started/introduction")}
+            >
+              GET STARTED
+            </Link>
+          </div>
+        </div>
       </main >
     </Layout >
   );

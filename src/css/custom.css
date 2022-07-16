@@ -294,3 +294,29 @@ html[data-theme="dark"] .feature-media:before {
 .footer--dark {
   background-color: #000;
 }
+
+.quotes code {
+  padding: 0.2em 0.5em;
+  margin-right: 1em;
+  font-size: 1em;
+  line-height: 2.5em;
+  border-left: 7px solid #e34343;
+  border-radius: 0;
+}
+
+.get-started-row {
+  padding: 2em;
+  text-align: center;
+}
+
+.get-started-row a {
+  color: #de6060;
+  font-size: 3rem;
+  text-align: center;
+  font-family: var(--ifm-heading-font-family);
+  text-transform: uppercase;
+  text-shadow: 0 0 15px rgba(237, 96, 89, 0.6);
+  width: 100%;
+  font-weight: 500;
+  text-decoration: none;
+}
