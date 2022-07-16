@@ -125,7 +125,7 @@ module.exports = {
         docs: {
           versions: {
             current: {
-              label: "v4 🚧",
+              label: "v4",
               badge: false
             },
             "3": {
@@ -133,7 +133,7 @@ module.exports = {
               badge: false
             }
           },
-          lastVersion: "3",
+          lastVersion: "current",
           breadcrumbs: false,
           sidebarPath: require.resolve("./src/sidebars"),
           editUrl:

@@ -162,13 +162,14 @@ function Home() {
           title="What users ❤️ in Centrifugo"
           text={
             <div class="quotes">
-              <code>Simplicity, stability, speed</code>
-              <code>It's simple and powerful</code>
               <code>Stability. It just works without restarts, for few years already</code>
               <code>Scalability and integration with Redis</code>
+              <code>It's simple and powerful</code>
               <code>Open source</code>
               <code>Very simple integration</code>
               <code>It's really well written. Super easy to setup, especially for auth!</code>
+              <code>Clean code</code>
+              <code>Has a Dart Client &lt;3</code>
             </div>
           }
         />
