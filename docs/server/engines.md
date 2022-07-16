@@ -40,9 +40,11 @@ Disadvantages:
 
 #### history_meta_ttl
 
-[Duration](../server/configuration.md#setting-time-duration-options), default `0s`.
+[Duration](../server/configuration.md#setting-time-duration-options), default `2160h` (90 days).
 
-`history_meta_ttl` sets a time in seconds of history stream metadata expiration. Stream metadata is information about the current offset number in the channel and epoch value. By default, metadata for channels does not expire. Though in some cases – when channels are created for а short time and then not used anymore – created metadata can stay in memory while not useful. For example, you can have a personal user channel but after using your app for a while user left it forever. From a long-term perspective, this can be an unwanted memory leak. Setting a reasonable value to this option (usually much bigger than the history retention period) can help. In this case, unused channel metadata will eventually expire.
+`history_meta_ttl` sets a time of history stream metadata expiration. 
+
+When using a history in a channel, Centrifugo keeps some metadata for it. Metadata includes the latest stream offset and its epoch value. In some cases, when channels are created for а short time and then not used anymore, created metadata can stay in memory while not useful. For example, you can have a personal user channel but after using your app for a while user left it forever. From a long-term perspective, this can be an unwanted memory growth. Setting a reasonable value to this option can help to expire metadata faster (or slower if you need it). The rule of thumb here is to keep this value much bigger than maximum history TTL used in Centrifugo configuration.
 
 ## Redis engine
 
@@ -92,7 +94,13 @@ Boolean, default `false` – turns on using Redis Lists instead of Stream data s
 
 #### history_meta_ttl
 
-Similar to a Memory engine Redis engine also looks at `history_meta_ttl` option ([duration](../server/configuration.md#setting-time-duration-options), default `0`) - which sets a time of history stream metadata expiration in Redis Engine (with seconds resolution). Meta key in Redis is a HASH that contains the current offset number in channel and epoch value. By default, metadata for channels does not expire. Though in some cases – when channels are created for а short time and then not used anymore – created stream metadata can stay in memory while not useful. For example, you can have a personal user channel but after using your app for a while user left it forever. From a long-term perspective, this can be an unwanted memory leak. Setting a reasonable value to this option (usually much bigger than the history retention period) can help. In this case, unused channel metadata will eventually expire.
+[Duration](../server/configuration.md#setting-time-duration-options), default `2160h` (90 days).
+
+`history_meta_ttl` sets a time of history stream metadata expiration. 
+
+Similar to a Memory engine Redis engine also looks at `history_meta_ttl` option. Meta key in Redis is a HASH that contains the current offset number in channel and the stream epoch value.
+
+When using a history in a channel, Centrifugo saves metadata for it. Metadata includes the latest stream offset and its epoch value. In some cases, when channels are created for а short time and then not used anymore, created metadata can stay in memory while not useful. For example, you can have a personal user channel but after using your app for a while user left it forever. From a long-term perspective, this can be an unwanted memory growth. Setting a reasonable value to this option can help. The rule of thumb here is to keep this value much bigger than maximum history TTL used in Centrifugo configuration.
 
 ### Scaling with Redis tutorial
 
@@ -384,7 +392,7 @@ String, default `""`. Allows setting a password.
 
 #### history_meta_ttl
 
-[Duration](../server/configuration.md#setting-time-duration-options), default `0s`.
+[Duration](../server/configuration.md#setting-time-duration-options), default `2160h`.
 
 Same option as for Memory engine and Redis engine also applies to Tarantool case.
 

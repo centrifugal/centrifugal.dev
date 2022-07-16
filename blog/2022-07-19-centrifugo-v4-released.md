@@ -18,7 +18,7 @@ Today we are excited to announce the next generation of Centrifugo – Centrifug
 
 :::info About Centrifugo
 
-If you've never heard of Centrifugo before, it's a scalable real-time messaging server written in the Go language. Centrifugo can instantly deliver messages to application online users connected over supported transports (WebSocket, HTTP-streaming, SSE/EventSource, GRPC, SockJS). Centrifugo has the concept of a channel – so it's a user-facing PUB/SUB server.
+If you've never heard of Centrifugo before, it's an open-source scalable real-time messaging server written in Go language. Centrifugo can instantly deliver messages to application online users connected over supported transports (WebSocket, HTTP-streaming, SSE/EventSource, GRPC, SockJS). Centrifugo has the concept of a channel – so it's a user-facing PUB/SUB server.
 
 Centrifugo is language-agnostic and can be used to build chat apps, live comments, multiplayer games, real-time data visualizations, collaborative tools, etc. in combination with any backend. It is well suited for modern architectures and allows decoupling the business logic from the real-time transport layer.
 
@@ -266,7 +266,7 @@ This was a long awaited improvement, and it finally happened! The entire public 
 
 ## Experimenting with HTTP/3
 
-Centrifugo v4 has an **experimental** HTTP/3 support. Once TLS is enabled and `"http3": true` option is set all the endpoints on an external port will be served by a HTTP/3 server based on [lucas-clemente/quic-go](https://github.com/lucas-clemente/quic-go) implementation.
+Centrifugo v4 has an **experimental** [HTTP/3](https://en.wikipedia.org/wiki/HTTP/3) support. Once TLS is enabled and `"http3": true` option is set all the endpoints on an external port will be served by a HTTP/3 server based on [lucas-clemente/quic-go](https://github.com/lucas-clemente/quic-go) implementation.
 
 It's worth noting that WebSocket will still use HTTP/1.1 for its Upgrade request (there is an interesting IETF draft BTW about [Bootstrapping WebSockets with HTTP/3](https://www.ietf.org/archive/id/draft-ietf-httpbis-h3-websockets-02.html)). But HTTP-streaming and EventSource should work just fine with HTTP/3.
 
