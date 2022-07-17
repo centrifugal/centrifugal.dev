@@ -639,7 +639,7 @@ Note, that we can call `subscribe()` before making a connection to a server – 
 
 ## Subscription recovery state
 
-Subscriptions to channels with `recover` option enabled maintain stream position information internally. On every publication received this information updated and used to recover missed publications upon resubscribe (caused by reconnect for example).
+Subscriptions to channels with recovery option enabled maintain stream position information internally. On every publication received this information updated and used to recover missed publications upon resubscribe (caused by reconnect for example).
 
 When you call `unsubscribe()` Subscription position state is not cleared. So it's possible to call `subscribe()` later and catch up a state.
 
