@@ -96,7 +96,7 @@ You can provide custom certificate files to configure TLS for GRPC API server.
 
 ### TLS for GRPC unidirectional stream
 
-Starting from Centrifugo v3.0.0 you can provide custom certificate files to configure TLS for GRPC unidirectional stream endpoint.
+You can provide custom certificate files to configure TLS for GRPC unidirectional stream endpoint.
 
 * `uni_grpc_tls` boolean flag enables TLS for GRPC server, requires an X509 certificate and a key file
 * `uni_grpc_tls_cert` string provides a path to an X509 certificate file for GRPC uni stream server

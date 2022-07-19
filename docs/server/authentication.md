@@ -84,8 +84,6 @@ This is a token unique ID. See [definition in RFC](https://datatracker.ietf.org/
 
 ### aud
 
-Handled since Centrifugo v3.2.0
-
 By default, Centrifugo does not check JWT audience ([rfc7519 aud](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.3) claim).
 
 But you can force this check by setting `token_audience` string option:
@@ -103,8 +101,6 @@ Setting `token_audience` will also affect subscription tokens (used for [channel
 :::
 
 ### iss
-
-Handled since Centrifugo v3.2.0
 
 By default, Centrifugo does not check JWT issuer ([rfc7519 iss](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.1) claim).
 

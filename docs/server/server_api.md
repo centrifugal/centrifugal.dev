@@ -162,7 +162,7 @@ Date: Thu, 17 May 2018 22:03:09 GMT
 | channel       | string  | yes | Name of channel to publish        |
 | data       | any JSON       | yes | Custom JSON data to publish into a channel        |
 | skip_history  | bool       | no | Skip adding publication to history for this request            |
-| tags  | map[string]string  | no | Publication tags - map with arbitrary string keys and values which is attached to publication and will be delivered to clients (available since v3.2.0)            |
+| tags  | map[string]string  | no | Publication tags - map with arbitrary string keys and values which is attached to publication and will be delivered to clients            |
 | b64data       | string       | no | Custom binary data to publish into a channel encoded to base64 so it's possible to use HTTP API to send binary to clients. Centrifugo will decode it from base64 before publishing. In case of GRPC you can publish binary using `data` field.        |
 
 #### Publish result
@@ -195,7 +195,7 @@ Similar to `publish` but allows to send the same data into many channels.
 | channels       | Array of strings  | yes | List of channels to publish data to        |
 | data       | any JSON       | yes | Custom JSON data to publish into each channel        |
 | skip_history  | bool       | no | Skip adding publications to channels' history for this request            |
-| tags  | map[string]string  | no | Publication tags (available since v3.2.0) - map with arbitrary string keys and values which is attached to publication and will be delivered to clients           |
+| tags  | map[string]string  | no | Publication tags - map with arbitrary string keys and values which is attached to publication and will be delivered to clients           |
 | b64data       | string       | no | Custom binary data to publish into a channel encoded to base64 so it's possible to use HTTP API to send binary to clients. Centrifugo will decode it from base64 before publishing. In case of GRPC you can publish binary using `data` field.        |
 
 #### Broadcast result
@@ -291,7 +291,7 @@ Empty object at the moment.
 | -------------- | -------------- | ------------ | ---- |
 | user       | string       | yes | User ID to disconnect        |
 | client       | string       | no | Specific client ID to disconnect (user still required to be set)       |
-| session       | string       | no | Specific client session to disconnect (user still required to be set). Available since Centrifugo v3.2.0      |
+| session       | string       | no | Specific client session to disconnect (user still required to be set).     |
 | whitelist       | Array of strings       | no | Array of client IDs to keep       |
 | disconnect       | Disconnect object       | no | Provide custom disconnect object, see below      |
 

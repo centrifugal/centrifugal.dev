@@ -33,7 +33,7 @@ During the Centrifugo v3 lifecycle we added even more JSON protocol optimization
 
 But Centrifugo v3 did not contain anything... let's say **revolutional**. Revolutional for Centrifugo itself, community, or even the entire field of open-source real-time messaging.
 
-With this release, we feel that the revolution in some aspects had happened. Now let's talk about it and introduce all the major things of the brand new v4 release.
+With this release, we feel that we bring innovation to the ecosystem. Now let's talk about it and introduce all the major things of the brand new v4 release.
 
 <video width="100%" loop="true" autoplay="autoplay" muted controls="" src="/img/v4_logo.mp4"></video>
 

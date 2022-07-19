@@ -387,8 +387,8 @@ Expected response example if subscription is allowed:
 | user         | string     | no |  a connection user ID obtained during authentication process         |
 | channel         | string     | no |  a string channel client wants to subscribe to        |
 | meta         | JSON | yes | a connection attached meta (off by default, enable with `"proxy_include_connection_meta": true`)         |
-| data         | JSON     | yes | custom data from client sent with subscription request (this field will only be set if provided by a client on subscribe). Available since Centrifugo v3.1.1            |
-| b64data      | string     | yes | optional subscription data from the client in base64 format (if the binary proxy mode is used). Available since Centrifugo v3.1.1            |
+| data         | JSON     | yes | custom data from client sent with subscription request (this field will only be set if provided by a client on subscribe).           |
+| b64data      | string     | yes | optional subscription data from the client in base64 format (if the binary proxy mode is used).           |
 
 #### Subscribe result fields
 
@@ -710,8 +710,6 @@ While this feature is useful for HTTP proxy it's not really required if you are 
 Regarding b64 fields in proxy results – just use base64 fields when required – Centrifugo is smart enough to detect that you are using base64 field and will pick payload from it, decode from base64 automatically and will pass further to connections in binary format.
 
 ## Granular proxy mode
-
-New in Centrifugo v3.1.0.
 
 By default, with proxy configuration shown above, you can only define a global proxy settings and one endpoint for each type of proxy (i.e. one for connect proxy, one for subscribe proxy, and so on). Also, you can configure only one set of headers to proxy which will be used by each proxy type. This may be sufficient for many use cases, but what if you need a more granular control? For example, use different subscribe proxy endpoints for different channel namespaces (i.e. when using microservice architecture).
 

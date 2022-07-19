@@ -68,8 +68,6 @@ String, default `""` - Redis password.
 
 #### redis_user
 
-Available since Centrifugo v3.2.0
-
 String, default `""` - Redis user for [ACL-based](https://redis.io/docs/manual/security/acl/) auth.
 
 #### redis_db
@@ -158,7 +156,7 @@ For this you only need to utilize 2 Redis Engine options: `redis_sentinel_addres
 Also:
 
 * `redis_sentinel_password` – optional string password for your Sentinel, works with Redis Sentinel >= 5.0.1
-* `redis_sentinel_user` (available since v3.2.0) - optional string user (used only in Redis ACL-based auth).
+* `redis_sentinel_user` - optional string user (used only in Redis ACL-based auth).
 
 So you can start Centrifugo which will use Sentinels to discover Redis master instances like this:
 

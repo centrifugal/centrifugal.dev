@@ -78,7 +78,7 @@ Note that docker allows setting `nofile` limits in command-line arguments which 
 
 :::caution
 
-Pin to the exact Docker Image tag in production, for example: `centrifugo/centrifugo:v3.0.0`, this will help to avoid unexpected problems during re-deploy process. 
+Pin to the exact Docker Image tag in production, for example: `centrifugo/centrifugo:v4.0.0`, this will help to avoid unexpected problems during re-deploy process. 
 
 :::
 
@@ -101,7 +101,7 @@ Create `docker-compose.yml`:
 ```yml
 centrifugo:
   container_name: centrifugo
-  image: centrifugo/centrifugo:v3
+  image: centrifugo/centrifugo:v4
   volumes:
     - ./config.json:/centrifugo/config.json
   command: centrifugo -c config.json
