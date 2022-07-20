@@ -1,7 +1,7 @@
 ---
 title: Centrifugo v4 released – a little revolution
 tags: [centrifugo, release]
-description: Centrifugo v4 released – providing optimized client protocol, modern WebSocket emulation layer, improved channel security, and redesigned client SDK behavior.
+description: Centrifugo v4 released – providing optimized client protocol, modern WebSocket emulation layer, improved channel security, and redesigned client SDK behavior. It also comes with a couple of cutting-edge technologies to experiment with such as HTTP/3 and WebTransport.
 author: Centrifugal team
 authorTitle: Let the Centrifugal force be with you
 authorImageURL: /img/logo_animated.svg
