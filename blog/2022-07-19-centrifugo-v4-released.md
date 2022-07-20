@@ -88,7 +88,7 @@ And finally, if you want to use SockJS with a distributed backend, you must enab
 We danced around the idea of replacing SockJS for a long time. But only now we are ready to provide our alternative to it – meet Centrifugo own **bidirectional emulation layer**. It's based on two additional transports:
 
 * HTTP-streaming (using modern browser [ReadableStream API](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) in JavaScript, supports both binary Protobuf and JSON transfer)
-* Eventsource (Server-Sent Events, SSE) – while a bit older choice and works with JSON only EventSource transport is loved by many developers, so we implemented bidirectional emulation with it too.
+* Eventsource (Server-Sent Events, SSE) – while a bit older choice and works with JSON only EventSource transport is loved by many developers and can provide fallback in slightly older browsers which don't have ReadableStream, so we implemented bidirectional emulation with it too.
 
 So when the fallback is used, you always have a real-time, persistent connection in server -> to -> client direction. Requests in client -> to -> server direction are regular HTTP – similar to how SockJS works. But our bidirectional emulation layer does not require sticky sessions – Centrifugo can proxy client-to-server requests to the correct node in the cluster. **Having sticky sessions is an optimization** for Centrifugo bidirectional emulation layer, **not a requirement**. We believe that this is a game changer for our users – no need to bother about proper load balancing, especially since in most cases 95% or even more users will be able to connect using the WebSocket transport.
 
