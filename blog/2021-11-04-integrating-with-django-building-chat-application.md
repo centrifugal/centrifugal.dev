@@ -20,6 +20,12 @@ The room view will use a WebSocket to communicate with the Django server (with h
 
 <!--truncate-->
 
+:::caution
+
+This tutorial was written for Centrifugo v3. We recently released [Centrifugo v4](/blog/2022/07/19/centrifugo-v4-released) which makes some parts of this tutorial obsolete. The core concepts are similar though – so this can still be used as a Centrifugo learning step.
+
+:::
+
 The result will look like this:
 
 ![demo](/img/django_chat.gif)

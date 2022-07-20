@@ -17,6 +17,12 @@ Why would NodeJS developers want to integrate a project with Centrifugo? This is
 
 <!--truncate-->
 
+:::caution
+
+This tutorial was written for Centrifugo v3. We recently released [Centrifugo v4](/blog/2022/07/19/centrifugo-v4-released) which makes some parts of this tutorial obsolete. The core concepts are similar though – so this can still be used as a Centrifugo learning step.
+
+:::
+
 I found several points which could be a good motivation:
 
 * Centrifugo scales well – we have a very optimized Redis Engine with client-side sharding and Redis Cluster support. We can also scale with KeyDB, Nats, or Tarantool. Centrifugo can scale to millions connections distributed over different server nodes.
