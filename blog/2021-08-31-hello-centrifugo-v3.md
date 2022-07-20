@@ -52,9 +52,9 @@ Let's start with the most important thing – backwards compatibility concerns.
 
 In Centrifugo v3 client protocol mostly stayed the same. We expect that most applications will be able to update without any change on a client-side. This was an important concern for v3 given how painful the update cycle can be on mobile devices and lessons learned from v1 to v2 migration. There is one breaking change though which can affect users who use history API manually from a client-side (we provide a temporary workaround to give apps a chance to migrate smoothly).
 
-On a server-side, much more changes happened, especially in the configuration: some options were renamed, some were removed. We provide a [v2 to v3 configuration converter](/docs/getting-started/migration_v3#v2-to-v3-config-converter) which can help dealing with changes. In most cases, all you should do is adapt Centrifugo configuration to match v3 changes and redeploy Centrifugo using v3 build instead of v2. All features are still there (or a replacement exists, like for `channels` API).
+On a server-side, much more changes happened, especially in the configuration: some options were renamed, some were removed. We provide a [v2 to v3 configuration converter](/docs/3/getting-started/migration_v3#v2-to-v3-config-converter) which can help dealing with changes. In most cases, all you should do is adapt Centrifugo configuration to match v3 changes and redeploy Centrifugo using v3 build instead of v2. All features are still there (or a replacement exists, like for `channels` API).
 
-For more details, refer to the [v3 migration guide](/docs/getting-started/migration_v3).
+For more details, refer to the [v3 migration guide](/docs/3/getting-started/migration_v3).
 
 ### License change
 

@@ -45,7 +45,7 @@ Centrifugo uses bidirectional asynchronous protocol between client and server. O
 
 While implementing the same protocol and same functions, all SDKs behaved slightly differently. That was the result of the missing SDK specification. Without a strict SDK spec, it was hard to document things, hard to explain the exact details of the real-time SDK behavior. What we did earlier in the Centrifugo documentation – was pointing users to specific SDK Github repo to look for behaviour details.
 
-The coolest thing about Centrifugo v4 is the next generation SDK API. We now have a [client SDK API specification](/docs/next/transports/client_api). It's a source of truth for SDKs behavior which try to follow the spec closely.
+The coolest thing about Centrifugo v4 is the next generation SDK API. We now have a [client SDK API specification](/docs/transports/client_api). It's a source of truth for SDKs behavior which try to follow the spec closely.
 
 The new SDK API is the result of several iterations and reflections on possible states, transitions, token refresh mechanism, etc. Users in our Telegram group may remember how it all started:
 
@@ -302,7 +302,7 @@ Obviously, due to the limited WebTransport support in browsers at the moment, po
 
 ## Migration guide
 
-The [migration guide](/docs/next/getting-started/migration_v4) contains steps to upgrade your Centrifugo from version 3 to version 4. While there are many changes in the v4 release, it should be possible to migrate to Centrifugo v4 without changing the code on the client side at all. And then, after updating the server, gradually update the client-side to the latest version of the stack.
+The [migration guide](/docs/getting-started/migration_v4) contains steps to upgrade your Centrifugo from version 3 to version 4. While there are many changes in the v4 release, it should be possible to migrate to Centrifugo v4 without changing the code on the client side at all. And then, after updating the server, gradually update the client-side to the latest version of the stack.
 
 ## Conclusion
 
