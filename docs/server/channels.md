@@ -74,6 +74,14 @@ Centrifugo v4 has this option to achieve compatibility with previous Centrifugo 
 
 But for namespaces with `allow_subscribe_for_client` option enabled Centrifugo does not allow subscribing on channels starting with `private_channel_prefix` (`$` by default) without a subscription token. This limitation exists to help users migrate to Centrifugo v4 without security risks.
 
+### Channel is just a string
+
+Keep in mind that a channel is uniquely identified by its string representation. Do not expect that channels `$news` and `news` are the same. They are different because strings are not equal. So if a user subscribed to `$news` then user won't receive messages published to `news`.
+
+Channels `dialog#42,43` and `dialog#43,42` are two different channels too. Centrifugo only applies permission checks when a user subscribes to a channel. So if user-limited channels are enabled then the user with ID `42` will be able to subscribe on both `dialog#42,43` and `dialog#43,42`. But Centrifugo does no magic regarding channel strings when keeping channel->to->subscribers map. So if the user subscribed on `dialog#42,43` you must publish messages to exactly that channel: `dialog#42,43`.
+
+The same applies to channels with namespaces. Do not expect that channels `chat:index` and `index` are the same – they are different, moreover, belong to different namespaces. We'll look at the concept of channel namespaces in Centrifugo shortly.
+
 ## Channel namespaces
 
 It's possible to configure a list of channel namespaces. Namespaces are optional but very useful. 
