@@ -41,9 +41,13 @@ openssl x509 -in server.crt -pubkey -noout | openssl pkey -pubin -outform der | 
 
 With not self-signed certs things should work just fine in Chrome.
 
+Here is a video tutorial that shows this in action:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/RmhggpXPncU" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 :::
 
-Then you can connect to that endpoint using `centrifuge-js`. For example, let's enable WebTransport and will use WebSocket as a fallback option:
+After starting Centrifugo with HTTP/3 and WebTransport endpoint you can connect to that endpoint (by default – `/connection/webtransport`) using `centrifuge-js`. For example, let's enable WebTransport and will use WebSocket as a fallback option:
 
 ```javascript
 const transports = [
