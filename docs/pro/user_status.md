@@ -16,7 +16,7 @@ The feature can be useful for chat applications when you need to get online/acti
 Centrifugo PRO provides a built-in RPC method of client API called `update_user_status`. Call it with empty parameters from a client side whenever user performs a useful action that proves it's active status in your app. For example, in Javascript:
 
 ```javascript
-await centrifuge.namedRPC('update_user_status', {});
+await centrifuge.rpc('update_user_status', {});
 ```
 
 :::note
