@@ -45,4 +45,6 @@ By the way, we have rooms in Telegram (the most active) and Discord:
 
 [![Join the chat at https://t.me/joinchat/ABFVWBE0AhkyyhREoaboXQ](https://img.shields.io/badge/Telegram-Group-orange?style=flat&logo=telegram)](https://t.me/joinchat/ABFVWBE0AhkyyhREoaboXQ) &nbsp;[![Join the chat at https://discord.gg/tYgADKx](https://img.shields.io/discord/719186998686122046?style=flat&label=Discord&logo=discord)](https://discord.gg/tYgADKx)
 
+We also have [Twitter account](https://twitter.com/centrifugal_dev) and [Youtube channel](https://www.youtube.com/channel/UCdQmdbYM5pzqrrRFmt6KA1Q).
+
 See you there!
