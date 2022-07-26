@@ -9,11 +9,11 @@ Centrifugo engines can maintain publication history for channels with configured
 
 History properties configured on a namespace level, to enable history both `history_size` and `history_ttl` should be set to a value greater than zero. 
 
-Centrifugo is not designed to keep publications streams forever. Streams are ephemeral and can expire or can be lost at any moment. But Centrifugo provides a way for an application or a client to understand that stream history lost. In this case, the main application database should be the source of truth and state recovery.
+Centrifugo is designed with an idea that history streams are ephemeral (can be created on the fly without explicit create call from Centrifugo users) and can expire or can be lost at any moment. Centrifugo provides a way for a client to understand that channel history lost. In this case, the main application database should be the source of truth and state recovery.
 
-When history is on every publication is published into a channel saved into history. Depending on the engine used history stream implementation can differ. For example, in the case of the Memory engine, all history is stored in process memory. So as soon as Centrifugo restarted all history is cleared. When using Redis engine history is kept in Redis Stream data structure - persistence properties are then inherited from Redis persistence configuration (the same for KeyDB engine). For Tarantool history is kept inside spaces.
+When history is on every message published into a channel is saved into a history stream. The persistence properties of history are dictated by a Centrifugo engine used. For example, in the case of the Memory engine, all history is stored in process memory. So as soon as Centrifugo restarted all history is cleared. When using Redis engine history is kept in Redis Stream data structure - persistence properties are then inherited from Redis persistence configuration (the same for KeyDB engine). For Tarantool history is kept inside Tarantool spaces.
 
-Each publication when added to history has an `offset` field. This is an incremental `uint64` field. Each stream is identified by the `epoch` field - which is an arbitrary string. As soon as the underlying engine loses data epoch field will change for a stream thus letting consumers know that stream can't be used as the source of truth anymore.
+Each publication when added to history has an `offset` field. This is an incremental `uint64` field. Each stream is identified by the `epoch` field - which is an arbitrary string. As soon as the underlying engine loses data epoch field will change for a stream thus letting consumers know that stream can't be used as the source of state recovery anymore.
 
 :::tip
 
@@ -113,26 +113,41 @@ for {
 
 One of the most interesting features of Centrifugo is automatic message recovery after short network disconnects. This mechanism allows a client to automatically restore missed publications on successful resubscribe to a channel after being disconnected for a while.
 
-In general, you could query your application backend for the actual state on every client reconnect - but the message recovery feature allows Centrifugo to deal with this and restore missed publications from the history cache thus radically reducing the load on your application backend and your main application database in some scenarios (when many clients reconnecting at the same time).
+In general, you could query your application backend for the actual state on every client reconnect - but the message recovery feature allows Centrifugo to deal with this and restore missed publications from the history cache thus radically reducing the load on your application backend and your main application database in some scenarios (when many clients reconnect at the same time).
 
 :::danger
 
-Message recovery protocol feature designed to be used together with reasonably small Publication stream size as all missed publications sent towards the client in one protocol frame on resubscribing to a channel. Thus, it is mostly suitable for short-time disconnects. It helps a lot to survive a reconnect storm when many clients reconnect at one moment (balancer reload, network glitch) - but it's not a good idea to recover a long list of missed messages after clients being offline for a long time.
+Message recovery protocol feature designed to be used together with reasonably small history stream size as all missed publications sent towards the client in one protocol frame on resubscribing to a channel. Thus, it is mostly suitable for short-time disconnects. It helps a lot to survive a reconnect storm when many clients reconnect at one moment (balancer reload, network glitch) - but it's not a good idea to recover a long list of missed messages after clients being offline for a long time.
 
 :::
 
-To enable recovery mechanism for channels set the `recover` boolean configuration option to `true` on the configuration file top-level or for a channel namespace. Make sure to enable this option in namespaces where history is on.
+To enable recovery mechanism for channels set the `force_recovery` boolean configuration option to `true` on the configuration file top-level or for a channel namespace. Make sure to enable this option in namespaces where history is on. It's also possible to ask for enabling recovery from the client-side when configuring Subscription object – in this case client must have a permission to call history API.
 
 When re-subscribing on channels Centrifugo will return missed `publications` to a client in a subscribe `Reply`, also it will return a special `recovered` boolean flag to indicate whether all missed publications successfully recovered after a disconnect or not.
 
 The number of publications that is possible to automatically recover is controlled by the `client_recovery_max_publication_limit` option which is `300` by default. 
 
-Centrifugo recovery model based on two fields in the protocol: `offset` and `epoch`. All fields are managed automatically by Centrifugo client libraries (for bidirectional transport), but it's good to know how recovery works under the hood.
+Centrifugo recovery model based on two fields in the protocol: `offset` and `epoch`. All fields are managed automatically by Centrifugo client SDKs (for bidirectional transport).
 
-The recovery feature heavily relies on `offset` and `epoch` values described above.
+The recovery process works this way:
 
-`epoch` handles cases when history storage has been restarted while the client was in a disconnected state so publication numeration in a channel started from scratch. For example at the moment Memory engine does not persist publication sequences on disk so every restart will start numeration from scratch. After each restart a new `epoch` field is generated, and we can understand in the recovery process that the client could miss messages thus returning the correct `recovered` flag in a subscribe `Reply`. This also applies to the Redis engine – if you do not use AOF with fsync then sequences can be lost after Redis restart. When using the Redis engine you need to use a fully in-memory model strategy or AOF with fsync to guarantee the reliability of the `recovered` flag sent by Centrifugo.
+1. Let's suppose client subscribes on a channel with recovery on.
+2. Client receives subscribe reply from Centrifugo with two values: stream `epoch` and stream top `offset`, those values are saved by an SDK implementation.
+3. Every received publication has incremental `offset`, client SDK increments locally saved offset on each publication from a channel.
+4. Let's say at this point client disconnected for a while.
+5. Upon resubscribing to a channel SDK provides last seen `epoch` anf `offset` to Centrifugo.
+6. Centrifugo tries to load all the missed publications starting from the stream position provided by a client.
+7. If Centrifugo decides it can successfully recover client's state – then all missed publications returned in subscribe reply and client receives `recovered: true` in subscribed event context, and `publication` event handler of Subscription is called for every missed publication. Otherwise no publications returned and `recovered` flag of subscribed event context is set to `false`.
 
-When a server receives subscribe command with the boolean flag `recover` set to `true` and `offset`, `epoch` set to values last seen by a client (see `SubscribeRequest` type in [protocol definitions](https://github.com/centrifugal/protocol/blob/master/definitions/client.proto)) it will try to find all missed publications from history cache. Recovered publications will be passed to the client in a subscribe `Reply` in the correct order, so your publication handler will be automatically called to process each missed message.
+`epoch` is useful for cases when history storage is temporary and can lose the history stream entirely. In this case comparing epoch values gives Centrifugo a tip that while publications exist and theoretically have same offsets as before - the stream is actually different, so it's impossible to use it for the recovery process.
 
-You can also manually implement your recovery algorithm on top of the basic PUB/SUB possibilities that Centrifugo provides. As we said above you can simply ask your backend for an actual state after every client reconnects completely bypassing the recovery mechanism described here. Also, it's possible to manually iterate over the Centrifugo stream using the history iteration API described above. 
+To summarize, here is a list of possible scenarios when Centrifugo can't recover client's state for a channel and provides `recovered: false` flag in subscribed event context:
+
+* number of missed publications exceeds `client_recovery_max_publication_limit` option
+* number of missed publications exceeds `history_size` namespace option
+* client was away for a long time and history stream expired according to `history_ttl` namespace option
+* storage used by Centrifugo engine lost the stream (restart, number of shards changed, cleared by the administrator, etc.)
+
+Having said this all, Centrifugo recovery is nice to keep the continuity of the connection and subscription. This speed-ups resubscribe in many cases and helps the backend to survive mass reconnect scenario since you avoid lots of requests for state loading. For setups with millions of connections this can be a life-saver. But we recommend applications to always have a way to load the state from the main application database. For example, on app reload.
+
+You can also manually implement your own recovery logic on top of the basic PUB/SUB possibilities that Centrifugo provides. As we said above you can simply ask your backend for an actual state after every client resubscribe completely bypassing the recovery mechanism described here. Also, it's possible to manually iterate over the Centrifugo stream using the history iteration API described above.
