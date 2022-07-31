@@ -189,6 +189,10 @@ You may consider using a separate service to deal with presence status informati
 
 The same is true for join/leave messages - as soon as you turn on join/leave events for a channel with many active subscribers each subscriber starts generating indiviaual join/leave events. This may result in many messages sent to each subscriber in a channel, drastically multiplying amount of messages traveling through the system. Especially when all clients reconnect simulteniously. So be careful and estimate the possible load. There is no magic, unfortunately.
 
+### How to send initial data to channel subscriber?
+
+Sometimes you need to send some initial state towards channel subscriber. Centrifugo provides a way to attach any data to a successful subscribe reply when using [subscribe proxy](../server/proxy.md#subscribe-proxy) feature. See `data` and `b64data` fields. This data will be part of `subscribed` event context. And of course, you can always simply send request to get initial data from the application backend before or after subscribing to a channel without Centrifugo connection involved (i.e. using sth like general AJAX/HTTP call or passing data to the template when rendering an application page).
+
 ### Does Centrifugo support multitenancy?
 
 No, if you want to use Centrifugo with different projects then the recommended approach is to have different Centrifugo installations for each project. Multitenancy is better to solve on infrastructure level in case of Centrifugo.
