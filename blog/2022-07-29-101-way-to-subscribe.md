@@ -292,7 +292,7 @@ As we pointed above Centrifugo knows an ID of the user due to authentication pro
 
 This feature only subscribes non-anonymous users to personal channels (those with non-empty user ID). The configuration above will subscribe our user `"17"` to channel `personal:#17` automatically after successful authentication.
 
-## #7 – capabilities in connection JWT or connect proxy
+## #7 – capabilities in connection JWT
 
 Allows using client-side subscriptions, but skip receiving subscription token. This is only available in Centrifugo PRO at this point.
 
