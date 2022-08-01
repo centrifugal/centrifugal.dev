@@ -21,12 +21,12 @@ And... well, there are actually 8 ways I found, not 101 😇
 
 ## Setup
 
-To make the post a bit easier to consume let's setup some things. Let's assume that the user for which we provide all the examples in this post has ID `"17"`. Of course in real-life the example given here can be extrapolated to any user ID.
+To make the post a bit easier to consume let's setup some things. Let's assume that the user for which we provide all the examples in this post has ID `"17"`. Of course in real-life the examples given here can be extrapolated to any user ID.
 
 When you create a real-time connection to Centrifugo the connection is authenticated using the one of the following ways:
 
-* using connection JWT
-* using connection request proxy from Centrifugo to the configured endpoint of the application backend (connect proxy)
+* using [connection JWT](../docs/server/authentication.md)
+* using connection request proxy from Centrifugo to the configured endpoint of the application backend ([connect proxy](../docs/server/proxy.md#connect-proxy))
 
 As soon as the connection is successfully established and authenticated Centrifugo knows the ID of connected user. This is important to understand.
 
@@ -231,7 +231,7 @@ The approach where you don't need to manage client-side subscriptions.
 
 :::
 
-Server-side subscriptions is a way to consume publications from channels without even create Subscription objects on the client side. In general, client side Subscription objects provide a more flexible and controllable way to work with subscriptions. Clients can subscribe/unsubscribe on channels at any point. Client-side subscriptions provide more details about state transitions.
+[Server-side subscriptions](../docs/server/server_subs.md) is a way to consume publications from channels without even create Subscription objects on the client side. In general, client side Subscription objects provide a more flexible and controllable way to work with subscriptions. Clients can subscribe/unsubscribe on channels at any point. Client-side subscriptions provide more details about state transitions.
 
 With server-side subscriptions though you are consuming publications directly from Client instance:
 
