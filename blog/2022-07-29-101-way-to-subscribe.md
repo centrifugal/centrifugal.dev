@@ -1,7 +1,7 @@
 ---
 title: 101 ways to subscribe user on a personal channel in Centrifugo
 tags: [centrifugo, tutorial]
-description: In this post we are discussing vaious ways developers can use to subscribe application user to a personal channel
+description: In this post we are discussing vaious ways developers can use to subscribe user to a personal channel in Centrifugo
 author: Alexander Emelin
 authorTitle: Author of Centrifugo
 authorImageURL: https://github.com/FZambia.png
@@ -12,11 +12,11 @@ draft: true
 
 ![Centrifuge](/img/101-way.png)
 
-Let's say you develop an application and you want a real-time connection which is subscribed to one channel. Let's also assume that this channel is used for user personal notifications. So only one user in the application can subcribe to that channel to receive its notifications in real-time.
+Let's say you develop an application and want a real-time connection which is subscribed to one channel. Let's also assume that this channel is used for user personal notifications. So only one user in the application can subcribe to that channel to receive its notifications in real-time.
 
-In this post we will look at various ways to achieve this with Centrifugo, and consider trade-offs of the available approaches. The main goal of this tutorial is to help developers be aware of all the ways to control channel permissions by reading just one document.
+In this post we will look at various ways to achieve this with Centrifugo, and consider trade-offs of the available approaches. The main goal of this tutorial is to help Centrifugo newcomers be aware of all the ways to control channel permissions by reading just one document.
 
-And... well, there are actually 8 ways I found, not 101 :)
+And... well, there are actually 8 ways I found, not 101 😇
 
 <!--truncate-->
 
@@ -246,7 +246,7 @@ client.on('publication', function(ctx) {
 client.connect();
 ```
 
-In this case you don't have separate Subscription objects and need to look at `ctx.channel` upon receiving publication or to publication content to decide how to handle it.
+In this case you don't have separate Subscription objects and need to look at `ctx.channel` upon receiving publication or to publication content to decide how to handle it. Server-side subscriptions could be a good choice if you are using Centrifugo unidirectional transports and don't need dynamic subscribe/unsubscribe behavior.
 
 The first way to subscribe client on a server-side channel is to include `channels` claim into connection JWT:
 
@@ -358,7 +358,7 @@ While in case of single channel the benefit of using this approach is not really
 
 ## #8 – capabilities in connect proxy
 
-This is very similar to the previous approach, but capabilities are passed to Centrifugo in connect proxy result. So if you are using connect proxy for auth then you can still provide capabilities in the same form as in JWT.
+This is very similar to the previous approach, but capabilities are passed to Centrifugo in connect proxy result. So if you are using connect proxy for auth then you can still provide capabilities in the same form as in JWT. This is also a Centrifugo PRO feature.
 
 ## Teardown
 
