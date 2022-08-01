@@ -25,8 +25,8 @@ To make the post a bit easier to consume let's setup some things. Let's assume t
 
 When you create a real-time connection to Centrifugo the connection is authenticated using the one of the following ways:
 
-* using [connection JWT](../docs/server/authentication.md)
-* using connection request proxy from Centrifugo to the configured endpoint of the application backend ([connect proxy](../docs/server/proxy.md#connect-proxy))
+* using [connection JWT](/docs/server/authentication)
+* using connection request proxy from Centrifugo to the configured endpoint of the application backend ([connect proxy](/docs/server/proxy#connect-proxy))
 
 As soon as the connection is successfully established and authenticated Centrifugo knows the ID of connected user. This is important to understand.
 
@@ -231,7 +231,7 @@ The approach where you don't need to manage client-side subscriptions.
 
 :::
 
-[Server-side subscriptions](../docs/server/server_subs.md) is a way to consume publications from channels without even create Subscription objects on the client side. In general, client side Subscription objects provide a more flexible and controllable way to work with subscriptions. Clients can subscribe/unsubscribe on channels at any point. Client-side subscriptions provide more details about state transitions.
+[Server-side subscriptions](/docs/server/server_subs) is a way to consume publications from channels without even create Subscription objects on the client side. In general, client side Subscription objects provide a more flexible and controllable way to work with subscriptions. Clients can subscribe/unsubscribe on channels at any point. Client-side subscriptions provide more details about state transitions.
 
 With server-side subscriptions though you are consuming publications directly from Client instance:
 
