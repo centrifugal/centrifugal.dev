@@ -7,7 +7,6 @@ authorTitle: Author of Centrifugo
 authorImageURL: https://github.com/FZambia.png
 image: /img/101-way.png
 hide_table_of_contents: false
-draft: true
 ---
 
 ![Centrifuge](/img/101-way.png)
