@@ -1,6 +1,6 @@
 ---
 id: engines
-title: "Engines and scalability"
+title: Engines and scalability
 ---
 
 The Engine in Centrifugo is responsible for publishing messages between nodes, handle PUB/SUB broker subscriptions, save/retrieve online presence and history data.

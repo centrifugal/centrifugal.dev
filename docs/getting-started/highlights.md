@@ -31,7 +31,7 @@ Centrifugo supports JSON and binary Protobuf protocol for client-server communic
 
 ### Variety of real-time transports
 
-The main transport in Centrifugo is WebSocket. It's a bidirectional transport on top of TCP with low overhead. For browsers that do not support WebSocket Centrifugo provides its own bidirectional WebSocket emulation layer based on HTTP-streaming and EventSource (SSE), and also supports SockJS as an older but battle-tests WebSocket polyfill option.
+The main transport in Centrifugo is WebSocket. It's a bidirectional transport on top of TCP with low overhead. For browsers that do not support WebSocket Centrifugo provides its own bidirectional WebSocket emulation layer based on HTTP-streaming and EventSource (SSE), and also supports SockJS as an older but battle-tests WebSocket polyfill option, and WebTransport in experimental form.
 
 Centrifugo also supports unidirectional transports for real-time updates: like SSE (EventSource), HTTP streaming, GRPC unidirectional stream. Using unidirectional transport is sufficient for many real-time applications and does not require using custom client connectors – just native APIs or GRPC-generated code.
 
@@ -45,7 +45,7 @@ It supports the [JWK specification](https://datatracker.ietf.org/doc/html/rfc751
 
 ### Connection management
 
-Connections can expire, developers can choose a way to handle connection refresh – using client-side refresh workflow, or server-side call from Centrifugo to the application backend. 
+Connections can expire, developers can choose a way to handle connection refresh – using a client-side refresh workflow, or a server-side call from Centrifugo to the application backend. 
 
 ### Channel (room) concept
 
