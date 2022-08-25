@@ -202,6 +202,18 @@ The maximum number of connections from a user (with known user ID) to Centrifugo
 
 The important thing to emphasize is that `client_user_connection_limit` works only per one Centrifugo node and exists mostly to protect Centrifugo from many connections from a single user – but not for business logic limitations. This means that if you set this to 1 and scale nodes – say run 10 Centrifugo nodes – then a user will be able to create 10 connections (one to each node).
 
+### client_connection_limit
+
+Added in Centrifugo v4.0.1
+
+Default: 0
+
+When set to a value > 0 `client_connection_limit` limits the max number of connections single Centrifugo node can handle. It acts on HTTP middleware level and stops processing request if the condition met. It logs a warning into logs in this case and increments `centrifugo_node_client_connection_limit` Prometheus counter. Client SDKs will attempt reconnecting.
+
+Some motivation behind this option may be found in [this issue](https://github.com/centrifugal/centrifugo/issues/544).
+
+Note, that at this point `client_connection_limit` does not affect connections coming over GRPC unidirectional transport.
+
 ### client_queue_max_size
 
 Default: 1048576
@@ -226,7 +238,7 @@ Enable a mode when all clients can connect to Centrifugo without JWT. In this ca
 
 Default: 0
 
-By default, Centrifugo runs on all available CPU cores. To limit the number of cores Centrifugo can utilize in one moment use this option.
+By default, Centrifugo runs on all available CPU cores (also Centrifugo can look at cgroup limits when rnning in Docker/Kubernetes). To limit the number of cores Centrifugo can utilize in one moment use this option.
 
 ## Endpoint configuration.
 
