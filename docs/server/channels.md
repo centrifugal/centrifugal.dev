@@ -324,15 +324,15 @@ Turning this option on effectively makes namespace public – no subscribe permi
 
 ### allow_publish_for_subscriber
 
-`subscribe_to_publish` (boolean, default `false`) - when the `publish` option is enabled client can publish into a channel without being subscribed to it. This option enables an automatic check that the client subscribed to a channel before allowing a client to publish.
+`allow_publish_for_subscriber` (boolean, default `false`) - when the `publish` option is enabled client can publish into a channel without being subscribed to it. This option enables an automatic check that the client subscribed to a channel before allowing a client to publish.
 
 ### allow_publish_for_client
 
-`publish` (boolean, default `false`) – when on allows clients to publish messages into channels directly (from a client-side).
+`allow_publish_for_client` (boolean, default `false`) – when on allows clients to publish messages into channels directly (from a client-side).
 
 Keep in mind that your application will never receive such messages. In an idiomatic use case, all messages must be published to Centrifugo by an application backend using Centrifugo API (HTTP or GRPC). Or using [publish proxy](proxy.md#publish-proxy). Since in those cases your application has a chance to validate a message, save it into a database, and only after that broadcast to all subscribers.
 
-But the `publish` option still can be useful to send something without backend-side validation and saving it into a database. This option can also be handy for demos and quick prototyping real-time app ideas.
+But the `allow_publish_for_client` option still can be useful to send something without backend-side validation and saving it into a database. This option can also be handy for demos and quick prototyping real-time app ideas.
 
 ### allow_publish_for_anonymous
 
@@ -344,7 +344,7 @@ But the `publish` option still can be useful to send something without backend-s
 
 ### allow_history_for_client
 
-`history_disable_for_client` (boolean, default `false`) – allows all clients to call history information in a namespace.
+`allow_history_for_client` (boolean, default `false`) – allows all clients to call history information in a namespace.
 
 ### allow_history_for_anonymous
 
