@@ -326,13 +326,23 @@ Turning this option on effectively makes namespace public – no subscribe permi
 
 `allow_publish_for_subscriber` (boolean, default `false`) - when the `allow_publish_for_subscriber` option is enabled client can publish into a channel in namespace directly from the client side over real-time connection but only if client subscribed to that channel.
 
-Keep in mind that your application will never receive such messages. In an idiomatic use case, all messages must be published to Centrifugo by an application backend using Centrifugo API (HTTP or GRPC). Or using [publish proxy](proxy.md#publish-proxy). Since in those cases your application has a chance to validate a message, save it into a database, and only after that broadcast to all channel subscribers.
+:::danger
 
-But the `allow_publish_for_subscriber` (or `allow_publish_for_client` mentioned below) option still can be useful to send something without backend-side validation and saving it into a database. This option can also be handy for demos and quick prototyping real-time app ideas.
+Keep in mind that in this case subscriber can publish any payload to a channel – Centrifugo does not validate input at all. Your app backend won't receive those messages - publications just go through Centrifugo towards channel subscribers. Consider always validate messages which are being published to channels (i.e. using server API to publish after validating input on the backend side, or using [publish proxy](proxy.md#publish-proxy) - see [idiomatic usage](../getting-started/design.md#idiomatic-usage)).
+
+:::
+
+`allow_publish_for_subscriber` (or `allow_publish_for_client` mentioned below) option still can be useful to send something without backend-side validation and saving it into a database – for example, this option may be handy for demos and quick prototyping real-time app ideas.
 
 ### allow_publish_for_client
 
 `allow_publish_for_client` (boolean, default `false`) – when on allows clients to publish messages into channels directly (from a client-side). It's like `allow_publish_for_subscriber` – but client should not be a channel subscriber to publish.
+
+:::danger
+
+Keep in mind that in this case client can publish any payload to a channel – Centrifugo does not validate input at all. Your app backend won't receive those messages - publications just go through Centrifugo towards channel subscribers. Consider always validate messages which are being published to channels (i.e. using server API to publish after validating input on the backend side, or using [publish proxy](proxy.md#publish-proxy) - see [idiomatic usage](../getting-started/design.md#idiomatic-usage)).
+
+:::
 
 ### allow_publish_for_anonymous
 
