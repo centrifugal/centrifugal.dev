@@ -13,7 +13,7 @@ If you prefer to avoid using JWT then look at [the proxy feature](proxy.md). It 
 
 :::tip
 
-Using JWT auth can be nice in terms of massive reconnect scenario. Since authentication information is encoded directly in the token this may help to drastically reduce load on your application session backend. See in our [blog post](http://localhost:3000/blog/2020/11/12/scaling-websocket#massive-reconnect).
+Using JWT auth can be nice in terms of massive reconnect scenario. Since authentication information is encoded directly in the token this may help to drastically reduce load on your application session backend. See in our [blog post](/blog/2020/11/12/scaling-websocket#massive-reconnect).
 
 :::
 
