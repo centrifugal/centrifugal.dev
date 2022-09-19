@@ -33,20 +33,17 @@ An example configuration:
             "publish": {
                 "enabled": true,
                 "interval": "1s",
-                "rate": 1,
-                "capacity": 1
+                "rate": 1
             },
             "rpc": {
                 "enabled": true,
                 "interval": "1s",
                 "rate": 10,
-                "capacity": 1,
                 "method_override": [
                     {
                         "method": "updateActiveStatus",
                         "interval": "20s",
-                        "rate": 1,
-                        "capacity": 1
+                        "rate": 1
                     }
                 ]
             }
@@ -73,8 +70,7 @@ It's also possible to reuse Centrifugo Redis engine by setting `use_redis_from_e
             "publish": {
                 "enabled": true,
                 "interval": "1s",
-                "rate": 1,
-                "capacity": 1
+                "rate": 1
             }
         }
     }
