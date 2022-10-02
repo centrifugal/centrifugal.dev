@@ -35,7 +35,7 @@ Centrifugo provides ways to distinguish whether the missed messages can't be res
 
 ## Message delivery model
 
-By default, the message delivery model of Centrifugo is at most once. With history and the positioning/recovery features enabled it's possible to achieve at least once guarantee within history retention time and size. After abnormal disconnect clients have an option to recover missed messages from the publication chsnnel stream history that Centrifugo maintains.
+By default, the message delivery model of Centrifugo is at most once. With history and the positioning/recovery features enabled it's possible to achieve at least once guarantee within history retention time and size. After abnormal disconnect clients have an option to recover missed messages from the publication channel stream history that Centrifugo maintains.
 
 Without the positioning or recovery features enabled a message sent to Centrifugo can be theoretically lost while moving towards clients. Centrifugo tries to do its best to prevent message loss on a way to online clients, but the application should tolerate a loss.
 
