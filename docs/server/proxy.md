@@ -666,7 +666,7 @@ A custom value for `proxy_grpc_credentials_key`.
 
 ### GRPC proxy example
 
-We have [an example of backend server](https://github.com/centrifugal/examples/tree/master/v3/proxy/grpc) (written in Go language) which can react to events from Centrifugo over GRPC. For other programming languages the approach is similar, i.e.:
+We have [an example of backend server](https://github.com/centrifugal/examples/tree/master/v3/go_proxy/grpc) (written in Go language) which can react to events from Centrifugo over GRPC. For other programming languages the approach is similar, i.e.:
 
 1. Copy proxy Protobuf definitions
 1. Generate GRPC code
