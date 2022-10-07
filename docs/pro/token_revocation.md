@@ -136,7 +136,7 @@ curl --header "Content-Type: application/json" \
 | Parameter name | Parameter type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | user       | string  | yes | User ID to invalidate tokens for       |
-| issued_before       | int  | yes | All tokens issued at before this time will be considered revoked (in case of JWT this requires `iat` to be properly set in JWT)         |
+| issued_before       | int  | no | All tokens issued at before this Unix time will be considered revoked (in case of JWT this requires `iat` to be properly set in JWT), if not provided server uses current time         |
 | expire_at       | int  | no | Unix time in the future when revocation information should expire (Unix seconds). While optional **we recommend to use a reasonably small expiration time (matching the expiration time of your JWTs)** to keep working set of revocations small (since Centrifugo nodes periodically load all entries from the database table to construct in-memory cache).  |
 
 #### Invalidate user tokens result
