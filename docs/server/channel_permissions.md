@@ -54,13 +54,15 @@ User-limited channels must be enabled in a namespace using `allow_user_limited_c
 
 #### Use allow_subscribe_for_client namespace option
 
-`allow_subscribe_for_client` allows all connections to subscribe on all channels in a namespace.
+`allow_subscribe_for_client` allows all authenticated non-anonymous connections to subscribe on all channels in a namespace.
 
 :::caution
 
-Turning this option on effectively makes namespace public – no subscribe permissions will be checked. Make sure this is really what you want in terms of channels security. 
+Turning this option on effectively makes namespace public – no subscribe permissions will be checked (only the check that current connection is authenticated - i.e. has non-empty user ID). Make sure this is really what you want in terms of channels security.
 
 :::
+
+To additionally allow subscribing to anonymous connections take a look at `allow_subscribe_for_anonymous` option.
 
 #### Subscribe capabilities in connection token
 

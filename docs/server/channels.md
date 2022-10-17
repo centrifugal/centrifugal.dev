@@ -314,7 +314,7 @@ Not all real-time events require this feature turned on so think wisely when you
 
 :::caution
 
-Turning this option on effectively makes namespace public – no subscribe permissions will be checked. Make sure this is really what you want in terms of channels security. 
+Turning this option on effectively makes namespace public – no subscribe permissions will be checked (only the check that current connection is authenticated - i.e. has non-empty user ID). Make sure this is really what you want in terms of channels security.
 
 :::
 
