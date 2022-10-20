@@ -287,7 +287,7 @@ var centrifuge = new Centrifuge("ws://localhost:8000/connection/websocket", {
 centrifuge.connect();
 ```
 
-See more details about working with connection tokens and handling token expiration on the client-side [real-time SDK API spec](../transports/client_api.md#client-connection-token).
+See more details about working with connection tokens and handling token expiration on the client-side in the [real-time SDK API spec](../transports/client_api.md#client-connection-token).
 
 ### Token with expiration
 
