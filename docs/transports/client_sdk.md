@@ -21,6 +21,16 @@ Client libraries listed here speak Centrifugo bidirectional protocol (WebSocket)
 
 See a description of [client protocol](./client_protocol.md) if you want to write a custom bidirectional connector or eager to learn how Centrifugo protocol internals are structured.
 
+## Protobuf and JSON protocol formats in SDKs
+
+Centrifugo real-time SDKs work using two possible serialization formats: JSON and Protobuf. The entire bidirectional client protocol is described by the [Protobuf schema](https://github.com/centrifugal/protocol/blob/master/definitions/client.proto). But those Protobuf messages may be also encoded as JSON objects (in JSON representation `bytes` fields in the Protobuf schema is replaced by the embedded JSON object in Centrifugo case).
+
+Our Javascript SDK - `centrifuge-js` - uses JSON serialization for protocol frames by default. This makes communication with Centrifugo server convenient as we are exchanging human-readable JSON frames between client and server. And it makes it possible to use `centrifuge-js` without extra dependency to `protobuf.js` library. It's possible to switch to Protobuf protocol with `centrifuge-js` SDK though, in case you want more compact Centrifuge protocol representation, faster decode/encode speeds on Centrifugo server side, or payloads you need to pass are custom binary. See more details on how to use `centrifuge-js` with Protobuf serialization in [README](https://github.com/centrifugal/centrifuge-js#protobuf-support).
+
+`centrifuge-go` real-time SDK for Go language also supports both JSON and Protobuf formats when communicating with Centrifugo server.
+
+Other SDKs, like `centrifuge-dart`, `centrifuge-swift`, `centrifuge-java` work using only Protobuf serialization for Centrifuge protocol internally. So they utilize the fastest and the most compact wire representation by default. Note, that while internally in those SDKs the serialization format is Protobuf, you can still send JSON towards these clients as JSON objects may be encoded as UTF-8 bytes. So these SDKs may work with both custom binary and JSON payloads.
+
 ## SDK feature matrix
 
 Below you can find an information regarding support of different features in our official client SDKs
