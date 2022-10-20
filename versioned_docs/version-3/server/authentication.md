@@ -290,7 +290,7 @@ Note that we use the value of `token_hmac_secret_key` from Centrifugo config her
 
 Then you can pass this token to your client side and use it when connecting to Centrifugo:
 
-```javascript title="Using centrifuge-js lib"
+```javascript title="Using centrifuge-js v2.x"
 var centrifuge = new Centrifuge("ws://localhost:8000/connection/websocket");
 centrifuge.setToken(token);
 centrifuge.connect();
