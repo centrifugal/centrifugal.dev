@@ -36,7 +36,7 @@ Although there is a password based authentication a good advice is to protect we
 
 :::
 
-![Admin web panel](/img/quick_start_admin.png)
+![Admin web panel](/img/quick_start_admin_v4.png)
 
 ## Using custom web interface
 

@@ -53,6 +53,8 @@ You also need to set a ClickHouse cluster name (`clickhouse_cluster`) and databa
 
 `export_operations` tells Centrifugo to export individual client operation information. See below on table structure to see which fields are available.
 
+`export_publications` tells Centrifugo to export publications for channels to separate ClickHouse table.
+
 `export_http_headers` is a list of HTTP headers to export for connection information.
 
 `export_grpc_metadata` is a list of metadata keys to export for connection information for GRPC unidirectional transport.
@@ -161,6 +163,50 @@ ENGINE = Distributed('centrifugo_cluster', 'centrifugo', 'operations', murmurHas
 └────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
+## Publications table
+
+```sql
+SHOW CREATE TABLE centrifugo.publications
+
+Query id: 5bdcb253-e781-42e5-9d4b-1aa61c3cb9b4
+
+┌─statement──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ CREATE TABLE centrifugo.publications
+(
+    `channel` String,
+    `source` String,
+    `size` UInt64,
+    `client` FixedString(36),
+    `user` String,
+    `time` DateTime
+)
+ENGINE = MergeTree
+PARTITION BY toYYYYMMDD(time)
+ORDER BY time
+TTL time + toIntervalDay(1)
+SETTINGS index_granularity = 8192 │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+And distributed one:
+
+```sql
+SHOW CREATE TABLE centrifugo.publications_distributed;
+
+┌─statement──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ CREATE TABLE centrifugo.operations_distributed
+(
+    `channel` String,
+    `source` String,
+    `size` UInt64,
+    `client` FixedString(36),
+    `user` String,
+    `time` DateTime
+)
+ENGINE = Distributed('centrifugo_cluster', 'centrifugo', 'publications', murmurHash3_64(channel)) │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
 ## Query examples
 
 Show unique users which were connected:
@@ -239,6 +285,12 @@ LIMIT 10;
 │       3 │ user_52  │
 └─────────┴──────────┘
 ```
+
+## Web UI analytics page
+
+Centrifugo PRO exposes some Clickhouse analitics data in Web UI – so you can quickly get some interesting Centrifugo cluster information.
+
+![Admin analytics](/img/pro_analytics.png)
 
 ## Development
 

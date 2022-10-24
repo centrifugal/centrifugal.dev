@@ -10,7 +10,7 @@ It's possible to attach to trace streams using Centrifugo admin UI panel or simp
 This can be super-useful for debugging issues, investigating application behavior, understanding that the application works as expected. 
 
 <video width="100%" controls>
-  <source src="/img/tracing.mp4" type="video/mp4" />
+  <source src="/img/tracing_ui.mp4" type="video/mp4" />
   Sorry, your browser doesn't support embedded video.
 </video>
 
