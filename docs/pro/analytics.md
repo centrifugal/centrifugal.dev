@@ -3,7 +3,7 @@ id: analytics
 title: Analytics with ClickHouse
 ---
 
-This feature allows exporting information about connections, subscriptions and client operations to [ClickHouse](https://clickhouse.tech/) thus providing an integration with a real-time (with seconds delay) analytics storage. ClickHouse is super fast and simple to operate with, and it allows effective data keeping for a window of time.  
+This feature allows exporting information about publications, client connections, subscriptions and client operations to [ClickHouse](https://clickhouse.tech/) thus providing an integration with a real-time (with seconds delay) analytics storage. ClickHouse is super fast and simple to operate with, and it allows effective data keeping for a window of time.  
 
 This unlocks a great observability and possibility to perform various analytics queries for better user behavior understanding, check application correctness, building trends, reports and so on.
 
@@ -26,6 +26,7 @@ To enable integration with ClickHouse add the following section to a configurati
         "clickhouse_cluster": "centrifugo_cluster",
         "export_connections": true,
         "export_operations": true,
+        "export_publications": true,
         "export_http_headers": [
             "User-Agent",
             "Origin",
@@ -288,7 +289,7 @@ LIMIT 10;
 
 ## Web UI analytics page
 
-Centrifugo PRO exposes some Clickhouse analitics data in Web UI – so you can quickly get some interesting Centrifugo cluster information.
+Centrifugo PRO exposes some Clickhouse analytics data in Web UI – so you can quickly get some interesting Centrifugo cluster information.
 
 ![Admin analytics](/img/pro_analytics.png)
 

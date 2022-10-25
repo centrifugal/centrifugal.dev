@@ -67,12 +67,12 @@ function Home() {
           <div className="container">
             <div className="row">
               <Feature title="Integrates with everything" imageUrl="img/feature_integration.png">
-                Centrifugo is a self-hosted service which can handle connections through various <a href="/docs/transports/overview">real-time transports</a> and provides a simple <a href="/docs/server/server_api">publishing API</a>.
+                Centrifugo is a self-hosted service which can handle connections over various <a href="/docs/transports/overview">real-time transports</a> and provides a simple <a href="/docs/server/server_api">publishing API</a>.
                 Centrifugo integrates with any application – no need to change an
                 existing app architecture to introduce real-time features.
               </Feature>
               <Feature title="Great performance" imageUrl="img/feature_performance.png">
-                Centrifugo is written in the Go language with some smart optimizations inside.
+                Centrifugo is written in Go language with some smart optimizations inside.
                 See the description of the test stand with <a href="/blog/2020/02/10/million-connections-with-centrifugo">one million WebSocket</a> connections and 30 million delivered
                 messages per minute with hardware comparable to a single modern server machine.
               </Feature>
@@ -83,12 +83,11 @@ function Home() {
               </Feature>
               <Feature title="Out-of-the-box scalability" imageUrl="img/feature_scalability.png">
                 Built-in Redis, KeyDB, Tarantool engines, or Nats broker make it possible
-                to scale connections across different machines. With consistent sharding
-                of Redis, KeyDB, and Tarantool, it's possible to handle millions of active
-                connections with reasonable hardware requirements.
+                to scale connections across different Centrifugo nodes. So Centrifugo helps
+                you to scale to millions of active connections with reasonable hardware requirements.
               </Feature>
               <Feature title="Used in production" imageUrl="img/feature_production.png">
-                Started a decade ago, Centrifugo (and the Centrifuge library for Go
+                Started a decade ago, Centrifugo (and Centrifuge library for Go
                 it's built on top of) is mature, battle-tested software that has been successfully used in
                 production by many companies around the world: VK, Badoo, ManyChat, OpenWeb, Grafana, and others.
               </Feature>
@@ -116,7 +115,7 @@ function Home() {
                 Chats apps, live comments, multiplayer games, real-time data visualizations, collaborative tools, etc. can all be built on top of a real-time messaging system.
               </p>
               <p>
-                Centrifugo is a user facing <b>PUB/SUB</b> server that handles persistent connections through various real-time transports – <b>WebSocket</b>, HTTP-streaming, EventSource (Server-Sent Events), SockJS or GRPC.
+                Centrifugo is a user facing <b>PUB/SUB</b> server that handles persistent connections over various real-time transports – <b>WebSocket</b>, HTTP-streaming, SSE (Server-Sent Events), SockJS, WebTransport or GRPC.
               </p>
             </>
           }
