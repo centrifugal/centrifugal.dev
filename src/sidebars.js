@@ -73,7 +73,6 @@ module.exports = {
         "pro/user_block",
         "pro/token_revocation",
         "pro/performance",
-        "pro/redis_engine",
         "pro/singleflight",
         "pro/process_stats",
       ],
