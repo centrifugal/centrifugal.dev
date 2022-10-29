@@ -25,6 +25,7 @@ To enable integration with ClickHouse add the following section to a configurati
         "clickhouse_database": "centrifugo",
         "clickhouse_cluster": "centrifugo_cluster",
         "export_connections": true,
+        "export_subscriptions": true,
         "export_operations": true,
         "export_publications": true,
         "export_http_headers": [
@@ -52,6 +53,8 @@ You also need to set a ClickHouse cluster name (`clickhouse_cluster`) and databa
 
 `export_connections` tells Centrifugo to export connection information snapshots. Information about connection will be exported once a connection established and then periodically while connection alive. See below on table structure to see which fields are available.
 
+`export_subscriptions` tells Centrifugo to export subscription information snapshots. Information about subscription will be exported once a subscription established and then periodically while connection alive. See below on table structure to see which fields are available.
+
 `export_operations` tells Centrifugo to export individual client operation information. See below on table structure to see which fields are available.
 
 `export_publications` tells Centrifugo to export publications for channels to separate ClickHouse table.
@@ -77,7 +80,6 @@ SHOW CREATE TABLE centrifugo.connections;
     `name` String,
     `version` String,
     `transport` String,
-    `channels` Array(String),
     `headers.key` Array(String),
     `headers.value` Array(String),
     `metadata.key` Array(String),
@@ -105,7 +107,6 @@ SHOW CREATE TABLE centrifugo.connections_distributed;
     `name` String,
     `version` String,
     `transport` String,
-    `channels` Array(String),
     `headers.key` Array(String),
     `headers.value` Array(String),
     `metadata.key` Array(String),
@@ -113,6 +114,44 @@ SHOW CREATE TABLE centrifugo.connections_distributed;
     `time` DateTime
 )
 ENGINE = Distributed('centrifugo_cluster', 'centrifugo', 'connections', murmurHash3_64(client)) │
+└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Subscriptions table
+
+```sql
+SHOW CREATE TABLE centrifugo.subscriptions
+
+┌─statement──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ CREATE TABLE centrifugo.subscriptions
+(
+    `client` FixedString(36),
+    `user` String,
+    `channels` Array(String),
+    `time` DateTime
+)
+ENGINE = MergeTree
+PARTITION BY toYYYYMMDD(time)
+ORDER BY time
+TTL time + toIntervalDay(1)
+SETTINGS index_granularity = 8192 │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+And distributed one:
+
+```sql
+SHOW CREATE TABLE centrifugo.subscriptions_distributed;
+
+┌─statement───────────────────────────────────────────────────────────────────────────────────────┐
+│ CREATE TABLE centrifugo.subscriptions_distributed
+(
+    `client` FixedString(36),
+    `user` String,
+    `channels` Array(String),
+    `time` DateTime
+)
+ENGINE = Distributed('centrifugo_cluster', 'centrifugo', 'subscriptions', murmurHash3_64(client)) │
 └─────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
