@@ -208,8 +208,6 @@ ENGINE = Distributed('centrifugo_cluster', 'centrifugo', 'operations', murmurHas
 ```sql
 SHOW CREATE TABLE centrifugo.publications
 
-Query id: 5bdcb253-e781-42e5-9d4b-1aa61c3cb9b4
-
 ┌─statement──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │ CREATE TABLE centrifugo.publications
 (
@@ -349,6 +347,8 @@ To do this set only one ClickHouse dsn and do not set cluster name:
         "clickhouse_database": "centrifugo",
         "clickhouse_cluster": "",
         "export_connections": true,
+        "export_subscriptions": true,
+        "export_publications": true,
         "export_operations": true,
         "export_http_headers": [
             "Origin",
