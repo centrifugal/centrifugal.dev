@@ -286,11 +286,11 @@ WHERE (error = 111) AND (op = 'publish') AND (user = 'user_200');
 └─────────┘
 ```
 
-Show number of unique users subscribed to a specific channel in last 5 minutes (this is approximate since connections table contain periodic snapshot entries, clients could subscribe/unsubscribe in between snapshots – this is reflected in operations table):
+Show number of unique users subscribed to a specific channel in last 5 minutes (this is approximate since subscriptions table contain periodic snapshot entries, clients could unsubscribe in between snapshots – this is reflected in operations table):
 
 ```sql
 SELECT COUNT(Distinct(user))
-FROM centrifugo.connections_distributed
+FROM centrifugo.subscriptions_distributed
 WHERE arrayExists(x -> (x = 'chat:index'), channels) AND (time >= (now() - toIntervalMinute(5)));
 
 ┌─uniqExact(user)─┐
