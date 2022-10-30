@@ -3,9 +3,9 @@ id: analytics
 title: Analytics with ClickHouse
 ---
 
-This feature allows exporting information about publications, client connections, subscriptions and client operations to [ClickHouse](https://clickhouse.tech/) thus providing an integration with a real-time (with seconds delay) analytics storage. ClickHouse is super fast and simple to operate with, and it allows effective data keeping for a window of time.  
+This feature allows exporting information about publications, client connections, subscriptions and client operations to [ClickHouse](https://clickhouse.com/) thus providing an integration with a real-time (with seconds delay) analytics storage. ClickHouse is super fast for analytical queries, simple to operate with and it allows effective data keeping for a window of time. It's relatively simple to create a high performance ClickHouse cluster.
 
-This unlocks a great observability and possibility to perform various analytics queries for better user behavior understanding, check application correctness, building trends, reports and so on.
+This unlocks a great observability and possibility to perform various analytics queries for better user behavior understanding, check application correctness, building trends, reports, and so on.
 
 ## Configuration
 
