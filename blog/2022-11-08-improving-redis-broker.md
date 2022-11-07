@@ -16,7 +16,7 @@ The main goal of Centrifugo is to handle persistent client connections establish
 
 To achieve a possibility to scale client connections between many server nodes and not worry about subscribers belonging to different nodes Centrifugo uses **[Redis](https://redis.com/) as the main scalability option**. Redis is incredibly mature, simple and fast in-memory storage. Due to various built-in data structures and PUB/SUB support Redis is a perfect fit to be both Centrifugo `Broker` and `PresenceManager`.
 
-In Centrifugo v4.1.0 we introduced an updated implementation of our Redis Engine (`Engine` in Centrifugo == `Broker` + `PresenceManager`) which provides great performance benefits to our users. In this post we are discussing some things which pushed us towards rewriting Redis Engine and giving some insights to numbers we were able to achieve.
+In Centrifugo v4.1.0 we introduced an updated implementation of our Redis Engine (`Engine` in Centrifugo == `Broker` + `PresenceManager`) which provides great performance improvements to our users. In this post we are discussing some things which pushed us towards rewriting Redis Engine and giving some insights about numbers we were able to achieve.
 
 <!--truncate-->
 
@@ -87,7 +87,7 @@ Another thing is that Redigo is fully interface-based. It has `Do` method which 
 Do(commandName string, args ...interface{}) (reply interface{}, err error)
 ```
 
-While this works well and you can issue any command to Redis, this adds some allocation overhead.
+While this works well and you can issue any command to Redis, this adds some allocation overhead. Also, you need to be very accurate when constructing a command.
 
 At some point we felt that removing additional dependencies (even though I am the author of one of them) and reducing allocations in Redis communication layer is a nice step forward for Centrifugo. So we started looking around for `redigo` alternatives.
 
@@ -95,12 +95,13 @@ To summarize what we wanted from Redis library:
 
 * Possibility to work with all three Redis setup options we support: standalone, master-replica(s) with Sentinel, Redis Cluster, so we can depend on one library instead of three
 * Less memory allocations, so our users could notice a sufficient CPU reduction on Centrifugo nodes which communicate with Redis a lot
+* More type-safety when constructing Redis commands
 * Work with RESP2-only Redis servers as we need that for backwards compatibility, and some vendors like Redis Enterprise still using only RESP2 protocol
 * Well-maintained
 
 ## Go-redis
 
-Actually, the most obvious alternative to `redigo` is [go-redis/redis](https://github.com/go-redis/redis) package. It's very popular, regularly gets updates, used by a huge amount of Go projects. I personally successfully used it in several other projects I worked on.
+Actually, the most obvious alternative to `redigo` is [go-redis/redis](https://github.com/go-redis/redis) package. It's very popular, regularly gets updates, used by a huge amount of Go projects (Grafana, Thanos, etc.). I personally successfully used it in several other projects I worked on.
 
 To avoid setup boilerplate for various Redis setup variations `go-redis/redis` has [UniversalClient](https://pkg.go.dev/github.com/go-redis/redis/v9#UniversalClient), from docs:
 
@@ -108,12 +109,12 @@ To avoid setup boilerplate for various Redis setup variations `go-redis/redis` h
 
 In terms of internal implementation `go-redis/redis` also has internal pool of connections, similar to `redigo`.It's also possible to get a dedicated connection from the internal pool and use it for pipelining purposes. So `UniversalClient` reduces boilerplate and dependencies we had and still provides similar approach for the connection management so we could easily re-implement things we had.
 
-At some point [@j178](https://github.com/j178) sent [a pull request](https://github.com/centrifugal/centrifuge/pull/235) with Centrifuge `Broker` and `PresenceManager` implementations based on `go-redis/redis`. The amount of code to cover all the various Redis setups reduced, we got only one dependency instead of three.
+At some point [@j178](https://github.com/j178) sent [a pull request](https://github.com/centrifugal/centrifuge/pull/235) to Centrifuge library ([the core of Centrifugo](/docs/ecosystem/centrifuge)) with `Broker` and `PresenceManager` implementations based on `go-redis/redis`. The amount of code to cover all the various Redis setups reduced, we got only one dependency instead of three.
 
 But what about performance? Here we will show results for several operations which are typical for Centrifugo:
 
-1. Publish message to a channel without saving it to the history - this is just a PUBLISH command of Redis PUB/SUB system
-2. Publish message to a channel with saving it to history - this involves executing LUA script on Redis side where we add publication to STREAM data structure, update meta information HASH and finally PUBLISH to PUB/SUB 
+1. Publish message to a channel without saving it to the history - this is just a Redis PUBLISH command going through Redis PUB/SUB system
+2. Publish message to a channel with saving it to history - this involves executing LUA script on Redis side where we add publication to STREAM data structure, update meta information HASH and finally PUBLISH to PUB/SUB
 3. Subscribe to a channel - that's a SUBSRIBE Redis command, this is important to have it fast as Centrifugo should be able to re-subscribe to all the channels in the system upon [mass client reconnect scenario](/blog/2020/11/12/scaling-websocket#massive-reconnect)
 4. Recovering missed publication state from channel STREAM, this is again may be called lots of times when all clients reconnect at once
 5. Updating connection presence information - many connections may periodically update their channel presence information in Redis
@@ -122,28 +123,28 @@ Here are the benchmark results we got when comparing `redigo` (v1.8.9) implement
 
 ```
 name                          old time/op    new time/op    delta
-RedisPublish_ManyCh-8         2.82µs ± 2%    2.99µs ± 4%   +5.95%  (p=0.000 n=10+10)
-RedisPublish_History_1Ch-8    14.6µs ± 0%    11.3µs ± 1%  -22.83%  (p=0.000 n=9+10)
-RedisSubscribe-8              2.19µs ±10%    2.16µs ± 6%     ~     (p=0.315 n=9+10)
-RedisRecover_1Ch-8            12.4µs ± 1%    13.0µs ± 8%   +5.49%  (p=0.014 n=10+10)
-RedisAddPresence_1Ch-8        6.56µs ± 1%    5.13µs ± 0%  -21.82%  (p=0.000 n=10+10)
+RedisPublish-8                 2.82µs ± 2%    2.99µs ± 4%   +5.95%  (p=0.000 n=10+10)
+RedisPublish_History-8         14.6µs ± 0%    11.3µs ± 1%  -22.83%  (p=0.000 n=9+10)
+RedisSubscribe-8               2.19µs ±10%    2.16µs ± 6%     ~     (p=0.315 n=9+10)
+RedisRecover-8                 12.4µs ± 1%    13.0µs ± 8%   +5.49%  (p=0.014 n=10+10)
+RedisAddPresence-8             6.56µs ± 1%    5.13µs ± 0%  -21.82%  (p=0.000 n=10+10)
 
 name                          old alloc/op   new alloc/op   delta
-RedisPublish_ManyCh-8           484B ± 0%      501B ± 0%   +3.43%  (p=0.000 n=10+10)
-RedisPublish_History_1Ch-8    1.30kB ± 0%    1.08kB ± 0%  -16.71%  (p=0.000 n=10+10)
-RedisSubscribe-8              1.26kB ± 0%    1.08kB ± 2%  -14.57%  (p=0.000 n=10+10)
-RedisRecover_1Ch-8            1.24kB ± 0%    1.02kB ± 0%  -18.01%  (p=0.000 n=8+8)
-RedisAddPresence_1Ch-8          910B ± 0%      829B ± 0%   -8.90%  (p=0.000 n=8+7)
+RedisPublish-8                   484B ± 0%      501B ± 0%   +3.43%  (p=0.000 n=10+10)
+RedisPublish_History-8         1.30kB ± 0%    1.08kB ± 0%  -16.71%  (p=0.000 n=10+10)
+RedisSubscribe-8               1.26kB ± 0%    1.08kB ± 2%  -14.57%  (p=0.000 n=10+10)
+RedisRecover-8                 1.24kB ± 0%    1.02kB ± 0%  -18.01%  (p=0.000 n=8+8)
+RedisAddPresence-8               910B ± 0%      829B ± 0%   -8.90%  (p=0.000 n=8+7)
 
 name                          old allocs/op  new allocs/op  delta
-RedisPublish_ManyCh-8           9.00 ± 0%      8.00 ± 0%  -11.11%  (p=0.000 n=10+10)
-RedisPublish_History_1Ch-8      29.0 ± 0%      25.0 ± 0%  -13.79%  (p=0.000 n=10+10)
-RedisSubscribe-8                25.0 ± 0%      18.5 ± 3%  -26.00%  (p=0.000 n=10+10)
-RedisRecover_1Ch-8              29.0 ± 0%      24.0 ± 0%  -17.24%  (p=0.000 n=10+10)
-RedisAddPresence_1Ch-8          18.0 ± 0%      17.0 ± 0%   -5.56%  (p=0.000 n=10+10)
+RedisPublish-8                   9.00 ± 0%      8.00 ± 0%  -11.11%  (p=0.000 n=10+10)
+RedisPublish_History-8           29.0 ± 0%      25.0 ± 0%  -13.79%  (p=0.000 n=10+10)
+RedisSubscribe-8                 25.0 ± 0%      18.5 ± 3%  -26.00%  (p=0.000 n=10+10)
+RedisRecover-8                   29.0 ± 0%      24.0 ± 0%  -17.24%  (p=0.000 n=10+10)
+RedisAddPresence-8               18.0 ± 0%      17.0 ± 0%   -5.56%  (p=0.000 n=10+10)
 ```
 
-These benchmarks and many others not presented here convinced us that migration from `redigo` to `go-redis/redis` may provide us with everything we aimed for – all the goals for a `redigo` alternative library outlined above were successfully fullfilled.
+While the performance improvements observed were not really mind-blowing, these benchmarks and many others not presented here convinced us that migration from `redigo` to `go-redis/redis` may provide us with everything we aimed for – all the goals for a `redigo` alternative library outlined above were successfully fullfilled.
 
 One good thing `go-redis/redis` allowed us to do is to use Redis pipelining also in a Redis Cluster case. It's possible due to the fact that `go-redis/redis` [re-maps pipeline objects internally](https://github.com/go-redis/redis/blob/c561f3ca7e5cf44ce1f1d3ef30f4a10a9c674c8a/cluster.go#L1062) based on keys to execute pipeline on the correct node of Redis Cluster. Actually, we could do the same based on `redigo` + `mna/redisc`, but here we got it for free.
 
@@ -161,9 +162,9 @@ The readme of `rueidis` contains benchmark results where it hugely outperforms `
 
 ![](/img/rueidis_2.png)
 
-`rueidis` lib comes with auto-pipelining, so it helps to always utilize the connection between application and Redis in a most efficient maximum throughput way.
+`rueidis` lib comes with **automatic pipelining**, so it helps to always utilize the connection between application and Redis in a most efficient maximum throughput way.
 
-This is a relatively new library, I was following it right from the first announcements. And I did some prototypes with `rueidis` which were super-promising in terms of performance. There were some issues we found during early prototyping – but all were successfuly resolved by `rueidis` author. Until `v0.0.80` release `rueidis` did not support RESP2 though, so we could not replace our Redis Engine implementation with it. But as soon as it got RESP2 support we opened [a pull request with alternative implementation](https://github.com/centrifugal/centrifuge/pull/262).
+This is a relatively new library, I was following it right from the first announcements. And I did some prototypes with `rueidis` and Centrifugo which were super-promising in terms of performance. There were some issues we found during early prototyping – but all of them were successfuly resolved by `rueidis` author. Until `v0.0.80` release `rueidis` did not support RESP2 though, so we could not replace our Redis Engine implementation with it. But as soon as it got RESP2 support we opened [a pull request with alternative implementation](https://github.com/centrifugal/centrifuge/pull/262).
 
 `rueidis` works with standalone Redis, Sentinel Redis and Redis Cluster out of the box. Just like `UniversalClient` of `go-redis/redis`. So it also allowed us to reduce code boilerplate to work with all these setups.
 
@@ -171,25 +172,25 @@ Regarding performance, here are the benchmark results we got when comparing `red
 
 ```
 name                          old time/op    new time/op    delta
-RedisPublish_ManyCh-8         2.82µs ± 2%    0.68µs ± 3%  -75.99%  (p=0.000 n=10+9)
+RedisPublish-8                2.82µs ± 2%    0.68µs ± 3%  -75.99%  (p=0.000 n=10+9)
 RedisPublish_History-8        14.6µs ± 0%     9.7µs ± 1%  -33.51%  (p=0.000 n=9+10)
 RedisSubscribe-8              2.19µs ±10%    1.49µs ± 8%  -31.93%  (p=0.000 n=9+10)
-RedisRecover_1Ch-8            12.4µs ± 1%    10.6µs ± 0%  -14.45%  (p=0.000 n=10+8)
-RedisAddPresence_1Ch-8        6.56µs ± 1%    3.80µs ± 1%  -42.02%  (p=0.000 n=10+10)
+RedisRecover-8                12.4µs ± 1%    10.6µs ± 0%  -14.45%  (p=0.000 n=10+8)
+RedisAddPresence-8            6.56µs ± 1%    3.80µs ± 1%  -42.02%  (p=0.000 n=10+10)
 
 name                          old alloc/op   new alloc/op   delta
-RedisPublish_ManyCh-8           484B ± 0%      171B ± 0%  -64.67%  (p=0.000 n=10+9)
-RedisPublish_History_1Ch-8    1.30kB ± 0%    0.55kB ± 1%  -57.55%  (p=0.000 n=10+10)
+RedisPublish-8                  484B ± 0%      171B ± 0%  -64.67%  (p=0.000 n=10+9)
+RedisPublish_History-8        1.30kB ± 0%    0.55kB ± 1%  -57.55%  (p=0.000 n=10+10)
 RedisSubscribe-8              1.26kB ± 0%    1.22kB ± 0%   -3.13%  (p=0.000 n=10+8)
-RedisRecover_1Ch-8            1.24kB ± 0%    0.59kB ± 1%  -52.78%  (p=0.000 n=8+10)
-RedisAddPresence_1Ch-8          910B ± 0%      149B ± 3%  -83.60%  (p=0.000 n=8+10)
+RedisRecover-8                1.24kB ± 0%    0.59kB ± 1%  -52.78%  (p=0.000 n=8+10)
+RedisAddPresence-8              910B ± 0%      149B ± 3%  -83.60%  (p=0.000 n=8+10)
 
 name                          old allocs/op  new allocs/op  delta
-RedisPublish_ManyCh-8           9.00 ± 0%      3.00 ± 0%  -66.67%  (p=0.000 n=10+10)
-RedisPublish_History_1Ch-8      29.0 ± 0%      12.0 ± 0%  -58.62%  (p=0.000 n=10+10)
+RedisPublish-8                  9.00 ± 0%      3.00 ± 0%  -66.67%  (p=0.000 n=10+10)
+RedisPublish_History-8          29.0 ± 0%      12.0 ± 0%  -58.62%  (p=0.000 n=10+10)
 RedisSubscribe-8                25.0 ± 0%      13.0 ± 0%  -48.00%  (p=0.000 n=10+10)
-RedisRecover_1Ch-8              29.0 ± 0%      11.0 ± 0%  -62.07%  (p=0.000 n=10+10)
-RedisAddPresence_1Ch-8          18.0 ± 0%       3.0 ± 0%  -83.33%  (p=0.000 n=10+10)
+RedisRecover-8                  29.0 ± 0%      11.0 ± 0%  -62.07%  (p=0.000 n=10+10)
+RedisAddPresence-8              18.0 ± 0%       3.0 ± 0%  -83.33%  (p=0.000 n=10+10)
 ```
 
 Yes, it's 4x times more publication throughput than we had before! Instead of 400k publications per second we went towards 1.6 million publications per second due to drastically decreased publish operation latency (2.82µs -> 0.68µs). The latency of other operations also reduced.
@@ -208,9 +209,13 @@ Since auto-pipelining is used in `rueidis` by default we also were able to remov
 
 You may also find other features of `rueidis` useful – like OpenTelemetry integration, client-side caching support to avoid network round trips while accessing an application cache data, integration with popular Redis modules like RediSearch or RedisJSON, etc.
 
+## Other improvements
+
+There were some other improvements in our Redis Engine implementation not outlined here – for example, in new implementation we got a sifficiently larger publish and subscribe throughput upon increased latency between Centrifugo and Redis. Also, we supported [sharded PUB/SUB feature](https://redis.io/docs/manual/pubsub/#sharded-pubsub) available in Redis Cluster since Redis v7 – it allows better scaling of PUB/SUB inside Redis Cluster.
+
 ## Conclusion
 
-Migrating from a stable to a relatively new library is a risky step. We spent some time testing various failure scenarios – and new Engine implementation behaved well.
+Migrating from a stable to a relatively new library is a risky step. We spent some time testing various failure scenarios – and new Engine implementation behaved as expected.
 
 I believe that we will find more projects in Go ecosystem using `rueidis` library in the near future. Not just because its efficiency but also due to a nice type-safe API. I really enjoyed building commands with `rueidis` - all Redis commands may be constructed using a builder approach based on code generation. For example, this is a process of building a PUBLISH Redis command:
 
