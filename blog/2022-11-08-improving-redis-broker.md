@@ -12,21 +12,21 @@ draft: true
 
 ![Centrifuge](/img/redis.png)
 
-The main goal of Centrifugo is to handle persistent client connections established over various real-time transports (such as WebSocket, HTTP-Streaming, SSE, WebTransport, etc) and provide an API for publishing data towards established connections. Centrifugo is a user-facing PUB/SUB server where client connections may subscribe to different channels.
+The main goal of Centrifugo is to handle persistent client connections established over various real-time transports (such as WebSocket, HTTP-Streaming, SSE, WebTransport, etc) and provide an API for publishing data towards established connections. Clients subscribe to channels, so Centrifugo implements PUB/SUB mechanics – data is published to a channel and delivered to all online subscribers.
 
-To achieve a possibility to scale client connections between many server nodes and not worry about channel subscribers belonging to different nodes Centrifugo uses **[Redis](https://redis.com/) as the main scalability option**. Redis is incredibly mature, simple and fast in-memory storage. Due to various built-in data structures and PUB/SUB support Redis is a perfect fit to be both Centrifugo `Broker` and `PresenceManager`.
+To achieve the possibility to scale client connections between many server nodes and not worry about channel subscribers belonging to different nodes Centrifugo uses **[Redis](https://redis.com/) as the main scalability option**. Redis is incredibly mature, simple, and fast in-memory storage. Due to various built-in data structures and PUB/SUB support Redis is a perfect fit to be both Centrifugo `Broker` and `PresenceManager`.
 
-In Centrifugo v4.1.0 we introduced an updated implementation of our Redis Engine (`Engine` in Centrifugo == `Broker` + `PresenceManager`) which provides great performance improvements to our users. In this post we are discussing some things which pushed us towards updating Redis Engine implementation and giving some insights about numbers we were able to achieve.
+In Centrifugo v4.1.0 we introduced an updated implementation of our Redis Engine (`Engine` in Centrifugo == `Broker` + `PresenceManager`) which provides great performance improvements to our users. In this post, we are discussing some things which pushed us towards updating Redis Engine implementation and giving some insights about the numbers we were able to achieve.
 
 <!--truncate-->
 
 ## Broker and PresenceManager
 
-Let's provide some glue what is `Broker` and `PresenceManager` in Centrifugo.
+Let's provide some glue on what is `Broker` and `PresenceManager` in Centrifugo.
 
-`Broker` is responsible for keeping subscriptions coming from different Centrifugo nodes (initiated by client connections), thus connecting channel subscribers on different nodes. This helps to scale connections over many Centrifugo instances and not worry about same channel subscribers being connected to different nodes – all nodes are connected with PUB/SUB.
+`Broker` is responsible for keeping subscriptions coming from different Centrifugo nodes (initiated by client connections), thus connecting channel subscribers on different nodes. This helps to scale connections over many Centrifugo instances and not worry about the same channel subscribers being connected to different nodes – all nodes are connected with PUB/SUB.
 
-Another important part of `Broker` is keeping an expiring publication history streams for channels – so that Centrifugo may provide a fast cache for messages missed by clients upon going offline for short and compensate at most once delivery of Redis PUB/SUB using publication incremental offsets. Centrifugo uses STREAM and HASH data structures in Redis to keep channel history and its meta information.
+Another important part of `Broker` is keeping expiring publication history streams for channels – so that Centrifugo may provide a fast cache for messages missed by clients upon going offline for a short and compensate at most once delivery of Redis PUB/SUB using publication incremental offsets. Centrifugo uses STREAM and HASH data structures in Redis to keep channel history and its meta information.
 
 Overall Centrifugo architecture may be represented with this awesome picture (Gophers are Centrifugo nodes all connected to `Broker`):
 
@@ -38,15 +38,15 @@ Overall Centrifugo architecture may be represented with this awesome picture (Go
 
 The implementation of Redis Engine was based on [gomodule/redigo](https://github.com/gomodule/redigo) library for a long time. Big kudos to Mr Gary Burd for establishing such a great set of libraries in Go ecosystem.
 
-Redigo library provides a connection [Pool](https://pkg.go.dev/github.com/gomodule/redigo/redis#Pool) to Redis. A simple usage of it is to get the connection from the pool, issuing request to Redis using that connection, and putting the connection to the pool after receiving the result from Redis.
+Redigo provides a connection [Pool](https://pkg.go.dev/github.com/gomodule/redigo/redis#Pool) to Redis. A simple usage of it is to get the connection from the pool, issuing request to Redis using that connection, and putting the connection to the pool after receiving the result from Redis.
 
-To achieve a bigger throughput, instead of using `redigo`'s Pool for each operation we acquired a dedicated connection from the Pool and used Redis pipelining to send multiple commands where possible.
+To achieve a bigger throughput, instead of using Redigo's `Pool` for each operation we acquired a dedicated connection from the `Pool` and used Redis pipelining to send multiple commands where possible.
 
 Redis pipelining improves performance by executing multiple commands using a single client-server-client round trip. Instead of executing 100 commands one by one, you can queue the commands in a pipeline and then execute the queued commands as if it is a single command. Also, given a single CPU nature of Redis, reducing number of active connections when using pipelining has a good effect on throughput – so pipelining helps in this perspective also.
 
 We are using smart batching technique for collecting pipeline (described in [one of the previous posts](/blog/2020/11/12/scaling-websocket) in this blog). See also some benchmarks which demonstrate the benefit from pipelining and redigo in https://github.com/FZambia/redigo-smart-batching repo.
 
-We also had a dedicated goroutine responsible for subscribing to channels. This goroutine also used a dedicated connection to Redis to send SUBSCRIBE/UNSUBSCRIBE Redis commands, batching commands to pipeline objects.
+We also used a dedicated goroutine responsible for subscribing to channels. This goroutine also used a dedicated connection to Redis to send SUBSCRIBE/UNSUBSCRIBE Redis commands, batching commands to pipeline objects.
 
 Redigo is a nice stable library which served us great for a long time.
 
@@ -58,7 +58,7 @@ There are three modes in which Centrifugo can work with Redis these days:
 2. Connecting to Redis in master-replica configuration, where Redis Sentinel controls failover process
 3. Connecting to Redis Cluster
 
-All modes additionally can be run with client-side consistent sharding.
+All modes additionally can be used with client-side consistent sharding. So it's possible to scale Redis even without Redis Cluster setup. 
 
 Unfortunately, with pure Redigo library, it's only possible to implement [ 1 ] – i.e. connecting to a single standalone Redis instance.
 
@@ -190,7 +190,7 @@ The readme of `rueidis` contains benchmark results where it hugely outperforms `
 
 ![](/img/rueidis_2.png)
 
-`rueidis` library comes with **automatic pipelining**, so you can send each request in isolated way while `rueidis` makes sure it becomes part of pipeline sent to Redis – thus utilizing the connection between an application and Redis in the most efficient way with maximized throughput.
+`rueidis` library comes with **automatic pipelining**, so you can send each request in isolated way while `rueidis` makes sure request becomes part of the pipeline sent to Redis – thus utilizing the connection between an application and Redis in the most efficient way with maximized throughput.
 
 For Centrifugo we didn't expect such a huge speed-up as shown on the graphs above since we already used pipelining in Redis Engine as I mentioned above.
 
@@ -230,9 +230,9 @@ Or visualized in Grafana:
 
 ![](/img/redis_vis02.png)
 
-Yes, it's almost 3x times more publication throughput than we had before! Instead of 700k publications/sec we went towards 1.7 million publications/sec due to drastically decreased publish operation latency (1.45µs -> 0.59µs). This means that our previous Engine implementations under-utilized Redis, and Rueidis just pushes us towards Redis limits. The latency of most other operations is also reduced (except for `Subscribe`).
+Yes, it's almost 3x times more publication throughput than we had before! Instead of 700k publications/sec we went towards 1.7 million publications/sec due to drastically decreased publish operation latency (1.45µs -> 0.59µs). This obviously means that our previous Engine implementations under-utilized Redis, and Rueidis just pushes us towards Redis limits. The latency of most other operations is also reduced (except for `Subscribe`).
 
-The best win here is allocation efficiency of the `rueidis`-based implementation. As you can see `rueidis` helped us to generate sufficiently less allocations for all our Redis requests. Allocation improvements directly affect Centrifugo node CPU usage. So Centrifugo users with Redis Engine may expect CPU usage reduction upon switching to Centrifugo v4.1.0. Of course it's not a two times CPU reduction since Centrifugo node does many other things beyond Redis communication. But on our test stand we observed a 20% overall CPU drop. This number may vary depending on load profile and used Centrifugo features.
+The best benefit here is allocation efficiency of the `rueidis`-based implementation. As you can see `rueidis` helped us to generate sufficiently less allocations for all our Redis requests. Allocation improvements directly affect Centrifugo node CPU usage. So Centrifugo users with Redis Engine may expect CPU usage reduction upon switching to Centrifugo v4.1.0. Of course it's not a two times CPU reduction since Centrifugo node does many other things beyond Redis communication. But on our test stand we observed a 20% overall CPU drop. This number may vary in both directions depending on load profile and used Centrifugo features.
 
 For Redis Cluster case we also got benchmark results similar to standalone Redis results above.
 
