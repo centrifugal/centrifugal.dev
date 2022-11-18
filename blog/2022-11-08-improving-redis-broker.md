@@ -190,15 +190,15 @@ The readme of `rueidis` contains benchmark results where it hugely outperforms `
 
 ![](/img/rueidis_2.png)
 
-`rueidis` library comes with **automatic pipelining**, so you can send each request in isolated way while `rueidis` makes sure request becomes part of the pipeline sent to Redis – thus utilizing the connection between an application and Redis in the most efficient way with maximized throughput.
+`rueidis` library comes with **automatic implicit pipelining**, so you can send each request in isolated way while `rueidis` makes sure request becomes part of the pipeline sent to Redis – thus utilizing the connection between an application and Redis in the most efficient way with maximized throughput. The idea of implicit pipelining with Redis is not new and Go ecosystem already had [joomcode/redispipe](https://github.com/joomcode/redispipe) library which implemented it (though it comes with some limitations critical for Centrifugo use case).
 
-For Centrifugo we didn't expect such a huge speed-up as shown on the graphs above since we already used pipelining in Redis Engine as I mentioned above.
-
-`rueidis` is a relatively new library. I was following it right from the first announcements and did some prototypes together with Centrifugo which were super-promising in terms of performance. There were some issues found during that early prototyping (mostly with PUB/SUB) – but all of them were quickly resolved by author of `rueidis`.
+For Centrifugo we didn't expect such a huge speed-up as shown on the graphs above since we already used pipelining in Redis Engine. I did some prototypes with `rueidis` which were super-promising in terms of performance. There were some issues found during that early prototyping (mostly with PUB/SUB) – but all of them were quickly resolved by Rueian (`rueidis` author).
 
 Until `v0.0.80` release `rueidis` did not support RESP2 though, so we could not replace our Redis Engine implementation with it. But as soon as it got RESP2 support we opened [a pull request with alternative implementation](https://github.com/centrifugal/centrifuge/pull/262).
 
 `rueidis` works with standalone Redis, Sentinel Redis and Redis Cluster out of the box. Just like `UniversalClient` of `go-redis/redis`. So it also allowed us to reduce code boilerplate to work with all these setups.
+
+Since auto-pipelining is used in `rueidis` by default we were able to remove some of our pipelining management code – so the Engine implementation is more concise now. One more thing to mention is a simpler PUB/SUB code we were able to write with `rueidis`. In `redigo` case we had to periodically PING PUB/SUB connection to maintain it alive, `rueidis` does this automatically.
 
 Regarding performance, here are the benchmark results we got when comparing `redigo` (v1.8.9) implementation (old) and `rueidis` (v0.0.83) implementation (new):
 
@@ -230,21 +230,21 @@ Or visualized in Grafana:
 
 ![](/img/redis_vis02.png)
 
-Yes, it's almost 3x times more publication throughput than we had before! Instead of 700k publications/sec we went towards 1.7 million publications/sec due to drastically decreased publish operation latency (1.45µs -> 0.59µs). This obviously means that our previous Engine implementations under-utilized Redis, and Rueidis just pushes us towards Redis limits. The latency of most other operations is also reduced (except for `Subscribe`).
+2.5x times more publication throughput than we had before! Instead of 700k publications/sec we went towards 1.7 million publications/sec due to drastically decreased publish operation latency (1.45µs -> 0.59µs). This obviously means that our previous Engine implementations under-utilized Redis, and Rueidis just pushes us towards Redis limits. The latency of most other operations is also reduced (except for `Subscribe`).
 
-The best benefit here is allocation efficiency of the `rueidis`-based implementation. As you can see `rueidis` helped us to generate sufficiently less allocations for all our Redis requests. Allocation improvements directly affect Centrifugo node CPU usage. So Centrifugo users with Redis Engine may expect CPU usage reduction upon switching to Centrifugo v4.1.0. Of course it's not a two times CPU reduction since Centrifugo node does many other things beyond Redis communication. But on our test stand we observed a 20% overall CPU drop. This number may vary in both directions depending on load profile and used Centrifugo features.
+Other applications which use pool-based approach may benefit even more dramatic improvements in latency.
+
+The best thing is allocation efficiency of the `rueidis`-based implementation. As you can see `rueidis` helped us to generate sufficiently less memory allocations for all our Redis operations. Allocation improvements directly affect Centrifugo node CPU usage. So Centrifugo users with Redis Engine may expect CPU usage reduction upon switching to Centrifugo v4.1.0. Of course it's not a two times CPU reduction since Centrifugo node does many other things beyond Redis communication. On our test stand we observed a 20% overall CPU drop, but obviously this number will vary in both directions depending on load profile and used Centrifugo features.
 
 For Redis Cluster case we also got benchmark results similar to standalone Redis results above.
 
-Why `rueidis` is that efficient? Some insights are provided by its author in a "Writing a High-Performance Golang Client Library" series of posts on Medium:
+Why `rueidis` is that efficient? Insights about this are provided by its author in a "Writing a High-Performance Golang Client Library" series of posts on Medium:
 
 * [Part 1: Batching on Pipeline](https://betterprogramming.pub/writing-high-performance-golang-client-library-part-1-batching-on-pipeline-97988fe3211)
 * [Part 2: Reading Again From Channels?](https://betterprogramming.pub/working-on-high-performance-golang-client-library-reading-again-from-channels-5e98ff3538cf)
 * [Part 3: Remove the Bad Busy Loops With the Sync.Cond](https://betterprogramming.pub/working-on-high-performance-golang-client-library-remove-the-bad-busy-loops-with-the-sync-cond-e262b3fcb458)
 
-Since auto-pipelining is used in `rueidis` by default we also were able to remove some of our pipelining management code – so the Engine implementation is more concise now. One more thing to mention is a simpler PUB/SUB code we were able to write with `rueidis`. In `redigo` case we had to periodically PING PUB/SUB connection to maintain it alive, `rueidis` does this automatically.
-
- I really enjoyed building commands with `rueidis` - all Redis commands may be constructed using a builder approach based on code generation. For example, this is a process of building a PUBLISH Redis command:
+One more thing to mention – I really enjoyed building commands with `rueidis`. All Redis commands may be constructed using a builder approach based on code generation. For example, this is a process of building a PUBLISH Redis command:
 
 <video width="100%" loop="true" autoplay="autoplay" muted controls="" src="/img/rueidis_cmd.mp4"></video>
 
@@ -252,7 +252,7 @@ This drastically reduces a chance to make a stupid mistake while constructing a 
 
 You may also find other features of `rueidis` useful – like OpenTelemetry integration, client-side caching support to avoid network round trips while accessing an application cache data, integration with popular Redis modules like RediSearch or RedisJSON, etc.
 
-## Redis 7 performance degradation
+## Redis 7 performance drop
 
 One thing worth mentioning and which may be helpful for someone is that during our comparison experiments we discovered that Redis 7 has a major latency increase compared to Redis 6. This is definitely true for Lua scripts execution and currently investigated inside [this Redis issue](https://github.com/redis/redis/issues/10981).   
 
