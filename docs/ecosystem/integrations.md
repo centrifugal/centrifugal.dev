@@ -13,3 +13,5 @@ In general, integrating Centrifugo can be done in several steps even without thi
 * [laravel-centrifugo-broadcaster](https://github.com/opekunov/laravel-centrifugo-broadcaster) one more integration with Laravel framework to consider
 * [CentrifugoBundle](https://github.com/fre5h/CentrifugoBundle) integration with Symfony framework
 * [Django-instant](https://github.com/synw/django-instant) integration with Django framework
+* [roadrunner-php/centrifugo](https://github.com/roadrunner-php/centrifugo) integration with [RoadRunner](https://roadrunner.dev)
+* [spiral/roadrunner-bridge](https://github.com/spiral/roadrunner-bridge) integration with [Spiral Framework](https://spiral.dev)
