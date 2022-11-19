@@ -1,7 +1,7 @@
 ---
 title: Improving Centrifugo Redis Engine throughput and allocation efficiency with Rueidis Go library
 tags: [centrifugo, redis, go]
-description: In this post we share some details about Centrifugo Redis engine implementation and its recent performance improvements with the help of Rueidis library
+description: In this post we share some details about Centrifugo Redis engine implementation and its recent performance improvements with the help of Rueidis Go library
 author: Alexander Emelin
 authorTitle: Author of Centrifugo
 authorImageURL: https://github.com/FZambia.png
@@ -28,7 +28,7 @@ Let's provide some glue on what is `Broker` and `PresenceManager` in Centrifugo.
 
 Another important part of `Broker` is keeping expiring publication history streams for channels – so that Centrifugo may provide a fast cache for messages missed by clients upon going offline for a short period and also compensate at most once delivery of Redis PUB/SUB using publication incremental offsets. Centrifugo uses STREAM and HASH data structures in Redis to keep channel history and its meta information.
 
-Overall Centrifugo architecture may be represented with this awesome picture (Gophers are Centrifugo nodes all connected to `Broker`, and sockets are WebSockets):
+Overall Centrifugo architecture may be perfectly illustrated by this picture (Gophers are Centrifugo nodes all connected to `Broker`, and sockets are WebSockets):
 
 ![gopher-broker](https://i.imgur.com/QOJ1M9a.png)
 
