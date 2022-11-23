@@ -479,4 +479,18 @@ I believe that we will find more projects in Go ecosystem using `rueidis` librar
 
 For Centrifugo users this migration means more efficient CPU usage which should be noticeable for setups using Redis Engine with many publications, or with many history requests, or with many presence requests. 
 
-P.S. One thing worth mentioning and which may be helpful for someone is that during our comparison experiments we discovered that Redis 7 has a major latency increase compared to Redis 6 when executing Lua scripts. So if you have performance sensitive code with Lua scripts take a look at [this Redis issue](https://github.com/redis/redis/issues/10981).
+<hr /><hr /><hr />
+
+**P.S.** One thing worth mentioning and which may be helpful for someone is that during our comparison experiments we discovered that Redis 7 has a major latency increase compared to Redis 6 when executing Lua scripts. So if you have performance sensitive code with Lua scripts take a look at [this Redis issue](https://github.com/redis/redis/issues/10981).
+
+**P.S.S.** To run Centrifuge benchmarks presented here yourself you may use:
+
+* Centrifuge [master](https://github.com/centrifugal/centrifuge) branch for `rueidis`
+* Centrifuge [redigo_optimized](https://github.com/centrifugal/centrifuge/tree/redigo_optimized) branch for `redigo`
+* Centrifuge [goredis_optimized](https://github.com/centrifugal/centrifuge/tree/goredis_optimized) branch for `go-redis/redis`
+
+The command to run benchmarks is:
+
+```bash
+go test -run xxx -bench "BenchmarkRedisPublish_ManyCh/streams|BenchmarkRedisRecover/streams|BenchmarkRedisPublish_History_1Ch/streams|BenchmarkRedisSubscribe|BenchmarkRedisAddPresence_1Ch/without_cluster" -benchmem -tags integration -count 10
+```
