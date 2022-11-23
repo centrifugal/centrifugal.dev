@@ -326,21 +326,21 @@ Here are the benchmark results we got when comparing `redigo` (v1.8.9) implement
 name                      old time/op    new time/op    delta
 RedisPublish-8            1.45µs ± 6%    1.78µs ± 2%  +22.30%  (p=0.000 n=9+9)
 RedisPublish_History-8    12.5µs ± 7%     9.7µs ± 3%  -22.40%  (p=0.000 n=10+10)
-RedisSubscribe-8          1.36µs ±26%    1.38µs ± 3%     ~     (p=0.195 n=10+8)
+RedisSubscribe-8          1.56µs ±32%    1.42µs ±11%     ~     (p=0.290 n=30+28)
 RedisRecover-8            18.2µs ± 3%    14.5µs ± 2%  -20.11%  (p=0.000 n=10+10)
 RedisAddPresence-8        3.68µs ± 1%    3.37µs ± 3%   -8.36%  (p=0.000 n=10+10)
 
 name                     old alloc/op   new alloc/op   delta
 RedisPublish-8              483B ± 0%      499B ± 0%   +3.31%  (p=0.000 n=10+8)
 RedisPublish_History-8    1.30kB ± 0%    1.08kB ± 0%  -16.69%  (p=0.000 n=8+8)
-RedisSubscribe-8            893B ± 1%      665B ± 4%  -25.58%  (p=0.000 n=9+10)
+RedisSubscribe-8            896B ± 1%      662B ± 8%  -26.18%  (p=0.000 n=30+30)
 RedisRecover-8            1.25kB ± 0%    1.02kB ± 0%  -18.29%  (p=0.000 n=10+10)
 RedisAddPresence-8          907B ± 0%      827B ± 0%   -8.78%  (p=0.000 n=10+8)
 
 name                    old allocs/op  new allocs/op  delta
 RedisPublish-8              10.0 ± 0%       9.0 ± 0%  -10.00%  (p=0.000 n=10+10)
 RedisPublish_History-8      29.0 ± 0%      25.0 ± 0%  -13.79%  (p=0.000 n=10+10)
-RedisSubscribe-8            22.0 ± 0%      13.3 ± 5%  -39.55%  (p=0.000 n=8+10)
+RedisSubscribe-8            22.0 ± 0%      13.6 ±12%  -38.33%  (p=0.000 n=30+30)
 RedisRecover-8              29.0 ± 0%      24.0 ± 0%  -17.24%  (p=0.000 n=10+10)
 RedisAddPresence-8          18.0 ± 0%      17.0 ± 0%   -5.56%  (p=0.000 n=10+10)
 ```
@@ -427,28 +427,28 @@ Until `v0.0.80` release `rueidis` did not support RESP2 though, so we could not 
 
 Since auto-pipelining is used in `rueidis` by default we were able to remove some of our own pipelining management code – so the Engine implementation is more concise now. One more thing to mention is a simpler PUB/SUB code we were able to write with `rueidis`. In `redigo` case we had to periodically PING PUB/SUB connection to maintain it alive, `rueidis` does this automatically.
 
-Regarding performance, here are the benchmark results we got when comparing `redigo` (v1.8.9) implementation (old) and `rueidis` (v0.0.83) implementation (new):
+Regarding performance, here are the benchmark results we got when comparing `redigo` (v1.8.9) implementation (old) and `rueidis` (v0.0.86) implementation (new):
 
 ```
 ❯ benchstat redigo.txt rueidis.txt
 name                      old time/op    new time/op    delta
 RedisPublish-8            1.45µs ± 6%    0.59µs ± 3%  -59.67%  (p=0.000 n=9+8)
 RedisPublish_History-8    12.5µs ± 7%     9.7µs ± 0%  -22.28%  (p=0.000 n=10+10)
-RedisSubscribe-8          1.36µs ±26%    1.60µs ± 8%  +17.90%  (p=0.007 n=10+10)
+RedisSubscribe-8          1.56µs ±32%    1.57µs ± 9%     ~     (p=0.975 n=30+28)
 RedisRecover-8            18.2µs ± 3%    10.9µs ± 1%  -40.01%  (p=0.000 n=10+10)
 RedisAddPresence-8        3.68µs ± 1%    3.54µs ± 0%   -3.86%  (p=0.000 n=10+9)
 
 name                     old alloc/op   new alloc/op   delta
 RedisPublish-8              483B ± 0%      171B ± 0%  -64.66%  (p=0.000 n=10+10)
 RedisPublish_History-8    1.30kB ± 0%    0.55kB ± 1%  -57.68%  (p=0.000 n=8+10)
-RedisSubscribe-8            893B ± 1%      841B ± 6%   -5.85%  (p=0.000 n=9+10)
+RedisSubscribe-8            896B ± 1%      699B ± 0%  -22.07%  (p=0.000 n=30+30)
 RedisRecover-8            1.25kB ± 0%    0.59kB ± 1%  -53.08%  (p=0.000 n=10+10)
 RedisAddPresence-8          907B ± 0%      149B ± 2%  -83.52%  (p=0.000 n=10+10)
 
 name                    old allocs/op  new allocs/op  delta
 RedisPublish-8              10.0 ± 0%       3.0 ± 0%  -70.00%  (p=0.000 n=10+10)
 RedisPublish_History-8      29.0 ± 0%      12.0 ± 0%  -58.62%  (p=0.000 n=10+10)
-RedisSubscribe-8            22.0 ± 0%      10.0 ± 0%  -54.55%  (p=0.002 n=8+10)
+RedisSubscribe-8            22.0 ± 0%      10.0 ± 0%  -54.55%  (p=0.000 n=30+30)
 RedisRecover-8              29.0 ± 0%      11.0 ± 0%  -62.07%  (p=0.000 n=10+10)
 RedisAddPresence-8          18.0 ± 0%       3.0 ± 0%  -83.33%  (p=0.000 n=10+10)
 ```
@@ -457,7 +457,7 @@ Or visualized in Grafana:
 
 ![](/img/redis_vis02.png)
 
-2.5x times more publication throughput than we had before! Instead of 700k publications/sec we went towards 1.7 million publications/sec due to drastically decreased publish operation latency (1.45µs -> 0.59µs). This obviously means that our previous Engine implementations under-utilized Redis, and Rueidis just pushes us towards Redis limits. The latency of most other operations is also reduced (except for `Subscribe`).
+2.5x times more publication throughput than we had before! Instead of 700k publications/sec we went towards 1.7 million publications/sec due to drastically decreased publish operation latency (1.45µs -> 0.59µs). This obviously means that our previous Engine implementations under-utilized Redis, and Rueidis just pushes us towards Redis limits. The latency of most other operations is also reduced.
 
 The best thing is allocation efficiency of the `rueidis`-based implementation. As you can see `rueidis` helped us to generate sufficiently less memory allocations for all our Redis operations. Allocation improvements directly affect Centrifugo node CPU usage. So Centrifugo users with Redis Engine may expect CPU usage reduction upon switching to Centrifugo v4.1.0. Of course it's not a two times CPU reduction since Centrifugo node does many other things beyond Redis communication. On our test stand we observed a 20% overall CPU drop, but obviously this number will vary in both directions depending on load profile and used Centrifugo features.
 
