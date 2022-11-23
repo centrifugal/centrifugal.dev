@@ -319,7 +319,7 @@ But what about performance? Here we will show results for several operations whi
 4. Recovering missed publication state from channel STREAM, this is again may be called lots of times when all clients reconnect at once (`RedisRecover`).
 5. Updating connection presence information - many connections may periodically update their channel online presence information in Redis (`RedisAddPresence`)
 
-Here are the benchmark results we got when comparing `redigo` (v1.8.9) implementation (old) and `go-redis/redis` (v9.0.0-beta.3) implementation (new) with Redis v6.2.7:
+Here are the benchmark results we got when comparing `redigo` (v1.8.9) implementation (old) and `go-redis/redis` (v9.0.0-rc.1) implementation (new) with Redis v6.2.7:
 
 ```
 ❯ benchstat redigo.txt goredis.txt
