@@ -463,7 +463,7 @@ Or visualized in Grafana:
 
 2.5x times more publication throughput than we had before! Instead of 700k publications/sec, we went towards 1.7 million publications/sec due to drastically decreased publish operation latency (1.45µs -> 0.59µs). This means that our previous Engine implementation under-utilized Redis, and Rueidis just pushes us towards Redis limits. The latency of most other operations is also reduced.
 
-The allocation effectiveness of the implementation based on "rueidis" is best. As you can see `rueidis` helped us to generate sufficiently fewer memory allocations for all our Redis operations. Allocation improvements directly affect Centrifugo node CPU usage. So Centrifugo users with Redis Engine may expect CPU usage reduction upon switching to Centrifugo v4.1.0. Of course, it's not a two-times CPU reduction since the Centrifugo node performs many other tasks beyond Redis communication. On our test stand, we observed a 20% overall CPU drop, although it's clear that this percentage will vary in both directions depending on the load profile and Centrifugo features used.
+The allocation effectiveness of the implementation based on "rueidis" is best. As you can see `rueidis` helped us to generate sufficiently fewer memory allocations for all our Redis operations. Allocation improvements directly affect Centrifugo node CPU usage. Though we will talk about CPU more later below.
 
 For Redis Cluster case we also got benchmark results similar to the standalone Redis results above.
 
@@ -473,28 +473,72 @@ I might add that I enjoyed building commands with `rueidis`. All Redis commands 
 
 This drastically reduces a chance to make a stupid mistake while constructing a command. Instead of always opening Redis docs to see a command syntax it's now possible to just start typing - and quickly come to the complete command to send.
 
-You may also find other features of `rueidis` useful – like OpenTelemetry integration, client-side caching support to avoid network round trips while accessing an application cache data, integration with popular Redis modules like RediSearch or RedisJSON, etc.
+## Switching to Rueidis: reducing CPU usage
+
+After making all these benchmarks and implementing Engine in Rueidis I decided to check whether Centrifugo consumes less CPU with it. I expected a notable CPU reduction as Rueidis implementation allocates two times less than Redigo-based. Turned out it's not that simple.
+
+I ran Centrifugo with some artificial load and noticed that CPU consumption of new implementation is actually... worse than we had with Redigo-based engine! But why?
+
+As I mentioned above Redis pipelining is a technique when several commands may be combined into one batch to send over the network. In case of automatic pipelining the size of generated batches start playing a crucial role in application and Redis CPU usage – since smaller command batches result into more read/write system calls on both application and Redis sides. That's why projects like [Twemproxy](https://github.com/twitter/twemproxy) which sit between app and Redis have sich a good effect on Redis CPU usage among other things. 
+
+As we have seen above, Rueidis provides a better throughput and latency, but it's more agressive in terms of flushing data to the network. So in its default configuration we get smaller batches than we had before in our own pipelining implementation based on Redigo (shown in the beginning of this post).
+
+There is an option in Rueidis though called `MaxFlushDelay` which allows to slow down write loop a bit to give Rueidis a chance to collect more commands to send in one batch. Using some reasonable value it's possible to drastically reduce both application and Redis CPU utilization.
+
+To demonstrate this I created a repo: https://github.com/FZambia/pipelines.
+
+This repo contains three benchmarks where we use automatic pipelining: based on Redigo, based on Go-Redis and Rueidis. In these benchmarks we produce concurrent requests, but instead of pushing the system towards limits we are limiting number of requests sent to Redis.
+
+To rate limit requests we are using [uber-go/ratelimit](https://github.com/uber-go/ratelimit) library. For example, to allow rate no more than 100k commands per second we can do sth like this:
+
+```go
+rl := ratelimit.New(100, ratelimit.Per(time.Millisecond))
+for {
+	rl.Take()
+	...
+}
+```
+
+We limit requests per second we could actually just write `ratelimit.New(100000)` – but we aim to get a more smooth distribution of requests over time - so using millisecond resolution.
+
+Let's run all the benchmarks in the default configuration:
+
+<video width="100%" loop="true" autoplay="autoplay" muted controls="" src="/img/redis_b1.mp4"></video>
+
+Average CPU usage during the test (a bit rough but enough for demonstration):
+
+|                     | Redigo      | Goredis | Rueidis |
+| ------------------- | ----------- | ----------- |----------- |
+| Application CPU, % | 95            | 99             |  <span style={{color: 'red'}}>116</span>            |
+| Redis CPU, %       | 36             | 35              | <span style={{color: 'red'}}>42</span>              |
+
+OK, Rueidis-based implementation is the worst here despite of allocating less than others. So let's try to change this by setting `MaxFlushDelay` to sth like 100 microseconds:
+
+<video width="100%" loop="true" autoplay="autoplay" muted controls="" src="/img/redis_b2.mp4"></video>
+
+Now CPU usage is:
+
+|                     | Redigo      | Goredis | Rueidis |
+| ------------------- | ----------- | ----------- |----------- |
+| Application CPU, % | 95            | 99             |  <span style={{color: 'green'}}>59</span>            |
+| Redis CPU, %       | 36             | 35              | <span style={{color: 'green'}}>12</span>              |
+
+As we can see we can achieve great CPU usage reduction with it. It went from 116% to 59% for the application side, and from 42% to only 12% for Redis! We are sacrificing latency though. Given the fact the CPU utilization reduction is very notable the trade-off is pretty fair. As you can see we were able to achieve better CPU results just by using 100 microseconds delay to each request. In real life when we are not running Redis on localhost and have some network latency in between application and Redis this delay should be insignificant.
+
+It's possible to tune this `MaxFlushDelay` value further to create even larger batches and decrease CPU further – the problem is that the value to pause Rueidis write loop is a very use case specific, it's pretty hard to provide a reasonable default for it. Depending on request rate, network latency etc. you may choose a larger or smaller delay.
+
+There is a chance that Rueidis may provide smarter solution for batching in the future, so that the library itself could automatically optimize batching algorithm for changing conditions. It's rather complicated task though, for now manual control seems good enough.
 
 ## Conclusion
 
-Migrating from a stable to a relatively new library is a risky step. In this perspective `redigo` and `go-redis/redis` may be more mature options with a bigger community and wider usage behind. We spent some time testing various failure scenarios though – and the new `rueidis`-based Engine implementation behaved as expected.
+Migrating from Redigo to Rueidis library was not just a task of rewriting code, we had to carefully test various aspects of Redis Engine behaviour – latency, throughput, CPU utilization of application, and even CPU utilization of Redis itself under the equal application load conditions.
 
-I believe that we will find more projects in Go ecosystem using `rueidis` library shortly. Not just because of its allocation efficiency and out-of-the-box throughput, but also due to a convenient type-safe command API.
+I believe that we will find more projects in Go ecosystem using `rueidis` library shortly. Not just because of its allocation efficiency and out-of-the-box throughput, but also due to a convenient type-safe command API and possibility to reduce CPU utilization of Redis.
 
 For Centrifugo users this migration means more efficient CPU usage which should be noticeable for setups using Redis Engine with many publications, with many history requests, or with many presence requests.
+
+This post contains many different numbers, benchmarks etc. But the only truth you can get from it is that **you need to measure for your own use case**. Hopefully you learnt some tips from this text which could help you to achieve effective communication with Redis in your app.
 
 <hr /><hr /><hr />
 
 **P.S.** One thing worth mentioning and which may be helpful for someone is that during our comparison experiments we discovered that Redis 7 has a major latency increase compared to Redis 6 when executing Lua scripts. So if you have performance sensitive code with Lua scripts take a look at [this Redis issue](https://github.com/redis/redis/issues/10981).
-
-**P.S.S.** To run Centrifuge benchmarks presented here yourself you may use:
-
-* Centrifuge [master](https://github.com/centrifugal/centrifuge) branch for `rueidis`
-* Centrifuge [redigo_optimized](https://github.com/centrifugal/centrifuge/tree/redigo_optimized) branch for `redigo`
-* Centrifuge [goredis_optimized](https://github.com/centrifugal/centrifuge/tree/goredis_optimized) branch for `go-redis/redis`
-
-The command to run benchmarks is:
-
-```bash
-go test -run xxx -bench "BenchmarkRedisPublish_ManyCh/streams|BenchmarkRedisRecover/streams|BenchmarkRedisPublish_History_1Ch/streams|BenchmarkRedisSubscribe|BenchmarkRedisAddPresence_1Ch/without_cluster" -benchmem -tags integration -count 10
-```
