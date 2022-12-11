@@ -560,8 +560,14 @@ Migrating from Redigo to Rueidis library was not just a task of rewriting code, 
 
 I believe that we will find more projects in Go ecosystem using `rueidis` library shortly. Not just because of its allocation efficiency and out-of-the-box throughput, but also due to a convenient type-safe command API and possibility to reduce CPU utilization of Redis.
 
-This post contains many different numbers, benchmarks etc. But the only truth you can get from it is that **you need to measure for your own use case**. Hopefully some readers learn some tips from this text which can help to achieve effective communication with Redis from Go or another programming language.
-
 For Centrifugo users this migration means more efficient CPU usage which should be noticeable for setups using Redis Engine with many publications, with many history requests, or with many presence requests.
+
+Hopefully some readers learn some tips from this text which can help to achieve effective communication with Redis from Go or another programming language. To summarise:
+
+* Redis pipelining may increase throughput and reduce latency, it can also reduce CPU utilization of Redis
+* Don't blindly trust Go benchmark numbers but also think about memory and CPU effect of changes you made
+* Reduce system calls to decrease CPU utilization
+* Don't trust benchmarks - they are lying, written by biased people, **measure for your own use case**
+* Everything is a trade-off – latency or resource usage? Traffic cost or human-readability of protocol format? Your own WebSocket server or Centrifugo? :)
 
 **P.S.** One thing worth mentioning and which may be helpful for someone is that during our comparison experiments we discovered that Redis 7 has a major latency increase compared to Redis 6 when executing Lua scripts. So if you have performance sensitive code with Lua scripts take a look at [this Redis issue](https://github.com/redis/redis/issues/10981). With the help of Redis developers some things already improved in `unstable` Redis branch, hopefully that issue will be closed at the time you read this post.
