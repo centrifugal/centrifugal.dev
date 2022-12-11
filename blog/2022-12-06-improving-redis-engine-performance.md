@@ -523,9 +523,34 @@ Now CPU usage is:
 | Application CPU, % | 95            | 99             |  <span style={{color: 'green'}}>59</span>            |
 | Redis CPU, %       | 36             | 35              | <span style={{color: 'green'}}>12</span>              |
 
-As we can see we can achieve great CPU usage reduction with it. It went from 116% to 59% for the application side, and from 42% to only 12% for Redis! We are sacrificing latency though. Given the fact the CPU utilization reduction is very notable the trade-off is pretty fair. As you can see we were able to achieve better CPU results just by using 100 microseconds delay to each request. In real life when we are not running Redis on localhost and have some network latency in between application and Redis this delay should be insignificant.
+As we can see we can achieve great CPU usage reduction with it. It went from 116% to 59% for the application side, and from 42% to only 12% for Redis! We are sacrificing latency though. Given the fact the CPU utilization reduction is very notable the trade-off is pretty fair. As you can see we were able to achieve better CPU results just by using 100 microseconds delay to each request. In real life when we are not running Redis on localhost and have some network latency in between application and Redis this delay should be insignificant. Indeed, it can even improve (!) the latency you have. You may wonder what happened with benchmarks we showed above after we added `MaxFlushDelay` option. In Centrifugo we chose default value 100 microseconds, and here are results on localhost (old without delay, new with delay):
 
-It's possible to tune this `MaxFlushDelay` value further to create even larger batches and decrease CPU further – the problem is that the value to pause Rueidis write loop is a very use case specific, it's pretty hard to provide a reasonable default for it. Depending on request rate, network latency etc. you may choose a larger or smaller delay.
+```
+name                      old time/op    new time/op    delta
+RedisPublish-8             574ns ± 3%     486ns ± 3%  -15.35%  (p=0.000 n=9+10)
+RedisPublish_History-8    9.65µs ± 1%    9.60µs ± 1%   -0.50%  (p=0.014 n=9+9)
+RedisSubscribe-8          1.46µs ± 3%    1.38µs ± 5%   -5.23%  (p=0.000 n=9+10)
+RedisRecover-8            10.8µs ± 0%    10.6µs ± 0%   -1.36%  (p=0.000 n=9+9)
+RedisAddPresence-8        3.56µs ± 1%    3.31µs ± 0%   -7.14%  (p=0.000 n=10+10)
+
+name                     old alloc/op   new alloc/op   delta
+RedisPublish-8              171B ± 0%      171B ± 0%     ~     (all equal)
+RedisPublish_History-8      554B ± 1%      556B ± 1%     ~     (p=0.714 n=10+10)
+RedisSubscribe-8            702B ± 0%      702B ± 0%   +0.11%  (p=0.010 n=10+10)
+RedisRecover-8              590B ± 1%      589B ± 1%     ~     (p=0.651 n=10+10)
+RedisAddPresence-8          231B ± 1%      231B ± 1%     ~     (p=0.768 n=9+9)
+
+name                    old allocs/op  new allocs/op  delta
+RedisPublish-8              3.00 ± 0%      3.00 ± 0%     ~     (all equal)
+RedisPublish_History-8      12.0 ± 0%      12.0 ± 0%     ~     (all equal)
+RedisSubscribe-8            10.0 ± 0%      10.0 ± 0%     ~     (all equal)
+RedisRecover-8              11.0 ± 0%      11.0 ± 0%     ~     (all equal)
+RedisAddPresence-8          4.00 ± 0%      4.00 ± 0%     ~     (all equal)
+```
+
+It's even better! Though while it's better for these benchmarks the numbers may differ if we change the level of parallelism in benchmarks.
+
+It's possible to tune `MaxFlushDelay` value further (towards 1 millisecond or event higher) to create even larger batches and further decrease CPU utilization – the problem is that the value to pause Rueidis write loop is a very use case specific, it's pretty hard to provide a reasonable default for it. Depending on request rate/size, network latency etc. you may choose a larger or smaller delay.
 
 There is a chance that Rueidis may provide smarter solution for batching in the future, so that the library itself could automatically optimize batching algorithm for changing conditions. It's rather complicated task though, for now manual control seems good enough.
 
@@ -535,10 +560,8 @@ Migrating from Redigo to Rueidis library was not just a task of rewriting code, 
 
 I believe that we will find more projects in Go ecosystem using `rueidis` library shortly. Not just because of its allocation efficiency and out-of-the-box throughput, but also due to a convenient type-safe command API and possibility to reduce CPU utilization of Redis.
 
+This post contains many different numbers, benchmarks etc. But the only truth you can get from it is that **you need to measure for your own use case**. Hopefully some readers learn some tips from this text which can help to achieve effective communication with Redis from Go or another programming language.
+
 For Centrifugo users this migration means more efficient CPU usage which should be noticeable for setups using Redis Engine with many publications, with many history requests, or with many presence requests.
 
-This post contains many different numbers, benchmarks etc. But the only truth you can get from it is that **you need to measure for your own use case**. Hopefully you learnt some tips from this text which could help you to achieve effective communication with Redis in your app.
-
-<hr /><hr /><hr />
-
-**P.S.** One thing worth mentioning and which may be helpful for someone is that during our comparison experiments we discovered that Redis 7 has a major latency increase compared to Redis 6 when executing Lua scripts. So if you have performance sensitive code with Lua scripts take a look at [this Redis issue](https://github.com/redis/redis/issues/10981).
+**P.S.** One thing worth mentioning and which may be helpful for someone is that during our comparison experiments we discovered that Redis 7 has a major latency increase compared to Redis 6 when executing Lua scripts. So if you have performance sensitive code with Lua scripts take a look at [this Redis issue](https://github.com/redis/redis/issues/10981). With the help of Redis developers some things already improved in `unstable` Redis branch, hopefully that issue will be closed at the time you read this post.
