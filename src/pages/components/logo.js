@@ -31,7 +31,7 @@ Segment.prototype.init = function init(X, Y, x, y, rad, r, w, rotate, speed, ang
     this.w = w;
     this.c = segColor;
     this.rotate = rotate;
-    this.speed = speed;
+    this.speed = speed * 60;
     this.angleDiff = angleDiff;
     this.a = 0;
 };
@@ -80,12 +80,12 @@ Segment.prototype.resize = function resize() {
     this.y = this.Y / 2;
 };
 
-Segment.prototype.updateParams = function updateParams() {
-    this.a += (this.speed * this.radius) / this.r;
+Segment.prototype.updateParams = function updateParams(elapsedTime) {
+    this.a += (this.speed * elapsedTime * this.radius) / this.r;
 };
 
-Segment.prototype.render = function render() {
-    this.updateParams();
+Segment.prototype.render = function render(elapsedTime) {
+    this.updateParams(elapsedTime);
     this.draw();
 };
 
@@ -102,8 +102,8 @@ Line.prototype.init = function init(X, Y, x, y, lineColor) {
     this.c = lineColor;
     this.lw = 1;
     this.v = {
-        x: 2 * Math.random(),
-        y: 2 * Math.random(),
+        x: Math.random() * 100,
+        y: Math.random() * 100,
     };
 };
 
@@ -123,9 +123,9 @@ Line.prototype.draw = function draw() {
     this.ctx.restore();
 };
 
-Line.prototype.updatePosition = function updatePosition() {
-    this.x += this.v.x;
-    this.y += this.v.y;
+Line.prototype.updatePosition = function updatePosition(elapsedTime) {
+    this.x += this.v.x * elapsedTime;
+    this.y += this.v.y * elapsedTime;
 };
 
 Line.prototype.wrapPosition = function wrapPosition() {
@@ -135,13 +135,9 @@ Line.prototype.wrapPosition = function wrapPosition() {
     if (this.y > this.Y) this.y = 0;
 };
 
-Line.prototype.updateParams = function updateParams() {
-};
-
-Line.prototype.render = function render() {
-    this.updatePosition();
+Line.prototype.render = function render(elapsedTime) {
+    this.updatePosition(elapsedTime);
     this.wrapPosition();
-    this.updateParams();
     this.draw();
 };
 
@@ -200,19 +196,25 @@ function draw(canvas, X, Y, isDarkTheme) {
         ctx, X, Y, centerX, centerY, radius, radius * 1.45, lw * 8, 225, 1.5, 2, segmentColor,
     ));
 
-    function render() {
+    let lastRenderTime = 0;
+
+    function render(currentTime) {
+        const secondsSinceLastRender = (currentTime - lastRenderTime) / 1000
+
         ctx.clearRect(0, 0, X, Y);
 
         for (let i = 0; i < lines.length; i += 1) {
-            lines[i].render();
+            lines[i].render(secondsSinceLastRender);
         }
         for (let i = 0; i < segments.length; i += 1) {
-            segments[i].render();
+            segments[i].render(secondsSinceLastRender);
         }
+
+        lastRenderTime = currentTime;
         requestAnimationFrame(render);
     }
 
-    render();
+    requestAnimationFrame(render);
 }
 
 let observer;
