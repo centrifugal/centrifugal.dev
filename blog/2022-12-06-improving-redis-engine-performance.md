@@ -550,7 +550,7 @@ RedisAddPresence-8          4.00 ± 0%      4.00 ± 0%     ~     (all equal)
 
 It's even better! Though while it's better for these benchmarks the numbers may differ if we change the level of parallelism in benchmarks.
 
-It's possible to tune `MaxFlushDelay` value further (towards 1 millisecond or event higher) to create even larger batches and further decrease CPU utilization – the problem is that the value to pause Rueidis write loop is a very use case specific, it's pretty hard to provide a reasonable default for it. Depending on request rate/size, network latency etc. you may choose a larger or smaller delay.
+It's possible to tune `MaxFlushDelay` value further (towards 1 millisecond or even higher) to create even larger batches and further decrease CPU utilization – the problem is that the value to pause Rueidis write loop is a very use case specific, it's pretty hard to provide a reasonable default for it. Depending on request rate/size, network latency etc. you may choose a larger or smaller delay.
 
 There is a chance that Rueidis may provide smarter solution for batching in the future, so that the library itself could automatically optimize batching algorithm for changing conditions. It's rather complicated task though, for now manual control seems good enough.
 
