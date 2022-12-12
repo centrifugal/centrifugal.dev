@@ -122,7 +122,7 @@ Added in Centrifugo v4.1.0
 
 String, default `""` – path to TLS root CA file (in PEM format) to use. If you prefer passing root CA PEM as a string instead of path to the file then use `redis_tls_root_ca_pem` option.
 
-### redis_tls_server_name
+#### redis_tls_server_name
 
 Added in Centrifugo v4.1.0
 
@@ -217,6 +217,42 @@ You can find how to properly set up Sentinels [in official documentation](http:/
 Note that when your Redis master instance is down there will be a small downtime interval until Sentinels
 discover a problem and come to a quorum decision about a new master. The length of this period depends on
 Sentinel configuration.
+
+### Redis Sentinel TLS
+
+To configure TLS for Redis Sentinel use the following options.
+
+#### redis_sentinel_tls
+
+Boolean, default `false` - enable Redis TLS connection.
+
+#### redis_sentinel_tls_insecure_skip_verify
+
+Boolean, default `false` - disable Redis TLS host verification. Centrifugo v4 also supports alias for this option – `redis_sentinel_tls_skip_verify` – but it will be removed in v5.
+
+#### redis_sentinel_tls_cert
+
+Added in Centrifugo v4.1.0
+
+String, default `""` – path to TLS cert file. If you prefer passing certificate as a string instead of path to the file then use `redis_sentinel_tls_cert_pem` option.
+
+#### redis_sentinel_tls_key
+
+Added in Centrifugo v4.1.0
+
+String, default `""` – path to TLS key file.  If you prefer passing cert key as a string instead of path to the file then use `redis_sentinel_tls_key_pem` option.
+
+#### redis_sentinel_tls_root_ca
+
+Added in Centrifugo v4.1.0
+
+String, default `""` – path to TLS root CA file (in PEM format) to use. If you prefer passing root CA PEM as a string instead of path to the file then use `redis_sentinel_tls_root_ca_pem` option.
+
+#### redis_sentinel_tls_server_name
+
+Added in Centrifugo v4.1.0
+
+String, default `""` – used to verify the hostname on the returned certificates. It is also included in the client's handshake to support virtual hosting unless it is an IP address.
 
 ### Haproxy instead of Sentinel configuration
 
