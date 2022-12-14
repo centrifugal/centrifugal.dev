@@ -68,7 +68,7 @@ Now let's create `index.html` file with our simple app:
 
 <body>
   <div id="counter">-</div>
-  <script src="https://unpkg.com/centrifuge@3.0.0/dist/centrifuge.js"></script>
+  <script src="https://unpkg.com/centrifuge@3.1.0/dist/centrifuge.js"></script>
   <script type="text/javascript">
     const container = document.getElementById('counter');
 
@@ -102,7 +102,7 @@ Now let's create `index.html` file with our simple app:
 </html>
 ```
 
-Note that we are using `centrifuge-js` 3.0.0 in this example, getting it from CDN, you better use its latest version at the moment of reading this tutorial. In real Javascript app you most probably will load `centrifuge` from NPM.
+Note that we are using `centrifuge-js` 3.1.0 in this example, getting it from CDN, you better use its latest version at the moment of reading this tutorial. In real Javascript app you most probably will load `centrifuge` from NPM.
 
 In `index.html` above we created an instance of a Centrifuge client passing Centrifugo server default WebSocket endpoint address to it, then we subscribed to a channel called `channel` and provided a callback function to process incoming real-time messages (publications). Upon receiving a new publication we update page HTML and setting counter value to page title. We call `.subscribe()` to initialte subscription and `.connect()` method of Client to start a WebSocket connection. We also handle Client state transitions (disconnected, connecting, connected) and Subscription state transitions (unsubscribed, subscribing, subscribed) – see detailed description in [client SDK spec](../transports/client_api.md).
 
