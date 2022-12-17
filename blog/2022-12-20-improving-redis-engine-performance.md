@@ -5,12 +5,12 @@ description: In this post we share some details about Centrifugo Redis Engine im
 author: Alexander Emelin
 authorTitle: Author of Centrifugo
 authorImageURL: https://github.com/FZambia.png
-image: /img/redis.png
+image: /img/redis_cover.png
 hide_table_of_contents: false
 draft: true
 ---
 
-![Centrifugo_Redis_Engine_Improvements](/img/redis.png)
+![Centrifugo_Redis_Engine_Improvements](/img/redis_cover.png)
 
 The main objective of Centrifugo is to manage persistent client connections established over various real-time transports (including WebSocket, HTTP-Streaming, SSE, WebTransport, etc) and offer an API for publishing data towards established connections. Clients subscribe to channels, hence Centrifugo implements PUB/SUB mechanics to transmit published data to all online channel subscribers.
 
