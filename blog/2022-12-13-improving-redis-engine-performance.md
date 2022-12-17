@@ -10,7 +10,7 @@ hide_table_of_contents: false
 draft: true
 ---
 
-![Centrifuge](/img/redis.png)
+![Centrifugo_Redis_Engine_Improvements](/img/redis.png)
 
 The main objective of Centrifugo is to manage persistent client connections established over various real-time transports (including WebSocket, HTTP-Streaming, SSE, WebTransport, etc) and offer an API for publishing data towards established connections. Clients subscribe to channels, hence Centrifugo implements PUB/SUB mechanics to transmit published data to all online channel subscribers.
 
@@ -36,7 +36,7 @@ In general Centrifugo architecture may be perfectly illustrated by this picture 
 
 ## Redigo
 
-For a long time, the [gomodule/redigo](https://github.com/gomodule/redigo) package served as the foundation for the Redis Engine implementation in Centrifugo. Huge props go to Mr Gary Burd for establishing such a great set of libraries in Go ecosystem.
+For a long time, the [gomodule/redigo](https://github.com/gomodule/redigo) package served as the foundation for the Redis Engine implementation in Centrifugo. Huge props go to [Mr Gary Burd](https://github.com/garyburd) for creating it.
 
 Redigo offers a connection [Pool](https://pkg.go.dev/github.com/gomodule/redigo/redis#Pool) to Redis. A simple usage of it involves getting the connection from the pool, issuing request to Redis over that connection, and then putting the connection back to the pool after receiving the result from Redis.
 
@@ -127,18 +127,18 @@ func (s *sender) send() error {
 	return <-errCh
 }
 
-func (p *sender) runPipelineRoutine() {
+func (s *sender) runPipelineRoutine() {
 	conn := p.pool.Get()
 	defer conn.Close()
 	for {
 		select {
-		case cmd := <-p.cmdCh:
+		case cmd := <-s.cmdCh:
 			commands := []command{cmd}
 			conn.Send("set", "redigo", "test")
 		loop:
 			for i := 0; i < maxCommandsInPipeline; i++ {
 				select {
-				case cmd := <-p.cmdCh:
+				case cmd := <-s.cmdCh:
 					commands = append(commands, cmd)
 					conn.Send("set", "redigo", "test")
 				default:
@@ -185,7 +185,7 @@ func BenchmarkRedigoPipelininig(b *testing.B) {
 }
 ```
 
-This is a strategy that we employed in Centrifugo for a long time. As you can see code with automatic pipelining gets more complex, and in real life, it's even more complicated to handle different types of commands, channel send timeouts, and server shutdowns.
+This is a strategy that we employed in Centrifugo for a long time. As you can see code with automatic pipelining gets more complex, and in real life it's even more complicated to support different types of commands, channel send timeouts, and server shutdowns.
 
 What about the performance of this approach?
 
@@ -196,7 +196,9 @@ BenchmarkRedigoPipelininig-8   1840758     604.7 ns/op      176 B/op     4 alloc
 
 Operation latency reduced from 4648 ns/op to 604.7 ns/op – not bad right?
 
-It's worth mentioning that upon increased RTT between application and Redis the approach with pipelining will provide more poor throughput. But it still can be better than in pool-based approach. Let's say we have latency 5ms between app and Redis. This means that with pool size of 128 you will be able to issue up to `128 * (1000 / 5) = 25600` requests per second. With the pipelining approach above it may be up to `512 * (1000 / 5) = 102400` requests per second. And it can scale further if you increase `numPipelineWorkers`. Though increasing `numPipelineWorkers` has negative effect on CPU – we will discuss this later in this post.
+It's worth mentioning that upon increased RTT between application and Redis the approach with pipelining will provide worse throughput. But it still can be better than in pool-based approach.
+
+Let's say we have latency 5ms between app and Redis. This means that with pool size of 128 you will be able to issue up to `128 * (1000 / 5) = 25600` requests per second over 128 connections. With the pipelining approach above the theoretical limit is `512 * (1000 / 5) = 102400` requests per second over a single connection (though in case of using code for pipelining shown above we need to have larger parallelism). And it can scale further if you increase `numPipelineWorkers` to work over several connections in paralell. Though increasing `numPipelineWorkers` has negative effect on CPU – we will discuss this later in this post.
 
 Redigo is an awesome battle-tested library that served us great for a long time.
 
@@ -251,20 +253,20 @@ At some point we felt that eliminating additional dependencies (even though I am
 To summarize, here is what we wanted from Redis library:
 
 * Possibility to work with all three Redis setup options we support: standalone, master-replica(s) with Sentinel, Redis Cluster, so we can depend on one library instead of three
-* Less memory allocations, so our users could notice a sufficient CPU reduction on Centrifugo nodes which communicate with Redis a lot
-* More type-safety when constructing Redis commands
+* Less memory allocations (and more type-safety API is a plus)
 * Support working with RESP2-only Redis servers as we need that for backwards compatibility. And some vendors like Redis Enterprise still support RESP2 protocol only
 * The library should be actively maintained
 
-## Go-redis
+## Go-redis/redis
 
-The most obvious alternative to `redigo` is [go-redis/redis](https://github.com/go-redis/redis) package. It's popular, regularly gets updates, used by a huge amount of Go projects (Grafana, Thanos, etc.). I personally successfully used it in several other projects I worked on.
+The most obvious alternative to `redigo` is [go-redis/redis](https://github.com/go-redis/redis) package. It's popular, regularly gets updates, used by a huge amount of Go projects (Grafana, Thanos, etc.). And maintained by 
+[Vladimir Mihailenco](https://github.com/vmihailenco) who created several more awesome Go libraries, like [msgpack](https://github.com/vmihailenco/msgpack) for example. I personally successfully used `go-redis/redis` in several other projects I worked on.
 
 To avoid setup boilerplate for various Redis installation variations `go-redis/redis` has [UniversalClient](https://pkg.go.dev/github.com/go-redis/redis/v9#UniversalClient). From docs:
 
 > UniversalClient is a wrapper client which, based on the provided options, represents either a ClusterClient, a FailoverClient, or a single-node Client. This can be useful for testing cluster-specific applications locally or having different clients in different environments.
 
-In terms of implementation `go-redis/redis` also has internal pool of connections to Redis, similar to `redigo`. It's also possible to get a dedicated connection from the internal pool and use it for pipelining. So `UniversalClient` reduces setup boilerplate for different Redis installation types and number of dependencies we had – and still provides similar approach for the connection management so we could easily re-implement things we had.
+In terms of implementation `go-redis/redis` also has internal pool of connections to Redis, similar to `redigo`. It's also possible to use [Client.Pipeline](https://pkg.go.dev/github.com/go-redis/redis/v9#Client.Pipeline) method to allocate a [Pipeliner](https://pkg.go.dev/github.com/go-redis/redis/v9#Pipeliner) interface and use it for pipelining. So `UniversalClient` reduces setup boilerplate for different Redis installation types and number of dependencies we had, and it provide very similar way to pipeline requests so we could easily re-implement things we had with Redigo.
 
 Go-redis also provides more type-safety when constructing commands compared to Redigo, almost every command in Redis is implemented as a separate method of `Client`, for example `Publish` [defined](https://pkg.go.dev/github.com/go-redis/redis/v9#Client.Publish) as:
 
@@ -323,29 +325,29 @@ But what about performance? Here we will show results for several operations whi
 4. Recovering missed publication state from channel STREAM, this is again may be called lots of times when all clients reconnect at once (`RedisRecover`).
 5. Updating connection presence information - many connections may periodically update their channel online presence information in Redis (`RedisAddPresence`)
 
-Here are the benchmark results we got when comparing `redigo` (v1.8.9) implementation (old) and `go-redis/redis` (v9.0.0-rc.1) implementation (new) with Redis v6.2.7:
+Here are the benchmark results we got when comparing `redigo` (v1.8.9) implementation (old) and `go-redis/redis` (v9.0.0-rc.2) implementation (new) with Redis v6.2.7 on Mac with M1 processor and benchmark paralellism 128:
 
 ```
-❯ benchstat redigo.txt goredis.txt
+❯ benchstat redigo_p128.txt goredis_p128.txt
 name                      old time/op    new time/op    delta
-RedisPublish-8            1.45µs ± 6%    1.78µs ± 2%  +22.30%  (p=0.000 n=9+9)
-RedisPublish_History-8    12.5µs ± 7%     9.7µs ± 3%  -22.40%  (p=0.000 n=10+10)
-RedisSubscribe-8          1.56µs ±32%    1.42µs ±11%     ~     (p=0.290 n=30+28)
-RedisRecover-8            18.2µs ± 3%    14.5µs ± 2%  -20.11%  (p=0.000 n=10+10)
-RedisAddPresence-8        3.68µs ± 1%    3.37µs ± 3%   -8.36%  (p=0.000 n=10+10)
+RedisPublish-8            1.45µs ±10%    1.88µs ± 4%  +29.32%  (p=0.000 n=10+10)
+RedisPublish_History-8    12.5µs ± 6%     9.7µs ± 3%  -22.77%  (p=0.000 n=10+10)
+RedisSubscribe-8          1.47µs ±24%    1.47µs ±10%     ~     (p=0.469 n=10+10)
+RedisRecover-8            18.4µs ± 2%     6.3µs ± 0%  -65.78%  (p=0.000 n=10+8)
+RedisAddPresence-8        3.72µs ± 1%    3.40µs ± 1%   -8.74%  (p=0.000 n=10+10)
 
-name                     old alloc/op   new alloc/op   delta
-RedisPublish-8              483B ± 0%      499B ± 0%   +3.31%  (p=0.000 n=10+8)
-RedisPublish_History-8    1.30kB ± 0%    1.08kB ± 0%  -16.69%  (p=0.000 n=8+8)
-RedisSubscribe-8            896B ± 1%      662B ± 8%  -26.18%  (p=0.000 n=30+30)
-RedisRecover-8            1.25kB ± 0%    1.02kB ± 0%  -18.29%  (p=0.000 n=10+10)
-RedisAddPresence-8          907B ± 0%      827B ± 0%   -8.78%  (p=0.000 n=10+8)
+name                      old alloc/op   new alloc/op   delta
+RedisPublish-8              483B ± 0%      499B ± 0%   +3.37%  (p=0.000 n=9+10)
+RedisPublish_History-8    1.30kB ± 0%    1.08kB ± 0%  -16.67%  (p=0.000 n=10+10)
+RedisSubscribe-8            892B ± 2%      662B ± 6%  -25.83%  (p=0.000 n=10+10)
+RedisRecover-8            1.25kB ± 1%    1.00kB ± 0%  -19.91%  (p=0.000 n=10+10)
+RedisAddPresence-8          907B ± 0%      827B ± 0%   -8.82%  (p=0.002 n=7+8)
 
-name                    old allocs/op  new allocs/op  delta
+name                      old allocs/op  new allocs/op  delta
 RedisPublish-8              10.0 ± 0%       9.0 ± 0%  -10.00%  (p=0.000 n=10+10)
 RedisPublish_History-8      29.0 ± 0%      25.0 ± 0%  -13.79%  (p=0.000 n=10+10)
-RedisSubscribe-8            22.0 ± 0%      13.6 ±12%  -38.33%  (p=0.000 n=30+30)
-RedisRecover-8              29.0 ± 0%      24.0 ± 0%  -17.24%  (p=0.000 n=10+10)
+RedisSubscribe-8            22.0 ± 0%      14.0 ± 0%  -36.36%  (p=0.000 n=8+7)
+RedisRecover-8              29.0 ± 0%      23.0 ± 0%  -20.69%  (p=0.000 n=10+10)
 RedisAddPresence-8          18.0 ± 0%      17.0 ± 0%   -5.56%  (p=0.000 n=10+10)
 ```
 
@@ -359,7 +361,13 @@ Please note that this benchmark is not a pure performance comparison of two Go l
 
 :::
 
-While the observed performance improvements here are not really mind-blowing – we see a noticeable reduction in allocations in these benchmarks and in some other benchmarks not presented here we observed a 2 times reduced latency.
+:::note
+
+Centrifugo benchmarks results shown in the post use parallelism 128. If someone interested to check numbers for paralellism 1 or 16 – [check out this comment on Github](https://github.com/centrifugal/centrifugal.dev/pull/18#issuecomment-1356263272).
+
+:::
+
+While the observed performance improvements here are not mind-blowing – we see a noticeable reduction in allocations in these benchmarks and in some other benchmarks not presented here we observed a 2 times reduced latency.
 
 Overall, results convinced us that the migration from `redigo` to `go-redis/redis` may provide Centrifugo with everything we aimed for – all the goals for a `redigo` alternative outlined above were successfully fullfilled.
 
@@ -375,7 +383,7 @@ While results were good with `go-redis/redis` we also made an attempt to impleme
 
 > A fast Golang Redis client that supports Client Side Caching, Auto Pipelining, Generics OM, RedisJSON, RedisBloom, RediSearch, RedisAI, RedisGears, etc.
 
-The readme of `rueidis` contains benchmark results where it hugely outperforms `go-redis/redis` in both single Redis and Redis Custer setups:
+The readme of `rueidis` contains benchmark results where it hugely outperforms `go-redis/redis` in terms of operation latency/throughput in both single Redis and Redis Custer setups:
 
 ![](/img/rueidis_1.png)
 
@@ -427,35 +435,35 @@ For Centrifugo we didn't expect such a huge speed-up as shown in the above graph
 * [Part 2: Reading Again From Channels?](https://betterprogramming.pub/working-on-high-performance-golang-client-library-reading-again-from-channels-5e98ff3538cf)
 * [Part 3: Remove the Bad Busy Loops With the Sync.Cond](https://betterprogramming.pub/working-on-high-performance-golang-client-library-remove-the-bad-busy-loops-with-the-sync-cond-e262b3fcb458)
 
-I did some prototypes with `rueidis` which were super-promising in terms of performance. There were some issues found during that early prototyping (mostly with PUB/SUB) – but all of them were quickly resolved by Rueian (`rueidis` author).
+I did some prototypes with `rueidis` which were super-promising in terms of performance. There were some issues found during that early prototyping (mostly with PUB/SUB) – but all of them were quickly resolved by Rueian.
 
 Until `v0.0.80` release `rueidis` did not support RESP2 though, so we could not replace our Redis Engine implementation with it. But as soon as it got RESP2 support we opened [a pull request with alternative implementation](https://github.com/centrifugal/centrifuge/pull/262).
 
-Since auto-pipelining is used in `rueidis` by default we were able to remove some of our own pipelining management code – so the Engine implementation is more concise now. One more thing to mention is a simpler PUB/SUB code we were able to write with `rueidis`. In `redigo` case we had to periodically PING PUB/SUB connection to maintain it alive, `rueidis` does this automatically.
+Since auto-pipelining is used in `rueidis` by default we were able to remove some of our own pipelining management code – so the Engine implementation is more concise now. One more thing to mention is a simpler PUB/SUB code we were able to write with `rueidis`. One example is that in `redigo` case we had to periodically PING PUB/SUB connection to maintain it alive, `rueidis` does this automatically.
 
-Regarding performance, here are the benchmark results we got when comparing `redigo` (v1.8.9) implementation (old) and `rueidis` (v0.0.86) implementation (new):
+Regarding performance, here are the benchmark results we got when comparing `redigo` (v1.8.9) implementation (old) and `rueidis` (v0.0.90) implementation (new):
 
 ```
-❯ benchstat redigo.txt rueidis.txt
+❯ benchstat redigo_p128.txt rueidis_p128.txt
 name                      old time/op    new time/op    delta
-RedisPublish-8            1.45µs ± 6%    0.59µs ± 3%  -59.67%  (p=0.000 n=9+8)
-RedisPublish_History-8    12.5µs ± 7%     9.7µs ± 0%  -22.28%  (p=0.000 n=10+10)
-RedisSubscribe-8          1.50µs ±28%    1.42µs ± 3%     ~     (p=1.000 n=10+10)
-RedisRecover-8            18.2µs ± 3%    10.9µs ± 1%  -40.01%  (p=0.000 n=10+10)
-RedisAddPresence-8        3.68µs ± 1%    3.54µs ± 0%   -3.86%  (p=0.000 n=10+9)
+RedisPublish-8            1.45µs ±10%    0.56µs ± 1%  -61.53%  (p=0.000 n=10+9)
+RedisPublish_History-8    12.5µs ± 6%     9.7µs ± 1%  -22.43%  (p=0.000 n=10+9)
+RedisSubscribe-8          1.47µs ±24%    1.45µs ± 1%     ~     (p=0.484 n=10+9)
+RedisRecover-8            18.4µs ± 2%     6.2µs ± 1%  -66.08%  (p=0.000 n=10+10)
+RedisAddPresence-8        3.72µs ± 1%    3.60µs ± 1%   -3.34%  (p=0.000 n=10+10)
 
-name                     old alloc/op   new alloc/op   delta
-RedisPublish-8              483B ± 0%      171B ± 0%  -64.66%  (p=0.000 n=10+10)
-RedisPublish_History-8    1.30kB ± 0%    0.55kB ± 1%  -57.68%  (p=0.000 n=8+10)
-RedisSubscribe-8            902B ± 1%      440B ± 0%  -51.20%  (p=0.000 n=10+10)
-RedisRecover-8            1.25kB ± 0%    0.59kB ± 1%  -53.08%  (p=0.000 n=10+10)
-RedisAddPresence-8          907B ± 0%      149B ± 2%  -83.52%  (p=0.000 n=10+10)
+name                      old alloc/op   new alloc/op   delta
+RedisPublish-8              483B ± 0%       91B ± 0%  -81.16%  (p=0.000 n=9+10)
+RedisPublish_History-8    1.30kB ± 0%    0.39kB ± 0%  -70.08%  (p=0.000 n=10+8)
+RedisSubscribe-8            892B ± 2%      360B ± 0%  -59.66%  (p=0.000 n=10+10)
+RedisRecover-8            1.25kB ± 1%    0.36kB ± 1%  -71.52%  (p=0.000 n=10+10)
+RedisAddPresence-8          907B ± 0%      151B ± 1%  -83.34%  (p=0.000 n=7+9)
 
-name                    old allocs/op  new allocs/op  delta
-RedisPublish-8              10.0 ± 0%       3.0 ± 0%  -70.00%  (p=0.000 n=10+10)
-RedisPublish_History-8      29.0 ± 0%      12.0 ± 0%  -58.62%  (p=0.000 n=10+10)
-RedisSubscribe-8            22.0 ± 0%       7.0 ± 0%  -68.18%  (p=0.000 n=10+10)
-RedisRecover-8              29.0 ± 0%      11.0 ± 0%  -62.07%  (p=0.000 n=10+10)
+name                      old allocs/op  new allocs/op  delta
+RedisPublish-8              10.0 ± 0%       2.0 ± 0%  -80.00%  (p=0.000 n=10+10)
+RedisPublish_History-8      29.0 ± 0%      10.0 ± 0%  -65.52%  (p=0.000 n=10+10)
+RedisSubscribe-8            22.0 ± 0%       6.0 ± 0%  -72.73%  (p=0.002 n=8+10)
+RedisRecover-8              29.0 ± 0%       7.0 ± 0%  -75.86%  (p=0.000 n=10+10)
 RedisAddPresence-8          18.0 ± 0%       3.0 ± 0%  -83.33%  (p=0.000 n=10+10)
 ```
 
@@ -477,9 +485,9 @@ This drastically reduces a chance to make a stupid mistake while constructing a 
 
 ## Switching to Rueidis: reducing CPU usage
 
-After making all these benchmarks and implementing Engine in Rueidis I decided to check whether Centrifugo consumes less CPU with it. I expected a notable CPU reduction as Rueidis implementation allocates two times less than Redigo-based. Turned out it's not that simple.
+After making all these benchmarks and implementing Engine in Rueidis I decided to check whether Centrifugo consumes less CPU with it. I expected a notable CPU reduction as Rueidis Engine implementation allocates two times less than Redigo-based. Turned out it's not that simple.
 
-I ran Centrifugo with some artificial load and noticed that CPU consumption of new implementation is actually... worse than we had with Redigo-based engine under equal conditions! But why?
+I ran Centrifugo with some artificial load and noticed that CPU consumption of the new implementation is actually... worse than we had with Redigo-based engine under equal conditions!😩 But why?
 
 As I mentioned above Redis pipelining is a technique when several commands may be combined into one batch to send over the network. In case of automatic pipelining the size of generated batches start playing a crucial role in application and Redis CPU usage – since smaller command batches result into more read/write system calls on both application and Redis sides. That's why projects like [Twemproxy](https://github.com/twitter/twemproxy) which sit between app and Redis have sich a good effect on Redis CPU usage among other things. 
 
@@ -525,42 +533,61 @@ Now CPU usage is:
 | Application CPU, % | 95            | 99             |  <span style={{color: 'green'}}>59</span>            |
 | Redis CPU, %       | 36             | 35              | <span style={{color: 'green'}}>12</span>              |
 
-As we can see we can achieve great CPU usage reduction with it. It went from 116% to 59% for the application side, and from 42% to only 12% for Redis! We are sacrificing latency though. Given the fact the CPU utilization reduction is very notable the trade-off is pretty fair.
+So we can achieve great CPU usage reduction. CPU went from 116% to 59% for the application side, and from 42% to only 12% for Redis! We are sacrificing latency though. Given the fact the CPU utilization reduction is very notable the trade-off is pretty fair.
 
-As you can see we were able to achieve better CPU results just by using 100 microseconds delay to each request. In real life, where we are not running Redis on localhost and have some network latency in between application and Redis, this delay should be insignificant. Indeed, it can even improve (!) the latency you have. You may wonder what happened with benchmarks we showed above after we added `MaxFlushDelay` option. In Centrifugo we chose default value 100 microseconds, and here are results on localhost (old without delay, new with delay):
+:::caution
+
+It's definitely possible to improve CPU usage in Redigo and Go-redis/redis cases too – using similar technique. But the goal here was to improve Rueidis-based engine implementation to make it comparable or better than our Redigo-based implementation in terms of CPU utilization. 
+
+:::
+
+As you can see we were able to achieve better CPU results just by using 100 microseconds delay to each request. In real life, where we are not running Redis on localhost and have some network latency in between application and Redis, this delay should be insignificant. Indeed, it can even improve (!) the latency you have. You may wonder what happened with benchmarks we showed above after we added `MaxFlushDelay` option. In Centrifugo we chose default value 100 microseconds, and here are results on localhost (`old` without delay, `new` with delay):
 
 ```
+> benchstat rueidis_p128.txt rueidis_delay_p128.txt
 name                      old time/op    new time/op    delta
-RedisPublish-8             574ns ± 3%     486ns ± 3%  -15.35%  (p=0.000 n=9+10)
-RedisPublish_History-8    9.65µs ± 1%    9.60µs ± 1%   -0.50%  (p=0.014 n=9+9)
-RedisSubscribe-8          1.42µs ± 3%    1.27µs ± 2%  -10.69%  (p=0.000 n=10+10)
-RedisRecover-8            10.8µs ± 0%    10.6µs ± 0%   -1.36%  (p=0.000 n=9+9)
-RedisAddPresence-8        3.56µs ± 1%    3.31µs ± 0%   -7.14%  (p=0.000 n=10+10)
+RedisPublish-8             559ns ± 1%     468ns ± 0%  -16.35%  (p=0.000 n=9+8)
+RedisPublish_History-8    9.72µs ± 1%    9.67µs ± 1%   -0.52%  (p=0.007 n=9+8)
+RedisSubscribe-8          1.45µs ± 1%    1.27µs ± 1%  -12.49%  (p=0.000 n=9+10)
+RedisRecover-8            6.25µs ± 1%    5.85µs ± 0%   -6.32%  (p=0.000 n=10+10)
+RedisAddPresence-8        3.60µs ± 1%    3.33µs ± 1%   -7.52%  (p=0.000 n=10+10)
 
-name                     old alloc/op   new alloc/op   delta
-RedisPublish-8              171B ± 0%      171B ± 0%     ~     (all equal)
-RedisPublish_History-8      554B ± 1%      556B ± 1%     ~     (p=0.714 n=10+10)
-RedisSubscribe-8            440B ± 0%      440B ± 0%     ~     (all equal)
-RedisRecover-8              590B ± 1%      589B ± 1%     ~     (p=0.651 n=10+10)
-RedisAddPresence-8          231B ± 1%      231B ± 1%     ~     (p=0.768 n=9+9)
-
-name                    old allocs/op  new allocs/op  delta
-RedisPublish-8              3.00 ± 0%      3.00 ± 0%     ~     (all equal)
-RedisPublish_History-8      12.0 ± 0%      12.0 ± 0%     ~     (all equal)
-RedisSubscribe-8            7.00 ± 0%      7.00 ± 0%     ~     (all equal)
-RedisRecover-8              11.0 ± 0%      11.0 ± 0%     ~     (all equal)
-RedisAddPresence-8          4.00 ± 0%      4.00 ± 0%     ~     (all equal)
+(rest is not important here...)
 ```
 
 It's even better for this set of benchmarks. Though while it's better for these benchmarks the numbers may differ for other under different conditions. For example, in the benchmarks we run we use concurrency 128, if we reduce concurrency we will notice reduced throughput – as batches Rueidis collects will be smaller. Smaller batches + some delay to collect = less requests per second to send.
 
-The problem is that the value to pause Rueidis write loop is a very use case specific, it's pretty hard to provide a reasonable default for it. Depending on request rate/size, network latency etc. you may choose a larger or smaller delay. In v4.1.0 we start with hardcoded `MaxFlushDelay` - though possibly we will have to make it tunable later.
+The problem is that the value to pause Rueidis write loop is a very use case specific, it's pretty hard to provide a reasonable default for it. Depending on request rate/size, network latency etc. you may choose a larger or smaller delay. In v4.1.0 we start with hardcoded 100 microsecond `MaxFlushDelay` - though possibly we will have to make it tunable later.
 
-Hope you understand now why increasing `numPipelineWorkers` value in the pipelining code showed here before results into better throughput but increased CPU usage on app and Redis sides – due to smaller batch sizes and more read/write system calls as the consequence.
+To check that Centrifugo benchmarks also utilize less CPU I added rate limiter (50k rps per second) to benchmark and compared version without `MaxFlushDelay` and with 100 microsecond `MaxFlushDelay`:
+
+| 50k req per second | Without delay | With 100mks delay |
+|----- |----- |----|
+| BenchmarkPublish | Centrifugo - 75%, Redis - 24% |  Centrifugo - 44%, Redis - 9% |
+| BenchmarkPublish_History | Centrifugo - 80% , Redis - 67% |  Centrifugo - 55%, Redis - 50% |
+| BenchmarkSubscribe | Centrifugo - 80%, Redis - 30% |  Centrifugo - 45% , Redis - 14% |
+| BenchmarkRecover | Centrifugo - 84%, Redis - 51% |  Centrifugo - 51%, Redis - 36% |
+| BenchmarkPresence | Centrifugo - 114%, Redis - 69% |  Centrifugo - 90%, Redis - 60% |
+
+:::note
+
+In this test I replaced `BenchmarkAddPresence` with `BenchmarkPresence` (get information about all online subscribers in channel) to also make sure we have CPU reduction when using read-intensive method, i.e. when Redis response is reasonably large.
+
+:::
+
+We observe a notable CPU usage improvement here.
+
+Hope you understand now why increasing `numPipelineWorkers` value in the pipelining code showed before results into increased CPU usage on app and Redis sides – due to smaller batch sizes and more read/write system calls as the consequence.
+
+:::note
+
+BTW, would it be a nice thing if Go benchmarking suite could show a CPU usage of the process in addition to time and alloc stats? 🤔
+
+:::
 
 ## Adding latency
 
-The last thing to check is how new implementation works upon increased RTT between application and Redis. To add artificial latency on localhost one can use `tc` tool as [shown here](https://daniel.haxx.se/blog/2010/12/14/add-latency-to-localhost/) by Daniel Stenberg. But I am on MacOS so the simplest way I found was using [Shopify/toxiproxy](https://github.com/Shopify/toxiproxy). Sth like running a server:
+The last thing to check is how new implementation works upon increased RTT between application and Redis. To add artificial latency on localhost on Linux one can use `tc` tool as [shown here](https://daniel.haxx.se/blog/2010/12/14/add-latency-to-localhost/) by Daniel Stenberg. But I am on MacOS so the simplest way I found was using [Shopify/toxiproxy](https://github.com/Shopify/toxiproxy). Sth like running a server:
 
 ```bash
 toxyproxy-server
@@ -573,18 +600,27 @@ toxiproxy-cli create -l localhost:26379 -u localhost:6379 toxic_redis
 toxiproxy-cli toxic add -t latency -a latency=5 toxic_redis
 ```
 
-The benchmark results are (we only interested in time/op here as allocs difference already shown above and it's the same here):
+The benchmark results are (`old` is Redigo-based, new is Rueidis-based):
 
 ```
+> benchstat redigo_latency_p128.txt rueidis_delay_latency_p128.txt
 name                      old time/op    new time/op    delta
-RedisPublish-8            31.8µs ± 2%     5.5µs ± 3%   -82.58%  (p=0.000 n=10+10)
-RedisPublish_History-8    63.3µs ± 1%    10.8µs ± 2%   -82.97%  (p=0.000 n=10+10)
-RedisSubscribe-8          1.74µs ± 6%    6.08µs ± 7%  +249.97%  (p=0.000 n=8+10)
-RedisRecover-8            47.2µs ± 2%     7.5µs ± 5%   -84.07%  (p=0.000 n=10+10)
-RedisAddPresence-8        51.6µs ± 5%     5.7µs ± 2%   -88.92%  (p=0.000 n=10+8)
+RedisPublish-8            31.5µs ± 1%     5.6µs ± 3%   -82.26%  (p=0.000 n=9+10)
+RedisPublish_History-8    62.8µs ± 3%    10.6µs ± 4%   -83.05%  (p=0.000 n=10+10)
+RedisSubscribe-8          1.52µs ± 5%    6.05µs ± 8%  +298.70%  (p=0.000 n=8+10)
+RedisRecover-8            48.3µs ± 3%     7.3µs ± 4%   -84.80%  (p=0.000 n=10+10)
+RedisAddPresence-8        52.3µs ± 4%     5.8µs ± 2%   -88.94%  (p=0.000 n=10+10)
+
+(rest is not important here...)
 ```
 
-We see that new Engine implementation behaves much better for most cases. But what happened to Subscribe operation? It's 4x worse! Turned out I did not know that when we call `Subscribe` command in Redigo we only flush data to the network without waiting synchronously for subscribe result. It makes sense in general, but in Centrifugo we relied on the returned error thinking that it includes succesful subscription result from Redis - meaning that we already subscribed to a channel. And this could actually lead to some rare bugs in Centrifugo. So here the behavior of `rueidis` while differs from `redigo` in terms of throughput under increased latency just fits Centrifugo better in terms of behavior. So we go with it.
+We see that new Engine implementation behaves much better for most cases. But what happened to `Subscribe` operation? It did not change at all in Redigo case – the same performance as if there is no additional latency involved!
+
+Turned out that when we call `Subscribe` in Redigo case, Redigo only flushes data to the network without waiting synchronously for subscribe result.
+
+It makes sense in general and we can listen to subscribe notifications asynchronously, but in Centrifugo we relied on the returned error thinking that it includes succesful subscription result from Redis - meaning that we already subscribed to a channel at that point. And this could theoretically lead to some rare bugs in Centrifugo.
+
+Rueidis library waits for subscribe response. So here the behavior of `rueidis` while differs from `redigo` in terms of throughput under increased latency just fits Centrifugo better in terms of correctness. So we go with it.
 
 ## Conclusion
 
@@ -597,9 +633,9 @@ For most Centrifugo users this migration means more efficient CPU usage as new i
 Hopefully readers will learn some tips from this text which can help to achieve effective communication with Redis from Go or another programming language. To summarise:
 
 * Redis pipelining may increase throughput and reduce latency, it can also reduce CPU utilization of Redis
-* Don't blindly trust Go benchmark numbers but also think about memory and CPU effect of changes you made
+* Don't blindly trust Go benchmark numbers but also think about CPU effect of changes you made (sometimes of the external system also)
 * Reduce system calls to decrease CPU utilization
-* Don't trust benchmarks - they are lying, written by biased people, **measure for your own use case**. Take into account your load paralellism, network latency, data size.
 * Everything is a trade-off – latency or resource usage? Your own WebSocket server or Centrifugo?
+* Don't rely on someone's else benchmarks, including those published here. **Measure for your own use case**. Take into account your load profile, paralellism, network latency, data size, etc.
 
 **P.S.** One thing worth mentioning and which may be helpful for someone is that during our comparison experiments we discovered that Redis 7 has a major latency increase compared to Redis 6 when executing Lua scripts. So if you have performance sensitive code with Lua scripts take a look at [this Redis issue](https://github.com/redis/redis/issues/10981). With the help of Redis developers some things already improved in `unstable` Redis branch, hopefully that issue will be closed at the time you read this post.
