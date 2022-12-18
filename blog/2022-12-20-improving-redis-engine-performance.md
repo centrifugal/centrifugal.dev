@@ -83,10 +83,7 @@ To increase a throughput in Centrifugo, instead of using Redigo's `Pool` for eac
 
 Redis pipelining improves performance by executing multiple commands using a single client-server-client round trip. Instead of executing many commands one by one, you can queue the commands in a pipeline and then execute the queued commands as if it is a single command. Redis processes commands in order and sends individual response for each command. Given a single CPU nature of Redis, reducing the number of active connections when using pipelining has a positive impact on throughput – therefore pipelining is beneficial from this angle as well.
 
-The illustration from [Beating Round-Trip Latency With Redis Pipelining
-](https://kn100.me/redis-pipelining/) post by Kevin Norman:
-
-![](https://kn100.me/posts/redis-pipelining/intro.png)
+![Redis pipeline](/img/redis_pipeline.png)
 
 You can quickly estimate the benefits of pipelining by running Redis locally and running `redis-benchmark` which comes with Redis distribution over it:
 
@@ -513,7 +510,7 @@ After making all these benchmarks and implementing Engine in Rueidis I decided t
 
 I ran Centrifugo with some artificial load and noticed that CPU consumption of the new implementation is actually... worse than we had with Redigo-based engine under equal conditions!😩 But why?
 
-As I mentioned above Redis pipelining is a technique when several commands may be combined into one batch to send over the network. In case of automatic pipelining the size of generated batches start playing a crucial role in application and Redis CPU usage – since smaller command batches result into more read/write system calls on both application and Redis sides. That's why projects like [Twemproxy](https://github.com/twitter/twemproxy) which sit between app and Redis have sich a good effect on Redis CPU usage among other things. 
+As I mentioned above Redis pipelining is a technique when several commands may be combined into one batch to send over the network. In case of automatic pipelining the size of generated batches start playing a crucial role in application and Redis CPU usage – since smaller command batches result into more read/write system calls to the kernel on both application and Redis server sides. That's why projects like [Twemproxy](https://github.com/twitter/twemproxy) which sit between app and Redis have sich a good effect on Redis CPU usage among other things. 
 
 As we have seen above, Rueidis provides a better throughput and latency, but it's more agressive in terms of flushing data to the network. So in its default configuration we get smaller batches under th equal conditions than we had before in our own pipelining implementation based on Redigo (shown in the beginning of this post).
 
@@ -664,4 +661,4 @@ To summarise:
 * Everything is a trade-off – latency or resource usage? Your own WebSocket server or Centrifugo?
 * Don't rely on someone's else benchmarks, including those published here. **Measure for your own use case**. Take into account your load profile, paralellism, network latency, data size, etc.
 
-**P.S.** One thing worth mentioning and which may be helpful for someone is that during our comparison experiments we discovered that Redis 7 has a major latency increase compared to Redis 6 when executing Lua scripts. So if you have performance sensitive code with Lua scripts take a look at [this Redis issue](https://github.com/redis/redis/issues/10981). With the help of Redis developers some things already improved in `unstable` Redis branch, hopefully that issue will be closed at the time you read this post.
+P.S. One thing worth mentioning and which may be helpful for someone is that during our comparison experiments we discovered that Redis 7 has a major latency increase compared to Redis 6 when executing Lua scripts. So if you have performance sensitive code with Lua scripts take a look at [this Redis issue](https://github.com/redis/redis/issues/10981). With the help of Redis developers some things already improved in `unstable` Redis branch, hopefully that issue will be closed at the time you read this post.
