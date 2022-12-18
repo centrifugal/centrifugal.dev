@@ -83,6 +83,11 @@ To increase a throughput in Centrifugo, instead of using Redigo's `Pool` for eac
 
 Redis pipelining improves performance by executing multiple commands using a single client-server-client round trip. Instead of executing many commands one by one, you can queue the commands in a pipeline and then execute the queued commands as if it is a single command. Redis processes commands in order and sends individual response for each command. Given a single CPU nature of Redis, reducing the number of active connections when using pipelining has a positive impact on throughput – therefore pipelining is beneficial from this angle as well.
 
+The illustration from [Beating Round-Trip Latency With Redis Pipelining
+](https://kn100.me/redis-pipelining/) post by Kevin Norman:
+
+![](https://kn100.me/posts/redis-pipelining/intro.png)
+
 You can quickly estimate the benefits of pipelining by running Redis locally and running `redis-benchmark` which comes with Redis distribution over it:
 
 ```bash
@@ -647,13 +652,15 @@ Migrating from Redigo to Rueidis library was not just a task of rewriting code, 
 
 I think that we will find more projects in Go ecosystem using `rueidis` library shortly. Not just because of its allocation efficiency and out-of-the-box throughput, but also due to a convenient type-safe command API.
 
-For most Centrifugo users this migration means more efficient CPU usage as new implementation allocates less memory (less work to allocate and less strain on GC) and we tried to find a reasonable batch size to reduce system calls for common operations. While latency and throughput of single Centrifugo node should be better as we make concurrent Redis calls from many goroutines.
+For most Centrifugo users this migration means more efficient CPU usage as new implementation allocates less memory (less work to allocate and less strain on GC) and we tried to find a reasonable batch size to reduce the number of system calls for common operations. While latency and throughput of single Centrifugo node should be better as we make concurrent Redis calls from many goroutines.
 
-Hopefully readers will learn some tips from this text which can help to achieve effective communication with Redis from Go or another programming language. To summarise:
+Hopefully readers will learn some tips from this post which can help to achieve effective communication with Redis from Go or another programming language.
+
+To summarise:
 
 * Redis pipelining may increase throughput and reduce latency, it can also reduce CPU utilization of Redis
 * Don't blindly trust Go benchmark numbers but also think about CPU effect of changes you made (sometimes of the external system also)
-* Reduce system calls to decrease CPU utilization
+* Reduce the number of system calls to decrease CPU utilization
 * Everything is a trade-off – latency or resource usage? Your own WebSocket server or Centrifugo?
 * Don't rely on someone's else benchmarks, including those published here. **Measure for your own use case**. Take into account your load profile, paralellism, network latency, data size, etc.
 
