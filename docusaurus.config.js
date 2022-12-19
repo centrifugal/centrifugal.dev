@@ -191,7 +191,7 @@ module.exports = {
            */
           routeBasePath: 'blog',
           include: ['*.md', '*.mdx'],
-          postsPerPage: 10,
+          postsPerPage: 15,
           /**
            * Theme components used by the blog pages.
            */
