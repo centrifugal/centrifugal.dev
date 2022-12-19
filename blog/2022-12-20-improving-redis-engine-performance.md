@@ -653,7 +653,7 @@ For most Centrifugo users this migration means more efficient CPU usage as new i
 
 Hopefully readers will learn some tips from this post which can help to achieve effective communication with Redis from Go or another programming language.
 
-To summarise:
+A few key takeaways:
 
 * Redis pipelining may increase throughput and reduce latency, it can also reduce CPU utilization of Redis
 * Don't blindly trust Go benchmark numbers but also think about CPU effect of changes you made (sometimes of the external system also)
