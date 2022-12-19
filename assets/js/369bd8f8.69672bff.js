@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkcentrifugal_dev=self.webpackChunkcentrifugal_dev||[]).push([[5391],{5650:e=>{e.exports=JSON.parse('{"permalink":"/blog/tags/tutorial","page":1,"postsPerPage":15,"totalPages":1,"totalCount":4,"blogDescription":"Centrifugal Blog","blogTitle":"Centrifugal Blog"}')}}]);
