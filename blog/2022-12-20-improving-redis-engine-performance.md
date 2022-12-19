@@ -514,7 +514,7 @@ As I mentioned above Redis pipelining is a technique when several commands may b
 
 As we have seen above, Rueidis provides a better throughput and latency, but it's more agressive in terms of flushing data to the network. So in its default configuration we get smaller batches under th equal conditions than we had before in our own pipelining implementation based on Redigo (shown in the beginning of this post).
 
-Luckily, there is an option in Rueidis called `MaxFlushDelay` which allows to slow down write loop a bit to give Rueidis a chance to collect more commands to send in one batch. Using some reasonable value it's possible to drastically reduce both application and Redis CPU utilization.
+Luckily, there is an option in Rueidis called `MaxFlushDelay` which allows to slow down write loop a bit to give Rueidis a chance to collect more commands to send in one batch. When this option is used Rueidis will make a pause after each network flush not bigger than selected value of `MaxFlushDelay` (please note, that this is a delay after flushing collected pipeline commands, not an additional delay for each request). Using some reasonable value it's possible to drastically reduce both application and Redis CPU utilization.
 
 To demonstrate this I created a repo: https://github.com/FZambia/pipelines.
 
@@ -578,7 +578,7 @@ RedisAddPresence-8        3.60µs ± 1%    3.33µs ± 1%   -7.52%  (p=0.000 n=10
 
 It's even better for this set of benchmarks. Though while it's better for these benchmarks the numbers may differ for other under different conditions. For example, in the benchmarks we run we use concurrency 128, if we reduce concurrency we will notice reduced throughput – as batches Rueidis collects become smaller. Smaller batches + some delay to collect = less requests per second to send.
 
-The problem is that the value to pause Rueidis write loop is a very use case specific, it's pretty hard to provide a reasonable default for it. Depending on request rate/size, network latency etc. you may choose a larger or smaller delay. In v4.1.0 we start with hardcoded 100 microsecond `MaxFlushDelay` which seems sufficient for most use cases - though possibly we will have to make it tunable later.
+The problem is that the value to pause Rueidis write loop is a very use case specific, it's pretty hard to provide a reasonable default for it. Depending on request rate/size, network latency etc. you may choose a larger or smaller delay. In v4.1.0 we start with hardcoded 100 microsecond `MaxFlushDelay` which seems sufficient for most use cases and showed good results in the benchmarks - though possibly we will have to make it tunable later.
 
 To check that Centrifugo benchmarks also utilize less CPU I added rate limiter (50k rps per second) to benchmarks and compared version without `MaxFlushDelay` and with 100 microsecond `MaxFlushDelay`:
 
