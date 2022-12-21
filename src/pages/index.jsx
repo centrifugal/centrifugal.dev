@@ -8,6 +8,10 @@ import styles from "./styles.module.css";
 import Logo from "./components/logo";
 import { useColorMode } from '@docusaurus/theme-common';
 import Highlight from './components/Highlight'
+import Badoo from "./components/logos/Badoo";
+import Grafana from "./components/logos/Grafana";
+import ManyChat from "./components/logos/ManyChat";
+import OpenWeb from "./components/logos/OpenWeb";
 
 function Feature({ imageUrl, title, children }) {
   const imgUrl = useBaseUrl(imageUrl);
@@ -63,6 +67,26 @@ function Home() {
     >
       <Header />
       <main>
+        <section className={clsx("logos-wrapper", styles.logos)}>
+          <div className="container">
+            <div className="row justify-content-center">
+              <div className="col"></div>
+              <div className="col">
+                <Badoo />
+              </div>
+              <div className="col">
+                <Grafana />
+              </div>
+              <div className="col">
+                <ManyChat />
+              </div>
+              <div className="col">
+                <OpenWeb />
+              </div>
+              <div className="col"></div>
+            </div>
+          </div>
+        </section>
         <section className={clsx("features-wrapper", styles.features)}>
           <div className="container">
             <div className="row">
@@ -98,6 +122,7 @@ function Home() {
             </div>
           </div>
         </section>
+
         <Highlight
           img={
             <img src="/img/scheme_sketch.png" />
