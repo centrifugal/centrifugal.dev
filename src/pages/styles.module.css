@@ -65,6 +65,21 @@
   justify-content: center;
 }
 
+.logos {
+  opacity: 0.4;
+  margin-top: 15px;
+  text-align: center;
+  padding: 25px 0;
+}
+
+.logos svg {
+  height: 38px;
+}
+
+html[data-theme="dark"] .logos svg * {
+  fill: white;
+}
+
 .features {
   display: flex;
   align-items: center;
