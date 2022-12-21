@@ -63,6 +63,26 @@ function Home() {
     >
       <Header />
       <main>
+        <section className={clsx("logos-wrapper", styles.logos)}>
+          <div className="container">
+            <div className="row justify-content-center">
+              <div className="col"></div>
+              <div className="col">
+                <img src="/img/logos/badoo.svg" />
+              </div>
+              <div className="col">
+                <img src="/img/logos/grafana.svg" />
+              </div>
+              <div className="col">
+                <img src="/img/logos/manychat.svg" />
+              </div>
+              <div className="col">
+                <img src="/img/logos/openweb.svg" />
+              </div>
+              <div className="col"></div>
+            </div>
+          </div>
+        </section>
         <section className={clsx("features-wrapper", styles.features)}>
           <div className="container">
             <div className="row">
@@ -98,6 +118,7 @@ function Home() {
             </div>
           </div>
         </section>
+
         <Highlight
           img={
             <img src="/img/scheme_sketch.png" />

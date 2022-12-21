@@ -65,6 +65,17 @@
   justify-content: center;
 }
 
+.logos {
+  opacity: 0.4;
+  margin-top: 15px;
+  text-align: center;
+  padding: 25px 0;
+}
+
+.logos img {
+  height: 38px;
+}
+
 .features {
   display: flex;
   align-items: center;
