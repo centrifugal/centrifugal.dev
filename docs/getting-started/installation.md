@@ -5,13 +5,9 @@ title: Install Centrifugo
 
 Centrifugo server is written in Go language. It's an open-source software, the source code is available [on Github](https://github.com/centrifugal/centrifugo).
 
-```shell
-curl -sSLf https://centrifugal.dev/install.sh | sh
-```
-
 ## Install from the binary release
 
-For a local development the simplest way to get Centrifugo is from binary release (i.e. single all-contained executable file).
+For a local development you can download prebuilt Centrifugo binary release (i.e. single all-contained executable file) for your system.
 
 Binary releases available on Github. [Download latest release](https://github.com/centrifugal/centrifugo/releases) for your operating system, unpack it and you are done. Centrifugo is pre-built for:
 
@@ -27,7 +23,13 @@ Binary releases available on Github. [Download latest release](https://github.co
 Archives contain a single statically compiled binary `centrifugo` file that is ready to run: 
 
 ```
-./centrifugo -h
+./centrifugo
+```
+
+If you doubt which distribution you need, then on Linux or MacOS you can use the following command to download and unpack `centrifugo` binary to your current working directory:
+
+```shell
+curl -sSLf https://centrifugal.dev/install.sh | sh
 ```
 
 See the version of Centrifugo:
