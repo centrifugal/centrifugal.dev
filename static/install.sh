@@ -48,7 +48,6 @@ main() {
     CENTRIFUGO_VERSION=$(_centrifugo_latest)
   fi
 
-#  centrifugoInstallPath=/usr/local/bin
   centrifugoInstallPath=`pwd`
   centrifugoBinary="$(_detect_binary)"
   centrifugoOs="$(_detect_os)"
@@ -59,9 +58,11 @@ main() {
 
   echo "Downloading centrifugo from URL: $centrifugoDownloadUrl"
 
-  curl -sSLf "$centrifugoDownloadUrl" >"/tmp/centrifugo.tar.gz"
+  tmpdir=$(mktemp -d)
+  curl -sSLf "$centrifugoDownloadUrl" >"$tmpdir/centrifugo.tar.gz"
   tar -xzf /tmp/centrifugo.tar.gz ${centrifugoBinary}
   chmod +x "$centrifugoBinary"
+  rm -r $tmpdir
 
   echo "centrifugo is now executable in $centrifugoInstallPath"
 }
