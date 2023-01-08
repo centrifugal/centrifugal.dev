@@ -141,12 +141,12 @@ Empty object at the moment.
 
 ### Configuration
 
-To enable Redis active status feature:
+To enable Redis user status feature:
 
 ```json title="config.json"
 {
     ...
-    "redis_user_status": {
+    "user_status": {
         "enabled": true,
         "redis_address": "127.0.0.1:6379"
     }
@@ -162,7 +162,7 @@ It's also possible to reuse Centrifugo Redis engine by setting `use_redis_from_e
     ...
     "engine": "redis",
     "redis_address": "localhost:6379",
-    "redis_user_status": {
+    "user_status": {
         "enabled": true,
         "use_redis_from_engine": true,
     }
@@ -176,7 +176,7 @@ In this case Redis active status will simply connect to Redis instances configur
 ```json title="config.json"
 {
     ...
-    "redis_user_status": {
+    "user_status": {
         ...
         "expire_interval": "24h"
     }

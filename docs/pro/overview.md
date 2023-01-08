@@ -14,7 +14,7 @@ Centrifugo PRO includes the following features:
 * [Real-time analytics with ClickHouse](./analytics.md) for a great system observability, reporting and trending.
 * [Channel capabilities](./capabilities.md) for controlling channel permissions per connection or per subscription.
 * [User status](./user_status.md) feature to understand activity state for a list of users.
-* [Operation throttling](./throttling.md) to protect client API from misusing and frontend bugs.
+* [Operation throttling](./throttling.md) to protect server from the real-time API misusing and frontend bugs.
 * [Connections API](./connections.md) to filter and inspect active connections.
 * [User blocking API](./user_block.md) to block/unblock abusive users by ID.
 * [JWT revoking and invalidation](./token_revocation.md) to revoke tokens by token ID (JTI) and invalidate user's tokens on issue time basis.
