@@ -49,6 +49,12 @@ If you are using mobile client SDKs then most probably some time must pass while
 
 :::
 
+:::tip
+
+Starting from Centrifugo v4.1.1 it's possible to completely turn off client protocol v1 by setting `disable_client_protocol_v1` boolean option to `true`.
+
+:::
+
 ## Unidirectional transport migration
 
 Client protocol framing also changed in unidirectional transports. The good news is that Centrifugo v4 still supports previous format for unidirectional transports.
