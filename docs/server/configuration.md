@@ -234,6 +234,14 @@ Default: false
 
 Enable a mode when all clients can connect to Centrifugo without JWT. In this case, all connections without a token will be treated as anonymous (i.e. with empty user ID). Access to channel operations should be explicitly enabled for anonymous connections.
 
+### disallow_anonymous_connection_tokens
+
+Added in Centrifugo v4.1.1
+
+Default: false
+
+When the option is set Centrifugo won't accept connections from anonymous users even if they provided a valid JWT. I.e. if token is valid, but `sub` claim is empty – then Centrifugo closes connection with advice to not reconnect again.
+
 ### gomaxprocs
 
 Default: 0
