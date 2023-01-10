@@ -11,6 +11,7 @@ The list of events that can be proxied:
 * `refresh` - called when a client session is going to expire, so it's possible to prolong it or just let it expire. Can also be used just as a periodical connection liveness callback from Centrifugo to app backend. Works for bidirectional and unidirectional transports.
 * `subscribe` - called when clients try to subscribe on a channel, so it's possible to check permissions and return custom initial subscription data. Works for bidirectional transports only.
 * `publish` - called when a client tries to publish into a channel, so it's possible to check permissions and optionally modify publication data. Works for bidirectional transports only.
+* `sub_refresh` - called when a client Subscription is going to expire, so it's possible to prolong it or just let it expire. Can also be used just as a periodical Subscription liveness callback from Centrifugo to app backend. Works for bidirectional and unidirectional transports.
 * `rpc` - called when a client sends RPC, you can do whatever logic you need based on a client-provided RPC method and params. Works for bidirectional transports only.
 
 At the moment Centrifugo can proxy these events over two protocols:
@@ -154,7 +155,7 @@ This is what application returns to Centrifugo inside `result` field in case of 
 
 #### Options
 
-`proxy_connect_timeout` (float, in seconds) config option controls timeout of HTTP POST request sent to app backend.
+`proxy_connect_timeout` (duration) config option controls timeout of HTTP POST request sent to app backend. By default `1s`.
 
 #### Example
 
@@ -247,7 +248,7 @@ Expected response example:
 
 #### Options
 
-`proxy_refresh_timeout` (float, in seconds) config option controls timeout of HTTP POST request sent to app backend.
+`proxy_refresh_timeout` (duration) config option controls timeout of HTTP POST request sent to app backend. By default `1s`.
 
 ### RPC proxy
 
@@ -306,7 +307,7 @@ Expected response example:
 
 #### Options
 
-`proxy_rpc_timeout` (float, in seconds) config option controls timeout of HTTP POST request sent to app backend.
+`proxy_rpc_timeout` (duration) config option controls timeout of HTTP POST request sent to app backend.  By default `1s`.
 
 See below on how to return a custom error.
 
@@ -422,7 +423,7 @@ See below on how to return an error in case you don't want to allow subscribing.
 
 #### Options
 
-`proxy_subscribe_timeout` (float, in seconds) config option controls timeout of HTTP POST request sent to app backend.
+`proxy_subscribe_timeout` (duration) config option controls timeout of HTTP POST request sent to app backend. By default `1s`.
 
 ### Publish proxy
 
@@ -519,7 +520,100 @@ See below on how to return an error in case you don't want to allow publishing.
 
 #### Options
 
-`proxy_publish_timeout` (float, in seconds) config option controls timeout of HTTP POST request sent to app backend.
+`proxy_publish_timeout` (duration) config option controls timeout of HTTP POST request sent to app backend. By default `1s`.
+
+### Sub refresh proxy
+
+Added in Centrifugo v4.1.1
+
+With the following options in the configuration file:
+
+```json
+{
+  ...
+  "proxy_sub_refresh_endpoint": "http://localhost:3000/centrifugo/sub_refresh",
+  "proxy_sub_refresh_timeout":  "1s"
+}
+```
+
+– Centrifugo will call `proxy_sub_refresh_endpoint` when it's time to refresh the subscription. Centrifugo itself will ask your backend about subscription validity instead of subscription refresh workflow on the client-side.
+
+Like subscribe and publish proxy types, sub refresh proxy must be enabled per channel namespace. This means that every namespace (including the global/default one) has a boolean option `proxy_sub_refresh` that enables sub refresh proxy for channels in the namespace. Only subscriptions which have expiration time will be validated over sub refresh proxy endpoint.
+
+Sub refresh proxy may be used as a periodical Subscription liveness callback from Centrifugo to app backend.
+
+:::caution
+
+In the current implementation the delay of Subscription refresh requests from Centrifugo to application backend may be up to one minute (was implemented this way from a simplicity and efficiency perspective). We assume this should be enough for many scenarios. But this may be improved if needed. Please reach us out with a detailed description of your use case where you want more accurate requests to refresh subscriptions.
+
+:::
+
+So to enable sub refresh proxy for channels without namespace define `proxy_sub_refresh` on a top configuration level:
+
+```json
+{
+  ...
+  "proxy_sub_refresh_endpoint": "http://localhost:3000/centrifugo/sub_refresh",
+  "proxy_sub_refresh": true
+}
+```
+
+Or for channels in namespace `sun`:
+
+```json
+{
+  ...
+  "proxy_sub_refresh_endpoint": "http://localhost:3000/centrifugo/publish",
+  "namespaces": [{
+    "name": "sun",
+    "proxy_sub_refresh": true
+  }]
+}
+```
+
+The payload sent to app backend in sub refresh request (when the subscription is going to expire):
+
+```json
+{
+  "client":"9336a229-2400-4ebc-8c50-0a643d22e8a0",
+  "transport":"websocket",
+  "protocol": "json",
+  "encoding":"json",
+  "user":"56",
+  "channel": "channel"
+}
+```
+
+Expected response example:
+
+```json
+{"result": {"expire_at": 1565436268}}
+```
+
+#### Sub refresh request fields
+
+| Field | Type | Optional | Description |
+| ------------ | -------------- | ------------ | ---- |
+| client       | string     | no | unique client ID generated by Centrifugo for each incoming connection  |
+| transport    | string     | no | transport name (ex. `websocket`, `sockjs`, `uni_sse` etc.)        |
+| protocol     | string     | no | protocol type used by client (`json` or `protobuf` at moment)            |
+| encoding     | string     | no | protocol encoding type used (`json` or `binary` at moment)            |
+| user         | string     | no | a connection user ID obtained during authentication process         |
+| channel         | string  | no | channel for which Subscription is going to expire          |
+| meta         | JSON | yes | a connection attached meta (off by default, enable with `"proxy_include_connection_meta": true`)         |
+
+#### Sub refresh result fields
+
+| Field | Type | Optional | Description |
+| ------------ | -------------- | ------------ | ---- |
+| expired       | bool     | yes |  a flag to mark the connection as expired - the client will be disconnected  |
+| expire_at    | integer     | yes | a timestamp in the future when connection must be considered expired       |
+| info     | JSON     | yes | a channel info JSON            |
+| b64info     | string     | yes | binary channel info encoded in base64 format, will be decoded to raw bytes on Centrifugo before using in messages            |
+
+#### Options
+
+`proxy_sub_refresh_timeout` (duration) config option controls timeout of HTTP POST request sent to app backend. By default `1s`.
 
 ### Return custom error
 
@@ -538,7 +632,7 @@ Applications **must use error codes in range [400, 1999]**. Error code field is 
 
 :::note
 
-Returning custom error does not apply to response on refresh request as there is no sense in returning an error (will not reach client anyway). 
+Returning custom error does not apply to response for refresh and sub refresh proxy requests as there is no sense in returning an error (will not reach client anyway). 
 
 :::
 
@@ -564,7 +658,7 @@ Code is `uint32` internally. Numbers outside of 4000-4999 range are reserved by 
 
 :::note
 
-Returning custom disconnect does not apply to response on refresh request as there is no way to control disconnect at moment - the client will always be disconnected with `expired` disconnect reason.
+Returning custom disconnect does not apply to response for refresh and sub refresh proxy requests as there is no way to control disconnect at moment - the client will always be disconnected with `expired` disconnect reason.
 
 :::
 
@@ -820,9 +914,9 @@ Let's also add refresh proxy:
 }
 ```
 
-### Granular subscribe and publish
+### Granular subscribe, publish, sub refresh
 
-Subscribe and publish proxy work per-namespace. This means that `subscribe_proxy_name` and `publish_proxy_name` are just a channel namespace options. So it's possible to define these options on configuration top-level (for channels in default top-level namespace) or inside namespace object.
+Subscribe, publish and sub refresh proxies work per-namespace. This means that `subscribe_proxy_name`, `publish_proxy_name` and `sub_refresh_proxy_name` are just channel namespace options. So it's possible to define these options on configuration top-level (for channels in default top-level namespace) or inside namespace object.
 
 ```json title="config.json"
 {
@@ -850,9 +944,11 @@ If namespace does not have `"subscribe_proxy_name"` or `"subscribe_proxy_name"` 
 
 If namespace does not have `"publish_proxy_name"` or `"publish_proxy_name"` is empty then no publish proxy will be used for a namespace.
 
+If namespace does not have `"sub_refresh_proxy_name"` or `"sub_refresh_proxy_name"` is empty then no sub refresh proxy will be used for a namespace.
+
 :::tip
 
-You can define `subscribe_proxy_name` and `publish_proxy_name` on configuration top level – and in this case publish and subscribe requests for channels without explicit namespace will be proxied using this proxy. The same mechanics as for other channel options in Centrifugo.
+You can define `subscribe_proxy_name`, `publish_proxy_name`, `sub_refresh_proxy_name` on configuration top level – and in this case publish, subscribe and sub refresh requests for channels without explicit namespace will be proxied using this proxy. The same mechanics as for other channel options in Centrifugo.
 
 :::
 
