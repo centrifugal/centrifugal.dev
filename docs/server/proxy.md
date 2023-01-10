@@ -3,7 +3,7 @@ id: proxy
 title: Proxy events to the backend
 ---
 
-It's possible to proxy some client connection events from Centrifugo to the application backend and react to them in a custom way. For example, it's possible to authenticate connection via request from Centrifugo to application backend, refresh client sessions and answer to RPC calls sent by a client over bidirectional connection.
+It's possible to proxy some client connection events from Centrifugo to the application backend and react to them in a custom way. For example, it's possible to authenticate connection via request from Centrifugo to application backend, refresh client sessions and answer to RPC calls sent by a client over bidirectional connection. Also, you may control subscription and publication permissions using these hooks. 
 
 The list of events that can be proxied:
 
@@ -11,7 +11,7 @@ The list of events that can be proxied:
 * `refresh` - called when a client session is going to expire, so it's possible to prolong it or just let it expire. Can also be used just as a periodical connection liveness callback from Centrifugo to app backend. Works for bidirectional and unidirectional transports.
 * `subscribe` - called when clients try to subscribe on a channel, so it's possible to check permissions and return custom initial subscription data. Works for bidirectional transports only.
 * `publish` - called when a client tries to publish into a channel, so it's possible to check permissions and optionally modify publication data. Works for bidirectional transports only.
-* `sub_refresh` - called when a client Subscription is going to expire, so it's possible to prolong it or just let it expire. Can also be used just as a periodical Subscription liveness callback from Centrifugo to app backend. Works for bidirectional and unidirectional transports.
+* `sub_refresh` - called when a client subscription is going to expire, so it's possible to prolong it or just let it expire. Can also be used just as a periodical subscription liveness callback from Centrifugo to app backend. Works for bidirectional and unidirectional transports.
 * `rpc` - called when a client sends RPC, you can do whatever logic you need based on a client-provided RPC method and params. Works for bidirectional transports only.
 
 At the moment Centrifugo can proxy these events over two protocols:
@@ -21,7 +21,7 @@ At the moment Centrifugo can proxy these events over two protocols:
 
 ## HTTP proxy
 
-HTTP proxy in Centrifugo converts client connection events into HTTP call to the application backend.
+HTTP proxy in Centrifugo converts client connection events into HTTP calls to the application backend.
 
 ### HTTP request structure
 

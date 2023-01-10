@@ -179,13 +179,13 @@ function Home() {
         />
         <Highlight
           img={
-            <video width="100%" loop="true" autoplay="autoplay" muted controls="" src="/img/logo.mp4"></video>
+            <video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/logo.mp4"></video>
           }
           reversed
           isDark
           title="What users ❤️ in Centrifugo"
           text={
-            <div class="quotes">
+            <div className="quotes">
               <code>Stability. It just works without restarts, for few years already</code>
               <code>Scalability and integration with Redis</code>
               <code>It's simple and powerful</code>
