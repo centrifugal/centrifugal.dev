@@ -214,6 +214,18 @@ Some motivation behind this option may be found in [this issue](https://github.c
 
 Note, that at this point `client_connection_limit` does not affect connections coming over GRPC unidirectional transport.
 
+### client_connection_rate_limit
+
+Added in Centrifugo v4.1.1
+
+Default: 0
+
+`client_connection_rate_limit` sets the maximum number of HTTP requests to establish a new real-time connection a single Centrifugo node will accept per second (on real-time transport endpoints). All requests outside the limit will get 503 Service Unavailable code in response. Our SDKs handle this with backoff reconnection.
+
+By default, no limit is used.
+
+Note, that at this point `client_connection_rate_limit` does not affect connections coming over GRPC unidirectional transport.
+
 ### client_queue_max_size
 
 Default: 1048576

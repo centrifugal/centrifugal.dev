@@ -418,6 +418,10 @@ Centrifugo uses Go language [regexp](https://pkg.go.dev/regexp) package for regu
 
 `proxy_publish` (boolean, default `false`) – turns on publish proxy, more info in [proxy chapter](proxy.md)
 
+### proxy_sub_refresh
+
+`proxy_sub_refresh` (boolean, default `false`) – turns on sub refresh proxy, more info in [proxy chapter](proxy.md)
+
 ### subscribe_proxy_name
 
 `subscribe_proxy_name` (string, default `""`) – turns on subscribe proxy when [granular proxy mode](proxy.md#granular-proxy-mode) is used. Note that `proxy_subscribe` option defined above is ignored in granular proxy mode.
@@ -425,6 +429,10 @@ Centrifugo uses Go language [regexp](https://pkg.go.dev/regexp) package for regu
 ### publish_proxy_name
 
 `publish_proxy_name` (string, default `""`) – turns on publish proxy when [granular proxy mode](proxy.md#granular-proxy-mode) is used. Note that `proxy_publish` option defined above is ignored in granular proxy mode.
+
+### sub_refresh_proxy_name
+
+`sub_refresh_proxy_name` (string, default `""`) – turns on sub refresh proxy when [granular proxy mode](proxy.md#granular-proxy-mode) is used. Note that `proxy_sub_refresh` option defined above is ignored in granular proxy mode.
 
 ## Channel config examples
 
