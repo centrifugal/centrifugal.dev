@@ -105,18 +105,20 @@ Create configuration file `config.json`:
 Create `docker-compose.yml`:
 
 ```yml
-centrifugo:
-  container_name: centrifugo
-  image: centrifugo/centrifugo:v4
-  volumes:
-    - ./config.json:/centrifugo/config.json
-  command: centrifugo -c config.json
-  ports:
-    - 8000:8000
-  ulimits:
-    nofile:
-      soft: 65535
-      hard: 65535
+version: "3.9"
+services:
+  centrifugo:
+    container_name: centrifugo
+    image: centrifugo/centrifugo:v4
+    volumes:
+      - ./config.json:/centrifugo/config.json
+    command: centrifugo -c config.json
+    ports:
+      - 8000:8000
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
 ```
 
 Run with:
