@@ -104,23 +104,23 @@ All things together here is an example of `config.json` which includes some top-
 
 ```json title="config.json"
 {
-    "token_hmac_secret_key": "very-long-secret-key",
-    "api_key": "secret-api-key",
-
-    "presence": true,
-    "history_size": 10,
-    "history_ttl": "30s",
-    
-    "namespaces": [
-        {
-          "name": "facts",
-          "history_size": 10,
-          "history_ttl": "300s",
-        },
-        {
-          "name": "gossips",
-        }
-    ]
+  "token_hmac_secret_key": "very-long-secret-key",
+  "api_key": "secret-api-key",
+  
+  "presence": true,
+  "history_size": 10,
+  "history_ttl": "30s",
+  
+  "namespaces": [
+    {
+      "name": "facts",
+      "history_size": 10,
+      "history_ttl": "300s"
+    },
+    {
+      "name": "gossips"
+    }
+  ]
 }
 ```
 
