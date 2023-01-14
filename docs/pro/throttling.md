@@ -86,7 +86,7 @@ In addition, Centrifugo allows defining two special buckets containers:
 
 :::tip
 
-Centrifugo real-time SDKs written in a way that if client receives an error during connect – it will try to reconnect to a server with backoff algorithm. The same for subscribing to channels (i.e. error from subscribe command) – subscription request will be retried with a backoff. Refresh and subscription refresh will be also retried automatically by SDK upon errors after in several seconds. Retries of other commands should be handled manually from the client side if needed.
+Centrifugo real-time SDKs written in a way that if client receives an error during connect – it will try to reconnect to a server with backoff algorithm. The same for subscribing to channels (i.e. error from subscribe command) – subscription request will be retried with a backoff. Refresh and subscription refresh will be also retried automatically by SDK upon errors after in several seconds. Retries of other commands should be handled manually from the client side if needed – though usually you should choose throttling limits in a way that normal users of your app never hit the limits.
 
 :::
 
