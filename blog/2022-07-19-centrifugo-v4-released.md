@@ -253,10 +253,6 @@ The filtering works by user ID or with a help of [CEL expressions](https://opens
 
 The `connections` API call result contains more useful information: a list of client's active channels, information about the tokens used to connect and subscribe, meta information attached to the connection.
 
-## Optimized Redis engine
-
-One more story which landed to the PRO version for now is the optimized Redis Engine. The optimized version allocates less memory (thus you can expect a reduced CPU usage for the Centrifugo node) and supports [sharded PUB/SUB](https://redis.io/docs/manual/pubsub/#sharded-pubsub) in Redis Cluster (introduced recently as part of Redis v7). You can read what we have in [Optimized Redis engine](/docs/pro/redis_engine) docs.
-
 ## Javascript client moved to TypeScript
 
 It's no secret that `centrifuge-js` is the most popular SDK in the Centrifugo ecosystem. We put additional love to it – and `centrifuge-js` is now fully written in Typescript ❤️
