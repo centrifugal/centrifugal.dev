@@ -336,7 +336,7 @@ It's interesting – if we dive deeper into what is it we can discover that this
 
 But as I said in Centrifugo we already used pipelining over the dedicated connection for all operations so we avoid frequently getting connections from the pool. And early experiments proved that `go-redis` may provide some performance benefits for our use case.
 
-At some point [@j178](https://github.com/j178) sent [a pull request](https://github.com/centrifugal/centrifuge/pull/235) to Centrifuge library ([the core of Centrifugo](/docs/ecosystem/centrifuge)) with `Broker` and `PresenceManager` implementations based on `go-redis/redis`. The amount of code to cover all the various Redis setups was reduced, we got only one dependency instead of three 🔥
+At some point [@j178](https://github.com/j178) sent [a pull request](https://github.com/centrifugal/centrifuge/pull/235) to Centrifuge library with `Broker` and `PresenceManager` implementations based on `go-redis/redis`. The amount of code to cover all the various Redis setups was reduced, we got only one dependency instead of three 🔥
 
 But what about performance? Here we will show results for several operations which are typical for Centrifugo:
 
