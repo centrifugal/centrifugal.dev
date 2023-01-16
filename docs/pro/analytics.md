@@ -31,7 +31,7 @@ To enable integration with ClickHouse add the following section to a configurati
         "export_http_headers": [
             "User-Agent",
             "Origin",
-            "X-Real-Ip",
+            "X-Real-Ip"
         ]
     }
 }

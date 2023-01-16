@@ -46,12 +46,6 @@ module.exports = {
         },
         {
           type: 'doc',
-          docId: 'ecosystem/centrifuge',
-          label: "Ecosystem",
-          position: "left",
-        },
-        {
-          type: 'doc',
           docId: 'pro/overview',
           label: "Centrifugo PRO",
           position: "left",

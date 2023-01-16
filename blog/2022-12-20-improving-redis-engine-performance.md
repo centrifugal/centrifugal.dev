@@ -500,7 +500,7 @@ For Redis Cluster case we also got benchmark results similar to the standalone R
 
 I might add that I enjoyed building commands with `rueidis`. All Redis commands may be constructed using a builder approach. Rueidis comes with builders generated for all Redis commands. As an illustration, this is a process of building a PUBLISH Redis command:
 
-<video width="100%" loop="true" autoplay="autoplay" muted controls="" src="/img/rueidis_cmd.mp4"></video>
+<video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/rueidis_cmd.mp4"></video>
 
 This drastically reduces a chance to make a stupid mistake while constructing a command. Instead of always opening Redis docs to see a command syntax it's now possible to just start typing - and quickly come to the complete command to send.
 
@@ -534,7 +534,7 @@ We limit requests per second we could actually just write `ratelimit.New(100000)
 
 Let's run all the benchmarks in the default configuration:
 
-<video width="100%" loop="true" autoplay="autoplay" muted controls="" src="/img/redis_b1.mp4"></video>
+<video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/redis_b1.mp4"></video>
 
 Average CPU usage during the test (a bit rough but enough for demonstration):
 
@@ -545,7 +545,7 @@ Average CPU usage during the test (a bit rough but enough for demonstration):
 
 OK, Rueidis-based implementation is the worst here despite of allocating less than others. So let's try to change this by setting `MaxFlushDelay` to sth like 100 microseconds:
 
-<video width="100%" loop="true" autoplay="autoplay" muted controls="" src="/img/redis_b2.mp4"></video>
+<video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/redis_b2.mp4"></video>
 
 Now CPU usage is:
 

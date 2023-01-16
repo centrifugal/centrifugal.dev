@@ -117,7 +117,7 @@ function Home() {
               </Feature>
               <Feature title="Centrifugo PRO" imageUrl="img/feature_pro.png">
                 <a href="/docs/pro/overview">Centrifugo PRO</a> provides a set of unique features on top of the OSS version: connection analytics
-                with ClickHouse, real-time user and channel tracing, operation throttling, faster performance, optimized Redis communication, and more.
+                with ClickHouse, real-time user and channel tracing, operation throttling, faster performance, token extensions, and more.
               </Feature>
             </div>
           </div>

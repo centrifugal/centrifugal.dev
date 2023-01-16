@@ -26,7 +26,7 @@ Centrifugo v2 was a pretty huge refactoring of v1. Since the v2 release, Centrif
 Here is an awesome demo made by my colleague <a href="https://github.com/alexanderzobnin">Alexander Zobnin</a> that demonstrates real-time telemetry of Assetto Corsa sports car streamed in real-time to Grafana dashboard: 
 
 <div class="vimeo-full-width">
-   <iframe src="https://player.vimeo.com/video/570333329?title=0&byline=0&portrait=0" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
+   <iframe src="https://player.vimeo.com/video/570333329?title=0&byline=0&portrait=0" frameBorder="0" allow="autoplay; fullscreen" allowFullScreen></iframe>
 </div>
 <p></p>
 

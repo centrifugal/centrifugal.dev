@@ -6,6 +6,7 @@ module.exports = {
     "getting-started/highlights",
     "getting-started/integration",
     "getting-started/design",
+    "getting-started/ecosystem",
     "getting-started/migration_v4",
   ],
   Guides: [
@@ -77,9 +78,5 @@ module.exports = {
         "pro/process_stats",
       ],
     },
-  ],
-  Ecosystem: [
-    "ecosystem/centrifuge",
-    "ecosystem/integrations",
-  ],
+  ]
 };

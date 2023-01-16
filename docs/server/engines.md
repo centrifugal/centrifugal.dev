@@ -203,7 +203,7 @@ Where config.json:
 }
 ```
 
-Sentinel configuration files can look like this:
+Sentinel configuration file may look like this (for 3-node Sentinel setup with quorum 2):
 
 ```
 port 26379

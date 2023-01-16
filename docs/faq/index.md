@@ -165,9 +165,9 @@ Centrifugo does not support unsubscribe/disconnect hooks – see the reasoning b
 
 Centrifugo does not support disconnect hooks at this point.
 
-First of all, there is no guarantee that the disconnect process will have a time to execute on the client-side (as the client can just switch off its device or simply lose internet connection). This means that a server may notice a connection loss with some delay (thanks to PING/PONG).
+First of all, there is no guarantee that the disconnect process will have a time to execute on the client-side (as the client can just switch off its device or simply lose internet connection). This means that a server may notice a connection loss with some delay (thanks to PING/PONG mechanism).
 
-Also, Centrifugo node can be unexpectedly killed. So there is a chance that disconnect event won't have a chance to be emitted to the backend.
+Centrifugo node can be unexpectedly killed. So there is a chance that disconnect event won't have a chance to be emitted to the backend.
 
 One more reason is that Centrifugo designed to scale to many concurrent connections. Think millions of them. As we [mentioned in our blog](https://centrifugal.dev/blog/2020/11/12/scaling-websocket#massive-reconnect) there are cases when all connections start reconnecting at the same time. In this case Centrifugo could potentially generate lots of disconnect events. To reduce the load during connect process Centrifugo has JWT authentication. Even if disconnect events were queued/rate-limited there could be situations when your app processes disconnect hook while user already reconnected and connect event processed. This is a racy situation which you will need to handle somehow (possibly based on unique client ID attached to each connection).
 
@@ -197,7 +197,7 @@ Sometimes you need to send some initial state towards channel subscriber. Centri
 
 No, if you want to use Centrifugo with different projects then the recommended approach is to have different Centrifugo installations for each project. Multitenancy is better to solve on infrastructure level in case of Centrifugo.
 
-It's possible to share one Redis setup though by setting unique `redis_prefix`. But completely isolated setups are still better.
+It's possible to share one Redis setup though by setting unique `redis_prefix`. But we recommend having completely isolated setups.
 
 ### I have not found an answer to my question here:
 

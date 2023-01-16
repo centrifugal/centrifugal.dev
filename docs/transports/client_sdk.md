@@ -39,7 +39,7 @@ Below you can find an information regarding support of different features in our
 
 ### Connection related features
 
-<div class="features">
+<div className="features">
 
 | Client feature  | js  | dart | swift | go | java |
 | ------ | ------ | ------ | ------- | ------- | ------- |
@@ -61,7 +61,7 @@ Below you can find an information regarding support of different features in our
 
 ### Client-side subscription related features
 
-<div class="features">
+<div className="features">
 
 | Client feature  | js  | dart | swift | go | java |
 | ------- | ------- | ------- | ------- | ------- | ------- |

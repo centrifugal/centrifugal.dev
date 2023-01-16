@@ -57,7 +57,7 @@ curl --header "Authorization: apikey <API_KEY>" \
 
 Here is a live example:
 
-<iframe width="100%" height="400" src="/img/api_example.mp4" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="100%" height="400" src="/img/api_example.mp4" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
 
 Now let's investigate each API method in detail.
 

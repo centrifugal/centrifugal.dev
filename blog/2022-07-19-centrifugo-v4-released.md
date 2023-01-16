@@ -35,7 +35,7 @@ But Centrifugo v3 did not contain anything... let's say **revolutional**. Revolu
 
 With this release, we feel that we bring innovation to the ecosystem. Now let's talk about it and introduce all the major things of the brand new v4 release.
 
-<video width="100%" loop="true" autoplay="autoplay" muted controls="" src="/img/v4_logo.mp4"></video>
+<video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/v4_logo.mp4"></video>
 
 ## Unified client SDK API
 

@@ -27,18 +27,6 @@ In this case, Centrifugo is a straightforward and non-obtrusive way to introduce
 
 At the moment, Centrifugo provides some advanced and unique features that can simplify a developer's life and save months of development, even if the application backend is built with the asynchronous concurrent language. One example is that Centrifugo can scale out-of-the-box to many machines with several supported brokers. And there are more things to mention – see detailed highlights further in the docs.
 
-## Basic concept
-
-As mentioned above, Centrifugo runs as a standalone service that cares about handling persistent connections from the application users. The application backend and frontend can be written in any programming language. Clients connect to Centrifugo and subscribe to channels.
-
-As soon as some event happens the application backend can publish a message with event payload into a channel using Centrifugo publishing API. The message will be delivered to all clients currently connected and subscribed to a channel.
-
-That's right, Centrifugo is basically a user-facing PUB/SUB server. Here is a simplified scheme: 
-
-![Centrifugo scheme](/img/scheme_sketch.png)
-
-Although the basic concept is simple, there are many challenges on the way to a production-ready system with a developer-friendly API and scalability. Centrifugo tries to solve them for you. We are describing many interesting solutions and advanced features in the documentation and our blog.
-
 ## Join community
 
 By the way, we have rooms in Telegram (the most active) and Discord:

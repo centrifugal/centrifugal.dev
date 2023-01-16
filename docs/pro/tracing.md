@@ -14,12 +14,6 @@ This can be super-useful for debugging issues, investigating application behavio
   Sorry, your browser doesn't support embedded video.
 </video>
 
-:::caution
-
-The tracing feature works fine for JSON messages. For binary payloads, there are some limitations currently.
-
-:::
-
 ### Save to a file
 
 It's possible to connect to the admin tracing endpoint with CURL using the admin session token. And then save tracing output to a file for later processing.
@@ -28,4 +22,4 @@ It's possible to connect to the admin tracing endpoint with CURL using the admin
 curl -X POST http://localhost:8000/admin/trace -H "Authorization: token <ADMIN_AUTH_TOKEN>" -d '{"type": "user", "entity": "56"}' -o trace.txt
 ```
 
-Currently, you should copy the admin auth token from browser developer tools, this may be improved in the future.
+Currently, you should copy the admin auth token from browser developer tools, this may be improved in the future as PRO version evolves.

@@ -223,7 +223,7 @@ if (global.window || (process && process.browser)) {
     observer = new MutationObserver(function (mutations) {
         mutations.forEach(function (mutation) {
             if (mutation.type == "attributes") {
-                window.dispatchEvent(new Event('resize'));
+                window.dispatchEvent(new Event('resized'));
             }
         });
     });
@@ -241,6 +241,9 @@ const Logo = (props) => {
     const calculateScaleY = () => (!canvas.current ? 0 : canvas.current.clientHeight);
 
     const resized = () => {
+        if (canvas.current === null) {
+            return;
+        }
         canvas.current.width = canvas.current.clientWidth;
         canvas.current.height = canvas.current.clientHeight;
         setScale({ x: calculateScaleX(), y: calculateScaleY() });
@@ -252,6 +255,10 @@ const Logo = (props) => {
         React.useEffect(() => {
             window.addEventListener("resize", resized);
             return () => window.removeEventListener("resize", resized);
+        });
+        React.useEffect(() => {
+            window.addEventListener("resized", resized);
+            return () => window.removeEventListener("resized", resized);
         });
     }
 

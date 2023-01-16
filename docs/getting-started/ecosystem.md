@@ -1,7 +1,11 @@
 ---
-id: centrifuge
-title: Centrifuge library
+id: ecosystem
+title: Ecosystem notes
 ---
+
+Some additional notes about our ecosystem which may help you develop with our tech.
+
+## Centrifuge library for Go
 
 Centrifugo is built on top of [Centrifuge](https://github.com/centrifugal/centrifuge) library for Go language.
 
@@ -16,3 +20,20 @@ Many Centrifugo features should be re-implemented when using Centrifuge - like A
 Many things said in Centrifugo doc can be considered as an extra documentation for Centrifuge library (for example part about infrastructure tuning or transport description). But not all of them.
 
 :::
+
+## Framework integrations
+
+There are some community-driven projects that provide integration with frameworks for more native experience.
+
+:::tip
+
+In general, integrating Centrifugo can be done in several steps even without third-party libraries – see our [integration guide](integration.md). Integrating directly may allow using all Centrifugo features without limitations which can be introduced by third-party wrapper.
+
+:::
+
+* [laravel-centrifugo](https://github.com/denis660/laravel-centrifugo) integration with Laravel framework
+* [laravel-centrifugo-broadcaster](https://github.com/opekunov/laravel-centrifugo-broadcaster) one more integration with Laravel framework to consider
+* [CentrifugoBundle](https://github.com/fre5h/CentrifugoBundle) integration with Symfony framework
+* [Django-instant](https://github.com/synw/django-instant) integration with Django framework
+* [roadrunner-php/centrifugo](https://github.com/roadrunner-php/centrifugo) integration with [RoadRunner](https://roadrunner.dev)
+* [spiral/roadrunner-bridge](https://github.com/spiral/roadrunner-bridge) integration with [Spiral Framework](https://spiral.dev)
