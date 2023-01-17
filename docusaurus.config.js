@@ -14,8 +14,7 @@ module.exports = {
       additionalLanguages: ["php", "dart", "swift", "java"],
     },
     colorMode: {
-      defaultMode: "light",
-      respectPrefersColorScheme: true,
+      defaultMode: "dark"
     },
     image: "img/centrifugo_soc.png",
     navbar: {
