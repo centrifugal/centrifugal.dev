@@ -3,9 +3,13 @@ id: analytics
 title: Analytics with ClickHouse
 ---
 
-This feature allows exporting information about publications, client connections, subscriptions and client operations to [ClickHouse](https://clickhouse.com/) thus providing an integration with a real-time (with seconds delay) analytics storage. ClickHouse is super fast for analytical queries, simple to operate with and it allows effective data keeping for a window of time. It's relatively simple to create a high performance ClickHouse cluster.
+This feature allows exporting information about channel publications, client connections, channel subscriptions and client operations to [ClickHouse](https://clickhouse.com/) thus providing an integration with a real-time (with seconds delay) analytics storage. ClickHouse is super fast for analytical queries, simple to operate with and it allows effective data keeping for a window of time. Also, it's relatively simple to create a high performance ClickHouse cluster.
 
-This unlocks a great observability and possibility to perform various analytics queries for better user behavior understanding, check application correctness, building trends, reports, and so on.
+This unlocks a great observability and a way to perform various analytics queries for better connection behavior understanding, check application correctness, building trends, reports, and so on.
+
+As soon as you start using integration with ClickHouse some of mentioned possibilities may be easily accessed with Centrifugo PRO web UI and it's analytics page:
+
+![Admin analytics](/img/pro_analytics.png)
 
 ## Configuration
 
@@ -75,15 +79,13 @@ SHOW CREATE TABLE centrifugo.connections;
 ┌─statement───────────────────────────────────────────────────────────────────────────────────────┐
 │ CREATE TABLE centrifugo.connections
 (
-    `client` FixedString(36),
+    `client` String,
     `user` String,
     `name` String,
     `version` String,
     `transport` String,
-    `headers.key` Array(String),
-    `headers.value` Array(String),
-    `metadata.key` Array(String),
-    `metadata.value` Array(String),
+    `headers` Map(String, Array(String)),
+    `metadata` Map(String, Array(String)),
     `time` DateTime
 )
 ENGINE = ReplicatedMergeTree('/clickhouse/tables/{cluster}/{shard}/connections', '{replica}')
@@ -102,15 +104,13 @@ SHOW CREATE TABLE centrifugo.connections_distributed;
 ┌─statement───────────────────────────────────────────────────────────────────────────────────────┐
 │ CREATE TABLE centrifugo.connections_distributed
 (
-    `client` FixedString(36),
+    `client` String,
     `user` String,
     `name` String,
     `version` String,
     `transport` String,
-    `headers.key` Array(String),
-    `headers.value` Array(String),
-    `metadata.key` Array(String),
-    `metadata.value` Array(String),
+    `headers` Map(String, Array(String)),
+    `metadata` Map(String, Array(String)),
     `time` DateTime
 )
 ENGINE = Distributed('centrifugo_cluster', 'centrifugo', 'connections', murmurHash3_64(client)) │
@@ -125,7 +125,7 @@ SHOW CREATE TABLE centrifugo.subscriptions
 ┌─statement──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │ CREATE TABLE centrifugo.subscriptions
 (
-    `client` FixedString(36),
+    `client` String,
     `user` String,
     `channels` Array(String),
     `time` DateTime
@@ -146,7 +146,7 @@ SHOW CREATE TABLE centrifugo.subscriptions_distributed;
 ┌─statement───────────────────────────────────────────────────────────────────────────────────────┐
 │ CREATE TABLE centrifugo.subscriptions_distributed
 (
-    `client` FixedString(36),
+    `client` String,
     `user` String,
     `channels` Array(String),
     `time` DateTime
@@ -163,7 +163,7 @@ SHOW CREATE TABLE centrifugo.operations;
 ┌─statement──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │ CREATE TABLE centrifugo.operations
 (
-    `client` FixedString(36),
+    `client` String,
     `user` String,
     `op` String,
     `channel` String,
@@ -189,7 +189,7 @@ SHOW CREATE TABLE centrifugo.operations_distributed;
 ┌─statement──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │ CREATE TABLE centrifugo.operations_distributed
 (
-    `client` FixedString(36),
+    `client` String,
     `user` String,
     `op` String,
     `channel` String,
@@ -214,7 +214,7 @@ SHOW CREATE TABLE centrifugo.publications
     `channel` String,
     `source` String,
     `size` UInt64,
-    `client` FixedString(36),
+    `client` String,
     `user` String,
     `time` DateTime
 )
@@ -237,7 +237,7 @@ SHOW CREATE TABLE centrifugo.publications_distributed;
     `channel` String,
     `source` String,
     `size` UInt64,
-    `client` FixedString(36),
+    `client` String,
     `user` String,
     `time` DateTime
 )
@@ -324,12 +324,6 @@ LIMIT 10;
 └─────────┴──────────┘
 ```
 
-## Web UI analytics page
-
-Centrifugo PRO exposes some Clickhouse analytics data in Web UI – so you can quickly get some interesting Centrifugo cluster information.
-
-![Admin analytics](/img/pro_analytics.png)
-
 ## Development
 
 The recommended way to run ClickHouse in production is with cluster. But during development you may want to run Centrifugo with single instance ClickHouse.
@@ -361,13 +355,13 @@ To do this set only one ClickHouse dsn and do not set cluster name:
 Run ClickHouse locally:
 
 ```bash
-docker run -it --rm -v /tmp/clickhouse:/var/lib/clickhouse -p 9000:9000 --name click yandex/clickhouse-server
+docker run -it --rm -v /tmp/clickhouse:/var/lib/clickhouse -p 9000:9000 --name click clickhouse/clickhouse-serve
 ```
 
 Run ClickHouse client:
 
 ```bash
-docker run -it --rm --link click:clickhouse-server yandex/clickhouse-client --host clickhouse-server
+docker run -it --rm --link click:clickhouse-server --entrypoint clickhouse-client clickhouse/clickhouse-server --host clickhouse-server
 ```
 
 Issue queries:

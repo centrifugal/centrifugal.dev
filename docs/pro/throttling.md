@@ -251,6 +251,12 @@ But there are scenarios when abusive or broken connections may generate a signif
 
 Error limits are configured as in-memory buckets operating on a per-connection level. When these buckets are full due to lots of errors for an individual connection Centrifugo disconnects the client (with advice to not reconnect, so our SDKs may follow it). This way it's possible to get rid of the connection and rely on HTTP infrastracture tools to deal with client reconnections. Since WebSocket or other our transports (except unidirectional GRPC, but it's usually not available to the public port) are HTTP-based (or start with HTTP request in WebSocket Upgrade case) – developers can use Nginx `limit_req_zone` directive, Cloudflare rules, iptables, and so on, to protect Centrifugo from unwanted connections.
 
+:::tip
+
+Centrifugo PRO does not count internal errors for the error limit buckets – as internal errors is usually not a client's fault.
+
+:::
+
 The configuration on error limits per connection may look like this:
 
 ```json title="config.json"
