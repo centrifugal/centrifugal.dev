@@ -3,7 +3,7 @@ id: overview
 title: Centrifugo PRO overview
 ---
 
-Centrifugo PRO is an extended version of Centrifugo with a set of additional features. These features can provide your business with unique benefits – granular channel permission control, lower CPU utilization on Centrifugo nodes, backend protection from misusing, next level system observability, and more.
+Centrifugo PRO is the enhanced version of Centrifugo, packed with a set of powerful features that offer exceptional benefits to your business. It provides granular channel permission control, lower CPU utilization on Centrifugo nodes, backend protection from misusing, next level system observability, additional APIs, and more.
 
 ## Features
 
