@@ -10,17 +10,18 @@ Centrifugo PRO is an extended version of Centrifugo with a set of additional fea
 Centrifugo PRO includes the following features:
 
 * Everything from Centrifugo OSS
-* [Channel and user tracing](./tracing.md) provides a way to look at all client protocol frames in the specified channel or per user ID.
-* [Real-time analytics with ClickHouse](./analytics.md) for a great system observability, reporting and trending.
-* [Channel capabilities](./capabilities.md) for controlling channel permissions per connection or per subscription.
-* [User status](./user_status.md) feature to understand activity state for a list of users.
-* [Operation throttling](./throttling.md) to protect server from the real-time API misusing and frontend bugs.
-* [Connections API](./connections.md) to filter and inspect active connections.
-* [User blocking API](./user_block.md) to block/unblock abusive users by ID.
-* [JWT revoking and invalidation](./token_revocation.md) to revoke tokens by token ID (JTI) and invalidate user's tokens on issue time basis.
-* [Faster performance](./performance.md) to reduce resource usage on server side.
-* [Singleflight](./singleflight.md) for online presence and history to reduce load on the broker.
-* Near real-time [CPU and RSS memory usage stats](./process_stats.md).
+* ✨ [Channel and user tracing](./tracing.md) provides a way to look at client protocol frames in the specified channel or per user ID.
+* ❤️ [Real-time analytics with ClickHouse](./analytics.md) for a great system observability, reporting and trending.
+* 🪄 [Channel capabilities](./capabilities.md) for controlling channel permissions per connection or per subscription.
+* 🛡️ [Operation throttling](./throttling.md) to protect server from the real-time API misusing and frontend bugs.
+* 🟢 [User status API](./user_status.md) feature to understand activity state for a list of users.
+* 🔌 [Connections API](./connections.md) to filter and inspect active connections.
+* ✋ [User blocking API](./user_block.md) to block/unblock abusive users by ID.
+* 🛑 [JWT revoking and invalidation API](./token_revocation.md) to revoke tokens by token ID and invalidate user's tokens on issue time basis.
+* 🔥 [Push notification API](./push_notifications.md) to manage device tokens and send push notifications to mobile devices and browsers.
+* 💣 [Faster performance](./performance.md) to reduce resource usage on server side.
+* 🔮 [Singleflight](./singleflight.md) for online presence and history to reduce load on the broker.
+* 🪵 Near real-time [CPU and RSS memory usage stats](./process_stats.md).
 
 :::info
 

@@ -9,6 +9,8 @@ This feature can be useful to manage active user sessions – for example in a m
 
 Also, it can help developers to understand the system state during issue investigations.
 
+### Example
+
 Let's look at example. Generate a JWT for user 42:
 
 ```
@@ -71,20 +73,24 @@ Here we can see that user has 2 connections from `terminal` app.
 
 Each connection can be annotated with meta JSON information which is set during connection establishment (over `meta` claim of JWT or by returning `meta` in connect proxy result).
 
-#### User connections params
+### connections
+
+Returns information about active connections according to the request. 
+
+#### connections params
 
 | Parameter name | Parameter type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | user       | string  | no | fast filter by User ID        |
 | expression       | string  | no | CEL expression to filter users        |
 
-#### User connections result
+#### connections result
 
 | Field name   | Field type     | Optional | Description  |
 | -------------- | -------------- | ------ | ------------ |
-| connections       | map of string to UserConnectionInfo  | no | active user connections map where key is client ID and value is UserConnectionInfo      |
+| connections       | map of string to ConnectionInfo  | no | active user connections map where key is client ID and value is ConnectionInfo      |
 
-#### UserConnectionInfo
+#### ConnectionInfo
 
 | Field name   | Field type     | Optional | Description  |
 | -------------- | -------------- | ------ | ------------ |

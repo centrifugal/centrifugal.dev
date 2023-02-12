@@ -69,7 +69,7 @@ To enable this configuration should be like:
 {
     ...
     "database": {
-        "dsn": "postgresql://postgres:test@127.0.0.1:5432/postgres"
+        "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres"
     },
     "token_revoke": {
         "persistence_engine": "database"

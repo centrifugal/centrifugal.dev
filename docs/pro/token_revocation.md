@@ -69,7 +69,7 @@ To enable this configuration should be like:
 {
     ...
     "database": {
-        "dsn": "postgresql://postgres:test@127.0.0.1:5432/postgres"
+        "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres"
     },
     "token_revoke": {
         "persistence_engine": "database"
@@ -81,6 +81,8 @@ To enable this configuration should be like:
 ```
 
 ## Revoke token API
+
+### revoke_token
 
 Allows revoking individual tokens. For example, this may be useful when token leakage has been detected and you want to revoke access for a particular tokens. BTW Centrifugo PRO provides `user_connections` API which has an information about tokens for active users connections (if set in JWT). 
 
@@ -100,18 +102,20 @@ curl --header "Content-Type: application/json" \
   http://localhost:8000/api
 ```
 
-#### Revoke token params
+#### revoke_token params
 
 | Parameter name | Parameter type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | uid       | string  | yes | Token unique ID (JTI claim in case of JWT)        |
 | expire_at       | int  | no | Unix time in the future when revocation information should expire (Unix seconds). While optional **we recommend to use a reasonably small expiration time (matching the expiration time of your JWTs)** to keep working set of revocations small (since Centrifugo nodes periodically load all entries from the database table to construct in-memory cache).    |
 
-#### Revoke token result
+#### revoke_token result
 
 Empty object at the moment.
 
 ## Invalidate user tokens API
+
+### invalidate_user_tokens
 
 Allows revoking all tokens for a user which were issued before a certain time. For example, this may be useful after user changed a password in an application.
 
@@ -131,7 +135,7 @@ curl --header "Content-Type: application/json" \
   http://localhost:8000/api
 ```
 
-#### Invalidate user tokens params
+#### invalidate_user_tokens params
 
 | Parameter name | Parameter type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
@@ -139,6 +143,6 @@ curl --header "Content-Type: application/json" \
 | issued_before       | int  | no | All tokens issued at before this Unix time will be considered revoked (in case of JWT this requires `iat` to be properly set in JWT), if not provided server uses current time         |
 | expire_at       | int  | no | Unix time in the future when revocation information should expire (Unix seconds). While optional **we recommend to use a reasonably small expiration time (matching the expiration time of your JWTs)** to keep working set of revocations small (since Centrifugo nodes periodically load all entries from the database table to construct in-memory cache).  |
 
-#### Invalidate user tokens result
+#### invalidate_user_tokens result
 
 Empty object at the moment.

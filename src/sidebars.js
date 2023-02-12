@@ -73,6 +73,7 @@ module.exports = {
         "pro/connections",
         "pro/user_block",
         "pro/token_revocation",
+        "pro/push_notifications",
         "pro/performance",
         "pro/singleflight",
         "pro/process_stats",

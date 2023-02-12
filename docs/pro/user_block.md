@@ -60,7 +60,7 @@ To enable this configuration should be like:
 {
     ...
     "database": {
-        "dsn": "postgresql://postgres:test@127.0.0.1:5432/postgres"
+        "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres"
     },
     "user_block": {
         "persistence_engine": "database"
@@ -68,7 +68,15 @@ To enable this configuration should be like:
 }
 ```
 
-## Block user API
+To quickly start local PostgreSQL database:
+
+```
+docker run -it --rm -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=pass -p 5432:5432 postgres:15
+```
+
+## Block  API
+
+### block_user
 
 Example:
 
@@ -80,18 +88,18 @@ curl --header "Content-Type: application/json" \
   http://localhost:8000/api
 ```
 
-#### Block user params
+#### block_user params
 
 | Parameter name | Parameter type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | user       | string  | yes | User ID to block       |
 | expire_at       | int  | no | Unix time in the future when user blocking information should expire (Unix seconds). While optional **we recommend to use a reasonably small expiration time** to keep working set of blocked users small (since Centrifugo nodes periodically load all entries from the storage to construct in-memory cache). |
 
-#### Block user result
+#### block_user result
 
 Empty object at the moment.
 
-## Unblock user API
+### unblock_user
 
 Example:
 
@@ -103,12 +111,12 @@ curl --header "Content-Type: application/json" \
   http://localhost:8000/api
 ```
 
-#### Unblock user params
+#### unblock_user params
 
 | Parameter name | Parameter type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | user       | string  | yes | User ID to unblock        |
 
-#### Unblock user result
+#### unblock_user result
 
 Empty object at the moment.
