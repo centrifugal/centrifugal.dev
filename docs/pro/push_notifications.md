@@ -4,9 +4,9 @@ sidebar_label: Push notification API
 title: Push notification API (coming soon)
 ---
 
-Centrifugo excels in delivering real-time in-app messages to online users. Sometimes though you need a way to engage offline users to come back to your app. Or trigger some update in the app when it's running in the background. That's where push notifications may be used. Push notifications delivered over battery-efficient platform-dependent transport. Integrating push notifications into an app can be a time-consuming process, but popular cloud services simplify it. However, the situation can be a bit more challenging with self-hosted solutions.
+Centrifugo excels in delivering real-time in-app messages to online users. Sometimes though you need a way to engage offline users to come back to your app. Or trigger some update in the app when it's running in the background. That's where push notifications may be used. Push notifications delivered over battery-efficient platform-dependent transport.
 
-Centrifugo PRO provides API to manage user device tokens, device channel subscriptions and to send push notifications towards registered devices and group of devices (subscribed on a channel). Centrifugo PRO integrates with the [Firebase Cloud Messaging (FCM)](https://firebase.google.com/docs/cloud-messaging) API to send push notifications, making the process seamless and efficient.
+Centrifugo PRO provides API to manage user device tokens, device channel subscriptions and API to send push notifications towards registered devices and group of devices (subscribed to a channel). Centrifugo PRO integrates with the [Firebase Cloud Messaging (FCM)](https://firebase.google.com/docs/cloud-messaging) API to send push notifications, so it covers full flow of push notification integration including frontend SDKs (provided by FCM).
 
 FCM is **free to use** and provides a way to send notifications to the following platforms in a unified way:
 
@@ -51,11 +51,21 @@ Also, you can remove unnecessary by using `device_remove` or `device_subscriptio
 
 ## Configuration
 
-Coming soon.
+As mentioned above Centrifigo uses PostgreSQL for token storage. To enable push notifications make sure `database` section defined in the configration and `push_notifications.enabled` flag set to `true`. Also, Centrifugo PRO uses Redis for queuing notifications, so Redis address should be configured also. And finally, to integrate with FCM a path to credentials file must be provided. So full configuration to start sending push notifications may look like this:
 
-## Tutorial
-
-Coming soon.
+```json
+{
+    ...
+    "database": {
+        "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres"
+    },
+    "push_notifications": {
+        "enabled": true,
+        "redis_address": "localhost:6379",
+        "fcm_credentials_file_path": "/path/to/service/account/credentials.json"
+    }
+}
+```
 
 ## API description
 
@@ -226,3 +236,7 @@ Send push notification to specific `device_ids`, or to `channels`, or `fcm_token
 #### send_push_notification result
 
 [Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L712)
+
+## Tutorial
+
+Coming soon.

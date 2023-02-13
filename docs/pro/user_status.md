@@ -1,6 +1,6 @@
 ---
 id: user_status
-title: User status
+title: User status API
 ---
 
 Centrifugo OSS provides a presence feature for channels. It works well (for channels with reasonably small number of active subscribers though), but sometimes you may need a bit different functionality.

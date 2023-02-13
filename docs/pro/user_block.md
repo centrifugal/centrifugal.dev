@@ -68,11 +68,15 @@ To enable this configuration should be like:
 }
 ```
 
+:::tip
+
 To quickly start local PostgreSQL database:
 
 ```
 docker run -it --rm -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=pass -p 5432:5432 postgres:15
 ```
+
+:::
 
 ## Block  API
 
