@@ -176,8 +176,8 @@ Unsubscribes device from the provided list of channels.
 
 | Field Name | Type | Required | Description |
 | --- | --- | ---- | --- |
-| device_id | string | Yes | ID of the device to remove the subscription from |
-| channels | repeated string | No | List of channels to remove |
+| `device_id` | string | Yes | ID of the device to remove the subscription from |
+| `channels` | repeated string | No | List of channels to remove |
 
 [Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L513)
 
@@ -195,13 +195,13 @@ Returns a paginated list of device subscriptions according to request filter con
 
 | Field Name   | Type         | Required | Description                                                           |
 |--------------|--------------|----|-----------------------------------------------------------------------|
-| device_ids   | repeated string | No | List of device IDs to filter results                                                  |
-| device_platforms | repeated string | No | List of device platforms to filter results                 |
-| device_tokens | repeated string | No | List of device tokens to filter results                |
-| device_users | repeated string | No | List of device users to filter results                             |
-| channels     | repeated string | No | Filter by list of channels the devices are subscribed to                        |
-| since        | string        | No | Cursor for pagination (last device subscription id in the previous batch).   |
-| limit        | int32        | No | Maximum number of devices to return in response                        |
+| `device_ids`   | repeated string | No | List of device IDs to filter results                                                  |
+| `device_platforms` | repeated string | No | List of device platforms to filter results                 |
+| `device_tokens` | repeated string | No | List of device tokens to filter results                |
+| `device_users` | repeated string | No | List of device users to filter results                             |
+| `channels`     | repeated string | No | Filter by list of channels the devices are subscribed to                        |
+| `since`        | string        | No | Cursor for pagination (last device subscription id in the previous batch).   |
+| `limit`        | int32        | No | Maximum number of devices to return in response                        |
 
 [Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L518)
 
@@ -218,12 +218,12 @@ Returns a paginated list of device subscriptions according to request filter con
 
 | Field | Type | Description |
 |-------|------|-------------|
-| id | string | Unique identifier of the device subscription. |
-| device_id | string | Unique identifier of the device. |
-| device_token | string | Token used by the device to receive push notifications. |
-| device_platform | string | Platform of the device |
-| device_user | string | Unique identifier of the user associated with the device. |
-| channel | string | Channel the device is subscribed to. |
+| `id` | string | Unique identifier of the device subscription. |
+| `device_id` | string | Unique identifier of the device. |
+| `device_token` | string | Token used by the device to receive push notifications. |
+| `device_platform` | string | Platform of the device |
+| `device_user` | string | Unique identifier of the user associated with the device. |
+| `channel` | string | Channel the device is subscribed to. |
 
 ### send_push_notification
 
@@ -231,9 +231,153 @@ Send push notification to specific `device_ids`, or to `channels`, or `fcm_token
 
 #### send_push_notification params
 
+| Field name          | Type         | Required |Description |
+|-----------------|--------------|-----|--------|
+| `recipient`       | `PushRecipient` | Yes | Recipient of push notification      |
+| `notification`    | `PushNotification` | Yes | Push notification to send     |
+| `uid`             | string       | No | Unique send id      |
+| `expire_at`       | int64        | No | Unix timestamp when Centrifugo stops attempting to send this notification (this does not relate to notification TTL fields)      |
+
+`PushRecipient` (set one of the following fields):
+
+| Field         | Type      |  Required | Description |
+|---------------|-----------|-----------|--------|
+| `device_ids`    | repeated string | No | Send to a list of device IDs     |
+| `channels`      | repeated string | No | Send to channels     |
+| `fcm_tokens`    | repeated string | No | Send to a list of FCM tokens     |
+| `fcm_topic`     | string     | No | Send to a FCM topic     |
+
+`PushNotification`:
+
+| Field     | Type            | Description |
+|-----------|----------------|--------|
+| `fcm`       | `FcmPushNotification` | Notification in FCM format      |
+
+`FcmPushNotification`:
+
+| Field Name | Type | Description |
+| --- | --- | --- |
+| `data` | map<string, string> | |
+| `notification` | `FcmNotification` | |
+| `android` | `FcmAndroid` | |
+| `apns` | `FcmApns` | |
+| `web` | `FcmWeb` | |
+| `fcm_options` | `FcmOptions` | |
+
+`FcmNotification`:
+
+| Field Name | Type | Description |
+| --- | --- | --- |
+| `title` | string | |
+| `body` | string | |
+
+`FcmOptions`:
+
+| Field Name | Type | Description |
+| --- | --- | --- |
+| `analytics_label` | string | |
+
+`FcmAndroid`:
+
+| Field Name | Type | Description |
+| --- | --- | --- |
+| `collapse_key` | string | |
+| `ttl` | string | |
+| `data` | map<string, string> | |
+| `notification` | `AndroidNotification` | |
+| `fcm_options` | `AndroidFcmOptions` | |
+
+`AndroidNotification`:
+
+| Field Name | Type | Description |
+| --- | --- | --- |
+| `title` | string | |
+| `body` | string | |
+| `icon` | string | |
+| `color` | string | |
+| `sound` | string | |
+| `tag` | string | |
+| `click_action` | string | |
+| `image` | string | |
+| `sticky` | bool | |
+
+`FcmApns`:
+
+| Field Name | Type | Description |
+| --- | --- | --- |
+| `headers` | map<string, string> | |
+| `payload` | `ApnsPayload` | |
+| `fcm_options` | `ApnsFcmOptions` | |
+
+`ApnsFcmOptions`:
+
+| Field Name | Type | Description |
+| --- | --- | --- |
+| `analytics_label` | string | |
+| `image` | string | |
+
+`ApnsPayload`:
+
+| Field Name | Type | Description |
+| --- | --- | --- |
+| `aps` | `ApnsAps` | |
+| `data` | map<string, string> | |
+
+`ApnsAps`:
+
+| Field Name | Type | Description |
+| --- | --- | --- |
+| `alert` | `ApnsApsAlert` | |
+| `badge` | `Int32Value` | |
+| `sound` | string | |
+| `thread_id` | string | |
+| `category` | string | |
+
+`ApnsApsAlert`:
+
+| Field Name | Type | Description |
+| --- | --- | --- |
+| `title` | string | |
+| `subtitle` | string | |
+| `body` | string | |
+
+`AndroidFcmOptions`:
+
+| Field Name | Type | Description |
+| --- | --- | --- |
+| `analytics_label` | string | |
+
+`FcmWeb`:
+
+| Field Name | Type | Description |
+| --- | --- | --- |
+| `headers` | map<string, string> | |
+| `data` | map<string, string> | |
+| `notification` | `WebPushNotification` | |
+| `fcm_options` | `WebPushFcmOptions` | |
+
+`WebPushNotification`:
+
+| Field Name | Type |
+| --- | --- |
+| `title` | string |
+| `body` | string |
+| `icon` | string |
+| `tag` | string |
+
+`WebPushFcmOptions`:
+
+| Field Name | Type |
+| --- | --- |
+| `link` | string |
+
 [Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L700)
 
 #### send_push_notification result
+
+| Field Name | Type | Description |
+| --- | --- | --- |
+| `uid` | string | Unique send id, matches `uid` in request if it was provided |
 
 [Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L712)
 
