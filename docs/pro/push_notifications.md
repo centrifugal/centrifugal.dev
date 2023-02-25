@@ -26,11 +26,27 @@ But all these providers only manage frontend and transport part of notification 
 
 Centrifugo PRO comes with super efficient worker queues (based on Redis streams) which allow broadcasting push notifications towards devices in a very efficient way.
 
-Integration with FCM means that you can use existing Firebase messaging SDKs to extract push notification token for a device on different platforms (iOS, Android, Flutter, web browser) and setting up push notification listeners. Only a couple of additional steps required to integrate frontend with Centrifugo PRO device token and device subscription storage. After doing that you will be able to send push notification towards single device, or towards devices subscribed to a channel with a simple API call like this:
+Integration with FCM means that you can use existing Firebase messaging SDKs to extract push notification token for a device on different platforms (iOS, Android, Flutter, web browser) and setting up push notification listeners. Only a couple of additional steps required to integrate frontend with Centrifugo PRO device token and device subscription storage. After doing that you will be able to send push notification towards single device, or towards devices subscribed to a channel. For example, with a simple Centrifugo API call like this:
 
 ```bash
-curl -X POST http://localhost:8000/api -d \
-'{"method": "send_push_notification", "params": {"recipient": {"channels": ["test"]}, "notification": {"fcm": {"notification": {"title": "Hello", "body": "How are you?"}}}}}'
+curl -X POST http://localhost:8000/api \
+-H "Authorization: apikey <KEY>" \
+-d @- <<'EOF'
+
+{
+    "method": "send_push_notification",
+    "params": {
+        "recipient": {"channels": ["test"]},
+        "notification": {
+            "fcm": {
+                "message": {
+                    "notification": {"title": "Hello", "body": "How are you?"}
+                }
+            }
+        }
+    }
+}
+EOF
 ```
 
 ## Motivation and design choices
@@ -85,11 +101,59 @@ As mentioned above Centrifigo uses PostgreSQL for token storage. To enable push 
 
 ### HMS
 
-TBD.
+```json
+{
+    ...
+    "database": {
+        "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres"
+    },
+    "push_notifications": {
+        "redis_address": "localhost:6379",
+        "enabled_providers": ["hms"],
+        "hms_app_id": "<your_app_id>",
+        "hms_app_secret": "<your_app_secret>",
+    }
+}
+```
+
+:::tip
+
+See how to get app id and app secret [here](https://github.com/Catapush/catapush-docs/blob/master/AndroidSDK/DOCUMENTATION_PLATFORM_HMS_PUSHKIT.md).
+
+:::
 
 ### APNs
 
-TBD.
+```json
+{
+    ...
+    "database": {
+        "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres"
+    },
+    "push_notifications": {
+        "redis_address": "localhost:6379",
+        "enabled_providers": ["apns"],
+        "apns_endpoint": "development",
+        "apns_bundle_id": "com.example.your_app",
+        "apns_auth": "token",
+        "apns_token_auth_key_path": "/path/to/auth/key/file.p8",
+        "apns_token_key_id": "<your_key_id>",
+        "apns_token_team_id": "your_team_id",
+    }
+}
+```
+
+We also support auth over p12 certificates. 
+
+### Other options
+
+#### push_notifications.max_inactive_device_days
+
+TBD
+
+#### push_notifications.max_inactive_device_subscription_days
+
+TBD
 
 ## API description
 
@@ -108,8 +172,6 @@ Registers or updates device information.
 | `user`          | string | No | User associated with the device.            |
 | `meta`          | map<string, string> | No | Additional metadata for the device.         |
 
-[Proto definitions](https://github.com/centrifugal/centrifugo/blob/masster/internal/apiproto/api.proto).
-
 #### device_register result
 
 | Field Name | Type | Description |
@@ -127,8 +189,6 @@ Registers or updates device information.
 | `user` | string | The user associated with the device. |
 | `meta` | map<string, string> | Additional metadata about the device. |
 
-[Proto definitions](https://github.com/centrifugal/centrifugo/blob/master/internal/apiproto/api.proto).
-
 ### device_remove
 
 Removes device from storage.
@@ -140,13 +200,9 @@ Removes device from storage.
 | `ids` | repeated string | No | A list of device IDs to be removed |
 | `provider_tokens` | `ProviderTokens` | No | Provider tokens to remove |
 
-[Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L493).
-
 #### device_remove result
 
 Empty object.
-
-[Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L562).
 
 ### device_list
 
@@ -165,16 +221,12 @@ Returns a paginated list of registered devices according to request filter condi
 | `limit` | int32 | No | Maximum number of devices to retrieve. |
 | `include_meta` | bool | No | Flag indicating whether to include meta information for each device. |
 
-[Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L498).
-
 #### device_list result
 
 | Field Name | Type | Description |
 | --- | --- | --- |
 | `items` | repeated `Device` | A list of devices |
 | `has_more` | bool | A flag indicating whether there are more devices available |
-
-[Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L565).
 
 ### device_subscription_add
 
@@ -187,13 +239,9 @@ Subscribes device to the provided list of channels.
 | `device_id` | string | Yes | ID of the device to add subscriptions for |
 | `channels` | repeated string | No | List of channels to add subscriptions for |
 
-[Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L508).
-
 #### device_subscription_add result
 
 Empty object.
-
-[Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L579).
 
 ### device_subscription_remove
 
@@ -206,13 +254,9 @@ Unsubscribes device from the provided list of channels.
 | `device_id` | string | Yes | ID of the device to remove the subscription from |
 | `channels` | repeated string | No | List of channels to remove |
 
-[Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L513)
-
 #### device_subscription_remove result
 
 Empty object.
-
-[Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L582)
 
 ### device_subscription_set
 
@@ -225,13 +269,9 @@ Set device subscriptions to the provided list of channels (clearing all other no
 | `device_id` | string | Yes | ID of the device to add subscriptions for |
 | `channels` | repeated string | No | List of channels to subscribe the device to |
 
-[Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto).
-
 #### device_subscription_set result
 
 Empty object.
-
-[Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L579).
 
 ### device_subscription_list
 
@@ -250,16 +290,12 @@ Returns a paginated list of device subscriptions according to request filter con
 | `since`        | string        | No | Cursor for pagination (last device subscription id in the previous batch).   |
 | `limit`        | int32        | No | Maximum number of devices to return in response                        |
 
-[Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L518)
-
 #### device_subscription_list result
 
 | Field Name | Type | Description |
 | --- | --- | --- |
 | `items` | repeated `DeviceSubscription` | An array of `DeviceSubscription` items. |
 | `has_more` | bool | Indicates if there are more items to be fetched. |
-
-[Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L585)
 
 `DeviceSubscription`:
 
@@ -297,7 +333,6 @@ Send push notification to specific `device_ids`, or to `channels`, or native pro
 | `hms_topic`     | string     | No | Send to a HMS topic     |
 | `hms_condition`     | string     | No | Send to a HMS condition     |
 | `apns_tokens`    | repeated string | No | Send to a list of APNs tokens     |
-
 
 `PushNotification`:
 
