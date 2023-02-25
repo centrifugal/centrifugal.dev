@@ -4,17 +4,25 @@ sidebar_label: Push notification API
 title: Push notification API (coming soon)
 ---
 
-Centrifugo excels in delivering real-time in-app messages to online users. Sometimes though you need a way to engage offline users to come back to your app. Or trigger some update in the app when it's running in the background. That's where push notifications may be used. Push notifications delivered over battery-efficient platform-dependent transport.
+Centrifugo excels in delivering real-time in-app messages to online users. Sometimes though you need a way to engage offline users to come back to your app. Or trigger some update in the app while it's running in the background. That's where push notifications may be used. Push notifications delivered over battery-efficient platform-dependent transport.
 
-Centrifugo PRO provides API to manage user device tokens, device channel subscriptions and API to send push notifications towards registered devices and group of devices (subscribed to a channel). Centrifugo PRO integrates with the [Firebase Cloud Messaging (FCM)](https://firebase.google.com/docs/cloud-messaging) API to send push notifications, so it covers full flow of push notification integration including frontend SDKs (provided by FCM).
+With Centriufugo PRO push notifications may be delivered to all popular application platforms:
 
-FCM is **free to use** and provides a way to send notifications to the following platforms in a unified way:
-
-* <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i> iOS devices (over APNs)
-* <i className="bi bi-android2" style={{'color': 'yellowgreen'}}></i> Android devices (over FCM)
+* <i className="bi bi-android2" style={{'color': 'yellowgreen'}}></i> Android devices
+* <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i> iOS devices
 * <i className="bi bi-globe" style={{color: 'orange'}}></i> Web browsers which support Web Push API (Chrome, Firefox, see <a href="https://caniuse.com/push-api">this matrix</a>)
 
-FCM is only a transport for push notifications, tokens should be stored in the application database. Centrifugo PRO provides an API to store tokens in database (PostgreSQL), manage device subscriptions to channels (replacing native FCM topics functionality – see motivation below).
+Centrifugo PRO provides API to manage user device tokens, device channel subscriptions and API to send push notifications towards registered devices and group of devices (subscribed to a channel).
+
+To deliver push notifications to devices Centrifugo PRO integrates with the following providers:
+
+* [Firebase Cloud Messaging (FCM)](https://firebase.google.com/docs/cloud-messaging) <i className="bi bi-android2" style={{'color': 'yellowgreen'}}></i> <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i> <i className="bi bi-globe" style={{color: 'orange'}}></i>
+* [Huawei Messaging Service (HMS) Push Kit](https://developer.huawei.com/consumer/en/hms/huawei-pushkit/) <i className="bi bi-android2" style={{'color': 'yellowgreen'}}></i> <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i> <i className="bi bi-globe" style={{color: 'orange'}}></i>
+* [Apple Push Notification service (APNs) ](https://developer.apple.com/documentation/usernotifications) <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i>
+
+This means that Centrifugo PRO covers full flow of push notification integration including frontend SDKs (provided by FCM, HMS, Apple SDKs).
+
+But all these providers only manage frontend and transport part of notification delivery. Device token management and effective push notification broadcasting are parts to be solved by the application backend. Centrifugo PRO provides an API to store tokens in database (PostgreSQL), manage device subscriptions to channels in a unified way.
 
 Centrifugo PRO comes with super efficient worker queues (based on Redis streams) which allow broadcasting push notifications towards devices in a very efficient way.
 
@@ -25,24 +33,28 @@ curl -X POST http://localhost:8000/api -d \
 '{"method": "send_push_notification", "params": {"recipient": {"channels": ["test"]}, "notification": {"fcm": {"notification": {"title": "Hello", "body": "How are you?"}}}}}'
 ```
 
-## Motivation
+## Motivation and design choices
 
-Our goals introducing push notification API in Centrifugo PRO were:
+Let's talk about our main goals and choices when adding push notification API to Centrifugo PRO.
 
-* Simplify adding push notifications to the project. FCM SDKs solve the frontend part – giving a unified way to load push token for all popular platforms and a way to set notification handlers. FCM also provides a unified transport layer for all the platforms. But the backend part (token storage and management) is still need to be implemented by application. Centrifugo PRO provides the required backend, it tries to follow best practices when working with FCM maintaining only an actual set of device tokens, reacting on FCM errors and periodically removing stale devices.
-* FCM provides API to send push notifications. Centrifugo just wraps it, but at the same time provides efficient queuing. So you can send notifications from your app with minimal latency, and let Centrifugo process sending to FCM for you.
-* FCM has a built-in way of sending notification to large groups of devices over [topics](https://firebase.google.com/docs/cloud-messaging/android/topic-messaging) mechanism. The problem with native FCM topics though is that client can subscribe to any topic from the frontend side without any permission check. In today's world this is usually not desired. So Centrifugo PRO re-implements FCM topics by introducing an additional API to manage device subscriptions to channels. We intentionally called it `channels` to make the concept closer to our real-time API. In some cases you may have real-time channels and device subscription channels with matching names – to send messages to both online and offline users. Though it's up to you.
+The main goal was to simplify adding push notifications to the project for our users. FCM, HMS, APNs push provider SDKs solve the frontend part – giving a way to load push token. And a way to set notification handlers to handle notifications coming from Push Notifications server. Providers like FCM and HMS also provide a unified transport layer for all the platforms. But the backend part (token storage and management) is still need to be implemented by the application. Centrifugo PRO provides the required backend, and tries to follow best practices when working with tokens. It follows provider advices to keep only a working set of device tokens by reacting on errors and periodically removing stale devices.
 
-Apart from this you get a possibility to inspect sent push notifications over our ClickHouse analytics. Also, FCM provides [its own analytics](https://firebase.google.com/docs/cloud-messaging/understand-delivery?platform=web) from which you can get insight into push notification delivery.
+Centrifugo provides efficient and scalable queuing for sending push notifications. Developers can send notifications from the app backend to Centrifugo API with a minimal latency, and let Centrifugo process sending to FCM, HMS, APNs concurrently from the built-in workers.
 
-BTW, in our API we left a possibility to publish notifications into FCM topics or sending to raw FCM tokens, so you can combine native FCM primitives with those provided by Centrifugo.
+FCM and HMS have a built-in way of sending notification to large groups of devices over [topics](https://firebase.google.com/docs/cloud-messaging/android/topic-messaging) mechanism ([the same for HMS](https://developer.huawei.com/consumer/en/doc/development/HMS-Plugin-Guides-V1/subscribetopic-0000001056797545-V1)). One problem with native FCM or HMS topics though is that client can subscribe to any topic from the frontend side without any permission check. In today's world this is usually not desired. So Centrifugo PRO re-implements FCM, HMS topics by introducing an additional API to manage device subscriptions to channels. We intentionally called it `channels` to make the concept closer to our real-time API. In some cases you may have real-time channels and device subscription channels with matching names – to send messages to both online and offline users. Though it's up to you. Centrifugo PRO device subscriptions also add a way to introduce topic semantics for APNs.
+
+Centrifugo PRO tries to avoid combining push notifications APIs for all supported providers into one unified API – just gives a way to send notification payloads in a format defined by each provider. This allows Centrifugo PRO to be a non-obtrusive proxy for all the mentioned providers. 
+
+Apart from this you get a possibility to inspect sent push notifications over our [ClickHouse analytics](./analytics.md). Also, providers may provide their own analytics. For example, [FCM provides analytics](https://firebase.google.com/docs/cloud-messaging/understand-delivery?platform=web) from which you can get insight into push notification delivery.
+
+One more thing – in our push API we left a possibility to send notifications into FCM, HMS topics or sending to raw FCM, HMS, APNs tokens, so you can combine native provider primitives with those added by Centrifugo (i.e. sending to a list of device IDs or to a list of channels).
 
 ## Steps to integrate
 
-1. Add FCM SDK on the frontend side, follow FCM instructions for your platform to obtain a push token for a device (see [iOS](https://firebase.google.com/docs/cloud-messaging/ios/client), [Android](https://firebase.google.com/docs/cloud-messaging/android/client), [Flutter](https://firebase.google.com/docs/cloud-messaging/flutter/client), [Web Browser](https://firebase.google.com/docs/cloud-messaging/js/client)). So all the frontend part is left to FCM libraries.
-2. Call your backend API with the obtained token, from the backend call Centrifugo `device_register` API to register the device in Centrifugo PRO storage.
+1. Add provider SDK on the frontend side, follow provider instructions for your platform to obtain a push token for a device. For example, for FCM see instructions for [iOS](https://firebase.google.com/docs/cloud-messaging/ios/client), [Android](https://firebase.google.com/docs/cloud-messaging/android/client), [Flutter](https://firebase.google.com/docs/cloud-messaging/flutter/client), [Web Browser](https://firebase.google.com/docs/cloud-messaging/js/client)). The same for HMS or APNs – frontend part should be handled by their native SDKs.
+2. Call Centrifugo PRO backend API with the obtained token. From the application backend call Centrifugo `device_register` API to register the device in Centrifugo PRO storage.
 3. Centrifugo returns a registered device object, pass a generated device ID to the frontend and save it on the frontend together with a token received from FCM.
-4. Subscribe device to the required set of channels, first by calling your backend with device ID and list of channels, check channel permissions and then call Centrifugo `device_subscription_add` API.
+4. Subscribe device to the required set of channels, first by calling your backend with device ID and list of channels, check channel permissions and then call Centrifugo `device_subscription_set` or `device_subscription_add` APIs.
 5. Call Centrifugo `send_push_notification` API whenever it's time to deliver a push notification.
 
 At any moment you can inspect device and subscription storage by calling `device_list` or `device_subscription_list` APIs.
@@ -51,7 +63,11 @@ Also, you can remove unnecessary by using `device_remove` or `device_subscriptio
 
 ## Configuration
 
-As mentioned above Centrifigo uses PostgreSQL for token storage. To enable push notifications make sure `database` section defined in the configration and `push_notifications.enabled` flag set to `true`. Also, Centrifugo PRO uses Redis for queuing notifications, so Redis address should be configured also. And finally, to integrate with FCM a path to credentials file must be provided. So full configuration to start sending push notifications may look like this:
+In Centrifugo PRO you can configure one push provider or use all of them – this choice is up to you.
+
+### FCM
+
+As mentioned above Centrifigo uses PostgreSQL for token storage. To enable push notifications make sure `database` section defined in the configration and `fcm` is in the `push_notifications.enabled_providers` list. Centrifugo PRO uses Redis for queuing push notification requests, so Redis address should be configured also. Finally, to integrate with FCM a path to the credentials file must be provided (see how to create one [in this instruction](https://github.com/Catapush/catapush-docs/blob/master/AndroidSDK/DOCUMENTATION_PLATFORM_GMS_FCM.md)). So the full configuration to start sending push notifications over FCM may look like this:
 
 ```json
 {
@@ -60,12 +76,20 @@ As mentioned above Centrifigo uses PostgreSQL for token storage. To enable push 
         "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres"
     },
     "push_notifications": {
-        "enabled": true,
         "redis_address": "localhost:6379",
+        "enabled_providers": ["fcm"],
         "fcm_credentials_file_path": "/path/to/service/account/credentials.json"
     }
 }
 ```
+
+### HMS
+
+TBD.
+
+### APNs
+
+TBD.
 
 ## API description
 
@@ -78,12 +102,13 @@ Registers or updates device information.
 | Field           | Type     | Required | Description                                 |
 |-----------------|----------|----|---------------------------------------------|
 | `id`            | string | No | ID of the device being registered (only provide when updating).          |
-| `platform`      | string | Yes | Platform of the device (valid choices: `apns`, `android`, `web`). |
+| `provider`      | string | Yes | Provider of the device token (valid choices: `fcm`, `hms`, `apns`). |
 | `token`         | string | Yes | Push notification token for the device.     |
+| `platform`      | string | Yes | Platform of the device (valid choices: `ios`, `android`, `web`). |
 | `user`          | string | No | User associated with the device.            |
 | `meta`          | map<string, string> | No | Additional metadata for the device.         |
 
-[Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L485).
+[Proto definitions](https://github.com/centrifugal/centrifugo/blob/masster/internal/apiproto/api.proto).
 
 #### device_register result
 
@@ -96,12 +121,13 @@ Registers or updates device information.
 | Field Name | Type | Description |
 |------------|------|-------------|
 | `id` | string | The device's ID. |
-| `platform` | string | The device's platform. |
+| `provider` | string | The device's token provider. |
 | `token` | string | The device's token. |
+| `platform` | string | The device's platform. |
 | `user` | string | The user associated with the device. |
 | `meta` | map<string, string> | Additional metadata about the device. |
 
-[Proto definitions](https://github.com/centrifugal/centrifugo/blob/master/internal/apiproto/api.proto#L558).
+[Proto definitions](https://github.com/centrifugal/centrifugo/blob/master/internal/apiproto/api.proto).
 
 ### device_remove
 
@@ -112,7 +138,7 @@ Removes device from storage.
 | Field Name | Type | Required | Description |
 | --- | --- | ----| --- |
 | `ids` | repeated string | No | A list of device IDs to be removed |
-| `tokens` | repeated string | No | A list of device tokens to be removed |
+| `provider_tokens` | `ProviderTokens` | No | Provider tokens to remove |
 
 [Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L493).
 
@@ -131,8 +157,9 @@ Returns a paginated list of registered devices according to request filter condi
 | Field | Type | Required | Description |
 |-------|------|----|-------------|
 | `ids`   | repeated string | No | List of device IDs to filter results. |
-| `platforms` | repeated string | No | List of device platforms to filter results. |
+| `providers` | repeated string | No | List of device token providers to filter results. |
 | `tokens` | repeated string | No | List of device tokens to filter results. |
+| `platforms` | repeated string | No | List of device platforms to filter results. |
 | `users` | repeated string | No | List of device users to filter results. |
 | `since` | string | No | Cursor for pagination (last device id in previous batch). |
 | `limit` | int32 | No | Maximum number of devices to retrieve. |
@@ -158,7 +185,7 @@ Subscribes device to the provided list of channels.
 | Field name | Type | Required | Description |
 |-----------|-------|----|-------------|
 | `device_id` | string | Yes | ID of the device to add subscriptions for |
-| `channels` | repeated string | No | List of channels to subscribe the device to |
+| `channels` | repeated string | No | List of channels to add subscriptions for |
 
 [Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L508).
 
@@ -187,6 +214,25 @@ Empty object.
 
 [Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L582)
 
+### device_subscription_set
+
+Set device subscriptions to the provided list of channels (clearing all other not provided).
+
+#### device_subscription_set params
+
+| Field name | Type | Required | Description |
+|-----------|-------|----|-------------|
+| `device_id` | string | Yes | ID of the device to add subscriptions for |
+| `channels` | repeated string | No | List of channels to subscribe the device to |
+
+[Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto).
+
+#### device_subscription_set result
+
+Empty object.
+
+[Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L579).
+
 ### device_subscription_list
 
 Returns a paginated list of device subscriptions according to request filter conditions.
@@ -196,8 +242,9 @@ Returns a paginated list of device subscriptions according to request filter con
 | Field Name   | Type         | Required | Description                                                           |
 |--------------|--------------|----|-----------------------------------------------------------------------|
 | `device_ids`   | repeated string | No | List of device IDs to filter results                                                  |
-| `device_platforms` | repeated string | No | List of device platforms to filter results                 |
+| `device_providers` | repeated string | No | List of device providers to filter results                 |
 | `device_tokens` | repeated string | No | List of device tokens to filter results                |
+| `device_platforms` | repeated string | No | List of device platforms to filter results                 |
 | `device_users` | repeated string | No | List of device users to filter results                             |
 | `channels`     | repeated string | No | Filter by list of channels the devices are subscribed to                        |
 | `since`        | string        | No | Cursor for pagination (last device subscription id in the previous batch).   |
@@ -214,12 +261,13 @@ Returns a paginated list of device subscriptions according to request filter con
 
 [Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L585)
 
-`DevideSubscription`:
+`DeviceSubscription`:
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `id` | string | Unique identifier of the device subscription. |
 | `device_id` | string | Unique identifier of the device. |
+| `device_provider` | string | Device provider. |
 | `device_token` | string | Token used by the device to receive push notifications. |
 | `device_platform` | string | Platform of the device |
 | `device_user` | string | Unique identifier of the user associated with the device. |
@@ -227,7 +275,7 @@ Returns a paginated list of device subscriptions according to request filter con
 
 ### send_push_notification
 
-Send push notification to specific `device_ids`, or to `channels`, or `fcm_tokens`, or to `fcm_topic`. Request will be queued by Centrifugo, consumed by Centrifugo built-in workers and sent to FCM API.
+Send push notification to specific `device_ids`, or to `channels`, or native provider identifiers like `fcm_tokens`, or to `fcm_topic`. Request will be queued by Centrifugo, consumed by Centrifugo built-in workers and sent to the provider API.
 
 #### send_push_notification params
 
@@ -235,10 +283,8 @@ Send push notification to specific `device_ids`, or to `channels`, or `fcm_token
 |-----------------|--------------|-----|--------|
 | `recipient`       | `PushRecipient` | Yes | Recipient of push notification      |
 | `notification`    | `PushNotification` | Yes | Push notification to send     |
-| `uid`             | string       | No | Unique send id      |
-| `expire_at`       | int64        | No | Unix timestamp when Centrifugo stops attempting to send this notification (this does not relate to notification TTL fields)      |
 
-`PushRecipient` (set one of the following fields):
+`PushRecipient` (you **must set only one of the following fields**):
 
 | Field         | Type      |  Required | Description |
 |---------------|-----------|-----------|--------|
@@ -246,132 +292,41 @@ Send push notification to specific `device_ids`, or to `channels`, or `fcm_token
 | `channels`      | repeated string | No | Send to channels     |
 | `fcm_tokens`    | repeated string | No | Send to a list of FCM tokens     |
 | `fcm_topic`     | string     | No | Send to a FCM topic     |
+| `fcm_condition`     | string     | No | Send to a FCM condition     |
+| `hms_tokens`    | repeated string | No | Send to a list of HMS tokens     |
+| `hms_topic`     | string     | No | Send to a HMS topic     |
+| `hms_condition`     | string     | No | Send to a HMS condition     |
+| `apns_tokens`    | repeated string | No | Send to a list of APNs tokens     |
+
 
 `PushNotification`:
 
-| Field     | Type            | Description |
-|-----------|----------------|--------|
-| `fcm`       | `FcmPushNotification` | Notification in FCM format      |
+| Field         | Type      |  Required | Description |
+|---------------|-----------|-----------|--------|
+| `fcm`       | `FcmPushNotification` | No | Notification for FCM      |
+| `hms`       | `HmsPushNotification` | No | Notification for HMS      |
+| `apns`       | `ApnsPushNotification` | No | Notification for APNs   |
+| `uid`             | string       | No | Unique send id      |
+| `expire_at`       | int64        | No | Unix timestamp when Centrifugo stops attempting to send this notification (this does not relate to notification TTL fields)      |
 
 `FcmPushNotification`:
 
-| Field Name | Type | Description |
-| --- | --- | --- |
-| `data` | map<string, string> | |
-| `notification` | `FcmNotification` | |
-| `android` | `FcmAndroid` | |
-| `apns` | `FcmApns` | |
-| `web` | `FcmWeb` | |
-| `fcm_options` | `FcmOptions` | |
+| Field         | Type      |  Required | Description |
+|---------------|-----------|-----------|--------|
+| `message` | JSON object | Yes | FCM [Message](https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages#Message) described in FCM docs.  |
 
-`FcmNotification`:
+`HmsPushNotification`:
 
-| Field Name | Type | Description |
-| --- | --- | --- |
-| `title` | string | |
-| `body` | string | |
+| Field         | Type      |  Required | Description |
+|---------------|-----------|-----------|--------|
+| `message` | JSON object | Yes | HMS [Message](https://developer.huawei.com/consumer/en/doc/development/HMSCore-References/https-send-api-0000001050986197#EN-US_TOPIC_0000001134031085__p1324218481619) described in HMS Push Kit docs. |
 
-`FcmOptions`:
+`ApnsPushNotification`:
 
-| Field Name | Type | Description |
-| --- | --- | --- |
-| `analytics_label` | string | |
-
-`FcmAndroid`:
-
-| Field Name | Type | Description |
-| --- | --- | --- |
-| `collapse_key` | string | |
-| `ttl` | string | |
-| `data` | map<string, string> | |
-| `notification` | `AndroidNotification` | |
-| `fcm_options` | `AndroidFcmOptions` | |
-
-`AndroidNotification`:
-
-| Field Name | Type | Description |
-| --- | --- | --- |
-| `title` | string | |
-| `body` | string | |
-| `icon` | string | |
-| `color` | string | |
-| `sound` | string | |
-| `tag` | string | |
-| `click_action` | string | |
-| `image` | string | |
-| `sticky` | bool | |
-
-`FcmApns`:
-
-| Field Name | Type | Description |
-| --- | --- | --- |
-| `headers` | map<string, string> | |
-| `payload` | `ApnsPayload` | |
-| `fcm_options` | `ApnsFcmOptions` | |
-
-`ApnsFcmOptions`:
-
-| Field Name | Type | Description |
-| --- | --- | --- |
-| `analytics_label` | string | |
-| `image` | string | |
-
-`ApnsPayload`:
-
-| Field Name | Type | Description |
-| --- | --- | --- |
-| `aps` | `ApnsAps` | |
-| `data` | map<string, string> | |
-
-`ApnsAps`:
-
-| Field Name | Type | Description |
-| --- | --- | --- |
-| `alert` | `ApnsApsAlert` | |
-| `badge` | `Int32Value` | |
-| `sound` | string | |
-| `thread_id` | string | |
-| `category` | string | |
-
-`ApnsApsAlert`:
-
-| Field Name | Type | Description |
-| --- | --- | --- |
-| `title` | string | |
-| `subtitle` | string | |
-| `body` | string | |
-
-`AndroidFcmOptions`:
-
-| Field Name | Type | Description |
-| --- | --- | --- |
-| `analytics_label` | string | |
-
-`FcmWeb`:
-
-| Field Name | Type | Description |
-| --- | --- | --- |
-| `headers` | map<string, string> | |
-| `data` | map<string, string> | |
-| `notification` | `WebPushNotification` | |
-| `fcm_options` | `WebPushFcmOptions` | |
-
-`WebPushNotification`:
-
-| Field Name | Type |
-| --- | --- |
-| `title` | string |
-| `body` | string |
-| `icon` | string |
-| `tag` | string |
-
-`WebPushFcmOptions`:
-
-| Field Name | Type |
-| --- | --- |
-| `link` | string |
-
-[Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L700)
+| Field         | Type      |  Required | Description |
+|---------------|-----------|-----------|--------|
+| `headers` | map<string, string> | No | APNs [headers](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/sending_notification_requests_to_apns)  |
+| `payload` | JSON object | Yes | APNs [payload](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/generating_a_remote_notification) |
 
 #### send_push_notification result
 
