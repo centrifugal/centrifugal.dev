@@ -7,6 +7,8 @@ The throttling feature allows limiting the number of operations each connection 
 
 With throttling properly configured you can protect your Centrifugo installation to some degree without sophisticated third-party solution. Centrifugo PRO protection works best in combination with protection on infrastructure level though.
 
+![Throttling](/img/throttling.png)
+
 ## In-memory per connection throttling
 
 In-memory throttling is an efficient way to limit number of operations allowed on a per-connection basis – i.e. inside each individual real-time connection. Our throttling implementation uses [token bucket](https://en.wikipedia.org/wiki/Token_bucket) algorithm internally.

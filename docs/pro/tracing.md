@@ -5,6 +5,8 @@ title: User and channel tracing
 
 That's a unique thing. The tracing feature of Centrifugo PRO allows attaching to any channel to see all messages flying towards subscribers or attach to a specific user ID to see all user-related events in real-time.
 
+![tracing](/img/tracing.png)
+
 It's possible to attach to trace streams using Centrifugo admin UI panel or simply from terminal using CURL and admin token. 
 
 This can be super-useful for debugging issues, investigating application behavior, understanding that the application works as expected. 

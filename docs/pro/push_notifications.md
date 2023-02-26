@@ -14,13 +14,13 @@ With Centriufugo PRO push notifications may be delivered to all popular applicat
 
 Centrifugo PRO provides API to manage user device tokens, device channel subscriptions and API to send push notifications towards registered devices and group of devices (subscribed to a channel).
 
+![Push](/img/push_notifications.png)
+
 To deliver push notifications to devices Centrifugo PRO integrates with the following providers:
 
 * [Firebase Cloud Messaging (FCM)](https://firebase.google.com/docs/cloud-messaging) <i className="bi bi-android2" style={{'color': 'yellowgreen'}}></i> <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i> <i className="bi bi-globe" style={{color: 'orange'}}></i>
 * [Huawei Messaging Service (HMS) Push Kit](https://developer.huawei.com/consumer/en/hms/huawei-pushkit/) <i className="bi bi-android2" style={{'color': 'yellowgreen'}}></i> <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i> <i className="bi bi-globe" style={{color: 'orange'}}></i>
 * [Apple Push Notification service (APNs) ](https://developer.apple.com/documentation/usernotifications) <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i>
-
-![Push](/img/push_notifications.png)
 
 This means that Centrifugo PRO covers full flow of push notification integration including frontend SDKs (provided by FCM, HMS, Apple SDKs).
 
@@ -63,7 +63,7 @@ FCM and HMS have a built-in way of sending notification to large groups of devic
 
 Centrifugo PRO tries to avoid combining push notifications APIs for all supported providers into one unified API – just gives a way to send notification payloads in a format defined by each provider. This allows Centrifugo PRO to be a non-obtrusive proxy for all the mentioned providers. 
 
-Apart from this you get a possibility to inspect sent push notifications over our [ClickHouse analytics](./analytics.md). Also, providers may provide their own analytics. For example, [FCM provides analytics](https://firebase.google.com/docs/cloud-messaging/understand-delivery?platform=web) from which you can get insight into push notification delivery.
+Apart from this you get a possibility to inspect sent push notifications over our [ClickHouse analytics](./analytics.md#notifications-table). Also, providers may provide their own analytics. For example, [FCM provides analytics](https://firebase.google.com/docs/cloud-messaging/understand-delivery?platform=web) from which you can get insight into push notification delivery.
 
 One more thing – in our push API we left a possibility to send notifications into FCM, HMS topics or sending to raw FCM, HMS, APNs tokens, so you can combine native provider primitives with those added by Centrifugo (i.e. sending to a list of device IDs or to a list of channels).
 

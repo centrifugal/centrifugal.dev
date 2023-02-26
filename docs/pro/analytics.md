@@ -3,7 +3,9 @@ id: analytics
 title: Analytics with ClickHouse
 ---
 
-This feature allows exporting information about channel publications, client connections, channel subscriptions and client operations to [ClickHouse](https://clickhouse.com/) thus providing an integration with a real-time (with seconds delay) analytics storage. ClickHouse is super fast for analytical queries, simple to operate with and it allows effective data keeping for a window of time. Also, it's relatively simple to create a high performance ClickHouse cluster.
+This feature allows exporting information about channel publications, client connections, channel subscriptions,  client operations and push notifications to [ClickHouse](https://clickhouse.com/) thus providing an integration with a real-time (with seconds delay) analytics storage. ClickHouse is super fast for analytical queries, simple to operate with and it allows effective data keeping for a window of time. Also, it's relatively simple to create a high performance ClickHouse cluster.
+
+![clickhouse](/img/clickhouse.png)
 
 This unlocks a great observability and a way to perform various analytics queries for better connection behavior understanding, check application correctness, building trends, reports, and so on.
 
@@ -32,6 +34,7 @@ To enable integration with ClickHouse add the following section to a configurati
         "export_subscriptions": true,
         "export_operations": true,
         "export_publications": true,
+        "export_notifications": true,
         "export_http_headers": [
             "User-Agent",
             "Origin",
@@ -61,7 +64,9 @@ You also need to set a ClickHouse cluster name (`clickhouse_cluster`) and databa
 
 `export_operations` tells Centrifugo to export individual client operation information. See below on table structure to see which fields are available.
 
-`export_publications` tells Centrifugo to export publications for channels to separate ClickHouse table.
+`export_publications` tells Centrifugo to export publications for channels to a separate ClickHouse table.
+
+`export_notifications` tells Centrifugo to export push notifications to a separate ClickHouse table.
 
 `export_http_headers` is a list of HTTP headers to export for connection information.
 
@@ -245,6 +250,60 @@ ENGINE = Distributed('centrifugo_cluster', 'centrifugo', 'publications', murmurH
 └────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
+## Notifications table
+
+```sql
+SHOW CREATE TABLE centrifugo.notifications
+
+┌─statement──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ CREATE TABLE centrifugo.notifications
+(
+    `uid` String,
+    `provider` String,
+    `type` String,
+    `recipient` String,
+    `device_id` String,
+    `platform` String,
+    `user` String,
+    `msg_id` String,
+    `success` Bool,
+    `error_message` String,
+    `error_code` String,
+    `time` DateTime
+)
+ENGINE = MergeTree
+PARTITION BY toYYYYMMDD(time)
+ORDER BY time
+TTL time + toIntervalDay(1)
+SETTINGS index_granularity = 8192 │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+And distributed one:
+
+```sql
+SHOW CREATE TABLE centrifugo.notifications_distributed;
+
+┌─statement──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ CREATE TABLE centrifugo.operations_distributed
+(
+    `uid` String,
+    `provider` String,
+    `type` String,
+    `recipient` String,
+    `device_id` String,
+    `platform` String,
+    `user` String,
+    `msg_id` String,
+    `success` Bool,
+    `error_message` String,
+    `error_code` String,
+    `time` DateTime
+)
+ENGINE = Distributed('centrifugo_cluster', 'centrifugo', 'notifications', murmurHash3_64(uid)) │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
 ## Query examples
 
 Show unique users which were connected:
@@ -324,9 +383,23 @@ LIMIT 10;
 └─────────┴──────────┘
 ```
 
+Show total number of push notifications to iOS devices sent during last 24 hours:
+
+```sql
+SELECT COUNT(*)
+FROM centrifugo.notifications
+WHERE (time > (now() - toIntervalHour(24))) AND (platform = 'ios')
+
+┌─count()─┐
+│   31200 │
+└─────────┘
+```
+
 ## Development
 
-The recommended way to run ClickHouse in production is with cluster. But during development you may want to run Centrifugo with single instance ClickHouse.
+The recommended way to run ClickHouse in production is with cluster. See [an example of such cluster configuration](https://github.com/centrifugal/centrifugo/tree/master/misc/clickhouse_cluster) made with Docker Compose.
+
+But during development you may want to run Centrifugo with single instance ClickHouse.
 
 To do this set only one ClickHouse dsn and do not set cluster name:
 
@@ -355,7 +428,7 @@ To do this set only one ClickHouse dsn and do not set cluster name:
 Run ClickHouse locally:
 
 ```bash
-docker run -it --rm -v /tmp/clickhouse:/var/lib/clickhouse -p 9000:9000 --name click clickhouse/clickhouse-serve
+docker run -it --rm -v /tmp/clickhouse:/var/lib/clickhouse -p 9000:9000 --name click clickhouse/clickhouse-server
 ```
 
 Run ClickHouse client:
