@@ -4,7 +4,7 @@
 #cfgo_outer,
 #cfgo_inner {
   transform-origin: 50% 50%;
-  animation: spin 10s ease-in-out infinite;
+  animation: spin 6s linear infinite;
   animation-delay: 0s;
 }
 #cfgo_outer {

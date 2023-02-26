@@ -3,7 +3,9 @@ id: performance
 title: Faster performance
 ---
 
-Centrifugo PRO has performance improvements for several server parts. These improvements can help to reduce tail end-to-end latencies in application, increase server throughput and/or reduce CPU usage on server machines.
+<img src="/img/logo_animated_fast.svg" width="75px" height="75px" align="left" style={{'marginRight': '10px', 'float': 'left'}} />
+
+Centrifugo PRO has performance improvements for several server parts. These improvements can help to reduce tail end-to-end latencies in the application, increase server throughput and/or reduce CPU usage on server machines. Our open-source version has a decent performance by itself, with PRO improvements Cenrifugo steps even further.
 
 ## Faster HTTP API
 
