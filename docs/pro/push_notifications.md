@@ -20,9 +20,11 @@ To deliver push notifications to devices Centrifugo PRO integrates with the foll
 * [Huawei Messaging Service (HMS) Push Kit](https://developer.huawei.com/consumer/en/hms/huawei-pushkit/) <i className="bi bi-android2" style={{'color': 'yellowgreen'}}></i> <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i> <i className="bi bi-globe" style={{color: 'orange'}}></i>
 * [Apple Push Notification service (APNs) ](https://developer.apple.com/documentation/usernotifications) <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i>
 
+![Push](/img/push_notifications.png)
+
 This means that Centrifugo PRO covers full flow of push notification integration including frontend SDKs (provided by FCM, HMS, Apple SDKs).
 
-But all these providers only manage frontend and transport part of notification delivery. Device token management and effective push notification broadcasting are parts to be solved by the application backend. Centrifugo PRO provides an API to store tokens in database (PostgreSQL), manage device subscriptions to channels in a unified way.
+All these push notification providers only manage frontend and transport part of notification delivery. Device token management and effective push notification broadcasting are parts to be solved by the application backend. Centrifugo PRO provides an API to store tokens in database (PostgreSQL), manage device subscriptions to channels in a unified way.
 
 Centrifugo PRO comes with super efficient worker queues (based on Redis streams) which allow broadcasting push notifications towards devices in a very efficient way.
 
@@ -51,11 +53,11 @@ EOF
 
 ## Motivation and design choices
 
-Let's talk about our main goals and choices when adding push notification API to Centrifugo PRO.
+Usually the first thing you'd do in the app to start delivering push notifications is integrating with huge providers like FCM, HMS, APNs. Integrating with these providers usually mean you need to keep device tokens in the application database and implement sending push messages to provider Push Services.
 
-The main goal was to simplify adding push notifications to the project for our users. FCM, HMS, APNs push provider SDKs solve the frontend part – giving a way to load push token. And a way to set notification handlers to handle notifications coming from Push Notifications server. Providers like FCM and HMS also provide a unified transport layer for all the platforms. But the backend part (token storage and management) is still need to be implemented by the application. Centrifugo PRO provides the required backend, and tries to follow best practices when working with tokens. It follows provider advices to keep only a working set of device tokens by reacting on errors and periodically removing stale devices.
+Centrifugo PRO provides the required backend for device tokens, and tries to follow best practices when working with tokens. It follows provider advices to keep only a working set of device tokens by reacting on errors and periodically removing stale devices/tokens.
 
-Centrifugo provides efficient and scalable queuing for sending push notifications. Developers can send notifications from the app backend to Centrifugo API with a minimal latency, and let Centrifugo process sending to FCM, HMS, APNs concurrently from the built-in workers.
+Centrifugo PRO provides an efficient and scalable queuing mechanism for sending push notifications. Developers can send notifications from the app backend to Centrifugo API with a minimal latency, and let Centrifugo process sending to FCM, HMS, APNs concurrently from the built-in workers.
 
 FCM and HMS have a built-in way of sending notification to large groups of devices over [topics](https://firebase.google.com/docs/cloud-messaging/android/topic-messaging) mechanism ([the same for HMS](https://developer.huawei.com/consumer/en/doc/development/HMS-Plugin-Guides-V1/subscribetopic-0000001056797545-V1)). One problem with native FCM or HMS topics though is that client can subscribe to any topic from the frontend side without any permission check. In today's world this is usually not desired. So Centrifugo PRO re-implements FCM, HMS topics by introducing an additional API to manage device subscriptions to channels. We intentionally called it `channels` to make the concept closer to our real-time API. In some cases you may have real-time channels and device subscription channels with matching names – to send messages to both online and offline users. Though it's up to you. Centrifugo PRO device subscriptions also add a way to introduce topic semantics for APNs.
 
@@ -99,6 +101,12 @@ As mentioned above Centrifigo uses PostgreSQL for token storage. To enable push 
 }
 ```
 
+:::tip
+
+Actually, PostgreSQL database configuration is optional here – you can use push notifications API without it. In this case you will be able to send notifications to FCM, HMS, APNs raw tokens, FCM and HMS native topics and conditions. I.e. using Centrifugo as an efficient proxy for push notifications (for example if you already keep tokens in your database). But sending to device ids and channels, and token/subscription management APIs won't be available for usage. 
+
+:::
+
 ### HMS
 
 ```json
@@ -118,7 +126,7 @@ As mentioned above Centrifigo uses PostgreSQL for token storage. To enable push 
 
 :::tip
 
-See how to get app id and app secret [here](https://github.com/Catapush/catapush-docs/blob/master/AndroidSDK/DOCUMENTATION_PLATFORM_HMS_PUSHKIT.md).
+See example how to get app id and app secret [here](https://github.com/Catapush/catapush-docs/blob/master/AndroidSDK/DOCUMENTATION_PLATFORM_HMS_PUSHKIT.md).
 
 :::
 
@@ -143,7 +151,11 @@ See how to get app id and app secret [here](https://github.com/Catapush/catapush
 }
 ```
 
-We also support auth over p12 certificates. 
+We also support auth over p12 certificates with the following options:
+
+* `push_notifications.apns_cert_p12_path`
+* `push_notifications.apns_cert_p12_b64`
+* `push_notifications.apns_cert_p12_password`
 
 ### Other options
 
@@ -370,6 +382,15 @@ Send push notification to specific `device_ids`, or to `channels`, or native pro
 | `uid` | string | Unique send id, matches `uid` in request if it was provided |
 
 [Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L712)
+
+## Metrics
+
+Several metrics are available to monitor the state of Centrifugo push worker system:
+
+* `centrifugo_push_notification_count` - counter, shows total count of push notifications sent to providers (splitted by provider, recipient type, platform, success, error code).
+* `centrifugo_push_queue_consuming_lag` - gauge, shows the lag of queues, should be close to zero most of the time. Splitted by provider and name of queue.
+* `centrifugo_push_consuming_inflight_jobs` - gauge, shows immediate number of workers proceccing pushes. Splitted by provider and name of queue.
+* `centrifugo_push_job_duration_seconds` - summary, provides insights about worker job duration timings. Splitted by provider and recipient type.
 
 ## Tutorial
 
