@@ -22,11 +22,11 @@ To deliver push notifications to devices Centrifugo PRO integrates with the foll
 * [Huawei Messaging Service (HMS) Push Kit](https://developer.huawei.com/consumer/en/hms/huawei-pushkit/) <i className="bi bi-android2" style={{'color': 'yellowgreen'}}></i> <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i> <i className="bi bi-globe" style={{color: 'orange'}}></i>
 * [Apple Push Notification service (APNs) ](https://developer.apple.com/documentation/usernotifications) <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i>
 
-This means that Centrifugo PRO covers full flow of push notification integration including frontend SDKs (provided by FCM, HMS, Apple SDKs).
+This means that Centrifugo PRO covers full flow of sending push notifications including frontend SDKs (provided by FCM, HMS, Apple SDKs).
 
 All these push notification providers only manage frontend and transport part of notification delivery. Device token management and effective push notification broadcasting are parts to be solved by the application backend. Centrifugo PRO provides an API to store tokens in database (PostgreSQL), manage device subscriptions to channels in a unified way.
 
-Centrifugo PRO comes with super efficient worker queues (based on Redis streams) which allow broadcasting push notifications towards devices in a very efficient way.
+Centrifugo PRO comes with worker queues (based on Redis streams) which allow broadcasting push notifications towards devices in a very efficient way.
 
 Integration with FCM means that you can use existing Firebase messaging SDKs to extract push notification token for a device on different platforms (iOS, Android, Flutter, web browser) and setting up push notification listeners. Only a couple of additional steps required to integrate frontend with Centrifugo PRO device token and device subscription storage. After doing that you will be able to send push notification towards single device, or towards devices subscribed to a channel. For example, with a simple Centrifugo API call like this:
 
@@ -161,11 +161,7 @@ We also support auth over p12 certificates with the following options:
 
 #### push_notifications.max_inactive_device_days
 
-TBD
-
-#### push_notifications.max_inactive_device_subscription_days
-
-TBD
+This option configures the number of days to keep device without updates. By default Centrifugo does not remove inactive devices.
 
 ## API description
 
@@ -173,7 +169,7 @@ TBD
 
 Registers or updates device information.
 
-#### device_register params
+#### device_register request
 
 | Field           | Type     | Required | Description                                 |
 |-----------------|----------|----|---------------------------------------------|
@@ -182,7 +178,9 @@ Registers or updates device information.
 | `token`         | string | Yes | Push notification token for the device.     |
 | `platform`      | string | Yes | Platform of the device (valid choices: `ios`, `android`, `web`). |
 | `user`          | string | No | User associated with the device.            |
-| `meta`          | map<string, string> | No | Additional metadata for the device.         |
+| `meta`          | map<string, string> | No | Additional metadata for the device (not indexed).         |
+| `tags`          | map<string, string> | No | Additional tags for the device (indexed data).         |
+| `channels`      | array of strings | No | Device channel subscriptions.         |
 
 #### device_register result
 
@@ -199,17 +197,29 @@ Registers or updates device information.
 | `token` | string | The device's token. |
 | `platform` | string | The device's platform. |
 | `user` | string | The user associated with the device. |
-| `meta` | map<string, string> | Additional metadata about the device. |
+
+### device_update
+
+Call this method to update device. For example, when user logs out the app and you need to detach user ID from the device.
+
+#### device_update request
+
+TBD
+
+#### device_update result
+
+TBD
 
 ### device_remove
 
-Removes device from storage.
+Removes device from storage. This may be also called when user logs out the app and you don't need its device token after that.
 
-#### device_remove params
+#### device_remove request
 
 | Field Name | Type | Required | Description |
 | --- | --- | ----| --- |
 | `ids` | repeated string | No | A list of device IDs to be removed |
+| `users` | repeated string | No | A list of device user IDs to filter devices to remove |
 | `provider_tokens` | `ProviderTokens` | No | Provider tokens to remove |
 
 #### device_remove result
@@ -220,7 +230,7 @@ Empty object.
 
 Returns a paginated list of registered devices according to request filter conditions.
 
-#### device_list params
+#### device_list request
 
 | Field | Type | Required | Description |
 |-------|------|----|-------------|
@@ -240,92 +250,35 @@ Returns a paginated list of registered devices according to request filter condi
 | `items` | repeated `Device` | A list of devices |
 | `has_more` | bool | A flag indicating whether there are more devices available |
 
-### device_subscription_add
+### push_user_channel_update
 
-Subscribes device to the provided list of channels.
+Manage mapping of channels with users. These user channels will be automatically attached to user devices upon registering.
 
-#### device_subscription_add params
+#### push_user_channel_update request
 
-| Field name | Type | Required | Description |
-|-----------|-------|----|-------------|
-| `device_id` | string | Yes | ID of the device to add subscriptions for |
-| `channels` | repeated string | No | List of channels to add subscriptions for |
+TBD
 
-#### device_subscription_add result
+#### push_user_channel_update result
 
-Empty object.
+TBD
 
-### device_subscription_remove
+### push_user_channel_list
 
-Unsubscribes device from the provided list of channels.
+List user to channel mapping.
 
-#### device_subscription_remove params
+#### push_user_channel_list request
 
-| Field Name | Type | Required | Description |
-| --- | --- | ---- | --- |
-| `device_id` | string | Yes | ID of the device to remove the subscription from |
-| `channels` | repeated string | No | List of channels to remove |
+TBD
 
-#### device_subscription_remove result
+#### push_user_channel_list result
 
-Empty object.
-
-### device_subscription_set
-
-Set device subscriptions to the provided list of channels (clearing all other not provided).
-
-#### device_subscription_set params
-
-| Field name | Type | Required | Description |
-|-----------|-------|----|-------------|
-| `device_id` | string | Yes | ID of the device to add subscriptions for |
-| `channels` | repeated string | No | List of channels to subscribe the device to |
-
-#### device_subscription_set result
-
-Empty object.
-
-### device_subscription_list
-
-Returns a paginated list of device subscriptions according to request filter conditions.
-
-#### device_subscription_list params
-
-| Field Name   | Type         | Required | Description                                                           |
-|--------------|--------------|----|-----------------------------------------------------------------------|
-| `device_ids`   | repeated string | No | List of device IDs to filter results                                                  |
-| `device_providers` | repeated string | No | List of device providers to filter results                 |
-| `device_tokens` | repeated string | No | List of device tokens to filter results                |
-| `device_platforms` | repeated string | No | List of device platforms to filter results                 |
-| `device_users` | repeated string | No | List of device users to filter results                             |
-| `channels`     | repeated string | No | Filter by list of channels the devices are subscribed to                        |
-| `since`        | string        | No | Cursor for pagination (last device subscription id in the previous batch).   |
-| `limit`        | int32        | No | Maximum number of devices to return in response                        |
-
-#### device_subscription_list result
-
-| Field Name | Type | Description |
-| --- | --- | --- |
-| `items` | repeated `DeviceSubscription` | An array of `DeviceSubscription` items. |
-| `has_more` | bool | Indicates if there are more items to be fetched. |
-
-`DeviceSubscription`:
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | Unique identifier of the device subscription. |
-| `device_id` | string | Unique identifier of the device. |
-| `device_provider` | string | Device provider. |
-| `device_token` | string | Token used by the device to receive push notifications. |
-| `device_platform` | string | Platform of the device |
-| `device_user` | string | Unique identifier of the user associated with the device. |
-| `channel` | string | Channel the device is subscribed to. |
+TBD
 
 ### send_push_notification
 
 Send push notification to specific `device_ids`, or to `channels`, or native provider identifiers like `fcm_tokens`, or to `fcm_topic`. Request will be queued by Centrifugo, consumed by Centrifugo built-in workers and sent to the provider API.
 
-#### send_push_notification params
+#### send_push_notification request
 
 | Field name          | Type         | Required |Description |
 |-----------------|--------------|-----|--------|
