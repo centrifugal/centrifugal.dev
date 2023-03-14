@@ -194,7 +194,7 @@ This example should help you to implement a similar HTTP handler in any language
 
 We also have a tutorial in the blog about [Centrifugo integration with NodeJS](/blog/2021/10/18/integrating-with-nodejs) which uses connect proxy and native session middleware of Express.js to authenticate connections. Even if you are not using NodeJS on a backend a tutorial can help you understand the idea.
 
-#### What if connection is anauthenticated/unauthorized to connect?
+#### What if connection is unauthenticated/unauthorized to connect?
 
 In this case return a disconnect object as a response. See [Return custom disconnect](#return-custom-disconnect) section. Depending on whether you want connection to reconnect or not (usually not) you can select the appropriate disconnect code. Sth like this in response:
 
