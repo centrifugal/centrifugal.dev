@@ -84,7 +84,7 @@ Make sure you properly configured [allowed_origins](configuration.md#allowed_ori
 
 :::
 
-Yes, this means you don't need to generate JWT and pass it to a client-side and can rely on a cookie while authenticating the user. **Centrifugo should work on the same domain in this case so your site cookie could be passed to Centrifugo by browsers**.
+Yes, this means you don't need to generate JWT and pass it to a client-side and can rely on a cookie while authenticating the user. **Centrifugo should work on the same domain in this case so your site cookie could be passed to Centrifugo by browsers**. In many cases your existing session mechanism will provide user authentication details to the connect proxy handler.   
 
 :::tip
 
@@ -193,6 +193,21 @@ if __name__ == '__main__':
 This example should help you to implement a similar HTTP handler in any language/framework you are using on the backend side.
 
 We also have a tutorial in the blog about [Centrifugo integration with NodeJS](/blog/2021/10/18/integrating-with-nodejs) which uses connect proxy and native session middleware of Express.js to authenticate connections. Even if you are not using NodeJS on a backend a tutorial can help you understand the idea.
+
+#### What if connection is anauthenticated/unauthorized to connect?
+
+In this case return a disconnect object as a response. See [Return custom disconnect](#return-custom-disconnect) section. Depending on whether you want connection to reconnect or not (usually not) you can select the appropriate disconnect code. Sth like this in response:
+
+```json
+{
+  "disconnect": {
+    "code": 4501,
+    "reason": "unauthorized"
+  }
+}
+```
+
+– may be sufficient enough. Choosing codes and reason is up to the developer, but follow the rules described in [Return custom disconnect](#return-custom-disconnect) section.
 
 ### Refresh proxy
 
@@ -425,6 +440,25 @@ See below on how to return an error in case you don't want to allow subscribing.
 
 `proxy_subscribe_timeout` (duration) config option controls timeout of HTTP POST request sent to app backend. By default `1s`.
 
+#### What if connection is not allowed to subscribe?
+
+In this case you can return error object as a subscribe handler response. See [return custom error](#return-custom-error) section.
+
+In general, frontend applications should not try to subscribe to channels for which access is not allowed. But these situations can happen or malicious user can try to subscribe to a channel. In most scenarios returning:
+
+```json
+{
+  "error": {
+    "code": 403,
+    "message": "permission denied"
+  }
+}
+```
+
+– is sufficient enough. Error code may be not 403 actually, no real reason to force HTTP semantics here - so it's up to Centrifugo user to decide. Just keep it in range  [400, 1999] as described [here](#return-custom-error).
+
+If case of returning response above, on client side `unsubscribed` event of Subscription object will be called with error code 403. Subscription won't resubscribe automatically after that.
+
 ### Publish proxy
 
 With the following option in the configuration file:
@@ -644,7 +678,7 @@ Application backend can return JSON object that contains a custom disconnect obj
 {
   "disconnect": {
     "code": 4500,
-    "reason": "custom disconnect"
+    "reason": "disconnect reason"
   }
 }
 ```
@@ -654,7 +688,7 @@ Application **must use numbers in the range 4000-4999 for custom disconnect code
 * codes in range [4000, 4499] give client an advice to reconnect
 * codes in range [4500, 4999] are terminal codes – client won't reconnect upon receiving it.
 
-Code is `uint32` internally. Numbers outside of 4000-4999 range are reserved by Centrifugo internal protocol. Keep in mind that **due to WebSocket protocol limitations and Centrifugo internal protocol needs you need to keep disconnect reason string no longer than 32 symbols**.
+Code is `uint32` internally. Numbers outside of 4000-4999 range are reserved by Centrifugo internal protocol. Keep in mind that **due to WebSocket protocol limitations and Centrifugo internal protocol needs you need to keep disconnect reason string no longer than 32 ASCII symbols (i.e. 32 bytes max)**.
 
 :::note
 
