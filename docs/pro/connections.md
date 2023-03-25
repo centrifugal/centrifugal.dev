@@ -3,24 +3,29 @@ id: connections
 title: Connections API
 ---
 
-Centrifugo PRO provides an additional API call `connections`. It allows getting all active sessions of the user (by user ID) without turning on presence feature for channels at all. It's also possible to attach any JSON payload to a connection which will be then visible in the result of `connections` call. The important thing is that this additional meta information won't be exposed to a client-side (unlike connection `info` for example).
+Centrifugo PRO offers an extra API call, `connections`, which enables retrieval of all active sessions (based on user ID or expression) without the need to activate the presence feature for channels. Furthermore, developers can attach any desired JSON payload to a connection that will then be visible in the result of the connections call. It's worth noting that this additional meta-information remains hidden from the client-side, unlike the info associated with the connection.
 
-This feature can be useful to manage active user sessions – for example in a messenger application. Users can look at a list of own current sessions and close some of them (possible with Centrifugo disconnect server API).
+This feature serves a valuable purpose in managing active user sessions, particularly for messenger applications. Users can review their current sessions and terminate some of them using the Centrifugo disconnect server API.
 
-Also, it can help developers to understand the system state during issue investigations.
+Moreover, this feature can help developers investigate issues by providing insights into the system's state.
 
 ### Example
 
-Let's look at example. Generate a JWT for user 42:
+Let's look at the quick example. First, generate a JWT for user 42:
 
+```bash
+$ centrifugo genconfig
 ```
-centrifugo genconfig
-centrifugo gentoken -u 42
+
+Generate token for some user to be used in the example connections:
+
+```bash
+$ centrifugo gentoken -u 42
 HMAC SHA-256 JWT for user 42 with expiration TTL 168h0m0s:
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MiIsImV4cCI6MTYyNzcxMzMzNX0.s3eOhujiyBjc4u21nuHkbcWJll4Um0QqGU3PF-6Mf7Y
 ```
 
-Run Centrifugo with `uni_http_stream` transport enabled (it will allow us to connect from console):
+Run Centrifugo with `uni_http_stream` transport enabled (it will allow us connecting from the terminal with `curl`):
 
 ```
 CENTRIFUGO_UNI_HTTP_STREAM=1 centrifugo -c config.json
@@ -71,7 +76,7 @@ The result:
 
 Here we can see that user has 2 connections from `terminal` app.
 
-Each connection can be annotated with meta JSON information which is set during connection establishment (over `meta` claim of JWT or by returning `meta` in connect proxy result).
+Each connection can be annotated with meta JSON information which is set during connection establishment (over `meta` claim of JWT or by returning `meta` in the connect proxy result).
 
 ### connections
 
@@ -88,7 +93,7 @@ Returns information about active connections according to the request.
 
 | Field name   | Field type     | Optional | Description  |
 | -------------- | -------------- | ------ | ------------ |
-| connections       | map of string to ConnectionInfo  | no | active user connections map where key is client ID and value is ConnectionInfo      |
+| connections       | `map[string]ConnectionInfo`  | no | active user connections map where key is client ID and value is ConnectionInfo      |
 
 #### ConnectionInfo
 
@@ -98,16 +103,23 @@ Returns information about active connections according to the request.
 | app_version       | string  | yes | client app version (if provided by client)         |
 | transport       | string  | no | client connection transport         |
 | protocol       | string  | no | client connection protocol (json or protobuf) |
-| state       | ConnectionState  | yes | connection state |
+| user       | string  | yes | client user ID |
+| state       | `ConnectionState`  | yes | connection state |
 
 #### ConnectionState object
 
 | Field name   | Field type     | Optional | Description  |
 | -------------- | -------------- | ------ | ------------ |
-| channels       | array of strings  | yes | Channels client subscribed to         |
+| channels       | `map[string]ChannelContext`  | yes | Channels client subscribed to         |
 | connection_token       | ConnectionTokenInfo  | yes | information about connection token         |
 | subscription_tokens       | map<string, SubscriptionTokenInfo>  | yes |  information about channel tokens used to subscribe         |
 | meta       | JSON object  | yes | meta information attached to a connection |
+
+#### ChannelContext object
+
+| Field name   | Field type     | Optional | Description  |
+| -------------- | -------------- | ------ | ------------ |
+| source       | int  | yes | The source of channel subscription  |
 
 #### ConnectionTokenInfo object
 

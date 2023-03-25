@@ -1,6 +1,7 @@
 module.exports = {
   Introduction: [
     "getting-started/introduction",
+    "getting-started/community",
     "getting-started/installation",
     "getting-started/quickstart",
     "getting-started/highlights",
@@ -74,7 +75,10 @@ module.exports = {
         "pro/user_block",
         "pro/token_revocation",
         "pro/capabilities",
+        "pro/channel_patterns",
+        "pro/cel_expressions",
         "pro/performance",
+        "pro/client_message_batching",
         "pro/singleflight",
         "pro/process_stats",
       ],

@@ -28,24 +28,6 @@
     background-color: var(--palette-background-alt);
 }
 
-@media (max-width: 996px) {
-    /* .featureContent {
-        padding: var(--cf-spacing-vertical) 0 calc(var(--cf-spacing-vertical) * 4) calc(var(--ifm-spacing-horizontal) + 20px)!important;
-    } */
-
-    /* .featureImage {
-        padding: calc(var(--cf-spacing-vertical) * 4) var(--ifm-spacing-horizontal) var(--cf-spacing-vertical)!important;
-    } */
-
-    /* .featureContentReversed {
-        padding: calc(var(--cf-spacing-vertical) * 4) calc(var(--ifm-spacing-horizontal) + 20px) var(--cf-spacing-vertical) var(--ifm-spacing-horizontal)!important;
-    }
-
-    .featureImageReversed {
-        padding: var(--cf-spacing-vertical) var(--ifm-spacing-horizontal) calc(var(--cf-spacing-vertical) * 4)!important;
-    } */
-}
-
 @media (max-width: 500px) {
     .featureContent {
         padding: 30px 30px 30px 30px !important;

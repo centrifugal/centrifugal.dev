@@ -3,7 +3,7 @@ id: user_block
 title: User blocking API
 ---
 
-In addition to detailed observability properties Centrifugo PRO provides instruments for performing protective actions. One of such instruments is user blocking API which allows blocking a specific user in Centrifugo.
+One additional instrument for making protective actions in Centrifugo PRO is user blocking API which allows blocking a specific user on Centrifugo level.
 
 When user is blocked it will be disconnected from Centrifugo immediately and also on the next connect attempt right after JWT decoded (so that Centrifugo got a user ID) or after result from connect proxy received. In case of using connect proxy you can actually disconnect user yourself by implementing blocking check on the application backend side – but possibility to block user in Centrifugo can still be helpful.
 

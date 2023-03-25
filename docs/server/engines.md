@@ -54,6 +54,10 @@ Centrifugo Redis engine allows scaling Centrifugo nodes to different machines. N
 
 **Minimal Redis version is 5.0.1**
 
+With Redis it's possible to come to the architecture like this:
+
+![redis](/img/redis_arch.png)
+
 ### Redis engine options
 
 Several configuration options related to Redis engine.

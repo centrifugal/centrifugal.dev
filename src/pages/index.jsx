@@ -92,7 +92,7 @@ function Home() {
             <div className="row">
               <Feature title="Integrates with everything" imageUrl="img/feature_integration.png">
                 Centrifugo is a self-hosted service which can handle connections over various <a href="/docs/transports/overview">real-time transports</a> and provides a simple <a href="/docs/server/server_api">publishing API</a>.
-                Centrifugo integrates with any application – no need to change an
+                Centrifugo integrates with any application &mdash; no need to change an
                 existing app architecture to introduce real-time features.
               </Feature>
               <Feature title="Great performance" imageUrl="img/feature_performance.png">

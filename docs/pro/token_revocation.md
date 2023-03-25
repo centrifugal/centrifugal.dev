@@ -145,4 +145,4 @@ curl --header "Content-Type: application/json" \
 
 #### invalidate_user_tokens result
 
-Empty object at the moment.
+Empty object.

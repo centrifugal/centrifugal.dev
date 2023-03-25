@@ -252,6 +252,8 @@ ENGINE = Distributed('centrifugo_cluster', 'centrifugo', 'publications', murmurH
 
 ## Notifications table
 
+🚧 This PRO feature is under construction together with [push notification API](./push_notifications.md).
+
 ```sql
 SHOW CREATE TABLE centrifugo.notifications
 
@@ -266,7 +268,7 @@ SHOW CREATE TABLE centrifugo.notifications
     `platform` String,
     `user` String,
     `msg_id` String,
-    `success` Bool,
+    `status` String,
     `error_message` String,
     `error_code` String,
     `time` DateTime
@@ -295,7 +297,7 @@ SHOW CREATE TABLE centrifugo.notifications_distributed;
     `platform` String,
     `user` String,
     `msg_id` String,
-    `success` Bool,
+    `status` String,
     `error_message` String,
     `error_code` String,
     `time` DateTime
