@@ -389,6 +389,13 @@ Use KeyDB instead of Redis only if you are sure you need it. Nothing stops you f
 
 To run Centrifugo with KeyDB all you need to do is use `redis` engine but run the KeyDB server instead of Redis.
 
+## Other Redis compatible
+
+Other storages which are compatible with Centrifugo may work, but we did not make enough testing with them. Some of them still evolving and do not fully support Redis protocol. So if you want to use these storages with Centrifugo – please read carefully the notes below:
+
+* [AWS Elasticache](https://aws.amazon.com/elasticache/) – it was reported to work, but we suggest you testing the setup including failover tests and work under load.
+* [DragonflyDB](https://dragonflydb.io/) - it's mostly compatible, the only problem with DragonflyDB v1.0.0 we observed is failing test regarding history iteration in reversed order (not very common). We have not tested a Redis Cluster emulation mode provided by DragonflyDB yet. We suggest you testing the setup including failover tests and work under load.
+
 ## Tarantool engine
 
 **EXPERIMENTAL**

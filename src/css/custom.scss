@@ -5,6 +5,8 @@
  * work well for content-centric websites.
  */
 
+@import url('https://fonts.googleapis.com/css2?family=Nunito&family=Roboto&display=swap');
+
 /* You can override the default Infima variables here. */
 :root {
   --palette-background-main: #17171b;
@@ -17,6 +19,9 @@
   --ifm-color-primary-lighter: #b54747;
   --ifm-color-primary-lightest: #bf5d5d;
   --ifm-code-font-size: 85%;
+  --ifm-font-size-base: 105%;
+  --ifm-heading-font-family: "Nunito";
+  --ifm-font-family-base: 'Roboto';
 
   --cf-spacing-vertical: 60px;
   --cf-link-background-color: #eee0d7;
@@ -50,6 +55,10 @@ html[data-theme="light"] .button--secondary:hover {
 
 .navbar__items a:nth-child(7).navbar__link--active {
   color: var(--ifm-color-primary);
+}
+
+.menu__link {
+  line-height: 1.10;
 }
 
 .doc-page em {

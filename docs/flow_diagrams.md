@@ -1,4 +1,4 @@
-For swimlines.io:
+For swimlanes.io:
 
 ```
 Client <- App Backend: JWT

@@ -797,6 +797,67 @@ Client automatically reconnects upon receiving code in range 3000-3499, 4000-449
 
 Client implementation can use codes <3000 for client-side specific disconnect reasons. 
 
+## RPC
+
+An SDK provides a way to send RPC to a server. RPC is a call that is not related to channels at all. It's just a way to call the server method from the client-side over the real-time connection. RPC is only available when [RPC proxy](../server/proxy.md#rpc-proxy) configured (so Centrifugo proxies the RPC to your application backend).
+
+```javascript
+const rpcRequest = {'key': 'value'};
+const data = await centrifuge.namedRPC('example_method', rpcRequest);
+```
+
+## Channel history API
+
+SDK provides a method to call publication history inside a channel (only for channels where history is enabled) to get last publications in a channel.
+
+Get stream current top position:
+
+```javascript
+const resp = await subscription.history();
+console.log(resp.offset);
+console.log(resp.epoch);
+```
+
+Get up to 10 publications from history since known stream position:
+
+```javascript
+const resp = await subscription.history({limit: 10, since: {offset: 0, epoch: '...'}});
+console.log(resp.publications);
+```
+
+Get up to 10 publications from history since current stream beginning:
+
+```javascript
+const resp = await subscription.history({limit: 10});
+console.log(resp.publications);
+```
+
+Get up to 10 publications from history since current stream end in reversed order (last to first):
+
+```javascript
+const resp = await subscription.history({limit: 10, reverse: true});
+console.log(resp.publications);
+```
+
+## Presence and presence stats API
+
+Once subscribed client can call presence and presence stats information inside channel (only for channels where [presence configured](../server/channels.md#channel-options)):
+
+For presence (full information about active subscribers in channel):
+
+```javascript
+const resp = await subscription.presence();
+// resp contains presence information - a map client IDs as keys 
+// and client information as values.
+```
+
+For presence stats (just a number of clients and unique users in a channel):
+
+```javascript
+const resp = await subscription.presenceStats();
+// resp contains a number of clients and a number of unique users.
+```
+
 ## SDK common best practices
 
 * Callbacks must be fast. Avoid blocking operations inside event handlers. Callbacks caused by protocol messages received from a server are called synchronously and connection read loop is blocked while such callbacks are being executed. Consider doing heavy work asynchronously.

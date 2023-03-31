@@ -9,13 +9,13 @@ As Centrifugo is language-agnostic and can be used together with any language/fr
 
 Let's look again at a simplified scheme:
 
-![Centrifugo scheme](/img/scheme_sketch.png)
+![Centrifugo scheme](/img/basic_pub_sub.png)
 
 There are three parts involved in the idiomatic Centrifugo usage scenario:
 
-1. Your clients (frontend application)
 1. Your application backend
-1. Centrifugo.
+1. Centrifugo
+1. Your clients (frontend application)
 
 It's possible to use Centrifugo without any application backend involved but here we won't consider this use case. 
 

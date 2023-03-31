@@ -36,15 +36,17 @@
 }
 
 .mainTitle {
-  margin: 5% 0 0 0;
+  margin: 3% 0 0 0;
   font-size: 3.2rem;
   font-weight: 600;
+  font-family: "Nunito";
 }
 
 .subTitle {
   margin: 0 0 5% 0;
-  font-size: 1.4rem;
+  font-size: 1.6rem;
   font-weight: 600;
+  font-family: "Nunito";
 }
 
 .section {

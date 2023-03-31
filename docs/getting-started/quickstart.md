@@ -4,7 +4,7 @@ sidebar_label: Quickstart tutorial
 title: Quickstart tutorial ⏱️
 ---
 
-Here we will build a very simple browser application with Centrifugo. Users will connect to Centrifugo over WebSocket, subscribe to a channel, and start receiving all channel publications (messages published to that channel). In our case, we will send a counter value to all channel subscribers to update counter widget in all open browser tabs in real-time.
+In this tutorial we will build a very simple browser application with Centrifugo. Users will connect to Centrifugo over WebSocket, subscribe to a channel, and start receiving all channel publications (messages published to that channel). In our case, we will send a counter value to all channel subscribers to update counter widget in all open browser tabs in real-time.
 
 First you need to [install Centrifugo](installation.md). In this example, we are using a binary file release which is fine for development. Once you have Centrifugo binary available on your machine you can generate minimal required configuration file with the following command:
 

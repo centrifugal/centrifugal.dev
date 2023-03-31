@@ -37,7 +37,9 @@ function Header() {
       <Logo isDarkTheme={isDarkTheme} />
       <div className="container" style={{ "zIndex": 1 }}>
         <div className={styles.mainTitle}>
+          {/* <span style={{ "color": "#d34343" }}> */}
           CENTRIFUGO
+          {/* </span> */}
         </div>
         <div className={styles.subTitle}>
           Scalable real-time messaging server. Set up once and forever.
@@ -53,7 +55,7 @@ function Header() {
           </Link>
         </div>
       </div>
-    </header>
+    </header >
   );
 }
 
@@ -91,9 +93,9 @@ function Home() {
           <div className="container">
             <div className="row">
               <Feature title="Integrates with everything" imageUrl="img/feature_integration.png">
-                Centrifugo is a self-hosted service which can handle connections over various <a href="/docs/transports/overview">real-time transports</a> and provides a simple <a href="/docs/server/server_api">publishing API</a>.
-                Centrifugo integrates with any application &mdash; no need to change an
-                existing app architecture to introduce real-time features.
+                Centrifugo is a self-hosted service which handles connections over various <a href="/docs/transports/overview">transports</a> and provides a simple <a href="/docs/server/server_api">publishing API</a>.
+                Centrifugo nicely integrates with any application &mdash; no changes in
+                the existing app architecture required to introduce real-time updates.
               </Feature>
               <Feature title="Great performance" imageUrl="img/feature_performance.png">
                 Centrifugo is written in Go language with some smart optimizations inside.
@@ -116,16 +118,15 @@ function Home() {
                 production by many companies around the world: VK, Badoo, ManyChat, OpenWeb, Grafana, and others.
               </Feature>
               <Feature title="Centrifugo PRO" imageUrl="img/feature_pro.png">
-                <a href="/docs/pro/overview">Centrifugo PRO</a> provides a set of unique features on top of the OSS version: connection analytics
-                with ClickHouse, real-time user and channel tracing, operation throttling, faster performance, token extensions, and more.
+                <a href="/docs/pro/overview">Centrifugo PRO</a> has a set of unique features on top of the OSS version: analytics
+                with ClickHouse, real-time user and channel tracing, operation throttling, faster performance, token extensions, additional APIs (for example, push notification API), and more.
               </Feature>
             </div>
           </div>
         </section>
-
         <Highlight
           img={
-            <img src="/img/scheme_sketch.png" />
+            <img src="/img/basic_pub_sub.png" />
           }
           reversed
           isDark
@@ -133,14 +134,14 @@ function Home() {
           text={
             <>
               <p>
-                Real-time messaging can help create interactive applications where events
+                Real-time messaging is used to create interactive applications where events
                 are delivered to online users with minimal delay.
               </p>
               <p>
                 Chats apps, live comments, multiplayer games, real-time data visualizations, collaborative tools, etc. can all be built on top of a real-time messaging system.
               </p>
               <p>
-                Centrifugo is a user facing <b>PUB/SUB</b> server that handles persistent connections over various real-time transports – <b>WebSocket</b>, HTTP-streaming, SSE (Server-Sent Events), SockJS, WebTransport or GRPC.
+                Centrifugo is a user facing <b>PUB/SUB</b> server that handles persistent connections over various real-time transports &mdash; <b>WebSocket</b>, HTTP-streaming, SSE (Server-Sent Events), SockJS, WebTransport, GRPC.
               </p>
             </>
           }
@@ -191,7 +192,7 @@ function Home() {
               <code>It's simple and powerful</code>
               <code>Open source</code>
               <code>Very simple integration</code>
-              <code>It's really well written. Super easy to setup, especially for auth!</code>
+              <code>It's really well written. Super easy to setup, especially for auth</code>
               <code>Clean code</code>
               <code>Has a Dart Client &lt;3</code>
             </div>

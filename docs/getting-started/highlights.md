@@ -9,7 +9,7 @@ At this point you know how to build the simplest real-time app with Centrifugo. 
 
 Centrifugo was originally designed to be used in conjunction with frameworks without built-in concurrency support (like Django, Laravel, etc.).
 
-It works as a standalone service with well-defined communication contracts. It fits very well in both monolithic and microservice architecture. Application developers should not change backend philosophy at all – just integrate with Centrifugo [HTTP or GRPC API](../server/server_api.md) and let users enjoy real-time updates.
+It works as a standalone service with well-defined communication contracts. It nicely fits both monolithic and microservice architectures. Application developers should not change backend philosophy and technology stack at all – just integrate with Centrifugo [HTTP or GRPC API](../server/server_api.md) and let users enjoy real-time updates.
 
 ### Great performance
 

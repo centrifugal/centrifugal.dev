@@ -73,7 +73,7 @@ module.exports = {
       style: "dark",
       links: [
         {
-          title: "Contacts",
+          title: "Contact us",
           items: [
             {
               label: "Send e-mail",
@@ -85,16 +85,16 @@ module.exports = {
           title: "Community",
           items: [
             {
-              label: "Issues",
-              href: "https://github.com/centrifugal/centrifugo/issues",
-            },
-            {
               label: "Telegram",
               href: "https://t.me/joinchat/U57MI8Lam9mhpuhd",
             },
             {
               label: "Discord",
               href: "https://discord.gg/tYgADKx",
+            },
+            {
+              label: "Twitter",
+              href: "https://twitter.com/centrifugal_dev",
             },
           ],
         },
@@ -226,7 +226,7 @@ module.exports = {
           },
         },
         theme: {
-          customCss: require.resolve("./src/css/custom.css"),
+          customCss: require.resolve("./src/css/custom.scss"),
         },
       },
     ],
@@ -238,6 +238,7 @@ module.exports = {
         hashed: true,
       },
     ],
+    "docusaurus-plugin-sass",
   ],
   stylesheets: [
     'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css'
