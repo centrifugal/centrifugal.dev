@@ -57,7 +57,10 @@ curl --header "Authorization: apikey <API_KEY>" \
 
 Here is a live example:
 
-<iframe width="100%" height="400" src="/img/api_example.mp4" frameBorder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+<video width="100%" controls>
+  <source src="/img/api_example.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
 Now let's investigate each API method in detail.
 
