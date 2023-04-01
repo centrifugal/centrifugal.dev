@@ -94,6 +94,12 @@ npm run dev
 
 Navigate to [http://localhost:5173/](http://localhost:5173/). You should see default Vite template working, we are going to modify it a bit.
 
+:::caution
+
+Use `localhost`, not `127.0.0.1` - since we used `localhost` for Keyloak and Centrifugo configurations above.
+
+:::
+
 Add the following into `main.jsx`:
 
 ```javascript
