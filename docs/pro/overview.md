@@ -14,25 +14,26 @@ All the features of Centrifugo PRO come with a decent scalable performance. Some
 Centrifugo PRO is packed with the following features:
 
 * Everything from Centrifugo OSS
-* 🔍 [Channel and user tracing](./tracing.md) provides a way to look at client protocol frames in the specified channel or per user ID.
+* 🔍 [Channel and user tracing](./tracing.md) allows watching client protocol frames in channel or per user ID in real time.
 * 💹 [Real-time analytics with ClickHouse](./analytics.md) for a great system observability, reporting and trending.
 * 🛡️ [Operation throttling](./throttling.md) to protect server from the real-time API misusing and frontend bugs.
-* 🔥 [Push notification API](./push_notifications.md) to manage device tokens and send push notifications to mobile devices and browsers.
-* 🟢 [User status API](./user_status.md) feature to understand activity state for a list of users.
-* 🔌 [Connections API](./connections.md) to filter and inspect active connections.
+* 🔥 [Push notification API](./push_notifications.md) to manage device tokens and send mobile and browser push notifications.
+* 🟢 [User status API](./user_status.md) feature allows understanding activity state for a list of users.
+* 🔌 [Connections API](./connections.md) to query, filter and inspect active connections.
 * ✋ [User blocking API](./user_block.md) to block/unblock abusive users by ID.
-* 🛑 [JWT revoking and invalidation API](./token_revocation.md) to revoke tokens by token ID and invalidate user's tokens on issue time basis.
-* 🪄 [Channel capabilities](./capabilities.md) for controlling channel permissions per connection or per subscription.
-<!-- * 📜 [Channel patterns](./channel_patterns.md) to define channel config like HTTP routes and include tenant information into channel. -->
+* 🛑 [JWT revoking and invalidation API](./token_revocation.md) to revoke tokens by ID and invalidate user's tokens based on issue time.
+* 🌸 [Channel capabilities](./capabilities.md) for controlling channel permissions per connection or per subscription.
+<!-- * 📜 [Channel patterns](./channel_patterns.md) allow defining channel configuration like HTTP routes. -->
+<!-- * 🛍️ [Tenant channels](./tenant_channels.md) extend channel syntax to include tenant information. -->
 <!-- * ✍️ [CEL expressions](./cel_expressions.md) to write custom efficient permission rules for channel operations. -->
 * 💣 [Faster performance](./performance.md) to reduce resource usage on server side.
 * 🔮 [Singleflight](./singleflight.md) for online presence and history to reduce load on the broker.
 <!-- * 🍔 [Client message batching control](./client_msg_batching.md) for advanced tuning of client connection write behaviour. -->
-* 🪵 [Near real-time CPU and RSS memory](./process_stats.md) usage stats of Centrifugo nodes in admin UI.
+* 🪵 [CPU and RSS memory](./process_stats.md) usage stats of Centrifugo nodes in admin UI.
 
 :::info
 
-PRO features can change with time. We reserve a right to move features from PRO to OSS version if there is a clear signal that this is required to do for the Centrifugo ecosystem.
+PRO features can change with time. We reserve a right to move features from PRO to OSS version if there is a clear signal that this is required to do for the ecosystem.
 
 :::
 

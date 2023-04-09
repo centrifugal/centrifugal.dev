@@ -563,7 +563,7 @@ Empty object at the moment.
 
 | Parameter name | Parameter type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
-| pattern       | string  | no | Pattern to filter channels        |
+| pattern       | string  | no | Pattern to filter channels, we are using [gobwas/glob](https://github.com/gobwas/glob) library for matching         |
 
 #### Channels result
 

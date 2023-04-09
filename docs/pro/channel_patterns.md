@@ -30,22 +30,32 @@ Let's look at the example:
 }
 ```
 
-`$` in the segment beginning defines a variable part, more information below.
+As soon as namespace name starts with `/` - it's considered a channel pattern. `$` in the segment beginning defines a variable part, more information below.
 
-In this case a channel to be used must be sth like `/users/mario` - i.e. start with `/` and match one of the patterns defined in the configuration. So this channel pattern matching mechanics behaves mostly like HTTP route resolving in many frameworks. Some examples:
+In this case a channel to be used must be sth like `/users/mario` - i.e. start with `/` and match one of the patterns defined in the configuration. So this channel pattern matching mechanics behaves mostly like HTTP route resolving in many frameworks.
+
+Some examples:
 
 * channel is `/users/mario`, then the namespace with the name `/users/$name` will match and we apply all the options defined for it to the channel.
 * channel is `/events/42/news`, then the namespace with the name `/events/$project/$type` will match.
 * channel is `/events/42`, then no namespace will match and the `unknown channel` error will be returned.
 
-### Limitations
+```javascript title="Basic example demonstrating use of pattern channels in JS"
+const client := new Centrifuge("ws://...", {});
+const sub = client.newSubscription('/users/mario');
+sub.subscribe();
+client.connect();
+```
 
-Some limitations to know about:
+### Implementation details
 
-* Centrifugo only allows explicit channel patterns which do not result into channel pattern conflicts, this is checked during configuration validation on server start.
-* Pattern names can't start with `/$`, `/*` or `//` – Centrifugo requires first segment to not be a variable part, this should help your routes scale as time goes. See more about variables below.
+Some implementation restrictions and details to know about:
+
+* Centrifugo only allows explicit channel patterns which do not result into channel pattern conflicts, this is checked during configuration validation on server start. The logic is inspired by [julienschmidt/httprouter](https://github.com/julienschmidt/httprouter) (though we are not using that lib for the implementation).
+* Pattern names can't start with `/$`, `/*` or `//` – Centrifugo requires first segment to be a non-variable part, this should help your routes scale as time goes. Read more about variables below.
 * When using channel patterns feature `:` symbol in a channel name is not a namespace separator anymore – the entire channel is matched over the namespace name (over channel pattern). Similar to the HTTP routes semantics.
-* There is no analogue of top-level namespace (like we have for standard namespace configuration) for channels starting with `/`. If a channel does not match any explicitly defined pattern then Centrifugo returns the `unknown channel` error.
+* There is no analogue of top-level namespace (like we have for standard namespace configuration) for channels starting with `/`. If a channel does not match any explicitly defined pattern then Centrifugo returns the `102: unknown channel` error.
+* If you define `channel_regex` inside channel pattern options – then regex matches over the entire channel (since variable parts are located in the namespace name in this case).
 
 ### Variables
 
@@ -67,24 +77,9 @@ The second type is catch-all variable and it has the form of `*path`. Like the n
 Channel pattern: /sources/*path
 
 Channels:
-  /sources/:something           match
-  /sources/file:something       match
-  /sources/dir/file:something   match
+  /sources/           match
+  /sources/file       match
+  /sources/dir/file   match
 ```
 
-### Tenant channels
-
-As the next step Centrifugo PRO extends channel name syntax with tenant channels. This is only available when `channel_patterns` feature is used.
-
-Tenant channel format looks very similar to the format used for URLs:
-
-```
-cf://org_1/users/test
-cf://org_2/posts/test
-```
-
-`cf` part is necessary in this case and is called `protocol` part. Protocol must always be `cf` at the moment. The `org_1` is called host (or tenant) part. In general you can choose any string which fits your app for the host part of a channel but we recommend putting something which identifies the particular application instance (tenant) into it. If you only have one tenant in the app – then use sth like app name or just don't use tenant channels at all.
-
-The protocol and host parts are ignored by Centrifugo when resolving a namespace for a channel, namespace is extracted as part of the channel after host (i.e. from the `path` part if we remember about URL convention). For example, in channel `cf://org_15/private/test` the extracted namespace part will be `/private/test`.
-
-Additional benefits of using channel patterns and tenant channels may be achieved together with Centrifugo PRO [CEL expressions](./cel_expressions.md). The host part of tenant channel becomes available for CEL expressions as a separate variable which may be used for rule evaluation in a custom way. For example, may be used as a check that user belongs to a particular tenant of the application. And the channel pattern variables are also available to be used inside CEL expressions. 
+Additional benefits of using channel patterns may be achieved together with Centrifugo PRO [CEL expressions](./cel_expressions.md). Channel pattern variables are available inside CEL expressions for evaluation in a custom way.

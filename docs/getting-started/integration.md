@@ -7,9 +7,9 @@ This chapter aims to help you get started with Centrifugo. We will look at a ste
 
 As Centrifugo is language-agnostic and can be used together with any language/framework we won't be specific here about any backend or frontend technology your application can be built with. Only abstract steps which you can extrapolate to your application stack.
 
-Let's look again at a simplified scheme:
+Let's look at a simplified scheme:
 
-![Centrifugo scheme](/img/basic_pub_sub.png)
+![Centrifugo scheme](/img/protocol_pub_sub.png)
 
 There are three parts involved in the idiomatic Centrifugo usage scenario:
 

@@ -76,6 +76,7 @@ module.exports = {
         "pro/token_revocation",
         "pro/capabilities",
         // "pro/channel_patterns",
+        // "pro/tenant_channels",
         // "pro/cel_expressions",
         "pro/performance",
         "pro/singleflight",
