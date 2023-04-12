@@ -24,13 +24,13 @@ To deliver push notifications to devices Centrifugo PRO integrates with the foll
 * [Huawei Messaging Service (HMS) Push Kit](https://developer.huawei.com/consumer/en/hms/huawei-pushkit/) <i className="bi bi-android2" style={{'color': 'yellowgreen'}}></i> <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i> <i className="bi bi-globe" style={{color: 'orange'}}></i>
 * [Apple Push Notification service (APNs) ](https://developer.apple.com/documentation/usernotifications) <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i>
 
-This means that Centrifugo PRO covers full flow of sending push notifications including frontend SDKs (provided by FCM, HMS, Apple SDKs).
+Centrifugo PRO provides a comprehensive solution for sending push notifications by incorporating frontend SDKs from FCM, HMS, and Apple SDKs.
 
-All these push notification providers only manage frontend and transport part of notification delivery. Device token management and effective push notification broadcasting are parts to be solved by the application backend. Centrifugo PRO provides an API to store tokens in database (PostgreSQL), manage device subscriptions to topics in a secure unified way.
+While these push notification providers handle the frontend and transport aspects of notification delivery, device token management and efficient push notification broadcasting still need to be addressed by the application backend. Centrifugo PRO offers an API for storing tokens in a PostgreSQL database and managing device subscriptions to topics in a secure, unified manner.
 
-Centrifugo PRO comes with worker queues (based on Redis streams) which allow efficient broadcasting of push notifications towards devices.
+To facilitate efficient push notification broadcasting towards devices, Centrifugo PRO includes worker queues based on Redis streams.
 
-Integration with FCM means that you can use existing Firebase messaging SDKs to extract push notification token for a device on different platforms (iOS, Android, Flutter, web browser) and setting up push notification listeners. Only a couple of additional steps required to integrate frontend with Centrifugo PRO device token and device subscription storage. After doing that you will be able to send push notification towards single device, or towards devices subscribed to a topic. For example, with a simple Centrifugo API call like this:
+Integration with FCM means that you can use existing Firebase messaging SDKs to extract push notification token for a device on different platforms (iOS, Android, Flutter, web browser) and setting up push notification listeners. Only a couple of additional steps required to integrate frontend with Centrifugo PRO device token and device topic storage. After doing that you will be able to send push notification towards single device, or towards group of devices subscribed to a topic. For example, with a simple Centrifugo API call like this:
 
 ```bash
 curl -X POST http://localhost:8000/api \
@@ -40,7 +40,7 @@ curl -X POST http://localhost:8000/api \
 {
     "method": "send_push_notification",
     "params": {
-        "recipient": {"topics": ["test"]},
+        "recipient": {"topics": ["user:4223"]},
         "notification": {
             "fcm": {
                 "message": {
@@ -79,7 +79,7 @@ In some cases you may have real-time channels and device subscription topics wit
 
 Centrifugo PRO device topic subscriptions also add a way to introduce the missing topic semantics for APNs.
 
-Centrifugo PRO additionally provides an API to create persistent bindings of user to notification topics. Then – as soon as user registers a device – it will be automatically subscribed to its own topics. As soon as user logs out from the app and you update user ID of the device - user topics binded to the device automatically removed/switched. This design solves one of the issues with FCM – if two different users use the same device it's becoming problematic to unsubscribe the device from large number of topics upon logout. Also, as soon as user to topic binding added (using `push_user_topic_update` API) – it will be synchronized across all user active devices. You can still manage such persistent subscriptions on the application backend side if you prefer and provide the full list inside `device_register` call.
+Centrifugo PRO additionally provides an API to create persistent bindings of user to notification topics. Then – as soon as user registers a device – it will be automatically subscribed to its own topics. As soon as user logs out from the app and you update user ID of the device - user topics binded to the device automatically removed/switched. This design solves one of the issues with FCM – if two different users use the same device it's becoming problematic to unsubscribe the device from large number of topics upon logout. Also, as soon as user to topic binding added (using `user_topic_update` API) – it will be synchronized across all user active devices. You can still manage such persistent subscriptions on the application backend side if you prefer and provide the full list inside `device_register` call.
 
 ### Non-obtrusive proxying
 
@@ -126,7 +126,7 @@ As mentioned above Centrifigo uses PostgreSQL for token storage. To enable push 
 
 :::tip
 
-Actually, PostgreSQL database configuration is optional here – you can use push notifications API without it. In this case you will be able to send notifications to FCM, HMS, APNs raw tokens, FCM and HMS native topics and conditions. I.e. using Centrifugo as an efficient proxy for push notifications (for example if you already keep tokens in your database). But sending to device ids and topics, and token/subscription management APIs won't be available for usage.
+Actually, PostgreSQL database configuration is optional here – you can use push notifications API without it. In this case you will be able to send notifications to FCM, HMS, APNs raw tokens, FCM and HMS native topics and conditions. I.e. using Centrifugo as an efficient proxy for push notifications (for example if you already keep tokens in your database). But sending to device ids and topics, and token/topic management APIs won't be available for usage.
 
 :::
 
@@ -201,7 +201,7 @@ Registers or updates device information.
 | `token`         | string | Yes | Push notification token for the device.     |
 | `platform`      | string | Yes | Platform of the device (valid choices: `ios`, `android`, `web`). |
 | `user`          | string | No  | User associated with the device.            |
-| `topics`      | array of strings | No | Device topic subscriptions. This should be a full list which replaces all the topics previously accociated with the device. User topics managed by `PushUserTopic` model will be automatically attached.  |
+| `topics`      | array of strings | No | Device topic subscriptions. This should be a full list which replaces all the topics previously accociated with the device. User topics managed by `UserTopic` model will be automatically attached.  |
 | `tags`          | map<string, string> | No | Additional tags for the device (indexed key-value data).  |
 | `meta`          | map<string, string> | No | Additional metadata for the device (not indexed).         |
 
@@ -347,10 +347,10 @@ List device to topic mapping.
 
 #### device_topic_list result
 
-| Field Name | Type | Description |
-| --- | --- | --- |
-| `items` | repeated `DeviceChannel` | A list of DeviceChannel objects |
-| `has_more` | bool | A flag indicating whether there are more devices available |
+| Field Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `items` | repeated `DeviceChannel` | Yes | A list of DeviceChannel objects |
+| `has_more` | bool | Yes | A flag indicating whether there are more devices available |
 
 `DeviceChannel`:
 
@@ -360,11 +360,11 @@ List device to topic mapping.
 | `device_id` | string | Yes | Device ID |
 | `topic` | string | Yes | Channel |
 
-### push_user_topic_update
+### user_topic_update
 
 Manage mapping of topics with users. These user topics will be automatically attached to user devices upon registering. And removed from device upon deattaching user.
 
-#### push_user_topic_update request
+#### user_topic_update request
 
 | Field | Type | Required | Description |
 |-------|------|----|-------------|
@@ -372,15 +372,15 @@ Manage mapping of topics with users. These user topics will be automatically att
 | `op` | string | Yes | `add` or `remove` or `set` |
 | `topics` | repeated string | No | List of topics. |
 
-#### push_user_topic_update result
+#### user_topic_update result
 
 Empty object.
 
-### push_user_topic_list
+### user_topic_list
 
 List user to topic mapping.
 
-#### push_user_topic_list request
+#### user_topic_list request
 
 | Field | Type | Required | Description |
 |-------|------|----|-------------|
@@ -388,20 +388,20 @@ List user to topic mapping.
 | `topics` | repeated string | No | List of topics to filter results. |
 | `topic_prefix` | string | No | Channel prefix to filter results. |
 | `since` | string | No | Cursor for pagination (last id in previous batch, empty for first page). |
-| `limit` | int32 | No | Maximum number of `PushUserTopic` objects to retrieve. |
+| `limit` | int32 | No | Maximum number of `UserTopic` objects to retrieve. |
 
-#### push_user_topic_list result
+#### user_topic_list result
 
 | Field Name | Type | Description |
 | --- | --- | --- |
-| `items` | repeated `PushUserTopic` | A list of PushUserTopic objects |
+| `items` | repeated `UserTopic` | A list of UserTopic objects |
 | `has_more` | bool | A flag indicating whether there are more devices available |
 
-`PushUserTopic`:
+`UserTopic`:
 
 | Field | Type | Required | Description |
 |-------|------|----|-------------|
-| `id`   | string | Yes | ID of `PushUserTopic` |
+| `id`   | string | Yes | ID of `UserTopic` |
 | `user` | string | Yes | User ID |
 | `topic` | string | Yes | Channel |
 
@@ -420,21 +420,21 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 
 | Field         | Type      |  Required | Description |
 |---------------|-----------|-----------|--------|
-| `device_ids`    | repeated string | No | Send to a list of device IDs     |
-| `topics`      | repeated string | No | Send to topics     |
-| `fcm_tokens`    | repeated string | No | Send to a list of FCM tokens     |
-| `fcm_topic`     | string     | No | Send to a FCM topic     |
-| `fcm_condition`     | string     | No | Send to a FCM condition     |
-| `hms_tokens`    | repeated string | No | Send to a list of HMS tokens     |
-| `hms_topic`     | string     | No | Send to a HMS topic     |
-| `hms_condition`     | string     | No | Send to a HMS condition     |
-| `apns_tokens`    | repeated string | No | Send to a list of APNs tokens     |
+| `device_ids`    | repeated string | No | Send to a list of device IDs (managed by Centrifugo) |
+| `topics`      | repeated string | No | Send to topics (managed by Centrifugo)     |
+| `fcm_tokens`    | repeated string | No | Send to a list of FCM native tokens     |
+| `fcm_topic`     | string     | No | Send to a FCM native topic     |
+| `fcm_condition`     | string     | No | Send to a FCM native condition     |
+| `hms_tokens`    | repeated string | No | Send to a list of HMS native tokens     |
+| `hms_topic`     | string     | No | Send to a HMS native topic     |
+| `hms_condition`     | string     | No | Send to a HMS native condition     |
+| `apns_tokens`    | repeated string | No | Send to a list of APNs native tokens     |
 
 `PushNotification`:
 
 | Field         | Type      |  Required | Description |
 |---------------|-----------|-----------|--------|
-| `uid`             | string       | No | Unique send id      |
+| `uid`             | string       | No | Unique send id, used for Centrifugo builtin analytics |
 | `expire_at`       | int64        | No | Unix timestamp when Centrifugo stops attempting to send this notification (this does not relate to notification TTL fields)      |
 | `fcm`       | `FcmPushNotification` | No | Notification for FCM      |
 | `hms`       | `HmsPushNotification` | No | Notification for HMS      |
@@ -465,17 +465,15 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 | --- | --- | --- |
 | `uid` | string | Unique send id, matches `uid` in request if it was provided |
 
-[Proto definitions](https://github.com/centrifugal/centrifugo/blob/157d3a7da9bdae5b6274da99473deee25f158e40/internal/apiproto/api.proto#L712)
-
 ### update_push_status
 
-This API call is experimental, some changes are expected to happen here.
+This API call is experimental, some changes may happen here.
 
-Centrifugo PRO also allows tracking status of push notification delivery and interaction. It's possible to use `update_push_status` API to save the updated status of push notification to the `notifications` [analytics table](./analytics.md#notifications-table). Then it's possible to build insights into push notification effectiveness.
+Centrifugo PRO also allows tracking status of push notification delivery and interaction. It's possible to use `update_push_status` API to save the updated status of push notification to the `notifications` [analytics table](./analytics.md#notifications-table). Then it's possible to build insights into push notification effectiveness by querying the table.
 
-The `update_push_status` API supposes that you are using `uid` field with each notification sent and you are using Centrifugo PRO generated device IDs (as described in steps to integrate).
+The `update_push_status` API supposes that you are using `uid` field with each notification sent and you are using Centrifugo PRO generated device IDs (as described in [steps to integrate](#steps-to-integrate)).
 
-This is a part of server API at the moment, so you need to proxy requests to this endpoint over your backend. We can consider making this API public – please reach out if your use case requires it.
+This is a part of server API at the moment, so you need to proxy requests to this endpoint over your backend. We can consider making this API suitable for requests from the client side – please reach out if your use case requires it.
 
 #### update_push_status request
 
