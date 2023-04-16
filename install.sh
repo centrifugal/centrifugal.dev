@@ -60,7 +60,7 @@ main() {
 
   tmpdir=$(mktemp -d)
   curl -sSLf "$centrifugoDownloadUrl" >"$tmpdir/centrifugo.tar.gz"
-  tar -xzf /tmp/centrifugo.tar.gz ${centrifugoBinary}
+  tar -xzf $tmpdir/centrifugo.tar.gz ${centrifugoBinary}
   chmod +x "$centrifugoBinary"
   rm -r $tmpdir
 
