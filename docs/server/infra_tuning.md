@@ -81,3 +81,15 @@ Make sure you have a reasonable limit for max number of incoming and outgoing co
 ### Conntrack table
 
 More rare (since default limit is usually sufficient) your possible number of connections can be limited by conntrack table. Netfilter framework which is part of iptables keeps information about all connections and has limited size for this information. See how to see its limits and instructions to increase [in this article](https://morganwu277.github.io/2018/05/26/Solve-production-issue-of-nf-conntrack-table-full-dropping-packet/).
+
+### Additional server protection
+
+You should also consider adding additional protection to your Centrifugo endpoints. Centrifugo itself provides several options (described in [configuration](./configuration.md) section) regarding server protection from the malicious behavior. Though an additional layer of DDOS protection on network or infrastructure level is highly recommended. For example, you may want to limit the number of connections coming from particular IP address.
+
+Here we list some possible ways you can use to protect your Centrifugo installation:
+
+* Adding Nginx [limit_conn_zone](https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html#limit_conn_zone) configuration
+* Using [stick tables](https://www.haproxy.com/blog/introduction-to-haproxy-stick-tables/) of Haproxy
+* Configuring [rate limiting rules](https://developers.cloudflare.com/waf/rate-limiting-rules/) with Cloudflare
+
+The list is not exhaustive of course.
