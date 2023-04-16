@@ -86,6 +86,12 @@ String, default `"centrifugo"` – custom prefix to use for channels and keys in
 
 Boolean, default `false` – turns on using Redis Lists instead of Stream data structure for keeping history (not recommended, keeping this for backwards compatibility mostly).
 
+#### redis_force_resp2
+
+Available since Centrifugo v4.1.3
+
+Boolean, default `false`. If set to true it forces using RESP2 protocol for communicating with Redis. By default, Redis client used by Centrifugo tries to detect supported Redis protocol automatically trying RESP3 first.
+
 #### history_meta_ttl
 
 [Duration](../server/configuration.md#setting-time-duration-options), default `2160h` (90 days).
