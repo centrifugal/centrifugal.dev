@@ -396,7 +396,14 @@ Once enabled JWKS used for both connection and channel subscription tokens.
 
 Available since Centrifugo v4.1.3
 
-It's possible to extract variables from `iss` and `aud` JWT claims using Go regexp named groups, then use these vars to construct JWKS endpoint dynamically. In this case JWKS endpoint may be set in config as template:
+It's possible to extract variables from `iss` and `aud` JWT claims using [Go regexp](https://pkg.go.dev/regexp) named groups, then use variables extracted during `iss` or `aud` matching to construct a JWKS endpoint dynamically upon token validation. In this case JWKS endpoint may be set in config as template.
+
+To achieve this Centrifugo provides two additional options:
+
+* `token_issuer_regex` - match JWT issuer (`iss` claim) against this regex, extract named groups to variables, variables are then available for jwks endpoint construction.
+* `token_audience_regex` - match JWT audience (`aud` claim) against this regex, extract named groups to variables, variables are then available for jwks endpoint construction.
+
+Let's look at the example:
 
 ```json
 {
@@ -405,8 +412,7 @@ It's possible to extract variables from `iss` and `aud` JWT claims using Go rege
 }
 ```
 
-* `token_issuer_regex` - match JWT issuer (`iss` claim) against this regex, extract named groups to variables, variables are then available for jwks endpoint construction.
-* `token_audience_regex` - match JWT audience (`aud` claim) against this regex, extract named groups to variables, variables are then available for jwks endpoint construction.
+To use variable in `token_jwks_public_endpoint` it must be wrapped in `{{` `}}`.
 
 When using `token_issuer_regex` and `token_audience_regex` make sure `token_issuer` and `token_audience` not used in the config - otherwise and error will be returned on Centrifugo start.
 
