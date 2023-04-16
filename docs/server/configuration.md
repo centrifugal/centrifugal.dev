@@ -240,6 +240,12 @@ Default: 0
 
 By default, concurrency disabled – Centrifugo processes commands received from a client one by one. This means that if a client issues two RPC requests to a server then Centrifugo will process the first one, then the second one. If the first RPC call is slow then the client will wait for the second RPC response much longer than it could (even if the second RPC is very fast). If you set `client_concurrency` to some value greater than 1 then commands will be processed concurrently (in parallel) in separate goroutines (with maximum concurrency level capped by `client_concurrency` value). Thus, this option can effectively reduce the latency of individual requests. Since separate goroutines are involved in processing this mode adds some performance and memory overhead – though it should be pretty negligible in most cases. This option applies to all commands from a client (including subscribe, publish, presence, etc).
 
+### client_stale_close_delay
+
+Duration, default: 10s
+
+This option allows tuning the maximum time Centrifugo will wait for the connect frame (which contains authentication information) from the client after establishing connection. Default value should be reasonable for most use cases.
+
 ### allow_anonymous_connect_without_token
 
 Default: false
