@@ -96,7 +96,7 @@ But you can force this check by setting `token_audience` string option:
 
 :::caution
 
-Setting `token_audience` will also affect subscription tokens (used for [channel token authorization](channel_token_auth.md)).
+Setting `token_audience` will also affect subscription tokens (used for [channel token authorization](channel_token_auth.md)). Please read [this issue](https://github.com/centrifugal/centrifugo/issues/640) and reach out if your use case requires separate configuration for subscription tokens.
 
 :::
 
@@ -114,7 +114,7 @@ But you can force this check by setting `token_issuer` string option:
 
 :::caution
 
-Setting `token_issuer` will also affect subscription tokens (used for [channel token authorization](channel_token_auth.md)).
+Setting `token_issuer` will also affect subscription tokens (used for [channel token authorization](channel_token_auth.md)). Please read [this issue](https://github.com/centrifugal/centrifugo/issues/640) and reach out if your use case requires separate configuration for subscription tokens.
 
 :::
 
@@ -378,10 +378,40 @@ A mechanism can be enabled by providing `token_jwks_public_endpoint` string opti
 
 As soon as `token_jwks_public_endpoint` set all tokens will be verified using JSON Web Key Set loaded from JWKS endpoint. This makes it impossible to use non-JWK based tokens to connect and subscribe to private channels.
 
+:::tip
+
+Read a tutorial in our blog about [using Centrifugo with Keycloak SSO](/blog/2023/03/31/keycloak-sso-centrifugo). In that case connection tokens are verified using public key loaded from the JWKS endpoint of Keycloak.
+
+:::
+
 At the moment Centrifugo caches keys loaded from an endpoint for one hour.
 
 Centrifugo will load keys from JWKS endpoint by issuing GET HTTP request with 1 second timeout and one retry in case of failure (not configurable at the moment).
 
 Only `RSA` algorithm is supported.
 
-JWKS support enabled both connection and private channel subscription tokens.
+Once enabled JWKS used for both connection and channel subscription tokens.
+
+## Dynamic JWKs endpoint
+
+Available since Centrifugo v4.1.3
+
+It's possible to extract variables from `iss` and `aud` JWT claims using Go regexp named groups, then use these vars to construct JWKS endpoint dynamically. In this case JWKS endpoint may be set in config as template:
+
+```json
+{
+  "token_issuer_regex": "https://example.com/auth/realms/(?P<realm>[A-z]+)",
+  "token_jwks_public_endpoint": "https://keycloak:443/{{realm}}/protocol/openid-connect/certs",
+}
+```
+
+* `token_issuer_regex` - match JWT issuer (`iss` claim) against this regex, extract named groups to variables, variables are then available for jwks endpoint construction.
+* `token_audience_regex` - match JWT audience (`aud` claim) against this regex, extract named groups to variables, variables are then available for jwks endpoint construction.
+
+When using `token_issuer_regex` and `token_audience_regex` make sure `token_issuer` and `token_audience` not used in the config - otherwise and error will be returned on Centrifugo start.
+
+:::caution
+
+Setting `token_issuer_regex` and `token_audience_regex` will also affect subscription tokens (used for [channel token authorization](channel_token_auth.md)). Please read [this issue](https://github.com/centrifugal/centrifugo/issues/640) and reach out if your use case requires separate configuration for subscription tokens.
+
+:::
