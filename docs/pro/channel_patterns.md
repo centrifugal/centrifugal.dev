@@ -30,15 +30,15 @@ Let's look at the example:
 }
 ```
 
-As soon as namespace name starts with `/` - it's considered a channel pattern. `$` in the segment beginning defines a variable part, more information below.
+As soon as namespace name starts with `/` - it's considered a channel pattern. Just like an HTTP path it consists of segments delimited by `/`. The `$` symbol in the segment beginning defines a variable part – more information below.
 
-In this case a channel to be used must be sth like `/users/mario` - i.e. start with `/` and match one of the patterns defined in the configuration. So this channel pattern matching mechanics behaves mostly like HTTP route resolving in many frameworks.
+In this case a channel to be used must be sth like `/users/mario` - i.e. start with `/` and match one of the patterns defined in the configuration. So this channel pattern matching mechanics behaves mostly like HTTP route matching in many frameworks.
 
-Some examples:
+Given the configuration example above:
 
-* channel is `/users/mario`, then the namespace with the name `/users/$name` will match and we apply all the options defined for it to the channel.
-* channel is `/events/42/news`, then the namespace with the name `/events/$project/$type` will match.
-* channel is `/events/42`, then no namespace will match and the `unknown channel` error will be returned.
+* if channel is `/users/mario`, then the namespace with the name `/users/$name` will match and we apply all the options defined for it to the channel.
+* if channel is `/events/42/news`, then the namespace with the name `/events/$project/$type` will match.
+* if channel is `/events/42`, then no namespace will match and the `unknown channel` error will be returned.
 
 ```javascript title="Basic example demonstrating use of pattern channels in JS"
 const client := new Centrifuge("ws://...", {});

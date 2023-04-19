@@ -7,7 +7,7 @@ draft: true
 
 This PRO feature is under construction, not available in PRO beta 🚧
 
-Centrifugo PRO extends channel name syntax with a tenant part. This is only available when `tenant_channels` boolean option is set to `true` in configuration:
+Centrifugo PRO extends channel name syntax with a tenant part. This is only available when `tenant_channels` boolean option is set to `true` in the configuration:
 
 ```json title="config.json"
 {

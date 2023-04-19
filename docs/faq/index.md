@@ -122,6 +122,8 @@ Sometimes it's confusing to see a difference between real-time messages and push
 
 But the reasonable question here is how can you know when you need to send a real-time message to an online client or push notification to its device for an offline client. The solution is pretty simple. You can keep critical notifications for a client in the database. And when a client reads a message you should send an ack to your backend marking that notification as read by the client. Periodically you can check which notifications were sent to clients but they have not read it (no read ack received). For such notifications, you can send push notifications to its device using your own or another open-source solution. Look at Firebase for example.
 
+We are also preparing our own [push notifications API](/docs/pro/push_notifications) as part of Centrifugo PRO version. This is under construction though.
+
 ### How can I know a message is delivered to a client?
 
 You can, but Centrifugo does not have such an API. What you have to do to ensure your client has received a message is sending confirmation ack from your client to your application backend as soon as the client processed the message coming from a Centrifugo channel.
