@@ -5,7 +5,7 @@ title: Tenant channels (coming soon)
 draft: true
 ---
 
-This PRO feature is under construction, not available in PRO beta 🚧
+This PRO feature is under active development, some changes expected here 🚧
 
 Centrifugo PRO extends channel name syntax with a tenant part. This is only available when `tenant_channels` boolean option is set to `true` in the configuration:
 

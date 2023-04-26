@@ -4,7 +4,7 @@ sidebar_label: Message batching control
 title: Client message batching control (coming soon)
 ---
 
-This PRO feature is under construction, not available in PRO beta 🚧
+This PRO feature is under active development, some changes expected here 🚧
 
 Centrifugo PRO provides advanced options to tweak connection message write behaviour.
 

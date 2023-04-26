@@ -5,7 +5,7 @@ title: Channel patterns (coming soon)
 draft: true
 ---
 
-This PRO feature is under construction, not available in PRO beta 🚧
+This PRO feature is under active development, some changes expected here 🚧
 
 Centrifugo PRO enhances a way to configure channels with Channel Patterns feature. This opens a road for building channel model similar to what developers got used to when writing HTTP servers and configuring routes for HTTP request processing.
 

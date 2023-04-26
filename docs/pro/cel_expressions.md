@@ -5,7 +5,7 @@ title: CEL expressions (coming soon)
 draft: true
 ---
 
-This PRO feature is under construction, not available in PRO beta 🚧
+This PRO feature is under active development, some changes expected here 🚧
 
 Centrifugo PRO supports [CEL expressions](https://opensource.google/projects/cel) (Common Expression Language) for checking channel operation permissions.
 
