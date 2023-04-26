@@ -16,6 +16,29 @@ This transport is only implemented by our Javascript SDK at this point – as it
 
 :::
 
+Here is an example how to use JavaScript SDK with WebSocket as the main transport and SSE transport fallback:
+
+```javascript title="Use SSE with bidirectional emulation as a fallback for WebSocket in JS SDK"
+const transports = [
+    {
+        transport: 'websocket',
+        endpoint: 'ws://localhost:8000/connection/websocket'
+    },
+    {
+        transport: 'sse',
+        endpoint: 'http://localhost:8000/connection/sse'
+    }
+];
+const centrifuge = new Centrifuge(transports);
+centrifuge.connect()
+```
+
+:::danger
+
+Make sure [allowed_origins](../server/configuration.md#allowed_origins) are properly configured.
+
+:::
+
 ## Options
 
 ### sse

@@ -22,13 +22,13 @@ Bidirectional transports are capable to serve all Centrifugo features. These tra
 
 Bidirectional transports come with a cost that developers need to use a special client connector library (SDK) which speaks Centrifugo [client protocol](./client_protocol.md). The reason why we need a special client connector library is that a bidirectional connection is asynchronous – it's required to match requests to responses, properly manage connection state, handle request queueing/timeouts/errors, etc.
 
-Centrifugo has several official [client SDKs](../transports/client_sdk.md) for popular environments.
+Centrifugo has several official [client SDKs](../transports/client_sdk.md) for popular environments. All of them work over [WebSocket](./websocket.md) transport. Our Javascript SDK also offers bidirectional fallbacks over [HTTP-Streaming](./http_stream.md), [Server-Sent Events (SSE)](./sse.md) or [SockJS](./sockjs.md).
 
 ## Unidirectional
 
 Unidirectional transports suit well for simple use-cases with stable subscriptions, usually known at connection time.
 
-The advantage is that unidirectional transports do not require special client connectors - developers can use native browser APIs (like WebSocket, EventSource, HTTP streaming), or GRPC generated code to receive real-time updates from Centrifugo. Thus avoiding dependency to a client connector that abstracts bidirectional communication.
+The advantage is that unidirectional transports do not require special client connectors - developers can use native browser APIs (like [WebSocket](./uni_websocket.md), [EventSource/SSE](./uni_sse.md), [HTTP-streaming](./uni_http_stream.md)), or [GRPC](./uni_grpc.md) generated code to receive real-time updates from Centrifugo. Thus avoiding dependency to a client connector that abstracts bidirectional communication.
 
 The drawback is that with unidirectional transports you are not inheriting all Centrifugo features out of the box (like dynamic subscriptions/unsubscriptions, automatic message recovery on reconnect, possibility to send RPC calls over persistent connection). But some of the missing client APIs can be mimicked by using calls to Centrifugo [server API](../server/server_api.md) (i.e. over client -> application backend -> Centrifugo).
 

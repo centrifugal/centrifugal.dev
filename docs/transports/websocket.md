@@ -5,7 +5,7 @@ title: WebSocket
 
 [Websocket](https://en.wikipedia.org/wiki/WebSocket) is the main transport in Centrifugo. It's a very efficient low-overhead protocol on top of TCP.
 
-The biggest advantage is that Websocket works out of the box in all modern browsers and almost all programming languages have Websocket implementations. This makes Websocket a pretty universal transport that can even be used to connect to Centrifugo from web apps and mobile apps and other environments.
+The biggest advantage is that Websocket works out of the box in all modern browsers and almost all programming languages have Websocket implementations. This makes Websocket a universal transport that can be used to connect to Centrifugo from almost everywhere.
 
 Default WebSocket connection endpoint in Centrifugo is:
 
@@ -13,7 +13,16 @@ Default WebSocket connection endpoint in Centrifugo is:
 /connection/websocket
 ```
 
-By default, WebSocket connection uses JSON protocol internally.
+So to connect:
+
+```javascript title="Connect to local Centrifugo with JavaScript SDK"
+const client = new Centrifuge('ws://localhost:8000/connection/websocket', {
+    // token: ?,
+    // getToken: ?
+});
+
+client.connect();
+```
 
 ## Options
 

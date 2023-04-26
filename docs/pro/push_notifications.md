@@ -8,7 +8,7 @@ This PRO feature is under construction, not available in PRO beta 🚧
 
 Centrifugo excels in delivering real-time in-app messages to online users. Sometimes though you need a way to engage offline users to come back to your app. Or trigger some update in the app while it's running in the background. That's where push notifications may be used. Push notifications delivered over battery-efficient platform-dependent transport.
 
-With Centriufugo PRO push notifications may be delivered to all popular application platforms:
+With Centrifugo PRO push notifications may be delivered to all popular application platforms:
 
 * <i className="bi bi-android2" style={{'color': 'yellowgreen'}}></i> Android devices
 * <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i> iOS devices
