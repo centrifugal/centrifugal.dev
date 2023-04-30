@@ -1,7 +1,7 @@
 ---
 id: push_notifications
 sidebar_label: Push notification API
-title: Push notification API (coming soon)
+title: Push notification API
 ---
 
 This PRO feature is under active development, some changes expected here 🚧

@@ -1,7 +1,7 @@
 ---
 id: client_message_batching
 sidebar_label: Message batching control
-title: Client message batching control (coming soon)
+title: Message batching control
 ---
 
 This PRO feature is under active development, some changes expected here 🚧
@@ -35,7 +35,7 @@ Example:
 
 ## client_reply_without_queue
 
-The `client_reply_without_queue` is a boolean option to not use client queue for replies to commands. When `true` replies are written to the transport without going through the connection queue.
+The `client_reply_without_queue` is a boolean option to not use client queue for replies to commands. When `true` replies are written to the transport without going through the connection message queue.
 
 ## client_max_messages_in_frame
 
