@@ -106,7 +106,7 @@ Keep in mind that when using WebSocket you are working only over HTTP/1.1, so HT
 
 ### Does Centrifugo work with HTTP/3?
 
-Centrifugo v4 added an **experimental** HTTP/3 support. As soon as you enabled TLS and provided `"http3": true` option all endpoints on external port will be served by HTTP/3 server based on [lucas-clemente/quic-go](https://github.com/lucas-clemente/quic-go) implementation. This (among other benefits which HTTP/3 can provide) is a first step towards [WebTransport](https://web.dev/webtransport/) support in the future.
+Centrifugo v4 added an **experimental** HTTP/3 support. As soon as you enabled TLS and provided `"http3": true` option all endpoints on external port will be served by HTTP/3 server based on [github.com/quic-go/quic-go](https://github.com/quic-go/quic-go) implementation. This (among other benefits which HTTP/3 can provide) is a step towards a proper [WebTransport](https://web.dev/webtransport/) support. For now we [support WebTransport experimentally](../transports/webtransport.md).
 
 It's worth noting that WebSocket transport does not work over HTTP/3, it still starts with HTTP/1.1 Upgrade request (there is an interesting IETF draft BTW about [Bootstrapping WebSockets with HTTP/3](https://www.ietf.org/archive/id/draft-ietf-httpbis-h3-websockets-02.html)). But HTTP-streaming and Eventsource should work just fine with HTTP/3.
 
@@ -118,11 +118,11 @@ If the underlying transport is HTTP-based, and you use HTTP/2 then this will wor
 
 ### What if I need to send push notifications to mobile or web applications?
 
-Sometimes it's confusing to see a difference between real-time messages and push notifications. Centrifugo is a real-time messaging server. It can not send push notifications to devices - to Apple iOS devices via APNS, Android devices via GCM, or browsers over Web Push API. This is a goal for another software.
+Sometimes it's confusing to see a difference between real-time messages and push notifications. Centrifugo is a real-time messaging server. It can not send push notifications to devices - to Apple iOS devices via APNS, Android devices via FCM, or browsers over Web Push API.
 
-But the reasonable question here is how can you know when you need to send a real-time message to an online client or push notification to its device for an offline client. The solution is pretty simple. You can keep critical notifications for a client in the database. And when a client reads a message you should send an ack to your backend marking that notification as read by the client. Periodically you can check which notifications were sent to clients but they have not read it (no read ack received). For such notifications, you can send push notifications to its device using your own or another open-source solution. Look at Firebase for example.
+We are preparing our own [push notifications API](/docs/pro/push_notifications) as part of Centrifugo PRO version. This is under construction though.
 
-We are also preparing our own [push notifications API](/docs/pro/push_notifications) as part of Centrifugo PRO version. This is under construction though.
+The reasonable question here is how can you know when you need to send a real-time message to an online client or push notification to its device for an offline client. The solution is pretty simple. You can keep critical notifications for a client in the database. And when a client reads a message you should send an ack to your backend marking that notification as read by the client. Periodically you can check which notifications were sent to clients but they have not read it (no read ack received). For such notifications, you can send push notifications to its device using your own or another open-source solution. Look at Firebase for example.
 
 ### How can I know a message is delivered to a client?
 
@@ -197,7 +197,7 @@ Sometimes you need to send some initial state towards channel subscriber. Centri
 
 ### Does Centrifugo support multitenancy?
 
-No, if you want to use Centrifugo with different projects then the recommended approach is to have different Centrifugo installations for each project. Multitenancy is better to solve on infrastructure level in case of Centrifugo.
+If you want to use Centrifugo with different projects the recommended approach is to have different Centrifugo installations for each project. Multitenancy is better to solve on infrastructure level in case of Centrifugo.
 
 It's possible to share one Redis setup though by setting unique `redis_prefix`. But we recommend having completely isolated setups.
 
