@@ -2,7 +2,6 @@
 id: channel_patterns
 sidebar_label: Channel patterns
 title: Channel patterns
-draft: true
 ---
 
 This PRO feature is under active development, some changes expected here 🚧

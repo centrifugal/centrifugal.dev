@@ -2,7 +2,6 @@
 id: cel_expressions
 sidebar_label: CEL expressions
 title: CEL expressions
-draft: true
 ---
 
 This PRO feature is under active development, some changes expected here 🚧
