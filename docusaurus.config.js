@@ -108,7 +108,7 @@ module.exports = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Centrifugal.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Centrifugal Labs LTD`,
     },
   },
   presets: [

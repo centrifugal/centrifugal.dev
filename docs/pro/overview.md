@@ -5,7 +5,7 @@ title: Centrifugo PRO overview
 
 <img src="/img/pro_icon.png" width="110px" height="110px" align="left" style={{'marginRight': '10px', 'float': 'left'}} />
 
-Centrifugo PRO is the enhanced version of Centrifugo, packed with a set of unique powerful features that offer exceptional benefits to your business. It provides granular channel permission control, lower CPU utilization on Centrifugo nodes, backend protection from misusing, next level system observability, additional APIs, and more.
+Centrifugo PRO is the enhanced version of Centrifugo provided by Centrifugal Labs LTD under commercial license. It's packed with a set of unique powerful features that offer exceptional benefits to your business. It provides granular channel permission control, lower CPU utilization on Centrifugo nodes, backend protection from misusing, next level system observability, additional APIs, and more.
 
 All the features of Centrifugo PRO come with a decent scalable performance. Some reuse Centrifugo super fast Redis communication capabilities. ClickHouse analytics built on top of efficient approach with the minimal overhead. We've put a lot of love into all of the extra powers of Centrifugo to make sure they are practical and ready for production workloads.
 
@@ -23,12 +23,11 @@ Centrifugo PRO is packed with the following features:
 * ✋ [User blocking API](./user_block.md) to block/unblock abusive users by ID.
 * 🛑 [JWT revoking and invalidation API](./token_revocation.md) to revoke tokens by ID and invalidate user's tokens based on issue time.
 * 💪 [Channel capabilities](./capabilities.md) for controlling channel permissions per connection or per subscription.
-<!-- * 📜 [Channel patterns](./channel_patterns.md) allow defining channel configuration like HTTP routes. -->
-<!-- * 🛍️ [Tenant channels](./tenant_channels.md) extend channel syntax to include tenant information. -->
-<!-- * ✍️ [CEL expressions](./cel_expressions.md) to write custom efficient permission rules for channel operations. -->
+* 📜 [Channel patterns](./channel_patterns.md) allow defining channel configuration like HTTP routes with parameters.
+* ✍️ [CEL expressions](./cel_expressions.md) to write custom efficient permission rules for channel operations.
 * 🚀 [Faster performance](./performance.md) to reduce resource usage on server side.
 * 🔮 [Singleflight](./singleflight.md) for online presence and history to reduce load on the broker.
-<!-- * 🍔 [Client message batching control](./client_msg_batching.md) for advanced tuning of client connection write behaviour. -->
+* 🍔 [Message batching control](./client_msg_batching.md) for advanced tuning of client connection write behaviour.
 * 🪵 [CPU and RSS memory](./process_stats.md) usage stats of Centrifugo nodes in admin UI.
 
 :::info
@@ -47,9 +46,9 @@ You can try out Centrifugo PRO for free. When you start Centrifugo PRO without l
 
 This mode should be enough for development and trying out PRO features, but must not be used in production environment as we can introduce additional limitations in the future.
 
-:::caution
+:::caution Centrifugo PRO license agreement
 
-Centrifugo PRO is distributed under [commercial license](/pro_license) which is different from OSS version. By downloading Centrifugo PRO you automatically accept license terms.
+Centrifugo PRO is distributed by Centrifugal Labs LTD under [commercial license](/pro_license) which is different from OSS version. By downloading Centrifugo PRO you automatically accept commercial license terms.
 
 :::
 

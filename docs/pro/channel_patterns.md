@@ -62,29 +62,35 @@ Some implementation restrictions and details to know about:
 
 `:` in the channel pattern name helps to define a variable to match against. Named parameters only match a single segment of the channel:
 
-| Pattern | Channel                 | Match     |
-| ------- |-------------------------|-----------|
-| `/users/:name` | `/users/mary`         |  ✅  |
-| `/users/:name` | `/users/john`         |  ✅  |
-| `/users/:name` | `/users/mary/profile` |  ❌  |
-| `/users/:name` | `/users/`             |  ❌  |
+```
+Channel pattern "/users/:name":
+
+/users/mary         ✅ match
+/users/john         ✅ match
+/users/mary/info    ❌ no match 
+/users              ❌ no match
+```
 
 Another example for channel pattern `/news/:type/:subtype`, i.e. with multiple variables:
 
-| Pattern | Channel                 | Match     |
-| ------- |-------------------------|-----------|
-| `/news/:type/:subtype` | `/news/sport/football`    |  ✅  |
-| `/news/:type/:subtype` | `/news/sport/volleyball`  |  ✅  |
-| `/news/:type/:subtype` | `/news/sport`             |  ❌  |
-| `/news/:type/:subtype` | `/news`                   |  ❌  |
+```
+Channel pattern "/news/:type/:subtype":
+
+/news/sport/football       ✅ match
+/news/sport/volleyball     ✅ match
+/news/sport                ❌ no match
+/news                      ❌ no match
+```
 
 Channel patterns support mid-segment variables, so the following is possible:
 
-| Pattern | Channel                 | Match     |
-| ------- |-------------------------|-----------|
-| `/personal/user_:user` | `/personal/user_mary`  |  ✅  |
-| `/personal/user_:user` | `/personal/user_john`  |  ✅  |
-| `/personal/user_:user` | `/personal/user_`      |  ❌  |
+```
+Channel pattern "/personal/user_:user":
+
+/personal/user_mary     ✅ match
+/personal/user_john     ✅ match
+/personal/user_         ❌ no match
+```
 
 ### Using varibles
 
