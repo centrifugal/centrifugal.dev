@@ -333,7 +333,7 @@ Empty object at the moment.
 
 :::tip
 
-Presence in channels is not enabled by default. See how to enable it over [channel options](./channels.md#channel-options).
+Presence in channels is not enabled by default. See how to enable it over [channel options](./channels.md#channel-options). Also check out [dedicated chapter about it](./presence.md).
 
 :::
 

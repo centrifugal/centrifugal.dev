@@ -21,6 +21,7 @@ module.exports = {
     "server/engines",
     "server/proxy",
     "server/history_and_recovery",
+    "server/presence",
     "server/admin_web",
     "server/monitoring",
     "server/infra_tuning",

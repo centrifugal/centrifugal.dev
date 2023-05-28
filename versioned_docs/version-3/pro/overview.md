@@ -39,7 +39,7 @@ This mode should be enough for development and trying out PRO features, but must
 
 :::caution
 
-Centrifugo PRO is distributed under [commercial license](/pro_license) which is different from OSS version. By downloading Centrifugo PRO you automatically accept license terms.
+Centrifugo PRO is distributed under [commercial license](/license) which is different from OSS version. By downloading Centrifugo PRO you automatically accept license terms.
 
 :::
 

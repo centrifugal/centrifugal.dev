@@ -30,7 +30,7 @@ While these push notification providers handle the frontend and transport aspect
 
 To facilitate efficient push notification broadcasting towards devices, Centrifugo PRO includes worker queues based on Redis streams.
 
-Integration with FCM means that you can use existing Firebase messaging SDKs to extract push notification token for a device on different platforms (iOS, Android, Flutter, web browser) and setting up push notification listeners. Only a couple of additional steps required to integrate frontend with Centrifugo PRO device token and device topic storage. After doing that you will be able to send push notification towards single device, or towards group of devices subscribed to a topic. For example, with a simple Centrifugo API call like this:
+Integration with FCM means that you can use existing Firebase messaging SDKs to extract push notification token for a device on different platforms (iOS, Android, Flutter, web browser) and setting up push notification listeners. The same for HMS and APNs - just use existing native SDKs and best practices on the frontend. Only a couple of additional steps required to integrate frontend with Centrifugo PRO device token and device topic storage. After doing that you will be able to send push notification towards single device, or towards group of devices subscribed to a topic. For example, with a simple Centrifugo API call like this:
 
 ```bash
 curl -X POST http://localhost:8000/api \
@@ -40,7 +40,7 @@ curl -X POST http://localhost:8000/api \
 {
     "method": "send_push_notification",
     "params": {
-        "recipient": {"topics": ["user:4223"]},
+        "recipient": {"topics": ["test"]},
         "notification": {
             "fcm": {
                 "message": {
@@ -185,6 +185,31 @@ We also support auth over p12 certificates with the following options:
 #### push_notifications.max_inactive_device_days
 
 This option configures the number of days to keep device without updates. By default Centrifugo does not remove inactive devices.
+
+### Use PostgreSQL as queue
+
+Coming soon 🚧
+
+Centrifugo PRO utilizes Redis Streams as the default queue engine for push notifications. However, it also offers the option to employ PostgreSQL for queuing. It's as simple as:
+
+```json title="config.json"
+{
+    ...
+    "database": {
+        "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres"
+    },
+    "push_notifications": {
+        "queue_engine": "database",
+        // rest of the options...
+    }
+}
+```
+
+:::tip
+
+Queue based on Redis streams is faster, so if you start with PostgreSQL based queue – you have an option to switch to a more performant implementation later. Though active push notifications will be lost during a switch.
+
+:::
 
 ## API description
 
@@ -497,6 +522,6 @@ Several metrics are available to monitor the state of Centrifugo push worker sys
 * `centrifugo_push_consuming_inflight_jobs` - gauge, shows immediate number of workers proceccing pushes. Splitted by provider and name of queue.
 * `centrifugo_push_job_duration_seconds` - summary, provides insights about worker job duration timings. Splitted by provider and recipient type.
 
-## Tutorial
+## Further reading and tutorials
 
 Coming soon.

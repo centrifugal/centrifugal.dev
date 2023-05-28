@@ -5,7 +5,7 @@ title: Install and run PRO version
 
 :::caution
 
-Centrifugo PRO is distributed under [commercial license](/pro_license) which is different from OSS version. By downloading Centrifugo PRO you automatically accept license terms.
+Centrifugo PRO is distributed under [commercial license](/license) which is different from OSS version. By downloading Centrifugo PRO you automatically accept license terms.
 
 :::
 
