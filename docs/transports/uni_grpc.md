@@ -67,9 +67,9 @@ Path to key file.
 
 ## Example
 
-A basic example will come soon as we update docs for v4. In general, algorithm is like this: 
+We don't have example here yet. In general, the algorithm is like this: 
 
 1. Copy Protobuf definitions
 1. Generate GRPC client code
 1. Use generated code to connect to Centrifugo
-1. Process Push messages, drop unknown Push types, handle those necessary for the application.
+1. Process Push messages, drop unknown Pushes, handle those necessary for the application.

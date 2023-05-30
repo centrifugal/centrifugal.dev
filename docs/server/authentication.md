@@ -394,8 +394,6 @@ Once enabled JWKS used for both connection and channel subscription tokens.
 
 ## Dynamic JWKs endpoint
 
-Available since Centrifugo v4.1.3
-
 It's possible to extract variables from `iss` and `aud` JWT claims using [Go regexp](https://pkg.go.dev/regexp) named groups, then use variables extracted during `iss` or `aud` matching to construct a JWKS endpoint dynamically upon token validation. In this case JWKS endpoint may be set in config as template.
 
 To achieve this Centrifugo provides two additional options:

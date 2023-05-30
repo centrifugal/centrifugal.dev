@@ -96,10 +96,10 @@ Example:
 
 ```bash
 curl --header "Content-Type: application/json" \
-  --header "Authorization: apikey <API_KEY>" \
+  --header "X-API-Key: <API_KEY>" \
   --request POST \
-  --data '{"method": "revoke_token", "params": {"uid": "xxx-xxx-xxx", "expire_at": 1635845122}}' \
-  http://localhost:8000/api
+  --data '{"uid": "xxx-xxx-xxx", "expire_at": 1635845122}' \
+  http://localhost:8000/api/revoke_token
 ```
 
 #### revoke_token params
@@ -129,10 +129,10 @@ Example:
 
 ```bash
 curl --header "Content-Type: application/json" \
-  --header "Authorization: apikey <API_KEY>" \
+  --header "X-API-Key: <API_KEY>" \
   --request POST \
-  --data '{"method": "invalidate_user_tokens", "params": {"user": "test", "issued_before": 1635845022, "expire_at": 1635845122}}' \
-  http://localhost:8000/api
+  --data '{"user": "test", "issued_before": 1635845022, "expire_at": 1635845122}' \
+  http://localhost:8000/api/invalidate_user_tokens
 ```
 
 #### invalidate_user_tokens params

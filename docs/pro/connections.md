@@ -47,10 +47,10 @@ Now let's call `connections` over HTTP API:
 
 ```bash
 curl --header "Content-Type: application/json" \
-  --header "Authorization: apikey <API_KEY>" \
+  --header "X-API-Key: <API_KEY>" \
   --request POST \
-  --data '{"method": "connections", "params": {"user": "42"}}' \
-  http://localhost:8000/api
+  --data '{"user": "42"}' \
+  http://localhost:8000/api/connections
 ```
 
 The result:

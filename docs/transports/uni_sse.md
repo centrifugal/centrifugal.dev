@@ -66,4 +66,4 @@ Maximum allowed size of a initial HTTP POST request in bytes when using HTTP POS
 
 ## Browser example
 
-A basic browser will come soon as we update docs for v4.
+Coming soon.

@@ -153,10 +153,10 @@ Let's say you have a channel `chat:index` and 2 users (with ID `2694` and `56`) 
 
 ```bash
 curl --header "Content-Type: application/json" \
-  --header "Authorization: apikey <API_KEY>" \
+  --header "X-API-Key: <API_KEY>" \
   --request POST \
-  --data '{"method": "presence", "params": {"channel": "chat:index"}}' \
-  http://localhost:8000/api
+  --data '{"channel": "chat:index"}' \
+  http://localhost:8000/api/presence
 {
     "result": {
         "presence": {
@@ -248,10 +248,10 @@ Let's look at example. You enabled history for a namespace `chat` and sent two m
 
 ```bash
 curl --header "Content-Type: application/json" \
-  --header "Authorization: apikey <API_KEY>" \
+  --header "X-API-Key: <API_KEY>" \
   --request POST \
-  --data '{"method": "history", "params": {"channel": "chat:index", "limit": 100}}' \
-  http://localhost:8000/api
+  --data '{"channel": "chat:index", "limit": 100}' \
+  http://localhost:8000/api/history
 {
     "result": {
         "publications": [

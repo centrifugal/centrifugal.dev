@@ -88,8 +88,6 @@ Boolean, default `false` – turns on using Redis Lists instead of Stream data s
 
 #### redis_force_resp2
 
-Available since Centrifugo v4.1.3
-
 Boolean, default `false`. If set to true it forces using RESP2 protocol for communicating with Redis. By default, Redis client used by Centrifugo tries to detect supported Redis protocol automatically trying RESP3 first.
 
 #### history_meta_ttl
@@ -116,25 +114,17 @@ Boolean, default `false` - disable Redis TLS host verification. Centrifugo v4 al
 
 #### redis_tls_cert
 
-Added in Centrifugo v4.1.0
-
 String, default `""` – path to TLS cert file. If you prefer passing certificate as a string instead of path to the file then use `redis_tls_cert_pem` option.
 
 #### redis_tls_key
-
-Added in Centrifugo v4.1.0
 
 String, default `""` – path to TLS key file.  If you prefer passing cert key as a string instead of path to the file then use `redis_tls_key_pem` option.
 
 #### redis_tls_root_ca
 
-Added in Centrifugo v4.1.0
-
 String, default `""` – path to TLS root CA file (in PEM format) to use. If you prefer passing root CA PEM as a string instead of path to the file then use `redis_tls_root_ca_pem` option.
 
 #### redis_tls_server_name
-
-Added in Centrifugo v4.1.0
 
 String, default `""` – used to verify the hostname on the returned certificates. It is also included in the client's handshake to support virtual hosting unless it is an IP address.
 
@@ -242,25 +232,17 @@ Boolean, default `false` - disable Redis TLS host verification. Centrifugo v4 al
 
 #### redis_sentinel_tls_cert
 
-Added in Centrifugo v4.1.0
-
 String, default `""` – path to TLS cert file. If you prefer passing certificate as a string instead of path to the file then use `redis_sentinel_tls_cert_pem` option.
 
 #### redis_sentinel_tls_key
-
-Added in Centrifugo v4.1.0
 
 String, default `""` – path to TLS key file.  If you prefer passing cert key as a string instead of path to the file then use `redis_sentinel_tls_key_pem` option.
 
 #### redis_sentinel_tls_root_ca
 
-Added in Centrifugo v4.1.0
-
 String, default `""` – path to TLS root CA file (in PEM format) to use. If you prefer passing root CA PEM as a string instead of path to the file then use `redis_sentinel_tls_root_ca_pem` option.
 
 #### redis_sentinel_tls_server_name
-
-Added in Centrifugo v4.1.0
 
 String, default `""` – used to verify the hostname on the returned certificates. It is also included in the client's handshake to support virtual hosting unless it is an IP address.
 

@@ -558,8 +558,6 @@ See below on how to return an error in case you don't want to allow publishing.
 
 ### Sub refresh proxy
 
-Added in Centrifugo v4.1.1
-
 With the following options in the configuration file:
 
 ```json

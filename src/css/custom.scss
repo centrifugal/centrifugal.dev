@@ -339,3 +339,9 @@ html[data-theme="dark"] .feature-media:before {
     display: none;
   }
 }
+
+@media (min-width: 1440px) {
+  .blog-wrapper .container {
+    max-width: var(--ifm-container-width);
+  }
+}

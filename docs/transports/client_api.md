@@ -240,40 +240,35 @@ const client = new Centrifuge('ws://localhost:8000/connection/websocket', {
 });
 ```
 
-If the token sets connection expiration then the client SDK will keep the token refreshed. It does this by calling a special callback function. This callback must return a new token. If a new token with updated connection expiration is returned from callback then it's sent to Centrifugo. If your callback returns an empty string – this means the user has no permission to connect to Centrifugo and the Client will move to a disconnected state. In case of error returned by your callback SDK will retry the operation after some jittered time.
+If the token sets connection expiration then the client SDK will keep the token refreshed. It does this by calling a special callback function. This callback must return a new token. If a new token with updated connection expiration is returned from callback then it's sent to Centrifugo. In case of error returned by your callback SDK will retry the operation after some jittered time.
 
 An example:
 
 ```javascript
-function getToken(url, ctx) {
-    return new Promise((resolve, reject) => {
-        fetch(url, {
-            method: 'POST',
-            headers: new Headers({ 'Content-Type': 'application/json' }),
-            body: JSON.stringify(ctx)
-        })
-        .then(res => {
-            if (!res.ok) {
-                throw new Error(`Unexpected status code ${res.status}`);
-            }
-            return res.json();
-        })
-        .then(data => {
-            resolve(data.token);
-        })
-        .catch(err => {
-            reject(err);
-        });
-    });
+async function getToken() {
+    if (!loggedIn) {
+        return ""; // Empty token or pre-generated token for anonymous users.
+    }
+    // Fetch your application backend.
+    const res = await fetch('http://localhost:8000/centrifugo/connection_token');
+    if (!res.ok) {
+        if (res.status === 403) {
+            // Return special error to not proceed with token refreshes,
+            // client will be disconnected.
+            throw new Centrifuge.UnauthorizedError();
+        }
+        // Any other error thrown will result into token refresh re-attempts.
+        throw new Error(`Unexpected status code ${res.status}`);
+    }
+    const data = await res.json();
+    return data.token;
 }
 
 const client = new Centrifuge(
     'ws://localhost:8000/connection/websocket',
     {
-        token: 'JWT-GENERATED-ON-BACKEND-SIDE',
-        getToken: function (ctx) {
-            return getToken('/centrifuge/connection_token', ctx);
-        }
+        token: 'JWT-GENERATED-ON-BACKEND-SIDE', // Optional, getToken is enough.
+        getToken: getToken
     }
 );
 ```
@@ -685,36 +680,33 @@ If token sets subscription expiration client SDK will keep token refreshed. It d
 An example:
 
 ```javascript
-function getToken(url, ctx) {
-    return new Promise((resolve, reject) => {
-        fetch(url, {
-            method: 'POST',
-            headers: new Headers({ 'Content-Type': 'application/json' }),
-            body: JSON.stringify(ctx)
+async function getToken(ctx) {
+    // Fetch your application backend.
+    const res = await fetch('http://localhost:8000/centrifugo/subscription_token', {
+        method: 'POST',
+        headers: new Headers({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+            channel: ctx.channel
         })
-        .then(res => {
-            if (!res.ok) {
-                throw new Error(`Unexpected status code ${res.status}`);
-            }
-            return res.json();
-        })
-        .then(data => {
-            resolve(data.token);
-        })
-        .catch(err => {
-            reject(err);
-        });
     });
+    if (!res.ok) {
+        if (res.status === 403) {
+            // Return special error to not proceed with token refreshes,
+            // client will be disconnected.
+            throw new Centrifuge.UnauthorizedError();
+        }
+        // Any other error thrown will result into token refresh re-attempts.
+        throw new Error(`Unexpected status code ${res.status}`);
+    }
+    const data = await res.json();
+    return data.token;
 }
 
 const client = new Centrifuge('ws://localhost:8000/connection/websocket', {});
 
 const sub = centrifuge.newSubscription(channel, {
-    token: 'JWT-GENERATED-ON-BACKEND-SIDE',
-    getToken: function (ctx) {
-        // ctx has channel in the Subscription token case.
-        return getToken('/centrifuge/subscription_token', ctx);
-    },
+    token: 'JWT-GENERATED-ON-BACKEND-SIDE', // Optional, getToken is enough.
+    getToken: getToken
 });
 sub.subscribe();
 ```

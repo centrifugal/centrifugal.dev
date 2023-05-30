@@ -118,6 +118,10 @@ module.exports = {
         docs: {
           versions: {
             current: {
+              label: "v5",
+              badge: false
+            },
+            "4": {
               label: "v4",
               badge: false
             },
@@ -173,7 +177,7 @@ module.exports = {
            * 'ALL' to show all blog posts
            * 0 to disable
            */
-          blogSidebarCount: 'ALL',
+          blogSidebarCount: 0,
           /**
            * Title of the blog sidebar
            */

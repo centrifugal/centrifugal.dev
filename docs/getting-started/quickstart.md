@@ -227,10 +227,10 @@ BTW, let's also look at how you can publish data to a channel over Centrifugo se
 
 ```bash
 curl --header "Content-Type: application/json" \
-  --header "Authorization: apikey d7627bb6-2292-4911-82e1-615c0ed3eebb" \
+  --header "X-API-Key: d7627bb6-2292-4911-82e1-615c0ed3eebb" \
   --request POST \
-  --data '{"method": "publish", "params": {"channel": "channel", "data": {"value": 2}}}' \
-  http://localhost:8000/api
+  --data '{"channel": "channel", "data": {"value": 2}}' \
+  http://localhost:8000/api/publish
 ```
 
 – where for `Authorization` header we set `api_key` value from Centrifugo config file generated above.

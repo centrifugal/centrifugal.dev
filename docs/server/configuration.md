@@ -204,8 +204,6 @@ The important thing to emphasize is that `client_user_connection_limit` works on
 
 ### client_connection_limit
 
-Added in Centrifugo v4.0.1
-
 Default: 0
 
 When set to a value > 0 `client_connection_limit` limits the max number of connections single Centrifugo node can handle. It acts on HTTP middleware level and stops processing request if the condition met. It logs a warning into logs in this case and increments `centrifugo_node_client_connection_limit` Prometheus counter. Client SDKs will attempt reconnecting.
@@ -215,8 +213,6 @@ Some motivation behind this option may be found in [this issue](https://github.c
 Note, that at this point `client_connection_limit` does not affect connections coming over GRPC unidirectional transport.
 
 ### client_connection_rate_limit
-
-Added in Centrifugo v4.1.1
 
 Default: 0
 
@@ -253,8 +249,6 @@ Default: false
 Enable a mode when all clients can connect to Centrifugo without JWT. In this case, all connections without a token will be treated as anonymous (i.e. with empty user ID). Access to channel operations should be explicitly enabled for anonymous connections.
 
 ### disallow_anonymous_connection_tokens
-
-Added in Centrifugo v4.1.1
 
 Default: false
 

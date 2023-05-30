@@ -77,14 +77,14 @@ docker pull centrifugo/centrifugo
 Run:
 
 ```bash
-docker run --ulimit nofile=262144:262144 -v /host/dir/with/config/file:/centrifugo -p 8000:8000 centrifugo/centrifugo centrifugo -c config.json
+docker run --ulimit nofile=262144:262144 -v /host/dir/with/config/file:/centrifugo -p 8000:8000 centrifugo/centrifugo:v5 centrifugo -c config.json
 ```
 
 Note that docker allows setting `nofile` limits in command-line arguments which is pretty important to handle lots of simultaneous persistent connections and not run out of open file limit (each connection requires one file descriptor). See also [infrastructure tuning chapter](../server/infra_tuning.md).
 
 :::caution
 
-Pin to the exact Docker Image tag in production, for example: `centrifugo/centrifugo:v4.0.0`, this will help to avoid unexpected problems during re-deploy process. 
+Pin to the exact Docker Image tag in production, for example: `centrifugo/centrifugo:v5.0.0`, this will help to avoid unexpected problems during re-deploy process. 
 
 :::
 

@@ -93,8 +93,8 @@ curl -X POST http://localhost:8000/connection/uni_http_stream \
 Open one more terminal window and publish message to a personal user channel:
 
 ```bash
-curl -X POST http://localhost:8000/api \
-    -d '{"method": "publish", "params": {"channel": "#user12", "data": {"input": "hello"}}}' \
+curl -X POST http://localhost:8000/api/publish \
+    -d '{"channel": "#user12", "data": {"input": "hello"}}' \
     -H "Authorization: apikey 9230f514-34d2-4971-ace2-851c656e81dc"
 ```
 

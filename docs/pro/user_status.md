@@ -35,10 +35,10 @@ It's also possible to call `update_user_status` using Centrifugo server API (for
 
 ```bash
 curl --header "Content-Type: application/json" \
-  --header "Authorization: apikey <API_KEY>" \
+  --header "X-API-Key: <API_KEY>" \
   --request POST \
-  --data '{"method": "update_user_status", "params": {"users": ["42"]}}' \
-  http://localhost:8000/api
+  --data '{"users": ["42"]}' \
+  http://localhost:8000/api/update_user_status
 ```
 
 #### Update user status params
@@ -59,10 +59,10 @@ Call RPC method of server API (over HTTP or GRPC):
 
 ```bash
 curl --header "Content-Type: application/json" \
-  --header "Authorization: apikey <API_KEY>" \
+  --header "X-API-Key: <API_KEY>" \
   --request POST \
-  --data '{"method": "get_user_status", "params": {"users": ["42"]}}' \
-  http://localhost:8000/api
+  --data '{"users": ["42"]}' \
+  http://localhost:8000/api/get_user_status
 ```
 
 You should get a response like this:
@@ -125,10 +125,10 @@ If you need to clear user status information for some reason there is a `delete_
 
 ```bash
 curl --header "Content-Type: application/json" \
-  --header "Authorization: apikey <API_KEY>" \
+  --header "X-API-Key: <API_KEY>" \
   --request POST \
-  --data '{"method": "delete_user_status", "params": {"users": ["42"]}}' \
-  http://localhost:8000/api
+  --data '{"users": ["42"]}' \
+  http://localhost:8000/api/delete_user_status
 ```
 
 #### Delete user status params

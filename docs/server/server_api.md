@@ -3,151 +3,113 @@ id: server_api
 title: Server API walkthrough
 ---
 
-Server API provides a way to send various commands to Centrifugo. For example, server API allows publishing messages to channels, get server statistics, etc. There are two kinds of API available at the moment:
+Server API provides different methods to interact with Centrifugo. Specifically, in most cases this is an entry point for publications into channels coming from your application backend. There are two kinds of server API available at the moment:
 
 * HTTP API
 * GRPC API
 
+Both are similar in terms of request/response structures.  
+
 ## HTTP API
 
-Server HTTP API works on `/api` endpoint (by default). It has a simple request format: this is an HTTP POST request with `application/json` Content-Type and with JSON command body.
+Server HTTP API works on `/api` path prefix (by default). The request format is super-simple: this is an HTTP POST request to a specific method API path with `application/json` Content-Type, `X-API-Key` header and with JSON body.
 
-Here we will look at available command methods and parameters.
+Instead of many words, here is an example how to call `publish` method:
+
+```bash
+curl --header "X-API-Key: <API_KEY>" \
+  --request POST \
+  --data '{"channel": "test", "data": {"value": "test_value"}}' \
+  http://localhost:8000/api/publish
+```
 
 :::tip
 
-In some cases, you can just use one of our [available HTTP API libraries](../server/server_api.md#http-api-libraries) or use Centrifugo [GRPC API](#grpc-api) to avoid manually constructing requests.
+You can just use one of our [available HTTP API libraries](../server/server_api.md#http-api-libraries) or use Centrifugo [GRPC API](#grpc-api) to avoid manually constructing requests structures.
 
 :::
 
-### HTTP API authorization
+Below we look at all aspects of HTTP API in detail, starting with information about authorization.
+
+## HTTP API authorization
 
 HTTP API is protected by `api_key` set in Centrifugo configuration. I.e. `api_key` option must be added to config, like:
 
 ```json title="config.json"
 {
     ...
-    "api_key": "<YOUR API KEY>"
+    "api_key": "<YOUR_API_KEY>"
 }
 ```
 
-This API key must be set in the request `Authorization` header in this way:
+This API key must be set in the request `X-API-Key` header in this way:
 
 ```
-Authorization: apikey <KEY>
+X-API-Key: <YOUR_API_KEY>
 ```
 
-It's also possible to pass API key over URL query param. This solves some edge cases where it's not possible to use the `Authorization` header. Simply add `?api_key=<YOUR API KEY>` query param to the API endpoint. Keep in mind that passing the API key in the `Authorization` header is a recommended way.
+It's also possible to pass API key over URL query param. Simply add `?api_key=<YOUR_API_KEY>` query param to the API endpoint. Keep in mind that passing the API key in the `X-API-Key` header is a recommended way as it is considered more secure.
 
-It's possible to disable API key check on Centrifugo side using the `api_insecure` configuration option. Be sure to protect the API endpoint by firewall rules in this case – to prevent anyone on the internet to send commands over your unprotected Centrifugo API endpoint. API key auth is not very safe for man-in-the-middle so we also recommended running Centrifugo with TLS.
+To disable API key check on Centrifugo side you can use `api_insecure` configuration option. Use it in development only or make sure to protect the API endpoint by proxy or firewall rules in production – to prevent anyone with access to the endpoint to send commands over your unprotected Centrifugo API.
 
-A command is a JSON object with two properties: `method` and `params`.
+API key auth is not very safe for man-in-the-middle so we also recommended protecting Centrifugo with TLS.
 
-* `method` is the name of the API command you want to call.
-* `params` is an object with command arguments. Each `method` can have its own `params`
+## API methods
 
-Before looking at all available commands here is a CURL that calls `info` command:
-
-```bash
-curl --header "Authorization: apikey <API_KEY>" \
-  --request POST \
-  --data '{"method": "info", "params": {}}' \
-  http://localhost:8000/api
-```
-
-Here is a live example:
-
-<video width="100%" controls>
-  <source src="/img/api_example.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
-</video>
-
-Now let's investigate each API method in detail.
+Server API supports many methods. Let's describe them starting with the most important publish operation. 
 
 ### publish
 
-Publish command allows publishing data into a channel (we call this message `publication` in Centrifugo). Most probably this is a command you'll use most of the time.
+Publish method allows publishing data into a channel (we call this message `publication` in Centrifugo). Most probably this is a command you'll use most of the time.
 
-It looks like this:
-
-```json
-{
-    "method": "publish",
-    "params": {
-        "channel": "chat", 
-        "data": {
-            "text": "hello"
-        }
-    }
-}
-```
-
-Let's apply all information said above and send publish command to Centrifugo. We will send a request using the `requests` library for Python. 
-
-```python
-import json
-import requests
-
-command = {
-    "method": "publish",
-    "params": {
-        "channel": "docs", 
-        "data": {
-            "content": "1"
-        }
-    }
-}
-
-api_key = "YOUR_API_KEY"
-data = json.dumps(command)
-headers = {'Content-type': 'application/json', 'Authorization': 'apikey ' + api_key}
-resp = requests.post("https://centrifuge.example.com/api", data=data, headers=headers)
-print(resp.json())
-```
-
-The same using `httpie` console tool:
+Here is an example of publishing message to Centrifugo:
 
 ```bash
-echo '{"method": "publish", "params": {"channel": "chat", "data": {"text": "hello"}}}' | http "localhost:8000/api" Authorization:"apikey <YOUR_API_KEY>" -vvv
-POST /api HTTP/1.1
-Accept: application/json, */*
-Accept-Encoding: gzip, deflate
-Authorization: apikey KEY
-Connection: keep-alive
-Content-Length: 80
-Content-Type: application/json
-Host: localhost:8000
-User-Agent: HTTPie/0.9.8
+curl --header "X-API-Key: <API_KEY>" \
+  --request POST \
+  --data '{"channel": "chat", "data": {"text": "hello"}}' \
+  http://localhost:8000/api/publish
+```  
 
-{
-    "method": "publish",
-    "params": {
-        "channel": "chat",
-        "data": {
-            "text": "hello"
-        }
-    }
-}
+In case of successful publish you will get a response like this:
 
-HTTP/1.1 200 OK
-Content-Length: 3
-Content-Type: application/json
-Date: Thu, 17 May 2018 22:01:42 GMT
-
+```json
 {
     "result": {}
 }
 ```
 
-In case of error response object can contain `error` field. For example, let's publish to a channel with unknown namespace:
+As an additional example, let's take a look how to publish to Centrifugo with `requests` library for Python: 
+
+```python
+import json
+import requests
+
+api_key = "YOUR_API_KEY"
+data = json.dumps({
+    "channel": "docs", 
+    "data": {
+        "content": "1"
+    }
+})
+headers = {'Content-type': 'application/json', 'X-API-Key': api_key}
+resp = requests.post("https://centrifuge.example.com/api/publish", data=data, headers=headers)
+print(resp.json())
+```
+
+
+In case of publication error, response object will contain `error` field. For example, let's publish to an unknown namespace (not defined in Centrifugo configuration):
 
 ```bash
-echo '{"method": "publish", "params": {"channel": "unknown:chat", "data": {"text": "hello"}}}' | http "localhost:8000/api" Authorization:"apikey <YOUR_API_KEY>"
-HTTP/1.1 200 OK
-Content-Length: 55
-Content-Type: application/json
-Date: Thu, 17 May 2018 22:03:09 GMT
+curl --header "X-API-Key: <API_KEY>" \
+  --request POST \
+  --data '{"channel": "unknown:chat", "data": {"text": "hello"}}' \
+  http://localhost:8000/api/publish
+```
 
+Response will be:
+
+```json
 {
     "error": {
         "code": 102,
@@ -158,9 +120,9 @@ Date: Thu, 17 May 2018 22:03:09 GMT
 
 `error` object contains error code and message - this is also the same for other commands described below.
 
-#### Publish params
+#### Publish request
 
-| Parameter name | Parameter type | Required | Description  |
+| Field name | Field type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | channel       | string  | yes | Name of channel to publish        |
 | data       | any JSON       | yes | Custom JSON data to publish into a channel        |
@@ -177,23 +139,18 @@ Date: Thu, 17 May 2018 22:03:09 GMT
 
 ### broadcast
 
-Similar to `publish` but allows to send the same data into many channels.
+`broadcast` is similar to `publish` but allows to efficiently send the same data into many channels:
 
-```json
-{
-    "method": "broadcast",
-    "params": {
-        "channels": ["CHANNEL_1", "CHANNEL_2"],
-        "data": {
-            "text": "hello"
-        }
-    }
-}
+```bash
+curl --header "X-API-Key: <API_KEY>" \
+  --request POST \
+  --data '{"channels": ["user:1", "user:2"], "data": {"text": "hello"}}' \
+  http://localhost:8000/api/broadcast
 ```
 
-#### Broadcast params
+#### Broadcast request
 
-| Parameter name | Parameter type | Required | Description  |
+| Field name | Field type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | channels       | Array of strings  | yes | List of channels to publish data to        |
 | data       | any JSON       | yes | Custom JSON data to publish into each channel        |
@@ -209,11 +166,11 @@ Similar to `publish` but allows to send the same data into many channels.
 
 ### subscribe
 
-`subscribe` allows subscribing user to a channel.
+`subscribe` allows subscribing active user's sessions to a channel. Note, it's mostly for dynamic [server-side subscriptions](./server_subs.md).
 
-#### Subscribe params
+#### Subscribe request
 
-| Parameter name | Parameter type | Required | Description  |
+| Field name | Field type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | user       | string       | yes | User ID to subscribe        |
 | channel       | string  | yes | Name of channel to subscribe user to        |
@@ -252,19 +209,9 @@ Empty object at the moment.
 
 `unsubscribe` allows unsubscribing user from a channel.
 
-```json
-{
-    "method": "unsubscribe",
-    "params": {
-        "channel": "CHANNEL NAME",
-        "user": "USER ID"
-    }
-}
-```
+#### Unsubscribe request
 
-#### Unsubscribe params
-
-| Parameter name | Parameter type | Required | Description  |
+| Field name | Field type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | user       | string       | yes | User ID to unsubscribe        |
 | channel       | string  | yes | Name of channel to unsubscribe user to        |
@@ -279,18 +226,9 @@ Empty object at the moment.
 
 `disconnect` allows disconnecting a user by ID.
 
-```json
-{
-    "method": "disconnect",
-    "params": {
-        "user": "USER ID"
-    }
-}
-```
+#### Disconnect request
 
-#### Disconnect params
-
-| Parameter name | Parameter type | Required | Description  |
+| Field name | Field type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | user       | string       | yes | User ID to disconnect        |
 | client       | string       | no | Specific client ID to disconnect (user still required to be set)       |
@@ -313,9 +251,9 @@ Empty object at the moment.
 
 `refresh` allows refreshing user connection (mostly useful when unidirectional transports are used).
 
-#### Refresh params
+#### Refresh request
 
-| Parameter name | Parameter type | Required | Description  |
+| Field name | Field type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | user       | string       | yes | User ID to refresh       |
 | client       | string       | no | Client ID to refresh  (user still required to be set)      |
@@ -337,24 +275,16 @@ Presence in channels is not enabled by default. See how to enable it over [chann
 
 :::
 
-```json
-{
-    "method": "presence",
-    "params": {
-        "channel": "chat"
-    }
-}
+```bash
+curl --header "X-API-Key: <API_KEY>" \
+  --request POST \
+  --data '{"channel": "chat"}' \
+  http://localhost:8000/api/presence
 ```
 
-Example:
+Example response:
 
 ```bash
-fz@centrifugo: echo '{"method": "presence", "params": {"channel": "chat"}}' | http "localhost:8000/api" Authorization:"apikey KEY"
-HTTP/1.1 200 OK
-Content-Length: 127
-Content-Type: application/json
-Date: Thu, 17 May 2018 22:13:17 GMT
-
 {
     "result": {
         "presence": {
@@ -371,9 +301,9 @@ Date: Thu, 17 May 2018 22:13:17 GMT
 }
 ```
 
-#### Presence params
+#### Presence request
 
-| Parameter name | Parameter type | Required | Description  |
+| Field name | Field type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | channel       | string  | yes | Name of channel to call presence from        |
 
@@ -396,24 +326,16 @@ Date: Thu, 17 May 2018 22:13:17 GMT
 
 `presence_stats` allows getting short channel presence information - number of clients and number of unique users (based on user ID).
 
-```json
-{
-    "method": "presence_stats",
-    "params": {
-        "channel": "chat"
-    }
-}
+```bash
+curl --header "X-API-Key: <API_KEY>" \
+  --request POST \
+  --data '{"channel": "chat"}' \
+  http://localhost:8000/api/presence_stats
 ```
 
-Example:
+Example response:
 
-```bash
-echo '{"method": "presence_stats", "params": {"channel": "public:chat"}}' | http "localhost:8000/api" Authorization:"apikey KEY"
-HTTP/1.1 200 OK
-Content-Length: 43
-Content-Type: application/json
-Date: Thu, 17 May 2018 22:09:44 GMT
-
+```json
 {
     "result": {
         "num_clients": 0,
@@ -422,9 +344,9 @@ Date: Thu, 17 May 2018 22:09:44 GMT
 }
 ```
 
-#### Presence stats params
+#### Presence stats request
 
-| Parameter name | Parameter type | Required | Description  |
+| Field name | Field type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | channel       | string  | yes | Name of channel to call presence from        |
 
@@ -446,25 +368,16 @@ History in channels is not enabled by default. See how to enable it over [channe
 :::
 
 
-```json
-{
-    "method": "history",
-    "params": {
-        "channel": "chat",
-        "limit": 2
-    }
-}
+```bash
+curl --header "X-API-Key: <API_KEY>" \
+  --request POST \
+  --data '{"channel": "chat", "limit": 2}' \
+  http://localhost:8000/api/history
 ```
 
-Example:
+Example response:
 
-```bash
-echo '{"method": "history", "params": {"channel": "chat", "limit": 2}}' | http "localhost:8000/api" Authorization:"apikey KEY"
-HTTP/1.1 200 OK
-Content-Length: 129
-Content-Type: application/json
-Date: Wed, 21 Jul 2021 05:30:48 GMT
-
+```json
 {
     "result": {
         "epoch": "qFhv",
@@ -487,9 +400,9 @@ Date: Wed, 21 Jul 2021 05:30:48 GMT
 }
 ```
 
-#### History params
+#### History request
 
-| Parameter name | Parameter type | Required | Description  |
+| Field name | Field type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | channel       | string  | yes | Name of channel to call history from        |
 | limit       | int  | no | Limit number of returned publications, if not set in request then only current stream position information will present in result (without any publications)         |
@@ -515,32 +428,9 @@ Date: Wed, 21 Jul 2021 05:30:48 GMT
 
 `history_remove` allows removing publications in channel history. Current top stream position meta data kept untouched to avoid client disconnects due to insufficient state.
 
-```json
-{
-    "method": "history_remove",
-    "params": {
-        "channel": "chat"
-    }
-}
-```
+#### History remove request
 
-Example:
-
-```bash
-echo '{"method": "history_remove", "params": {"channel": "chat"}}' | http "localhost:8000/api" Authorization:"apikey KEY"
-HTTP/1.1 200 OK
-Content-Length: 43
-Content-Type: application/json
-Date: Thu, 17 May 2018 22:09:44 GMT
-
-{
-    "result": {}
-}
-```
-
-#### History remove params
-
-| Parameter name | Parameter type | Required | Description  |
+| Field name | Field type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | channel       | string  | yes | Name of channel to remove history        |
 
@@ -552,16 +442,16 @@ Empty object at the moment.
 
 `channels` return active channels (with one or more active subscribers in it).
 
-```json
-{
-    "method": "channels",
-    "params": {}
-}
+```bash
+curl --header "X-API-Key: <API_KEY>" \
+  --request POST \
+  --data '{}' \
+  http://localhost:8000/api/channels
 ```
 
-#### Channels params
+#### Channels request
 
-| Parameter name | Parameter type | Required | Description  |
+| Field name | Field type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
 | pattern       | string  | no | Pattern to filter channels, we are using [gobwas/glob](https://github.com/gobwas/glob) library for matching         |
 
@@ -587,15 +477,9 @@ Keep in mind that since the `channels` method by default returns all active chan
 
 `info` method allows getting information about running Centrifugo nodes.
 
-Example:
+Example response:
 
-```bash
-echo '{"method": "info", "params": {}}' | http "localhost:8000/api" Authorization:"apikey KEY"
-HTTP/1.1 200 OK
-Content-Length: 184
-Content-Type: application/json
-Date: Thu, 17 May 2018 22:07:58 GMT
-
+```json
 {
     "result": {
         "nodes": [
@@ -613,7 +497,7 @@ Date: Thu, 17 May 2018 22:07:58 GMT
 }
 ```
 
-#### Info params
+#### Info request
 
 Empty object at the moment.
 
@@ -623,24 +507,11 @@ Empty object at the moment.
 | -------------- | -------------- | ------ | ------------ |
 | nodes       | Array of Node objects  | no | Information about all nodes in a cluster  |
 
-### Command pipelining
+### batch
 
-It's possible to combine several commands into one request to Centrifugo. To do this use [JSON streaming](https://en.wikipedia.org/wiki/JSON_streaming) format. This can improve server throughput and reduce traffic traveling around.
+TBD.
 
-Example:
-
-```bash
-curl --header "Authorization: apikey <API_KEY>" \
-  --request POST \
-  --data $'{"method": "publish", "params": {"channel": "test1", "data": {"test": 1}}}\n{"method": "publish", "params": {"channel": "test2", "data": {"test": 2}}}' \
-  http://localhost:8000/api
-{"result":{}}
-{"result":{}}
-```
-
-Note that with CURL we had to use `$` to properly send new line `\n` character in data.
-
-### HTTP API libraries
+## HTTP API libraries
 
 Sending an API request to Centrifugo is a simple task to do in any programming language - this is just a POST request with JSON payload in body and `Authorization` header.
 

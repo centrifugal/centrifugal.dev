@@ -86,10 +86,10 @@ Example:
 
 ```bash
 curl --header "Content-Type: application/json" \
-  --header "Authorization: apikey <API_KEY>" \
+  --header "X-API-Key: <API_KEY>" \
   --request POST \
-  --data '{"method": "block_user", "params": {"user": "2695", "expire_at": 1635845122}}' \
-  http://localhost:8000/api
+  --data '{"user": "2695", "expire_at": 1635845122}' \
+  http://localhost:8000/api/block_user
 ```
 
 #### block_user params
@@ -109,10 +109,10 @@ Example:
 
 ```bash
 curl --header "Content-Type: application/json" \
-  --header "Authorization: apikey <API_KEY>" \
+  --header "X-API-Key: <API_KEY>" \
   --request POST \
-  --data '{"method": "unblock_user", "params": {"user": "2695"}}' \
-  http://localhost:8000/api
+  --data '{"user": "2695"}' \
+  http://localhost:8000/api/unblock_user
 ```
 
 #### unblock_user params

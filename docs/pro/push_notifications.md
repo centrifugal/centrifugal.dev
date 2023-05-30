@@ -33,19 +33,16 @@ To facilitate efficient push notification broadcasting towards devices, Centrifu
 Integration with FCM means that you can use existing Firebase messaging SDKs to extract push notification token for a device on different platforms (iOS, Android, Flutter, web browser) and setting up push notification listeners. The same for HMS and APNs - just use existing native SDKs and best practices on the frontend. Only a couple of additional steps required to integrate frontend with Centrifugo PRO device token and device topic storage. After doing that you will be able to send push notification towards single device, or towards group of devices subscribed to a topic. For example, with a simple Centrifugo API call like this:
 
 ```bash
-curl -X POST http://localhost:8000/api \
+curl -X POST http://localhost:8000/api/send_push_notification \
 -H "Authorization: apikey <KEY>" \
 -d @- <<'EOF'
 
 {
-    "method": "send_push_notification",
-    "params": {
-        "recipient": {"topics": ["test"]},
-        "notification": {
-            "fcm": {
-                "message": {
-                    "notification": {"title": "Hello", "body": "How are you?"}
-                }
+    "recipient": {"topics": ["test"]},
+    "notification": {
+        "fcm": {
+            "message": {
+                "notification": {"title": "Hello", "body": "How are you?"}
             }
         }
     }
