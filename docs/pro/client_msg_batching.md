@@ -4,8 +4,6 @@ sidebar_label: Message batching control
 title: Message batching control
 ---
 
-This PRO feature is under active development, some changes expected here 🚧
-
 Centrifugo PRO provides advanced options to tweak connection message write behaviour.
 
 By default, Centrifugo tries to write messages to clients as fast as possible. Centrifugo also does best effort combining different protocol messages into one transport frame (to reduce system calls and thus reduce CPU usage) without sacrificing delivery latency.

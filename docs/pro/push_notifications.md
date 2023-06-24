@@ -24,11 +24,7 @@ To deliver push notifications to devices Centrifugo PRO integrates with the foll
 * [Huawei Messaging Service (HMS) Push Kit](https://developer.huawei.com/consumer/en/hms/huawei-pushkit/) <i className="bi bi-android2" style={{'color': 'yellowgreen'}}></i> <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i> <i className="bi bi-globe" style={{color: 'orange'}}></i>
 * [Apple Push Notification service (APNs) ](https://developer.apple.com/documentation/usernotifications) <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i>
 
-Centrifugo PRO provides a comprehensive solution for sending push notifications by incorporating frontend SDKs from FCM, HMS, and Apple SDKs.
-
-While these push notification providers handle the frontend and transport aspects of notification delivery, device token management and efficient push notification broadcasting still need to be addressed by the application backend. Centrifugo PRO offers an API for storing tokens in a PostgreSQL database and managing device subscriptions to topics in a secure, unified manner.
-
-To facilitate efficient push notification broadcasting towards devices, Centrifugo PRO includes worker queues based on Redis streams.
+FCM, HMS, APNs handle the frontend and transport aspects of notification delivery. Device token storage, management and efficient push notification broadcasting is managed by Centrifugo PRO. Tokens are stored in a PostgreSQL database. To facilitate efficient push notification broadcasting towards devices, Centrifugo PRO includes worker queues based on Redis streams (and also provides and option to use PostgreSQL-based queue).
 
 Integration with FCM means that you can use existing Firebase messaging SDKs to extract push notification token for a device on different platforms (iOS, Android, Flutter, web browser) and setting up push notification listeners. The same for HMS and APNs - just use existing native SDKs and best practices on the frontend. Only a couple of additional steps required to integrate frontend with Centrifugo PRO device token and device topic storage. After doing that you will be able to send push notification towards single device, or towards group of devices subscribed to a topic. For example, with a simple Centrifugo API call like this:
 
@@ -38,7 +34,11 @@ curl -X POST http://localhost:8000/api/send_push_notification \
 -d @- <<'EOF'
 
 {
-    "recipient": {"topics": ["test"]},
+    "recipient": {
+        "filter": {
+            "topics": ["test"]
+        }
+    },
     "notification": {
         "fcm": {
             "message": {
@@ -49,6 +49,10 @@ curl -X POST http://localhost:8000/api/send_push_notification \
 }
 EOF
 ```
+
+In addition, Centrifugo PRO includes a helpful web UI for inspecting registered devices and sending push notifications:
+
+![](/img/push_ui.png)
 
 ## Motivation and design choices
 
@@ -185,8 +189,6 @@ This option configures the number of days to keep device without updates. By def
 
 ### Use PostgreSQL as queue
 
-Coming soon 🚧
-
 Centrifugo PRO utilizes Redis Streams as the default queue engine for push notifications. However, it also offers the option to employ PostgreSQL for queuing. It's as simple as:
 
 ```json title="config.json"
@@ -204,7 +206,7 @@ Centrifugo PRO utilizes Redis Streams as the default queue engine for push notif
 
 :::tip
 
-Queue based on Redis streams is faster, so if you start with PostgreSQL based queue – you have an option to switch to a more performant implementation later. Though active push notifications will be lost during a switch.
+Queue based on Redis streams is generally more efficient, so if you start with PostgreSQL based queue – you have an option to switch to a more performant implementation later. Though in-flight and currently queued push notifications will be lost during a switch.
 
 :::
 
@@ -224,8 +226,7 @@ Registers or updates device information.
 | `platform`      | string | Yes | Platform of the device (valid choices: `ios`, `android`, `web`). |
 | `user`          | string | No  | User associated with the device.            |
 | `topics`      | array of strings | No | Device topic subscriptions. This should be a full list which replaces all the topics previously accociated with the device. User topics managed by `UserTopic` model will be automatically attached.  |
-| `tags`          | map<string, string> | No | Additional tags for the device (indexed key-value data).  |
-| `meta`          | map<string, string> | No | Additional metadata for the device (not indexed).         |
+| `meta`          | map<string, string> | No | Additional custom metadata for the device         |
 
 #### device_register result
 
@@ -243,11 +244,9 @@ Call this method to update device. For example, when user logs out the app and y
 |-----------------|----------|----|---------------------------------------------|
 | `ids`            | repeated string | No | Device ids to filter       |
 | `users`      | repeated string | No | Device users filter |
-| `provider_tokens`         | repeated DeviceProviderTokens | No | Provider tokens filter     |
-| `user_update`      | DeviceUserUpdate | No | Optional user update object |
-| `meta_update`          | DeviceMetaUpdate | No | Optional device meta update object            |
-| `tags_update`          | DeviceTagsUpdate | No | Optional device tags update object         |
-| `topics_update`          | DeviceChannelsUpdate | No | Optional topics update object  |
+| `user_update`      | `DeviceUserUpdate` | No | Optional user update object |
+| `meta_update`          | `DeviceMetaUpdate` | No | Optional device meta update object            |
+| `topics_update`          | `DeviceTopicsUpdate` | No | Optional topics update object  |
 
 `DeviceUserUpdate`:
 
@@ -261,17 +260,12 @@ Call this method to update device. For example, when user logs out the app and y
 |-----------------|----------|----|---------------------------------------------|
 | `meta`            | map<string, string> | Yes | Meta to set                   |
 
-`DeviceTagsUpdate`:
+`DeviceTopicsUpdate`:
 
 | Field           | Type     | Required | Description                           |
 |-----------------|----------|----|---------------------------------------------|
-| `tags`            | map<string, string> | Yes | Tags to set                   |
-
-`DeviceChannelsUpdate`:
-
-| Field           | Type     | Required | Description                           |
-|-----------------|----------|----|---------------------------------------------|
-| `topics`            | repeated string | Yes | Channels to set               |
+| `op`            | string | Yes | Operation to make: `add`, `remove` or `set` |
+| `topics`            | repeated string | Yes | Topics for the operation |
 
 #### device_update result
 
@@ -287,7 +281,6 @@ Removes device from storage. This may be also called when user logs out the app 
 | --- | --- | ----| --- |
 | `ids` | repeated string | No | A list of device IDs to be removed |
 | `users` | repeated string | No | A list of device user IDs to filter devices to remove |
-| `provider_tokens` | `ProviderTokens` | No | Provider tokens to remove |
 
 #### device_remove result
 
@@ -301,36 +294,42 @@ Returns a paginated list of registered devices according to request filter condi
 
 | Field | Type | Required | Description |
 |-------|------|----|-------------|
+| `filter`   | `DeviceFilter` | Yes | How to filter results |
+| `cursor` | string | No | Cursor for pagination (last device id in previous batch, empty for first page). |
+| `limit` | int32 | No | Maximum number of devices to retrieve. |
+| `include_total_count` | bool | No | Flag indicating whether to include total count for the current filter. |
+| `include_topics` | bool | No | Flag indicating whether to include topics information for each device. |
+| `include_meta` | bool | No | Flag indicating whether to include meta information for each device. |
+
+`DeviceFilter`:
+
+| Field | Type | Required | Description |
+|-------|------|----|-------------|
 | `ids`   | repeated string | No | List of device IDs to filter results. |
 | `providers` | repeated string | No | List of device token providers to filter results. |
-| `provider_tokens` | repeated `ProviderTokens` | No | Provider tokens to filter results. |
 | `platforms` | repeated string | No | List of device platforms to filter results. |
 | `users` | repeated string | No | List of device users to filter results. |
-| `since` | string | No | Cursor for pagination (last device id in previous batch, empty for first page). |
-| `limit` | int32 | No | Maximum number of devices to retrieve. |
-| `include_topics` | bool | No | Flag indicating whether to include topics information for each device. |
-| `include_tags` | bool | No | Flag indicating whether to include tags information for each device. |
-| `include_meta` | bool | No | Flag indicating whether to include meta information for each device. |
+| `topics` | repeated string | No | List of topics to filter results. |
 
 #### device_list result
 
 | Field Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `items` | repeated `Device` | Yes | A list of devices |
-| `has_more` | bool | Yes | A flag indicating whether there are more devices available |
+| `next_cursor` | string | No | Cursor string for retreiving the next page, if not set - then no next page exists |
+| `total_count` | integer | No | Total count value (if `include_total_count` used) |
 
 `Device`:
 
-| Field Name | Type | Description |
-|------------|------|-------------|
-| `id` | string | The device's ID. |
-| `provider` | string | The device's token provider. |
-| `token` | string | The device's token. |
-| `platform` | string | The device's platform. |
-| `user` | string | The user associated with the device. |
-| `topics` | array of strings | Only included if `include_topics` was true |
-| `tags` | map<string, string> | Only included if `include_tags` was true |
-| `meta` | map<string, string> | Only included if `include_meta` was true |
+| Field Name | Type | Required | Description |
+|------------|------| --- | -------------|
+| `id` | string | Yes | The device's ID. |
+| `provider` | string | Yes | The device's token provider. |
+| `token` | string | Yes | The device's token. |
+| `platform` | string | Yes | The device's platform. |
+| `user` | string | No | The user associated with the device. |
+| `topics` | array of strings | No | Only included if `include_topics` was true |
+| `meta` | map<string, string> | No | Only included if `include_meta` was true |
 
 ### device_topic_update
 
@@ -356,31 +355,38 @@ List device to topic mapping.
 
 | Field | Type | Required | Description |
 |-------|------|----|-------------|
+| `filter`   | `DeviceTopicFilter` | No | List of device IDs to filter results. |
+| `cursor` | string | No | Cursor for pagination (last device id in previous batch, empty for first page). |
+| `limit` | int32 | No | Maximum number of devices to retrieve. |
+| `include_device` | bool | No | Flag indicating whether to include Device information for each object. |
+| `include_total_count` | bool | No | Flag indicating whether to include total count info to response. |
+
+`DeviceTopicFilter`:
+
+| Field | Type | Required | Description |
+|-------|------|----|-------------|
 | `device_ids`   | repeated string | No | List of device IDs to filter results. |
 | `device_providers` | repeated string | No | List of device token providers to filter results. |
-| `device_provider_tokens` | repeated `ProviderTokens` | No | Provider tokens to filter results. |
 | `device_platforms` | repeated string | No | List of device platforms to filter results. |
 | `device_users` | repeated string | No | List of device users to filter results. |
 | `topics` | repeated string | No | List of topics to filter results. |
-| `topic_prefix` | string | No | Channel prefix to filter results. |
-| `since` | string | No | Cursor for pagination (last device id in previous batch, empty for first page). |
-| `limit` | int32 | No | Maximum number of devices to retrieve. |
-| `include_device` | bool | No | Flag indicating whether to include Device information for each object. |
+| `topic_prefix` | string | No | Topic prefix to filter results. |
 
 #### device_topic_list result
 
 | Field Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `items` | repeated `DeviceChannel` | Yes | A list of DeviceChannel objects |
-| `has_more` | bool | Yes | A flag indicating whether there are more devices available |
+| `items` | repeated `DeviceTopic` | Yes | A list of DeviceChannel objects |
+| `next_cursor` | string | No | Cursor string for retreiving the next page, if not set - then no next page exists |
+| `total_count` | integer | No | Total count value (if `include_total_count` used) |
 
-`DeviceChannel`:
+`DeviceTopic`:
 
 | Field | Type | Required | Description |
 |-------|------|----|-------------|
-| `id`   | string | Yes | ID of DeviceChannel |
+| `id`   | string | Yes | ID of DeviceTopic object |
 | `device_id` | string | Yes | Device ID |
-| `topic` | string | Yes | Channel |
+| `topic` | string | Yes | Topic |
 
 ### user_topic_update
 
@@ -406,18 +412,26 @@ List user to topic mapping.
 
 | Field | Type | Required | Description |
 |-------|------|----|-------------|
+| `flter`   | `UserTopicFilter` | No | Filter object. |
+| `cursor` | string | No | Cursor for pagination (last id in previous batch, empty for first page). |
+| `limit` | int32 | No | Maximum number of `UserTopic` objects to retrieve. |
+| `include_total_count` | bool | No | Flag indicating whether to include total count info to response. |
+
+`UserTopicFilter`:
+
+| Field | Type | Required | Description |
+|-------|------|----|-------------|
 | `users`   | repeated string | No | List of users to filter results. |
 | `topics` | repeated string | No | List of topics to filter results. |
 | `topic_prefix` | string | No | Channel prefix to filter results. |
-| `since` | string | No | Cursor for pagination (last id in previous batch, empty for first page). |
-| `limit` | int32 | No | Maximum number of `UserTopic` objects to retrieve. |
 
 #### user_topic_list result
 
 | Field Name | Type | Description |
 | --- | --- | --- |
 | `items` | repeated `UserTopic` | A list of UserTopic objects |
-| `has_more` | bool | A flag indicating whether there are more devices available |
+| `next_cursor` | string | No | Cursor string for retreiving the next page, if not set - then no next page exists |
+| `total_count` | integer | No | Total count value (if `include_total_count` used) |
 
 `UserTopic`:
 
@@ -425,7 +439,7 @@ List user to topic mapping.
 |-------|------|----|-------------|
 | `id`   | string | Yes | ID of `UserTopic` |
 | `user` | string | Yes | User ID |
-| `topic` | string | Yes | Channel |
+| `topic` | string | Yes | Topic |
 
 ### send_push_notification
 
@@ -442,8 +456,7 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 
 | Field         | Type      |  Required | Description |
 |---------------|-----------|-----------|--------|
-| `device_ids`    | repeated string | No | Send to a list of device IDs (managed by Centrifugo) |
-| `topics`      | repeated string | No | Send to topics (managed by Centrifugo)     |
+| `filter`    | `DeviceFilter` | No | Send to device IDs based on Centrifugo device storage filter |
 | `fcm_tokens`    | repeated string | No | Send to a list of FCM native tokens     |
 | `fcm_topic`     | string     | No | Send to a FCM native topic     |
 | `fcm_condition`     | string     | No | Send to a FCM native condition     |
@@ -457,7 +470,7 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 | Field         | Type      |  Required | Description |
 |---------------|-----------|-----------|--------|
 | `uid`             | string       | No | Unique send id, used for Centrifugo builtin analytics |
-| `expire_at`       | int64        | No | Unix timestamp when Centrifugo stops attempting to send this notification (this does not relate to notification TTL fields)      |
+| `expire_at`       | int64        | No | Unix timestamp when Centrifugo stops attempting to send this notification. Note, it's Centrifugo specific and does not relate to notification TTL fields. We generally recommend to always set this to a reasonable value to protect your app from old push notifications sending      |
 | `fcm`       | `FcmPushNotification` | No | Notification for FCM      |
 | `hms`       | `HmsPushNotification` | No | Notification for HMS      |
 | `apns`       | `ApnsPushNotification` | No | Notification for APNs   |

@@ -260,11 +260,11 @@ Default: 0
 
 By default, Centrifugo runs on all available CPU cores (also Centrifugo can look at cgroup limits when rnning in Docker/Kubernetes). To limit the number of cores Centrifugo can utilize in one moment use this option.
 
-## Endpoint configuration.
+## Endpoint configuration
 
 After Centrifugo started there are several endpoints available.
 
-### Default endpoints.
+### Default endpoints
 
 Bidirectional WebSocket default endpoint:
 
@@ -330,13 +330,13 @@ By default, all endpoints work on port `8000`. This can be changed with `port` o
 
 In production setup, you may have a proper domain name in endpoint addresses above instead of `localhost`. While domain name and port parts can differ depending on setup – URL paths stay the same: `/connection/sockjs`, `/connection/websocket`, `/api` etc.
 
-### Admin endpoints.
+### Admin endpoints
 
 Admin web UI endpoint works on root path by default, i.e. `http://localhost:8000`.
 
 For more details about admin web UI, refer to the [Admin web UI documentation](admin_web.md).
 
-### Debug endpoints.
+### Debug endpoints
 
 Next, when Centrifugo started in debug mode some extra debug endpoints become available. To start in debug mode add `debug` option to config:
 
@@ -363,6 +363,14 @@ Use `health` boolean option (by default `false`) to enable the health check endp
 centrifugo -c config.json --health
 ```
 
+### Swagger UI for server API
+
+Use `swagger` boolean option (by default `false`) to enable Swagger UI for [server HTTP API](./server_api.md). UI will be available on path `/swagger`. Also available over command-line flag:
+
+```bash
+centrifugo -c config.json --swagger
+```
+
 ### Custom internal ports
 
 We strongly recommend not expose API, admin, debug, health, and Prometheus endpoints to the Internet. The following Centrifugo endpoints are considered internal:
@@ -372,6 +380,7 @@ We strongly recommend not expose API, admin, debug, health, and Prometheus endpo
 * Prometheus endpoint (`/metrics`) - used for exposing server metrics in Prometheus format 
 * Health check endpoint (`/health`) - used to do health checks
 * Debug endpoints (`/debug/pprof`) - used to inspect internal server state
+* Swagger UI endpoint (`/swagger`) - used for showing embedded Swagger UI for server HTTP API
 
 It's a good practice to protect all these endpoints with a firewall. For example, it's possible to configure in `location` section of the Nginx configuration.
 

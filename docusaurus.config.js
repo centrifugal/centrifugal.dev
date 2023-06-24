@@ -40,7 +40,7 @@ module.exports = {
         {
           type: 'doc',
           docId: 'transports/overview',
-          label: "Transports",
+          label: "Real-time transports / SDK",
           position: "left",
         },
         {
@@ -181,7 +181,7 @@ module.exports = {
           /**
            * Title of the blog sidebar
            */
-          blogSidebarTitle: 'All blog posts',
+          blogSidebarTitle: 'Recent posts',
           /**
            * URL route for the blog section of your site.
            * *DO NOT* include a trailing slash.

@@ -201,7 +201,7 @@ If you want to use Centrifugo with different projects the recommended approach i
 
 It's possible to share one Redis setup though by setting unique `redis_prefix`. But we recommend having completely isolated setups.
 
-### I have not found an answer to my question here:
+### I have not found an answer to my question here
 
 Ask in our community rooms:
 

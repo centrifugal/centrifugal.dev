@@ -23,7 +23,7 @@ module.exports = {
     "server/history_and_recovery",
     "server/presence",
     "server/admin_web",
-    "server/monitoring",
+    "server/observability",
     "server/infra_tuning",
     "server/load_balancing",
     "server/tls",
@@ -64,7 +64,7 @@ module.exports = {
     "pro/install_and_run",
     {
       type: 'category',
-      label: 'PRO features',
+      label: 'PRO version features',
       collapsed: false,
       items: [
         "pro/tracing",

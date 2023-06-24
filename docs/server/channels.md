@@ -70,7 +70,7 @@ User-limited channels must be enabled for a channel namespace using [allow_user_
 
 ### private channel prefix (`$`)
 
-Centrifugo v4 has this option to achieve compatibility with previous Centrifugo versions. Previously (in Centrifugo v1, v2 and v3) only channels starting with `$` could be subscribed with a subscription JWT. In Centrifugo v4 that's not the case anymore – clients can subscribe to any channel with a subscription token (if the token is valid – then subscription to a channel is accepted).
+Centrifugo has this option to achieve compatibility with previous Centrifugo versions. Previously (in Centrifugo v1, v2 and v3) only channels starting with `$` could be subscribed with a subscription JWT. In Centrifugo v4 that's not the case anymore – clients can subscribe to any channel with a subscription token (if the token is valid – then subscription to a channel is accepted).
 
 But for namespaces with `allow_subscribe_for_client` option enabled Centrifugo does not allow subscribing on channels starting with `private_channel_prefix` (`$` by default) without a subscription token. This limitation exists to help users migrate to Centrifugo v4 without security risks.
 
@@ -283,6 +283,14 @@ See additional information about offsets and epoch in [History and recovery](./h
 History persistence properties are dictated by Centrifugo [engine](./engines.md) used. For example, when using memory engine history is only kept till Centrifugo node restart. In Redis engine case persistence is determined by a Redis server persistence configuration (same for KeyDB and Tarantool).
 
 :::
+
+### history_meta_ttl
+
+`history_meta_ttl` ([duration](./configuration.md#setting-time-duration-options)) – sets a time of history stream metadata expiration (with seconds precision).
+
+When using a history in a channel, Centrifugo keeps some metadata for each channel stream. Metadata includes the latest stream offset and its epoch value. In some cases, when channels are created for а short time and then not used anymore, created metadata can stay in memory while not useful. For example, you can have a personal user channel but after using your app for a while user left it forever. From a long-term perspective, this can be an unwanted memory growth. Setting a reasonable value to this option can help to expire metadata faster (or slower if you need it). The rule of thumb here is to keep this value much bigger than maximum history TTL used in Centrifugo configuration.
+
+If not specified Centrifugo uses a global `history_meta_ttl` which is 30 days. This should be a good default for most use cases to avoid tweaking `history_meta_ttl` on a namespace level at all.
 
 ### force_positioning
 

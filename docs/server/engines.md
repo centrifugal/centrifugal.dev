@@ -361,28 +361,15 @@ To reproduce the same over environment variable use `space` to separate differen
 CENTRIFUGO_REDIS_CLUSTER_ADDRESS="localhost:30001,localhost:30002 localhost:30101,localhost:30102" CENTRIFUGO_ENGINE=redis ./centrifugo
 ```
 
-## KeyDB Engine
-
-**EXPERIMENTAL**
-
-Centrifugo Redis engine seamlessly works with [KeyDB](https://keydb.dev/). KeyDB server is compatible with Redis and provides several additional features beyond. 
-
-:::caution
-
-We can't give any promises about compatibility with KeyDB in the future Centrifugo releases - while KeyDB is fully compatible with Redis things should work just fine. That's why we consider this as **EXPERIMENTAL** feature.
-
-:::
-
-Use KeyDB instead of Redis only if you are sure you need it. Nothing stops you from running several Redis instances per each core you have, configure sharding, and obtain even better performance than KeyDB can provide (due to lack of synchronization between threads in Redis).
-
-To run Centrifugo with KeyDB all you need to do is use `redis` engine but run the KeyDB server instead of Redis.
-
 ## Other Redis compatible
 
-Other storages which are compatible with Centrifugo may work, but we did not make enough testing with them. Some of them still evolving and do not fully support Redis protocol. So if you want to use these storages with Centrifugo – please read carefully the notes below:
+When using Redis engine it's possible to point Centrifugo not only to Redis itself, but also to the other Redis compatible server. Such servers may work just fine if implement Redis protocol and support all the data structures Centrifugo uses and have PUB/SUB implemented.
+
+Some known options:
 
 * [AWS Elasticache](https://aws.amazon.com/elasticache/) – it was reported to work, but we suggest you testing the setup including failover tests and work under load.
-* [DragonflyDB](https://dragonflydb.io/) - it's mostly compatible, the only problem with DragonflyDB v1.0.0 we observed is failing test regarding history iteration in reversed order (not very common). We have not tested a Redis Cluster emulation mode provided by DragonflyDB yet. We suggest you testing the setup including failover tests and work under load.
+* [KeyDB](https://keydb.dev/) – should work fine with Centrifugo, no known problems at this point regarding Centrifugo compatibility.
+* [DragonflyDB](https://dragonflydb.io/) - should work fine starting from DragonflyDB 1.3.0 and with `redis_force_resp2` Centrifugo option on. We have not tested a Redis Cluster emulation mode provided by DragonflyDB yet. We suggest you testing the setup including failover tests and work under load.
 
 ## Tarantool engine
 
