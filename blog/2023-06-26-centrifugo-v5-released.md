@@ -31,7 +31,7 @@ Now returning an empty string from `getToken` is a valid scenario which won't re
 
 And we are putting back `setToken` method to our SDKs – so it's now possible to reset the token to be empty upon user logout.
 
-An abstract example in Javascript which demonstrates how login/logout flow may be now implemented:
+An abstract example in Javascript which demonstrates how login/logout flow may be now implemented with our SDK:
 
 ```javascript
 const centrifuge = new Centrifuge('ws://localhost:8000/connection/websocket', {
@@ -134,6 +134,26 @@ Another good addition is an OpenTelemetry tracing support for HTTP and GRPC serv
 
 Description and simple example with Jaeger may be found [in observability chapter](/docs/server/observability#opentelemetry). We only support OTLP HTTP export format and trace format defined in W3C spec: https://www.w3.org/TR/trace-context/.
 
+## Separate config for subscription token
+
+With the introduction of JWKS support in Centrifugo v4 (a way to validate JWT tokens using a remote endpoint which manages keys and key rotation - see [JWK spec](https://datatracker.ietf.org/doc/html/rfc7517)) Centrifugo users can rely on JWKS provider (like Keycloak, AWS Cognito) for making authentication.
+
+But at the same time developers may want to work with channels using subscription tokens managed in a custom way – without using the same JWKS configuration used for connection tokens.
+
+Centrifugo v5 allows doing by introducing the `separate_subscription_token_config` option.
+
+When `separate_subscription_token_config` is `true` Centrifugo does not look at general token options at all when verifying subscription tokens and uses config options starting from `subscription_token_` prefix instead. 
+
+Here is an example how to use JWKS for connection tokens, but have HMAC-based verification for subscription tokens:
+
+```json title="config.json"
+{
+  "token_jwks_public_endpoint": "https://example.com/openid-connect/certs",
+  "separate_subscription_token_config": true,
+  "subscription_token_hmac_secret_key": "separate_secret_which_must_be_strong"
+}
+```
+
 ## Unknown config keys warnings
 
 With every release, Centrifugo offers more and more options. One thing we've noticed is that some options from previous Centrifugo options, which were already removed, still persist in the user's configuration file.
@@ -152,6 +172,31 @@ It looks like this:
 ```
 
 These warnings do not prevent server to start so you can gradually clean up the configuration.
+
+## Simplifying protocol debug with Postman
+
+Centrifugo v5 supports a special url parameter for bidirectional websocket which turns on using native WebSocket frame ping-pong mechanism instead of server-to-client application level pings Centrifugo uses by default. This simplifies debugging Centrifugo protocol with tools like Postman, wscat, websocat, etc. 
+
+Previously it was inconvenient due to the fact Centrifugo sends periodic ping message to the client (`{}` in JSON protocol scenario) and expects pong response back within some time period. Otherwise Centrifugo closes connection. This results in problems with mentioned tools because you had to manually send `{}` pong message upon ping message. So typical session in `wscat` could look like this:
+
+```bash
+❯ wscat --connect ws://localhost:8000/connection/websocket
+Connected (press CTRL+C to quit)
+> {"id": 1, "connect": {}}
+< {"id":1,"connect":{"client":"9ac9de4e-5289-4ad6-9aa7-8447f007083e","version":"0.0.0","ping":25,"pong":true}}
+< {}
+Disconnected (code: 3012, reason: "no pong")
+```
+
+The parameter is called `cf_ws_frame_ping_pong`, to use it connect to Centrifugo bidirectional WebSocket endpoint like `ws://localhost:8000/websocket/connection?cf_ws_frame_ping_pong=true`. Here is an example which demonstrates working with Postman WebSocket where we connect to local Centrifugo and subscribe to two channels `test1` and `test2`:
+
+<video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/postman.mp4"></video>
+
+You can then proceed to Centrifugo [admin web UI](/docs/server/admin_web), publish something to these channels and see publications in Postman.
+
+Note, how we sent several JSON commands in one WebSocket frame to Centrifugo from Postman in the example above - this is possible since Centrifugo protocol supports batches of commands in line-delimited format.
+
+We consider this feature to be used only for debugging, **in production prefer using our SDKs without using `cf_ws_frame_ping_pong` parameter** – because app-level ping-pong is more efficient and our SDKs detect broken connections due to it.
 
 ## The future of SockJS
 

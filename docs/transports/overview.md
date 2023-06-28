@@ -22,7 +22,7 @@ Bidirectional transports are capable to serve all Centrifugo features. These tra
 
 Bidirectional transports come with a cost that developers need to use a special client connector library (SDK) which speaks Centrifugo [client protocol](./client_protocol.md). The reason why we need a special client connector library is that a bidirectional connection is asynchronous – it's required to match requests to responses, properly manage connection state, handle request queueing/timeouts/errors, etc.
 
-Centrifugo has several official [client SDKs](../transports/client_sdk.md) for popular environments. All of them work over [WebSocket](./websocket.md) transport. Our Javascript SDK also offers bidirectional fallbacks over [HTTP-Streaming](./http_stream.md), [Server-Sent Events (SSE)](./sse.md) or [SockJS](./sockjs.md).
+Centrifugo has several official [client SDKs](../transports/client_sdk.md) for popular environments. All of them work over [WebSocket](./websocket.md) transport. Our Javascript SDK also offers bidirectional fallbacks over [HTTP-Streaming](./http_stream.md), [Server-Sent Events (SSE)](./sse.md), [SockJS](./sockjs.md), and has an experimental support for [WebTransport](./webtransport.md).
 
 ## Unidirectional
 

@@ -99,6 +99,7 @@ html[data-theme="dark"] .logos svg * {
   height: 125px;
   width: 125px;
   margin: 2em 2em;
+  object-fit: cover;
 }
 
 .heart {

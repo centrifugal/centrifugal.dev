@@ -509,7 +509,27 @@ Empty object at the moment.
 
 ### batch
 
-TBD.
+Batch allows sending many commands in one request. Commands processed sequentially by Centrifugo, users should check individual error in each returned reply. Useful to avoid RTT latency penalty for each command sent, this is an analogue of pipelining.
+
+Example with two publications in one request:
+
+```bash
+curl --header "X-API-Key: <API_KEY>" \
+  --request POST \
+  --data '{"commands": [{"publish": {"channel": "test1", "data": {}}}, {"publish": {"channel": "x:test2", "data": {}}}]}' \
+  http://localhost:8000/api/batch
+```
+
+Example response:
+
+```json
+{
+    "replies":[
+        {"publish":{}},
+        {"error":{"code":102,"message":"unknown channel"}}
+    ]
+}
+```
 
 ## HTTP API libraries
 

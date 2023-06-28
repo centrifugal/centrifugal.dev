@@ -46,3 +46,7 @@ Don't forget that you can now generate HTTP clients from OpenAPI spec we now mai
 * `sockjs_heartbeat_delay` option removed
 * `uni_websocket_ping_interval` option removed
 * `websocket_ping_interval` option removed
+
+## Shutting down Centrifugo v2 doc site
+
+With Centrifugo v5 release we are shutting down Centrifugo v2 documentation site - this means `https://centrifugal.github.io/centrifugo/` won't be available anymore. Documents may still be found [on Github](https://github.com/centrifugal/centrifugo/tree/gh-pages). Documentation for v3, v4 and v5 is hosted here.

@@ -13,11 +13,11 @@ This chapter describes configuration principles and some important configuration
 
 ## Configuration sources
 
-Centrifugo can be configured in several ways.
+Centrifugo can be configured in several ways: using command-line flags (highest priority), environment variables (second priority after flags), configuration file (lowest priority).
 
 ### Command-line flags
 
-Centrifugo supports several command-line flags. See `centrifugo -h` for available flags. Command-line flags limited to most frequently used. In general, we suggest to avoid using flags for configuring Centrifugo in a production environment – prefer environment or configuration file sources.
+Centrifugo supports several command-line flags. See `centrifugo -h` for available flags. Command-line flags limited to most frequently used. In general, we suggest to avoid using flags for configuring Centrifugo in a production environment – prefer using environment variables or configuration file.
 
 Command-line options have the highest priority when set than other ways to configure Centrifugo.
 
@@ -45,7 +45,7 @@ Empty environment variables are considered unset (!) and will fall back to the n
 
 ### Configuration file
 
-Configuration file supports all options mentioned in Centrifugo documentation and can be in one of three supported formats: JSON, YAML, or TOML. Config file options have the lowest priority among configuration sources (i.e. option set over environment variable prevails over the same option in config file).
+Configuration file supports all options mentioned in Centrifugo documentation and can be in one of three supported formats: JSON, YAML, or TOML. Config file options have the lowest priority among configuration sources (i.e. option set over environment variable is preferred over the same option in config file).
 
 A simple way to start with Centrifugo is to run:
 
