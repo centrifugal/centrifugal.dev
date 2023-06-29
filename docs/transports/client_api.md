@@ -621,7 +621,7 @@ if err != nil {
 	log.Fatalln(err)
 }
 
-if err = client.connect(); err != nil {
+if err = client.Connect(); err != nil {
     log.Fatalln(err)
 }
 ```
