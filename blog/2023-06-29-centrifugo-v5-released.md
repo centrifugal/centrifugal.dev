@@ -9,23 +9,23 @@ image: /img/v5.jpg
 hide_table_of_contents: false
 ---
 
-In Centrifugo v5 we're phasing out old client protocol support, introducing a more intuitive HTTP API, adjusting token management behaviour in SDKs, improving configuration process, and refactoring the history meta ttl option. As the result you get a cleaner, more user-friendly, and optimized Centrifugo experience.
+In Centrifugo v5 we're phasing out old client protocol support, introducing a more intuitive HTTP API, adjusting token management behaviour in SDKs, improving configuration process, and refactoring the history meta ttl option. As the result you get a cleaner, more user-friendly, and optimized Centrifugo experience. And we have important news about the project - check it out in the end of this post.
 
 <!--truncate-->
 
 <img src="/img/v5.jpg" />
 
-## Introducing Centrifugal Labs LTD
+:::info What is Centrifugo?
 
-Let's start with some important news about the project.
+Centrifugo is an open-source scalable real-time messaging server. Centrifugo can instantly deliver messages to application online users connected over supported transports (WebSocket, HTTP-streaming, SSE/EventSource, GRPC, SockJS, WebTransport). Centrifugo has the concept of a channel – so it's a user-facing PUB/SUB server.
 
-Centrifugo is now backed by the company called **Centrifugal Labs LTD** - a Cyprus-registered technology company. This should help us to finally launch [Centrifugo PRO](/docs/pro/overview) offering – the product we have been working on for a couple of years now and which has some unique and powerful features like [real-time analytics](/docs/pro/analytics) or [push notification API](/docs/pro/push_notifications).
+Centrifugo is language-agnostic and can be used to build chat apps, live comments, multiplayer games, real-time data visualizations, collaborative tools, etc. in combination with any backend. It is well suited for modern architectures and allows decoupling the business logic from the real-time transport layer.
 
-As a Centrifugo user you will start noticing mentions of Centrifugal Labs LTD in our licenses, Github organization, throughout this web site. And that's mostly it - no radical changes at this point. We will still be working on improving Centrifugo trying to find a balance between OSS and PRO versions. Which is difficult TBH – but we will try.
+Several official client SDKs for browser and mobile development wrap the bidirectional protocol. In addition, Centrifugo supports a unidirectional approach for simple use cases with no SDK dependency.
 
-An ideal plan for us – make Centrifugo development sustainable enough to have the possibility for features from the PRO version flow to the OSS version eventually. The reality may be harder than this of course.
+:::
 
-Now let's proceed and look at all the major changes of Centrifugo v5.
+Let's proceed and take a look at most notable changes of Centrifugo v5.
 
 ## Dropping old client protocol
 
@@ -219,6 +219,16 @@ As you know SockJS is deprecated in Centrifugal ecosystem since Centrifugo v4. I
 Unfortunately, SockJS client repo is poorly maintained these days. And some of its iframe-based transports are becoming archaic. If you depend on SockJS and you really need fallback for WebSocket – consider switching to Centrifugo own bidirectional emulation for the browser which works over HTTP-streaming (using modern fetch API with Readable streams) or SSE. It should be more performant and work without sticky sessions requirement (sticky sessions is an optimization in our implementation). More details may be found in [Centrifugo v4 release post](/blog/2022/07/19/centrifugo-v4-released#modern-websocket-emulation-in-javascript).
 
 If you think SockJS is still required for your use case - reach us out so we could think about the future steps together.
+
+## Introducing Centrifugal Labs LTD
+
+Finally, some important news we mentioned in the beginning!
+
+Centrifugo is now backed by the company called **Centrifugal Labs LTD** - a Cyprus-registered technology company. This should help us to finally launch [Centrifugo PRO](/docs/pro/overview) offering – the product we have been working on for a couple of years now and which has some unique and powerful features like [real-time analytics](/docs/pro/analytics) or [push notification API](/docs/pro/push_notifications).
+
+As a Centrifugo user you will start noticing mentions of Centrifugal Labs LTD in our licenses, Github organization, throughout this web site. And that's mostly it - no radical changes at this point. We will still be working on improving Centrifugo trying to find a balance between OSS and PRO versions. Which is difficult TBH – but we will try.
+
+An ideal plan for us – make Centrifugo development sustainable enough to have the possibility for features from the PRO version flow to the OSS version eventually. The reality may be harder than this of course.
 
 ## Conclusion
 
