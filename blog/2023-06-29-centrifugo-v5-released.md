@@ -9,11 +9,23 @@ image: /img/v5.jpg
 hide_table_of_contents: false
 ---
 
-In Centrifugo v5 we're phasing out old client protocol support, introducing a more intuitive HTTP API, adjusting token management behaviour in SDKs, improving configuration process, and refactoring the history meta ttl option. As the result you get a cleaner, more user-friendly, and optimized Centrifugo experience. And we have some news about the project – check it out in the end of this post.
+In Centrifugo v5 we're phasing out old client protocol support, introducing a more intuitive HTTP API, adjusting token management behaviour in SDKs, improving configuration process, and refactoring the history meta ttl option. As the result you get a cleaner, more user-friendly, and optimized Centrifugo experience.
 
 <!--truncate-->
 
 <img src="/img/v5.jpg" />
+
+## Introducing Centrifugal Labs LTD
+
+Let's start with some important news about the project.
+
+Centrifugo is now backed by the company called **Centrifugal Labs LTD** - a Cyprus-registered technology company. This should help us to finally launch [Centrifugo PRO](/docs/pro/overview) offering – the product we have been working on for a couple of years now and which has some unique and powerful features like [real-time analytics](/docs/pro/analytics) or [push notification API](/docs/pro/push_notifications).
+
+As a Centrifugo user you will start noticing mentions of Centrifugal Labs LTD in our licenses, Github organization, throughout this web site. And that's mostly it - no radical changes at this point. We will still be working on improving Centrifugo trying to find a balance between OSS and PRO versions. Which is difficult TBH – but we will try.
+
+An ideal plan for us – make Centrifugo development sustainable enough to have the possibility for features from the PRO version flow to the OSS version eventually. The reality may be harder than this of course.
+
+Now let's proceed and look at all the major changes of Centrifugo v5.
 
 ## Dropping old client protocol
 
@@ -27,7 +39,7 @@ In Centrifugo v5 we are adjusting [client SDK specification](/docs/transports/cl
 
 There was some problem with it though. We did not take into account the fact that empty token may be a valid scenario actually. Centrifugo supports options to avoid using token at all for anonymous access. So the lack of possibility to switch between `token`/`no token` scenarios did not allow users to easily implement login/logout workflow. The only way was re-initializing SDK.
 
-Now returning an empty string from `getToken` is a valid scenario which won't result into disconnect on the client side. It's still possible to disconnect client by returning a special error from `getToken` function. We updated all our SDKs to inherit this behaviour - check out v5 [migration guide](/docs/getting-started/migration_v5) for more details.
+Now returning an empty string from `getToken` is a valid scenario which won't result into disconnect on the client side. It's still possible to disconnect client by returning a special error from `getToken` function.
 
 And we are putting back `setToken` method to our SDKs – so it's now possible to reset the token to be empty upon user logout.
 
@@ -55,6 +67,8 @@ logoutButton.addEventListener('click', function() {
     centrifuge.connect();
 });
 ```
+
+We updated all our SDKs to inherit described behaviour - check out v5 [migration guide](/docs/getting-started/migration_v5) for more details.
 
 ## history_meta_ttl refactoring
 
@@ -205,16 +219,6 @@ As you know SockJS is deprecated in Centrifugal ecosystem since Centrifugo v4. I
 Unfortunately, SockJS client repo is poorly maintained these days. And some of its iframe-based transports are becoming archaic. If you depend on SockJS and you really need fallback for WebSocket – consider switching to Centrifugo own bidirectional emulation for the browser which works over HTTP-streaming (using modern fetch API with Readable streams) or SSE. It should be more performant and work without sticky sessions requirement (sticky sessions is an optimization in our implementation). More details may be found in [Centrifugo v4 release post](/blog/2022/07/19/centrifugo-v4-released#modern-websocket-emulation-in-javascript).
 
 If you think SockJS is still required for your use case - reach us out so we could think about the future steps together.
-
-## Introducing Centrifugal Labs LTD
-
-Finally, some important news about the project we promised in the beginning.
-
-Centrifugo is now backed by the company called **Centrifugal Labs LTD** - a Cyprus-registered technology company. This should help us to finally launch [Centrifugo PRO](/docs/pro/overview) offering – the product we have been working on for a couple of years now and which has some unique and powerful features like [real-time analytics](/docs/pro/analytics) or [push notification API](/docs/pro/push_notifications).
-
-As a Centrifugo user you will start noticing mentions of Centrifugal Labs LTD in our licenses, Github organization, throughout this web site. And that's mostly it - no radical changes at this point. We will still be working on improving Centrifugo trying to find a balance between OSS and PRO versions. Which is difficult TBH – but we will try.
-
-An ideal plan for us – make Centrifugo development sustainable enough to have the possibility for features from the PRO version flow to the OSS version eventually. The reality may be harder than this of course.
 
 ## Conclusion
 

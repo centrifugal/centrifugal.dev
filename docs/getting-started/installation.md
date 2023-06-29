@@ -109,7 +109,7 @@ version: "3.9"
 services:
   centrifugo:
     container_name: centrifugo
-    image: centrifugo/centrifugo:v4
+    image: centrifugo/centrifugo:v5
     volumes:
       - ./config.json:/centrifugo/config.json
     command: centrifugo -c config.json
