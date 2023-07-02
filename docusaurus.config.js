@@ -115,6 +115,12 @@ module.exports = {
     [
       "@docusaurus/preset-classic",
       {
+        sitemap: {
+          changefreq: 'weekly',
+          priority: 0.5,
+          ignorePatterns: ['/license_exchange_*'],
+          filename: 'sitemap.xml',
+        },
         docs: {
           versions: {
             current: {
