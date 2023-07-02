@@ -4,8 +4,6 @@ sidebar_label: CEL expressions
 title: CEL expressions
 ---
 
-This PRO feature is under active development, some changes expected here 🚧
-
 Centrifugo PRO supports [CEL expressions](https://opensource.google/projects/cel) (Common Expression Language) for checking channel operation permissions.
 
 CEL expressions provide a developer-friendly, fast and secure way to evaluate some conditions predefined in the configuration. They are used in some Google services (ex. Firebase), in Envoy RBAC configuration, etc.

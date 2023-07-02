@@ -13,7 +13,7 @@ export default class LicenseInput extends React.Component {
     }
 
     async exchangeLicense(key) {
-        const res = await fetch('http://localhost:8080/centrifugo/license/exchange/' + this.props.providerName + '?license=' + key);
+        const res = await fetch('https://centrifugal.fly.dev/centrifugo/license/exchange/' + this.props.providerName + '?license=' + key);
         if (!res.ok) {
             // Any other error thrown will result into token refresh re-attempts.
             throw new Error(`Unexpected status code ${res.status}`);
