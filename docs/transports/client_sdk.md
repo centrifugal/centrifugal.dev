@@ -13,9 +13,9 @@ Client libraries listed here speak Centrifugo bidirectional protocol (WebSocket)
 
 ## List of client SDKs
 
-* [centrifuge-js](https://github.com/centrifugal/centrifuge-js) – for browser, NodeJS and React Native
+* [centrifuge-js](https://github.com/centrifugal/centrifuge-js) – for a browser, NodeJS and React Native
 * [centrifuge-go](https://github.com/centrifugal/centrifuge-go) - for Go language
-* [centrifuge-dart](https://github.com/centrifugal/centrifuge-dart) - for Dart and Flutter
+* [centrifuge-dart](https://github.com/centrifugal/centrifuge-dart) - for Dart and Flutter (mobile and web)
 * [centrifuge-swift](https://github.com/centrifugal/centrifuge-swift) – for native iOS development
 * [centrifuge-java](https://github.com/centrifugal/centrifuge-java) – for native Android development and general Java
 
