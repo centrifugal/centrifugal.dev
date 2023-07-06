@@ -13,13 +13,19 @@ Client libraries listed here speak Centrifugo bidirectional protocol (WebSocket)
 
 ## List of client SDKs
 
+Here is a list of SDKs maintained by Centrifugal Labs:
+
 * [centrifuge-js](https://github.com/centrifugal/centrifuge-js) – for a browser, NodeJS and React Native
 * [centrifuge-go](https://github.com/centrifugal/centrifuge-go) - for Go language
 * [centrifuge-dart](https://github.com/centrifugal/centrifuge-dart) - for Dart and Flutter (mobile and web)
 * [centrifuge-swift](https://github.com/centrifugal/centrifuge-swift) – for native iOS development
 * [centrifuge-java](https://github.com/centrifugal/centrifuge-java) – for native Android development and general Java
 
-See a description of [client protocol](./client_protocol.md) if you want to write a custom bidirectional connector or eager to learn how Centrifugo protocol internals are structured.
+SDKs driven by the community:
+
+* [centrifuge-csharp](https://github.com/charmy/centrifuge-csharp) - SDK in C# for .NET and Unity 2022.3+
+
+See a description of [client protocol](./client_protocol.md) if you want to write a custom bidirectional connector or eager to learn how Centrifugo protocol internals are structured. In case of any question how protocol works take a look at existing SDK source code or reach out in the community rooms.
 
 ## Protobuf and JSON formats in SDKs
 
