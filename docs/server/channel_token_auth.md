@@ -123,16 +123,51 @@ So for example, you want to turn off emitting a presence information for a parti
 
 So to generate a subscription token you can use something like this in Python (assuming user ID is `42` and the channel is `gossips`):
 
+````mdx-code-block
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs
+  className="unique-tabs"
+  defaultValue="python"
+  values={[
+    {label: 'Python', value: 'python'},
+    {label: 'NodeJS', value: 'node'},
+  ]
+}>
+<TabItem value="python">
+
 ```python
 import jwt
+import time
 
-token = jwt.encode({
-    "sub": "42",
-    "channel": "$gossips"
-}, "secret", algorithm="HS256").decode()
-
+claims = {"sub": "42", "channel": "$gossips", "exp": int(time.time()) + 3600}
+token = jwt.encode(claims, "secret", algorithm="HS256").decode()
 print(token)
 ```
+
+</TabItem>
+<TabItem value="node">
+
+```javascript
+const jose = require('jose')
+
+(async function main() {
+  const secret = new TextEncoder().encode('secret')
+  const alg = 'HS256'
+
+  const token = await new jose.SignJWT({ sub: '42', channel: '$gossips' })
+    .setProtectedHeader({ alg })
+    .setExpirationTime('1h')
+    .sign(secret)
+
+  console.log(token);
+})();
+```
+
+</TabItem>
+</Tabs>
+````
 
 Where `"secret"` is the `token_hmac_secret_key` from Centrifugo configuration (we use HMAC tokens in this example which relies on a shared secret key, for RSA or ECDSA tokens you need to use a private key known only by your backend).
 

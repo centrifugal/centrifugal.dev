@@ -265,11 +265,18 @@ print(token)
 <TabItem value="node">
 
 ```javascript
-var jwt = require('jsonwebtoken');
+const jose = require('jose');
 
-var token = jwt.sign({ sub: '42' }, 'secret');
+(async function main() {
+  const secret = new TextEncoder().encode('secret')
+  const alg = 'HS256'
 
-console.log(token);
+  const token = await new jose.SignJWT({ sub: '42' })
+    .setProtectedHeader({ alg })
+    .sign(secret)
+
+  console.log(token);
+})();
 ```
 
 </TabItem>
@@ -317,11 +324,19 @@ print(token)
 <TabItem value="node">
 
 ```javascript
-var jwt = require('jsonwebtoken');
+const jose = require('jose')
 
-var token = jwt.sign({ sub: '42' }, 'secret', { expiresIn: 5 * 60 });
+(async function main() {
+  const secret = new TextEncoder().encode('secret')
+  const alg = 'HS256'
 
-console.log(token);
+  const token = await new jose.SignJWT({ sub: '42' })
+    .setProtectedHeader({ alg })
+    .setExpirationTime('5m')
+    .sign(secret)
+
+  console.log(token);
+})();
 ```
 
 </TabItem>
@@ -355,11 +370,19 @@ print(token)
 <TabItem value="node">
 
 ```javascript
-var jwt = require('jsonwebtoken');
+const jose = require('jose')
 
-var token = jwt.sign({ sub: '42', info: {"name": "Alexander Emelin"} }, 'secret');
+(async function main() {
+  const secret = new TextEncoder().encode('secret')
+  const alg = 'HS256'
 
-console.log(token);
+  const token = await new jose.SignJWT({ sub: '42', info: {"name": "Alexander Emelin"} })
+    .setProtectedHeader({ alg })
+    .setExpirationTime('5m')
+    .sign(secret)
+
+  console.log(token);
+})();
 ```
 
 </TabItem>

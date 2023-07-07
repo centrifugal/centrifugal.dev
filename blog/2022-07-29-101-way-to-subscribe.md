@@ -144,17 +144,19 @@ print(token)
 <TabItem value="node">
 
 ```javascript
-const jwt = require('jsonwebtoken');
+const jose = require('jose')
 
-const token = jwt.sign(
-    { 
-        sub: '17'
-        channel: 'personal:17'
-    },
-    'secret',
-    { expiresIn: 30 * 60 }
-);
-console.log(token);
+(async function main() {
+  const secret = new TextEncoder().encode('secret')
+  const alg = 'HS256'
+
+  const token = await new jose.SignJWT({ 'sub': '17', 'channel': 'personal:17' })
+    .setProtectedHeader({ alg })
+    .setExpirationTime('30m')
+    .sign(secret)
+
+  console.log(token);
+})();
 ```
 
 </TabItem>
@@ -331,22 +333,27 @@ print(token)
 <TabItem value="node">
 
 ```javascript
-const jwt = require('jsonwebtoken');
+const jose = require('jose');
 
-const token = jwt.sign(
-    { 
-        sub: '17'
-        caps: [
-            {
-                "channels": ["personal:17"],
-                "allow": ["sub"]
-            }
-        ]
-    },
-    'secret',
-    { expiresIn: 30 * 60 }
-);
-console.log(token);
+(async function main() {
+  const secret = new TextEncoder().encode('secret')
+  const alg = 'HS256'
+
+  const token = await new jose.SignJWT({
+    sub: '17',
+    caps: [
+      {
+        "channels": ["personal:17"],
+        "allow": ["sub"]
+      }
+    ]
+  })
+    .setProtectedHeader({ alg })
+    .setExpirationTime('30m')
+    .sign(secret)
+
+  console.log(token);
+})();
 ```
 
 </TabItem>
