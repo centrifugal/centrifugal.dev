@@ -19,7 +19,9 @@ Using JWT auth can be nice in terms of massive reconnect scenario. Since authent
 
 Upon connecting to Centrifugo client should provide a connection JWT with several predefined credential claims. Here is a diagram:
 
-![](/img/diagram_jwt_authentication.png)
+![](/img/connection_token.png)
+
+See more info about working with connection tokens on the client side in [client SDK spec](../transports/client_api.md#client-connection-token).
 
 At the moment Centrifugo supports HMAC, RSA and ECDSA JWT algorithms - i.e. HS256, HS384, HS512, RSA256, RSA384, RSA512, EC256, EC384, EC512.
 

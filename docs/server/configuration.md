@@ -7,7 +7,7 @@ Let's look at how Centrifugo can be configured.
 
 :::info There are more options
 
-This chapter describes configuration principles and some important configuration options. There are some options not mentioned here but described later in each feature documentation.
+This chapter describes configuration principles and some important configuration options. There are some options not mentioned here but described throughout the doc in context of each individual server feature.
 
 :::
 

@@ -9,7 +9,9 @@ Subscription token is also JWT. Very similar to [connection token](authenticatio
 
 Valid subscription token passed to Centrifugo in subscribe request will tell Centrifugo that subscription must be accepted.
 
-The way how this token is obtained on the frontend side varies depending on a client SDK implementation. 
+![](/img/subscription_token.png)
+
+See more info about working with subscription tokens on the client side in [client SDK spec](../transports/client_api.md#subscription-token).
 
 :::tip
 
