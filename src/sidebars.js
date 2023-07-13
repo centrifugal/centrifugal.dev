@@ -20,6 +20,7 @@ module.exports = {
     "server/server_subs",
     "server/engines",
     "server/proxy",
+    // "server/on_demand_streams",
     "server/history_and_recovery",
     "server/presence",
     "server/admin_web",

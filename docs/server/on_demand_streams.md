@@ -5,11 +5,15 @@ title: On-demand streams
 draft: true
 ---
 
-In design 🚧
-
 On-demand streams feature of Centrifugo allows pushing data towards client channel subscription directly and individually from your application backend over the unidirectional GRPC stream (and optionally over the [bidirectional](#bidirectional-streaming) one). The stream is established between Centrifugo and your application backend as soon as user subscribes to a channel. The scheme may be useful if you want to generate individual streams for clients and these streams should only work for a time while client is subscribed to a channel – i.e. a stream must only be allocated on client's demand.
 
-In this case Centrifugo plays a role of WebSocket-to-GRPC streaming proxy – keeping many real-time connections from your app clients and establishing GRPC streams to the backend using a pool of HTTP/2 (transport used by GRPC) connections.
+:::caution Experimental status
+
+This is an experimental feature. We really appreciate your feedback to make sure it's useful and properly designed before marking it as stable. 
+
+:::
+
+In this case Centrifugo plays a role of WebSocket-to-GRPC streaming proxy – keeping many real-time connections from your app clients and establishing GRPC streams to the backend using a pool of HTTP/2 (transport used by GRPC) connections. Our bidirectional WebSocket fallbacks (HTTP-streaming and SSE) and experimental WebTransport work with on-demand streams too.
 
 ![](/img/proxy_streams.png)
 
@@ -19,32 +23,31 @@ On-demand streams generally solve a task of integrating with third-party streami
 
 Let's describe a real-life use case. Say you have [Loki](https://grafana.com/oss/loki/) for keeping logs, it provides a [streaming API for tailing logs](https://grafana.com/docs/loki/latest/api/#stream-log-messages). You decided to stream logs towards your clients. When client subscribes to some channel in Centrifugo and the unidirectional stream established between Centrifugo and your backend – backend starts tailing Loki logs and transfers them towards client over Centrifugo. Client can provide custom data upon subscribing to a channel which makes it possible to pass query filters from the frontend app.
 
-:::note
+:::note BTW
 
-Is this possible to implement without on-demand streams using other Centrifugo primitives? Actually, yes. Client can subscribe to the unique channel name, with the help of [subscribe proxy](../server/proxy.md#subscribe-proxy) app backend could know about new subscription and start streaming towards the provided channel by publishing messages over Centrifugo server API. If you enable channel presence then you can periodically ask Centrifugo whether the channel is still occupied by a subscriber and deallocate resources on the app backend. Or use sub_refresh proxy feature to be periodically notified by Centrifugo about subscription liveness. If your stream ends – you can call Centrifugo unsubscribe server API. This could be more efficient than on-demand streams actually – but more complex to implement and has its own trade-offs in terms of latencies.
+Is this possible to implement the same without on-demand streams using other Centrifugo primitives? Actually, yes. Client can subscribe to the unique channel name, with the help of [subscribe proxy](../server/proxy.md#subscribe-proxy) app backend could know about new subscription and start streaming towards the provided channel by publishing messages over Centrifugo server API. If you enable channel presence then you can periodically ask Centrifugo whether the channel is still occupied by a subscriber and deallocate resources on the app backend. Or use [sub_refresh proxy](../server/proxy.md#sub-refresh-proxy) feature to be periodically notified by Centrifugo about subscription liveness. If your stream ends – you can call Centrifugo unsubscribe server API. This could be more efficient than on-demand streams actually – but more complex to implement and has its own trade-offs in terms of latencies.
 
 :::
 
-In case of on-demand streams all the client authentication and channel permission control may be delegated to common Centrifugo mechanisms, so when the stream is established you know the ID of user and the channel. You can also additionally check channel permissions at the moment of stream establishement. As soon as client unsubscribes from the channel – Centrifugo closes the unidirectional GRPC stream.
+In case of on-demand streams all the client authentication may be delegated to common Centrifugo mechanisms, so when the channel stream is established you know the ID of user. You can additionally check channel permissions at the moment of stream establishement.
+
+As soon as client unsubscribes from the channel – Centrifugo closes the unidirectional GRPC stream.
 
 If for some reason connection between Centrifugo and backend is closed – then Centrifugo will unsubscribe a client with `insufficient state` reason and a client will soon resubscribe to a channel (managed automatically by our SDKs).
 
+On-demand stream is an individual link between a client and a backend. But you may wonder – what about the same channel name used for subscribing to an on-demand stream by different connections. At this moment Centrifugo transfers stream data published by the backend only to the client connection to whom the stream belongs. I.e. message published by the backend to GRPC stream is not broadcasted to other channel subscribers.
 
-:::danger Take care of channel names
-
-At this point it's the task of an application to use unique channel names for each individual on-demand stream created on the client side. If you subscribe to the same channel name from different browser tabs - then two different GRPC streams will be established with your backend and you will have merged/duplicate data in client-side subscriptions. To avoid this use unique channel names – for example, generate UUID V4 string and use it as part of a channel.
-
-:::
+But if you will use server API for publishing – then message will be broadcasted to all channel subscribers even if they are currently using on-demand stream with that channel. Also, presence and join/leave features will work as usual – if different connections use the same channel they will be able to use presence (if enabled) to see who else is currently in the channel, and will receive join/leave messages (if enabled). This is actually a side effect – and **we are still thinking about the desired mechanics here**. The behavior may be adjusted as the feature evolves. Please provide your feedback. If you want to avoid presence features - just use namespace with presence off, or simply use unique channel names for each stream - for example generate UUID V4 string and use it as part of a channel when subscribing (so your subscribers won't reuse the same channel name).
 
 :::caution Use on-demand streams only when really needed
 
-This scheme increases resource usage on both Centrifugo and app backend sides because it involves more moving parts and connections. The feature is quite niche actually. If you don't really need on-demand streams – prefer using Centrifugo usual approach for always publishing messages to channels whenever event happens. This is efficient and Centrifugo just drops messages in case of no active subscribers in a channel. On-demand streams should scale well horizontally – but they consume more resources which may become expensive in scale. The common advice here is load testing for your concrete use case.
+This scheme increases resource usage on both Centrifugo and app backend sides because it involves more moving parts, such as goroutines, connections, etc. The feature is quite niche. If you don't really need on-demand streams – prefer using Centrifugo usual approach by always publishing messages to channels whenever event happens. This is efficient and Centrifugo just drops messages in case of no active subscribers in a channel. On-demand streams should scale well horizontally – but they consume more resources which may become expensive in scale. The common advice here is load testing for your concrete use case.
 
 :::
 
-:::info History and presence are not used for on-demand streams
+:::info History for on-demand streams
 
-Note, that for the case of on-demand streams Centrifugo channel history, recovery, presence features are not available. On-demand stream is an individual direct link between client and your backend through Centrifugo which is always re-established from scratch upon re-subscription. The benefit of the history is not clear in this case and can only bring undesired overhead. For presence you can always use a separate channel which works in a standard Centrifugo way.
+Note, that for the case of on-demand streams Centrifugo channel history and recovery features does not really make sense. On-demand stream is an individual direct link between client and your backend through Centrifugo which is always re-established from scratch upon re-subscription. The benefit of the history is not clear in this case and can only bring undesired overhead (because Centrifugo will have to use broker, now messages just go directly towards connections).
 
 :::
 
@@ -86,7 +89,7 @@ Then you can enable on-demand streams for channels on a namespace level:
 }
 ```
 
-By default, Centrifugo uses unidirectional GRPC streams which should fit most of the use cases. To enable bidirectional streaming add `proxy_stream_bidirectional` flag:
+By default, Centrifugo uses unidirectional GRPC streams which should fit most of the use cases on-demand streams were introduced for. To enable bidirectional streaming add `proxy_stream_bidirectional` flag:
 
 ```json title="config.json"
 {
@@ -149,7 +152,8 @@ func (s *streamServer) Consume(
     stream pb.CentrifugoProxyStream_ConsumeServer,
 ) error {
     log.Println("consume called for channel", req.Channel)
-	stream.Send(&pb.Response{}) // We expect first message to always be sent.
+    // We expect first message to always be sent and contain SubscribeResponse.
+	stream.Send(&pb.Response{ SubscribeResponse: &pb.SubscribeResponse{}})
 	i := 0
 	for {
 		time.Sleep(time.Second)
@@ -171,7 +175,7 @@ func main() {
 }
 ```
 
-Note that we have some rules about messages in streams. Upon stream establishement Centrifugo expects backend to send first message from a stream and waits for it before replying to the client's subscription command. This way we can communicate initial state with a client and make sure streaming is properly established with all permission checks passed. After sending initial message you can send events (publications) as they appear in your system.
+Note that we have some rules about messages in streams. Upon stream establishement Centrifugo expects backend to send first message from a stream (`Response` with `SubscribeResponse`) and waits for it before replying to the client's subscription command. This way we can communicate initial state with a client and make sure streaming is properly established with all permission checks passed. After sending initial message you can send events (publications) as they appear in your system.
 
 Now everything should be ready to test it out from the client side: just subscribe to a channel where stream proxy is on with our SDK – and you will see your stream handler called and data streamed from it to a client. For example, with our Javascript SDK:
 
@@ -180,6 +184,8 @@ const client = new Centrifuge('ws://localhost:8000/connection/websocket', {
     getToken: getTokenImplementation
 });
 
+client.connect();
+
 const sub = client.newSubscription('streams:123e4567-e89b-12d3-a456-426614174000', {
     data: {}
 }).on('publication', function(ctx) {
@@ -187,7 +193,6 @@ const sub = client.newSubscription('streams:123e4567-e89b-12d3-a456-426614174000
 });
 
 sub.subscribe();
-client.connect();
 ```
 
 ## Granular stream proxy mode
