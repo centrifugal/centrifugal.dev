@@ -13,22 +13,29 @@ Here is the list of Centrifugo built-in client error codes (with proxy feature y
 
 ### Internal
 
-Code:    100,
-Message: "internal server error".
+```
+Code:    100
+Message: "internal server error"
+Temporary: true
+```
 
 Error Internal means server error, if returned this is a signal that something went wrong with a server itself and client most probably not guilty.
 
 ### Unauthorized
 
-Code:    101,
-Message: "unauthorized".
+```
+Code:    101
+Message: "unauthorized"
+```
 
 Error Unauthorized says that request is unauthorized.
 
 ### Unknown Channel
 
-Code:    102,
-Message: "unknown channel".
+```
+Code:    102
+Message: "unknown channel"
+```
 
 Error Unknown Channel means that channel name does not exist.
 
@@ -36,43 +43,55 @@ Usually this is returned when client uses channel with a namespace which is not 
 
 ### Permission Denied
 
-Code:    103,
-Message: "permission denied".
+```
+Code:    103
+Message: "permission denied"
+```
 
 Error Permission Denied means that access to resource not allowed.
 
 ### Method Not Found
 
-Code:    104,
-Message: "method not found".
+```
+Code:    104
+Message: "method not found"
+```
 
 Error Method Not Found means that method sent in command does not exist.
 
 ### Already Subscribed
 
-Code:    105,
-Message: "already subscribed".
+```
+Code:    105
+Message: "already subscribed"
+```
 
 Error Already Subscribed returned when client wants to subscribe on channel it already subscribed to.
 
 ### Limit Exceeded
 
-Code:    106,
-Message: "limit exceeded".
+```
+Code:    106
+Message: "limit exceeded"
+```
 
 Error Limit Exceeded says that some sort of limit exceeded, server logs should give more detailed information. See also ErrorTooManyRequests which is more specific for rate limiting purposes.
 
 ### Bad Request 
 
-Code:    107,
-Message: "bad request".
+```
+Code:    107
+Message: "bad request"
+```
 
 Error Bad Request says that server can not process received data because it is malformed. Retrying request does not make sense.
 
 ### Not Available
 
-Code:    108,
-Message: "not available".
+```
+Code:    108
+Message: "not available"
+```
 
 Error Not Available means that resource is not enabled.
 
@@ -80,29 +99,38 @@ For example, this can be returned when trying to access history or presence in a
 
 ### Token Expired
 
-Code:    109,
-Message: "token expired".
+```
+Code:    109
+Message: "token expired"
+```
 
-Error Token Expired indicates that connection token expired.
+Error Token Expired indicates that connection token expired. Our SDKs handle it in a special way by updating token.
 
 ### Expired
 
-Code:    110,
-Message: "expired".
+```
+Code:    110
+Message: "expired"
+```
 
 Error Expired indicates that connection expired (no token involved).
 
 ### Too Many Requests
 
-Code:    111,
-Message: "too many requests".
+```
+Code:    111
+Message: "too many requests"
+Temporary: true
+```
 
 Error Too Many Requests means that server rejected request due to rate limiting strategies.
 
 ### Unrecoverable Position
 
-Code:    112,
-Message: "unrecoverable position".
+```
+Code:    112
+Message: "unrecoverable position"
+```
 
 Error Unrecoverable Position means that stream does not contain required range of publications to fulfill a history query.
 
@@ -114,164 +142,201 @@ Client can be disconnected by a Centrifugo server with custom code and string re
 
 :::note
 
-We expect that in most situations developers don't need to programmatically deal with handling various disconnect codes, but since Centrifugo sends them and codes shown in server metrics – they are documented. Actually most client connectors don't provide access to reading a disconnect code these days (only a reason). This is what we are [planning to improve](https://github.com/centrifugal/centrifuge/issues/149).
+We expect that in most situations developers don't need to programmatically deal with handling various disconnect codes, but since Centrifugo sends them and codes shown in server metrics – they are documented. We expect these codes are mostly useful for logs and metrics.
 
 :::
 
-### Normal
+### DisconnectConnectionClosed
 
-Code:      3000.
+```
+Code: 3000
+Reason: "connection closed"
+```
 
-DisconnectNormal is clean disconnect when client cleanly closed connection. This is mostly useful for server metrics, since client never receives this disconnect code (since already gone).
+DisconnectConnectionClosed is a special Disconnect object used when client connection was closed without any advice from a server side. This can be a clean disconnect, or temporary disconnect of the client due to internet connection loss. Server can not distinguish the actual reason of disconnect.
 
-### Shutdown
+### Non-terminal disconnect codes
 
-Code:      3001,
-Reason:    "shutdown",
-Reconnect: true.
+Client will reconnect after receiving such codes.
 
-Disconnect Shutdown sent when node is going to shut down.
+#### Shutdown
 
-### Invalid Token
+```
+Code:      3001
+Reason:    "shutdown"
+```
 
-Code:      3002,
-Reason:    "invalid token",
-Reconnect: false.
+Disconnect Shutdown may be sent when node is going to shut down.
 
-Disconnect Invalid Token sent when client came with invalid token.
+#### DisconnectServerError
 
-### Bad Request
+```
+Code:   3004
+Reason: "internal server error"
+```
 
-Code:      3003,
-Reason:    "bad request",
-Reconnect: false.
+DisconnectServerError issued when internal error occurred on server.
 
-Disconnect Bad Request sent when client uses malformed protocol
+#### DisconnectExpired
 
-### Server Error
+```
+Code:   3005
+Reason: "connection expired"
+```
 
-Code:      3004,
-Reason:    "internal server error",
-Reconnect: true.
+#### DisconnectSubExpired
 
-Disconnect Server Error sent when internal error occurred on server.
+```
+Code:   3006
+Reason: "subscription expired"
+```
 
-### Expired
+DisconnectSubExpired issued when client subscription expired.
 
-Code:      3005,
-Reason:    "expired",
-Reconnect: true.
+#### DisconnectSlow
 
-Disconnect Expired sent when client connection expired.
+```
+Code:   3008
+Reason: "slow"
+```
 
-### Subscription Expired
+DisconnectSlow issued when client can't read messages fast enough.
 
-Code:      3006,
-Reason:    "subscription expired",
-Reconnect: true.
+#### DisconnectWriteError
 
-Disconnect Subscription Expired sent when client subscription expired.
+```
+Code:   3009
+Reason: "write error"
+```
 
-### Stale
+DisconnectWriteError issued when an error occurred while writing to client connection.
 
-Code:      3007,
-Reason:    "stale",
-Reconnect: false.
+#### DisconnectInsufficientState
 
-Disconnect Stale sent to close connection that did not become authenticated in configured interval after dialing. Usually this means a broken client implementation.
+```
+Code:   3010
+Reason: "insufficient state"
+```
 
-### Slow
+DisconnectInsufficientState issued when server detects wrong client position in channel Publication stream. Disconnect allows clien to restore missed publications on reconnect.
 
-Code:      3008,
-Reason:    "slow",
-Reconnect: true.
+#### DisconnectForceReconnect
 
-Disconnect Slow sent when a client can't read messages fast enough.
+```
+Code:   3011
+Reason: "force reconnect"
+```
 
-### Write Error
+DisconnectForceReconnect issued when server disconnects connection for some reason and whants it to reconnect.
 
-Code:      3009,
-Reason:    "write error",
-Reconnect: true.
+#### DisconnectNoPong
 
-Disconnect Write Error sent when an error occurred while writing to client connection.
+```
+Code:   3012
+Reason: "no pong"
+```
 
-### Insufficient State
+DisconnectNoPong may be issued when server disconnects bidirectional connection due to no pong received to application-level server-to-client pings in a configured time.
 
-Code:      3010,
-Reason:    "insufficient state",
-Reconnect: true.
+#### DisconnectTooManyRequests
 
-Disconnect Insufficient State sent when server detects wrong client position in channel Publication stream. Disconnect allows client to restore missed publications on reconnect.
+```
+Code:   3013
+Reason: "too many requests"
+```
 
-### Force Reconnect
+DisconnectTooManyRequests may be issued when client sends too many commands to a server.
 
-Code:      3011,
-Reason:    "force reconnect",
-Reconnect: true.
+### Terminal disconnect codes
 
-Disconnect Force Reconnect sent when server disconnects connection but want it to return back shortly.
+Client won't reconnect upon receiving such code.
 
-### Force No Reconnect
+#### DisconnectInvalidToken
 
-Code:      3012,
-Reason:    "force disconnect",
-Reconnect: false.
+```
+Code:   3500
+Reason: "invalid token"
+```
 
-Disconnect Force No Reconnect sent when server disconnects connection and asks it to not reconnect again.
+DisconnectInvalidToken issued when client came with invalid token.
 
-### Connection Limit
+#### DisconnectBadRequest
 
-Code:      3013,
-Reason:    "connection limit",
-Reconnect: false.
+```
+Code:   3501
+Reason: "bad request"
+```
 
-Disconnect Connection Limit can be sent when client connection exceeds a configured connection limit (per user ID or due to other rule).
+DisconnectBadRequest issued when client uses malformed protocol frames.
 
-## Server API error codes
+#### DisconnectStale
 
-Server API errors are errors that can be returned to a API caller in replies to commands (in both HTTP and GRPC server APIs).
+```
+Code:   3502
+Reason: "stale"
+```
 
-### Internal
+DisconnectStale issued to close connection that did not become authenticated in configured interval after dialing.
 
-Code:    100,
-Message: "internal server error".
+#### DisconnectForceNoReconnect
 
-ErrorInternal means server error, if returned this is a signal that something went wrong with Centrifugo itself.
+```
+Code:   3503
+Reason: "force disconnect"
+```
 
-### Unknown channel
+DisconnectForceNoReconnect issued when server disconnects connection and asks it to not reconnect again.
 
-Code:    102,
-Message: "unknown channel".
+#### DisconnectConnectionLimit
 
-Error Unknown Channel means that namespace in channel name does not exist.
+```
+Code:   3504
+Reason: "connection limit"
+```
 
-### Method Not Found
+DisconnectConnectionLimit can be issued when client connection exceeds a configured connection limit (per user ID or due to other rule).
 
-Code:    104,
-Message: "method not found".
+#### DisconnectChannelLimit
 
-Error Method Not Found means that method sent in command does not exist in Centrifugo.
+```
+Code:   3505
+Reason: "channel limit"
+```
 
-### Bad Request
+DisconnectChannelLimit can be issued when client connection exceeds a configured channel limit.
 
-Code:    107,
-Message: "bad request".
+#### DisconnectInappropriateProtocol
 
-Error Bad Request says that Centrifugo can not parse received data because it is malformed or there are required fields missing.
+```
+Code:   3506
+Reason: "inappropriate protocol"
+```
 
-### Not Available   
+DisconnectInappropriateProtocol can be issued when client connection format can not handle incoming data. For example, this happens when JSON-based clients receive binary data in a channel. This is usually an indicator of programmer error, JSON clients can not handle binary.
 
-Code:    108,
-Message: "not available".
+#### DisconnectPermissionDenied
 
-Error Not Available means that resource is not enabled.
+```
+Code:   3507
+Reason: "permission denied"
+```
 
-### Unrecoverable Position
+DisconnectPermissionDenied may be issued when client attempts accessing a server without enough permissions.
 
-Code:    112,
-Message: "unrecoverable position".
+#### DisconnectNotAvailable
 
-ErrorUnrecoverablePosition means that stream does not contain required range of publications to fulfill a history query.
+```
+Code:   3508
+Reason: "not available"
+```
 
-This can happen due to wrong epoch.
+DisconnectNotAvailable may be issued when ErrorNotAvailable does not fit message type, for example we issue DisconnectNotAvailable when client sends asynchronous message without MessageHandler set on server side.
+
+#### DisconnectTooManyErrors
+
+```
+Code:   3509
+Reason: "too many errors"
+```
+
+DisconnectTooManyErrors may be issued when client generates too many errors.
