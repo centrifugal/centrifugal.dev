@@ -72,7 +72,7 @@ In addition, Centrifugo allows defining two special buckets containers:
             ],
             "method_override": [
                 {
-                    "method": "updateActiveStatus",
+                    "method": "update_user_status",
                     "buckets": [
                         {
                             "interval": "20s",
@@ -145,7 +145,7 @@ The configuration is very similar:
             ],
             "method_override": [
                 {
-                    "method": "updateActiveStatus",
+                    "method": "update_user_status",
                     "buckets": [
                         {
                             "interval": "20s",
@@ -212,7 +212,7 @@ The configuration is very similar:
             ],
             "method_override": [
                 {
-                    "method": "updateActiveStatus",
+                    "method": "update_user_status",
                     "buckets": [
                         {
                             "interval": "20s",
