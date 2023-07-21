@@ -30,7 +30,7 @@ Prefer using new HTTP API format instead of old one where possible. The old form
 If you are using hand-written requests – then some refactoring is required. It should be rather straighforward:
 
 * replace request path from `/api` to `/api/<method>`
-* replace payload from having `method` and `params` on top level to just a `params` object
+* replace payload from having `method` and `params` on top level. Payload does not include method and params keys anymore. Please refer to: https://centrifugal.dev/blog/2023/06/29/centrifugo-v5-released#new-http-api-format
 * prefer using `X-API-Key: <YOUR_API_KEY` header format instead of `Authorization: apikey <YOUR_API_KEY`.
 
 Don't forget that you can now generate HTTP clients from OpenAPI spec we now maintain for the new HTTP API format.
