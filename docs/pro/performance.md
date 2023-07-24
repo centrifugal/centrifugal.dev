@@ -25,10 +25,6 @@ Centrifugo PRO has an optimized JSON serialization/deserialization for HTTP prox
 
 Centrifugo PRO has an optimized Protobuf serialization/deserialization for GRPC API. The effect can be noticeable under load. The exact numbers heavily depend on usage scenario.
 
-## Faster proxy streams
-
-Centrifugo PRO has an optimized Protobuf serialization/deserialization for [Proxy Streams](../server/proxy_streams.md). The effect can be noticeable under load. The exact numbers heavily depend on usage scenario.
-
 ## Faster JWT decoding
 
 Centrifugo PRO has an optimized decoding of JWT claims.
