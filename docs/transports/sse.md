@@ -4,6 +4,8 @@ title: SSE (EventSource), with bidirectional emulation
 sidebar_label: SSE (EventSource)
 ---
 
+[Server-Sent Events or EventSource](https://developer.mozilla.org/en-US/docs/Web/API/EventSource) is a well-known HTTP-based transport available in all modern browsers and loved by many developers. It's unidirectional in its nature but with [Centrifugo bidirectional emulation layer](https://centrifugal.dev/blog/2022/07/19/centrifugo-v4-released#modern-websocket-emulation-in-javascript) it may be used as a fallback or alternative to WebSocket.
+
 SSE (EventSource) connection endpoint in Centrifugo is:
 
 ```
@@ -12,7 +14,7 @@ SSE (EventSource) connection endpoint in Centrifugo is:
 
 :::info
 
-This transport is only implemented by our Javascript SDK at this point – as it mostly makes sense as a fallback for WebSocket to have real-time connection in an environment where WebSocket is unavailable. These days those envs are mostly corporate networks which can block WebSocket traffic (even TLS-based).
+This transport is only implemented by our Javascript SDK. 
 
 :::
 

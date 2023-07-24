@@ -4,7 +4,9 @@ title: HTTP streaming, with bidirectional emulation
 sidebar_label: HTTP streaming
 ---
 
-HTTP streaming connection endpoint in Centrifugo is:
+HTTP streaming is a technique based on using a long-lived HTTP connection between a client and a server with a chunked transfer encoding. Usually it only allows unidirectional flow of messages from server to client but with [Centrifugo bidirectional emulation layer](https://centrifugal.dev/blog/2022/07/19/centrifugo-v4-released#modern-websocket-emulation-in-javascript) it may be used as a full-featured fallback or alternative to WebSocket.
+
+HTTP-streaming connection endpoint in Centrifugo is:
 
 ```
 /connection/http_stream
@@ -12,7 +14,7 @@ HTTP streaming connection endpoint in Centrifugo is:
 
 :::info
 
-This transport is only implemented by our Javascript SDK at this point – as it mostly makes sense as a fallback for WebSocket to have real-time connection in an environment where WebSocket is unavailable. These days those envs are mostly corporate networks which can block WebSocket traffic (even TLS-based).
+This transport is only implemented by our Javascript SDK. Internally it uses modern [Fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) and [Readable Streams](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) API. HTTP-streaming fully supports binary transfer using our Protobuf protocol.
 
 :::
 

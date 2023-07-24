@@ -53,6 +53,7 @@ module.exports = {
       label: 'Unidirectional',
       collapsed: false,
       items: [
+        "transports/uni_client_protocol",
         "transports/uni_websocket",
         "transports/uni_http_stream",
         "transports/uni_sse",

@@ -4,13 +4,13 @@ title: Unidirectional HTTP streaming
 sidebar_label: HTTP streaming
 ---
 
+HTTP streaming is a technique based on using a long-lived HTTP connection between a client and a server with a chunked transfer encoding. These days it's possible to use it from the web browser using modern [Fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) and [Readable Streams](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) API.
+
 Default unidirectional HTTP streaming connection endpoint in Centrifugo is:
 
 ```
 /connection/uni_http_stream
 ```
-
-This is basically a long-lived HTTP connection. You can consume it from a browser using `fetch` API.
 
 Streaming endpoint accepts HTTP POST requests and sends JSON messages to a connection. These JSON messages can have different meaning according to Centrifuge protocol Protobuf definitions. But in most cases you will be interested in Publication push types.
 

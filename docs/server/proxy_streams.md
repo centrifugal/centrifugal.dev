@@ -37,6 +37,8 @@ We will start from subscription streams as we see more value in them for Centrif
 
 Subscription streams generally solve a task of integrating with third-party streaming providers with custom filtering. They come into play when it's not feasible to continuously stream all data to various channels, and when you need to deallocate some resources on the backend side as soon as stream is not needed anymore.
 
+Subscriptions streams may be also considered as streaming requests – an isolated way to stream something from the backend to the client or from the client to the backend.
+
 Let's describe a real-life use case. Say you have [Loki](https://grafana.com/oss/loki/) for keeping logs, it provides a [streaming API for tailing logs](https://grafana.com/docs/loki/latest/api/#stream-log-messages). You decided to stream logs towards your app's clients. When client subscribes to some channel in Centrifugo and the unidirectional stream established between Centrifugo and your backend – you can make sure client has proper permissions for the requested resource and backend then starts tailing Loki logs (or other third-party system, this may be Twitter streaming API, MQTT broker, GraphQL subscription, or streaming query to the real-time  database such as RethinkDB). As soon as backend receives log events from Loki it transfers them towards client over Centrifugo.
 
 Client can provide custom data upon subscribing to a channel which makes it possible to pass query filters from the frontend app to the backend. In the example with Loki above this may be a LogQL query.
