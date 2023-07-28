@@ -5,9 +5,9 @@ title: Client real-time SDKs
 
 [In the previous chapter](./client_api.md) we investigated common principles of Centrifugo client SDK API. Here we will provide a list of available bidirectional connectors you can use to communicate with Centrifugo.
 
-:::info No need in clients for unidirectional approach
+:::tip No need in SDK for unidirectional approach
 
-Client libraries listed here speak Centrifugo bidirectional protocol (WebSocket). If you aim to use unidirectional approach you don't need client connectors – just use standard APIs. See the difference [here](./overview.md).
+Real-time SDKs listed here speak Centrifugo bidirectional protocol (with WebSocket as main transport). If you aim to use unidirectional approach you don't need client connector dependency – just use standard APIs. See the difference [here](./overview.md).
 
 :::
 
