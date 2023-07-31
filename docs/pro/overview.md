@@ -1,11 +1,11 @@
 ---
 id: overview
-title: Centrifugo PRO overview
+title: Centrifugo PRO
 ---
 
 <img src="/img/pro_icon.png" width="110px" height="110px" align="left" style={{'marginRight': '10px', 'float': 'left'}} />
 
-Centrifugo PRO is the enhanced version of Centrifugo provided by Centrifugal Labs LTD under commercial license. It's packed with a set of unique powerful features that offer exceptional benefits to your business. It provides granular channel permission control, lower CPU utilization on Centrifugo nodes, backend protection from misusing, next level system observability, additional APIs, and more.
+Centrifugo PRO is the enhanced version of Centrifugo provided by Centrifugal Labs LTD under commercial license. It's packed with a set of unique features that offer exceptional benefits to your business. It provides granular channel permission control, lower CPU utilization on Centrifugo nodes, backend protection from misusing, next level system observability, push notifications API, and more.
 
 All the features of Centrifugo PRO come with a decent scalable performance. Some reuse Centrifugo super fast Redis communication capabilities. ClickHouse analytics built on top of efficient approach with the minimal overhead. We've put a lot of love into all of the extra powers of Centrifugo to make sure they are practical and ready for production workloads.
 
@@ -42,7 +42,7 @@ You can try out Centrifugo PRO for free. When you start Centrifugo PRO without l
 
 * Centrifugo handles up to 20 concurrent connections
 * up to 2 server nodes supported
-* up to 10 API requests per second allowed
+* up to 5 API requests per second allowed
 
 This mode should be enough for development and trying out PRO features, but must not be used in production environment as we can introduce additional limitations in the future.
 
@@ -56,4 +56,6 @@ Centrifugo PRO is distributed by Centrifugal Labs LTD under [commercial license]
 
 To run without limits Centrifugo PRO requires a license key.
 
-At this point we are not issuing license keys for Centrifugo PRO as we are in the process of defining pricing strategy and distribution model for it. Please contact us over `centrifugal.dev@gmail.com` – so we can add you to the list of interested customers. Will appreciate if you share which PRO features you are mostly interested in.
+The cost of the license key is 3299 EUR. The license key has an expiration date (six months after purchasing). After the key expires Centrifugo PRO will continue to work without any limitations, but you won't be able to update Centrifugo PRO to a version released after the key expiration date.
+
+Please contact us over `centrifugal.dev@gmail.com` if you want to purchase the license key. Make sure you agree with terms and conditions of our [commercial license](/license). Also, as of now, we do not provide dedicated support for Centrifugo PRO.

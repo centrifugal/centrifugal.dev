@@ -16,17 +16,6 @@ Some good links which may help you dive into CEL expressions are:
 * [CEL language definition](https://github.com/google/cel-spec/blob/master/doc/langdef.md)
 * [Docs of Google asset inventory](https://cloud.google.com/asset-inventory/docs/monitoring-asset-changes-with-condition#using_cel) which also uses CEL
 
-<!-- CEL expressions in Centrifugo PRO are defined per namespace and may run in two modes:
-
-* together with all other permission checks. If any of the other built-in permission checks allow connection to perform an operation (may be some other rule in the namespace, not necessary CEL expression) – then operation is allowed. So in this case CEL expression just an extra rule to check over.
-* as a **middleware** before all other Centrifugo channel permission checks for the operation. Below you will see such expressions – they have `middleware` part in name. If such expression fails, then user won't be able to proceed with operation in any way – execution stops at this point. For example, this may be helpful to prevent HTTP requests on early stage to your app backend when using subscribe proxy.
-
-:::tip
-
-It's possible to define both types of CEL expressions for the operation inside one namespace.
-
-::: -->
-
 Below we will explore some basic expressions and show how they can be used in Centrifugo.
 
 ## subscribe_cel
@@ -105,46 +94,14 @@ Let's look at one more example. Say client with user ID `123` subscribes to a ch
 }
 ```
 
-<!-- ## subscribe_middleware_cel
-
-CEL expression middleware evaluated before other channel subscribe permission checks.
-
-This expression acts according to "middleware" behaviour described above. The expression must pass for execution to proceed towards other subscribe checks.
-
-So for example, the middleware check to make sure user subscribes to the correct tenant (when subscribing `[org_1]/users/4` as in example above) may look like this (assuming `meta` information has information about tenants available for the client):
-
-```json
-{
-    "namespaces": [
-        {
-            "name": "/users/:user",
-            "subscribe_middleware_cel": "tenant in meta.tenants",
-            "subscribe_cel": "vars.user == user or 'admin' in meta.roles"
-        }
-    ]
-}
-``` -->
-
 ## publish_cel
 
 CEL expression to check permissions to publish into a channel. [Same expression variables](#expression-variables) are available.
-
-<!-- ## publish_middleware_cel
-
-CEL expression middleware evaluated before other channel publish permission checks. [Same variables](#expression-variables) are available. -->
 
 ## history_cel
 
 CEL expression to check permissions for channel history. [Same expression variables](#expression-variables) are available.
 
-<!-- ## history_middleware_cel
-
-CEL expression middleware evaluated before other channel history permission checks. [Same variables](#expression-variables) are available. -->
-
 ## presence_cel
 
 CEL expression to check permissions for channel presence. [Same expression variables](#expression-variables) are available.
-
-<!-- ## presence_middleware_cel
-
-CEL expression middleware evaluated before other channel presence permission checks. [Same variables](#expression-variables) are available. -->
