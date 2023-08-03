@@ -58,6 +58,25 @@ Centrifugo forces the` Content-Type` header to be `application/json` in all HTTP
 
 :::
 
+Starting from Centrifugo v5.0.2 it's possible to configure static set of headers to be appended to all HTTP proxy requests:
+
+```json title="config.json"
+{
+  ...
+  "proxy_static_http_headers": {
+    "X-Custom-Header": "custom value"
+  }
+}
+```
+
+`proxy_static_http_headers` is a map with string keys and string values. You may also set it over environment variable using JSON object string:
+
+```
+export CENTRIFUGO_PROXY_STATIC_HTTP_HEADERS='{"X-Custom-Header": "custom value"}'
+```
+
+Static headers may be overriden by the header from client connection request if you proxy the header with the same name inside `proxy_http_headers` option showed above.
+
 ### Proxy GRPC metadata
 
 When [GRPC unidirectional stream](../transports/uni_grpc.md) is used as a client transport then you may want to proxy GRPC metadata from the client request. In this case you may configure `proxy_grpc_metadata` option. This is an array of string metadata keys which will be proxied. These metadata keys transformed to HTTP headers of proxy request. By default no metadata keys are proxied.
@@ -906,16 +925,17 @@ Let's look at all fields for a proxy object which is possible to set for each pr
 
 | Field name | Field type | Required | Description  |
 | -------------- | -------------- | ------------ | ---- |
-| name       | string  | yes | Unique name of proxy used for referencing in configuration, must match regexp `^[-a-zA-Z0-9_.]{2,}$`      |
-| endpoint       | string  | yes | HTTP or GRPC endpoint in the same format as in default proxy mode. For example, `http://localhost:3000/path` for HTTP or `grpc://localhost:3000` for GRPC.      |
-| timeout       | duration (string)  | no | Proxy request timeout, default `"1s"`       |
-| http_headers       | array of strings  | no | List of headers to proxy, by default no headers       |
-| grpc_metadata       | array of strings  | no | List of GRPC metadata keys to proxy, by default no metadata keys   |
-| binary_encoding       | bool  | no | Use base64 for payloads       |
-| include_connection_meta | bool  | no | Include meta information (attached on connect)       |
-| grpc_cert_file       | string  | no | Path to cert file for secure TLS connection. If not set then an insecure connection with the backend endpoint is used.       |
-| grpc_credentials_key       | string  | no | Add custom key to per-RPC credentials.       |
-| grpc_credentials_value       | string  | no | A custom value for `grpc_credentials_key`.       |
+| name       | `string`  | yes | Unique name of proxy used for referencing in configuration, must match regexp `^[-a-zA-Z0-9_.]{2,}$`      |
+| endpoint       | `string`  | yes | HTTP or GRPC endpoint in the same format as in default proxy mode. For example, `http://localhost:3000/path` for HTTP or `grpc://localhost:3000` for GRPC.      |
+| timeout       | `duration` (string)  | no | Proxy request timeout, default `"1s"`       |
+| http_headers       | `array of strings`  | no | List of headers to proxy, by default no headers       |
+| static_http_headers       | `map[string]string`  | no | Static set of headers to add to HTTP proxy requests. Note these headers only appended to HTTP proxy requests from Centrifugo to backend        |
+| grpc_metadata       | `array of strings`  | no | List of GRPC metadata keys to proxy, by default no metadata keys   |
+| binary_encoding       | `bool`  | no | Use base64 for payloads       |
+| include_connection_meta | `bool`  | no | Include meta information (attached on connect)       |
+| grpc_cert_file       | `string`  | no | Path to cert file for secure TLS connection. If not set then an insecure connection with the backend endpoint is used.       |
+| grpc_credentials_key       | `string`  | no | Add custom key to per-RPC credentials.       |
+| grpc_credentials_value       | `string`  | no | A custom value for `grpc_credentials_key`.       |
 
 ### Granular connect and refresh
 
