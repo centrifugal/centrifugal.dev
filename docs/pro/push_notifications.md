@@ -4,8 +4,6 @@ sidebar_label: Push notification API
 title: Push notification API
 ---
 
-This PRO feature is under active development, some changes expected here 🚧
-
 Centrifugo excels in delivering real-time in-app messages to online users. Sometimes though you need a way to engage offline users to come back to your app. Or trigger some update in the app while it's running in the background. That's where push notifications may be used. Push notifications delivered over battery-efficient platform-dependent transport.
 
 With Centrifugo PRO push notifications may be delivered to all popular application platforms:
