@@ -296,7 +296,7 @@ With the following option in the configuration file:
 }
 ```
 
-RPC calls over client connection will be proxied to `proxy_rpc_endpoint`. This allows a developer to utilize WebSocket (or SockJS) connection in a bidirectional way.
+RPC calls over client connection will be proxied to `proxy_rpc_endpoint`. This allows a developer to utilize WebSocket connection (or any other bidirectional transport Centrifugo supports) in a bidirectional way.
 
 Payload example sent to app backend in RPC request:
 
