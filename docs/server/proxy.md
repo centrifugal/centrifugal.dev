@@ -929,7 +929,7 @@ Let's look at all fields for a proxy object which is possible to set for each pr
 | endpoint       | `string`  | yes | HTTP or GRPC endpoint in the same format as in default proxy mode. For example, `http://localhost:3000/path` for HTTP or `grpc://localhost:3000` for GRPC.      |
 | timeout       | `duration` (string)  | no | Proxy request timeout, default `"1s"`       |
 | http_headers       | `array of strings`  | no | List of headers to proxy, by default no headers       |
-| static_http_headers       | `map[string]string`  | no | Static set of headers to add to HTTP proxy requests. Note these headers only appended to HTTP proxy requests from Centrifugo to backend        |
+| static_http_headers       | `map[string]string`  | no | Static set of headers to add to HTTP proxy requests. Note these headers only appended to HTTP proxy requests from Centrifugo to backend. Available since Centrifugo v5.0.2        |
 | grpc_metadata       | `array of strings`  | no | List of GRPC metadata keys to proxy, by default no metadata keys   |
 | binary_encoding       | `bool`  | no | Use base64 for payloads       |
 | include_connection_meta | `bool`  | no | Include meta information (attached on connect)       |
