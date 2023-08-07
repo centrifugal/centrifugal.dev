@@ -683,7 +683,7 @@ Applications **must use error codes in range [400, 1999]**. Error code field is 
 
 :::note
 
-Returning custom error does not apply to response for refresh and sub refresh proxy requests as there is no sense in returning an error (will not reach client anyway). 
+Returning custom error does not apply to response for refresh and sub refresh proxy requests as there is no sense in returning an error (will not reach client anyway). I.e. custom error is only processed for connect, subscribe, publish and rpc proxy types.
 
 :::
 
@@ -709,7 +709,7 @@ Code is `uint32` internally. Numbers outside of 4000-4999 range are reserved by 
 
 :::note
 
-Returning custom disconnect does not apply to response for refresh and sub refresh proxy requests as there is no way to control disconnect at moment - the client will always be disconnected with `expired` disconnect reason.
+Returning custom disconnect does not apply to response for refresh and sub refresh proxy requests as there is no way to control disconnect at moment - the client will always be disconnected with `expired` disconnect reason. I.e. custom disconnect is only processed for connect, subscribe, publish and rpc proxy types.
 
 :::
 
