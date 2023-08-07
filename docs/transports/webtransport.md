@@ -66,6 +66,12 @@ centrifuge.connect()
 
 Note, that we are using secure schemes here – `https://` and `wss://`. While in WebSocket case you could opt for non-TLS communication, in WebTransport case non-TLS `http://` scheme is simply not supported by the specification.
 
+Also, Chrome may not automatically close WebTransport sessions upon browser reload, so consider adding:
+
+```javascript
+addEventListener("unload", (event) => { centrifuge.disconnect() });
+```
+
 :::tip
 
 Make sure you run Centrifugo without load balancer or reverse proxy in front, or make sure your proxy can proxy HTTP/3 traffic to Centrifugo.
