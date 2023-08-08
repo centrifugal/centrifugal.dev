@@ -361,7 +361,7 @@ With the following option in the configuration file:
 
 :::info
 
-**Subscribe proxy does not proxy [subscriptions with token](./channel_token_auth.md) and subscriptions to [user-limited](channels.md#user-channel-boundary) channels at the moment**. That's because those are already providing channel access control. Subscribe proxy assumes that all the permission management happens on the backend side when processing proxy request. So if you need to get subscribe proxy requests for all channels in the system - do not use subscription tokens and user-limited channels.
+**Subscribe proxy does not proxy [subscriptions with token](./channel_token_auth.md) and subscriptions to [user-limited](channels.md#user-channel-boundary-) channels at the moment**. That's because those are already providing channel access control. Subscribe proxy assumes that all the permission management happens on the backend side when processing proxy request. So if you need to get subscribe proxy requests for all channels in the system - do not use subscription tokens and user-limited channels.
 
 :::
 
