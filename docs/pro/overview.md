@@ -56,6 +56,4 @@ Centrifugo PRO is distributed by Centrifugal Labs LTD under [commercial license]
 
 To run without limits Centrifugo PRO requires a license key.
 
-The cost of the license key is 3299 EUR. The license key has an expiration date (six months after purchasing). After the key expires Centrifugo PRO will continue to work without any limitations, but you won't be able to update Centrifugo PRO to a version released after the key expiration date.
-
-Please contact us over `centrifugal.dev@gmail.com` if you want to purchase the license key. Make sure you agree with terms and conditions of our [commercial license](/license). Also, as of now, we do not provide dedicated support for Centrifugo PRO.
+Please contact us over `centrifugal.dev@gmail.com` if you want to purchase the license key. Make sure you agree with terms and conditions of our [commercial license](/license).
