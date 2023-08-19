@@ -12,7 +12,7 @@ The list of events that can be proxied:
 * `subscribe` - called when clients try to subscribe on a channel, so it's possible to check permissions and return custom initial subscription data. Works for bidirectional transports only.
 * `publish` - called when a client tries to publish into a channel, so it's possible to check permissions and optionally modify publication data. Works for bidirectional transports only.
 * `sub_refresh` - called when a client subscription is going to expire, so it's possible to prolong it or just let it expire. Can also be used just as a periodical subscription liveness callback from Centrifugo to app backend. Works for bidirectional and unidirectional transports.
-* `rpc` - called when a client sends RPC, you can do whatever logic you need based on a client-provided RPC method and params. Works for bidirectional transports only.
+* `rpc` - called when a client sends RPC, you can do whatever logic you need based on a client-provided RPC method and data. Works for bidirectional transports only.
 
 At the moment Centrifugo can proxy these events over two protocols:
 
@@ -25,7 +25,7 @@ HTTP proxy in Centrifugo converts client connection events into HTTP calls to th
 
 ### HTTP request structure
 
-All proxy calls are **HTTP POST** requests that will be sent from Centrifugo to configured endpoints with a configured timeout. These requests will have some headers copied from the original client request (see details below) and include JSON body which varies depending on call type (for example data sent by a client in RPC call etc, see more details about JSON bodies below).
+All HTTP proxy calls are **HTTP POST** requests that will be sent from Centrifugo to configured endpoints with a configured timeout. These requests will have some headers copied from the original client request (see details below) and include JSON body which varies depending on call type (for example data sent by a client in RPC call etc, see more details about JSON bodies below).
 
 ### Proxy HTTP headers
 

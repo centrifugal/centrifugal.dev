@@ -194,7 +194,7 @@ function Home() {
               <code>Very simple integration</code>
               <code>It's really well written. Super easy to setup, especially for auth</code>
               <code>Clean code</code>
-              <code>Has a Dart Client &lt;3</code>
+              <code>Admin web UI</code>
             </div>
           }
         />
