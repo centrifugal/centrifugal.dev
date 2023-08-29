@@ -29,7 +29,7 @@ The technologies that we are using:
 
 Almost all the information users see in our terminal is streamed over Centrifugo. We use it for financial order books, candlestick chart updates, and stat number updates. We can also send real-time personal user notifications via Centrifugo. Instead of all the words, here is a short recording of our terminal trading BTC:
 
-<video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/rabbitx.mp4?v=1"></video>
+<video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/rabbitx.mp4"></video>
 
 #### [Q] We know that you are using Centrifugo Tarantool engine - could you explain why and how it works in your case?
 
