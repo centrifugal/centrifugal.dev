@@ -97,7 +97,6 @@ resp = requests.post("https://centrifuge.example.com/api/publish", data=data, he
 print(resp.json())
 ```
 
-
 In case of publication error, response object will contain `error` field. For example, let's publish to an unknown namespace (not defined in Centrifugo configuration):
 
 ```bash
@@ -107,7 +106,7 @@ curl --header "X-API-Key: <API_KEY>" \
   http://localhost:8000/api/publish
 ```
 
-Response will be:
+In response you will also get 200 OK, but payload will contain `error` field instead of `result`:
 
 ```json
 {
