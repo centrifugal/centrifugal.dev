@@ -81,6 +81,8 @@ OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4318" CENTRIFUGO_OPENTELEMETRY=1 C
 
 Send some API requests - and open [http://localhost:16686](http://localhost:16686) to see traces in Jaeger UI.
 
+By default, Centrifugo exports traces in `http/protobuf` format. If you want to use GRPC exporter then it's possible to turn on by setting environment variable `OTEL_EXPORTER_OTLP_PROTOCOL` to `grpc` (GRPC exporter format supported since Centrifugo v5.0.3).
+
 ## Logs
 
 Logging may be configured using `log_level` option. It may have the following values:
