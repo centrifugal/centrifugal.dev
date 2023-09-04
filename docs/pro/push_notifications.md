@@ -451,6 +451,8 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 |-----------------|--------------|-----|--------|
 | `recipient`       | `PushRecipient` | Yes | Recipient of push notification      |
 | `notification`    | `PushNotification` | Yes | Push notification to send     |
+| `uid`             | string       | No | Unique send id, used for Centrifugo builtin analytics or to cancel delayed push |
+| `send_at`             | int64       | No | Optional Unix time in the future (in seconds) when to send push notification, push will be queued until that time. |
 
 `PushRecipient` (you **must set only one of the following fields**):
 
@@ -469,7 +471,6 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 
 | Field         | Type      |  Required | Description |
 |---------------|-----------|-----------|--------|
-| `uid`             | string       | No | Unique send id, used for Centrifugo builtin analytics |
 | `expire_at`       | int64        | No | Unix timestamp when Centrifugo stops attempting to send this notification. Note, it's Centrifugo specific and does not relate to notification TTL fields. We generally recommend to always set this to a reasonable value to protect your app from old push notifications sending      |
 | `fcm`       | `FcmPushNotification` | No | Notification for FCM      |
 | `hms`       | `HmsPushNotification` | No | Notification for HMS      |
@@ -499,6 +500,20 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 | Field Name | Type | Description |
 | --- | --- | --- |
 | `uid` | string | Unique send id, matches `uid` in request if it was provided |
+
+### cancel_push
+
+Cancel delayed push notification (which was sent with custom `send_at` value).
+
+#### update_push_status request
+
+| Field | Type | Required | Description |
+|-------|------|----|-------------|
+| `uid` | string | Yes | `uid` of push notification to cancel |
+
+#### update_push_status result
+
+Empty object.
 
 ### update_push_status
 
