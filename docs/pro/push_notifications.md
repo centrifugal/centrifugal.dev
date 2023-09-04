@@ -66,7 +66,7 @@ Centrifugo PRO simplifies the process by providing a backend for device token st
 
 Additionally, Centrifugo PRO provides an efficient, scalable queuing mechanism for sending push notifications. Developers can send notifications from the app backend to Centrifugo API with minimal latency and let Centrifugo process sending to FCM, HMS, APNs concurrently using built-in workers. In our tests, we achieved several millions pushes per minute.
 
-We also currently work on delayed push notifications feature – to queue push for a later delivery, so for example you can send notification based on user time zone and let Centrifugo PRO send it when needed. Stay tuned!
+Centrifugo PRO also supports delayed push notifications feature – to queue push for a later delivery, so for example you can send notification based on user time zone and let Centrifugo PRO send it when needed.
 
 ### Unified secure topics
 
@@ -451,7 +451,7 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 |-----------------|--------------|-----|--------|
 | `recipient`       | `PushRecipient` | Yes | Recipient of push notification      |
 | `notification`    | `PushNotification` | Yes | Push notification to send     |
-| `uid`             | string       | No | Unique send id, used for Centrifugo builtin analytics or to cancel delayed push |
+| `uid`             | string       | No | Unique send id, used for Centrifugo builtin analytics or to cancel delayed push. We recommend using UUID v4 for it |
 | `send_at`             | int64       | No | Optional Unix time in the future (in seconds) when to send push notification, push will be queued until that time. |
 
 `PushRecipient` (you **must set only one of the following fields**):
