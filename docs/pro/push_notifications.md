@@ -185,7 +185,11 @@ We also support auth over p12 certificates with the following options:
 
 #### push_notifications.max_inactive_device_days
 
-This option configures the number of days to keep device without updates. By default Centrifugo does not remove inactive devices.
+This integer option configures the number of days to keep device without updates. By default Centrifugo does not remove inactive devices.
+
+#### push_notifications.enable_redis_delayed_scheduler
+
+Boolean option which enables Redis scheduler to process delayed push notifications. It's off by default since produces additional requests to Redis. When using PostgreSQL as push notifications queue engine you don't need to enable sheduler explicitly.
 
 ### Use PostgreSQL as queue
 
