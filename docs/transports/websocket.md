@@ -113,7 +113,7 @@ Connected (press CTRL+C to quit)
 Disconnected (code: 3012, reason: "no pong")
 ```
 
-The parameter is called `cf_ws_frame_ping_pong`, to use it connect to Centrifugo bidirectional WebSocket endpoint like `ws://localhost:8000/websocket/connection?cf_ws_frame_ping_pong=true`. Here is an example which demonstrates working with Postman WebSocket where we connect to local Centrifugo and subscribe to two channels `test1` and `test2`:
+The parameter is called `cf_ws_frame_ping_pong`, to use it connect to Centrifugo bidirectional WebSocket endpoint like `ws://localhost:8000/connection/websocket?cf_ws_frame_ping_pong=true`. Here is an example which demonstrates working with Postman WebSocket where we connect to local Centrifugo and subscribe to two channels `test1` and `test2`:
 
 <video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/postman.mp4"></video>
 
