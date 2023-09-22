@@ -71,7 +71,8 @@ module.exports = {
       items: [
         "pro/tracing",
         "pro/analytics",
-        "pro/throttling",
+        "pro/rate_limiting",
+        // "pro/distributed_rate_limit",
         "pro/push_notifications",
         "pro/user_status",
         "pro/connections",

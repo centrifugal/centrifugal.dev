@@ -191,6 +191,14 @@ This integer option configures the number of days to keep device without updates
 
 Boolean option which enables Redis scheduler to process delayed push notifications. It's off by default since produces additional requests to Redis. When using PostgreSQL as push notifications queue engine you don't need to enable sheduler explicitly.
 
+#### push_notifications.dry_run
+
+Boolean option, when `true` Centrifugo PRO does not send push notifications to FCM, APNs, HMS providers but instead just print logs. Useful for development.
+
+#### push_notifications.dry_run_latency
+
+Duration. When set together with `push_notifications.dry_run` every dry-run request will cause some delay in workers emulating real-world latency. Useful for development.
+
 ### Use PostgreSQL as queue
 
 Centrifugo PRO utilizes Redis Streams as the default queue engine for push notifications. However, it also offers the option to employ PostgreSQL for queuing. It's as simple as:
