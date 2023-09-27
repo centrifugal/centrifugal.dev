@@ -449,6 +449,12 @@ Centrifugo tries to gracefully shut down client connections when SIGINT or SIGTE
 
 The boolean option `client_insecure` (default `false`) allows connecting to Centrifugo without JWT token. In this mode, there is no user authentication involved. It also disables permission checks on client API level - for presence and history calls. This mode can be useful for demo projects based on Centrifugo, integration tests, local projects, or real-time application prototyping. Don't use it in production until you 100% know what you are doing.
 
+### Disable client token signature check
+
+Available since Centrifugo v5.0.4
+
+The boolean option `client_insecure_skip_token_signature_verify` (default `false`), if enabled – tells Centrifugo to skip JWT signature verification - for both connection and subscription tokens. This is absolutely **insecure** and must only be used for development and testing purposes. Token claims are parsed as usual - so token should still follow JWT format.
+
 ### Insecure API mode
 
 This mode can be enabled using the boolean option `api_insecure` (default `false`). When on there is no need to provide API key in HTTP requests. When using this mode everyone that has access to `/api` endpoint can send any command to server. Enabling this option can be reasonable if `/api` endpoint is protected by firewall rules.

@@ -169,7 +169,7 @@ This is what application returns to Centrifugo inside `result` field in case of 
 | Field | Type | Optional | Description |
 | ------------ | -------------- | ------------ | ---- |
 | user       | string     | no |  user ID (calculated on app backend based on request cookie header for example). Return it as an empty string for accepting unauthenticated requests |
-| expire_at    | integer     | yes | a timestamp when connection must be considered expired. If not set or set to `0` connection won't expire at all        |
+| expire_at    | integer     | yes | a timestamp (Unix seconds in the future) when connection must be considered expired. If not set or set to `0` connection won't expire at all        |
 | info     | JSON     | yes | a connection info JSON            |
 | b64info     | string     | yes | binary connection info encoded in base64 format, will be decoded to raw bytes on Centrifugo before using in messages            |
 | data         | JSON     | yes | a custom data to send to the client in connect command response.           |
@@ -440,6 +440,7 @@ Expected response example if subscription is allowed:
 | data         | JSON     | yes | a custom data to send to the client in subscribe command reply.           |
 | b64data      | string     | yes | a custom data to send to the client in subscribe command reply, will be decoded to raw bytes on Centrifugo side before sending to client |
 | override       | Override object       | yes |  Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields)  |
+| expire_at    | integer     | yes | a timestamp (Unix seconds in the future) when subscription must be considered expired. If not set or set to `0` subscription won't expire at all. Supported since Centrifugo v5.0.4        |
 
 #### Override object
 
@@ -663,8 +664,8 @@ Expected response example:
 
 | Field | Type | Optional | Description |
 | ------------ | -------------- | ------------ | ---- |
-| expired       | bool     | yes |  a flag to mark the connection as expired - the client will be disconnected  |
-| expire_at    | integer     | yes | a timestamp in the future when connection must be considered expired       |
+| expired       | bool     | yes |  a flag to mark the subscription as expired - the client will be disconnected  |
+| expire_at    | integer     | yes | a timestamp in the future (Unix seconds) when subscription must be considered expired       |
 | info     | JSON     | yes | a channel info JSON            |
 | b64info     | string     | yes | binary channel info encoded in base64 format, will be decoded to raw bytes on Centrifugo before using in messages            |
 
