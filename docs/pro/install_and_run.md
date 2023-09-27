@@ -13,6 +13,12 @@ Centrifugo PRO is distributed by Centrifugal Labs LTD under [commercial license]
 
 Centrifugo PRO binary releases [available on Github](https://github.com/centrifugal/centrifugo-pro/releases). Note that we use a separate repo for PRO releases. Download latest release for your operating system, unpack it and run (see how to set license key [below](#setting-pro-license-key)).
 
+If you doubt which distribution you need, then on Linux or MacOS you can use the following command to download and unpack `centrifugo` binary to your current working directory:
+
+```shell
+curl -sSLf https://centrifugal.dev/install_pro.sh | sh
+```
+
 ### Docker image
 
 Centrifugo PRO uses a different image from OSS version – [centrifugo/centrifugo-pro](https://hub.docker.com/repository/docker/centrifugo/centrifugo-pro):
