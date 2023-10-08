@@ -7,7 +7,7 @@ draft: true
 
 :::caution Experimental
 
-This is an experimental extension of Centrifugo Proxy. We appreciate your feedback to make sure it's useful and solves real-world problems before marking it as stable and commit to the API.
+This is an experimental extension of Centrifugo [proxy](./proxy.md). We appreciate your feedback to make sure it's useful and solves real-world problems before marking it as stable and commit to the API.
 
 :::
 
@@ -19,7 +19,7 @@ In this case Centrifugo plays a role of WebSocket-to-GRPC streaming proxy – ke
 
 ![](/img/on_demand_stream_connections.png)
 
-BTW, our bidirectional WebSocket fallbacks (HTTP-streaming and SSE) and experimental WebTransport work with proxy subscription streams too. So it's possible to say that Centrifugo may be also Webtransport-to-GRPC proxy or SSE-to-GRPC proxy.
+Our bidirectional WebSocket fallbacks (HTTP-streaming and SSE) and experimental WebTransport work with proxy subscription streams too. So it's possible to say that Centrifugo may be also Webtransport-to-GRPC proxy or SSE-to-GRPC proxy.
 
 ## Subscription streams
 
@@ -31,7 +31,7 @@ Here is a diagram which shows the sequence of events happening when using subscr
 
 Using proxy subscription streams increases resource usage on both Centrifugo and app backend sides because it involves more moving parts such as goroutines, additional buffers, connections, etc.
 
-The feature is quite niche actually. Read carefully the motivation described in this doc. If you don't really need proxy streams – prefer using Centrifugo usual approach by always publishing messages to channels over [Centrifugo publish API](./server_api.md#publish) whenever an event happens. This is efficient and Centrifugo just drops messages in case of no active subscribers in a channel. I.e. follow our [idiomatic guidelines](./../getting-started/design.md).
+The feature is quite niche. Read carefully the motivation described in this doc. If you don't really need proxy streams – prefer using Centrifugo usual approach by always publishing messages to channels over [Centrifugo publish API](./server_api.md#publish) whenever an event happens. This is efficient and Centrifugo just drops messages in case of no active subscribers in a channel. I.e. follow our [idiomatic guidelines](./../getting-started/design.md).
 
 :::tip
 
@@ -79,7 +79,7 @@ Don't forget that Centrifugo namespace system is very flexible – so you can al
 
 ### Unidirectional subscription streams
 
-From the configuration point of view subscription streams may be enabled for channel namespace just as additional type of [proxy](./proxy.md). The important difference is that only GRPC endpoints may be used - as we are using GRPC streaming RPCs for this type of proxy.
+From the configuration point of view subscription streams may be enabled for channel namespace just as additional type of [proxy](./proxy.md). The important difference is that **only GRPC endpoints may be used** - as we are using GRPC streaming RPCs for this functionality.
 
 You can configure subscription streams for channels very similar to how [subscribe proxy](../server/proxy.md#subscribe-proxy) is configured.
 
