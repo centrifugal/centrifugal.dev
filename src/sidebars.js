@@ -22,7 +22,7 @@ module.exports = {
     "server/history_and_recovery",
     "server/presence",
     "server/proxy",
-    // "server/proxy_streams",
+    "server/proxy_streams",
     "server/admin_web",
     "server/observability",
     "server/infra_tuning",
