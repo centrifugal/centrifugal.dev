@@ -57,4 +57,4 @@ Centrifugo PRO is distributed by Centrifugal Labs LTD under [commercial license]
 
 To run without limits Centrifugo PRO requires a license key.
 
-Please contact us over `centrifugal.dev@gmail.com` if you want to purchase the license key. Make sure you agree with terms and conditions of our [commercial license](/license).
+Please send us mail over `sales@centrifugal.dev` if you want to purchase the license key. Make sure you agree with terms and conditions of our [commercial license](/license).
