@@ -753,3 +753,105 @@ func main() {
 ```
 
 For other languages refer to GRPC docs.
+
+## Transport error mode
+
+By default, Centrifugo server API never returns transport level errors - for example it always returns 200 OK for HTTP API and never returns GRPC transport-level errors. Centrifugo returns its custom errors from API calls inside optional `error` field of response as we showed above in this doc. This means that API call to Centrifigo API may returns 200 OK, but in the `error` field you may find Centrifugo-specific `100: internal error`.
+
+Since Centrifugo v5.1.0 Centrifigo has an option to use transport-native error codes instead of Centrifugo `error` field in the response. The main motivation is make API calls friendly to integrate with the network ecosystem - for automatic retries, better logging, etc. In many situations this may be more obvious for humans also.
+
+Let's show an example. Without any special options HTTP request to Centrifigo server API which contains error in response looks like this: 
+
+```bash
+❯ echo '{}' | http POST "http://localhost:8000/api/publish"
+HTTP/1.1 200 OK
+Content-Length: 46
+Content-Type: application/json
+Date: Sat, 19 Aug 2023 07:23:40 GMT
+
+{
+    "error": {
+        "code": 107,
+        "message": "bad request"
+    }
+}
+```
+
+Note - it returns 200 OK even though response contains `error` field. With `transport` error mode request-response may be transformed into the following: 
+
+```bash
+❯ echo '{}' | http POST "http://localhost:8000/api/publish" "X-Centrifugo-Error-Mode: transport"
+HTTP/1.1 400 Bad Request
+Content-Length: 36
+Content-Type: application/json
+Date: Sat, 19 Aug 2023 07:23:59 GMT
+
+{
+    "code": 107,
+    "message": "bad request"
+}
+```
+
+Transport error mode may be turned on globally:
+
+* using `"api_error_mode": "transport"` option for HTTP server API
+* using `"grpc_api_error_mode": "transport"` option for GRPC server API
+
+Also, this mode may be used on per-request basis:
+
+* by setting custom header `X-Centrifugo-Error-Mode: transport` for HTTP (as we just showed in the example)
+* adding custom metadata key `x-centrifugo-error-mode: transport` for GRPC 
+
+:::danger
+
+Note, that `transport` error mode does not help a lot with `Batch` and `Broadcast` APIs which are quite special because these calls contain many independent operations. For these calls you still need to look at individual `error` objects in response.
+
+:::
+
+To achieve the goal we have an internal matching of Centrifugo API error codes to HTTP and GRPC error codes.
+
+### Centrifugo error code to HTTP code
+
+```go
+func MapErrorToHTTPCode(err *Error) int {
+	switch err.Code {
+	case ErrorInternal.Code: // 100 -> HTTP 500
+		return http.StatusInternalServerError
+	case ErrorUnknownChannel.Code, ErrorNotFound.Code: // 102, 104 -> HTTP 404
+		return http.StatusNotFound
+	case ErrorBadRequest.Code, ErrorNotAvailable.Code: // 107, 108 -> HTTP 400
+		return http.StatusBadRequest
+	case ErrorUnrecoverablePosition.Code: // 112 -> HTTP 416
+		return http.StatusRequestedRangeNotSatisfiable
+	case ErrorConflict.Code: // 113 -> HTTP 409
+		return http.StatusConflict
+	default:
+		// Default to Internal Error for unmapped errors.
+		// In general should be avoided - all new API errors must be explicitly described here.
+		return http.StatusInternalServerError // HTTP 500
+	}
+}
+```
+
+### Centrifugo error code to GRPC code
+
+```go
+func MapErrorToGRPCCode(err *Error) codes.Code {
+	switch err.Code {
+	case ErrorInternal.Code: // 100
+		return codes.Internal
+	case ErrorUnknownChannel.Code, ErrorNotFound.Code: // 102, 104
+		return codes.NotFound
+	case ErrorBadRequest.Code, ErrorNotAvailable.Code: // 107, 108
+		return codes.InvalidArgument
+	case ErrorUnrecoverablePosition.Code: // 112
+		return codes.OutOfRange
+	case ErrorConflict.Code: // 113
+		return codes.AlreadyExists
+	default:
+		// Default to Internal Error for unmapped errors.
+		// In general should be avoided - all new API errors must be explicitly described here.
+		return codes.Internal
+	}
+}
+```
