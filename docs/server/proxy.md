@@ -816,6 +816,12 @@ String, default `""` (i.e. not used).
 
 A custom value for `proxy_grpc_credentials_key`.
 
+#### proxy_grpc_compression
+
+Bool, default `false` (i.e. not used).
+
+If `true` then gzip compression will be used for each GRPC proxy call (available since Centrifugo v5.1.0).
+
 ### GRPC proxy example
 
 We have [an example of backend server](https://github.com/centrifugal/examples/tree/master/v3/go_proxy/grpc) (written in Go language) which can react to events from Centrifugo over GRPC. For other programming languages the approach is similar, i.e.:
@@ -943,6 +949,7 @@ Let's look at all fields for a proxy object which is possible to set for each pr
 | grpc_cert_file       | `string`  | no | Path to cert file for secure TLS connection. If not set then an insecure connection with the backend endpoint is used.       |
 | grpc_credentials_key       | `string`  | no | Add custom key to per-RPC credentials.       |
 | grpc_credentials_value       | `string`  | no | A custom value for `grpc_credentials_key`.       |
+| grpc_compression       | `bool`  | no | If `true` then gzip compression will be used for each GRPC proxy call (available since Centrifugo v5.1.0)       |
 
 ### Granular connect and refresh
 
