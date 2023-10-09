@@ -802,7 +802,7 @@ Also, this mode may be used on per-request basis:
 * by setting custom header `X-Centrifugo-Error-Mode: transport` for HTTP (as we just showed in the example)
 * adding custom metadata key `x-centrifugo-error-mode: transport` for GRPC 
 
-:::danger
+:::caution
 
 Note, that `transport` error mode does not help a lot with `Batch` and `Broadcast` APIs which are quite special because these calls contain many independent operations. For these calls you still need to look at individual `error` objects in response.
 
