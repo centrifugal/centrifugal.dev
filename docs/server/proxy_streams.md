@@ -11,7 +11,7 @@ This is an experimental extension of Centrifugo [proxy](./proxy.md). We apprecia
 
 :::
 
-Proxy subscription streams allow pushing data towards client channel subscription directly and individually from your application backend over the unidirectional [GRPC](https://grpc.io/) stream. Additionally, bidirectional GRPC streams may be utilized to stream data in both directions.
+Proxy subscription streams (available since Centrifugo v5.1.0) allow pushing data towards client channel subscription directly and individually from your application backend over the unidirectional [GRPC](https://grpc.io/) stream. Additionally, bidirectional GRPC streams may be utilized to stream data in both directions.
 
 The stream is established between Centrifugo and your application backend as soon as user subscribes to a channel. Subscription streams may be useful if you want to generate individual streams and these streams should only work for a time while client is subscribed to a channel.
 
