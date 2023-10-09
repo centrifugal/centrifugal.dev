@@ -21,13 +21,7 @@ In this case Centrifugo plays a role of WebSocket-to-GRPC streaming proxy – ke
 
 Our bidirectional WebSocket fallbacks (HTTP-streaming and SSE) and experimental WebTransport work with proxy subscription streams too. So it's possible to say that Centrifugo may be also Webtransport-to-GRPC proxy or SSE-to-GRPC proxy.
 
-## Subscription streams
-
-Here is a diagram which shows the sequence of events happening when using subscription streams:
-
-![](/img/proxy_subscribe.png)
-
-## Scalability concerns
+### Scalability concerns
 
 Using proxy subscription streams increases resource usage on both Centrifugo and app backend sides because it involves more moving parts such as goroutines, additional buffers, connections, etc.
 
@@ -35,15 +29,19 @@ The feature is quite niche. Read carefully the motivation described in this doc.
 
 :::tip
 
-Use proxy subscription streams only when really needed.
+Use proxy subscription streams only when really needed. Specifically, proxy subscription stream may be very useful to stream data for a limited time upon some user action in the app.
 
 :::
 
-Proxy subscription streams should scale well horizontally with adding more servers. But scaling GRPC is more involved and using GRPC streams results into more resources utilized than with the common Centrifugo approach, so make sure the resource consumption is sufficient for your system by performing load tests with your expected load profile.
+At the same time proxy subscription streams should scale well horizontally with adding more servers. But scaling GRPC is more involved and using GRPC streams results into more resources utilized than with the common Centrifugo approach, so make sure the resource consumption is sufficient for your system by performing load tests with your expected load profile.
 
 The thing is that sometimes proxy streams is the only way to achieve the desired behaviour – at that point they shine even though require more resources and developer effort. Also, not every use case involves tens of thousands of subscriptions/connections to worry about – be realistic about your practical situation.
 
 ### Motivation and design
+
+Here is a diagram which shows the sequence of events happening when using subscription streams:
+
+![](/img/proxy_subscribe.png)
 
 Subscription streams generally solve a task of integrating with third-party streaming providers or external process, possibly with custom filtering. They come into play when it's not feasible to continuously stream all data to various channels, and when you need to deallocate resources on the backend side as soon as stream is not needed anymore.
 
