@@ -128,7 +128,15 @@ service CentrifugoProxy {
 
 GRPC service definitions can be found in the Centrifugo repository: [proxy.proto](https://github.com/centrifugal/centrifugo/blob/master/internal/proxyproto/proxy.proto) - same as [we described before](./proxy.md#grpc-proxy), probably you already have a service which implements some methods from it. If you don't – just follow [GRPC tutorials](https://grpc.io/docs/languages/) for your programming language to generate server stubs from our Protobuf schema – and you are ready to describe stream logic.
 
-Here we are looking at unidirectional subscription stream – so the next thing to do is to implement streaming handler on the application backend side which contains stream business logic, i.e. implement `SubscribeUnidirectional` streaming rpc handler. A basic example of such handler in Go may look like this (error handling skipped for brevity):
+Here we are looking at unidirectional subscription stream – so the next thing to do is to implement streaming handler on the application backend side which contains stream business logic, i.e. implement `SubscribeUnidirectional` streaming rpc handler.
+
+:::tip
+
+You can write GRPC handlers to handle proxy subscription streams in any language with [good GRPC support](https://grpc.io/docs/languages/).
+
+:::
+
+A basic example of such handler in Go may look like this (error handling skipped for brevity):
 
 ```go
 package main
