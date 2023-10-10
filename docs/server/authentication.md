@@ -413,7 +413,10 @@ At the moment Centrifugo caches keys loaded from an endpoint for one hour.
 
 Centrifugo will load keys from JWKS endpoint by issuing GET HTTP request with 1 second timeout and one retry in case of failure (not configurable at the moment).
 
-Only `RSA` algorithm is supported.
+Centrifugo supports the following key types (`kty`) for JWKs tokens:
+
+* `RSA`
+* `EC` (since Centrifugo v5.1.0)
 
 Once enabled JWKS used for both connection and channel subscription tokens.
 
