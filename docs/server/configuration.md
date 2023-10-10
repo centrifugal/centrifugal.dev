@@ -423,6 +423,7 @@ It's possible to customize server HTTP handler endpoints. To do this Centrifugo 
 * `websocket_handler_prefix` (default `"/connection/websocket"`) - to control WebSocket URL prefix
 * `http_stream_handler_prefix` (default `"/connection/http_stream"`) - to control HTTP-streaming URL prefix
 * `sse_handler_prefix` (default `"/connection/sse"`) - to control SSE/EventSource URL prefix
+* `emulation_handler_prefix` (default `"/emulation"`) - to control emulation endpoint prefix
 * `sockjs_handler_prefix` (default `"/connection/sockjs"`) - to control SockJS URL prefix
 * `uni_sse_handler_prefix` (default `"/connection/uni_sse"`) - to control unidirectional Eventsource URL prefix
 * `uni_http_stream_handler_prefix` (default `"/connection/uni_http_stream"`) - to control unidirectional HTTP streaming URL prefix
