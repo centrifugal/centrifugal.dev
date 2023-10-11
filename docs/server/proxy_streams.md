@@ -2,7 +2,6 @@
 id: proxy_streams
 sidebar_label: Proxy subscription streams
 title: Proxy subscription streams
-draft: true
 ---
 
 :::caution Experimental
