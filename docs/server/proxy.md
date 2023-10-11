@@ -13,7 +13,7 @@ The list of events that can be proxied:
 * `sub_refresh` - called when a client subscription is going to expire, so it's possible to prolong it or just let it expire. Can also be used just as a periodical subscription liveness callback from Centrifugo to app backend. Works for bidirectional and unidirectional transports.
 * `publish` - called when a client tries to publish into a channel, so it's possible to check permissions and optionally modify publication data. Works for bidirectional transports only.
 * `rpc` - called when a client sends RPC, you can do whatever logic you need based on a client-provided RPC method and data. Works for bidirectional transports only.
-* and starting from Centrifugo v5.1.0 we have experimental [proxy subscription streams](proxy_streams.md) which are a bit special, so we describe them in a special doc chapter.
+* and starting from Centrifugo v5.1.0 we have experimental [proxy subscription streams](./proxy_streams.md) which are a bit special, so we describe them in a special doc chapter.
 
 At the moment Centrifugo can proxy these events over two protocols:
 
