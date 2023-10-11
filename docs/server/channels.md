@@ -448,7 +448,7 @@ Centrifugo uses Go language [regexp](https://pkg.go.dev/regexp) package for regu
 
 ### subscribe_stream_proxy_name
 
-`subscribe_stream_proxy_name` (string, default `""`) – turns on subscribe stream proxy when [granular proxy mode](proxy_streams.md#granular-proxy-mode) is used. Note that `proxy_subscribe_stream` option defined above is ignored in granular proxy mode.
+`subscribe_stream_proxy_name` (string, default `""`) – turns on subscribe stream proxy when [granular proxy mode](./proxy_streams.md#granular-proxy-mode) is used. Note that `proxy_subscribe_stream` option defined above is ignored in granular proxy mode.
 
 ## Channel config examples
 
