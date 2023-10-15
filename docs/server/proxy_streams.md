@@ -315,3 +315,7 @@ Here is an example how you can define different subscribe stream proxies for dif
   ]
 }
 ```
+
+## Full example
+
+Full example which demonstrates proxy subscribe stream backend implemented in Go language may be found [in Centrifugo examples repo](https://github.com/centrifugal/examples/tree/master/v5/subscription_streams).
