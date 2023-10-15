@@ -23,6 +23,7 @@ Centrifugo PRO is packed with the following features:
 * 🔌 [Connections API](./connections.md) to query, filter and inspect active connections.
 * ✋ [User blocking API](./user_block.md) to block/unblock abusive users by ID.
 * 🛑 [JWT revoking and invalidation API](./token_revocation.md) to revoke tokens by ID and invalidate user's tokens based on issue time.
+* 🔔 [Channel state events](channel_events.md) to be notified on the backend about channel `occupied` and `vacated` events.
 * 💪 [Channel capabilities](./capabilities.md) for controlling channel permissions per connection or per subscription.
 * 📜 [Channel patterns](./channel_patterns.md) allow defining channel configuration like HTTP routes with parameters.
 * ✍️ [CEL expressions](./cel_expressions.md) to write custom efficient permission rules for channel operations.

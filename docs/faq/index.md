@@ -165,6 +165,12 @@ Centrifugo does not support unsubscribe/disconnect hooks – see the reasoning b
 
 ### Why Centrifugo does not have disconnect hooks?
 
+:::tip UPDATE
+
+Centrifugo PRO now solves the pitfalls mentioned here with its [Channel State Events](../pro/channel_events.md) feature.
+
+:::
+
 Centrifugo does not support disconnect hooks at this point. We understand that this may be useful for some use cases but there are some pitfalls which prevent us adding such hooks to Centrifugo. 
 
 Let's consider a case when Centrifugo node is unexpectedly killed. In this case there is no chance for Centrifugo to emit disconnect events for connections on that node. While this may be rare thing in practice – it may lead to inconsistent state in you app if you'd rely on disconnect hooks.
