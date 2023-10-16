@@ -18,8 +18,8 @@ curl -X POST http://localhost:8000/api/rate_limit \
 
 {
     "key": "rate_limit_test",
-    "interval": 60000,
-    "rate": 10
+    "rate": 10,
+    "interval_ms": 60000
 }
 EOF
 ```
@@ -42,15 +42,15 @@ Or, when no tokens left in a bucket:
     "result": {
         "allowed": false,
         "tokens_left": 0,
-        "allowed_in": 5208,
-        "server_time": 1694627573210,
+        "allowed_in_ms": 5208,
+        "server_time_ms": 1694627573210,
     }
 }
 ```
 
 In your app code call `rate_limit` API of Centrifugo PRO every time some action is executed and check `allowed` flag to allow or discard the action.
 
-Centrifugo PRO also returns `allowed_in` and `server_time` fields to help understanding when action will be allowed. These two fields are only appended when `tokens_left` are less than requested `score`. `allowed_in` + `server_time` will provide you a timestamp in the future (in milliseconds) when action is possible to be executed. So you can delay next action execution till that time if possible.
+Centrifugo PRO also returns `allowed_in_ms` and `server_time_ms` fields to help understanding when action will be allowed. These two fields are only appended when `tokens_left` are less than requested `score`. `allowed_in_ms` + `server_time_ms` will provide you a timestamp in the future (in milliseconds) when action is possible to be executed. So you can delay next action execution till that time if possible.
 
 ## Configuration
 
@@ -72,20 +72,111 @@ Note, that just like most of other features in Centrifugo it's possible to confi
 
 Now let's look at API description.
 
-### rate_limit request
+### rate_limit
+
+Rate limit request, consumes tokens from bucket, returns whether action is allowed or not.
+
+#### rate_limit request
 
 | Field | Type | Required | Description |
 |-------|------|----|-------------|
 | `key`   | `string` | Yes | Key for a bucket - you can construct keys whatever way you like |
-| `interval` | `integer` | Yes | Interval in milliseconds |
+| `interval_ms` | `integer` | Yes | Interval in milliseconds |
 | `rate` | `integer` | Yes | Allowed rate per provided interval |
 | `score` | `integer` | No | Score for the current action, if not provided the default score 1 is used |
+| `dry_run` | `bool` | No | If set runs rate limit request as usual, but does not actually modify Redis state for a bucket |
 
-### rate_limit result
+#### rate_limit result
 
 | Field Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `allowed` | `bool` | Yes | Whether desired action is allowed at this point in time |
 | `tokens_left` | `integer` | Yes | How many tokens left in a bucket |
-| `allowed_in` | `integer` | No | Milliseconds till desired score will be allowed again |
-| `server_time` | `integer` | No | Server time as Unix epoch in milliseconds used to calculate result |
+| `allowed_in_ms` | `integer` | No | Milliseconds till desired score will be allowed again |
+| `server_time_ms` | `integer` | No | Server time as Unix epoch in milliseconds used to calculate result |
+
+### reset_rate_limit
+
+Resets bucket counters in Redis
+
+#### reset_rate_limit request
+
+| Field | Type | Required | Description |
+|-------|------|----|-------------|
+| `key`   | `string` | Yes | Key to reset |
+
+#### reset_rate_limit result
+
+Empty object at the moment.
+
+## Example
+
+Here is an example of Go program which uses Centrifugo PRO distributed rate limiter and executes some heavy work as fast as possible according to selected rate limiting policy:
+
+```go
+package main
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"io"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"time"
+)
+
+type RateLimitResponse struct {
+	Result RateLimitResult `json:"result"`
+}
+
+type RateLimitResult struct {
+	Allowed      bool  `json:"allowed"`
+	TokensLeft   int64 `json:"tokens_left"`
+	AllowedInMs  int64 `json:"allowed_in_ms,omitempty"`
+	ServerTimeMs int64 `json:"server_time_ms,omitempty"`
+}
+
+func main() {
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+
+	client := &http.Client{
+		Timeout: time.Second,
+	}
+
+	url := "http://localhost:8000/api/rate_limit"
+
+	reqData := `{"key": "x", "rate": 1, "interval_ms": 5000}`
+
+	for {
+		req, _ := http.NewRequest(http.MethodPost, url, bytes.NewReader([]byte(reqData)))
+		resp, _ := client.Do(req)
+		body, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+
+		var res RateLimitResponse
+		_ = json.Unmarshal(body, &res)
+
+		started := time.Now()
+		if res.Result.Allowed {
+			log.Println("do heavy work")
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(500 * time.Millisecond):
+			}
+		}
+		delay := time.Duration(res.Result.AllowedInMs)*time.Millisecond - time.Since(started)
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(delay):
+		}
+	}
+}
+```
+
+You can run several such programs in parallel and make sure that rate limits are still preserved.

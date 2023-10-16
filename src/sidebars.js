@@ -72,7 +72,7 @@ module.exports = {
         "pro/tracing",
         "pro/analytics",
         "pro/rate_limiting",
-        // "pro/distributed_rate_limit",
+        "pro/distributed_rate_limit",
         "pro/push_notifications",
         "pro/user_status",
         "pro/connections",
