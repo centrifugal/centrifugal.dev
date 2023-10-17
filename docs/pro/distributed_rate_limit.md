@@ -5,7 +5,7 @@ title: Distributed rate limit API
 
 In addition to connection operation rate limiting features Centrifugo PRO provides a generic high precision rate limiting API. It may be used for custom quota managing tasks not even related to real-time connections. Its distributed nature allows managing quotas across different instances of your application backend.
 
-The original reason why we decided to ship this as part of our PRO version APIs was the desire to simplify our PRO users the implementation of per-user push notification limits when using [Push Notification API](./push_notifications.md). But you are free to use the API for other custom needs as well.
+The original reason why we decided to ship this as part of our PRO version APIs was the desire to simplify our PRO users the implementation of per-user push notification limits when using [Push Notification API](./push_notifications.md). But you are free to use the API for other custom needs as well - like using it for login rate limiting in your system, etc.
 
 ## Overview
 
@@ -50,7 +50,7 @@ Or, when no tokens left in a bucket:
 
 In your app code call `rate_limit` API of Centrifugo PRO every time some action is executed and check `allowed` flag to allow or discard the action.
 
-Centrifugo PRO also returns `allowed_in_ms` and `server_time_ms` fields to help understanding when action will be allowed. These two fields are only appended when `tokens_left` are less than requested `score`. `allowed_in_ms` + `server_time_ms` will provide you a timestamp in the future (in milliseconds) when action is possible to be executed. So you can delay next action execution till that time if possible.
+Centrifugo PRO also returns `allowed_in_ms` and `server_time_ms` fields to help understanding when action will be allowed again. These fields are only appended when `tokens_left` are less than requested `score`. `allowed_in_ms` + `server_time_ms` will provide you a timestamp in the future (in milliseconds) when action is possible to be executed. So you can delay next action execution till that time if possible.
 
 ## Configuration
 
@@ -66,7 +66,7 @@ To enable distributed rate limiter:
 }
 ```
 
-Note, that just like most of other features in Centrifugo it's possible to configure Redis shards here or use Redis Cluster.
+Note, that just like most of other features in Centrifugo it's possible to configure Redis shards here or use Redis Cluster. This provides a straighforward way to scale rate limiting since bucket keys will be distributed over different Redis nodes.
 
 ## API description
 
@@ -84,7 +84,7 @@ Rate limit request, consumes tokens from bucket, returns whether action is allow
 | `interval_ms` | `integer` | Yes | Interval in milliseconds |
 | `rate` | `integer` | Yes | Allowed rate per provided interval |
 | `score` | `integer` | No | Score for the current action, if not provided the default score 1 is used |
-| `dry_run` | `bool` | No | If set runs rate limit request as usual, but does not actually modify Redis state for a bucket |
+| `dry_run` | `bool` | No | If set runs rate limit request as usual, but does not actually modify Redis state for a bucket - i.e. tokens won't be really consumed from a bucket |
 
 #### rate_limit result
 
@@ -179,4 +179,4 @@ func main() {
 }
 ```
 
-You can run several such programs in parallel and make sure that rate limits are still preserved.
+You can run several such programs in parallel and make sure that rate limits are preserved - `do heavy work` won't be printed faster than once in 5 secs.
