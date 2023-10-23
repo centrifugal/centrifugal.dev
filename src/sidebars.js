@@ -84,6 +84,7 @@ module.exports = {
         "pro/performance",
         "pro/singleflight",
         "pro/client_message_batching",
+        "pro/observability_enhancements",
         "pro/process_stats",
       ],
     },
