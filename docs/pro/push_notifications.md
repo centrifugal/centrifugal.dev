@@ -542,7 +542,7 @@ This is a part of server API at the moment, so you need to proxy requests to thi
 | Field | Type | Required | Description |
 |-------|------|----|-------------|
 | `uid` | string | Yes | `uid` (unique send id) from `send_push_notification` |
-| `status`   | string | Yes | Status of push notification #### delivered` or `interacted` |
+| `status`   | string | Yes | Status of push notification - `delivered` or `interacted` |
 | `device_id` | string | Yes | Device ID |
 | `msg_id` | string | No | Message ID |
 
