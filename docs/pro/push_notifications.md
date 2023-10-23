@@ -542,7 +542,7 @@ This is a part of server API at the moment, so you need to proxy requests to thi
 | Field | Type | Required | Description |
 |-------|------|----|-------------|
 | `uid` | string | Yes | `uid` (unique send id) from `send_push_notification` |
-| `status`   | string | Yes | Status of push notification - `delivered` or `interacted` |
+| `status`   | string | Yes | Status of push notification #### delivered` or `interacted` |
 | `device_id` | string | Yes | Device ID |
 | `msg_id` | string | No | Message ID |
 
@@ -550,14 +550,37 @@ This is a part of server API at the moment, so you need to proxy requests to thi
 
 Empty object.
 
-## Metrics
+## Exposed metrics
 
 Several metrics are available to monitor the state of Centrifugo push worker system:
 
-* `centrifugo_push_notification_count` - counter, shows total count of push notifications sent to providers (splitted by provider, recipient type, platform, success, error code).
-* `centrifugo_push_queue_consuming_lag` - gauge, shows the lag of queues, should be close to zero most of the time. Splitted by provider and name of queue.
-* `centrifugo_push_consuming_inflight_jobs` - gauge, shows immediate number of workers proceccing pushes. Splitted by provider and name of queue.
-* `centrifugo_push_job_duration_seconds` - summary, provides insights about worker job duration timings. Splitted by provider and recipient type.
+#### centrifugo_push_notification_count
+
+- **Type:** Counter
+- **Labels:** provider, recipient_type, platform, success, err_code
+- **Description:** Total count of push notifications.
+- **Usage:** Helps in tracking the number and success rate of push notifications sent, providing insights for optimization and troubleshooting.
+
+#### centrifugo_push_queue_consuming_lag
+
+- **Type:** Gauge
+- **Labels:** provider, queue
+- **Description:** Queue consuming lag in seconds.
+- **Usage:** Useful for monitoring the delay in processing jobs from the queue, helping identify potential bottlenecks and ensuring timely processing.
+
+#### centrifugo_push_consuming_inflight_jobs
+
+- **Type:** Gauge
+- **Labels:** provider, queue
+- **Description:** Number of inflight jobs being consumed.
+- **Usage:** Helps in tracking the load on the job processing system, ensuring that resources are being utilized efficiently.
+
+#### centrifugo_push_job_duration_seconds
+
+- **Type:** Summary
+- **Labels:** provider, recipient_type
+- **Description:** Duration of push processing job in seconds.
+- **Usage:** Useful for monitoring the performance of job processing, helping in performance tuning and issue resolution.
 
 ## Further reading and tutorials
 
