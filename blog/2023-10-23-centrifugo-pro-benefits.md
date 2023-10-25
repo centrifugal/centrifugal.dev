@@ -10,7 +10,7 @@ hide_table_of_contents: false
 draft: true
 ---
 
-<img src="/img/centrifugo_pro_benefits_cover.png" />
+<img src="/img/centrifugo_pro_benefits_cover.jpg" />
 
 In our v5 release post we shared some information about the upcoming launch of Centrifugo PRO. Since that time we got several customers of PRO version and now want to look at the current state of PRO version and finally start talking more about its benefits.
 

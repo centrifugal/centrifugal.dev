@@ -10,7 +10,7 @@ hide_table_of_contents: false
 draft: true
 ---
 
-<img src="/img/centrifugo_dragonflydb_cover.png" />
+<img src="/img/centrifugo_dragonflydb_cover.jpg" />
 
 In Centrifugal Labs we like Redis a lot. It's a masterpiece software which provides unique possibilities for soft real-time systems while being simple and robust. We scale PUB/SUB with it, using as a message history cache, keep online presence information in it. In Centrifugo PRO we are using Redis as queue, as a backend for token bucket rate limiting, as a key/value storage of user statuses, revoked tokens. We even trying to build a distributed queue with partition semantics a-la Kafka on top of Redis.
 
