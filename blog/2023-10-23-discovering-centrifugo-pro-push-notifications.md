@@ -34,6 +34,8 @@ We will describe why our implementation is practical and useful and may serve we
 
 ## Why providing push notifications API
 
+<img src="/img/push_characters.jpg" />
+
 Why providing push notifications API at all? Well, actually real-time messages and push notifivations are so close that many developers hardly see the difference before starting work with both more closely. Moreover, I've heard several stories when messenger functionality on mobile devices was implemented using only native push notifications – without using a separate real-time transport like WebSocket while the app is in foreground. While it's not a recommended approach due to push notifications delivery properties this proves that real-time messages and push notifications are super related and sometimes may interchange each other.
 
 When developers introduce WebSocket communication in the application they often ask the question – what should I do next to deliver some important messages to a user currently not actively using an application? WebSockets are great when app is in foreground, but when app goes to the background - the recommended approach is to close WebSocket connection. To save battery and to not deal with cases when operational system decided to free some resources closing connections in background applications.
