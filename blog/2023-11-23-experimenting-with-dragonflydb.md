@@ -1,5 +1,5 @@
 ---
-title: Experimenting with DragonflyDB as a Redis drop-in replacement for Centrifugo engine
+title: Experimenting with DragonflyDB as a drop-in replacement for Redis in Centrifugo
 tags: [centrifugo, redis, dragonflydb]
 description: During last several months we were experimenting with DragonflyDB ...
 author: Alexander Emelin
