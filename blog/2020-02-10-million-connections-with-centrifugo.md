@@ -1,7 +1,7 @@
 ---
 title: Million connections with Centrifugo
 tags: [centrifuge, go]
-description: Million WebSocket connections with Centrifugo
+description: Describing a test stand in Kubernetes where we connect one million websocket connections to a server, using Redis to scale nodes, and providing insights about hardware resources required to achieve 500k messages per second
 author: Centrifugal team
 authorTitle: Let the Centrifugal force be with you
 authorImageURL: /img/logo_animated.svg
