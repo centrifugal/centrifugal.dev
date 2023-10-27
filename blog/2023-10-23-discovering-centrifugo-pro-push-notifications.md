@@ -1,7 +1,7 @@
 ---
 title: "Discovering Centrifugo PRO: push notifications API"
 tags: [centrifugo, pro, push notifications]
-description: In this post we would like to share some thoughts about .
+description: We start talking more about recently launched Centrifugo PRO. In this post, we would like to share details about implementation of Centrifugo PRO push notifications API feature.
 author: Alexander Emelin
 authorTitle: Founder of Centrifugal Labs
 authorImageURL: https://github.com/FZambia.png
