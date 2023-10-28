@@ -3,6 +3,7 @@ import Link from "@docusaurus/Link";
 import { useBlogPost } from "@docusaurus/theme-common/internal";
 import BlogPostItemContainer from "@theme/BlogPostItem/Container";
 import { BlogPostProvider } from '@docusaurus/theme-common/internal';
+import styles from './styles.module.css';
 
 export default function BlogPostItemsWrapper(props) {
   return (
@@ -34,12 +35,14 @@ function BlogPostItems({
 function BlogPostItem({ className }) {
   const { metadata } = useBlogPost();
 
+  console.log(metadata);
+
   const {
     permalink,
     title,
     // date,
     formattedDate,
-    // frontMatter,
+    frontMatter,
     description,
     // tags,
   } = metadata;
@@ -48,22 +51,29 @@ function BlogPostItem({ className }) {
 
   return (
     <BlogPostItemContainer className={className}>
-      <div>
-        <Link itemProp="url" to={permalink} style={{ "fontSize": "1.1em" }}>
-          {title}
-        </Link>
-      </div>
-      <div
-        style={{ "fontSize": "0.8em", color: "#6d6666" }}
-      >
-        {formattedDate} by {author?.name}
-      </div>
-      <div>
-        <div>
+      <div className={styles.container}>
+        <div className={styles.leftColumn}>
+          <img src={frontMatter.image} width="200px" />
+        </div>
+        <div className={styles.rightColumn}>
+          <div>
+            <Link itemProp="url" to={permalink} style={{ "fontSize": "1.0em" }}>
+              {title}
+            </Link>
+          </div>
           <div
-            style={{ fontSize: "0.9em" }}
+            style={{ "fontSize": "0.8em", color: "#6d6666" }}
           >
-            {description}
+            {formattedDate} by {author?.name}
+          </div>
+          <div>
+            <div>
+              <div
+                style={{ fontSize: "0.9em" }}
+              >
+                {description}
+              </div>
+            </div>
           </div>
         </div>
       </div>
