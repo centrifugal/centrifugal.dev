@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkcentrifugal_dev=self.webpackChunkcentrifugal_dev||[]).push([[6447],{2932:e=>{e.exports=JSON.parse('{"permalink":"/blog/tags/go","page":1,"postsPerPage":15,"totalPages":1,"totalCount":5,"blogDescription":"Centrifugal Blog","blogTitle":"Centrifugal Blog"}')}}]);
