@@ -5,7 +5,7 @@ description: We start talking more about recently launched Centrifugo PRO. In th
 author: Alexander Emelin
 authorTitle: Founder of Centrifugal Labs
 authorImageURL: /img/alexander_emelin.jpeg
-image: /img/blog_push_notifications_cover.jpg
+image: /img/blog_push_notifications_cover_thumb.jpg
 hide_table_of_contents: false
 ---
 

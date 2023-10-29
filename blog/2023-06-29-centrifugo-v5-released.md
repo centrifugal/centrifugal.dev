@@ -5,7 +5,7 @@ description: We are excited to announce a new version of Centrifugo. It's an evo
 author: Centrifugal team
 authorTitle: 💻✨🔮✨💻
 authorImageURL: /img/logo_animated.svg
-image: /img/v5.jpg
+image: /img/v5_thumb.jpg
 hide_table_of_contents: false
 ---
 

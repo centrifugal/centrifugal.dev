@@ -5,7 +5,7 @@ description: During last several months we were experimenting with DragonflyDB a
 author: Alexander Emelin
 authorTitle: TBD
 authorImageURL: /img/alexander_emelin.jpeg
-image: /img/centrifugo_dragonflydb_cover.jpg
+image: /img/centrifugo_dragonflydb_cover_thumb.jpg
 hide_table_of_contents: false
 draft: true
 ---

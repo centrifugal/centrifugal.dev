@@ -5,7 +5,7 @@ description: Centrifugo v4 provides an optimized client protocol, modern WebSock
 author: Centrifugal team
 authorTitle: Let the Centrifugal force be with you
 authorImageURL: /img/logo_animated.svg
-image: /img/v4.jpg
+image: /img/v4_thumb.jpg
 hide_table_of_contents: false
 ---
 
