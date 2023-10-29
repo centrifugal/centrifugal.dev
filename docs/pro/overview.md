@@ -17,7 +17,7 @@ Centrifugo PRO is packed with the following features:
 * 🔍 [Channel and user tracing](./tracing.md) allows watching client protocol frames in channel or per user ID in real time.
 * 💹 [Real-time analytics with ClickHouse](./analytics.md) for a great system observability, reporting and trending.
 * 🛡️ [Operation rate limits](./rate_limiting.md) to protect server from the real-time API misusing and frontend bugs.
-<!-- * 🌐 [Distributed rate limit API](./distributed_rate_limit.md) provides a generic way to implement high-precision rate limiting in your app. -->
+* 🌐 [Distributed rate limit API](./distributed_rate_limit.md) provides a generic way to implement high-precision rate limiting in your app.
 * 🔥 [Push notification API](./push_notifications.md) to manage device tokens and send mobile and browser push notifications.
 * 🟢 [User status API](./user_status.md) feature allows understanding activity state for a list of users.
 * 🔌 [Connections API](./connections.md) to query, filter and inspect active connections.
