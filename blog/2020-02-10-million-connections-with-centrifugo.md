@@ -5,8 +5,11 @@ description: Describing a test stand in Kubernetes where we connect one million 
 author: Centrifugal team
 authorTitle: Let the Centrifugal force be with you
 authorImageURL: /img/logo_animated.svg
+image: /img/million_conns.jpg
 hide_table_of_contents: false
 ---
+
+<img src="/img/million_conns.jpg" />
 
 In order to get an understanding about possible hardware requirements for reasonably massive Centrifugo setup we made a test stand inside Kubernetes.
 
