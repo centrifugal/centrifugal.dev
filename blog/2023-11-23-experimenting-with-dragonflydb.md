@@ -4,7 +4,7 @@ tags: [centrifugo, redis, dragonflydb]
 description: During last several months we were experimenting with DragonflyDB as a drop-in replacement for Redis in Centrifugo. Here, we want to share some thoughts and benchmark results about it.
 author: Alexander Emelin
 authorTitle: TBD
-authorImageURL: https://github.com/FZambia.png
+authorImageURL: /img/alexander_emelin.jpeg
 image: /img/centrifugo_dragonflydb_cover.jpg
 hide_table_of_contents: false
 draft: true
