@@ -246,6 +246,8 @@ This option allows tuning the maximum time Centrifugo will wait for the connect 
 
 String, default: `""`
 
+Available since v5.1.1
+
 Usually to authenticate client connections with Centrifugo you need to use [JWT authentication](./authentication.md) or [connect proxy](./proxy.md#connect-proxy). Sometimes though it may be convenient to pass user ID information in incoming HTTP request headers. This is usually the case when application backend infrastructure has some authentication proxy (like Envoy, etc). This proxy may set authenticated user ID to some header and proxy requests further to Centrifugo.
 
 When `client_user_id_http_header` is set to some non-empty header name Centrifugo will try to extract the authenticated user ID for client connections from that header. This mechanism works for all real-time transports based on HTTP (this also includes WebSocket since it starts with HTTP Upgrade request). Example:
