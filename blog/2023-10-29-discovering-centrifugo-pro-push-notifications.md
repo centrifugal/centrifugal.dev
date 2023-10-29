@@ -11,60 +11,41 @@ hide_table_of_contents: false
 
 <img src="/img/blog_push_notifications_cover.jpg" />
 
-In our [v5 release post](/blog/2023/06/29/centrifugo-v5-released) we announced the upcoming launch of Centrifugo PRO. We are happy to say that it was released soon after that and at this point we already have several customers of PRO version.
+In our [v5 release post](/blog/2023/06/29/centrifugo-v5-released), we announced the upcoming launch of Centrifugo PRO. We are happy to say that it was released soon after that, and at this point, we already have several customers of the PRO version.
 
-I think it's time to look at the current state of PRO version and finally start talking more about its benefits. In this post, we will talk more about one of the coolest PRO features we have at this point: push notifications API.
+I think it's time to look at the current state of the PRO version and finally start talking more about its benefits. In this post, we will talk more about one of the coolest PRO features we have at this point: the push notifications API.
 
 <!--truncate-->
 
 ## Centrifugo PRO goals
 
-When Centrifugo was originally created its main goal was to help introducing real-time messaging features to existing systems, written in traditional frameworks which work on top of worker/thread model. Serving many concurrent connections is a non-trivial task in general, and without native efficient concurrency support it becomes mostly imposible without a shift in the technology stack. Integrating with Centrifugo makes it simple to introduce an efficient real-time layer, while keeping the existing application architecture.
+When Centrifugo was originally created, its main goal was to help introduce real-time messaging features to existing systems, written in traditional frameworks which work on top of the worker/thread model. Serving many concurrent connections is a non-trivial task in general, and without native efficient concurrency support, it becomes mostly impossible without a shift in the technology stack. Integrating with Centrifugo makes it simple to introduce an efficient real-time layer, while keeping the existing application architecture.
 
-As time went Centrifugo got some unique features which now justify its usage even in conjunction with language/frameworks with good concurrency support. Simply using Centrifugo for at most once PUB/SUB may already save a lot of development time. The task which seems trivial at first glance has a lot of challenges on practice: client SDKs with reconnect and channel multiplexing, scalability to many nodes, websocket fallbacks, etc.
+As time went on, Centrifugo got some unique features which now justify its usage even in conjunction with languages/frameworks with good concurrency support. Simply using Centrifugo for at-most-once PUB/SUB may already save a lot of development time. The task, which seems trivial at first glance, has a lot of challenges in practice: client SDKs with reconnect and channel multiplexing, scalability to many nodes, WebSocket fallbacks, etc.
 
-The combination of useful possibilities made Centrifugo an attractive component for building enterprise-level applications. Let's be honest here - for pet projects developers often prefer writing websocket communications themselves, and Centrifugo may be too heavy and an extra dependency. But in corporate environment the decision which technology to use should take into account a lot of factors, like those we just mentioned above. Using a mature technology is often prefferred than building from scratch and making all the mistakes along the way.
+The combination of useful possibilities has made Centrifugo an attractive component for building enterprise-level applications. Let's be honest here - for pet projects, developers often prefer writing WebSocket communications themselves, and Centrifugo may be too heavy and an extra dependency. But in a corporate environment, the decision on which technology to use should take into account a lot of factors, like those we just mentioned above. Using a mature technology is often preferred to building from scratch and making all the mistakes along the way.
 
-With PRO version our goal is to provide even more value for established businesses when switching to Centrifugo. We want to solve tricky cases and simplify them for our customers, we want to step into related areas where we see we can provide a sufficient value.
+With the PRO version, our goal is to provide even more value for established businesses when switching to Centrifugo. We want to solve tricky cases and simplify them for our customers; we want to step into related areas where we see we can provide sufficient value.
 
-One rule we try to follow for PRO features which extend Centrifugo scope - we are not trying to repeat something existing in other systems, but try to improve it in some way. Solving practical issues we observe and provide a unique position for our customers. This post describes one such example - we will demonstrate our approach to push notifications, which is [one the features](/docs/pro/overview#features) of Centrifugo PRO.
-
-We will describe why our implementation is practical and useful and may serve well for many use cases involving sending push notifications to users. And you'll see how it provides more than simple API by thinking about push notification workflows and providing answers to non-obvious questions. 
+One rule we try to follow for PRO features that extend Centrifugo’s scope is this: we are not trying to replicate something that already exists in other systems, but rather, we strive to improve upon it. We focus on solving practical issues that we observe, providing a unique value proposition for our customers. This post describes one such example — we will demonstrate our approach to push notifications, which is [one the features](/docs/pro/overview#features) of Centrifugo PRO.
 
 ## Why providing push notifications API
 
 <img src="/img/push_characters.jpg" />
 
-Why providing push notifications API at all? Well, actually real-time messages and push notifivations are so close that many developers hardly see the difference before starting work with both more closely. 
+Why provide a push notifications API at all? Well, actually, real-time messages and push notifications are so close that many developers hardly see the difference before starting to work with both more closely.
 
-I've heard several stories when chat functionality on mobile devices was implemented using only native push notifications – without using a separate real-time transport like WebSocket while the app is in foreground. While it's not a recommended approach due to push notifications delivery properties, this proves that real-time messages and push notifications are close concepts and sometimes may interchange each other.
+I’ve heard several stories where chat functionality on mobile devices was implemented using only native push notifications — without using a separate real-time transport like WebSocket while the app is in the foreground. While this is not a recommended approach due to the delivery properties of push notifications, it proves that real-time messages and push notifications are closely related concepts and sometimes may interchange with each other.
 
-When developers introduce WebSocket communication in the application they often ask the question – what should I do next to deliver some important messages to a user currently not actively using an application? WebSockets are great when app is in foreground, but when app goes to the background - the recommended approach is to close WebSocket connection. This is important to save battery, and operational systems force connecting closing after some time anyway.
+When developers introduce WebSocket communication in an application, they often ask the question—what should I do next to deliver some important messages to a user who is currently not actively using the application? WebSockets are great when the app is in the foreground, but when the app goes to the background, the recommended approach is to close the WebSocket connection. This is important to save battery, and operating systems force the closing of connections after some time anyway.
 
 The delivery of important app data is then possible over push notifications. See a [good overview of them on web.dev](https://web.dev/articles/push-notifications-overview).
 
-Previously Centrifugo positioned itself only as a transport layer for real-time messages. In our FAQ we emphasized this fact and suggested to use separate software products to send push notifications.
+Previously, Centrifugo positioned itself solely as a transport layer for real-time messages. In our FAQ, we emphasized this fact and suggested using separate software products to send push notifications.
 
-Now with Centrifugo PRO we provide this functionality to our customers. We extended our server API with methods to manage and send push notifications. I promised to tell why we believe our implementation is super cool. Let's dive into the details.
+Now, with Centrifugo PRO, we provide this functionality to our customers. We have extended our server API with methods to manage and send push notifications. I promised to tell you why we believe our implementation is super cool. Let’s dive into the details.
 
 ## Push notifications API like no one provides
-
-Push notifications are super handy, but there’s a bit to do to get them working right. Let's break it down!
-
-On the user's side (frontend):
-
-Ask the user if they’re cool with getting notifications from us.
-Work with the specific system for their device (like Apple’s system for iPhones or Google’s for Android phones) to get a special code for their device.
-Send that code to our server so we know where to send the notifications.
-Be ready to receive notifications and show them to the user in the way they like, whether it’s a banner, an alert, or a message inside the app. Also, make sure we know what to do if they tap on it.
-On our server (backend):
-
-Keep all those device codes safe in a database.
-Every now and then, clean up the database to get rid of old or wrong codes. If a user says they don’t want notifications anymore, make sure we stop sending them.
-Connect with the system that sends out the notifications for each type of device and make sure everything goes smoothly. If something goes wrong, try again.
-Keep track of which notifications get delivered and see how many people are actually opening them.
-Look at the data to understand how people are responding to the notifications and use that info to get better at sending them.
-We think we've found a really special way of doing this that sets us apart. Let’s dive into what makes our approach unique!
 
 Push notifications are super handy, but there’s a bit to do to get them working right. Let's break it down!
 
@@ -88,13 +69,13 @@ We believe that we were able to achieve a unique combination of design decisions
 
 ## Frontend decisions
 
-When providing push notification feature, other solutions like Pusher or Ably also provide their own SDKs for managing notifications on the client side.
+When providing the push notification feature, other solutions like Pusher or Ably also offer their own SDKs for managing notifications on the client side.
 
-What we've learned though during Centrifugo life cycle is that creating and maintaining client SDKs for various environments (iOS, Android, Web, Flutter) is one of the hardest parts of Centrifugo project.
+What we've learned, though, during the Centrifugo life cycle, is that creating and maintaining client SDKs for various environments (iOS, Android, Web, Flutter) is one of the hardest parts of the Centrifugo project.
 
-So the decision here was simple and natural: Centrifugo PRO does not introduce any client SDKs for push noifications on the client side.
+So the decision here was simple and natural: Centrifugo PRO does not introduce any client SDKs for push notifications on the client side.
 
-When integrating with Centrifugo you can simply use native SDKs provided by each platform. We bypass the complexities of SDK development and concentrate on the server side improvements. With this decision we are not introducing any limitations to the client side.
+When integrating with Centrifugo, you can simply use the native SDKs provided by each platform. We bypass the complexities of SDK development and concentrate on server-side improvements. With this decision, we are not introducing any limitations to the client side.
 
 You get:
 
@@ -102,11 +83,11 @@ You get:
 * Stability and reliability: native SDKs are rigorously tested and frequently updated by the platform providers. This ensures that they are stable, reliable, and free from critical bugs.
 * Access to the latest features. As platform providers roll out new features or enhancements, native SDKs are usually the first to get updated. This ensures that your application can leverage the latest functionalities without waiting for SDKs to catch up.
 
-It was not possible with our real-time SDKs since WebSocket communication is very low-level and Centrifugo's main goal was to provide some high-level features on top of it. But with push notifications going forward with no custom SDK seems like a choice beneficial for everyone.
+This approach was not possible with our real-time SDKs, as WebSocket communication is very low-level, and Centrifugo’s main goal was to provide some high-level features on top of it. However, with push notifications, proceeding without a custom SDK seems like a choice beneficial for everyone.
 
 ## Server implementation
 
-The main work we did was for a server side. Let's go through the entire workflow of push notification delivery and describe what Centrifigo PRO provides for each step.
+The main work we did was on the server side. Let's go through the entire workflow of push notification delivery and describe what Centrifugo PRO provides for each step.
 
 ### How we keep tokens
 
@@ -122,11 +103,11 @@ When calling Centrifugo `device_register` API you can provide user ID, list of t
 
 ![Push](/img/push_notifications.png)
 
-So we basically cover all most popular platforms out of the box.
+So we basically cover all the most popular platforms out of the box.
 
-After registering device token Centrifugo PRO returns `device_id` to you. This device must be stored on client device. While frontend has this `device_id` it can update device push token information from time to time to maintain it actual (just calling `device_register` again but with `device_id` attached).
+After registering the device token, Centrifugo PRO returns a `device_id` to you. This device ID must be stored on the client device. As long as the frontend has this `device_id`, it can update the device's push token information from time to time to keep it current (by just calling `device_register` again, but with `device_id` attached).
 
-After saving token your backend can start sending push notifications to devices.
+After saving the token, your backend can start sending push notifications to devices.
 
 ### How we send notifications
 
@@ -154,17 +135,18 @@ curl -X POST http://localhost:8000/api/send_push_notification \
 EOF
 ```
 
-Here is another important decision we made: Centrifigo PRO allows you to specify raw JSON objects for each provider we support. I.e. we do not wrap push notifications API for FCM, APNS, HMS - we give you a way to construct the entire push notification message.
 
-This means Centrifugo push API supports all the fields of push notification payloads out-of-the-box. For all push providers. You can just use documentation of FCM, APNs – and send the constructed requests to Centrifugo. There is no need for us to update Centrifugo PRO in any way to support new fields added by providers to push APIs.
+Here is another important decision we made: Centrifugo PRO allows you to specify raw JSON objects for each provider we support. In other words, we do not wrap the push notifications API for FCM, APNS, HMS - we give you a way to construct the entire push notification message.
 
-When you send push notification with filter and push payload for each provider you want – it's queued by Centrifugo. We use Redis Streams for queuing and optionally queue based on PostgreSQL (less efficient, but still robust enough).
+This means the Centrifugo push API supports all the fields of push notification payloads out-of-the-box, for all push providers. You can simply use the documentation of FCM, APNs, and send the constructed requests to Centrifugo. There is no need for us to update Centrifugo PRO in any way to support new fields added by providers to push APIs.
 
-The fact nottification is being queued means a very fast response time – so you can integrate with Centrifugo from within hot paths of your application backend. You may additionally provide push expiration time and unique push identifier. If you have not provided unique identifier - Centrifugo generates one for you and returns in response. The unique identifier may be later used to track push status in Centrifugo PRO push notification analytics.
+When you send a push notification with a filter and push payload for each provider you want, it's queued by Centrifugo. We use Redis Streams for queuing and optionally a queue based on PostgreSQL (less efficient, but still robust enough).
 
-We then have efficient workers which process queue with minimal latency and send push notifications using batch requests for each provider - i.e. we do this in the most effective way possible. We did the benchmark of our worker system with FCM – and we can **easily send several millions of pushes in minute**.
+The fact that the notification is being queued means a very fast response time – so you can integrate with Centrifugo from within the hot paths of your application backend. You may additionally provide a push expiration time and a unique push identifier. If you have not provided a unique identifier, Centrifugo generates one for you and returns it in the response. The unique identifier may later be used to track push status in Centrifugo PRO's push notification analytics.
 
-Another decision we made - Centrifugo PRO supports sending push notifications to raw list of tokens. This makes it possible for our customers to use their own token storage. For example, in some case such storage could already exist before you started using Centrifugo, or you need a different storage/schema. In such cases, you can use Centrifugo just as an effective push sender server.
+We then have efficient workers which process the queue with minimal latency and send push notifications using batch requests for each provider - i.e., we do this in the most effective way possible. We conducted a benchmark of our worker system with FCM – and we can easily send **several million pushes per minute**.
+
+Another decision we made - Centrifugo PRO supports sending push notifications to a raw list of tokens. This makes it possible for our customers to use their own token storage. For example, such storage could already exist before you started using Centrifugo, or you might need a different storage/schema. In such cases, you can use Centrifugo just as an effective push sender server.
 
 Finally, Centrifugo PRO supports sending delayed push notification - to queue push for a later delivery, so for example you can send notification based on user time zone and let Centrifugo PRO send it when needed. Or you may send slightly delayed push notification together with real-time message and if client provided an ack to real-time message - [cancel push notification](/docs/pro/push_notifications#cancel_push).
 
@@ -189,7 +171,7 @@ It's then possible to make queries to ClickHouse and build various analytical re
 
 ### Push notifications UI
 
-Finally, Centrifugo PRO provides a simple web UI for inspecting registered devices. It can simplify development, provides a way to look at live data and send simple push notification alert to users or topics.
+Finally, Centrifugo PRO provides a simple web UI for inspecting registered devices. It can simplify development, provide a way to look at live data, and send simple push notification alerts to users or topics.
 
 ![](/img/push_ui.png)
 
