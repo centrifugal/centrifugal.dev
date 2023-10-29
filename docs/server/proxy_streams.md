@@ -20,6 +20,8 @@ In this case Centrifugo plays a role of WebSocket-to-GRPC streaming proxy – ke
 
 Our bidirectional WebSocket fallbacks (HTTP-streaming and SSE) and experimental WebTransport work with proxy subscription streams too. So it's possible to say that Centrifugo may be also Webtransport-to-GRPC proxy or SSE-to-GRPC proxy.
 
+Subscription streams allow achiving functionality similar to what [Websocketd](https://github.com/joewalnes/websocketd) provides but over the network.
+
 ### Scalability concerns
 
 Using proxy subscription streams increases resource usage on both Centrifugo and app backend sides because it involves more moving parts such as goroutines, additional buffers, connections, etc.
