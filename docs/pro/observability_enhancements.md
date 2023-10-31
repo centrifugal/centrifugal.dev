@@ -10,7 +10,7 @@ Centrifugo PRO has some enhancements to exposed metrics. At this moment it provi
 * centrifugo_transport_messages_received
 * centrifugo_transport_messages_received_size
 
-Since channel namespace resolution may add some overhead (though negligible in most cases), Centrifugo PRO requires it to be explicitly enabled using two boolean config options:
+Since channel namespace resolution may add some overhead (though negligible in most cases), Centrifugo PRO requires it to be explicitly enabled using two boolean config options (available since Centrifugo PRO v5.1.1):
 
 ```json title="config.json"
 {
