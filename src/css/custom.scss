@@ -349,3 +349,8 @@ html[data-theme="dark"] .feature-media:before {
 article {
   margin-bottom: 30px;
 }
+
+
+.menu__list-item:not(:first-child) {
+  margin-top: 0.15rem !important;
+}
