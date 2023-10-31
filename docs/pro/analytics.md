@@ -459,8 +459,27 @@ Issue queries:
 
 When ClickHouse analytics enabled Centrifugo nodes start exporting events to ClickHouse. Each node issues insert with events once in 10 seconds (flushing collected events in batches thus making insertion in ClickHouse efficient). Maximum batch size is 100k for each table at the momemt. If insert to ClickHouse failed Centrifugo retries it once and then buffers events in memory (up to 1 million entries). If ClickHouse still unavailable after collecting 1 million events then new events will be dropped until buffer has space. These limits are configurable. Centrifugo PRO uses very efficient code for writing data to ClickHouse, so analytics feature should only add a little overhead for Centrifugo node.
 
+## Exposed metrics
+
 Several metrics are exposed to monitor export process health:
 
-* centrifugo_clickhouse_analytics_flush_duration_seconds summary
-* centrifugo_clickhouse_analytics_batch_size summary
-* centrifugo_clickhouse_analytics_drop_count counter
+#### centrifugo_clickhouse_analytics_drop_count
+
+- **Type:** Counter
+- **Labels:** type
+- **Description:** Total count of drops.
+- **Usage:** Useful for tracking the number of data drops in ClickHouse analytics, helping identify potential issues with data processing.
+
+#### centrifugo_clickhouse_analytics_flush_duration_seconds
+
+- **Type:** Summary
+- **Labels:** type, retries, result
+- **Description:** Duration of ClickHouse data flush in seconds.
+- **Usage:** Helps in monitoring the performance of data flush operations in ClickHouse, aiding in performance tuning and issue resolution.
+
+#### centrifugo_clickhouse_analytics_batch_size
+
+- **Type:** Summary
+- **Labels:** type
+- **Description:** Distribution of batch sizes for ClickHouse flush.
+- **Usage:** Useful for understanding the size of data batches being flushed to ClickHouse, helping optimize performance.

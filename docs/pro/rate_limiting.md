@@ -183,7 +183,7 @@ The configuration is very similar:
 ```json title="config.json"
 {
     ...
-    "redus_user_command_rate_limit": {
+    "redis_user_command_rate_limit": {
         "enabled": true,
         "redis_address": "localhost:6379",
 
