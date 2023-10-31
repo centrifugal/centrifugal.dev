@@ -5,7 +5,7 @@ description: In this post we are discussing vaious ways developers can use to su
 author: Alexander Emelin
 authorTitle: Author of Centrifugo
 authorImageURL: https://github.com/FZambia.png
-image: /img/101-way.png
+image: /img/101-way_thumb.jpg
 hide_table_of_contents: false
 ---
 

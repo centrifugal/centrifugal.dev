@@ -1,7 +1,7 @@
 ---
 title: Experimenting with QUIC and WebTransport
 tags: [quic, webtransport, go]
-description: Experimenting with QUIC and WebTransport in Go
+description: Here we experiment with QUIC and WebTransport in Chrome
 author: Alexander Emelin
 authorTitle: Creator of Centrifugo
 authorImageURL: https://github.com/FZambia.png

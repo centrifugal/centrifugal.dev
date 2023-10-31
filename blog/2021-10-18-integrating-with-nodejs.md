@@ -5,7 +5,7 @@ description: In this tutorial we are integrating Centrifugo with NodeJS. We are 
 author: Alexander Emelin
 authorTitle: Creator of Centrifugo
 authorImageURL: https://github.com/FZambia.png
-image: /img/keyboard.png
+image: /img/keyboard_thumb.jpg
 hide_table_of_contents: false
 ---
 

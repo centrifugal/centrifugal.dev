@@ -1,7 +1,7 @@
 ---
 title: Scaling WebSocket in Go and beyond
 tags: [websocket, go]
-description: Scaling WebSocket in Go and beyond
+description: The post describes techniques to write scalable WebSocket servers within Go ecosystem and beyond it
 author: Alexander Emelin
 authorTitle: Creator of Centrifugo
 authorImageURL: https://github.com/FZambia.png

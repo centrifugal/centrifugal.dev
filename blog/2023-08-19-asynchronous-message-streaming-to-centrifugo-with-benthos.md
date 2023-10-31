@@ -5,7 +5,7 @@ description: In this post, we'll demonstrate how to asynchronously stream messag
 author: Alexander Emelin
 authorTitle: Author of Centrifugo
 authorImageURL: https://github.com/FZambia.png
-image: /img/benthos.png
+image: /img/benthos_thumb.jpg
 hide_table_of_contents: false
 ---
 

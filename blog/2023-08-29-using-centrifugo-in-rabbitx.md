@@ -5,7 +5,7 @@ description: In this post, the engineering team of RabbitX platform shares detai
 author: Centrifugal + RabbitX
 authorTitle: The interview with RabbitX engineering team
 authorImageURL: https://d1muf25xaso8hp.cloudfront.net/https%3A%2F%2F3918ead037b1d3dc3ed05287664aeaed.cdn.bubble.io%2Ff1655453377613x154516784582627620%2FLogo%2520big.png?w=128&h=&auto=compress&dpr=1&fit=max
-image: /img/rabbitx.png
+image: /img/rabbitx_thumb.jpg
 hide_table_of_contents: false
 ---
 
