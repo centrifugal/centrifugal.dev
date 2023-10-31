@@ -78,6 +78,7 @@ module.exports = {
         "pro/connections",
         "pro/user_block",
         "pro/token_revocation",
+        "pro/channel_state_events",
         "pro/capabilities",
         "pro/channel_patterns",
         "pro/cel_expressions",
