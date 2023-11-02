@@ -8,6 +8,7 @@ module.exports = {
     "getting-started/integration",
     "getting-started/design",
     "getting-started/ecosystem",
+    "getting-started/comparisons",
     "getting-started/migration_v5",
   ],
   Guides: [
