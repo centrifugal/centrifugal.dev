@@ -112,7 +112,7 @@ Returns information about active connections according to the request.
 | -------------- | -------------- | ------ | ------------ |
 | channels       | `map[string]ChannelContext`  | yes | Channels client subscribed to         |
 | connection_token       | ConnectionTokenInfo  | yes | information about connection token         |
-| subscription_tokens       | map<string, SubscriptionTokenInfo>  | yes |  information about channel tokens used to subscribe         |
+| subscription_tokens       | `map<string, SubscriptionTokenInfo>`  | yes |  information about channel tokens used to subscribe         |
 | meta       | JSON object  | yes | meta information attached to a connection |
 
 #### ChannelContext object
