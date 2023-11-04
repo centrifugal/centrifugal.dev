@@ -227,8 +227,8 @@ Registers or updates device information.
 | `platform`      | string | Yes | Platform of the device (valid choices: `ios`, `android`, `web`). |
 | `user`          | string | No  | User associated with the device.            |
 | `topics`      | array of strings | No | Device topic subscriptions. This should be a full list which replaces all the topics previously accociated with the device. User topics managed by `UserTopic` model will be automatically attached.  |
-| `tags`          | `map<string, string>` | No | Additional tags for the device (indexed key-value data).  |
-| `meta`          | `map<string, string>` | No | Additional metadata for the device (not indexed).         |
+| `tags`          | map<string, string> | No | Additional tags for the device (indexed key-value data).  |
+| `meta`          | map<string, string> | No | Additional metadata for the device (not indexed).         |
 
 #### device_register result
 
@@ -262,13 +262,13 @@ Call this method to update device. For example, when user logs out the app and y
 
 | Field           | Type     | Required | Description                           |
 |-----------------|----------|----|---------------------------------------------|
-| `meta`            | `map<string, string>` | Yes | Meta to set                   |
+| `meta`            | map<string, string> | Yes | Meta to set                   |
 
 `DeviceTagsUpdate`:
 
 | Field           | Type     | Required | Description                           |
 |-----------------|----------|----|---------------------------------------------|
-| `tags`            | `map<string, string>` | Yes | Tags to set                   |
+| `tags`            | map<string, string> | Yes | Tags to set                   |
 
 `DeviceChannelsUpdate`:
 
@@ -332,8 +332,8 @@ Returns a paginated list of registered devices according to request filter condi
 | `platform` | string | The device's platform. |
 | `user` | string | The user associated with the device. |
 | `topics` | array of strings | Only included if `include_topics` was true |
-| `tags` | `map<string, string>` | Only included if `include_tags` was true |
-| `meta` | `map<string, string>` | Only included if `include_meta` was true |
+| `tags` | map<string, string> | Only included if `include_tags` was true |
+| `meta` | map<string, string> | Only included if `include_meta` was true |
 
 ### device_topic_update
 
@@ -481,7 +481,7 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 
 | Field         | Type      |  Required | Description |
 |---------------|-----------|-----------|--------|
-| `headers` | `map<string, string>` | No | APNs [headers](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/sending_notification_requests_to_apns)  |
+| `headers` | map<string, string> | No | APNs [headers](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/sending_notification_requests_to_apns)  |
 | `payload` | JSON object | Yes | APNs [payload](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/generating_a_remote_notification) |
 
 #### send_push_notification result

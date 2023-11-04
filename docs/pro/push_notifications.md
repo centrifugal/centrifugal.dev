@@ -238,7 +238,7 @@ Registers or updates device information.
 | `platform`      | string | Yes | Platform of the device (valid choices: `ios`, `android`, `web`). |
 | `user`          | string | No  | User associated with the device.            |
 | `topics`      | array of strings | No | Device topic subscriptions. This should be a full list which replaces all the topics previously accociated with the device. User topics managed by `UserTopic` model will be automatically attached.  |
-| `meta`          | `map<string, string>` | No | Additional custom metadata for the device         |
+| `meta`          | map<string, string> | No | Additional custom metadata for the device         |
 
 #### device_register result
 
@@ -270,7 +270,7 @@ Call this method to update device. For example, when user logs out the app and y
 
 | Field           | Type     | Required | Description                           |
 |-----------------|----------|----|---------------------------------------------|
-| `meta`            | `map<string, string>` | Yes | Meta to set                   |
+| `meta`            | map<string, string> | Yes | Meta to set                   |
 
 `DeviceTopicsUpdate`:
 
@@ -341,7 +341,7 @@ Returns a paginated list of registered devices according to request filter condi
 | `platform` | string | Yes | The device's platform. |
 | `user` | string | No | The user associated with the device. |
 | `topics` | array of strings | No | Only included if `include_topics` was true |
-| `meta` | `map<string, string>` | No | Only included if `include_meta` was true |
+| `meta` | map<string, string> | No | Only included if `include_meta` was true |
 
 ### device_topic_update
 
@@ -504,7 +504,7 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 
 | Field         | Type      |  Required | Description |
 |---------------|-----------|-----------|--------|
-| `headers` | `map<string, string>` | No | APNs [headers](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/sending_notification_requests_to_apns)  |
+| `headers` | map<string, string> | No | APNs [headers](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/sending_notification_requests_to_apns)  |
 | `payload` | JSON object | Yes | APNs [payload](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/generating_a_remote_notification) |
 
 #### send_push_notification result

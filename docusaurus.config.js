@@ -228,11 +228,10 @@ module.exports = {
            * If feedOptions is undefined, no rss feed will be generated.
            */
           feedOptions: {
-            limit: false,
             type: 'all', // required. 'rss' | 'feed' | 'all'
             title: '', // default to siteConfig.title
             description: '', // default to  `${siteConfig.title} Blog`
-            copyright: 'Centrifugal Labs LTD',
+            copyright: 'Centrifugal',
             language: undefined, // possible values: http://www.w3.org/TR/REC-html40/struct/dirlang.html#langcodes
           },
         },
