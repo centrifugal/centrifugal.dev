@@ -7,7 +7,7 @@ Let's discuss some architectural and design topics about Centrifugo.
 
 ## Idiomatic usage
 
-Centrifugo is a standalone server which abstracts away the complexity of working with many persistent connections and efficient message broadcasting from the application backend. The fact Centrifugo acts as a separate service dictates some idiomatic patterns how to integrate with Centrifugo for real-time message delivery. Let's look at them.
+Centrifugo is a standalone server which abstracts away the complexity of working with many persistent connections and efficient message broadcasting from the application backend. The fact Centrifugo acts as a separate service dictates some idiomatic patterns how to integrate with Centrifugo for real-time message delivery.
 
 Usually, you want to deliver content created by some user in your app to other users in real time. Each user may have several real-time connections with Centrifugo. For example, user opened several browser tabs, each tab created a separate connection. Or user has two mobile devices and created separate connection to your app from each of them. We call connection a `client` in Centrifugo. So words `connection` and `client` are synonims for us.
 

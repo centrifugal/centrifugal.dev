@@ -159,7 +159,7 @@ brew install centrifugo
 
 ## Build from source
 
-You need Go language installed:
+You need Go language [installed](https://go.dev/doc/install). Then:
 
 ```
 git clone https://github.com/centrifugal/centrifugo.git
