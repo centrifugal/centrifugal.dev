@@ -35,8 +35,6 @@ function BlogPostItems({
 function BlogPostItem({ className }) {
   const { metadata } = useBlogPost();
 
-  console.log(metadata);
-
   const {
     permalink,
     title,
