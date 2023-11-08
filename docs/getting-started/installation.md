@@ -3,13 +3,13 @@ id: installation
 title: Install Centrifugo
 ---
 
-Centrifugo server is written in Go language. It's an open-source software, the source code is available [on Github](https://github.com/centrifugal/centrifugo).
+Centrifugo server is written in the Go language. It's open-source software, and the source code is available [on Github](https://github.com/centrifugal/centrifugo).
 
 ## Install from the binary release
 
-For a local development you can download prebuilt Centrifugo binary release (i.e. single all-contained executable file) for your system.
+For local development, you can download the prebuilt Centrifugo binary release (i.e., a single all-contained executable file) for your system.
 
-Binary releases available on Github. [Download latest release](https://github.com/centrifugal/centrifugo/releases) for your operating system, unpack it and you are done. Centrifugo is pre-built for:
+Binary releases are available on Github. [Download the latest release](https://github.com/centrifugal/centrifugo/releases) for your operating system, unpack it, and you are done. Centrifugo is pre-built for:
 
 * Linux 64-bit (linux_amd64)
 * Linux 32-bit (linux_386)
@@ -20,13 +20,13 @@ Binary releases available on Github. [Download latest release](https://github.co
 * FreeBSD (freebsd_amd64)
 * ARM v6 (linux_armv6)
 
-Archives contain a single statically compiled binary `centrifugo` file that is ready to run: 
+Archives contain a single statically compiled binary `centrifugo` file that is ready to run.
 
 ```
 ./centrifugo
 ```
 
-If you doubt which distribution you need, then on Linux or MacOS you can use the following command to download and unpack `centrifugo` binary to your current working directory:
+If you are unsure which distribution you need, then on Linux or MacOS you can use the following command to download and unpack the `centrifugo` binary to your current working directory:
 
 ```shell
 curl -sSLf https://centrifugal.dev/install.sh | sh
@@ -38,27 +38,27 @@ See the version of Centrifugo:
 ./centrifugo version
 ```
 
-Centrifugo requires a configuration file with several secret keys. If you are new to Centrifugo then there is `genconfig` command which generates a minimal configuration file to get started:
+Centrifugo requires a configuration file with several secret keys. If you are new to Centrifugo, then there is a genconfig command which generates a minimal configuration file to get started:
 
 ```bash
 ./centrifugo genconfig
 ```
 
-It creates a configuration file `config.json` with some auto-generated option values in a current directory (by default).
+This creates a configuration file config.json with some auto-generated option values in the current directory (by default).
 
 :::tip
 
-It's possible to generate file in YAML or TOML format, i.e. `./centrifugo genconfig -c config.toml`
+It's possible to generate a file in YAML or TOML format, for example: `./centrifugo genconfig -c config.toml`
 
 :::
 
-Having a configuration file you can finally run Centrifugo instance:
+With a configuration file, you can finally run a Centrifugo instance:
 
 ```bash
 ./centrifugo --config=config.json
 ```
 
-We will talk about a configuration in detail in the next sections.
+We will talk about configuration in detail in the next sections.
 
 You can also put or symlink `centrifugo` into your `bin` OS directory and run it from anywhere:
 
@@ -80,11 +80,11 @@ Run:
 docker run --ulimit nofile=262144:262144 -v /host/dir/with/config/file:/centrifugo -p 8000:8000 centrifugo/centrifugo:v5 centrifugo -c config.json
 ```
 
-Note that docker allows setting `nofile` limits in command-line arguments which is pretty important to handle lots of simultaneous persistent connections and not run out of open file limit (each connection requires one file descriptor). See also [infrastructure tuning chapter](../server/infra_tuning.md).
+Note that docker allows setting `nofile` limits in command-line arguments, which is quite important to handle many simultaneous persistent connections and not run out of the open file limit (each connection requires one file descriptor). See also [infrastructure tuning chapter](../server/infra_tuning.md).
 
 :::caution
 
-Pin to the exact Docker Image tag in production, for example: `centrifugo/centrifugo:v5.0.0`, this will help to avoid unexpected problems during re-deploy process. 
+Pin to the exact Docker Image tag in production, for instance: `centrifugo/centrifugo:v5.0.0`. This will help to avoid unexpected problems during redeployment process.
 
 :::
 
