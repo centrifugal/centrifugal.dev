@@ -134,6 +134,12 @@ This field contains a `base64` representation of your bytes. After receiving Cen
 
 An optional array of strings with server-side channels to subscribe a client to. See more details about [server-side subscriptions](server_subs.md).
 
+:::tip
+
+Sometimes this claim is **wrongly considered** by Centrifugo users as a list of channel permissions. It does not work like that. Using this claim results in the client being forcefully subscribed to the provided channels at the moment of connection; there is no need to additionally call the `subscribe` API from the client side then. More details in the [server-side subscriptions](server_subs.md) description.
+
+:::
+
 ### subs
 
 An optional map of channels with options. This is like a `channels` claim but allows more control over server-side subscription since every channel can be annotated with info, data, and so on using options.
