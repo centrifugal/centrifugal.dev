@@ -3,14 +3,15 @@ id: admin_web
 title: Admin web UI
 ---
 
-Centrifugo comes with a built-in admin web interface. It can:
+Centrifugo comes with a built-in administrative web interface. It enables users to:
 
-* Show general information and statistics from server nodes - number of connections, unique users, number of subscriptions, unique channels etc.
-* Call `publish`, `broadcast`, `subscribe`, `unsubscribe`, `disconnect`, `history`, `history_remove`, `presence`, `presence_stats`, `info`, `channels` and several additional Centrifugo PRO server API commands.
-* Trace connections in real-time (Centrifugo PRO feature)
-* Show analytics widgets (Centrifugo PRO feature)
+* Display general information and statistics from server nodes - including the number of connections, unique users, subscriptions, and unique channels, among others
+* Execute commands such as `publish`, `broadcast`, `subscribe`, `unsubscribe`, `disconnect`, `history`, `history_remove`, `presence`, `presence_stats`, `info`, `channels`, along with several additional Centrifugo PRO server API commands.
+* Trace connections in real-time (a feature Centrifugo PRO).
+* View analytics widgets (a feature of Centrifugo PRO).
+* Visualize registered devices for push notifications (a feature of Centrifugo PRO).
 
-To enable admin web interface run Centrifugo with `admin` option enabled and provide some security options in configuration file:
+To activate the administrative web interface, run Centrifugo with the `admin` option enabled and configure security settings in the configuration file:
 
 ```json title="config.json"
 {
@@ -57,7 +58,7 @@ This can be useful if you want to modify official [web interface code](https://g
 
 ## Admin insecure mode
 
-There is also an option to run Centrifugo in insecure admin mode - in this case you don't need to set `admin_password` and `admin_secret` in config – in web interface you will be logged in automatically without any password. Note that this is only an option for production if you protected admin web interface with firewall rules. Otherwise anyone in internet will have full access to admin functionality described above. To enable insecure admin mode:
+There is also an option to run Centrifugo in insecure admin mode. In this mode, it's unnecessary to set `admin_password` and `admin_secret` in the configuration – you will be automatically logged into the web interface without any password. Note that this mode should only be considered for production if you have protected the admin web interface with firewall rules. Without such protection, anyone on the internet would have full access to the admin functionalities described above. To enable insecure admin mode:
 
 ```json title="config.json"
 {
