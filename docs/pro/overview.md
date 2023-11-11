@@ -35,12 +35,6 @@ Centrifugo PRO is packed with the following features:
 
 Also, explore our [Centrifugo PRO planned features](https://github.com/orgs/centrifugal/projects/3/views/1) board for a concise overview of upcoming features which are currently in progress and enhancements planned for a future.
 
-:::info
-
-PRO features can change with time. We reserve a right to move features from PRO to OSS version if there is a clear signal that this is required to do for the ecosystem.
-
-:::
-
 ## Pricing
 
 Centrifugo PRO requires a license key to run.
