@@ -7,6 +7,7 @@ module.exports = {
     "getting-started/highlights",
     "getting-started/integration",
     "getting-started/design",
+    "getting-started/chat_tutorial",
     "getting-started/ecosystem",
     "getting-started/comparisons",
     "getting-started/migration_v5",
