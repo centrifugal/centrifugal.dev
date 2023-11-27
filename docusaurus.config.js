@@ -33,6 +33,12 @@ module.exports = {
         },
         {
           type: 'doc',
+          docId: 'tutorial/overview',
+          label: "Tutorial",
+          position: "left",
+        },
+        {
+          type: 'doc',
           docId: 'server/configuration',
           label: "Server guide",
           position: "left",

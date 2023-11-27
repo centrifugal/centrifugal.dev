@@ -1,29 +1,41 @@
 ---
-id: chat_tutorial
-sidebar_label: "Chat/Messenger tutorial"
-title: "Tutorial: building WebSocket chat (messenger) app"
+id: overview
+sidebar_label: Overview
+title: "Building WebSocket chat (messenger) app with Centrifugo"
 ---
 
-Let's also show how to build a more difficult application with Centrifugo. With a modern frontend, proper user authentication, real-time channel permission checks and the main application database as a source of truth for application data. The app we are building here is a WebSocket chat.
+Let's show how to build a more complex application with Centrifugo. With a modern frontend, user authentication, real-time channel permission checks and the main application database as a source of truth for application data. The app we are building here is a WebSocket chat. The internet is full of chat tutorials, what we show here goes beyond usually shown basics.
 
-This tutorial is quite lengthy — we don't want to cut it short because the goal is to demonstrate the process in detail. To make it possible for Centrifugo users to extrapolate it on their prefferred technology stack. After reading it full, you should be much more comfortable with Centrifugo design and the idiomatic ways to integrate it – so you can apply the knowledge within your own applicaion.
+This tutorial is quite lengthy. We don't want to cut it short because the main goal is to demonstrate the process in detail. To make it possible for Centrifugo users to extrapolate the example to their prefferred technology stack. After reading this full, you should be much more comfortable with Centrifugo design and the idiomatic ways to integrate with it – so you can apply the knowledge within your own applicaion.
 
-## What we build
+## What we are building here
 
 Here is a short demo which demonstrates our final result.
 
 ![Chat example](https://raw.githubusercontent.com/centrifugal/centrifuge/master/_examples/chat_json/demo.gif "Chat Demo")
 
+Note, that we have real-time synchronization across all the app, to achieve this in scalable way we will use personal user channels for messages delivery having both user authentication and channel permission checks in the final app. 
+
 For the frontend we will use Vite with React anf Typescript. The frontend will be a single page app (SPA) that communicates with the backend over REST API.
 
-For the backend we will use [Django framework](https://www.djangoproject.com/). But it could be any framework in any programming language since Centrifugo is absolutely backend agnostic.
+For the backend we will use Python's [Django framework](https://www.djangoproject.com/) and use [Django REST Framework](https://www.django-rest-framework.org/) for making server API.
 
-And Centrifugo will keep WebSocket connections and provide a real-time transport layer for delivering messages to users instantly.
+Centrifugo will handle WebSocket connections and provide a real-time transport layer for delivering chat 
+messages to users instantly.
 
-Python developers know that Django has a framework for building real-time applications called [Django Channels](https://channels.readthedocs.io/en/latest/). But with Centrifugo you can get some imporant advantages:
+:::tip
 
+We've chosen Django for the backend and React for the frontend here but these could be any other frameworks since Centrifugo is absolutely technology stack agnostic. We had to select sth to show the full process of building real-time WebSocket app – hope details here will help to extrapolate knowledge to another tech stack too. So even if you are not familiar with Django or React but want to understand Centrifugo concepts – consider reading this tutorial full anyway.
+
+:::
+
+## Centrifugo vs Django channels
+
+A little disclaimer about Django and real-time. Python developers know that Django has a popular framework for building real-time applications called [Django Channels](https://channels.readthedocs.io/en/latest/). With Centrifugo you can get some imporant advantages:
+
+* It's possible to use a traditional Django approach for writing application buisiness logic – no need to use ASGI at all if you prefer not to. Simple to integrate into existing Django application.
+* You get amazing scalable performance. We will use JWT for authentication and channel authorization to have a possibility to handle millions of concurrent connections with reasonable number of Django backend instances. We will show that having chat rooms with tens of thousands online users is simple to achieve with Centrifugo.
 * Centrifugo is a universal real-time component, your real-time transport layer will be decoupled from application core, you can take Centrifugo to any of you projects in the future – no matter which programming language the backend will be built on top of.
-* You get amazing scalable performance. And we will use JWT for authentication and channel authorization to have a possibility to handle millions of concurrent connections with reasonable number of Django backend instances.
 
 ## Setting up backend
 
@@ -32,15 +44,16 @@ python3 -m venv env
 ./env/bin/activate
 python -m pip install Django
 python -m django --version
-django-admin startproject django_slowstart
+django-admin startproject app
+mv app backend
 ```
 
 This will create a mysite directory in your current directory with the following contents:
 
 ```
-mysite/
+backend/
     manage.py
-    mysite/
+    app/
         __init__.py
         asgi.py
         settings.py
@@ -99,7 +112,7 @@ INSTALLED_APPS = [
 ]
 ```
 
-## Creating chat models
+## Creating models
 
 Django will help us to quickly create models required for our chat system:
 
@@ -134,72 +147,9 @@ class Message(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 ```
 
-## Prepare for JWT authentication
+## SPA approach and Django
 
-```bash
-pip install djangorestframework-simplejwt
-```
-
-Update your Django project settings:
-
-Add 'rest_framework_simplejwt.authentication.JWTAuthentication' to the DEFAULT_AUTHENTICATION_CLASSES in your REST_FRAMEWORK settings in settings.py.
-
-```python
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    # ... other settings
-}
-```
-
-```python
-from django.urls import path
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
-
-urlpatterns = [
-    # ... other url patterns
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-]
-```
-
-```
-python manage.py makemigrations
-python manage.py migrate
-```
-
-```
-python manage.py createsuperuser
-```
-
-## Enabling CORS
-
-```
-python -m pip install django-cors-headers
-```
-
-```
-INSTALLED_APPS = [
-    ...,
-    "corsheaders",
-    ...,
-]
-
-MIDDLEWARE = [
-    ...,
-    "corsheaders.middleware.CorsMiddleware",
-    "django.middleware.common.CommonMiddleware",
-    ...,
-]
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-]
-```
+TBD
 
 ## Adding React frontend
 
@@ -219,13 +169,14 @@ npm run dev
 
 ## Chat app layout
 
-Still no Centrifugo! We continue building chat app without Centrifugo involved – as in this app we demonstrate one of the principles mentioned in the [design overview](./design.md) – app should gracefully degrade if no real-time layer is present or is working.
+We continue building chat app without Centrifugo involved – as in this app we demonstrate one of the principles mentioned in the [design overview](../getting-started/design.md) – app should gracefully degrade if no real-time layer is present or is working.
 
 Our app with have 3 screens:
 
-* Login screen
-* Chat room list screen
-* Chat room detail (chat messages) screen
+* Login screen – this will support native Django user/password auth
+* Chat room list screen which shows room current user joined to
+* Chat room detail screen - i.e. a page with chat messages and possibility to send new one
+* Chat room search page to discover new rooms to join
 
 Often in messenger apps you can see the layout where a list of chats is the left column, and chat details shown on the right. We will build a slightly simplified layout here, but we will keep in mind the possibility to switch to the mentioned layout if needed.
 
@@ -258,6 +209,14 @@ TBD
 TBD
 
 ## Handle real-time message
+
+TBD
+
+## Transactional outbox for publishing events
+
+TBD
+
+## Using Debezium and Kafka for CDC capture
 
 TBD
 
