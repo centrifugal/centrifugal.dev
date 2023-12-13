@@ -33,8 +33,8 @@ module.exports = {
         },
         {
           type: 'doc',
-          docId: 'tutorial/overview',
-          label: "Tutorial",
+          docId: 'tutorial/intro',
+          label: "Grand tutorial 🎄",
           position: "left",
         },
         {

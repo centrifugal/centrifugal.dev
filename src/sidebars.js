@@ -12,7 +12,15 @@ module.exports = {
     "getting-started/migration_v5",
   ],
   Tutorial: [
-    "tutorial/overview"
+    "tutorial/intro",
+    "tutorial/layout",
+    "tutorial/backend",
+    "tutorial/reverse_proxy",
+    "tutorial/frontend",
+    "tutorial/centrifugo",
+    "tutorial/outbox_cdc",
+    "tutorial/scale",
+    "tutorial/outro",
   ],
   Guides: [
     "server/configuration",
