@@ -92,7 +92,7 @@ Here is a description of various metrics exposed by Centrifugo.
 - **Description:** Shows the total number of nodes in the cluster.
 - **Usage:** Essential for monitoring the size of the cluster and ensuring that all nodes are operational.
 
-#### centrifugo_node_build_info
+#### centrifugo_node_build
 
 - **Type:** Gauge
 - **Labels:** version
@@ -165,7 +165,7 @@ Here is a description of various metrics exposed by Centrifugo.
 
 - **Type:** Counter
 - **Labels:** transport, frame_type, channel_namespace
-- **Description:** Measures the size of messages sent to client connections over specific transports.
+- **Description:** Measures the size of messages (in bytes) sent to client connections over specific transports.
 - **Usage:** Helps in monitoring the network bandwidth usage and optimizing the data transfer.
 
 #### centrifugo_transport_messages_received
@@ -179,7 +179,7 @@ Here is a description of various metrics exposed by Centrifugo.
 
 - **Type:** Counter
 - **Labels:** transport, frame_type, channel_namespace
-- **Description:** Measures the size of messages received from client connections over specific transports.
+- **Description:** Measures the size of messages (in bytes) received from client connections over specific transports.
 - **Usage:** Use this metric to monitor the incoming data size and optimize the application's performance.
 
 #### centrifugo_proxy_duration_seconds
