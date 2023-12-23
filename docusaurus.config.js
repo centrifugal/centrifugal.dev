@@ -77,7 +77,7 @@ module.exports = {
           items: [
             {
               label: "Send e-mail",
-              to: "mailto:centrifugal.dev@gmail.com",
+              to: "mailto:hello@centrifugal.dev",
             },
           ],
         },
