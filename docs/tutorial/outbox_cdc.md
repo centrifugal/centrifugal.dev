@@ -4,11 +4,11 @@ sidebar_label: "Broadcast: outbox and CDC"
 title: "Broadcast using transactional outbox and CDC"
 ---
 
-Some of you may notice one possible problem which could happen when publishing messages to Centrifugo API. You are doing this after transaction and over the network call. This means broadcast may return the error.
+Some of you may notice one possible problem which could prevent event delivery to users when publishing messages to Centrifugo API. We do this after transaction and over the network call (in our case using HTTP). This means broadcast API call may return the error.
 
-There are real-time applications which can tolerate real-time message loss. In normal conditions the number of such errors should be small and in most cases fixed by a retry. Moreover, publishing directly over Centrifugo API usually allows achieving the best delivery latency. 
+There are real-time applications which can tolerate real-time message loss. In normal conditions the number of such errors should be small and in most cases fixed by a retry. Moreover, publishing directly over Centrifugo API usually allows achieving the best delivery latency.
 
-But what if you don't want to think about retries and possible message loss on this stage? Here we can show how to broadcast in different way – asynchronously and transactionally.
+But what if you don't want to think about retries and message loss in unaccepted on this stage? Here we will show how to broadcast in a different way – asynchronously and transactionally.
 
 ## Transactional outbox for publishing events
 
@@ -51,27 +51,91 @@ Outbox.objects.create(method='broadcast', payload=broadcast_payload, partition=p
 
 Also, add the following to Centrifugo configuration:
 
-```
-TBD
+```json
+{
+  ...
+  "consumers": [
+    {
+      "name": "postgresql",
+      "type": "postgresql",
+      "postgresql": {
+        "dsn": "postgresql://grandchat:grandchat@db:5432/grandchat",
+        "outbox_table_name": "chat_outbox",
+        "num_partitions": 1,
+        "partition_select_limit": 100,
+        "partition_poll_interval": "300ms",
+        "partition_notification_channel": "centrifugo_partition_change"
+      }
+    }
+  ]
+}
 ```
 
-If you want to use LISTEN/NOTIFY ... TBD
+That's it! Now if you save some model and write an event to outbox table insde transaction – you don't need to worry - an event will be delivered to Centrifugo.
+
+But, if you take a look at the configuration above you will see it has option `"partition_poll_interval": "300ms"`. This means the outbox approach may add delay for the real-time message. It's possible to reduce this polling interval – but this would mean increasing number of queries to PostgreSQL database. We can do slightly better.
+
+Centrifugo supports LISTEN/NOTIFY mechanism of PostgreSQL to be notified about new data in the outbox table. To enable it you need first create a trigger in PostgreSQL:
+
+```sql
+CREATE OR REPLACE FUNCTION centrifugo_notify_partition_change()
+RETURNS TRIGGER AS $$
+BEGIN
+    PERFORM pg_notify('centrifugo_partition_change', NEW.partition::text);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER centrifugo_notify_partition_trigger
+AFTER INSERT ON chat_outbox
+FOR EACH ROW
+EXECUTE FUNCTION centrifugo_notify_partition_change();
+```
+
+To do this you can connect to PostgreSQL with this command:
+
+```
+docker compose exec db psql postgresql://grandchat:grandchat@localhost:5432/grandchat
+```
+
+And then update consumer config – add `"partition_notification_channel"` option to it:
+
+```json
+{
+  ...
+  "consumers": [
+    {
+      "name": "postgresql",
+      ...
+      "postgresql": {
+        ...
+        "partition_poll_interval": "300ms",
+        "partition_notification_channel": "centrifugo_partition_change"
+      }
+    }
+  ]
+}
+```
+
+After doing that restart everything – and enjoy instant event delivery!
 
 ## Using Kafka Connect for CDC
 
 Let's also look at another approach - usually known as CDC - Change Data Capture (you can learn more about it from [this post](https://www.confluent.io/learn/change-data-capture/), for example). We will use Kafka Connect with Debezium connector to read updates from PostgreSQL WAL and translate them to Kafka. Then we will use built-in Centrifugo possibility to consume Kafka topics.
 
-First of all, we must configure PostgreSQL to use logical replication. To do this let's update `db` service in `docker-compose.yml`:
+The CDC approach with reading WAL has an advantage that in most cases it comes with a very low overhead for the database. In the outbox shown case above we constantly polling PostgreSQL for changes, which may be less effective for the database.
 
-```
+To configure CDC flow we must first configure PostgreSQL to use logical replication. To do this let's update `db` service in `docker-compose.yml`:
+
+```yaml title="docker-compose.yml"
 db:
   image: postgres:15
   volumes:
     - ./postgres_data:/var/lib/postgresql/data/
   environment:
-    - POSTGRES_USER=fusion
-    - POSTGRES_PASSWORD=fusion
-    - POSTGRES_DB=fusion
+    - POSTGRES_USER=grandchat
+    - POSTGRES_PASSWORD=grandchat
+    - POSTGRES_DB=grandchat
   expose:
     - 5432
   ports:
@@ -83,7 +147,7 @@ Note – added `command` field where `postgres` is launched with `wal_level=logi
 
 Then let's add Kafka Connect and Kafka itself to our `docker-compose.yml`:
 
-```yml
+```yaml title="docker-compose.yml"
 zookeeper:
   image: confluentinc/cp-zookeeper:latest
   environment:
@@ -128,16 +192,16 @@ connect:
 
 Kafka uses Zookeeper, so we added it here too. Next, we need to configure Debezium to use PostgreSQL plugin:
 
-```json
+```json title="debezium/debezium-config.json"
 {
-    "name": "fusion-chat-connector",
+    "name": "grandchat-connector",
     "config": {
         "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
         "database.hostname": "db",
         "database.port": "5432",
-        "database.user": "fusion",
-        "database.password": "fusion",
-        "database.dbname": "fusion",
+        "database.user": "grandchat",
+        "database.password": "grandchat",
+        "database.dbname": "grandchat",
         "database.server.name": "db",
         "table.include.list": "public.chat_cdc",
         "database.history.kafka.bootstrap.servers": "kafka:9092",
@@ -167,7 +231,7 @@ Kafka uses Zookeeper, so we added it here too. Next, we need to configure Debezi
 
 And we should add one more image to `docker-compose.yml` to apply this configuration on start:
 
-```yaml
+```yaml title="docker-compose.yml"
 connect-config-loader:
   image: appropriate/curl:latest
   depends_on:
@@ -179,7 +243,7 @@ connect-config-loader:
       echo 'Waiting for Kafka Connect to start...';
       while ! curl -f http://connect:8083/connectors; do sleep 1; done;
       echo 'Kafka Connect is up, posting configuration';
-      curl -X DELETE -H 'Content-Type: application/json' http://connect:8083/connectors/fusion-chat-connector;
+      curl -X DELETE -H 'Content-Type: application/json' http://connect:8083/connectors/chat-connector;
       curl -X POST -H 'Content-Type: application/json' -v --data @/debezium-config.json http://connect:8083/connectors;
       echo 'Configuration posted';
     "
@@ -195,7 +259,6 @@ Next step here is configure Centrifugo to consume Kafka topic:
     {
       "name": "my_kafka_consumer",
       "type": "kafka",
-      "enabled": true,
       "kafka": {
         "brokers": ["kafka:9092"],
         "topics": ["postgres.public.chat_cdc"],
@@ -243,3 +306,13 @@ That's how it is possible to use CDC to stream events to Centrifugo. This approa
 
 * it may provide better throughput as we are not limited in predefined number of partitions which is expected to be not very large. Here we can rely on Kafka native partitioning which is more scalable than reading SQL table concurrently by partition
 * since we are reading WAL here - the load on the database (PostgreSQL) should be mostly negligible. While in outbox case we are constantly polling tables and removing processed rows.
+
+But we can eliminate latency downside to take best of two worlds.
+
+## Solving CDC latency
+
+To eliminate longer latency in case of CDC but still have a reliable event delivery we can use combined approach: broadcast using HTTP API upon successful transaction and save Outbox/CDC model also. Why this works? Because we are using idempotency key while publishing to Centrifugo. So the second message will be dropped by Centrifugo and not reach subscribers.
+
+Moreover, on the client side we are using techniques to deal with duplicate messages – we are accurately updating state to prevent duplicate messages in a room, for counters we send the current number of members in a room instead of incrementing/decrementing one by one upon receiving the event. I.e. we have idempotent message processing on the client side.
+
+And one more technique which helps us to distinguish duplicate or outdated messages – is using incremental versioning of the room. Every event we send which is related to the room has a room version attached. On the client side this gives us a possibility to compare current state room version with event room version. And drop processing non-actual messages. This way we deal with a late message delivery problem, avoiding extra work and unnecessary UI updates.

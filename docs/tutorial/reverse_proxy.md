@@ -10,7 +10,7 @@ For general user authentication we will be using native Django session authentic
 
 BTW, if you are interested in more details check out this awesome tutorial: [Django Session-based Auth for Single Page Apps](https://testdriven.io/blog/django-spa-auth/). It contains a detailed description of the approach we use here together with other options to configure Django in SPA scenarios.
 
-It's possible to use any reverse proxy, but we will go with Nginx here as one of the most popular servers in the world. Here is a configuration for Nginx placed into `nginx/nginx.conf` file:
+It's possible to use any reverse proxy, but we will go with Nginx here – one of the most popular reverse proxies in the world. Here is a configuration for Nginx placed into `nginx/nginx.conf` file:
 
 ```conf title="nginx/nginx.conf"
 user www-data;
@@ -100,7 +100,7 @@ http {
 
 And add Nginx to `docker-compose.yaml` file:
 
-```yaml
+```yaml title="docker-compose.yml"
 nginx:
   image: nginx:1.25
   volumes:

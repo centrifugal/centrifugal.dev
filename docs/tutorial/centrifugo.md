@@ -4,13 +4,13 @@ sidebar_label: "Integrating Centrifugo"
 title: "Integrating Centrifugo for real-time event delivery"
 ---
 
-It's finally time for the real-time! In some cases you already have an application and when integrating Centrifugo you start from here. 
+It's finally time for the real-time! In some cases you already have an application and when integrating Centrifugo you start from here.
 
 To add Centrifugo let's update `docker-compose.yml` file:
 
 ```yaml
 centrifugo:
-  image: centrifugo/centrifugo:v5.1.1
+  image: centrifugo/centrifugo:v5.2.0
   volumes:
     - ./centrifugo/config.json:/centrifugo/config.json
   command: centrifugo -c config.json
@@ -32,7 +32,7 @@ And put `config.json` to local `centrifugo` directory with the following content
 }
 ```
 
-We will be using `personal` namespace here for user channels. Using separate namespaces for every real-time feature is a recommended approach when working with Centrifugo. Namespace allow splitting channel space and configure behavior separately for different real-time features.
+We will be using `personal` [namespace](../server/channels.md#channel-namespaces) here for user channels. Using separate namespaces for every real-time feature is a recommended approach when working with Centrifugo. Namespace allow splitting channel space and configure behavior separately for different real-time features.
 
 ## Adding Centrifugo connection
 
@@ -46,10 +46,11 @@ npm install centrifuge
 
 Then import it in `App.jsx`:
 
-```
+```javascript
 import {
-  Centrifuge, PublicationContext, State, StateContext,
-  SubscribedContext } from 'centrifuge';
+  Centrifuge, PublicationContext, SubscriptionStateContext,
+  SubscribedContext, SubscriptionState
+} from 'centrifuge';
 ```
 
 We also imported some types we will be using in the app.
@@ -68,15 +69,6 @@ useEffect(() => {
     centrifuge = new Centrifuge(WS_ENDPOINT, {
       debug: true
     })
-
-    centrifuge.on('state', (ctx: StateContext) => {
-      if (ctx.newState == State.Connected) {
-        setConnected(true)
-      } else {
-        setConnected(false)
-      }
-    })
-
     centrifuge.connect()
   }
 
@@ -93,8 +85,6 @@ useEffect(() => {
 ```
 
 When user logs out and `userInfo.id` is not set – the connection to server is closed as we do `centrifuge.disconnect()` in `useEffect` cleanup function.
-
-Note, that we've also implemented changing connection status here – as soon as we connected to Centrifugo we call `setConnected` state hook and this allows us to draw 🟢. Otherwise - we draw 🔴. To do this we addded listener to `state` event. There are several connection states in all our SDKs - `disconnected`, `connecting`, `connected`. You can also listen for them separately and ge more detailed information abput the reason of connecting lost, or about client id set by Centrifugo when client is connected. See [client SDK spec](../transports/client_api.md) for more detailed description.
 
 But if you run the code like this – connection won't be established. That's bad news! But we also have good news - this means that Centrifugo supports secure communication and we need to authenticate connection upon establishing! Let's do this.
 
@@ -161,7 +151,11 @@ Don't forget to include this view to `urls.py` configuration, and then you can f
 
 Awesome! Though simply being connecting is not that useful. We want to receive real-time data from Centrifugo. But how Centrifugo will understand how to route published data? Of course due to channel concept. Client can subscribe to channel to receive all messages published to that channel.
 
-As mention before – for this sort of app using a single individual channel for each user makes a lot of sense. We already have namespace `personal` configured in Centrifugo – so let's use it to construct individual channel for each user.
+As mention before – for this sort of app using a single individual channel for each user makes a lot of sense.
+
+You can ask – could we simply subscribe to all room channels current user is member of? It may be a good thing if you know that users won't have too many groups, let's say 10-100 max. Going above this number will make UI less efficient. Consider user who is a member of a thousand of groups – it will require a very heavyweight initial subscribe request. What if user is member of 10k groups? So moving all the routing complexity to the backend having a single individual channel on the frontend seems a more reasonable approach for our app. And this will also help us to simpify state recovery later. 
+
+We already have namespace `personal` configured in Centrifugo – so let's use it to construct individual channel for each user.
 
 ```javascript
 const personalChannel = 'personal:' + userInfo.id
@@ -188,6 +182,7 @@ sub.on('publication', (ctx: PublicationContext) => {
     // Used to process incoming channel publications. We will talk about it soon.
     onPublication(ctx.data)
 })
+
 sub.subscribe()
 ```
 
@@ -216,7 +211,21 @@ def get_subscription_token(request):
 
 Please refer to [client SDK spec](../transports/client_api.md#subscription-token) for more information about error handling scenarios.
 
-Now we should be able to connect (and authenticate!) and subscribe to channel (with authorization!). Try to open browser tools network tab and see WebSocket frames exchanged between client and server (we showed how to see this in [quickstart](../getting-started/quickstart.md)).
+Let's also finish up the logic with real-time subscription status now:
+
+```javascript
+sub.on('state', (ctx: SubscriptionStateContext) => {
+  if (ctx.newState == SubscriptionState.Subscribed) {
+    setRealTimeStatus('🟢')
+  } else {
+    setRealTimeStatus('🔴')
+  }
+})
+```
+
+There are several subscription states in all our SDKs - `unsubscribed`, `subscribing`, `subscribed`. You can also listen for them separately for more granular logic and get more detailed information about the reason of subscription loss. See [client SDK spec](../transports/client_api.md) for more detailed description.
+
+Now we should be able to connect (and authenticate) and subscribe to channel (with authorization). Try to open browser tools network tab and see WebSocket frames exchanged between client and server (we showed how to see this in [quickstart](../getting-started/quickstart.md)).
 
 ## Publish real-time messages
 
@@ -441,16 +450,110 @@ useEffect(() => {
 
 ## Handle message added event
 
-TBD
+Let's look what's going on inside `processMessageAdded` function:
+
+```javascript
+const processMessageAdded = async (body: any) => {
+  const roomId = body.room.id
+  const newMessage = body
+
+  let room = chatState.roomsById[roomId]
+  if (!room) {
+    room = await fetchRoom(roomId)
+    dispatch({
+      type: "ADD_ROOMS", payload: {
+        rooms: [room]
+      }
+    })
+  }
+
+  let messages = chatState.messagesByRoomId[roomId]
+  if (!messages) {
+    const messages = await fetchMessages(roomId)
+    dispatch({
+      type: "ADD_MESSAGES", payload: {
+        roomId: roomId,
+        messages: messages
+      }
+    })
+    return;
+  }
+
+  dispatch({
+    type: "ADD_MESSAGES", payload: {
+      roomId: roomId,
+      messages: [newMessage]
+    }
+  })
+}
+```
+
+We load the room if it was not loaded yet, load room's messages if it's first time we see a message in the room. 
 
 ## Handle user joined event
 
-TBD
+```javascript
+const processUserJoined = async (body: any) => {
+  const roomId = body.room.id
+  const roomVersion = body.room.version
+  let room = chatState.roomsById[roomId]
+  if (!room) {
+    room = await fetchRoom(roomId)
+    if (room === null) {
+      return
+    }
+    dispatch({
+      type: "ADD_ROOMS", payload: {
+        rooms: [room]
+      }
+    })
+  } else {
+    dispatch({
+      type: "SET_ROOM_MEMBER_COUNT", payload: {
+        roomId: roomId,
+        version: roomVersion,
+        memberCount: body.room.member_count
+      }
+    })
+  }
+}
+```
 
 ## Handle user left event
 
-TBD
-
-## Adding message recovery
-
-TBD
+```javascript
+const processUserLeft = async (body: any) => {
+  const roomId = body.room.id
+  const roomVersion = body.room.version
+  const leftUserId = body.user.id
+  let room = chatState.roomsById[roomId]
+  if (room) {
+    if (room.version >= roomVersion) {
+      console.error(`Outdated version for room ID ${roomId}.`);
+      return
+    }
+    if (userInfo.id == leftUserId) {
+      dispatch({
+        type: "DELETE_ROOM", payload: {
+          roomId: roomId
+        }
+      })
+    } else {
+      dispatch({
+        type: "SET_ROOM_MEMBER_COUNT", payload: {
+          roomId: roomId,
+          version: roomVersion,
+          memberCount: body.room.member_count
+        }
+      })
+    }
+  } else if (userInfo.id != leftUserId) {
+    room = await fetchRoom(roomId)
+    dispatch({
+      type: "ADD_ROOMS", payload: {
+        rooms: [room]
+      }
+    })
+  }
+}
+```

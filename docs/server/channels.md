@@ -84,23 +84,15 @@ The same reasoning applies to channels within namespaces. Channels `chat:index` 
 
 ## Channel namespaces
 
-Centrifugo allows configuring a list of channel namespaces. Namespaces are optional but very useful. 
+Centrifugo allows configuring a list of channel namespaces. Namespaces are optional but super-useful.
 
-A namespace is a container for options applied for channels starting with the namespace name. This provides great control over channel behavior so you have a flexible way to define different channel options for different real-time features in the application.
+A namespace acts as a container for options that are applied to channels starting with the namespace name. I.e. if you defined namespace with a name `personal` in config, then all the channels starting with `personal:`, like `personal:1` or `personal:2`, will inherit options defined for `personal` namespace. This provides great control over channel behavior, so you have a flexible way to define different channel options for various real-time features in the application.
 
-A namespace acts as a container for options that are applied to channels starting with the namespace name. This provides great control over channel behavior, so you have a flexible way to define different channel options for various real-time features in the application.
+Namespace has a name, and can contain all the [channel options](#channel-options). Namespace `name` is required to be set. Name of namespace must be unique, must consist of letters, numbers, underscores, or hyphens and be more than 2 symbols length i.e. satisfy regexp `^[-a-zA-Z0-9_]{2,}$`.
 
-Namespace has a name, and can contain all the channel options described below (with the same defaults).
+When you want to use specific namespace options your channel must be prefixed with namespace name and `:` separator: `public:messages`, `gossips:messages` are two channels in `public` and `gossips` namespaces.
 
-* `name` - unique namespace name (name must consist of letters, numbers, underscores, or hyphens and be more than 2 symbols length i.e. satisfy regexp `^[-a-zA-Z0-9_]{2,}$`).
-
-If you want to use namespace options for a channel - you must include namespace name into channel name with `:` as a separator:
-
-`public:messages`
-
-`gossips:messages`
-
-Where `public` and `gossips` are namespace names. Centrifugo looks for `:` symbol in the channel name, if found – extracts the namespace name, and applies namespace options while processing protocol commands from a client.
+Centrifugo looks for `:` symbol in the channel name, if found – extracts the namespace name, and applies all the configured namespace channel options while processing protocol commands from a client or server API calls.
 
 All things together here is an example of `config.json` which includes some top-level channel options set and has 2 additional channel namespaces configured:
 

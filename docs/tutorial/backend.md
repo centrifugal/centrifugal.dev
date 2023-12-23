@@ -4,11 +4,11 @@ sidebar_label: "Setting up backend and database"
 title: "Setting up backend and database"
 ---
 
-Let's start building the app. As the first step, create a directory for the new app, let's call it `fusionchat`:
+Let's start building the app. As the first step, create a directory for the new app:
 
 ```bash
-mkdir fusionchat
-cd fusionchat
+mkdir grand-chat-tutorial
+cd grand-chat-tutorial
 touch docker-compose.yml
 ```
 
@@ -40,14 +40,14 @@ backend/
         wsgi.py
 ```
 
-For the main chat business logic let's create a new Django `app`:
+The `app` directory contains core settings and things to run Django app. For the main chat business logic let's create a new Django app:
 
 ```bash
 cd backend
 python manage.py startapp chat
 ```
 
-This will create `chat` with sth like this inside:
+This will create `chat` folder with sth like this inside:
 
 ```bash
 chat/
@@ -63,8 +63,7 @@ chat/
 
 We need to tell our project that the chat app is installed. Edit the `app/settings.py` file and add `'chat'` to the `INSTALLED_APPS` setting. It'll look like this:
 
-```python
-# app/settings.py
+```python title="backend/app/settings.py"
 INSTALLED_APPS = [
     'chat',
     'django.contrib.admin',
@@ -85,8 +84,7 @@ pip freeze > requirements.txt
 
 Update `INSTALLED_APPS`:
 
-```python
-# app/settings.py
+```python title="backend/app/settings.py"
 INSTALLED_APPS = [
     'rest_framework',
     'chat',
@@ -101,7 +99,7 @@ INSTALLED_APPS = [
 
 For the main database we will use [PostgreSQL](https://www.postgresql.org/) here. Add `db` to `docker-compose.yml`:
 
-```yaml
+```yaml title="docker-compose.yml"
 version: '3.8'
 
 services:
@@ -110,9 +108,9 @@ services:
     volumes:
       - ./postgres_data:/var/lib/postgresql/data/
     environment:
-      - POSTGRES_USER=fusion
-      - POSTGRES_PASSWORD=fusion
-      - POSTGRES_DB=fusion
+      - POSTGRES_USER=grandchat
+      - POSTGRES_PASSWORD=grandchat
+      - POSTGRES_DB=grandchat
     expose:
       - 5432
     ports:
@@ -121,13 +119,13 @@ services:
 
 And properly set `DATABASES` in Django app settings:
 
-```python
+```python title="backend/app/settings.py"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'fusion',
-        'USER': 'fusion',
-        'PASSWORD': 'fusion',
+        'NAME': 'grandchat',
+        'USER': 'grandchat',
+        'PASSWORD': 'grandchat',
         'HOST': 'db',
         'PORT': '5432',
     }
@@ -160,7 +158,7 @@ Here we are using `gunicorn` with hot reload here to simplify development, of co
 
 Now add `backend` service to `docker-compose.yml`:
 
-```yaml
+```yaml title="docker-compose.yml"
 backend:
   build: ./backend
   volumes:
@@ -175,7 +173,7 @@ Note that we pass backend dir to the container, also passing and installing depe
 
 ## Creating models
 
-Django is great to quickly create domain models required for our chat system. Here is what we need:
+Django is great to quickly create domain models required for our messenger. Here is what we need:
 
 * **User** – for user model we will use Django's built-in User model here
 * **Room** - the model that describes chat room with unique name
@@ -184,7 +182,7 @@ Django is great to quickly create domain models required for our chat system. He
 
 Add the following to `chat/models.py`:
 
-```python
+```python title="backend/chat/models.py"
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -324,7 +322,7 @@ def logout_view(request):
 
 For rooms search we will simply return all the rooms sorted by name. As mentioned before for the restful layer we work with models using Django Rest framework. This means we need to tell DRF how to serialize models describing `Serializer` class and then we can use serializers in DRF predefined viewsets to create views.
 
-```python
+```python title="backend/chat/serializers.py"
 class RoomSearchSerializer(serializers.ModelSerializer):
 
     is_member = serializers.BooleanField(read_only=True)
@@ -336,7 +334,7 @@ class RoomSearchSerializer(serializers.ModelSerializer):
 
 And:
 
-```python
+```python title="backend/chat/views.py"
 class RoomSearchViewSet(viewsets.ModelViewSet):
     serializer_class = RoomSearchSerializer
     permission_classes = [IsAuthenticated]
@@ -354,7 +352,7 @@ class RoomSearchViewSet(viewsets.ModelViewSet):
 
 ### GET /api/rooms/
 
-```python
+```python title="backend/chat/serializers.py"
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -382,7 +380,7 @@ class RoomSerializer(serializers.ModelSerializer):
 
 And:
 
-```python
+```python title="backend/chat/views.py"
 class RoomListViewSet(ListModelMixin, GenericViewSet):
     serializer_class = RoomSerializer
     permission_classes = [IsAuthenticated]
@@ -397,7 +395,7 @@ class RoomListViewSet(ListModelMixin, GenericViewSet):
 
 ### GET /api/rooms/:room_id/messages/
 
-```python
+```python title="backend/chat/serializers.py"
 class MessageRoomSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
@@ -414,7 +412,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
 ```
 
-```python
+```python title="backend/chat/views.py"
 class MessageListCreateAPIView(ListCreateAPIView):
     serializer_class = MessageSerializer
     permission_classes = [IsAuthenticated]
@@ -432,7 +430,7 @@ class MessageListCreateAPIView(ListCreateAPIView):
 
 ### POST /api/rooms/:room_id/messages/
 
-```python
+```python title="backend/chat/views.py"
 class MessageListCreateAPIView(ListCreateAPIView):
     serializer_class = MessageSerializer
     permission_classes = [IsAuthenticated]
@@ -450,14 +448,19 @@ class MessageListCreateAPIView(ListCreateAPIView):
         serializer.is_valid(raise_exception=True)
         obj = serializer.save(room=room, user=request.user)
         room.last_message = obj
+        room.bumped_at = timezone.now()
         room.save()
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 ```
 
+Note we make actions here in transaction (using `@transaction.atomic`), and also use `select_for_update` method to lock the room while we are working with it. This allows us to atomically increment Room version on every change. We will show how having incremental version inside each room helps us on the frontend side later in the tutorial.
+
+While creating new message we set `room.bumped_at` to current time – so that we have a desired sort on the frontend side.
+
 ### POST /api/rooms/:room_id/join/
 
-```python
+```python title="backend/chat/serializers.py"
 class RoomMemberSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     room = RoomSerializer(read_only=True)
@@ -467,7 +470,7 @@ class RoomMemberSerializer(serializers.ModelSerializer):
         fields = ['room', 'user']
 ```
 
-```python
+```python title="backend/chat/views.py"
 class JoinRoomView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -484,9 +487,11 @@ class JoinRoomView(APIView):
         return Response(body, status=status.HTTP_200_OK)
 ```
 
+Here we add the current request user into the room.
+
 ### POST /api/rooms/:room_id/leave/
 
-```python
+```python title="backend/chat/views.py"
 class LeaveRoomView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -502,6 +507,8 @@ class LeaveRoomView(APIView):
         body = RoomMemberSerializer(obj).data
         return Response(body, status=status.HTTP_200_OK)
 ```
+
+Here we remove the current request user from the room.
 
 ### Register urls
 
@@ -548,4 +555,4 @@ urlpatterns += staticfiles_urlpatterns()
 
 So we included all the views we wrote, included chat application urls.
 
-We also serving Django built-in admin - it will allow us to create some rooms to play with. In the example source code you may find some additional code in `chat/admin.py` which registers models in Django admin – we skip it here to save some traffik for you in the response with this page.
+We also serving Django built-in admin - it will allow us to create some rooms to play with. In the example source code you may find some additional code in `backend/chat/admin.py` which registers models in Django admin.

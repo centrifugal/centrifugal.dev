@@ -4,22 +4,22 @@ sidebar_label: "Creating SPA frontend"
 title: "Creating SPA frontend with React"
 ---
 
-On the frontend we will use Vite with React and Typescript. The prerequisites is NodeJS >= 18.
+On the frontend we will use Vite with React and Typescript. In this tutorial we are not paying a lot of attention to making all the types strict and using `any` a lot. Which is actually a point for improvement, but at least helps to make the tutorial slightly shorter. The prerequisites is NodeJS >= 18.
 
-We can start by creating frontend app with Vite inside `fusionchat` dir:
+We can start by creating frontend app with Vite inside `grand-chat-tutorial` dir:
 
 ```bash
 npm create vite@latest
 ```
 
-Call the app `frontend`, select `React + Typescript` template.
+When asked, call the app `frontend`, select `React + Typescript` template. Then:
 
 ```bash
 cd frontend
 npm install
 ```
 
-Since we want to start the entire app with single docker compose command – let's again update `docker-compose.yml`. First, create custom Dockerfile in frontend folder:
+Since we want to start the entire application with a single docker compose command – let's again update `docker-compose.yml`. First, create custom Dockerfile in the frontend folder:
 
 ```Dockerfile title="frontend/Dockerfile"
 FROM node:18-slim
@@ -33,13 +33,12 @@ COPY package.json .
 COPY package-lock.json .
 RUN npm ci
 
-# start app
 CMD ["vite", "--host"]
 ```
 
 And add `frontend` service to `docker-compose.yaml` file:
 
-```yaml
+```yaml title="docker-compose.yml"
 frontend:
   stdin_open: true
   build: ./frontend
@@ -54,11 +53,13 @@ frontend:
     - backend
 ```
 
+When you eventually run application with docker compose, the frontend will be updated automatically upon changes in source code files – which is super nice for the development. 
+
 ## App layout
 
-Describing frontend code will be not so linear. First, lets start on the application top-level layout:
+Describing frontend code will be not so linear like we had for the backend case. First, let's start with the application top-level layout:
 
-```javascript
+```javascript title="frontend/src/App.tsx"
 const App: React.FC = () => {
   let localAuth: any = {};
   if (localStorage.getItem(LOCAL_STORAGE_AUTH_KEY)) {
@@ -67,7 +68,10 @@ const App: React.FC = () => {
   const [authenticated, setAuthenticated] = useState<boolean>(localAuth.id !== undefined)
   const [userInfo, setUserInfo] = useState<any>(localAuth)
   const [csrf, setCSRF] = useState('')
+  const [unrecoverableError, setUnrecoverableError] = useState('')
   const [chatState, dispatch] = useReducer(reducer, initialChatState);
+  const [realTimeStatus, setRealTimeStatus] = useState('🔴')
+  const [messageQueue, setMessageQueue] = useState<any[]>([]);
 
   return (
     <CsrfContext.Provider value={csrf}>
@@ -95,17 +99,17 @@ const App: React.FC = () => {
 export default App;
 ```
 
-Here we skipped some final code to start with basics.
+Here we skipped some final code to emphasize the core layout.
 
-First thing to note is that we wrapped the app into two React contexts: `CsrfContext` and `AuthContext`. First one will allow access to CSRF token everywhere in the app, second will provide authentication information.
+First thing to note is that we wrapped the app into two React contexts: `CsrfContext` and `AuthContext`. React contexts allow sharing some state without need to pass it over props to children components. `CsrfContext` allows access to CSRF token everywhere in the app, `AuthContext` provides authentication information.
 
-We render `ChatLogin` page if user is not authenticated and one of the chat pages if user authenticated. React Router is used for navigation.
+We render `ChatLogin` page if user is not authenticated and one of the chat screens if user authenticated. [React Router](https://reactrouter.com/en/main) is used for the navigation.
 
-Authentication information is stored in LocalStorage and we load it from there on app initial load.
+Authentication information is stored in `LocalStorage` and we load it from there during the app initial load.
 
-Note, that here we are using reducer to manage chat state. We do this to serialize and simplify state management – before we started using reducer chat state management was a hell. The initial chat state looks like this:
+Note, that here we are using [React reducer](https://react.dev/reference/react/useReducer) to manage chat state. We do this to serialize changes and thus simplify state management – trust us before we started using the reducer chat state management was a hell. It's not the only approach – there are other techniques to manage state in complex React apps (like [Redux](https://react-redux.js.org/), etc), but reducer works for us here. The initial chat state looks like this:
 
-```javascript
+```javascript title="frontend/src/App.tsx"
 const initialChatState = {
   rooms: [],
   roomsById: {},
@@ -119,11 +123,13 @@ const initialChatState = {
 
 We are not pretending that the way we show here is the best – it could be organized differently no doubt.
 
+Regarding `realTimeStatus` and `messageQueue` – those will be later used for real-time features.
+
 ## Login screen
 
 Let's look at `ChatLogin` component. To make it we need to render a login form:
 
-```javascript title="ChatLogin.tsx"
+```javascript title=" title="frontend/src/ChatLogin.tsx"
 import React, { useState, useContext } from 'react';
 import logo from './assets/centrifugo.svg'
 import CsrfContext from './CsrfContext';
@@ -171,13 +177,28 @@ const ChatLogin: React.FC<ChatLoginProps> = ({ onSuccess }) => {
 export default ChatLogin;
 ```
 
-This is quite a straightforward component.
+This is quite a straightforward component. Note the import from `./AppApi` - we've put all the API methods to a separate file, where we use `axios` HTTP client to communicate with the backend API. For example, `login` call looks like this:
+
+```javascript title="frontend/src/AppApi.tsx"
+import { API_ENDPOINT_BASE } from "./AppSettings";
+
+export const login = async (csrfToken: string, username: string, password: string) => {
+  const response = await axios.post(`${API_ENDPOINT_BASE}/api/login/`, { username, password }, {
+    headers: {
+      "X-CSRFToken": csrfToken
+    }
+  });
+  return response.data
+}
+```
+
+Other API calls look very similar, so we wan't pay attention to them further – but you can always take a look in source code.
 
 ## Chat room list screen
 
 On the root page we show rooms current user is member of. `ChatRoomList` component renders rooms. But note that rooms are managed outside of this component – it just renders rooms from application chat state.
 
-```javascript title="ChatRoomList.tsx"
+```javascript title="frontend/src/ChatRoomList.tsx"
 import { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import ChatContext from './ChatContext'
@@ -216,11 +237,13 @@ const ChatRoomList = () => {
 export default ChatRoomList;
 ```
 
+Note, we iterate over `state.rooms` array which only contains IDs of rooms and is a source of truth for the order of rooms on the screen. To remind: we sort rooms on this screen by `bumped_at` field in the descending order. 
+
 ## Chat room search screen
 
 Chat rooms search screen shows list of all rooms in the app available to join. What's important to note here – as soon as user joins/leaves the room we update chat state by dispatching `ADD_ROOMS` or `DELETE_ROOM` state events. This allows us to synchronize room state – so that after user joins some room, the room appears on room list screen.
 
-```javascript title="ChatSearch.tsx"
+```javascript  title="frontend/src/ChatSearch.tsx"
 import { useState, useEffect, useContext } from 'react';
 import CsrfContext from './CsrfContext';
 import ChatContext from './ChatContext';
@@ -332,9 +355,9 @@ export default ChatSearch;
 
 ## Chat room detail screen
 
-This screen renders messages in particular chat room and provides an input to send new messages.
+This screen displays information about the room, renders its messages and provides an input to send new messages.
 
-```javascript title="CharRoomDetail.tsx"
+```javascript title="frontend/src/CharRoomDetail.tsx"
 import { useState, useEffect, useContext, useRef, UIEvent } from 'react';
 import { useParams } from 'react-router-dom';
 import AuthContext from './AuthContext';
@@ -514,11 +537,205 @@ export default ChatRoomDetail;
 
 Let's discuss some important things in the implementation.
 
-One interesting thing is how we handle scroll – if user currently in the end of messages area - then we scroll to the end again after adding a new message. If user scrolls top – we prevent automatic scrolling on new message – because user most probably does not want scroll to work at that moment.
+One interesting thing is how we handle scroll – if user currently in the end of messages area - then we scroll to the end again after adding a new message. If user scrolls top – we prevent automatic scrolling on new message – because user most probably does not want scroll to work at that moment. This is a very common UX decision in messenger apps.
 
-For faking avatars we are using nice pictures of generated by robohash.org. So each user gets unique cat picture based on user ID.
+For faking avatars we are using cute pictures of cats generated by [robohash.org](https://robohash.org/). Each user gets unique cat picture based on user ID.
 
 The core behaviour is straightforward – we render messages in chat and render an input for sending new messages. As soon as user submits input form – we call the backend API to create a new message in the room.
+
+The thing to note – again, we use calls to modify state here, `ADD_ROOMS` and `ADD_MESSAGES`. We will look at reducer and describe state management shortly.
+
+## Chat state reducer
+
+To remind, the initial chat state looks like this:
+
+```javascript title="frontend/src/App.tsx"
+const initialChatState = {
+  rooms: [],
+  roomsById: {},
+  messagesByRoomId: {}
+};
+```
+
+In the app we have several reducer actions to modify this state:
+
+* `CLEAR_CHAT_STATE`
+* `ADD_ROOMS`
+* `DELETE_ROOM`
+* `ADD_MESSAGES`
+* `SET_ROOM_MEMBER_COUNT`
+
+State management in React is not very handy to write to be honest. What we've found though while writing this tutorial is that ChatGPT helps a lot with this task. If you describe the desired behavior properly – ChatGPT answers correctly.
+
+### CLEAR_CHAT_STATE
+
+Allows dropping the entire chat state, simply returns `initialChatState` const:
+
+```javascript
+function reducer(state: any, action: any) {
+  switch (action.type) {
+    case 'CLEAR_CHAT_STATE': {
+      return initialChatState;
+    }
+```
+
+### ADD_ROOMS
+
+Used to add rooms to the state. This may happen when we load rooms for room list screen, when we got an event from a room which is not yet known, also it's called from search screen when user joins some room:
+
+```javascript
+case 'ADD_ROOMS': {
+  const newRooms = action.payload.rooms;
+
+  // Update roomsById with new rooms, avoiding duplicates.
+  const updatedRoomsById = { ...state.roomsById };
+  newRooms.forEach((room: any) => {
+    if (!updatedRoomsById[room.id]) {
+      updatedRoomsById[room.id] = room;
+    }
+  });
+
+  // Merge new room IDs with existing ones, filtering out duplicates.
+  const mergedRoomIds = [...new Set([...newRooms.map((room: any) => room.id), ...state.rooms])];
+
+  // Sort mergedRoomIds based on bumped_at field in updatedRoomsById.
+  const sortedRoomIds = mergedRoomIds.sort((a, b) => {
+    const roomA = updatedRoomsById[a];
+    const roomB = updatedRoomsById[b];
+    // Compare RFC 3339 date strings directly
+    return roomB.bumped_at.localeCompare(roomA.bumped_at);
+  });
+
+  return {
+    ...state,
+    roomsById: updatedRoomsById,
+    rooms: sortedRoomIds
+  };
+}
+```
+
+### DELETE_ROOM
+
+This action helps to remove the room from room list screen. Used when current user leaves the room from search screen, or when we received an event that current user left the room – this help us to sync accross different devices.
+
+```javascript
+case 'DELETE_ROOM': {
+  const roomId = action.payload.roomId;
+
+  // Set the specified room to null instead of deleting it.
+  const newRoomsById = {
+    ...state.roomsById,
+    [roomId]: null // On delete we set roomId to null. This allows to sync membership state of rooms on ChatSearch screen.
+  };
+
+  // Remove the room from the rooms array.
+  const newRooms = state.rooms.filter((id: any) => id !== roomId);
+
+  // Remove associated messages.
+  const { [roomId]: deletedMessages, ...newMessagesByRoomId } = state.messagesByRoomId;
+
+  return {
+    ...state,
+    roomsById: newRoomsById,
+    rooms: newRooms,
+    messagesByRoomId: newMessagesByRoomId
+  };
+}
+```
+
+### ADD_MESSAGES
+
+Whenever we send message, got async real-time message, or simply load messages on Chat Detail Screen - we call this action to maintain a proper message list for each known room on room list screen.
+
+```javascript
+case 'ADD_MESSAGES': {
+  const roomId = action.payload.roomId;
+  const newMessages = action.payload.messages;
+  let currentMessages = state.messagesByRoomId[roomId] || [];
+
+  // Combine current and new messages, then filter out duplicates.
+  const combinedMessages = [...currentMessages, ...newMessages].filter(
+    (message, index, self) =>
+      index === self.findIndex(m => m.id === message.id)
+  );
+
+  // Sort the combined messages by id in ascending order.
+  combinedMessages.sort((a, b) => a.id - b.id);
+
+  // Find the message with the highest ID.
+  const maxMessageId = combinedMessages.length > 0 ? combinedMessages[combinedMessages.length - 1].id : null;
+
+  let needSort = false;
+
+  // Update the roomsById object with the new last_message if necessary.
+  const updatedRoomsById = { ...state.roomsById };
+  if (maxMessageId !== null && updatedRoomsById[roomId] && (!updatedRoomsById[roomId].last_message || maxMessageId > updatedRoomsById[roomId].last_message.id)) {
+    const newLastMessage = combinedMessages.find(message => message.id === maxMessageId);
+    updatedRoomsById[roomId].last_message = newLastMessage;
+    updatedRoomsById[roomId].bumped_at = newLastMessage.room.bumped_at;
+    needSort = true;
+  }
+
+  let updatedRooms = [...state.rooms];
+  if (needSort) {
+      // Sort mergedRoomIds based on bumped_at field in updatedRoomsById.
+      updatedRooms = updatedRooms.sort((a: any, b: any) => {
+        const roomA = updatedRoomsById[a];
+        const roomB = updatedRoomsById[b];
+        // Compare RFC 3339 date strings directly
+        return roomB.bumped_at.localeCompare(roomA.bumped_at);
+      });
+  }
+
+  return {
+    ...state,
+    messagesByRoomId: {
+      ...state.messagesByRoomId,
+      [roomId]: combinedMessages
+    },
+    roomsById: updatedRoomsById,
+    rooms: updatedRooms,
+  };
+}
+```
+
+### SET_ROOM_MEMBER_COUNT
+
+This reducer is called whenever we are getting events about membership changes – we will add such events soon when talk about Centrifugo integration.
+
+```javascript
+case 'SET_ROOM_MEMBER_COUNT': {
+  const { roomId, version, memberCount } = action.payload;
+
+  // Check if the roomId exists in roomsById.
+  if (!state.roomsById[roomId]) {
+    console.error(`Room with ID ${roomId} not found.`);
+    return state;
+  }
+
+  // Check if the version in the event is greater than the version in the room object.
+  if (version <= state.roomsById[roomId].version) {
+    console.error(`Outdated version for room ID ${roomId}.`);
+    return state;
+  }
+
+  // Update the member_count and version of the specified room.
+  const updatedRoom = {
+    ...state.roomsById[roomId],
+    member_count: memberCount,
+    version: version,
+  };
+
+  // Return the new state with the updated roomsById.
+  return {
+    ...state,
+    roomsById: {
+      ...state.roomsById,
+      [roomId]: updatedRoom,
+    },
+  };
+}
+```
 
 ## Adding styles
 
