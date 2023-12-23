@@ -39,11 +39,7 @@ Also, explore our [Centrifugo PRO planned features](https://github.com/orgs/cent
 
 Centrifugo PRO requires a license key to run.
 
-The price for a license key is 3,499 EUR. A license key has an expiration date — six months since the purchase. Once your key expires, Centrifugo PRO will continue to work, but you will lose access to updates for versions released after the expiration date of your key. This model is like subscription, yet provides the flexibility to delay subsequent payments until an upgrade is required.
-
-Our services are exclusively available to corporate and business clients at this time. To purchase the license key, please reach out to us at `sales@centrifugal.dev`. We kindly ask that your email includes specific information about your company, such as its name and address. We would also value a brief description of how you plan to utilize Centrifugo PRO.
-
-The purchase is just an online payment by card (or other available method) in Centrifugal Labs store on Lemon Squeezy platform. We will share a payment link in response to your request – and everything else is automated.
+Our services are exclusively available to corporate and business clients at this time. To purchase the license key, please reach out to us at `sales@centrifugal.dev`. We would be happy to learn more about your real-time challenges and how Centrifugo can help you address them.
 
 ## Try for free in sandbox mode
 
