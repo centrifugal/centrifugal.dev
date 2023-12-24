@@ -3,7 +3,7 @@
     color: #9b9b9b;
     padding: 2rem;
     text-align: center;
-    animation: slideIn 1s ease-out forwards;
+    animation: slideInDark 1s linear forwards;
 }
 
 .bannerTitle {
@@ -27,9 +27,19 @@
     margin-bottom: 0;
 }
 
-/* Keyframes for animations */
-@keyframes slideIn {
+@keyframes slideInDark {
     from {
+        background-color: #17171B;
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInLight {
+    from {
+        background-color: white;
         transform: translateY(100%);
     }
     to {
@@ -49,6 +59,7 @@
 html[data-theme="light"] .banner {
     background-color: #e7e7e7;
     color: #545454;
+    animation: slideInLight 1s linear forwards;
 }
 
 html[data-theme="light"] .bannerLink {
@@ -57,4 +68,14 @@ html[data-theme="light"] .bannerLink {
 
 html[data-theme="light"] .bannerLink:hover {
     color: #ff9184;
+}
+
+@media screen and (max-width: 996px) {
+    .bannerTitle {
+        font-size: 1.2rem;
+    }
+    
+    .bannerText {
+        font-size: 1rem;
+    }
 }
