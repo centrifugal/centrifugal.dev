@@ -3,32 +3,35 @@
     color: #9b9b9b;
     padding: 2rem;
     text-align: center;
-    animation: slideInDark 1s linear forwards;
+    animation: slideInDark 0.7s linear forwards;
+    position: relative;
+    overflow: hidden;
 }
 
 .bannerTitle {
     font-size: 2.2rem;
     margin-bottom: 0.5rem;
-    animation: fadeIn 2s ease-in;
+    animation: fadeIn 1.5s ease-in;
 }
 
 .bannerLink {
-    color: #E84C3B;
+    color: #ff4c4c;
 }
 
 .bannerLink:hover {
-    color: #f36656;
+    color: #ff6057;
     text-decoration: none;
 }
 
 .bannerText {
     font-size: 1.2rem;
-    animation: fadeIn 3s ease-in;
+    animation: fadeIn 1.5s ease-in;
     margin-bottom: 0;
 }
 
 @keyframes slideInDark {
     from {
+        color: #17171B;
         background-color: #17171B;
         transform: translateY(100%);
     }
@@ -39,6 +42,7 @@
 
 @keyframes slideInLight {
     from {
+        color: white;
         background-color: white;
         transform: translateY(100%);
     }
@@ -58,8 +62,8 @@
 
 html[data-theme="light"] .banner {
     background-color: #e7e7e7;
-    color: #545454;
-    animation: slideInLight 1s linear forwards;
+    color: #737373;
+    animation: slideInLight 0.7s linear forwards;
 }
 
 html[data-theme="light"] .bannerLink {
@@ -67,7 +71,7 @@ html[data-theme="light"] .bannerLink {
 }
 
 html[data-theme="light"] .bannerLink:hover {
-    color: #ff9184;
+    color: #cc4c3e;
 }
 
 @media screen and (max-width: 996px) {

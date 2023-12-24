@@ -37,7 +37,7 @@ html[data-theme="dark"] {
 }
 
 html[data-theme="light"] .button--secondary {
-  border-color: #e6b8b8;
+  border-color: #ff6057;
 }
 
 img[align='right'] {
@@ -46,7 +46,8 @@ img[align='right'] {
 }
 
 html[data-theme="light"] .button--secondary:hover {
-  background-color: #f5c1c1;
+  background-color: #ff6057;
+  color: white;
 }
 
 .navbar__items a:nth-child(7):hover {
