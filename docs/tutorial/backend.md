@@ -191,7 +191,7 @@ class Room(models.Model):
     name = models.CharField(max_length=100, unique=True)
     version = models.PositiveBigIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    bumped_at = models.DateTimeField(auto_now_add=True)
     last_message = models.ForeignKey(
         'Message', related_name='last_message_rooms',
         on_delete=models.SET_NULL, null=True, blank=True,
