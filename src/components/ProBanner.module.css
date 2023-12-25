@@ -3,7 +3,7 @@
     color: #9b9b9b;
     padding: 2rem;
     text-align: center;
-    animation: slideInDark 0.7s linear forwards;
+    animation: fadeIn 0.7s linear forwards;
     position: relative;
     overflow: hidden;
 }
@@ -63,7 +63,7 @@
 html[data-theme="light"] .banner {
     background-color: #e7e7e7;
     color: #737373;
-    animation: slideInLight 0.7s linear forwards;
+    animation: fadeIn 0.7s linear forwards;
 }
 
 html[data-theme="light"] .bannerLink {

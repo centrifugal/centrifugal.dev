@@ -535,7 +535,7 @@ const ChatRoomDetail: React.FC<ChatRoomDetailProps> = ({ fetchRoom, fetchMessage
 export default ChatRoomDetail;
 ```
 
-Let's discuss some important things in the implementation.
+Let's discuss some important or non-so-obvious things in the implementation.
 
 One interesting thing is how we handle scroll – if user currently in the end of messages area - then we scroll to the end again after adding a new message. If user scrolls top – we prevent automatic scrolling on new message – because user most probably does not want scroll to work at that moment. This is a very common UX decision in messenger apps.
 
@@ -743,4 +743,6 @@ For making frontend layout we use flexbox for CSS rules so the app will be fully
 
 ## What we have at this point
 
-Actually, at this point we have an app which provides messenger functionality. Users can join/leave rooms, send messages. But to see new messages in room users need to reload a page. Not a good thing for chat app, right? Counters about number of users in particular room are also not updated until page reload. So finally we are ready to integrate the app with Centrifugo.
+Actually, at this point we have an app which provides messenger functionality. 
+
+You can use Django admin web UI to create some rooms and interact with them. Users can join/leave rooms, send messages. But to see new messages in room users need to reload a page. Not a good thing for chat app, right? Counters about number of users in particular room are also not updated until page reload. So finally we are ready to integrate the app with Centrifugo.

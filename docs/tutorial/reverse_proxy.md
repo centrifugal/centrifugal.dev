@@ -4,13 +4,13 @@ sidebar_label: "Adding reverse proxy"
 title: "Adding Nginx as a reverse proxy"
 ---
 
-As mentioned we are building single-page frontend application here. The frontend will be fully decoupled from the backend. This is actually quite nice because Centrifugo users may theoretically swap only backend or only frontend parts when trying to follow this tutorial – for example, keep frontend part but try to implement the backend in Laravel or Rails, or with sth else.
+As mentioned, we are building a single-page frontend application here, and the frontend will be completely decoupled from the backend. This separation is advantageous because Centrifugo users can theoretically swap only the backend or frontend components while following this tutorial. For example, one could keep the frontend part but attempt to implement the backend in Laravel, Rails, or another framework.
 
-For general user authentication we will be using native Django session authentication, which is based on cookies. For the best in class security we will use HTTP-only cookies. To make such a setup work with SPA frontend we should serve the frontend and the backed from the same domain.
+For general user authentication, we will utilize native Django session authentication, which relies on cookies. For optimal security, we will employ HTTP-only cookies. To make such a setup compatible with the SPA frontend, we should serve both the frontend and backend from the same domain.
 
-BTW, if you are interested in more details check out this awesome tutorial: [Django Session-based Auth for Single Page Apps](https://testdriven.io/blog/django-spa-auth/). It contains a detailed description of the approach we use here together with other options to configure Django in SPA scenarios.
+For more details, you can refer to this excellent tutorial: [Django Session-based Auth for Single Page Apps](https://testdriven.io/blog/django-spa-auth/). It provides a thorough explanation of the approach used here, along with other options for configuring Django in SPA scenarios.
 
-It's possible to use any reverse proxy, but we will go with Nginx here – one of the most popular reverse proxies in the world. Here is a configuration for Nginx placed into `nginx/nginx.conf` file:
+While any reverse proxy can be used, we will use Nginx, one of the most popular reverse proxies globally. Here is the configuration for Nginx, placed in the `nginx/nginx.conf` file:
 
 ```conf title="nginx/nginx.conf"
 user www-data;
@@ -118,3 +118,5 @@ As you may noticed we added several locations to Nginx:
 * `/static` - to serve Django admin static files
 * `/connection/websocket` - this is a proxy to Centrifugo service, we will setup Centrifugo later in this tutorial
 * `/` – and finally root path serves the frontend app, we will be creating it soon too.
+
+Run the app, go to [http://localhost:9000/admin](http://localhost:9000/admin) – and create some rooms. Now it's time to build the frontend part of the app – to display user rooms, join/leave rooms and create new messages.

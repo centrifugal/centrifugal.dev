@@ -151,7 +151,7 @@ Don't forget to include this view to `urls.py` configuration, and then you can f
 
 Awesome! Though simply being connecting is not that useful. We want to receive real-time data from Centrifugo. But how Centrifugo will understand how to route published data? Of course due to channel concept. Client can subscribe to channel to receive all messages published to that channel.
 
-As mention before – for this sort of app using a single individual channel for each user makes a lot of sense.
+As mentioned before – for this sort of app using a single individual channel for each user makes a lot of sense.
 
 You can ask – could we simply subscribe to all room channels current user is member of? It may be a good thing if you know that users won't have too many groups, let's say 10-100 max. Going above this number will make UI less efficient. Consider user who is a member of a thousand of groups – it will require a very heavyweight initial subscribe request. What if user is member of 10k groups? So moving all the routing complexity to the backend having a single individual channel on the frontend seems a more reasonable approach for our app. And this will also help us to simpify state recovery later. 
 

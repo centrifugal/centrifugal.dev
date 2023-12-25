@@ -4,13 +4,13 @@ sidebar_label: "Missed messages recovery"
 title: "Missed messages recovery"
 ---
 
-At this point we already have a real-time application with an instant delivery of events towards interested messenger users. Now let's work on reliable message delivery a bit. First step would be enabling Centrifugo automatic message recovery for personal channels.
+At this point, we already have a real-time application with the instant delivery of events to interested messenger users. Now, let's focus on ensuring reliable message delivery. The first step would be enabling Centrifugo's automatic message recovery for personal channels.
 
-This will let connections automatically recover missed messages due to short network disconnections, like when moving in the metro with limited mobile internet coverage, etc. Also, it will help to recover messages due to disconnections upon Centrifugo node restart (in case of using Redis Engine).
+Enabling this feature allows connections to automatically recover missed messages due to brief network disconnections, such as when moving through areas with limited mobile internet coverage, and it aids in recovering messages after disconnections caused by a Centrifugo node restart (in the case of using the Redis Engine).
 
-But the most important thing about auto recovery is that it help to survive mass reconnect scenarios. This may happen when some load balancer in the infrastructure level reloaded – all connections towards your app is then dropped and try to re-establish. In some cases, like our messenger app, clients want to load the latest state and this may result into lots of requests to your main database (more connections => larger burst of requests in a short time). Centrifugo provides efficient recovery from history cache thus may help your backend to deal with such scenarios. This is especially useful if the backend is written in Django as you can have many WebSocket connections but still reasonable number of Django app processes.
+The most crucial aspect of auto recovery is its ability to handle mass reconnect scenarios. This situation might occur when a load balancer at the infrastructure level is reloaded, causing all connections to your app to be dropped and attempting to re-establish. In cases like our messenger app, clients want to load the latest state, leading to numerous requests to your main database (more connections result in a larger burst of requests in a short time). Centrifugo efficiently recovers from the history cache, helping your backend manage such scenarios. This is particularly valuable if the backend is written in Django, allowing for many WebSocket connections with a still reasonable number of Django app processes.
 
-To do this we need to extend Centrifugo `personal` namespace configuration:
+To implement this, we need to extend the Centrifugo `personal` namespace configuration:
 
 ```json
 {

@@ -262,6 +262,8 @@ CSRF and login/logout endpoints are rather trivial to implement with Django. For
 
 ### GET /api/csrf/
 
+We need a way to let the frontend to load CSRF token. Refer to the [Django Session-based Auth for Single Page Apps](https://testdriven.io/blog/django-spa-auth/) article which explains why we need to do that.
+
 ```python title="backend/app/views.py"
 from django.http import JsonResponse
 from django.middleware.csrf import get_token
@@ -272,6 +274,8 @@ def get_csrf(request):
 ```
 
 ### POST /api/login/
+
+Simply using Django's functions for authenticating user here:
 
 ```python title="backend/app/views.py"
 import json
@@ -300,6 +304,7 @@ def login_view(request):
 
 ### POST /api/logout/
 
+Simply using Django's functions for log user out here:
 
 ```python title="backend/app/views.py"
 import json
@@ -555,4 +560,6 @@ urlpatterns += staticfiles_urlpatterns()
 
 So we included all the views we wrote, included chat application urls.
 
-We also serving Django built-in admin - it will allow us to create some rooms to play with. In the example source code you may find some additional code in `backend/chat/admin.py` which registers models in Django admin.
+### Adding admin models
+
+We also serving Django built-in admin - it will allow us to create some rooms to play with. In the example source code you may find some additional code in `backend/chat/admin.py` which registers models in Django admin. After adding Nginx you will be able to start the app and go to [http://localhost:9000/admin](http://localhost:9000/admin) – and create some rooms. Let's add Nginx now.

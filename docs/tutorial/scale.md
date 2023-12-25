@@ -135,7 +135,7 @@ Things to observe:
 * for 10k members in group latencies are very acceptable for the messenger app, this is already the scale of quite huge organizations which use Slack messenger, and it's not limit as we will show.
 * using API and CDC together provides better latency than just CDC (so we proved it works as expected!), but probably for large groups you may want to only use CDC to keep publication time reasonably small.
 
-Now let's use Centrifugo [Redis engine](../server/engines.md#redis-engine):
+Now let's use Centrifugo [Redis engine](../server/engines.md#redis-engine). In the tutorial we used in-memory engine of Centrifugo. But with Redis engine it's possible to scale Centrifugo nodes and load balance WebSocket connections over them. We left Redis Engine out of the scope in the tutorial – but you can simply add it by extending `docker-compose.yml`. Here are results we got for it: 
 
 |      | api | outbox | cdc | api_cdc |
 |------|-----|--------|-----|---------|

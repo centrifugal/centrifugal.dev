@@ -27,13 +27,7 @@ Centrifugo **only supports JSON payloads for asynchronous commands coming to con
 
 :::tip
 
-Our [Chat/Messenger tutorial](../tutorial/outbox_cdc.md) shows PostgreSQL outbox and Kafka consumer in action.
-
-:::
-
-:::tip
-
-Various real-time features may require different ways of sending real-time events. Both synchronous API calls and async calls have its own advantages and trade-offs. We talk more about this throughout [Chat/Messenger tutorial](../tutorial/intro.md) and in [Asynchronous message streaming to Centrifugo with Benthos](/blog/2023/08/19/asynchronous-message-streaming-to-centrifugo-with-benthos) blog post.
+Our [Chat/Messenger tutorial](../tutorial/outbox_cdc.md) shows PostgreSQL outbox and Kafka consumer in action. It also shows techniques to avoid duplicate messages (idempotent publications) and deal with late message delivery (idempotent processing on client side). Whether you need those techniques – depends on the nature of app. Various real-time features may require different ways of sending real-time events. Both synchronous API calls and async calls have its own advantages and trade-offs. We also talk about this in [Asynchronous message streaming to Centrifugo with Benthos](/blog/2023/08/19/asynchronous-message-streaming-to-centrifugo-with-benthos) blog post.
 
 :::
 
@@ -76,7 +70,8 @@ CREATE TABLE IF NOT EXISTS centrifugo_outbox (
 	id BIGSERIAL PRIMARY KEY,
 	method text NOT NULL,
 	payload JSONB NOT NULL,
-	partition INTEGER NOT NULL default 0
+	partition INTEGER NOT NULL default 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
 );
 ```
 

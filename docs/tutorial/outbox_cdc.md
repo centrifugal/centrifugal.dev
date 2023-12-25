@@ -4,21 +4,21 @@ sidebar_label: "Broadcast: outbox and CDC"
 title: "Broadcast using transactional outbox and CDC"
 ---
 
-Some of you may notice one possible problem which could prevent event delivery to users when publishing messages to Centrifugo API. We do this after transaction and over the network call (in our case using HTTP). This means broadcast API call may return the error.
+Some of you may notice one potential issue which could prevent event delivery to users when publishing messages to Centrifugo API. Since we do this after a transaction and via a network call (in our case, using HTTP), it means the broadcast API call may return an error.
 
-There are real-time applications which can tolerate real-time message loss. In normal conditions the number of such errors should be small and in most cases fixed by a retry. Moreover, publishing directly over Centrifugo API usually allows achieving the best delivery latency.
+There are real-time applications that can tolerate the loss of real-time messages. In normal conditions, the number of such errors should be small, and in most cases, they can be addressed by adding retries. Moreover, publishing directly over the Centrifugo API usually allows achieving the best delivery latency.
 
-But what if you don't want to think about retries and message loss in unaccepted on this stage? Here we will show how to broadcast in a different way – asynchronously and transactionally.
+But what if you don't want to think about retries and consider message loss unacceptable at this stage? Here, we will demonstrate how to broadcast in a different way — asynchronously and transactionally.
 
 ## Transactional outbox for publishing events
 
-The first approach is using [Transactional outbox](https://microservices.io/patterns/data/transactional-outbox.html) pattern. When you make database changes you open transaction, do required changes and write an event into special outbox table. This event will be written to the outbox table only if transaction successfully commited. Then a separate process reads outbox table and sends events to the external system. In our case - to Centrifugo.
+The first approach involves using the [Transactional outbox](https://microservices.io/patterns/data/transactional-outbox.html) pattern. When you make database changes, you open a transaction, make the required changes, and write an event into a special outbox table. This event will be written to the outbox table only if the transaction is successfully committed. Then, a separate process reads the outbox table and sends events to the external system — in our case, to Centrifugo.
 
-You can implement such approach yourself to publish events to Centrifugo. But here we will show Centrifugo built-in feature to consume PostgreSQL outbox table.
+You can implement this approach yourself to publish events to Centrifugo. However, here we will showcase Centrifugo's built-in feature to consume the PostgreSQL outbox table.
 
-All you need to do is create an outbox table in predefined format (expected by Centrifugo) – and point Centrifugo to it.
+All you need to do is create an outbox table in a predefined format (expected by Centrifugo) and point Centrifugo to it.
 
-Moreover, to reduce the latency of outbox processing Centrifugo supports parallel processing of outbox table using configured partition number. And Centrifugo may be configured to use PostgreSQL LISTEN/NOTIFY mechanism - this reduces the latency of events processing a lot.
+Moreover, to reduce the latency of outbox processing, Centrifugo supports parallel processing of the outbox table using a configured partition number. Additionally, Centrifugo can be configured to use the PostgreSQL LISTEN/NOTIFY mechanism, significantly reducing the latency of event processing.
 
 First of all, let's create the Outbox model inside `chat` Django app which describes the required outbox table:
 
@@ -311,8 +311,10 @@ But we can eliminate latency downside to take best of two worlds.
 
 ## Solving CDC latency
 
-To eliminate longer latency in case of CDC but still have a reliable event delivery we can use combined approach: broadcast using HTTP API upon successful transaction and save Outbox/CDC model also. Why this works? Because we are using idempotency key while publishing to Centrifugo. So the second message will be dropped by Centrifugo and not reach subscribers.
+To minimize latency in the case of CDC but still ensure reliable event delivery, we can employ a combined approach: broadcasting using the HTTP API upon a successful transaction and saving the Outbox/CDC model as well. Why does this work? Because we use an idempotency key when publishing to Centrifugo. As a result, the second message will be rejected by Centrifugo and will not reach subscribers.
 
-Moreover, on the client side we are using techniques to deal with duplicate messages – we are accurately updating state to prevent duplicate messages in a room, for counters we send the current number of members in a room instead of incrementing/decrementing one by one upon receiving the event. I.e. we have idempotent message processing on the client side.
+Moreover, on the client side we are using techniques to deal with duplicate messages – we are accurately updating state to prevent duplicate messages in a room, for counters we send the current number of members in a room instead of incrementing/decrementing one by one upon receiving the event. In other words, we ensure idempotent message processing on the client side.
 
-And one more technique which helps us to distinguish duplicate or outdated messages – is using incremental versioning of the room. Every event we send which is related to the room has a room version attached. On the client side this gives us a possibility to compare current state room version with event room version. And drop processing non-actual messages. This way we deal with a late message delivery problem, avoiding extra work and unnecessary UI updates.
+Another technique that helps us distinguish duplicate or outdated messages is using incremental versioning of the room. Each event we send related to the room includes a room version. On the client side, this enables us to compare the current state room version with the event room version and discard processing non-actual messages. This approach addresses the issue of late message delivery, avoiding unnecessary work and UI updates.
+
+In the next chapter, we will examine some actual numbers to illustrate how this combined approach works as expected.
