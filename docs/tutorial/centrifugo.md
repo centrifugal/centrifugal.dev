@@ -112,9 +112,9 @@ I.e. it makes request to the backend and receives connection JWT in response. Ag
 
 The token must follow specification described in [Client JWT authentication](../server/authentication.md) chapter. Long story short – it's just a JWT from [rfc7519](https://datatracker.ietf.org/doc/html/rfc7519), we can use any JWT library to generate it.
 
-Let's extend `backend/app/view.py` with this view:
+Let's extend `backend/app/views.py` with this view:
 
-```python
+```python title="backend/app/views.py"
 import jwt
 
 from django.conf import settings
@@ -137,7 +137,7 @@ def get_connection_token(request):
 
 Note, we are using `settings.CENTRIFUGO_TOKEN_SECRET` here, we need to include this option to `backend/app/settings.py`:
 
-```python
+```python title="backend/app/settings.py"
 # CENTRIFUGO_TOKEN_SECRET is used to create connection and subscription JWT.
 # SECURITY WARNING: make it strong, keep it in secret, never send to the frontend!
 CENTRIFUGO_TOKEN_SECRET = 'secret'
@@ -190,7 +190,7 @@ Note that we additionally attach `channel` URL query param when requesting backe
 
 On the backend side we check permission to subscribe and return subscription token:
 
-```python
+```python title="backend/app/views.py"
 def get_subscription_token(request):
     if not request.user.is_authenticated:
         return JsonResponse({'detail': 'unauthorized'}, status=401)
@@ -239,7 +239,7 @@ But we want all chat room members to receive events. If user `1` sends a message
 
 To efficiently publish message to many channels Centrifugo provides [broadcast](../server/server_api.md#broadcast) API. Let's use HTTP API of Centrifugo:
 
-```python
+```python title="backend/chat/views.py"
 import requests
 
 from django.conf import settings
@@ -333,9 +333,11 @@ Note the following:
 
 When publishing we provide `idempotency_key` to Centrifugo – this allows effectively dropping duplicate publications during configurable time window on Centrifugo side.
 
+Another important thing is how we designed the data of the real-time event – note we've included event `type` field on top level. In this case `message_added`. This approach allows easily expanding possible event types – so the frontend may distinguish between them and process accordingly.
+
 We can extend `JoinRoomView` and `LeaveRoomView` with similar code to also broadcast room membership events:
 
-```python
+```python title="backend/chat/views.py"
 class JoinRoomView(APIView, CentrifugoMixin):
     # Some code skipped here ....
 
@@ -394,6 +396,14 @@ As we already shown above the entrypoint for incoming real-time messages on the 
 sub.on('publication', (ctx: PublicationContext) => {
     onPublication(ctx.data)
 })
+```
+
+Where `onPublication` is:
+
+```javascript
+const onPublication = (publication: any) => {
+  setMessageQueue(prevQueue => [...prevQueue, publication]);
+};
 ```
 
 In our app example we process the messages using asynchronous queue. To be honest, it's hard to give the universal receipt here – it seems to be a good approach for our example, but probably in your own app you will organise message processing differently.

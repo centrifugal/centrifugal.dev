@@ -130,6 +130,7 @@ We first start with Centrifugo that uses [Memory engine](../server/engines.md#me
 
 Things to observe:
 
+* end-to-end latency here includes the time Django processes the request, that's why we can't go below 40ms even in rooms with only 100 members.
 * when broadcasting over Centrifugo API - message delivered even faster than Django handler completes its work (since we are publishing synchronously somewhere inside request processing). I.e. this means your frontend can receive real-time message before publish request completes, this is actually true for all other broadcast mode – just with much smaller probability.
 * using outbox and CDC decreases time of message creation, but latency increases – since broadcastng is asynchronous, and several more stages involved into the flow. It's generally possible to tune to be faster.
 * for 10k members in group latencies are very acceptable for the messenger app, this is already the scale of quite huge organizations which use Slack messenger, and it's not limit as we will show.

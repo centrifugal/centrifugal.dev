@@ -14,7 +14,7 @@ But what if you don't want to think about retries and consider message loss unac
 
 The first approach involves using the [Transactional outbox](https://microservices.io/patterns/data/transactional-outbox.html) pattern. When you make database changes, you open a transaction, make the required changes, and write an event into a special outbox table. This event will be written to the outbox table only if the transaction is successfully committed. Then, a separate process reads the outbox table and sends events to the external system — in our case, to Centrifugo.
 
-You can implement this approach yourself to publish events to Centrifugo. However, here we will showcase Centrifugo's built-in feature to consume the PostgreSQL outbox table.
+You can implement this approach yourself to publish events to Centrifugo. However, here we will showcase Centrifugo's built-in feature to [consume the PostgreSQL outbox table](../server/consumers.md#postgresql-outbox-consumer).
 
 All you need to do is create an outbox table in a predefined format (expected by Centrifugo) and point Centrifugo to it.
 
@@ -121,7 +121,7 @@ After doing that restart everything – and enjoy instant event delivery!
 
 ## Using Kafka Connect for CDC
 
-Let's also look at another approach - usually known as CDC - Change Data Capture (you can learn more about it from [this post](https://www.confluent.io/learn/change-data-capture/), for example). We will use Kafka Connect with Debezium connector to read updates from PostgreSQL WAL and translate them to Kafka. Then we will use built-in Centrifugo possibility to consume Kafka topics.
+Let's also look at another approach - usually known as CDC - Change Data Capture (you can learn more about it from [this post](https://www.confluent.io/learn/change-data-capture/), for example). We will use Kafka Connect with Debezium connector to read updates from PostgreSQL WAL and translate them to Kafka. Then we will use built-in Centrifugo possibility to [consume Kafka topics](../server/consumers.md#kafka-consumer).
 
 The CDC approach with reading WAL has an advantage that in most cases it comes with a very low overhead for the database. In the outbox shown case above we constantly polling PostgreSQL for changes, which may be less effective for the database.
 

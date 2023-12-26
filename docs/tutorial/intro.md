@@ -16,11 +16,15 @@ Note that we have a real-time synchronization across the app – room membership
 
 Centrifugo is completely agnostic to the technology stack, seamlessly integrating with any frontend or backend technologies. However, for the purpose of this tutorial, we needed to choose specific technologies to illustrate the entire process of building a real-time WebSocket app:
 
-* On the frontend, we utilize [React](https://react.dev/) and [Typescript](https://www.typescriptlang.org/), with a help of the tooling provided by [Vite](https://vitejs.dev/). The frontend is designed as a Single-Page Application (SPA) that communicates with the backend through a REST API.
-* For the backend, we employ Python's [Django framework](https://www.djangoproject.com/), complemented by [Django REST Framework](https://www.django-rest-framework.org/) to implement the server API. The backend relies on [PostgreSQL](https://www.postgresql.org/) as its primary database.
-* Centrifugo will handle WebSocket connections, providing a real-time transport layer for delivering events instantly to users. The backend will communicate with Centrifugo synchronously over Centrifugo HTTP API, and asynchronously using transactional outbox or CDC approach with [Kafka Connect](https://docs.confluent.io/platform/current/connect/index.html).
-* [Nginx](https://www.nginx.com/) acts as a reverse proxy for all public endpoints of the app, facilitating the serving of frontend and backend endpoints from the same domain. This configuration is essential for secure HTTP-only cookie authentication of frontend-to-backend communication.
-* To handle connection authentication in Centrifugo and perform channel permission checks, we use [JWT](https://auth0.com/docs/secure/tokens/json-web-tokens) (JSON Web Token) in the app. This ensures secure real-time communication and helps the backend to deal with a reconnect storm – a problem which becomes very important at scale in WebSocket applications that deal with many real-time connections.
+💎 On the frontend, we utilize [React](https://react.dev/) and [Typescript](https://www.typescriptlang.org/), with a help of the tooling provided by [Vite](https://vitejs.dev/). The frontend is designed as a Single-Page Application (SPA) that communicates with the backend through a REST API.
+
+💎 For the backend, we employ Python's [Django framework](https://www.djangoproject.com/), complemented by [Django REST Framework](https://www.django-rest-framework.org/) to implement the server API. The backend relies on [PostgreSQL](https://www.postgresql.org/) as its primary database.
+
+💎 Centrifugo will handle WebSocket connections, providing a real-time transport layer for delivering events instantly to users. The backend will communicate with Centrifugo synchronously over Centrifugo HTTP API, and asynchronously using transactional outbox or CDC approach with [Kafka Connect](https://docs.confluent.io/platform/current/connect/index.html).
+
+💎 [Nginx](https://www.nginx.com/) acts as a reverse proxy for all public endpoints of the app, facilitating the serving of frontend and backend endpoints from the same domain. This configuration is essential for secure HTTP-only cookie authentication of frontend-to-backend communication.
+
+💎 To handle connection authentication in Centrifugo and perform channel permission checks, we use [JWT](https://auth0.com/docs/secure/tokens/json-web-tokens) (JSON Web Token) in the app. This ensures secure real-time communication and helps the backend to deal with a reconnect storm – a problem which becomes very important at scale in WebSocket applications that deal with many real-time connections.
 
 ![](/img/grand-chat-tutorial-tech.png)
 
@@ -28,9 +32,9 @@ The tutorial is quite lengthy, and it will likely grow larger over time. The pri
 
 ## Straight to the source code
 
-The complete source code for the app we build [may be found on Github](https://github.com). If you have Docker, you will be able to run the app locally quickly using just a few Docker Compose commands.
+The complete source code for the app we build [may be found on Github](https://github.com/centrifugal/grand-chat-tutorial). If you have Docker, you will be able to run the app locally quickly using just a few Docker Compose commands.
 
-If certain steps in the tutorial appear unclear, remember that you can refer to the source code.
+If certain steps in the tutorial appear unclear, remember that you can refer to the source code. Or ask in [our communities](../getting-started/community.md).
 
 ## Centrifugo vs Django Channels
 

@@ -532,6 +532,8 @@ Example response:
 }
 ```
 
+Starting from Centrifugo v5.2.0 it's also possible to pass `"parallel": true` on `batch` data top level to make batch commands processing parallel on Centrifugo side. This may provide reduced latency (especially in case of using Redis engine).
+
 ## HTTP API libraries
 
 Sending an API request to Centrifugo is a simple task to do in any programming language - this is just a POST request with JSON payload in body and `Authorization` header.

@@ -26,7 +26,7 @@ This screen includes a couple of elements to emphasize. First one is a green cir
 
 The next element - the number of ~~cats~~ users who joined the specific room. This counter is synchronized in real-time. For example, if someone joins the room from Chat Room Search Screen (at which we will look shortly) – the counter will be instantly synchronized. We also automatically add/remove rooms if current user joins/leaves some room from within Chat Room Search Screen opened in another browser tab or another device.
 
-Upon receiving real-time message we re-order rooms to put the one with latest message on top.
+For every room we show the beginning of the last message sent to the room. Upon receiving real-time message we re-order rooms to put the one with latest message on top.
 
 ### Chat Room Search Screen
 
