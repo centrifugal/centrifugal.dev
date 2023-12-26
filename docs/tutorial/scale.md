@@ -10,6 +10,12 @@ Congratulations – we've built an awesome app and we are done with the developm
 
 But before wrapping up, let's experiment a little. Here we will try to look at some latency numbers for the room with 100, 1k, 10k, 100k members in different scenarios. Not many apps will reach 100k members in one group scale, but we want to show that Centrifugo gives you a way to grow this big keeping reasonable latency times, and also gives answers how to reduce latency and increase a system throughput further.
 
+:::info
+
+This tutorial chapter is still to be improved. We've included some numbers we were able to get while experimenting with the app locally and on DigitalOcean droplet – but the chapter should be a bit more complete. At least include description on how to switch to Centrifugo Redis Engine with the corresponding `docker-compose.yml` update and configuration change.
+
+:::
+
 In our blog post [Million connections with Centrifugo](/blog/2020/02/10/million-connections-with-centrifugo) we've shown that on a limited hardware resources, comparable to one modern server machine, delivering 500k messages per second with delivery latency no more than 200ms in 99 percentile is possible with Centrifugo.
 
 But this case is different, in this app we want to have large group chats with many members. The difference here is that publishing involves sending a message to each individual channel – so instead of small fan-in and large fan-out **we have large fan-in and mostly the same fan-out** (mostly – because user may have several connections from different devices). We also have Django on the backend and database communication here – which also makes the use case different as we need to take backend processing timings into account too.

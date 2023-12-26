@@ -44,6 +44,6 @@ Before we begin, a brief note about Django and real-time: Python developers are 
 
 🔥 Centrifugo serves as a universal real-time component, allowing you to decouple your real-time transport layer from the application core. You can integrate Centrifugo into any of your future projects, regardless of the programming language used in the backend.
 
-🔥 It's possible to use a traditional Django approach for writing application business logic — there's no need to use ASGI if you prefer not to. Centrifugo is easy to integrate into existing Django applications working on top of WSGI.
+🔥 It's possible to use a traditional Django approach for writing application business logic — there's no need to use ASGI if you prefer not to. Centrifugo is easy to integrate into existing Django applications working on top of WSGI. And of course it's possible to combine using ASGI in Django with Centrifugo integration.
 
 🔥 You get an amazing scalable performance. Centrifugo is fast and supports sharding by channel to scale further. The use of JWT for authentication and channel authorization enables handling millions of concurrent connections with a reasonable number of Django backend instances. We will demonstrate that achieving chat rooms with tens of thousands of online users and minimal delivery latency is straightforward with Centrifugo. This is something Django Channels users might find challenging without investing considerable time in thinking about how to scale the app properly.
