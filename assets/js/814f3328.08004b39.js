@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkcentrifugal_dev=self.webpackChunkcentrifugal_dev||[]).push([[2535],{5641:e=>{e.exports=JSON.parse('{"title":"Recent posts","items":[]}')}}]);

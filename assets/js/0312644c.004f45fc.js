@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkcentrifugal_dev=self.webpackChunkcentrifugal_dev||[]).push([[4841],{1915:a=>{a.exports=JSON.parse('{"label":"push notifications","permalink":"/blog/tags/push-notifications","allTagsPath":"/blog/tags","count":1}')}}]);
