@@ -12,7 +12,7 @@ But before wrapping up, let's experiment a little. Here we will try to look at s
 
 :::info
 
-This tutorial chapter is still to be improved. We've included some numbers we were able to get while experimenting with the app locally and on DigitalOcean droplet – but the chapter should be a bit more complete. At least include description on how to switch to Centrifugo Redis Engine with the corresponding `docker-compose.yml` update and configuration change.
+This chapter is still to be improved. We've included some numbers we were able to get while experimenting with the app – but left configuring Redis Engine out of scope for now. In experiments we used Centrifugo running outside of Docker. See how we did it in [Tips and Tricks](./tips_and_tricks.md#point-to-centrifugo-running-on-host-outside-docker).
 
 :::
 

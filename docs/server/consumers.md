@@ -25,6 +25,8 @@ Async consumers only process commands which modify state – such as [publish](.
 
 Centrifugo **only supports JSON payloads for asynchronous commands coming to consumers for now**. If you need binary format – reach out with your use case.
 
+If Centrifugo encounters an error while processing consumed messages – then internal errors will be retried, all other errors logged on `error` level – and the message will be marked as processed. The processing logic for [broadcast](./server_api.md#broadcast) API is special: if any of the publications to any channel from broadcast `channels` array failed – then the entire broadcast command will be retried. To prevent duplicate messages being published during such retries – consider using `idempotency_key` in the broadcast command.
+
 :::tip
 
 Our [Chat/Messenger tutorial](../tutorial/outbox_cdc.md) shows PostgreSQL outbox and Kafka consumer in action. It also shows techniques to avoid duplicate messages (idempotent publications) and deal with late message delivery (idempotent processing on client side). Whether you need those techniques – depends on the nature of app. Various real-time features may require different ways of sending real-time events. Both synchronous API calls and async calls have its own advantages and trade-offs. We also talk about this in [Asynchronous message streaming to Centrifugo with Benthos](/blog/2023/08/19/asynchronous-message-streaming-to-centrifugo-with-benthos) blog post.
