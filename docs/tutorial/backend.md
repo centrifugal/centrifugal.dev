@@ -107,6 +107,11 @@ services:
     image: postgres:15
     volumes:
       - ./postgres_data:/var/lib/postgresql/data/
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "grandchat" ]
+      interval: 1s
+      timeout: 5s
+      retries: 10
     environment:
       - POSTGRES_USER=grandchat
       - POSTGRES_PASSWORD=grandchat
@@ -166,7 +171,8 @@ backend:
   expose:
     - 8000
   depends_on:
-    - db
+    db:
+      condition: service_healthy
 ```
 
 Note that we pass backend dir to the container, also passing and installing dependencies, as a result we will get Django app served and with hot reload upon source code changes.

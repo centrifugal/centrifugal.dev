@@ -132,6 +132,11 @@ db:
   image: postgres:15
   volumes:
     - ./postgres_data:/var/lib/postgresql/data/
+  healthcheck:
+    test: [ "CMD", "pg_isready", "-U", "grandchat" ]
+    interval: 1s
+    timeout: 5s
+    retries: 10
   environment:
     - POSTGRES_USER=grandchat
     - POSTGRES_PASSWORD=grandchat
@@ -162,6 +167,11 @@ kafka:
     - "29092:29092"
   expose:
     - 9092
+  healthcheck:
+    test: ["CMD", "kafka-topics", "--list", "--bootstrap-server", "localhost:9092"]
+    interval: 2s
+    timeout: 5s
+    retries: 10
   environment:
     KAFKA_BROKER_ID: 1
     KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -178,8 +188,10 @@ kafka:
 connect:
   image: debezium/connect:latest
   depends_on:
-    - kafka
-    - db
+    db:
+      condition: service_healthy
+    kafka:
+      condition: service_healthy
   ports:
     - "8083:8083"
   environment:
