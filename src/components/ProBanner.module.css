@@ -1,0 +1,88 @@
+.banner {
+    background-color: #0C0D0E;
+    color: #9b9b9b;
+    padding: 2rem;
+    text-align: center;
+    animation: fadeIn 0.7s linear forwards;
+    position: relative;
+    overflow: hidden;
+}
+
+.bannerTitle {
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
+    animation: fadeIn 1.5s ease-in;
+}
+
+.bannerLink {
+    color: #fe5e5e;
+}
+
+.bannerLink:hover {
+    color: #fa7171;
+    text-decoration: none;
+}
+
+.bannerText {
+    font-size: 1.2rem;
+    animation: fadeIn 1.5s ease-in;
+    margin-bottom: 0;
+}
+
+@keyframes slideInDark {
+    from {
+        color: #17171B;
+        background-color: #17171B;
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInLight {
+    from {
+        color: white;
+        background-color: white;
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+html[data-theme="light"] .banner {
+    background-color: #e7e7e7;
+    color: #737373;
+    animation: fadeIn 0.7s linear forwards;
+}
+
+html[data-theme="light"] .bannerLink {
+    color: #ff6757;
+}
+
+html[data-theme="light"] .bannerLink:hover {
+    color: #cc4c3e;
+}
+
+@media screen and (max-width: 996px) {
+    .bannerTitle {
+        font-size: 1.2rem;
+    }
+
+    .bannerText {
+        font-size: 1rem;
+    }
+}

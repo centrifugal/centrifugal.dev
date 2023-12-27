@@ -12,6 +12,8 @@ import Badoo from "./components/logos/Badoo";
 import Grafana from "./components/logos/Grafana";
 import ManyChat from "./components/logos/ManyChat";
 import OpenWeb from "./components/logos/OpenWeb";
+import TestimonialsCarousel from '../components/TestimonialsCarousel';
+import ProBanner from '../components/ProBanner';
 
 function Feature({ imageUrl, title, children }) {
   const imgUrl = useBaseUrl(imageUrl);
@@ -68,6 +70,7 @@ function Home() {
       description="Centrifugo is an open source server designed to help building interactive real-time messaging applications. Think chats, live comments, multiplayer games, streaming metrics etc. Centrifugo provides a variety of real-time transports, scales well and integrates with any application."
     >
       <Header />
+      <ProBanner />
       <main>
         <section className={clsx("logos-wrapper", styles.logos)}>
           <div className="container">
@@ -146,6 +149,7 @@ function Home() {
             </>
           }
         />
+        <TestimonialsCarousel />
         < Highlight
           img={
             <iframe
@@ -178,35 +182,6 @@ function Home() {
             </>
           }
         />
-        <Highlight
-          img={
-            <video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/logo.mp4"></video>
-          }
-          reversed
-          isDark
-          title="What users ❤️ in Centrifugo"
-          text={
-            <div className="quotes">
-              <code>Stability. It just works without restarts, for few years already</code>
-              <code>Scalability and integration with Redis</code>
-              <code>It's simple and powerful</code>
-              <code>Open source</code>
-              <code>Very simple integration</code>
-              <code>It's really well written. Super easy to setup, especially for auth</code>
-              <code>Clean code</code>
-              <code>Admin web UI</code>
-            </div>
-          }
-        />
-        <div className="container get-started-row">
-          <div className="row">
-            <Link
-              to={useBaseUrl("docs/getting-started/introduction")}
-            >
-              GET STARTED
-            </Link>
-          </div>
-        </div>
       </main >
     </Layout >
   );

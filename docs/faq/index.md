@@ -173,7 +173,7 @@ Centrifugo PRO now solves the pitfalls mentioned here with its [Channel State Ev
 
 Centrifugo does not support disconnect hooks at this point. We understand that this may be useful for some use cases but there are some pitfalls which prevent us adding such hooks to Centrifugo. 
 
-Let's consider a case when Centrifugo node is unexpectedly killed. In this case there is no chance for Centrifugo to emit disconnect events for connections on that node. While this may be rare thing in practice – it may lead to inconsistent state in you app if you'd rely on disconnect hooks.
+Let's consider a case when Centrifugo node is unexpectedly killed. In this case there is no chance for Centrifugo to emit disconnect events for connections on that node. While this may be rare thing in practice – it may lead to inconsistent state in your app if you'd rely on disconnect hooks.
 
 Another reason is that Centrifugo designed to scale to many concurrent connections. Think millions of them. As we [mentioned in our blog](https://centrifugal.dev/blog/2020/11/12/scaling-websocket#massive-reconnect) there are cases when all connections start reconnecting at the same time. In this case Centrifugo could potentially generate lots of disconnect events. Even if disconnect events were queued, rate-limited, or suppressed for quickly reconnected clients there could be situations when your app processes disconnect hook after user already reconnected. This is a racy situation which also can lead to the inconsistency if not properly addressed.
 

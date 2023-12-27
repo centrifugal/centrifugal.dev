@@ -17,7 +17,7 @@ By real-time, we mean a soft real-time. Due to network latencies, garbage collec
 
 :::
 
-## Background
+## Background and motivation
 
 ![](/img/bg_cat.jpg)
 
