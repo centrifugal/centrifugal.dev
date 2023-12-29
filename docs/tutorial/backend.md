@@ -12,7 +12,7 @@ cd grand-chat-tutorial
 touch docker-compose.yml
 ```
 
-We will use `docker compose` to build the app. It will include several services at the end. If you are not familiar with Docker and Docker Compose - we recommend to [learn it first](https://www.simplilearn.com/tutorials/docker-tutorial/docker-compose).
+We will use `docker compose` to build the app. It will include several services at the end. If you are not familiar with Docker and Docker Compose - we recommend to [learn it first](https://gabrieltanner.org/blog/docker-compose/).
 
 ## Start Django project
 
