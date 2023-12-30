@@ -79,10 +79,10 @@ html[data-theme="light"] .bannerLink:hover {
 
 @media screen and (max-width: 996px) {
     .bannerTitle {
-        font-size: 1.2rem;
+        font-size: 0.9rem;
     }
 
     .bannerText {
-        font-size: 1rem;
+        font-size: 0.8rem;
     }
 }

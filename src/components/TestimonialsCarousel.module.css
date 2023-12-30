@@ -41,3 +41,14 @@
     outline: none;
     color: #E84C3B;
 }
+
+@media screen and (max-width: 996px) {
+    .testimonial {
+        font-size: 1rem;
+        padding: 0 1rem;
+    }
+
+    .author {
+        font-size: 0.8em;
+    }
+}
