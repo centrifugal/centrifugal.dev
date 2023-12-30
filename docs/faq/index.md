@@ -118,11 +118,9 @@ If the underlying transport is HTTP-based, and you use HTTP/2 then this will wor
 
 ### What if I need to send push notifications to mobile or web applications?
 
-Sometimes it's confusing to see a difference between real-time messages and push notifications. Centrifugo is a real-time messaging server. It can not send push notifications to devices - to Apple iOS devices via APNS, Android devices via FCM, or browsers over Web Push API.
+We provide [push notifications API](/docs/pro/push_notifications) implementation as part of Centrifugo PRO. It allows sending push notifications to devices - to Apple iOS devices via APNS, Android devices via FCM, or browsers over Web Push API. Also, we cover HMS (Huawei Mobile Services). But in general the task of push notification delivery may be done using another open-source solution, or with Firebase directly.
 
-We are preparing our own [push notifications API](/docs/pro/push_notifications) as part of Centrifugo PRO version. This is under construction though.
-
-The reasonable question here is how can you know when you need to send a real-time message to an online client or push notification to its device for an offline client. The solution is pretty simple. You can keep critical notifications for a client in the database. And when a client reads a message you should send an ack to your backend marking that notification as read by the client. Periodically you can check which notifications were sent to clients but they have not read it (no read ack received). For such notifications, you can send push notifications to its device using your own or another open-source solution. Look at Firebase for example.
+The reasonable question here is how can you know when you need to send a real-time message to an online client or push notification to its device for an offline client. The solution is pretty simple. You can keep critical notifications for a client in the database. And when a client reads a message you should send an ack to your backend marking the notification as read by the client. Periodically you can check which notifications were sent to clients but have not been read (no read ack received). For such notifications, you can send push notification to the device.
 
 ### How can I know a message is delivered to a client?
 
