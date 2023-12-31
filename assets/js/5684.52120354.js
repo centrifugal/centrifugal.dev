@@ -1,0 +1,1 @@
+(self.webpackChunkcentrifugal_dev=self.webpackChunkcentrifugal_dev||[]).push([[5684],{29039:(e,c,s)=>{"use strict";s.d(c,{Z:()=>a});var u=s(31336);const a=u},15525:()=>{}}]);

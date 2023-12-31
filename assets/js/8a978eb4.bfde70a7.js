@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkcentrifugal_dev=self.webpackChunkcentrifugal_dev||[]).push([[4901],{5795:e=>{e.exports=JSON.parse('{"label":"websocket","permalink":"/blog/tags/websocket","allTagsPath":"/blog/tags","count":1,"unlisted":false}')}}]);
