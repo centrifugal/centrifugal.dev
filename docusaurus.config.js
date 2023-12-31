@@ -33,6 +33,12 @@ module.exports = {
         },
         {
           type: 'doc',
+          docId: 'tutorial/intro',
+          label: "Grand tutorial 🎄",
+          position: "left",
+        },
+        {
+          type: 'doc',
           docId: 'server/configuration',
           label: "Server guide",
           position: "left",
@@ -77,7 +83,7 @@ module.exports = {
           items: [
             {
               label: "Send e-mail",
-              to: "mailto:centrifugal.dev@gmail.com",
+              to: "mailto:hello@centrifugal.dev",
             },
           ],
         },

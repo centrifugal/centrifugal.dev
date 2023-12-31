@@ -3,23 +3,23 @@ id: channels
 title: Channels and namespaces
 ---
 
-Upon connecting to a server clients can subscribe to channels. Channel is one of the core concepts of Centrifugo. Most of the time when integrating Centrifugo you will work with channels and decide what is the best channel configuration for your application.
+Upon connecting to a server, clients can subscribe to channels. A channel is one of the core concepts of Centrifugo. Most of the time when integrating Centrifugo, you will work with channels and determine the optimal channel configuration for your application.
 
-## What is channel
+## What is a channel
 
-Centrifugo is a PUB/SUB system - it has publishers and subscribers. Channel is a route for publications. Clients can subscribe to a channel to receive all real-time messages published to a channel. A channel subscriber can also ask for a channel online presence or channel history information.
+Centrifugo operates on a PUB/SUB model - it has publishers and subscribers. A channel acts as a conduit for publications. Clients can subscribe to a channel to receive all the real-time messages published there. Subscribers to a channel may also request information about the channel's online presence or its history.
 
 ![pub_sub](/img/pub_sub.png)
 
-Channel is just a string - `news`, `comments`, `personal_feed` are valid channel names. Though this string has some [predefined rules](#channel-name-rules) as we will see below. You can define different channel behavior using a set of available [channel options](#channel-options).
+A channel is simply a string - names like `news`, `comments`, `personal_feed` are examples of valid channel names. However, there are [predefined rules](#channel-name-rules) for these strings, as we will discuss later. You can define different behaviors for a channel using a range of available [channel options](#channel-options).
 
-Channels are ephemeral – you don't need to create them explicitly. Channels created automatically by Centrifugo as soon as the first client subscribes to a channel. As soon as the last subscriber leaves a channel - it's automatically cleaned up.
+Channels are ephemeral – there is no need to create them explicitly. Channels are automatically created by Centrifugo as soon as the first client subscribes. Similarly, when the last subscriber leaves, the channel is automatically cleaned up.
 
-Channel can belong to a channel namespace. [Channel namespacing](#channel-namespaces) is a mechanism to define different behavior for different channels in Centrifugo. Using namespaces is a recommended way to manage channels – to turn on only those channel options which are required for a specific real-time feature you are implementing on top of Centrifugo.
+A channel can be part of a channel namespace. [Channel namespacing](#channel-namespaces) is a mechanism to define different behaviors for various channels within Centrifugo. Using namespaces is the recommended approach to manage channels – enabling only those channel options which are necessary for the specific real-time feature you are implementing with Centrifugo.
 
 :::caution
 
-When using channel namespaces make sure you defined a namespace in configuration. Subscription attempts to a channel within a non-defined namespace will result into [102: unknown channel](codes.md#unknown-channel) errors.
+Ensure you have defined a namespace in the configuration when using channel namespaces. Attempts to subscribe to a channel within an undefined namespace will result in [102: unknown channel](codes.md#unknown-channel) errors.
 
 :::
 
@@ -34,9 +34,9 @@ Several symbols in channel names reserved for Centrifugo internal needs:
 * `:` – for namespace channel boundary (see below)
 * `#` – for user channel boundary (see below)
 * `$` – for private channel prefix (see below)
+* `/` – for [Channel Patterns](../pro/channel_patterns.md) in Centrifugo PRO
 * `*` – for the future Centrifugo needs
 * `&` – for the future Centrifugo needs
-* `/` – for the future Centrifugo needs
 
 ### namespace boundary (`:`)
 
@@ -46,21 +46,21 @@ If the channel is `public:chat` - then Centrifugo will apply options to this cha
 
 :::info
 
-A namespace is part of the channel name. If a user subscribed to a channel with namespace, like `public:chat` – then you need to publish messages into `public:chat` channel to be delivered to the user. We often see some confusion from developers trying to publish messages into `chat` and thinking that namespace is somehow stripped upon subscription. It's not true.
+A namespace is a inalienable component of the channel name. If a user is subscribed to a channel with a namespace, such as `public:chat`, then you must publish messages to the `public:chat` channel for them to be delivered to the user. There is often confusion among developers who try to publish messages to `chat`, mistakenly believing that the namespace is stripped upon subscription. This is not the case. You must publish exactly to the same channel string you used for subscribing.
 
 :::
 
 ### user channel boundary (`#`)
 
-`#` – is a user channel boundary. This is a separator to create personal channels for users (we call this *user-limited channels*) without the need to provide a subscription token.
+`#` symbol serves as the user channel boundary. It acts as a separator to create personal channels for users—referred to as *user-limited channels*—without requiring a subscription token.
 
-For example, if the channel is `news#42` then the only user with ID `42` can subscribe to this channel (Centrifugo knows user ID because clients provide it in connection credentials with connection JWT).
+For instance, if the channel is named `news#42`, then only the user with ID `42` can subscribe to this channel. Centrifugo identifies the user ID from the connection credentials provided in the connection JWT.
 
-If you want to create a user-limited channel in namespace `personal` then you can use a name like `personal:user#42` for example.
+To create a user-limited channel within the `personal` namespace, you might use a name such as `personal:user#42`.
 
-Moreover, you can provide several user IDs in channel name separated by a comma: `dialog#42,43` – in this case only the user with ID `42` and user with ID `43` will be able to subscribe on this channel.
+Furthermore, it's possible to specify multiple user IDs in the channel name, separated by a comma: `dialog#42,43`. In this case, only users with IDs `42` and `43` are permitted to subscribe to this channel.
 
-This is useful for channels with a static list of allowed users, for example for single user personal messages channel, for dialog channel between certainly defined users. As soon as you need to manage access to a channel dynamically for many users this channel type does not suit well.
+This setup is ideal for channels that have a static list of allowed users, such as channels for personal messages to a single user or dialogue channels between specific users. However, for dynamic access management of a channel for numerous users, this type of channel is not appropriate.
 
 :::tip
 
@@ -70,35 +70,29 @@ User-limited channels must be enabled for a channel namespace using [allow_user_
 
 ### private channel prefix (`$`)
 
-Centrifugo has this option to achieve compatibility with previous Centrifugo versions. Previously (in Centrifugo v1, v2 and v3) only channels starting with `$` could be subscribed with a subscription JWT. In Centrifugo v4 that's not the case anymore – clients can subscribe to any channel with a subscription token (if the token is valid – then subscription to a channel is accepted).
+Centrifugo maintains compatibility with its previous versions which had concept of private channels. In earlier versions — specifically Centrifugo v1, v2, and v3—only – only channels beginning with `$` required a subscription JWT for subscribing. With Centrifugo v4, this is no longer the case; clients can subscribe to any channel if they have a valid subscription token.
 
-But for namespaces with `allow_subscribe_for_client` option enabled Centrifugo does not allow subscribing on channels starting with `private_channel_prefix` (`$` by default) without a subscription token. This limitation exists to help users migrate to Centrifugo v4 without security risks.
+However, for namespaces where the `allow_subscribe_for_client` option is activated, Centrifugo prohibits subscriptions to channels that start with the `private_channel_prefix` (which defaults to `$`) unless a subscription token is provided. This restriction is designed to facilitate a secure migration to Centrifugo v4 or later versions.
 
 ### Channel is just a string
 
-Keep in mind that a channel is uniquely identified by its string representation. Do not expect that channels `$news` and `news` are the same. They are different because strings are not equal. So if a user subscribed to `$news` then user won't receive messages published to `news`.
+Bear in mind that a channel is uniquely identified by its string representation. Do not assume that channels `$news` and `news` are the same; they differ because their strings are not identical. Thus, if a user is subscribed to `$news`, they will not receive messages published to `news`.
 
-Channels `dialog#42,43` and `dialog#43,42` are two different channels too. Centrifugo only applies permission checks when a user subscribes to a channel. So if user-limited channels are enabled then the user with ID `42` will be able to subscribe on both `dialog#42,43` and `dialog#43,42`. But Centrifugo does no magic regarding channel strings when keeping channel->to->subscribers map. So if the user subscribed on `dialog#42,43` you must publish messages to exactly that channel: `dialog#42,43`.
+The channels `dialog#42,43` and `dialog#43,42` are considered different as well. Centrifugo only applies permission checks when a user subscribes to a channel. So if user-limited channels are enabled then the user with ID `42` will be able to subscribe on both `dialog#42,43` and `dialog#43,42`. But Centrifugo does no magic regarding channel strings when keeping channel->to->subscribers map. So if the user subscribed on `dialog#42,43` you must publish messages to exactly that channel: `dialog#42,43`.
 
-The same applies to channels with namespaces. Do not expect that channels `chat:index` and `index` are the same – they are different, moreover, belong to different namespaces. We'll look at the concept of channel namespaces in Centrifugo shortly.
+The same reasoning applies to channels within namespaces. Channels `chat:index` and `index` are not the same — they are distinct and, moreover, they belong to different namespaces. The concept of channel namespaces in Centrifugo will be discussed shortly.
 
 ## Channel namespaces
 
-It's possible to configure a list of channel namespaces. Namespaces are optional but very useful. 
+Centrifugo allows configuring a list of channel namespaces. Namespaces are optional but super-useful.
 
-A namespace allows setting custom options for channels starting with the namespace name. This provides great control over channel behavior so you have a flexible way to define different channel options for different real-time features in the application.
+A namespace acts as a container for options that are applied to channels starting with the namespace name. I.e. if you defined namespace with a name `personal` in config, then all the channels starting with `personal:`, like `personal:1` or `personal:2`, will inherit options defined for `personal` namespace. This provides great control over channel behavior, so you have a flexible way to define different channel options for various real-time features in the application.
 
-Namespace has a name, and the same channel options (with the same defaults) as described above.
+Namespace has a name, and can contain all the [channel options](#channel-options). Namespace `name` is required to be set. Name of namespace must be unique, must consist of letters, numbers, underscores, or hyphens and be more than 2 symbols length i.e. satisfy regexp `^[-a-zA-Z0-9_]{2,}$`.
 
-* `name` - unique namespace name (name must consist of letters, numbers, underscores, or hyphens and be more than 2 symbols length i.e. satisfy regexp `^[-a-zA-Z0-9_]{2,}$`).
+When you want to use specific namespace options your channel must be prefixed with namespace name and `:` separator: `public:messages`, `gossips:messages` are two channels in `public` and `gossips` namespaces.
 
-If you want to use namespace options for a channel - you must include namespace name into channel name with `:` as a separator:
-
-`public:messages`
-
-`gossips:messages`
-
-Where `public` and `gossips` are namespace names. Centrifugo looks for `:` symbol in the channel name, if found – extracts the namespace name, and applies namespace options while processing protocol commands from a client.
+Centrifugo looks for `:` symbol in the channel name, if found – extracts the namespace name, and applies all the configured namespace channel options while processing protocol commands from a client or server API calls.
 
 All things together here is an example of `config.json` which includes some top-level channel options set and has 2 additional channel namespaces configured:
 

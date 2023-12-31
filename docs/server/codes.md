@@ -66,7 +66,11 @@ Code:    105
 Message: "already subscribed"
 ```
 
-Error Already Subscribed returned when client wants to subscribe on channel it already subscribed to.
+Error Already Subscribed returned when a client attempts to subscribe to a channel to which it is already subscribed.
+
+In Centrifugo, a client can only have one subscription to a specific channel.
+
+When using client-side subscriptions, this error may signal a bug in the SDK or the SDK being used in a way that was not planned. This error may also be returned by the server when a client tries to subscribe to a channel but is already subscribed to it using [server-side subscriptions](./server_subs.md).
 
 ### Limit Exceeded
 

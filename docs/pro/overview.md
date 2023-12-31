@@ -35,11 +35,9 @@ Centrifugo PRO is packed with the following features:
 
 Also, explore our [Centrifugo PRO planned features](https://github.com/orgs/centrifugal/projects/3/views/1) board for a concise overview of upcoming features which are currently in progress and enhancements planned for a future.
 
-:::info
+## Pricing
 
-PRO features can change with time. We reserve a right to move features from PRO to OSS version if there is a clear signal that this is required to do for the ecosystem.
-
-:::
+Centrifugo PRO requires a license key to run. The pricing information for the license key is available upon request over `sales@centrifugal.dev` e-mail. Our services are exclusively available to corporate and business clients at this time. We would be happy to learn more about your real-time challenges and how Centrifugo can help you address them. Don't hesitate to ask for an online meeting to discuss the use case in-person.
 
 ## Try for free in sandbox mode
 
@@ -56,9 +54,3 @@ This mode should be enough for development and trying out PRO features, but must
 Centrifugo PRO is distributed by Centrifugal Labs LTD under [commercial license](/license) which is different from OSS version. By downloading Centrifugo PRO you automatically accept commercial license terms.
 
 :::
-
-## Pricing
-
-To run without limits Centrifugo PRO requires a license key.
-
-Please send us mail over `sales@centrifugal.dev` if you want to purchase the license key. Make sure you agree with terms and conditions of our [commercial license](/license).

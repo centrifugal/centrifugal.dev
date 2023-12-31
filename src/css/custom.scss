@@ -11,7 +11,7 @@
 :root {
   --palette-background-main: #17171b;
   --palette-background-alt: #f5f6f7;
-  --ifm-color-primary: #d26b6b;
+  --ifm-color-primary: #e66262;
   --ifm-color-primary-dark: #8d3838;
   --ifm-color-primary-darker: #853535;
   --ifm-color-primary-darkest: #6e2b2b;
@@ -36,8 +36,12 @@ html[data-theme="dark"] {
   --ifm-background-color: var(--palette-background-main);
 }
 
+html[data-theme="light"] {
+  --ifm-color-primary: #d26b6b;
+}
+
 html[data-theme="light"] .button--secondary {
-  border-color: #e6b8b8;
+  border-color: #ff7171;
 }
 
 img[align='right'] {
@@ -46,7 +50,8 @@ img[align='right'] {
 }
 
 html[data-theme="light"] .button--secondary:hover {
-  background-color: #f5c1c1;
+  background-color: #ff6057;
+  color: white;
 }
 
 .navbar__items a:nth-child(7):hover {
@@ -353,4 +358,8 @@ article {
 
 .menu__list-item:not(:first-child) {
   margin-top: 0.15rem !important;
+}
+
+.logo-video {
+  width: 100%;
 }

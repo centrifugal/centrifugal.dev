@@ -118,11 +118,9 @@ If the underlying transport is HTTP-based, and you use HTTP/2 then this will wor
 
 ### What if I need to send push notifications to mobile or web applications?
 
-Sometimes it's confusing to see a difference between real-time messages and push notifications. Centrifugo is a real-time messaging server. It can not send push notifications to devices - to Apple iOS devices via APNS, Android devices via FCM, or browsers over Web Push API.
+We provide [push notifications API](/docs/pro/push_notifications) implementation as part of Centrifugo PRO. It allows sending push notifications to devices - to Apple iOS devices via APNS, Android devices via FCM, or browsers over Web Push API. Also, we cover HMS (Huawei Mobile Services). But in general the task of push notification delivery may be done using another open-source solution, or with Firebase directly.
 
-We are preparing our own [push notifications API](/docs/pro/push_notifications) as part of Centrifugo PRO version. This is under construction though.
-
-The reasonable question here is how can you know when you need to send a real-time message to an online client or push notification to its device for an offline client. The solution is pretty simple. You can keep critical notifications for a client in the database. And when a client reads a message you should send an ack to your backend marking that notification as read by the client. Periodically you can check which notifications were sent to clients but they have not read it (no read ack received). For such notifications, you can send push notifications to its device using your own or another open-source solution. Look at Firebase for example.
+The reasonable question here is how can you know when you need to send a real-time message to an online client or push notification to its device for an offline client. The solution is pretty simple. You can keep critical notifications for a client in the database. And when a client reads a message you should send an ack to your backend marking the notification as read by the client. Periodically you can check which notifications were sent to clients but have not been read (no read ack received). For such notifications, you can send push notification to the device.
 
 ### How can I know a message is delivered to a client?
 
@@ -173,7 +171,7 @@ Centrifugo PRO now solves the pitfalls mentioned here with its [Channel State Ev
 
 Centrifugo does not support disconnect hooks at this point. We understand that this may be useful for some use cases but there are some pitfalls which prevent us adding such hooks to Centrifugo. 
 
-Let's consider a case when Centrifugo node is unexpectedly killed. In this case there is no chance for Centrifugo to emit disconnect events for connections on that node. While this may be rare thing in practice – it may lead to inconsistent state in you app if you'd rely on disconnect hooks.
+Let's consider a case when Centrifugo node is unexpectedly killed. In this case there is no chance for Centrifugo to emit disconnect events for connections on that node. While this may be rare thing in practice – it may lead to inconsistent state in your app if you'd rely on disconnect hooks.
 
 Another reason is that Centrifugo designed to scale to many concurrent connections. Think millions of them. As we [mentioned in our blog](https://centrifugal.dev/blog/2020/11/12/scaling-websocket#massive-reconnect) there are cases when all connections start reconnecting at the same time. In this case Centrifugo could potentially generate lots of disconnect events. Even if disconnect events were queued, rate-limited, or suppressed for quickly reconnected clients there could be situations when your app processes disconnect hook after user already reconnected. This is a racy situation which also can lead to the inconsistency if not properly addressed.
 

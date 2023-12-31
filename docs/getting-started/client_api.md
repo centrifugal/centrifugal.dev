@@ -3,17 +3,17 @@ id: client_api
 title: Client API showcase
 ---
 
-This chapter showcases Centrifugo bidirectional client API capabilities – i.e. real-time messaging primitives available on a front-end (can be a browser or a mobile device).
+This chapter showcases the capabilities of Centrifugo's bidirectional client API – i.e., the real-time messaging primitives available on the front end (which can be a browser or a mobile device).
 
 :::tip
 
-It's also possible to avoid using the client library at all [with unidirectional transports](../transports/overview.md).
+It is also possible to avoid using the client library at all with unidirectional transports (../transports/overview.md).
 
 :::
 
-This is a formal description – we use Javascript client `centrifuge-js` for examples here. Refer to each specific client implementation for concrete method names and possibilities. See [full list of Centrifugo client SDKs](../transports/client_sdk.md). This description does not cover all protocol possibilities – just the most important to start with.
+This is a formal description – we use the JavaScript client `centrifuge-js` for examples here. Refer to each specific client implementation for concrete method names and possibilities. See the [full list of Centrifugo client SDKs](../transports/client_sdk.md). This description does not cover all protocol possibilities – just the most important ones to start with.
 
-If you are looking for detailed information about client-server protocol internals then [client protocol description](../transports/client_protocol.md) chapter can help.
+If you are looking for detailed information about the client-server protocol internals, then the [client protocol description](../transports/client_protocol.md) chapter can help.
 
 ## Connecting to a server
 
@@ -74,11 +74,11 @@ centrifuge.subscribe('channel', function(messageCtx) {
 })
 ```
 
-Client can subscribe to [different channels](../server/channels.md). Subscribe method returns the` Subscription` object. It's also possible to react to different Subscription events: join and leave events, subscribe success and subscribe error events, unsubscribe events.
+Clients can subscribe to [different channels](../server/channels.md). The subscribe method returns the `Subscription` object. It's also possible to react to different Subscription events: join and leave events, subscribe success and subscribe error events, unsubscribe events.
 
-In idiomatic case messages published to channels from application backend [over Centrifugo server API](../server/server_api.md). Though it's not always true.
+In the idiomatic case, messages are published to channels from the application backend [over the Centrifugo server API](../server/server_api.md). However, this is not always the case.
 
-Centrifugo also provides a message recovery feature to restore missed publications in channels. Publications can be missed due to temporary disconnects (bad network) or server reloads. Recovery happens automatically on reconnect (due to bad network or server reloads) as soon as recovery in the channel [properly configured](../server/channels.md#channel-options). Client keeps last seen Publication offset and restores missed publications since known offset upon reconnecting. If recovery failed then client implementation provides a flag inside subscribe event to let the application know that some publications were missed – so you may need to load state from scratch from the application backend. Not all Centrifugo clients implement a recovery feature – refer to specific client implementation docs. More details about recovery in [a dedicated chapter](../server/history_and_recovery.md).
+Centrifugo also provides a message recovery feature to restore missed publications in channels. Publications can be missed due to temporary disconnects (bad network) or server reloads. Recovery happens automatically on reconnect (due to bad network or server reloads) as soon as recovery in the channel is [properly configured](../server/channels.md#channel-options). The client keeps the last seen Publication offset and restores missed publications since the known offset upon reconnecting. If recovery fails, then the client implementation provides a flag inside the subscribe event to let the application know that some publications were missed – so you may need to load the state from scratch from the application backend. Not all Centrifugo clients implement a recovery feature – refer to specific client implementation docs. More details about recovery can be found in [a dedicated chapter](../server/history_and_recovery.md).
 
 ## Server-side subscriptions
 
@@ -94,7 +94,7 @@ It's also possible to react on different server-side Subscription events: join a
 
 ## Send RPC
 
-A client can send RPC to a server. RPC is a call that is not related to channels at all. It's just a way to call the server method from the client-side over the WebSocket or SockJS connection. RPC is only available when [RPC proxy](../server/proxy.md#rpc-proxy) configured.
+A client can send an RPC to the server. RPC is a call that is not related to channels at all. It's just a way to call a server method from the client side over the WebSocket or SockJS connection. RPC is only available when an [RPC proxy](../server/proxy.md#rpc-proxy) is configured.
 
 ```javascript
 const rpcRequest = {'key': 'value'};
