@@ -248,6 +248,9 @@ module.exports = {
       },
     ],
   ],
+  plugins: [
+    require.resolve('docusaurus-lunr-search')
+  ],
   stylesheets: [
     'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css'
   ]
