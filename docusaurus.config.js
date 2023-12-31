@@ -234,27 +234,19 @@ module.exports = {
            * If feedOptions is undefined, no rss feed will be generated.
            */
           feedOptions: {
+            limit: false,
             type: 'all', // required. 'rss' | 'feed' | 'all'
             title: '', // default to siteConfig.title
             description: '', // default to  `${siteConfig.title} Blog`
-            copyright: 'Centrifugal',
+            copyright: 'Centrifugal Labs LTD',
             language: undefined, // possible values: http://www.w3.org/TR/REC-html40/struct/dirlang.html#langcodes
           },
         },
         theme: {
-          customCss: require.resolve("./src/css/custom.scss"),
+          customCss: require.resolve("./src/css/custom.css"),
         },
       },
     ],
-  ],
-  plugins: [
-    [
-      require.resolve("@easyops-cn/docusaurus-search-local"),
-      {
-        hashed: true,
-      },
-    ],
-    "docusaurus-plugin-sass",
   ],
   stylesheets: [
     'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css'

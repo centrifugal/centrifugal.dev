@@ -769,19 +769,19 @@ Errors with codes 0-100 can be used by client-side implementation. Client-side e
 
 ## Unsubscribe codes
 
-Server may return unsubscribe codes. Server unsubscribe codes must be in range [2000, 2999].
+Server may return unsubscribe codes. Server unsubscribe codes must be in range `[2000, 2999]`.
 
 Unsubscribe codes >= 2500 coming from server to client result into automatic resubscribe attempt (i.e. client goes to `subscribing` state). Codes < 2500 result into going to `unsubscribed` state.
 
-Client implementation can use codes <2000 for client-side specific unsubscribe reasons. 
+Client implementation can use codes < 2000 for client-side specific unsubscribe reasons. 
 
 ## Disconnect codes
 
-Server may send custom disconnect codes to a client. Custom disconnect codes must be in range [3000, 4999].
+Server may send custom disconnect codes to a client. Custom disconnect codes must be in range `[3000, 4999]`.
 
 Client automatically reconnects upon receiving code in range 3000-3499, 4000-4499 (i.e. Client goes to `connecting` state). Other codes result into going to `disconnected` state.
 
-Client implementation can use codes <3000 for client-side specific disconnect reasons. 
+Client implementation can use codes < 3000 for client-side specific disconnect reasons. 
 
 ## RPC
 

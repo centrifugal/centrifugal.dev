@@ -13,19 +13,16 @@
   },
   "dependencies": {
     "@algolia/client-search": "^4.12.1",
-    "@docusaurus/core": "^2.4.3",
-    "@docusaurus/plugin-content-blog": "^2.4.3",
-    "@docusaurus/plugin-google-analytics": "^2.4.3",
-    "@docusaurus/plugin-sitemap": "^2.4.3",
-    "@docusaurus/preset-classic": "^2.4.3",
+    "@docusaurus/core": "^3.0.1",
+    "@docusaurus/plugin-content-blog": "^3.0.1",
+    "@docusaurus/plugin-google-analytics": "^3.0.1",
+    "@docusaurus/plugin-sitemap": "^3.0.1",
+    "@docusaurus/preset-classic": "^3.0.1",
     "@easyops-cn/docusaurus-search-local": "^0.21.4",
-    "@mdx-js/react": "^1.6.22",
+    "@mdx-js/react": "^3.0.0",
     "clsx": "^1.1.1",
-    "docusaurus-plugin-sass": "^0.2.3",
-    "nodejieba": "^2.5.2",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "sass": "^1.60.0"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "browserslist": {
     "production": [
@@ -40,7 +37,7 @@
     ]
   },
   "devDependencies": {
-    "@types/react": "^17.0.6",
+    "@types/react": "^18.2.0",
     "copyfiles": "^2.4.1",
     "gh-pages": "^3.1.0"
   },
