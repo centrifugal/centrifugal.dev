@@ -90,6 +90,7 @@ module.exports = {
         "pro/rate_limiting",
         // "pro/distributed_rate_limit",
         "pro/push_notifications",
+        "pro/admin_idp_auth",
         "pro/user_status",
         "pro/connections",
         "pro/user_block",

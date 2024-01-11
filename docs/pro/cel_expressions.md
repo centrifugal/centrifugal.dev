@@ -1,7 +1,7 @@
 ---
 id: cel_expressions
-sidebar_label: CEL expressions
-title: CEL expressions
+sidebar_label: Channel CEL expressions
+title: Channel CEL expressions
 ---
 
 Centrifugo PRO supports [CEL expressions](https://opensource.google/projects/cel) (Common Expression Language) for checking channel operation permissions.

@@ -5,7 +5,7 @@ title: Centrifugo PRO
 
 <img src="/img/pro_icon.png" width="110px" height="110px" align="left" style={{'marginRight': '10px', 'float': 'left'}} />
 
-Centrifugo PRO is the enhanced version of Centrifugo provided by Centrifugal Labs LTD under commercial license. It's packed with a set of unique features that offer exceptional benefits to your business. It provides granular channel permission control, lower CPU utilization on Centrifugo nodes, backend protection from misusing, next level system observability, additional APIs (like push notifications), and more.
+Centrifugo PRO is the enhanced version of Centrifugo provided by Centrifugal Labs LTD under commercial license. It's packed with a set of unique features that offer exceptional benefits to your business. It provides granular channel permission control, lower CPU utilization on Centrifugo nodes, backend protection from misusing, next level system observability, additional APIs (like push notifications), SSO integrations for admin UI, and more.
 
 All the features of Centrifugo PRO come with a decent scalable performance. Some reuse Centrifugo super fast Redis communication capabilities. ClickHouse analytics built on top of efficient approach with the minimal overhead. We've put a lot of love into all of the extra powers of Centrifugo to make sure they are practical and ready for production workloads.
 
@@ -18,6 +18,7 @@ Centrifugo PRO is packed with the following features:
 * 💹 [Real-time analytics with ClickHouse](./analytics.md) for a great system observability, reporting and trending.
 * 🛡️ [Operation rate limits](./rate_limiting.md) to protect server from the real-time API misusing and frontend bugs.
 * 🔥 [Push notification API](./push_notifications.md) to manage device tokens and send mobile and browser push notifications.
+* 🔐 [SSO for admin UI](./admin_idp_auth.md) using OpenID Connect (OIDC) protocol.
 * 🟢 [User status API](./user_status.md) feature allows understanding activity state for a list of users.
 * 🔌 [Connections API](./connections.md) to query, filter and inspect active connections.
 * ✋ [User blocking API](./user_block.md) to block/unblock abusive users by ID.
@@ -25,7 +26,7 @@ Centrifugo PRO is packed with the following features:
 * 🔔 [Channel state events](channel_events.md) to be notified on the backend about channel `occupied` and `vacated` events.
 * 💪 [Channel capabilities](./capabilities.md) for controlling channel permissions per connection or per subscription.
 * 📜 [Channel patterns](./channel_patterns.md) allow defining channel configuration like HTTP routes with parameters.
-* ✍️ [CEL expressions](./cel_expressions.md) to write custom efficient permission rules for channel operations.
+* ✍️ [Channel CEL expressions](./cel_expressions.md) to write custom efficient permission rules for channel operations.
 * 🚀 [Faster performance](./performance.md) to reduce resource usage on server side.
 * 🔮 [Singleflight](./singleflight.md) for online presence and history to reduce load on the broker.
 * 🍔 [Message batching control](./client_msg_batching.md) for advanced tuning of client connection write behaviour.
