@@ -10,6 +10,12 @@ module.exports = {
   organizationName: "centrifugal",
   projectName: "centrifugal.dev",
   themeConfig: {
+    algolia: {
+      appId: 'EPXZ1LXJ33',
+      apiKey: 'b50ce04cfb6a94729c0b970fd52eb16a',
+      indexName: 'centrifugal',
+      contextualSearch: true
+    },
     prism: {
       additionalLanguages: ["php", "dart", "swift", "java"],
     },
@@ -248,9 +254,7 @@ module.exports = {
       },
     ],
   ],
-  plugins: [
-    require.resolve('docusaurus-lunr-search')
-  ],
+  plugins: [],
   stylesheets: [
     'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css'
   ]
