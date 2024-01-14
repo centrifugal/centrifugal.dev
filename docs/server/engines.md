@@ -361,6 +361,25 @@ To reproduce the same over environment variable use `space` to separate differen
 CENTRIFUGO_REDIS_CLUSTER_ADDRESS="localhost:30001,localhost:30002 localhost:30101,localhost:30102" CENTRIFUGO_ENGINE=redis ./centrifugo
 ```
 
+### Optimize getting presence stats
+
+Starting from Centrifugo v5.2.1 it's possible to keep user mapping information on Redis side to optimize [presence stats](./server_api.md#presence_stats) API.
+
+It's implemented in a way that Centrifugo maintains additional per-user data structures in Redis. Similar to structures used for general client presence (ZSET + HASH). So we get a possibility to efficiently get both the number of clients in channel and the number of unique users in it.
+
+This may be useful to drastically reduce the time of Redis operation if you call presence stats for channels with large number of active subscribers. In our benchmarks, for a channel with 100k unique subscribers, number of presence stats ops bumped from 15 to 200k per second.
+
+The feature comes with a cost – it increases memory usage in Redis, possibly up to 2x from what was spent on presence information before enabling (less if you use `info` attached to a client connection, since Centrifugo does not include info payload to user mapping structures).
+
+To enable set `global_redis_presence_user_mapping` boolean option to `true`:
+
+```javascript title="config.json"
+{
+  ...
+  "global_redis_presence_user_mapping": true
+}
+```
+
 ## Other Redis compatible
 
 When using Redis engine it's possible to point Centrifugo not only to Redis itself, but also to the other Redis compatible server. Such servers may work just fine if implement Redis protocol and support all the data structures Centrifugo uses and have PUB/SUB implemented.

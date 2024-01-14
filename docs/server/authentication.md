@@ -419,6 +419,7 @@ Centrifugo supports the following key types (`kty`) for JWKs tokens:
 
 * `RSA`
 * `EC` (since Centrifugo v5.1.0)
+* `OKP` based on Ed25519 (since Centrifugo v5.2.1)
 
 Once enabled JWKS used for both connection and channel subscription tokens.
 
