@@ -121,8 +121,8 @@ function Home() {
                 production by many companies around the world: VK, Badoo, ManyChat, OpenWeb, Grafana, and others.
               </Feature>
               <Feature title="Centrifugo PRO" imageUrl="img/feature_pro.png">
-                <a href="/docs/pro/overview">Centrifugo PRO</a> has a set of unique features on top of the OSS version: analytics
-                with ClickHouse, real-time user and channel tracing, operation throttling, faster performance, token extensions, additional APIs (for example, push notification API), and more.
+                <a href="/docs/pro/overview">Centrifugo PRO</a> offers great benefits for corporate and enterprise environments by providing unique features on top of the OSS version: analytics
+                with ClickHouse, real-time tracing, performance optimizations, push notification API, SSO integrations for web UI, etc.
               </Feature>
             </div>
           </div>

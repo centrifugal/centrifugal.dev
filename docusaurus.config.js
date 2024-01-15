@@ -40,7 +40,7 @@ module.exports = {
         {
           type: 'doc',
           docId: 'tutorial/intro',
-          label: "Grand tutorial 🎄",
+          label: "Grand tutorial",
           position: "left",
         },
         {
