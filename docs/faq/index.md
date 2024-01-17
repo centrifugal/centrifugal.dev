@@ -5,6 +5,20 @@ title: Frequently Asked Questions
 
 Answers to popular questions here.
 
+### Disconnected due to client credentials not found
+
+If you connect to Centrifugo first time, and your client disconnected with code `3501` and reason `"bad request"` – then in many cases this means you have not provided authentication credentials. Check out server logs – if you see `credentials not found` message on INFO level – this is exactly it.
+
+When connecting to Centrifugo client must authenticate using one of the supported ways. This may be:
+
+* [JWT authentication](../server/authentication.md)
+* [Connect proxy](../server/proxy.md#connect-proxy) authentication
+* Using proxy to set [user authentication header](../server/configuration.md#client_user_id_http_header)
+
+You can also [configure access without token](../server/configuration.md#allow_anonymous_connect_without_token) – in this case Centrifugo will consider a connection without provided token anonymous. Or, if you just want to quickly experiment with Centrifugo during development, it's possible to turn on [client_insecure](../server/configuration.md#insecure-client-connection) option – but it **should never be used in production** since disables most of security checks.
+
+Another possible reason of first time connection problems - not properly configured [allowed_origins](../server/configuration.md#allowed_origins). Centrifugo server logs should also clearly indicate such issues on INFO level.
+
 ### How many connections can one Centrifugo instance handle?
 
 This depends on many factors. Real-time transport choice, hardware, message rate, size of messages, Centrifugo features enabled, client distribution over channels, compression on/off, etc. So no certain answer to this question exists. Common sense, performance measurements, and monitoring can help here. 
