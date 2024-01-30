@@ -36,16 +36,6 @@ Disadvantages:
 * Does not allow scaling nodes (actually you still can scale Centrifugo with Memory engine but you have to publish data into each Centrifugo node and you won't have consistent history and presence state throughout Centrifugo nodes)
 * Does not persist message history in channels between Centrifugo restarts.
 
-### Memory engine options
-
-#### history_meta_ttl
-
-[Duration](../server/configuration.md#setting-time-duration-options), default `2160h` (90 days).
-
-`history_meta_ttl` sets a time of history stream metadata expiration. 
-
-When using a history in a channel, Centrifugo keeps some metadata for it. Metadata includes the latest stream offset and its epoch value. In some cases, when channels are created for а short time and then not used anymore, created metadata can stay in memory while not useful. For example, you can have a personal user channel but after using your app for a while user left it forever. From a long-term perspective, this can be an unwanted memory growth. Setting a reasonable value to this option can help to expire metadata faster (or slower if you need it). The rule of thumb here is to keep this value much bigger than maximum history TTL used in Centrifugo configuration.
-
 ## Redis engine
 
 [Redis](https://redis.io/) is an open-source, in-memory data structure store, used as a database, cache, and message broker.
@@ -89,16 +79,6 @@ Boolean, default `false` – turns on using Redis Lists instead of Stream data s
 #### redis_force_resp2
 
 Boolean, default `false`. If set to true it forces using RESP2 protocol for communicating with Redis. By default, Redis client used by Centrifugo tries to detect supported Redis protocol automatically trying RESP3 first.
-
-#### history_meta_ttl
-
-[Duration](../server/configuration.md#setting-time-duration-options), default `2160h` (90 days).
-
-`history_meta_ttl` sets a time of history stream metadata expiration. 
-
-Similar to a Memory engine Redis engine also looks at `history_meta_ttl` option. Meta key in Redis is a HASH that contains the current offset number in channel and the stream epoch value.
-
-When using a history in a channel, Centrifugo saves metadata for it. Metadata includes the latest stream offset and its epoch value. In some cases, when channels are created for а short time and then not used anymore, created metadata can stay in memory while not useful. For example, you can have a personal user channel but after using your app for a while user left it forever. From a long-term perspective, this can be an unwanted memory growth. Setting a reasonable value to this option can help. The rule of thumb here is to keep this value much bigger than maximum history TTL used in Centrifugo configuration.
 
 ### Configuring Redis TLS
 
@@ -456,12 +436,6 @@ String, default `""`. Allows setting a user.
 #### tarantool_password
 
 String, default `""`. Allows setting a password.
-
-#### history_meta_ttl
-
-[Duration](../server/configuration.md#setting-time-duration-options), default `2160h`.
-
-Same option as for Memory engine and Redis engine also applies to Tarantool case.
 
 ## Nats broker
 

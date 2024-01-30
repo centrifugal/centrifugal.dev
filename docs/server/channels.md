@@ -228,6 +228,8 @@ By default history TTL duration is zero – this means that channel history is d
 
 **Again – to turn on history you should wisely configure both `history_size` and `history_ttl` options**.
 
+Also note, that `history_ttl` must be less than [history_meta_ttl](#history_meta_ttl).
+
 For example for top-level channels (which do not belong to a namespace):
 
 ```json title="config.json"
@@ -282,9 +284,9 @@ History persistence properties are dictated by Centrifugo [engine](./engines.md)
 
 `history_meta_ttl` ([duration](./configuration.md#setting-time-duration-options)) – sets a time of history stream metadata expiration (with seconds precision).
 
-When using a history in a channel, Centrifugo keeps some metadata for each channel stream. Metadata includes the latest stream offset and its epoch value. In some cases, when channels are created for а short time and then not used anymore, created metadata can stay in memory while not useful. For example, you can have a personal user channel but after using your app for a while user left it forever. From a long-term perspective, this can be an unwanted memory growth. Setting a reasonable value to this option can help to expire metadata faster (or slower if you need it). The rule of thumb here is to keep this value much bigger than maximum history TTL used in Centrifugo configuration.
+If not specified Centrifugo namespace inherits value from `global_history_meta_ttl` ([duration](./configuration.md#setting-time-duration-options)) option which is 30 days by default. This should be a good default for most use cases to avoid tweaking `history_meta_ttl` on a namespace level at all. If you have `history_ttl` greater than 30 days – then increase `history_meta_ttl` for namespace (recommended) or increase `global_history_meta_ttl` to be larger than `history_ttl`.
 
-If not specified Centrifugo uses a global `history_meta_ttl` which is 30 days. This should be a good default for most use cases to avoid tweaking `history_meta_ttl` on a namespace level at all.
+The motivation to have history meta information TTL is as follows. When using a history in a channel, Centrifugo keeps some metadata for each channel stream. Metadata includes the latest stream offset and its epoch value. In some cases, when channels are created for а short time and then not used anymore, created metadata can stay in memory while not useful. For example, you can have a personal user channel but after using your app for a while user left it forever. From a long-term perspective, this can be an unwanted memory growth. Setting a reasonable value to this option can help to expire metadata faster (or slower if you need it). The rule of thumb here is to keep this value larger than history TTL used.
 
 ### force_positioning
 
