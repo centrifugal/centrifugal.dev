@@ -14,6 +14,7 @@ import ManyChat from "./components/logos/ManyChat";
 import OpenWeb from "./components/logos/OpenWeb";
 import TestimonialsCarousel from '../components/TestimonialsCarousel';
 import ProBanner from '../components/ProBanner';
+import ImageRotator from '../components/ImageRotator';
 
 function Feature({ imageUrl, title, children }) {
   const imgUrl = useBaseUrl(imageUrl);
@@ -177,6 +178,64 @@ function Home() {
                   to={useBaseUrl("docs/getting-started/introduction")}
                 >
                   Impressive? Get Started!
+                </Link>
+              </div>
+            </>
+          }
+        />
+        < Highlight
+          img={
+            <iframe
+              width="560"
+              height="315"
+              src="/img/grand-chat-tutorial-demo.mp4"
+              title="Messenger tutorial"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          }
+          reversed
+          isDark
+          title="Slack-scale messenger?"
+          text={
+            <>
+              <p>
+                Straighforward with Centrifugo! Even though your backend does not support concurrency. See the tutorial where we build a beautiful messenger app and go beyond usually shown basics.
+              </p>
+              <p>Centrifugo is a versatile real-time component – it can be used to build various types of real-time applications, not just messengers.</p>
+              <div className={styles.buttons}>
+                <Link
+                  className={clsx(
+                    "button button--outline button--secondary button--lg",
+                    styles.getStarted
+                  )}
+                  to={useBaseUrl("docs/tutorial/intro")}
+                >
+                  See full tutorial
+                </Link>
+              </div>
+            </>
+          }
+        />
+        < Highlight
+          img={
+            <ImageRotator />
+          }
+          title="Are you Enterprise?"
+          text={
+            <>
+              <p>
+                Centrifugal Labs offers a PRO version of Centrifugo that includes a set of unique features, additional APIs, and enhanced performance. Ever dreamed about a self-hosted real-time messaging system combined with a push notification system? Want to benefit from analytics of real-time connections and subscriptions? Centrifugo PRO makes all of this possible.
+              </p>
+              <div className={styles.buttons}>
+                <Link
+                  className={clsx(
+                    "button button--outline button--secondary button--lg",
+                    styles.getStarted
+                  )}
+                  to={useBaseUrl("docs/pro/overview")}
+                >
+                  More about Centrifugo PRO
                 </Link>
               </div>
             </>
