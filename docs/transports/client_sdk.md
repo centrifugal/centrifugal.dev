@@ -20,7 +20,7 @@ Here is a list of SDKs maintained by Centrifugal Labs:
 * [centrifuge-dart](https://github.com/centrifugal/centrifuge-dart) - for Dart and Flutter (mobile and web)
 * [centrifuge-swift](https://github.com/centrifugal/centrifuge-swift) – for native iOS development
 * [centrifuge-java](https://github.com/centrifugal/centrifuge-java) – for native Android development and general Java
-* [centrifuge-python](https://github.com/centrifugal/centrifuge-python) – real-time SDK for Python on top of asyncio
+* [centrifuge-python](https://github.com/centrifugal/centrifuge-python) – real-time SDK for Python on top of asyncio (curently in BETA)
 
 SDKs driven by the community:
 
