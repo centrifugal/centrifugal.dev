@@ -7,13 +7,7 @@ SockJS is a polyfill browser library which provides HTTP-based fallback transpor
 
 :::caution
 
-SockJS transport is DEPRECATED. It [may be removed](https://centrifugal.dev/blog/2023/06/29/centrifugo-v5-released#the-future-of-sockjs) in the next major releases. Consider using our own WebSocket emulation layer based on HTTP-streaming and EventSource instead. If you know a use case where SockJS is still prefferred – reach us out to discuss this use case. 
-
-:::
-
-:::info
-
-This transport is only implemented by our Javascript SDK at this point – as it mostly makes sense as a fallback for WebSocket to have real-time connection in an environment where WebSocket is unavailable. These days those envs are mostly corporate networks which can block WebSocket traffic (even TLS-based).
+SockJS transport is DEPRECATED. It [will be removed](https://github.com/centrifugal/centrifugo/issues/765) in Centrifugo v6. Consider using our own WebSocket emulation layer based on HTTP-streaming and EventSource instead.
 
 :::
 

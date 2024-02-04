@@ -146,13 +146,15 @@ function draw(canvas, X, Y, isDarkTheme) {
 
     const centerX = X / 2;
     const centerY = Y / 2;
-    let lineColor, segmentColor;
+    let lineColor, outerSegmentColor, innnerSegmentColor;
     if (isDarkTheme) {
         lineColor = '#8d3838';
-        segmentColor = '#6e2b2b';
+        outerSegmentColor = '#1b1c21';
+        innnerSegmentColor = '#6e2b2b';
     } else {
         lineColor = '#ffd4d4';
-        segmentColor = '#ffd4d4';
+        outerSegmentColor = '#e6e8eb';
+        innnerSegmentColor = '#ffd4d4';
     }
 
     const linesNum = 3;
@@ -175,25 +177,25 @@ function draw(canvas, X, Y, isDarkTheme) {
     }
 
     segments.push(new Segment(
-        ctx, X, Y, centerX, centerY, radius, radius * 2.65, lw * 9, 0, -1.5, 0, segmentColor,
+        ctx, X, Y, centerX, centerY, radius, radius * 2.65, lw * 9, 0, -1.5, 0, outerSegmentColor,
     ));
     segments.push(new Segment(
-        ctx, X, Y, centerX, centerY, radius, radius * 2.65, lw * 9, 90, -1.5, 0, segmentColor,
+        ctx, X, Y, centerX, centerY, radius, radius * 2.65, lw * 9, 90, -1.5, 0, outerSegmentColor,
     ));
     segments.push(new Segment(
-        ctx, X, Y, centerX, centerY, radius, radius * 2.65, lw * 9, 180, -1.5, 0, segmentColor,
+        ctx, X, Y, centerX, centerY, radius, radius * 2.65, lw * 9, 180, -1.5, 0, outerSegmentColor,
     ));
     segments.push(new Segment(
-        ctx, X, Y, centerX, centerY, radius, radius * 2.65, lw * 9, 270, -1.5, 0, segmentColor,
+        ctx, X, Y, centerX, centerY, radius, radius * 2.65, lw * 9, 270, -1.5, 0, outerSegmentColor,
     ));
     segments.push(new Segment(
-        ctx, X, Y, centerX, centerY, radius, radius * 1.45, lw * 8, 45, 1.5, 2, segmentColor,
+        ctx, X, Y, centerX, centerY, radius, radius * 1.45, lw * 8, 45, 1.5, 2, innnerSegmentColor,
     ));
     segments.push(new Segment(
-        ctx, X, Y, centerX, centerY, radius, radius * 1.45, lw * 8, 135, 1.5, 2, segmentColor,
+        ctx, X, Y, centerX, centerY, radius, radius * 1.45, lw * 8, 135, 1.5, 2, innnerSegmentColor,
     ));
     segments.push(new Segment(
-        ctx, X, Y, centerX, centerY, radius, radius * 1.45, lw * 8, 225, 1.5, 2, segmentColor,
+        ctx, X, Y, centerX, centerY, radius, radius * 1.45, lw * 8, 225, 1.5, 2, innnerSegmentColor,
     ));
 
     let lastRenderTime = 0;
