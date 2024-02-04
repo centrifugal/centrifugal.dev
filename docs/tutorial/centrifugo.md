@@ -571,7 +571,3 @@ const processUserLeft = async (body: any) => {
 ## We did it
 
 Awesome – we now have an application with real-time features powered by Centrifugo! Messages and room membership changes are now delivered to users in real-time. Though, it's not the end of our journey. So please, take a break – and then proceed to the next part.
-
-<div className="logo-video">
-    <video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/logo.mp4"></video>
-</div>
