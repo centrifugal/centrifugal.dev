@@ -149,7 +149,7 @@ function draw(canvas, X, Y, isDarkTheme) {
     let lineColor, outerSegmentColor, innnerSegmentColor;
     if (isDarkTheme) {
         lineColor = '#8d3838';
-        outerSegmentColor = '#24242a';
+        outerSegmentColor = '#6e2b2b';
         innnerSegmentColor = '#6e2b2b';
     } else {
         lineColor = '#ffd4d4';
