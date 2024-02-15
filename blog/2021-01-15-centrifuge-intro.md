@@ -223,7 +223,7 @@ RPC is a primitive for sending a request from a client to a server and waiting f
 On client side it's as simple as:
 
 ```javascript
-const resp = await centrifuge.namedRPC('my_method', {});
+const resp = await centrifuge.rpc('my_method', {});
 ```
 
 On server side RPC event handler should be set to make calls available:

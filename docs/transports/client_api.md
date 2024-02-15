@@ -789,7 +789,7 @@ An SDK provides a way to send RPC to a server. RPC is a call that is not related
 
 ```javascript
 const rpcRequest = {'key': 'value'};
-const data = await centrifuge.namedRPC('example_method', rpcRequest);
+const data = await centrifuge.rpc('example_method', rpcRequest);
 ```
 
 ## Channel history API
