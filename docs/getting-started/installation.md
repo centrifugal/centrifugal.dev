@@ -70,14 +70,15 @@ centrifugo --config=config.json
 
 Centrifugo server has a docker image [available on Docker Hub](https://hub.docker.com/r/centrifugo/centrifugo/).
 
+Generate a configuration file.
 ```
-docker pull centrifugo/centrifugo
+docker run --rm -v$PWD:/centrifugo centrifugo/centrifugo:v5 centrifugo genconfig
 ```
 
 Run:
 
 ```bash
-docker run --ulimit nofile=262144:262144 -v /host/dir/with/config/file:/centrifugo -p 8000:8000 centrifugo/centrifugo:v5 centrifugo -c config.json
+docker run --rm --ulimit nofile=262144:262144 -v /host/dir/with/config/file:/centrifugo -p 8000:8000 centrifugo/centrifugo:v5 centrifugo -c config.json
 ```
 
 Note that docker allows setting `nofile` limits in command-line arguments, which is quite important to handle many simultaneous persistent connections and not run out of the open file limit (each connection requires one file descriptor). See also [infrastructure tuning chapter](../server/infra_tuning.md).
