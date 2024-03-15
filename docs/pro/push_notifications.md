@@ -12,7 +12,7 @@ With Centrifugo PRO push notifications may be delivered to all popular applicati
 * <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i> iOS devices
 * <i className="bi bi-globe" style={{color: 'orange'}}></i> Web browsers which support Web Push API (Chrome, Firefox, see <a href="https://caniuse.com/push-api">this matrix</a>)
 
-Centrifugo PRO provides API to manage user device tokens, device topic subscriptions and API to send push notifications towards registered devices and group of devices (subscribed to a topic).
+Centrifugo PRO provides API to manage user device tokens, device topic subscriptions and API to send push notifications towards registered devices and group of devices (subscribed to a topic). API also supports timezone-aware push notifications, push localizations, templating and per user device push rate limiting.
 
 ![Push](/img/push_notifications.png)
 
@@ -81,6 +81,17 @@ In some cases you may have real-time channels and device subscription topics wit
 Centrifugo PRO device topic subscriptions also add a way to introduce the missing topic semantics for APNs.
 
 Centrifugo PRO additionally provides an API to create persistent bindings of user to notification topics. Then – as soon as user registers a device – it will be automatically subscribed to its own topics. As soon as user logs out from the app and you update user ID of the device - user topics binded to the device automatically removed/switched. This design solves one of the issues with FCM – if two different users use the same device it's becoming problematic to unsubscribe the device from large number of topics upon logout. Also, as soon as user to topic binding added (using `user_topic_update` API) – it will be synchronized across all user active devices. You can still manage such persistent subscriptions on the application backend side if you prefer and provide the full list inside `device_register` call.
+
+### Push personalization
+
+Centrifugo PRO provides several ways to make push notifications individual and take care about better user experience with notifications. This includes:
+
+* [Timezone-aware](#timezone-aware-push) push notifications
+* Notification [templating](#templating)
+* Notification [localizations](#localizations)
+* Per user device [rate limiting](#push-rate-limits)
+
+All these features may be used on individual request basis.
 
 ### Non-obtrusive proxying
 
@@ -187,10 +198,6 @@ We also support auth over p12 certificates with the following options:
 
 This integer option configures the number of days to keep device without updates. By default Centrifugo does not remove inactive devices.
 
-#### push_notifications.enable_redis_delayed_scheduler
-
-Boolean option which enables Redis scheduler to process delayed push notifications. It's off by default since produces additional requests to Redis. When using PostgreSQL as push notifications queue engine you don't need to enable sheduler explicitly.
-
 #### push_notifications.dry_run
 
 Boolean option, when `true` Centrifugo PRO does not send push notifications to FCM, APNs, HMS providers but instead just print logs. Useful for development.
@@ -237,6 +244,8 @@ Registers or updates device information.
 | `token`         | string | Yes | Push notification token for the device.     |
 | `platform`      | string | Yes | Platform of the device (valid choices: `ios`, `android`, `web`). |
 | `user`          | string | No  | User associated with the device.            |
+| `timezone`          | string | No  | Timezone of device user ([IANA time zone identifier](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones), ex. `Europe/Nicosia`). See [Timezone aware push](#timezone-aware-push)            |
+| `locale`          | string | No  | Locale of device user. Must be IETF BCP 47 language tag - ex. `en-US`, `fr-CA`. See [Localizations](#localizations)            |
 | `topics`      | array of strings | No | Device topic subscriptions. This should be a full list which replaces all the topics previously accociated with the device. User topics managed by `UserTopic` model will be automatically attached.  |
 | `meta`          | `map<string, string>` | No | Additional custom metadata for the device         |
 
@@ -257,6 +266,8 @@ Call this method to update device. For example, when user logs out the app and y
 | `ids`            | repeated string | No | Device ids to filter       |
 | `users`      | repeated string | No | Device users filter |
 | `user_update`      | `DeviceUserUpdate` | No | Optional user update object |
+| `timezone_update`      | `DeviceTimezoneUpdate` | No | Optional timezone update object |
+| `locale_update`      | `DeviceLocaleUpdate` | No | Optional locale update object |
 | `meta_update`          | `DeviceMetaUpdate` | No | Optional device meta update object            |
 | `topics_update`          | `DeviceTopicsUpdate` | No | Optional topics update object  |
 
@@ -265,6 +276,20 @@ Call this method to update device. For example, when user logs out the app and y
 | Field           | Type     | Required | Description                           |
 |-----------------|----------|----|---------------------------------------------|
 | `user`            | string | Yes | User to set                                |
+
+
+`DeviceTimezoneUpdate`:
+
+| Field           | Type     | Required | Description                           |
+|-----------------|----------|----|---------------------------------------------|
+| `timezone`            | string | Yes | Timezone to set                                |
+
+
+`DeviceLocaleUpdate`:
+
+| Field           | Type     | Required | Description                           |
+|-----------------|----------|----|---------------------------------------------|
+| `locale`            | string | Yes | Locale to set                                |
 
 `DeviceMetaUpdate`:
 
@@ -463,8 +488,14 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 |-----------------|--------------|-----|--------|
 | `recipient`       | `PushRecipient` | Yes | Recipient of push notification      |
 | `notification`    | `PushNotification` | Yes | Push notification to send     |
-| `uid`             | string       | No | Unique send id, used for Centrifugo builtin analytics or to cancel delayed push. We recommend using UUID v4 for it |
+| `uid`             | string       | No | Unique identifier for each push notification request, can be used to cancel push. We recommend using UUID v4 for it. Two different requests must have different `uid` |
 | `send_at`             | int64       | No | Optional Unix time in the future (in seconds) when to send push notification, push will be queued until that time. |
+| `optimize_for_reliability`             | bool       | No | Makes processing heavier, but tolerates edge cases, like not loosing inflight pushes due to temporary queue unavailability. |
+| `limit_strategy`             | `PushLimitStrategy`       | No | Can be used to set push time constraints (based on device timezone) adnd rate limits. Note, when it's used Centrifugo processes pushes one by one instead of batch sending |
+| `analytics_uid`             | string       | No | Identifier for push notification analytics, if not set - Centrifugo will use `uid` field. |
+| `localizations`             | `map<string, PushLocalization>`       | No | Optional per language localizations for push notification. |
+| `use_templating`             | bool       | No | If set - Centrifugo will use templating for push notification. Note that setting localizations enables templating automatically. |
+| `use_meta`             | bool       | No | If set - Centrifugo will additionally load device meta during push sending, this meta becomes available in templating. |
 
 `PushRecipient` (you **must set only one of the following fields**):
 
@@ -507,6 +538,42 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 | `headers` | `map<string, string>` | No | APNs [headers](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/sending_notification_requests_to_apns)  |
 | `payload` | JSON object | Yes | APNs [payload](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/generating_a_remote_notification) |
 
+`PushLocalization`:
+
+| Field         | Type      |  Required | Description |
+|---------------|-----------|-----------|--------|
+| `translations` | `map<string, string>` | Yes | Variable name to value for the specific language.  |
+
+`PushLimitStrategy`:
+
+| Field         | Type      |  Required | Description |
+|---------------|-----------|-----------|--------|
+| `rate_limit` | `PushRateLimitStrategy` | No | Set rate limit policies  |
+| `time_limit` | `PushTimeLimitStrategy` | No | Set time limit policy  |
+
+`PushRateLimitStrategy`:
+
+| Field         | Type      |  Required | Description |
+|---------------|-----------|-----------|--------|
+| `key` | string | No | Optional key for rate limit policy, supports variables (`devide.id` and `device.user`).  |
+| `policies` | repeated `RateLimitPolicy` | No | Set time limit policy  |
+| `drop_if_rate_limited` | bool | No | Drop push if rate limited, otherwise queue for later  |
+delayed
+`RateLimitPolicy`:
+
+| Field         | Type      |  Required | Description |
+|---------------|-----------|-----------|--------|
+| `rate` | int | Yes | Allowed rate  |
+| `interval_ms` | int | Yes | Interval over which rate is allowed  |
+
+`PushTimeLimitStrategy`:
+
+| Field         | Type      |  Required | Description |
+|---------------|-----------|-----------|--------|
+| `send_after_time` | string | Yes | Local time in format `HH:MM:SS` after which push must be sent  |
+| `send_before_time` | string | Yes | Local time in format `HH:MM:SS` before which push must be sent  |
+| `no_tz_send_now` | bool | No | If device does not have timezone send push immediately, be default - will be dropped  |
+
 #### send_push_notification result
 
 | Field Name | Type | Description |
@@ -541,7 +608,7 @@ This is a part of server API at the moment, so you need to proxy requests to thi
 
 | Field | Type | Required | Description |
 |-------|------|----|-------------|
-| `uid` | string | Yes | `uid` (unique send id) from `send_push_notification` |
+| `analytics_uid` | string | Yes | `uid` (unique send id) from `send_push_notification` |
 | `status`   | string | Yes | Status of push notification - `delivered` or `interacted` |
 | `device_id` | string | Yes | Device ID |
 | `msg_id` | string | No | Message ID |
@@ -549,6 +616,86 @@ This is a part of server API at the moment, so you need to proxy requests to thi
 #### update_push_status result
 
 Empty object.
+
+## Timezone aware push
+
+Setting `timezone` to a device (see [device_register](#device_register) call) opens a road for timezone-aware push notifications. This is nice because you can send notifications to users in a convenient time of the day. Avoid pushes at night, push at specific time.
+
+To send such push notifications use `time_limit` field of `PushLimitStrategy`. For example, you can send push between `09:00:00` and `09:30:00` – and Centrifugo will send push somewhere during this period of user's local time.
+
+:::tip
+
+Given Centrifugo takes timezone from devices table into account timezone aware pushes only work with requests where `DeviceFilter` is used for sending – i.e. when Centrifugo iterates over devices in the database. If you send using raw tokens and want to inherit possibility to use timezones - reach out to us, this may be supported.
+
+:::
+
+## Templating
+
+It's possible to use templating in the content of your push notifications payloads. By default, Centrifugo does not use templating since this allows broadcasting pushes at max speed. You have to set `use_templating` flag to `true` when sending push to enable template execution. Here is an example of using templating:
+
+```json
+{
+  ..
+  "title": "Hello {{.device.meta.first_name}}"
+```
+
+To access device meta content in push template (as shown above) additionally set `use_meta` flag to `true` in send push notification request. Without `use_meta` you only have access to `.device.id` and `.device.user` variables.
+
+:::tip
+
+Given Centrifugo takes timezone from devices table into account timezone aware pushes only work with requests where `DeviceFilter` is used for sending – i.e. when Centrifugo iterates over devices in the database.
+
+:::
+
+## Localizations
+
+Templating also allows us to localize push notification content based on device `locale` (see [device_register](#device_register) call).
+
+When sending push notification use `localizations` field of [send_push_notification request](#send_push_notification-request):
+
+```json
+{
+  ..
+  "localizations": {
+    "pt": {
+        "translations": {
+            "greeting": "Olá",
+            "question": "Como tá indo"
+        }
+    }
+    "fr": {
+        "translations": {
+            "greeting": "Bonjour",
+            "question": "Comment ça va"
+        }
+    }
+  }
+}
+```
+
+In push payload you can then use templating and `l10n` object will be set to a proper translation map based on device `locale`:
+
+```json
+{
+  ..
+  "title": "{{default [[hello]] .l10n.greeting}}! {{ default [[How is it going]] .l10n.question }} ?"
+```
+
+So that a device with `pt-BR` locale will get a push notification with title `Olá! Como tá indo?`.
+
+Note, it's required to set default value here (we used English language in the example) for the cases when no locale found in device, or no translations for the device language provided in the request.
+
+## Push rate limits
+
+A good practice when working with push notifications is to avoid sending too many notifications to your users, especially marketing ones. Centrifugo PRO provides a way to rate limit notifications on user's device level.
+
+To do this, use `rate_limit` field of `PushLimitStrategy`. For example, you can configure policies to send push notifications not faster than once per minute and not more pushes than 10 in one hour. I.e. Centrifugo supports several policies for rate limit strategy. If push notification hits provided rate limits then it will be automatically delayed, or dropped if `drop_if_rate_limited` flag set to `true`.
+
+:::tip
+
+Given Centrifugo takes timezone from devices table into account timezone aware pushes only work with requests where `DeviceFilter` is used for sending – i.e. when Centrifugo iterates over devices in the database. If you send using raw tokens and want to inherit possibility to use rate limits - reach out to us, this may be supported.
+
+:::
 
 ## Exposed metrics
 
