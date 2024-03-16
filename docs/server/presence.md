@@ -12,7 +12,7 @@ To enable online presence, you need to set the `presence` option to `true` for t
 ```json
 {
     "namespaces": [{
-        "namespace": "public",
+        "name": "public",
         "presence": true
     }]
 }
@@ -75,7 +75,7 @@ By default, Centrifugo does not send these events and they must be explicitly tu
 ```json
 {
     "namespaces": [{
-        "namespace": "public",
+        "name": "public",
         "presence": true,
         "join_leave": true,
         "force_push_join_leave": true

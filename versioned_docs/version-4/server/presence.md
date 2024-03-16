@@ -16,7 +16,7 @@ To enable Online Presence, you need to set the `presence` option to `true` for t
 ```javascript
 {
     "namespaces": [{
-        "namespace": "public",
+        "name": "public",
         "presence": true
     }]
 }
