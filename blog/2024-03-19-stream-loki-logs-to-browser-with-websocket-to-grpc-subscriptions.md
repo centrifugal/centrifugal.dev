@@ -22,7 +22,9 @@ As of version 5.1.0, Centrifugo introduces an experimental yet powerful extensio
 
 ![](/img/on_demand_stream_connections.png)
 
-The essence of Proxy Subscription Streams lies in its simplicity and efficiency. By establishing a stream between Centrifugo and your application backend upon a channel subscription, it provides a straightforward path for data to travel directly to the subscribed clients. This mechanism not only simplifies the architecture for real-time data delivery but also ensures fast and individualized data streaming.
+Establishing a stream between Centrifugo and your application backend upon a channel subscription provides a straightforward path for data to travel directly to the subscribed clients. This mechanism not only simplifies the architecture for real-time data delivery but also ensures fast and individualized data streaming.
+
+The design is inspired by [Websocketd](http://websocketd.com/) server – but while Websocketd transforms data from programs running locally, Centrifugo provides a more generic network interface with GRPC. And all other features of Centrifugo like connection authentication, online presence come as a great bonus.
 
 In the documentation for Proxy Subscription Streams we mentioned streaming logs from Loki as one of the possible use cases. Let's expand on the idea and implement the working solution in just 10 minutes.
 
