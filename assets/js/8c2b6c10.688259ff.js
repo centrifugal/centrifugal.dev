@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkcentrifugal_dev=self.webpackChunkcentrifugal_dev||[]).push([[5910],{78509:e=>{e.exports=JSON.parse('{"label":"loki","permalink":"/blog/tags/loki","allTagsPath":"/blog/tags","count":1,"unlisted":false}')}}]);

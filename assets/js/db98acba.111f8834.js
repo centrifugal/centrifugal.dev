@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkcentrifugal_dev=self.webpackChunkcentrifugal_dev||[]).push([[3191],{34184:e=>{e.exports=JSON.parse('{"label":"grpc","permalink":"/blog/tags/grpc","allTagsPath":"/blog/tags","count":1,"unlisted":false}')}}]);
