@@ -11,7 +11,7 @@ hide_table_of_contents: false
 
 <img src="/img/centrifugo_loki.jpg" />
 
-As of version 5.1.0, Centrifugo introduces an experimental yet powerful extension that promises to simplify the data delivery process to the browser using GRPC streams. We believe it may help you to solve some practical tasks in minutes. Let's dive into how this feature works and how you can leverage it in your applications integrating with Loki real-time log streaming capabilities.
+As of version 5.1.0, Centrifugo introduces an experimental yet powerful extension that promises to simplify the data delivery process to the browser using GRPC streams. We believe it may help you to solve some practical tasks in minutes. Let's dive into how this feature works and how you can leverage it in your applications integrating with [Loki](https://grafana.com/oss/loki/) real-time log streaming capabilities.
 
 <!--truncate-->
 
@@ -35,7 +35,7 @@ Take a look at [full source code on Github](https://github.com/centrifugal/examp
 
 ## Setting Up Loki
 
-Loki is a horizontally-scalable, highly-available, multi-tenant log aggregation system inspired by Prometheus. It is designed to be very cost-effective and easy to operate, making it a perfect candidate for our real-time log streaming example.
+[Loki](https://grafana.com/oss/loki/) is a horizontally-scalable, highly-available, multi-tenant log aggregation system inspired by Prometheus. It is designed to be very cost-effective and easy to operate, making it a perfect candidate for our real-time log streaming example.
 
 We will build the example using Docker Compose, all we have to do for the example is to include Loki image to `docker-compose.yml`: 
 
