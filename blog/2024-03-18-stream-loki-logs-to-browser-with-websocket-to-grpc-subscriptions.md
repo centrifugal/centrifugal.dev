@@ -21,8 +21,6 @@ As of version 5.1.0, Centrifugo introduces an experimental yet powerful extensio
 
 ![](/img/on_demand_stream_connections.png)
 
-Establishing a stream between Centrifugo and your application backend upon a channel subscription provides a straightforward path for data to travel directly to the subscribed clients. This mechanism not only simplifies the architecture for real-time data delivery but also ensures fast and individualized data streaming.
-
 The design is inspired by [Websocketd](http://websocketd.com/) server – but while Websocketd transforms data from programs running locally, Centrifugo provides a more generic network interface with GRPC. And all other features of Centrifugo like connection authentication, online presence come as a great bonus.
 
 In the documentation for Proxy Subscription Streams we mentioned streaming logs from Loki as one of the possible use cases. Let's expand on the idea and implement the working solution in just 10 minutes.
@@ -44,17 +42,16 @@ We will build the example using Docker Compose, all we have to do for the exampl
 ```yaml
 services:
   loki:
-    image: grafana/loki:latest
+    image: grafana/loki:2.9.5
     ports:
       - "3100:3100"
 ```
-
 
 Loki can ingest logs via various methods, including Promtail, Grafana Agent, Fluentd, and more. For simplicity, we will send logs to Loki ourselves from the Go application.
 
 To send logs to Loki, we can use the HTTP API that Loki provides. This is a straightforward way to push logs directly from an application. The example below demonstrates how to create a simple Go application that generates logs and sends them to Loki using HTTP POST requests.
 
-First, define a function to send a log entry to Loki:
+First, let's some code to send a log entries to Loki:
 
 ```go
 const (
@@ -140,7 +137,7 @@ At this point our program pushes some logs to Loki, now let's add Centrifugo to 
 
 Adding Centrifugo is also rather straightforward:
 
-```
+```yaml
 services:
   centrifugo:
     image: centrifugo/centrifugo:v5.3.0
@@ -196,7 +193,7 @@ Note, we enabled `client_insecure` option here – this is to keep example short
 </html>
 ```
 
-In the final version we've also included some CSS to this HTML to make it look nicer.
+In the final version we've also included some CSS to this HTML to make it look a bit nicer.
 
 And our Javascript code in `app.js`:
 
@@ -238,12 +235,13 @@ function subscribeToLogs(e) {
 
 In the final example we've also added Nginx container to serve static files and proxy WebSocket connections to Centrifugo. Check it out in the source code.
 
-When user enters Loki query to input, subscription goes to Centrifugo and Centrifugo then realizes it's a proxy stream subscription. So it calls the backend GRPC endpoint (`backend:12000`) and expect it to implement unidirectional GRPC stream conract. Let's implement it. 
+When user enters Loki query to input, subscription goes to Centrifugo and Centrifugo then realizes it's a proxy stream subscription (since channel belongs to `logs` channel namespace). Centrifugo then calls the backend GRPC endpoint (`backend:12000`) and expect it to implement unidirectional GRPC stream contract. Our last part here - to implement it.
 
 ## Handle subscription stream on the Go side
 
-On your backend, you'll implement a GRPC service that interacts with Loki to tail logs and then re-send them to Centrifugo subscription stream. Let's implement such service. We first need to take Centrifugo [proxy.proto](https://github.com/centrifugal/centrifugo/blob/master/internal/proxyproto/proxy.proto) definitions. And we will implement `SubscribeUnidirectional` method from it.
+On your backend, we'll implement a GRPC service that interacts with Loki to tail logs and then re-send them to Centrifugo subscription stream. Let's implement such service.
 
+We first need to take Centrifugo [proxy.proto](https://github.com/centrifugal/centrifugo/blob/master/internal/proxyproto/proxy.proto) definitions. And we will implement `SubscribeUnidirectional` method from it.
 
 You need to install [`protoc`](https://grpc.io/docs/protoc-installation/), also install plugins for Go and GRPC:
 
@@ -258,9 +256,19 @@ And then:
 protoc -I ./ proxy.proto --go_out=./ --go-grpc_out=./
 ```
 
-This will generate Protobuf messages and GRPC code. Let's implement our server now:
+This will generate Protobuf messages and GRPC code required for writing GRPC service. We can use generated definitions now:
 
 ```go
+import (
+	"log"
+	"fmt"
+
+	pb "backend/internal/proxyproto"
+	"github.com/grafana/loki/pkg/logproto"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+)
+
 const (
 	lokiGRPCAddress  = "loki:9095"
 )
