@@ -369,6 +369,12 @@ Things to note:
 * When subscription stream initialized from Centrifugo side we start tailing logs from Loki and resend them to Centrifugo
 * Centrifugo then packs data to WebSocket connection and delivers to browser.
 
+:::caution
+
+Note, we bypass some security considerations in this example. In practice you must be more careful with query supplied by user in the form - validate and sanitize it before passing to Loki. Proxy subscription GRPC contract allows you to communicate custom errors with the client-side.
+
+:::
+
 ## Conclusion
 
 Subscription streams may be a very powerful generic feature in your arsenal. Here we've shown how simple it could be to make a proof of concept of the real-time application which consumes individual data from third-party streaming provider.
