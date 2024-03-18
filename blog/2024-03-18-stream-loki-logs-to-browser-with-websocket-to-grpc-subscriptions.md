@@ -5,11 +5,11 @@ description: Centrifugo has GRPC subscription streams feature, in this post we s
 author: Alexander Emelin
 authorTitle: Founder of Centrifugal Labs
 authorImageURL: /img/alexander_emelin.jpeg
-image: /img/centrifugo_loki.png
+image: /img/centrifugo_loki.jpg
 hide_table_of_contents: false
 ---
 
-<img src="/img/centrifugo_loki.png" />
+<img src="/img/centrifugo_loki.jpg" />
 
 As of version 5.1.0, Centrifugo introduces an experimental yet powerful extension that promises to simplify the data delivery process to the browser using GRPC streams. We believe it may help you to solve some practical tasks in minutes. Let's dive into how this feature works and how you can leverage it in your applications integrating with Loki real-time log streaming capabilities.
 
@@ -355,9 +355,9 @@ func main() {
 
 Things to note:
 
-* Loki also supports GRPC interface to tail logs, so we use it here
+* Loki also supports GRPC interface to tail logs, so we use it here. We could also use Loki WebSocket endpoint [`/loki/api/v1/tail`](https://grafana.com/docs/loki/latest/reference/api/#stream-log-messages) but this would mean establishing new connection for every tail operation - with GRPC we can use many concurrent tail requests all multiplexed over a single network connection.
 * When subscription stream initialized from Centrifugo side we start tailing logs from Loki and resend them to Centrifugo
-* Centrifugo then packs data to WebSocket and delivers to browser. 
+* Centrifugo then packs data to WebSocket connection and delivers to browser.
 
 ## Conclusion
 
