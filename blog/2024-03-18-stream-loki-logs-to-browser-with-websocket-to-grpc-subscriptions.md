@@ -51,6 +51,8 @@ Loki can ingest logs via various methods, including Promtail, Grafana Agent, Flu
 
 To send logs to Loki, we can use the HTTP API that Loki provides. This is a straightforward way to push logs directly from an application. The example below demonstrates how to create a simple Go application that generates logs and sends them to Loki using HTTP POST requests.
 
+For this post we will be using Go language to implement the backend part. But it could be any other programming language.
+
 First, let's some code to send a log entries to Loki:
 
 ```go
