@@ -315,7 +315,7 @@ We do broadcasts only after successful commit, using Django's `transaction.on_co
 
 Here we use `requests` library for making HTTP requests (`pip install requests`) and do some retries which is nice to deal with temporary network issues.
 
-We construct list of channels using `values_list` method of Djanfo queryset to make query more efficient.
+We construct list of channels using `values_list` method of Django queryset to make query more efficient.
 
 We also using `settings.CENTRIFUGO_HTTP_API_KEY` which is set in `settings.py` and matches `api_key` option from Centrifugo configuration file:
 
