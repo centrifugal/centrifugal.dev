@@ -100,7 +100,7 @@ You still can continue to encode your application specific data as JSON when usi
 
 ## Debugging with Postman, wscat, etc
 
-Centrifugo supports a special url parameter for bidirectional websocket which turns on using native WebSocket frame ping-pong mechanism instead of [server-to-client application level pings](./overview.md#pingpong-behavior) Centrifugo uses by default. This simplifies debugging Centrifugo protocol with tools like Postman, wscat, websocat, etc. 
+Centrifugo supports a special url parameter for bidirectional websocket which turns on using native WebSocket frame ping-pong mechanism instead of [server-to-client application level pings](./overview.md#pingpong-behavior) Centrifugo uses by default. This simplifies debugging Centrifugo protocol with tools like Postman, wscat, websocat, etc.
 
 By default, it may be inconvenient due to the fact Centrifugo sends periodic ping message to the client (`{}` in JSON protocol scenario) and expects pong response back within some time period. Otherwise Centrifugo closes connection. This results in problems with mentioned tools because you had to manually send `{}` pong message upon ping message. So typical session in `wscat` could look like this:
 

@@ -66,10 +66,10 @@ centrifuge.connect()
 
 Note, that we are using secure schemes here – `https://` and `wss://`. While in WebSocket case you could opt for non-TLS communication, in WebTransport case non-TLS `http://` scheme is simply not supported by the specification.
 
-Also, Chrome may not automatically close WebTransport sessions upon browser reload, so consider adding:
+Also, Chrome may not automatically close WebTransport sessions upon browser window reload, so consider adding:
 
 ```javascript
-addEventListener("unload", (event) => { centrifuge.disconnect() });
+addEventListener("beforeunload", (event) => { centrifuge.disconnect() });
 ```
 
 :::tip
