@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkcentrifugal_dev=self.webpackChunkcentrifugal_dev||[]).push([[7393],{81838:e=>{e.exports=JSON.parse('{"blogBasePath":"/blog","blogTitle":"Centrifugal Blog"}')}}]);
