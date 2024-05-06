@@ -208,6 +208,26 @@ Boolean option, when `true` Centrifugo PRO does not send push notifications to F
 
 Duration. When set together with `push_notifications.dry_run` every dry-run request will cause some delay in workers emulating real-world latency. Useful for development.
 
+#### push_notifications.read_from_replica
+
+Boolean option, when true Centrifugo will use configured PostgreSQL replicas for push notifications read API where possible. Also, replicas will also be used during brodcasting push notifications. This configuration enables efficient scaling of read operations.
+
+Adding `push_notifications.read_from_replica` option requires setting `database.replica_dsn` option – which is an array of strings containing PostgreSQL replica DSNs. So config may look like this:
+
+```json title="config.json"
+{
+    ...
+    "database": {
+        "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres",
+        "replica_dsn": ["postgresql://postgres:pass@127.0.0.1:5433/postgres"]
+    },
+    "push_notifications": {
+        "read_from_replica": true,
+        // rest of the options...
+    }
+}
+```
+
 ### Use PostgreSQL as queue
 
 Centrifugo PRO utilizes Redis Streams as the default queue engine for push notifications. However, it also offers the option to employ PostgreSQL for queuing. It's as simple as:
