@@ -17,7 +17,7 @@ module.exports = {
       contextualSearch: true
     },
     prism: {
-      additionalLanguages: ["php", "dart", "swift", "java"],
+      additionalLanguages: ["php", "dart", "swift", "java", "json"],
     },
     colorMode: {
       defaultMode: "dark"
