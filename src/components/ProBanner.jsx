@@ -5,7 +5,7 @@ const ProBanner = () => {
     return (
         <div className={styles.banner}>
             <h2 className={styles.bannerTitle}>Using Centrifugo? Check out <a className={styles.bannerLink} href="/docs/pro/overview">Centrifugo PRO</a></h2>
-            <p className={styles.bannerText}>Unique experience of self-hosted real-time messaging</p>
+            <p className={styles.bannerText}>Innovative answers to complex real-time messaging challenges</p>
         </div>
     );
 };
