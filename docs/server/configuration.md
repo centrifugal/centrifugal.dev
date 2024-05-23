@@ -267,21 +267,29 @@ When using authentication over proxy ensure your proxy strips the header you are
 
 :::
 
+### client_connect_include_server_time
+
+Boolean, default: `false`
+
+When enabled, Centrifugo attaches `time` field to the connect reply (or connect push in the unidirectional transport case). This field contains current server time as Unix milliseconds. Ex. `1716198604052`.
+
+Available since Centrifugo v5.4.0
+
 ### allow_anonymous_connect_without_token
 
-Default: false
+Boolean, default: `false`
 
 Enable a mode when all clients can connect to Centrifugo without JWT. In this case, all connections without a token will be treated as anonymous (i.e. with empty user ID). Access to channel operations should be explicitly enabled for anonymous connections.
 
 ### disallow_anonymous_connection_tokens
 
-Default: false
+Boolean, default: `false`
 
 When the option is set Centrifugo won't accept connections from anonymous users even if they provided a valid JWT. I.e. if token is valid, but `sub` claim is empty – then Centrifugo closes connection with advice to not reconnect again.
 
 ### gomaxprocs
 
-Default: 0
+Integer, default: `0`
 
 By default, Centrifugo runs on all available CPU cores (also Centrifugo can look at cgroup limits when rnning in Docker/Kubernetes). To limit the number of cores Centrifugo can utilize in one moment use this option.
 

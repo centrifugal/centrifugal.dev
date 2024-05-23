@@ -38,7 +38,15 @@ Although there is a password based authentication a good advice is to protect we
 
 :::
 
-![Admin web panel](/img/quick_start_admin_v4.png)
+![Admin web panel](/img/quick_start_admin_v5.png)
+Log in using `admin_password` value:
+![Admin web panel](/img/admin_three_nodes.png)
+
+:::tip
+
+Centrifugo PRO [supports Single Sign-On](../pro/admin_idp_auth.md) (SSO) authentication for web interface using OpenID Connect (OIDC) protocol.
+
+:::
 
 ## Using custom web interface
 

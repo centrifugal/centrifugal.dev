@@ -51,7 +51,7 @@ And then running Centrifugo only with a path to a configuration file:
 
 Now open [http://localhost:8000](http://localhost:8000). You should see Centrifugo admin web panel. Enter `admin_password` value from the configuration file to log in (in our case it's `d0683813-0916-4c49-979f-0e08a686b727`, but you will have a different value).
 
-![Admin web panel](/img/quick_start_admin_v4.png)
+![Admin web panel](/img/quick_start_admin_v5.png)
 
 Inside the admin panel, you should see that one Centrifugo node is running, and it does not have connected clients:
 

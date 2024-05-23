@@ -300,7 +300,7 @@ If positioning is not forced then client can provide a corresponding Subscriptio
 
 ### force_recovery
 
-`force_recovery` (boolean, default `false`) – when the `position` option is on Centrifugo forces all subscriptions in a namespace to be `recoverable`. When enabled Centrifugo will try to recover missed publications in channels after a client reconnects for some reason (bad internet connection for example). Also when the recovery feature is on Centrifugo automatically enables properties of the `force_positioning` option described above.
+`force_recovery` (boolean, default `false`) – when the `force_recovery` option is on Centrifugo forces all subscriptions in a namespace to be `recoverable`. When enabled Centrifugo will try to recover missed publications in channels after a client reconnects for some reason (bad internet connection for example). Also when the recovery feature is on Centrifugo automatically enables properties of the `force_positioning` option described above.
 
 `force_recovery` option must be used in conjunction with reasonably configured message history for channel i.e. `history_size` and `history_ttl` **must be set** (because Centrifugo uses channel history to recover messages).
 
@@ -311,6 +311,10 @@ If recovery is not forced then client can provide a corresponding Subscription o
 Not all real-time events require this feature turned on so think wisely when you need this. When this option is turned on your application should be designed in a way to tolerate duplicate messages coming from a channel (currently Centrifugo returns recovered publications in order and without duplicates but this is an implementation detail that can be theoretically changed in the future). See more details about how recovery works in [special chapter](history_and_recovery.md).
 
 :::
+
+### force_recovery_mode
+
+`force_recovery_mode` (string, possible values are `stream` or `cache`, when not specified Centrifugo uses `"stream"`). Allows setting recovery mode for all connections which use recovery in the namespace. By default, Centrifugo uses `stream` recovery mode – a mode where subscriber interested in all messages to be delivered. The alternative recovery mode which may be forced by using this option is `cache` – see the detailed description in [Cache recovery mode](./cache_recovery.md) chapter.
 
 ### allow_subscribe_for_client
 
@@ -414,6 +418,14 @@ Channel regex only checked for client-side subscriptions, if you are using serve
 
 Centrifugo uses Go language [regexp](https://pkg.go.dev/regexp) package for regular expressions.
 
+### delta_publish
+
+`delta_publish` (boolean, default `false`) allows marking all publications in the namespace with `delta` flag, i.e. all publications will result into delta updates for subscribers which negotiated delta compression for a channel.
+
+### allowed_delta_types
+
+`allowed_delta_types` (array of strings, the only allowed value now is `fossil`) - provide an array of allowed delta compression types in the namespace. If not specified – client won't be able to negotiate delta compression in channels.
+
 ### proxy_subscribe
 
 `proxy_subscribe` (boolean, default `false`) – turns on subscribe proxy, more info in [proxy chapter](proxy.md)
@@ -445,6 +457,38 @@ Centrifugo uses Go language [regexp](https://pkg.go.dev/regexp) package for regu
 ### subscribe_stream_proxy_name
 
 `subscribe_stream_proxy_name` (string, default `""`) – turns on subscribe stream proxy when [granular proxy mode](./proxy_streams.md#granular-proxy-mode) is used. Note that `proxy_subscribe_stream` option defined above is ignored in granular proxy mode.
+
+### cache_empty_proxy_name
+
+`cache_empty_proxy_name` (string, default `""`, Centrifugo PRO only) – turns on [cache empty proxy](../pro/channel_cache_empty.md) when [granular proxy mode](./proxy_streams.md#granular-proxy-mode) is used. Note that `proxy_cache_empty` option is ignored in granular proxy mode.
+
+### proxy_cache_empty
+
+`proxy_cache_empty` (boolean, default `false`, Centrifugo PRO only) - turns on cache empty proxy, see [more details](../pro/channel_cache_empty.md) in Centrifugo PRO docs.
+
+### shared_position_sync
+
+`shared_position_sync` (boolean, default `false`, Centrifugo PRO only) - can help reducing the number of position synchronization requests from Centrifugo to Broker's history API, see [more details](../pro/engine_optimizations.md#shared-position-sync) in Centrifugo PRO docs.
+
+### channel_state_events
+
+`channel_state_events` (array of strings, empty by default, Centrifugo PRO only) - can help configuring notifications about channel's `occupied` and `vacated` state. See [more details](../pro/channel_events.md) in Centrifugo PRO docs.
+
+### subscribe_cel
+
+`subscribe_cel` (string, default `""`, Centrifugo PRO only) – CEL expression for subscribe permission, see more details in [Channel CEL expressions](../pro/cel_expressions.md) of Centrifugo PRO.
+
+### publish_cel
+
+`publish_cel` (string, default `""`, Centrifugo PRO only) – CEL expression for publish permission, see more details in [Channel CEL expressions](../pro/cel_expressions.md) of Centrifugo PRO.
+
+### history_cel
+
+`history_cel` (string, default `""`, Centrifugo PRO only) – CEL expression for history permission, see more details in [Channel CEL expressions](../pro/cel_expressions.md) of Centrifugo PRO.
+
+### presence_cel
+
+`presence_cel` (string, default `""`, Centrifugo PRO only) – CEL expression for presence permission, see more details in [Channel CEL expressions](../pro/cel_expressions.md) of Centrifugo PRO.
 
 ## Channel config examples
 

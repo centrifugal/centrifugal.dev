@@ -63,7 +63,7 @@ html[data-theme="light"] .button--secondary:hover {
 }
 
 .menu__link {
-  line-height: 1.00;
+  line-height: 0.90;
   font-size: 0.98em;
 }
 
@@ -186,22 +186,6 @@ html[data-theme="dark"] .header-github-link:before {
 .markdown table {
   width: 100%;
   display: inline-table;
-}
-
-.markdown table td {
-  text-align: left;
-}
-
-.markdown table th:first-child {
-  width: 15%;
-}
-
-.markdown table th:nth-child(2) {
-  width: 20%;
-}
-
-.markdown table th:nth-child(3) {
-  width: 10%;
 }
 
 .markdown .features table {

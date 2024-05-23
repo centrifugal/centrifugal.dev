@@ -49,11 +49,15 @@ Connections can expire; developers can choose a way to handle connection refresh
 
 ### Channel (room) concept
 
-Centrifugo is a PUB/SUB server – users subscribe to channels to receive real-time updates. A message sent to a channel is delivered to all online channel subscribers.
+Centrifugo is a PUB/SUB server – users subscribe to [channels](../server/channels.md) to receive real-time updates. A message sent to a channel is delivered to all online channel subscribers.
 
 ### Different types of subscriptions
 
 Centrifugo supports client-side (initiated by the client) and [server-side](../server/server_subs.md) (forced by the server) channel subscriptions.
+
+### Delta compression
+
+[Delta compression](../server/delta_compression.md) feature may help reducing bandwidth costs significantly if you publish similar messages.
 
 ### RPC over bidirectional connection
 
@@ -65,7 +69,7 @@ The online presence feature for channels provides information about active chann
 
 ### Message history in channels
 
-Optionally, Centrifugo allows turning on history for publications in channels. This publication history has a limited size and retention period (TTL). With channel history, Centrifugo can help to survive the mass reconnect scenario – clients can automatically catch up on missed state from a fast cache thus reducing the load on your primary database. It's also possible to manually iterate over a history stream from the client or from the application backend side.
+Optionally, Centrifugo allows turning on history for publications in channels. This publication history has a limited size and retention period (TTL). With channel history, Centrifugo can help to survive the mass reconnect scenario – clients can automatically catch up on missed state from a fast cache thus reducing the load on your primary database. It's also possible to manually iterate over a history stream from the client or from the application backend side. See [history and recovery](../server/history_and_recovery.md) and also a special [cache recovery mode](../server/cache_recovery.md).
 
 ### Embedded admin web UI
 

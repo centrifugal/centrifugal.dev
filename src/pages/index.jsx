@@ -112,9 +112,7 @@ function Home() {
                 backend, and much more. It comes with official SDK libraries for both web and mobile development.
               </Feature>
               <Feature title="Out-of-the-box scalability" imageUrl="img/feature_scalability.png">
-                Built-in Redis, KeyDB, Tarantool engines, or Nats broker make it possible
-                to scale connections across different Centrifugo nodes. So Centrifugo helps
-                you to scale to millions of active connections with reasonable hardware requirements.
+                Centrifugo allows scaling connections over many server instances with the help of built-in Redis (or Redis-compatible like AWS Elasticache, DragonflyDB, Valkey, KeyDB) and Tarantool engines. Also Nats broker is supported for at most once PUB/SUB.
               </Feature>
               <Feature title="Used in production" imageUrl="img/feature_production.png">
                 Started a decade ago, Centrifugo (and Centrifuge library for Go
