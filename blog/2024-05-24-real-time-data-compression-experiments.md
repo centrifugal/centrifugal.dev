@@ -519,10 +519,10 @@ Analysis: Combining both methods results in a data size of 11.11%. Even more tha
 
 ## Conclusion
 
-Let's summarize:
+* WebSocket permessage-deflate compression significantly reduces the amount of data transferred over WebSocket connections. While it incurs CPU and memory overhead, it may be still worth using from a total cost perspective.
 
-* WebSocket permessage-deflate compression significantly reduces the amount of data transferred over WebSocket connections. It comes with CPU/memory overhead but it still be worth using from the final cost perspective.
-* Delta compression can have a perfect sense for channels where data differs insignificanly between publications, in our experiment it resulted in x10 bandwidth reduction.
-* Using binary for data combining with Centrifugo Protobuf protocol provides a good reduction in bandwidth even without deflate or delta compressions. But comes at the cost of data format complexity. One more benefit of using Centrifugo Protobuf protocol BTW is because it's much faster for marshaling/unmarshaling on server side than JSON protocol.
+* Delta compression makes perfect sense for channels where data changes only slightly between publications. In our experiment, it resulted in a tenfold reduction in bandwidth usage.
 
-For us, these results highlighted the potential of implementing delta compression, so we proceeded with it. Again, the benefit depends on data being sent – you can save even more with it if you have larger messages than we used here and those messages are very similar to each other.
+* Using binary data in combination with the Centrifugo Protobuf protocol provides substantial bandwidth reduction even without deflate or delta compression. However, this comes at the cost of increased data format complexity. An additional benefit of using the Centrifugo Protobuf protocol is its faster marshalling and unmarshalling on the server side compared to the JSON protocol.
+
+For Centrifugo, these results highlighted the potential of implementing delta compression, so we proceeded with it. The benefit depends on the nature of the data being sent – you can achieve even greater savings if you have larger messages that are very similar to each other.

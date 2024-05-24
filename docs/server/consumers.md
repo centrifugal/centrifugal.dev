@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS centrifugo_outbox (
 	method text NOT NULL,
 	payload JSONB NOT NULL,
 	partition INTEGER NOT NULL default 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
 );
 ```
 

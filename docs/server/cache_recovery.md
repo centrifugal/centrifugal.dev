@@ -1,6 +1,6 @@
 ---
 id: cache_recovery
-sidebar_label: Cache recovery mode 
+sidebar_label: Cache recovery mode
 title: Cache recovery mode
 ---
 

@@ -31,7 +31,7 @@ Centrifugo supports JSON and binary Protobuf protocols for client-server communi
 
 ### Variety of real-time transports
 
-The main transport in Centrifugo is WebSocket. For browsers that do not support WebSocket, Centrifugo provides its own bidirectional WebSocket emulation layer based on HTTP-streaming (using Fetch and Readable streams browser APIs) and SSE (EventSource). It also supports SockJS as an older but battle-tested WebSocket polyfill option. Additionally, WebTransport is supported in an experimental form.
+The main transport in Centrifugo is WebSocket. For web browsers with non-working WebSocket connection, Centrifugo provides its own bidirectional WebSocket emulation layer based on HTTP-streaming (using Fetch and Readable streams browser APIs) and SSE (EventSource). Additionally, WebTransport is supported in an experimental form.
 
 In addition to bidirectional transports, Centrifugo also supports a unidirectional approach for real-time updates: using SSE (EventSource), HTTP-streaming, and GRPC unidirectional stream. Utilizing a unidirectional transport is sufficient for many real-time applications and does not require using our client SDKs – just native standards or GRPC-generated code.
 
@@ -45,7 +45,7 @@ It supports the [JWK specification](https://datatracker.ietf.org/doc/html/rfc751
 
 ### Connection management
 
-Connections can expire; developers can choose a way to handle connection refresh – using a client-side refresh workflow or a server-side call from Centrifugo to the application backend. Centrifugo provides APIs to disconnect users, unsubscribe users from channels, and inspect active channels.
+Connections can expire; developers can choose a way to handle connection refresh – using a client-side refresh workflow or a server-side call from Centrifugo to the application backend. Centrifugo provides APIs to disconnect users, unsubscribe users from channels, and inspect active channels. On the client side our SDKs automatically handle reconnections with backoff strategy, and even re-subscriptions with backoff to not disrupt the entire connection on individual subscription request temporary failure.
 
 ### Channel (room) concept
 
@@ -54,6 +54,10 @@ Centrifugo is a PUB/SUB server – users subscribe to [channels](../server/chann
 ### Different types of subscriptions
 
 Centrifugo supports client-side (initiated by the client) and [server-side](../server/server_subs.md) (forced by the server) channel subscriptions.
+
+### Message history in channels
+
+Optionally, Centrifugo allows turning on history for publications in channels. This publication history has a limited size and retention period (TTL). With channel history, Centrifugo can help to survive the mass reconnect scenario – clients can automatically catch up on missed state from a fast cache thus reducing the load on your primary database. It's also possible to manually iterate over a history stream from the client or from the application backend side. See [history and recovery](../server/history_and_recovery.md) and also a special [cache recovery mode](../server/cache_recovery.md) which allows using Centrifugo as a real-time key-value cache.
 
 ### Delta compression
 
@@ -67,26 +71,27 @@ You can fully utilize bidirectional connections by sending RPC calls from the cl
 
 The online presence feature for channels provides information about active channel subscribers. Also, channel join and leave events (when someone subscribes/unsubscribes) can be received on the client side.
 
-### Message history in channels
-
-Optionally, Centrifugo allows turning on history for publications in channels. This publication history has a limited size and retention period (TTL). With channel history, Centrifugo can help to survive the mass reconnect scenario – clients can automatically catch up on missed state from a fast cache thus reducing the load on your primary database. It's also possible to manually iterate over a history stream from the client or from the application backend side. See [history and recovery](../server/history_and_recovery.md) and also a special [cache recovery mode](../server/cache_recovery.md).
-
 ### Embedded admin web UI
 
 The built-in [admin UI](../server/admin_web.md) allows publishing messages to channels, looking at Centrifugo cluster information, and more.
 
 ### Cross-platform
 
-Centrifugo works on Linux, macOS, and Windows.
+Centrifugo works on Linux, MacOS, and Windows.
 
 ### Ready to deploy
 
-Centrifugo supports various deployment methods: in Docker, using prepared RPM or DEB packages, via a Kubernetes Helm chart. It supports automatic TLS with Let's Encrypt TLS, outputs Prometheus/Graphite metrics, and has an official Grafana dashboard for the Prometheus data source.
+Centrifugo supports various deployment methods: in Docker, using prepared RPM or DEB packages, via a Kubernetes Helm chart. It supports automatic TLS with Let's Encrypt TLS, outputs Prometheus/Graphite metrics, and has an official Grafana dashboard for the Prometheus data source - read more about [observability](../server/observability.md).
 
 ### Open-source
 
-Centrifugo stands on top of the open-source library Centrifuge (MIT license). The OSS version of Centrifugo is based on the permissive open-source license (Apache 2.0). All our official client SDKs and API libraries are MIT-licensed.
+Centrifugo stands on top of the open-source library [Centrifuge](https://github.com/centrifugal/centrifuge) (MIT license). The OSS version of Centrifugo is based on the permissive open-source license (Apache 2.0). All our official client SDKs and API libraries are MIT-licensed.
 
 ### PRO features
 
-Centrifugo PRO extends Centrifugo with several unique features which can provide interesting advantages for business adopters. For additional details, refer to the [Centrifugo PRO documentation](../pro/overview.md).
+Centrifugo PRO extends Centrifugo with several unique features which can provide interesting advantages for business adopters. Some amazing features include into PRO version:
+
+* push notifications API – to send mobile and browser pushes over FCM, APNs, HMS
+* real-time analytics with ClickHouse for more insights about your real-time ecosystem
+* performance optimizations to reduce resource usage and thus reducing overall costs
+* many more, refer to the [Centrifugo PRO documentation](../pro/overview.md).

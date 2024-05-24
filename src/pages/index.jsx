@@ -76,7 +76,9 @@ function Home() {
         <section className={clsx("logos-wrapper", styles.logos)}>
           <div className="container">
             <div className="row justify-content-center">
-              <div className="col"></div>
+              <div className="col" style={{'fontSize': '14px'}}>
+                USED IN PRODUCTS OF MANY COMPANIES
+              </div>
               <div className="col">
                 <Badoo />
               </div>
@@ -89,19 +91,21 @@ function Home() {
               <div className="col">
                 <OpenWeb />
               </div>
-              <div className="col"></div>
+              <div className="col"  style={{'fontSize': '14px'}}>
+                THOUSANDS OF REAL INSTALLATIONS
+              </div>
             </div>
           </div>
         </section>
         <section className={clsx("features-wrapper", styles.features)}>
           <div className="container">
             <div className="row">
-              <Feature title="Integrates with everything" imageUrl="img/feature_integration.png">
+              <Feature title="Seamless Integration" imageUrl="img/feature_integration.png">
                 Centrifugo is a self-hosted service which handles connections over various <a href="/docs/transports/overview">transports</a> and provides a simple <a href="/docs/server/server_api">publishing API</a>.
                 Centrifugo nicely integrates with any application &mdash; no changes in
                 the existing app architecture required to introduce real-time updates.
               </Feature>
-              <Feature title="Great performance" imageUrl="img/feature_performance.png">
+              <Feature title="Great Performance" imageUrl="img/feature_performance.png">
                 Centrifugo is written in Go language with some smart optimizations inside.
                 See the description of the test stand with <a href="/blog/2020/02/10/million-connections-with-centrifugo">one million WebSocket</a> connections and 30 million delivered
                 messages per minute with hardware comparable to a single modern server machine.
@@ -111,10 +115,10 @@ function Home() {
                 of subscriptions, hot channel history, online presence, the ability to proxy connection events to the
                 backend, and much more. It comes with official SDK libraries for both web and mobile development.
               </Feature>
-              <Feature title="Out-of-the-box scalability" imageUrl="img/feature_scalability.png">
+              <Feature title="Out-of-the-box Scalability" imageUrl="img/feature_scalability.png">
                 Centrifugo allows scaling connections over many server instances with the help of built-in Redis (or Redis-compatible like AWS Elasticache, DragonflyDB, Valkey, KeyDB) and Tarantool engines. Also Nats broker is supported for at most once PUB/SUB.
               </Feature>
-              <Feature title="Used in production" imageUrl="img/feature_production.png">
+              <Feature title="Proven in Production" imageUrl="img/feature_production.png">
                 Started a decade ago, Centrifugo (and Centrifuge library for Go
                 it's built on top of) is mature, battle-tested software that has been successfully used in
                 production by many companies around the world: VK, Badoo, ManyChat, OpenWeb, Grafana, and others.
@@ -143,7 +147,7 @@ function Home() {
                 Chats apps, live comments, multiplayer games, real-time data visualizations, collaborative tools, etc. can all be built on top of a real-time messaging system.
               </p>
               <p>
-                Centrifugo is a user facing <b>PUB/SUB</b> server that handles persistent connections over various real-time transports &mdash; <b>WebSocket</b>, HTTP-streaming, SSE (Server-Sent Events), SockJS, WebTransport, GRPC.
+                Centrifugo is a user facing <b>PUB/SUB</b> server that handles persistent connections over various real-time transports &mdash; <b>WebSocket</b>, HTTP-streaming, SSE (Server-Sent Events), WebTransport, GRPC.
               </p>
             </>
           }

@@ -141,6 +141,64 @@ Line.prototype.render = function render(elapsedTime) {
     this.draw();
 };
 
+function drawBranch(ctx, startX, startY, endX, endY, thickness) {
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(endX, endY);
+    ctx.lineWidth = thickness;
+    ctx.strokeStyle = '#F6CFC7';
+    ctx.stroke();
+
+    // Create a gradient for the glow effect.
+    const gradient = ctx.createLinearGradient(startX, startY, endX, endY);
+    gradient.addColorStop(0, '#F60809');
+    gradient.addColorStop(1, '#F6B9BD');
+    
+    // Draw the glow.
+    ctx.strokeStyle = gradient;
+    ctx.lineWidth = thickness + 2;
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = 'red';
+    ctx.stroke();
+}
+
+function drawLightning(ctx, X, Y) {
+    const startX = X / 2 + (0.5 - Math.random()) * 30;
+    const startY = Y / 2 + (0.5 - Math.random()) * 30;
+    const numSegments = Math.floor(Math.random() * 10) + 2;
+    let currentX = startX;
+    let currentY = startY;
+
+    const initialAngle = Math.random() * Math.PI * 2;  // Random initial angle
+
+    ctx.globalCompositeOperation = 'lighter';
+
+    for (let i = 0; i < numSegments; i++) {
+        const segmentLength = Math.random() * 30 + 10;
+        const angle = initialAngle + (Math.random() - 0.5) * Math.PI / 3;
+        const endX = currentX + Math.cos(angle) * segmentLength;
+        const endY = currentY + Math.sin(angle) * segmentLength;
+
+        drawBranch(ctx, currentX, currentY, endX, endY, 2);
+
+        // Branching.
+        if (Math.random() > 0.7) {
+            drawBranch(ctx, currentX, currentY, currentX + Math.cos(angle + Math.PI / 4) * segmentLength, currentY + Math.sin(angle + Math.PI / 4) * segmentLength, 1);
+        }
+        if (Math.random() > 0.7) {
+            drawBranch(ctx, currentX, currentY, currentX + Math.cos(angle - Math.PI / 4) * segmentLength, currentY + Math.sin(angle - Math.PI / 4) * segmentLength, 1);
+        }
+        if (Math.random() > 0.7) {
+            drawBranch(ctx, currentX, currentY, currentX + Math.cos(angle - Math.PI / 4) * segmentLength, currentY + Math.sin(angle - Math.PI / 4) * segmentLength, 1);
+        }
+
+        currentX = endX;
+        currentY = endY;
+    }
+
+    ctx.globalCompositeOperation = 'source-over';
+}
+
 function draw(canvas, X, Y, isDarkTheme) {
     const ctx = canvas.getContext("2d");
 
@@ -200,6 +258,8 @@ function draw(canvas, X, Y, isDarkTheme) {
 
     let lastRenderTime = 0;
 
+    const useLightnings = localStorage.getItem("lights") == "up";
+
     function render(currentTime) {
         const secondsSinceLastRender = (currentTime - lastRenderTime) / 1000
 
@@ -210,6 +270,13 @@ function draw(canvas, X, Y, isDarkTheme) {
         }
         for (let i = 0; i < segments.length; i += 1) {
             segments[i].render(secondsSinceLastRender);
+        }
+
+        if (isDarkTheme && useLightnings) {
+            if (Math.random() > 0.99) {
+                drawLightning(ctx, X, Y);
+            }
+            ctx.shadowBlur = 100;
         }
 
         lastRenderTime = currentTime;

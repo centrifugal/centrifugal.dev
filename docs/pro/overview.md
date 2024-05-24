@@ -1,13 +1,12 @@
 ---
 id: overview
-title: Centrifugo PRO
+title: Centrifugo PRO ♻️
+sidebar_label: Centrifugo PRO
 ---
 
-<img src="/img/pro_icon.png" width="110px" height="110px" align="left" style={{'marginRight': '10px', 'float': 'left'}} />
+Centrifugo PRO is the enhanced version of Centrifugo provided by Centrifugal Labs LTD under commercial license. It's packed with a set of unique features offering exceptional benefits to corporate and enterprise environments.
 
-Centrifugo PRO is the enhanced version of Centrifugo provided by Centrifugal Labs LTD under commercial license. It's packed with a set of unique features offering exceptional benefits to corporate and enterprise environments. It provides granular channel permission control, lower CPU utilization on Centrifugo nodes, backend protection from misusing, next level system observability, additional APIs (like push notifications), SSO integrations for admin UI, and more.
-
-All the features of Centrifugo PRO come with a decent scalable performance. Push notification API benefits a lot from Centrifugo super fast Redis communication capabilities. ClickHouse analytics built on top of efficient approach with the minimal overhead. We've put a lot of love into all of the extra powers of Centrifugo PRO to make sure they are practical and ready for production workloads.
+All the features of Centrifugo PRO come with a decent scalable performance. We've put a lot of love into all of the extra powers of PRO edition to make sure they are practical and ready for production workloads.
 
 ## Features
 
