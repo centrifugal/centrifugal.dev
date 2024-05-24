@@ -218,7 +218,7 @@ Code:   3010
 Reason: "insufficient state"
 ```
 
-DisconnectInsufficientState issued when server detects wrong client position in channel Publication stream. Disconnect allows clien to restore missed publications on reconnect.
+DisconnectInsufficientState issued when server detects wrong client position in channel Publication stream. Disconnect allows client to restore missed publications on reconnect.
 
 #### DisconnectForceReconnect
 

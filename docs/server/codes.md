@@ -1,9 +1,9 @@
 ---
 id: codes
-title: Error and disconnect codes
+title: Client protocol codes
 ---
 
-This chapter describes error and disconnect codes Centrifugo uses in a client protocol, also error codes which a server API can return in response.
+This chapter describes error, unsubscribe and disconnect codes Centrifugo uses in a client protocol, also error codes which a server API can return in response.
 
 ## Client error codes
 
@@ -140,6 +140,49 @@ Error Unrecoverable Position means that stream does not contain required range o
 
 This can happen due to wrong epoch passed.
 
+## Client unsubscribe codes
+
+Client can be unsubscribed by a Centrifugo server with custom code and string reason. Here is the list of Centrifugo built-in unsubscribe codes.
+
+:::note
+
+We expect that in most situations developers don't need to programmatically deal with handling various unsubscribe codes, but since Centrifugo sends them and codes are shown in server metrics – they are documented. We expect these codes are mostly useful for logs and metrics. Increase in these metrics can be a signal of some problem in Centrifugo installation – the need to scale, network issues, an so on. 
+
+:::
+
+Unsubscribe codes >= 2500 coming from server to client must result into automatic resubscribe attempt (i.e. client goes to subscribing state). Codes < 2500 result into going to unsubscribed state. Our bidirectional SDKs handle this.
+
+### UnsubscribeCodeServer
+
+```
+Code:   2000
+Reason: "server unsubscribe"
+```
+
+UnsubscribeCodeServer set when unsubscribe event was initiated by an explicit server-side unsubscribe API call. No resubscribe will be made.
+
+### UnsubscribeCodeInsufficient
+
+```
+Code:   2500
+Reason: "insufficient state"
+```
+
+UnsubscribeCodeInsufficient is sent to unsubscribe client from a channel due to insufficient state in a stream. We expect client to resubscribe after receiving this code since it's still may be possible to recover a state since a known stream position.
+
+Insufficient state in channel only happens in channels with positioning/recovery on – where Centrifugo detects message loss and message order issues.
+
+Insufficient state in a stream means that Centrifugo detected message loss from the broker. Generally, rare cases of getting such unsubscribe code are OK, but if there is an increase in the amount of such codes – then this can be a signal of Centrifugo-to-Broker communication issue. The root cause should be investigated – it may be an unstable connection between Centrifugo and broker, or Centrifugo can't keep up with a message stream in a channel, or a broker skips messages for some reason.
+
+### UnsubscribeCodeExpired
+
+```
+Code:   2501
+Reason: "subscription expired"
+```
+
+UnsubscribeCodeExpired is sent when client subscription expired. We expect client to re-subscribe with updated subscription token.
+
 ## Client disconnect codes
 
 Client can be disconnected by a Centrifugo server with custom code and string reason. Here is the list of Centrifugo built-in disconnect codes (with proxy feature you have a way to use custom disconnect codes).
@@ -222,7 +265,12 @@ Code:   3010
 Reason: "insufficient state"
 ```
 
-DisconnectInsufficientState issued when server detects wrong client position in channel Publication stream. Disconnect allows clien to restore missed publications on reconnect.
+DisconnectInsufficientState issued when Centrifugo detects wrong client position in a channel stream. Disconnect allows client to restore missed publications on reconnect.
+
+Insufficient state in channel only happens in channels with positioning/recovery on – where Centrifugo detects message loss and message order issues.
+
+Insufficient state in a stream means that Centrifugo detected message loss from the broker. Generally, rare cases of getting such disconnect code are OK, but if there is an increase in the amount of such codes – then this can be a signal of Centrifugo-to-Broker communication issue. The root cause should be investigated – it may be an unstable connection between Centrifugo and broker, or Centrifugo can't keep up with a message stream in a channel, or a broker skips messages for some reason.
+
 
 #### DisconnectForceReconnect
 
