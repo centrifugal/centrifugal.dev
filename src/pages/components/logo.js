@@ -260,23 +260,35 @@ function draw(canvas, X, Y, isDarkTheme) {
 
     const useLightnings = localStorage.getItem("lights") == "up";
 
+    function isCanvasVisible() {
+        return !(canvas.offsetParent === null)
+    }
+
     function render(currentTime) {
+        if (X <= 1) {
+            return;
+        }
+
         const secondsSinceLastRender = (currentTime - lastRenderTime) / 1000
 
-        ctx.clearRect(0, 0, X, Y);
+        if (isCanvasVisible()) {
+            ctx.clearRect(0, 0, X, Y);
 
-        for (let i = 0; i < lines.length; i += 1) {
-            lines[i].render(secondsSinceLastRender);
-        }
-        for (let i = 0; i < segments.length; i += 1) {
-            segments[i].render(secondsSinceLastRender);
-        }
-
-        if (isDarkTheme && useLightnings) {
-            if (Math.random() > 0.9) {
-                drawLightning(ctx, X, Y);
+            for (let i = 0; i < lines.length; i += 1) {
+                lines[i].render(secondsSinceLastRender);
             }
-            ctx.shadowBlur = 100;
+            for (let i = 0; i < segments.length; i += 1) {
+                segments[i].render(secondsSinceLastRender);
+            }
+
+            if (isDarkTheme && useLightnings && X > 1280) {
+                if (Math.random() > 0.95) {
+                    drawLightning(ctx, X, Y);
+                }
+                ctx.shadowBlur = 100;
+            } else {
+                ctx.shadowBlur = 0;
+            }
         }
 
         lastRenderTime = currentTime;

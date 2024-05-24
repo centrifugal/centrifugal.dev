@@ -77,7 +77,7 @@ function Home() {
           <div className="container">
             <div className="row justify-content-center">
               <div className="col" style={{'fontSize': '14px'}}>
-                USED IN PRODUCTS OF MANY COMPANIES
+                USED IN PRODUCTS OF SUCCESSFUL COMPANIES
               </div>
               <div className="col">
                 <Badoo />
