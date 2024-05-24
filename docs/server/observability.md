@@ -119,6 +119,13 @@ Here is a description of various metrics exposed by Centrifugo.
 - **Description:** Counts the number of errors in replies sent to clients.
 - **Usage:** Critical for error monitoring and ensuring smooth client interactions.
 
+#### centrifugo_client_num_server_unsubscribes
+
+- **Type:** Counter
+- **Labels:** code
+- **Description:** Tracks the number of server-initiated unsubscribes.
+- **Usage:** Use this to monitor the health of client connections and identify potential issues with the server.
+
 #### centrifugo_client_num_server_disconnects
 
 - **Type:** Counter
