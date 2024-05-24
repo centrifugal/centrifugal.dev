@@ -5,7 +5,7 @@ title: Main highlights
 
 At this point, you know how to build the simplest real-time app with Centrifugo. Beyond the core PUB/SUB functionality, Centrifugo provides more features and primitives to build scalable real-time applications. Let's summarize the main Centrifugo ✨highlights✨ here. Every point is then extended throughout the documentation.
 
-### Simple integration
+### Seamless integration
 
 Centrifugo was originally designed to be used in conjunction with frameworks without built-in concurrency support (like Django, Laravel, etc.).
 

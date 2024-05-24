@@ -156,7 +156,7 @@ function drawBranch(ctx, startX, startY, endX, endY, thickness) {
     
     // Draw the glow.
     ctx.strokeStyle = gradient;
-    ctx.lineWidth = thickness + 2;
+    ctx.lineWidth = thickness;
     ctx.shadowBlur = 10;
     ctx.shadowColor = 'red';
     ctx.stroke();
@@ -174,22 +174,22 @@ function drawLightning(ctx, X, Y) {
     ctx.globalCompositeOperation = 'lighter';
 
     for (let i = 0; i < numSegments; i++) {
-        const segmentLength = Math.random() * 30 + 10;
+        const segmentLength = Math.random() * 10;
         const angle = initialAngle + (Math.random() - 0.5) * Math.PI / 3;
         const endX = currentX + Math.cos(angle) * segmentLength;
         const endY = currentY + Math.sin(angle) * segmentLength;
 
-        drawBranch(ctx, currentX, currentY, endX, endY, 2);
+        drawBranch(ctx, currentX, currentY, endX, endY, 3);
 
         // Branching.
         if (Math.random() > 0.7) {
-            drawBranch(ctx, currentX, currentY, currentX + Math.cos(angle + Math.PI / 4) * segmentLength, currentY + Math.sin(angle + Math.PI / 4) * segmentLength, 1);
+            drawBranch(ctx, currentX, currentY, currentX + Math.cos(angle + Math.PI / 4) * segmentLength, currentY + Math.sin(angle + Math.PI / 4) * segmentLength, 3);
         }
         if (Math.random() > 0.7) {
-            drawBranch(ctx, currentX, currentY, currentX + Math.cos(angle - Math.PI / 4) * segmentLength, currentY + Math.sin(angle - Math.PI / 4) * segmentLength, 1);
+            drawBranch(ctx, currentX, currentY, currentX + Math.cos(angle - Math.PI / 4) * segmentLength, currentY + Math.sin(angle - Math.PI / 4) * segmentLength, 3);
         }
         if (Math.random() > 0.7) {
-            drawBranch(ctx, currentX, currentY, currentX + Math.cos(angle - Math.PI / 4) * segmentLength, currentY + Math.sin(angle - Math.PI / 4) * segmentLength, 1);
+            drawBranch(ctx, currentX, currentY, currentX + Math.cos(angle - Math.PI / 4) * segmentLength, currentY + Math.sin(angle - Math.PI / 4) * segmentLength, 3);
         }
 
         currentX = endX;
@@ -273,7 +273,7 @@ function draw(canvas, X, Y, isDarkTheme) {
         }
 
         if (isDarkTheme && useLightnings) {
-            if (Math.random() > 0.99) {
+            if (Math.random() > 0.9) {
                 drawLightning(ctx, X, Y);
             }
             ctx.shadowBlur = 100;

@@ -1,7 +1,7 @@
 ---
 title: Experimenting with real-time data compression by simulating a football match events
 tags: [centrifugo, websocket, compression]
-description: This post shows the potential profit of implementing delta compression in channels and demonstrates the reduction of data transfer in various scenarios, including different Centrifugo protocol formats and enabling WebSocket permessage-deflate compression.
+description: This post shows the potential profit of enabling delta compression in channels and demonstrates the reduction of data transfer in various scenarios, including different Centrifugo protocol formats and using WebSocket permessage-deflate compression.
 author: Alexander Emelin
 authorTitle: Founder of Centrifugal Labs
 authorImageURL: /img/alexander_emelin.jpeg

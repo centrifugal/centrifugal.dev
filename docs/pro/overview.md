@@ -4,9 +4,9 @@ title: Centrifugo PRO ♻️
 sidebar_label: Centrifugo PRO
 ---
 
-Centrifugo PRO is the enhanced version of Centrifugo provided by Centrifugal Labs LTD under commercial license. It's packed with a set of unique features offering exceptional benefits to corporate and enterprise environments.
+Centrifugo PRO is the enhanced version of Centrifugo offered by Centrifugal Labs LTD under a commercial license. It's packed with a unique set of features designed to deliver benefits for corporate and enterprise environments.
 
-All the features of Centrifugo PRO come with a decent scalable performance. We've put a lot of love into all of the extra powers of PRO edition to make sure they are practical and ready for production workloads.
+All the features of Centrifugo PRO come with a decent scalable performance. We have put a lot of care into all of the extra powers of PRO edition to ensure they are practical and ready for production workloads.
 
 ## Features
 

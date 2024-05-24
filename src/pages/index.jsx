@@ -106,17 +106,17 @@ function Home() {
                 the existing app architecture required to introduce real-time updates.
               </Feature>
               <Feature title="Great Performance" imageUrl="img/feature_performance.png">
-                Centrifugo is written in Go language with some smart optimizations inside.
+                Centrifugo is written in Go language and includes some smart optimizations.
                 See the description of the test stand with <a href="/blog/2020/02/10/million-connections-with-centrifugo">one million WebSocket</a> connections and 30 million delivered
-                messages per minute with hardware comparable to a single modern server machine.
+                messages per minute on hardware comparable to a single modern server.
               </Feature>
               <Feature title="Feature-rich" imageUrl="img/feature_rich.png">
-                Centrifugo provides flexible authentication, various types
-                of subscriptions, hot channel history, online presence, the ability to proxy connection events to the
+                Centrifugo provides flexible auth, various types
+                of subscriptions, channel history, online presence, delta updates, the ability to proxy connection events to the
                 backend, and much more. It comes with official SDK libraries for both web and mobile development.
               </Feature>
               <Feature title="Out-of-the-box Scalability" imageUrl="img/feature_scalability.png">
-                Centrifugo allows scaling connections over many server instances with the help of built-in Redis (or Redis-compatible like AWS Elasticache, DragonflyDB, Valkey, KeyDB) and Tarantool engines. Also Nats broker is supported for at most once PUB/SUB.
+                Scale connections over many Centrifugo nodes by using built-in integrations with efficient brokers: Redis (or Redis Cluster, or Redis-compatible storages like AWS Elasticache, DragonflyDB, Valkey, KeyDB, with client-side sharding support), Tarantool and Nats.
               </Feature>
               <Feature title="Proven in Production" imageUrl="img/feature_production.png">
                 Started a decade ago, Centrifugo (and Centrifuge library for Go

@@ -62,8 +62,6 @@ If you have a few writes then `websocket_use_write_buffer_pool` (boolean, defaul
 
 An experimental feature for raw WebSocket endpoint - `permessage-deflate` compression for  websocket messages. Btw look at [great article](https://www.igvita.com/2013/11/27/configuring-and-optimizing-websocket-compression/) about websocket compression. WebSocket compression can reduce an amount of traffic travelling over the wire.
 
-We consider this experimental because this websocket compression is experimental in [Gorilla Websocket](https://github.com/gorilla/websocket) library that Centrifugo uses internally.
-
 :::caution
 
 Enabling WebSocket compression will result in much slower Centrifugo performance and more memory usage – depending on your message rate this can be very noticeable.

@@ -368,7 +368,8 @@ Some known options:
 
 * [AWS Elasticache](https://aws.amazon.com/elasticache/) – it was reported to work, but we suggest you testing the setup including failover tests and work under load.
 * [KeyDB](https://keydb.dev/) – should work fine with Centrifugo, no known problems at this point regarding Centrifugo compatibility.
-* [DragonflyDB](https://dragonflydb.io/) - should work fine starting from DragonflyDB 1.3.0 and with `redis_force_resp2` Centrifugo option on. We have not tested a Redis Cluster emulation mode provided by DragonflyDB yet. We suggest you testing the setup including failover tests and work under load.
+* [DragonflyDB](https://dragonflydb.io/) - should work fine (if you experience issues with it try enabling `redis_force_resp2` option). We have not tested a Redis Cluster emulation mode provided by DragonflyDB yet. We suggest you testing the setup including failover tests and work under load.
+* [Valkey](https://github.com/valkey-io/valkey) – should work fine since it's based on Redis v7, but no tests were performed by Centrifugal Labs.
 
 ## Tarantool engine
 
@@ -378,7 +379,7 @@ Some known options:
 
 :::caution
 
-**EXPERIMENTAL** status of Tarantool integration means that we are still going to improve it and there could be breaking changes as integration evolves.
+**EXPERIMENTAL** status of Tarantool integration means that we are still going to improve it and there could be breaking changes as integration evolves. It may also be excluded from the future major releases of Centrifugo.
 
 :::
 
