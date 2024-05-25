@@ -67,7 +67,7 @@ Path to key file.
 
 ## Example
 
-We don't have example here yet. In general, the algorithm is like this: 
+We have [example for Go](https://github.com/centrifugal/examples/tree/master/v4/unidirectional/grpc) language. In general, the algorithm is like this: 
 
 1. Copy Protobuf definitions
 1. Generate GRPC client code
