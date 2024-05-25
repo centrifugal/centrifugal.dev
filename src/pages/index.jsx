@@ -76,7 +76,7 @@ function Home() {
         <section className={clsx("logos-wrapper", styles.logos)}>
           <div className="container">
             <div className="row justify-content-center">
-              <div className="col" style={{'fontSize': '14px'}}>
+              <div className="col" style={{ 'fontSize': '14px' }}>
                 USED IN PRODUCTS OF SUCCESSFUL COMPANIES
               </div>
               <div className="col">
@@ -91,7 +91,7 @@ function Home() {
               <div className="col">
                 <OpenWeb />
               </div>
-              <div className="col"  style={{'fontSize': '14px'}}>
+              <div className="col" style={{ 'fontSize': '14px' }}>
                 THOUSANDS OF REAL INSTALLATIONS
               </div>
             </div>

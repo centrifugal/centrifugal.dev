@@ -30,7 +30,7 @@ How it may look in practice? Here is a screenshot of WebSocket frames in case of
 
 ### Subscribe using delta
 
-To use delta compression several conditions should be met:
+To successfully negotiate delta compression for a subscriber several conditions should be met:
 
 * subscriber provides `delta: "fossil"` option when creating a client-side Subscription
 * server uses `"allowed_delta_types": ["fossil"]` for a channel namespace a client subscribes to
@@ -68,9 +68,31 @@ If you want to use delta compression without history, positioning and recovery o
 
 :::
 
+If all conditions met – subscriber will negotiate compression with a server. If SDK does not support delta compression – it can still subscribe to the channel, but will receive publications with full payload. To let Centrifugo know that delta compression must be used for a particular publication some configuration is required for the publisher also. We will describe it shortly.
+
 ### Use delta when publishing
 
-If subscriber successfully negotiated delta compression with Centrifugo, it will start receiving deltas for publications marked with delta flag. It's possible to mark channel publications to use delta compression in the following ways:
+If subscriber successfully negotiated delta compression with Centrifugo, it will start receiving deltas for publications marked with delta flag by the publisher. It's possible to mark channel publications to use delta compression upon broadcasting to subscribers in the following ways:
 
-* enable it for all publications in the channel namespace by setting boolean channel option [delta_publish](./channels.md#delta_publish)
+* enable it for all publications in the channel namespace by setting a boolean channel option [delta_publish](./channels.md#delta_publish)
 * `delta` flag may be set on a per call basis (in publish or broadcast server APIs). For example, see `delta` field in [publish request](./server_api.md#publish-request) description.
+
+For example, this means that to automatically use delta calculation for all publications in the namespace the configuration example above evolves to:
+
+```json title="config.json"
+{
+    ..
+    "namespaces": [
+        {
+            "name": "example",
+            "allowed_delta_types": ["fossil"],
+            "force_positioning": true,
+            "history_size": 1,
+            "history_ttl": "60s",
+            "delta_publish": true
+        }
+    ]
+}
+```
+
+Again – subscribers which support delta compression and do not support it can co-exist in one channel.
