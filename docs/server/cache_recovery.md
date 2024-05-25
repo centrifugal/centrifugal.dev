@@ -37,7 +37,7 @@ Configuration example:
 }
 ```
 
-After that you need to subscribe to a channel and trigger recovery on first connect. With bidirectional SDKs this may be done by providing an empty `since` object when creating a subscription:
+After that you need to subscribe to a channel and trigger recovery on first connect. With bidirectional SDKs this may be done by providing an empty `since` object when creating a subscription (under the hood this leads to attaching `recover: true` to the client protocol subscribe request):
 
 ```javascript
 const sub = centrifuge.newSubscription('example:now-playing-12', {
