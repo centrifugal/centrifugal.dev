@@ -121,7 +121,7 @@ So for example, you want to turn off emitting a presence information for a parti
 }
 ```
 
-## Example
+## Example: create subscription JWT
 
 So to generate a subscription token you can use something like this in Python (assuming user ID is `42` and the channel is `gossips`):
 
@@ -172,6 +172,12 @@ const jose = require('jose')
 ````
 
 Where `"secret"` is the `token_hmac_secret_key` from Centrifugo configuration (we use HMAC tokens in this example which relies on a shared secret key, for RSA or ECDSA tokens you need to use a private key known only by your backend).
+
+## Example: subscribe with JWT
+
+To subscribe with JWT it should be passed to Centrifugo from the client side while making subscription request.
+
+Our bidirectional SDKs provide options to set initial subscription token for Subscription objects as well as an option to set the function to load new subscription token (required to handle refresh of expiring tokens). See [examples in client SDK spec](../transports/client_api.md#subscription-token).
 
 ## gensubtoken cli command
 

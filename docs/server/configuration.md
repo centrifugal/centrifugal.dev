@@ -3,7 +3,17 @@ id: configuration
 title: Configure Centrifugo
 ---
 
-Let's look at how Centrifugo can be configured.
+Centrifugo starts fine without any configuration. In most cases though, you need to configure it to set options for [server API](./server_api.md), [connection JWT authentication](./authentication.md) or maybe authentication over [connect proxy](./proxy.md), describe the desired [channel behaviour](./channels.md), and so on.
+
+This chapter describes configuration principles and some important configuration options. There are more options not mentioned here but described throughout the doc in the context of each individual server feature.
+
+### Configuration sources
+
+Centrifugo can be configured in several ways:
+
+* using command-line flags (highest priority, i.e. flags overwrite everything)
+* environment variables (medium priority, i.e. env vars overwrite config file options)
+* configuration file (lowest priority).
 
 :::info There are more options
 
@@ -11,13 +21,9 @@ This chapter describes configuration principles and some important configuration
 
 :::
 
-## Configuration sources
-
-Centrifugo can be configured in several ways: using command-line flags (highest priority), environment variables (second priority after flags), configuration file (lowest priority).
-
 ### Command-line flags
 
-Centrifugo supports several command-line flags. See `centrifugo -h` for available flags. Command-line flags limited to most frequently used. In general, we suggest to avoid using flags for configuring Centrifugo in a production environment – prefer using environment variables or configuration file.
+Centrifugo supports several command-line flags. See `centrifugo -h` for available flags. Command-line flags limited to most frequently used. Mostly useful for development. In general, we recommend to avoid using flags for configuring Centrifugo in a production environment – prefer using environment variables or configuration file.
 
 Command-line options have the highest priority when set than other ways to configure Centrifugo.
 

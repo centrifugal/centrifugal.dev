@@ -3,16 +3,20 @@ id: server_api
 title: Server API walkthrough
 ---
 
-Server API provides different methods to interact with Centrifugo. Specifically, in most cases this is an entry point for publications into channels coming from your application backend. There are two kinds of server API available at the moment:
+Server API provides various methods to interact with Centrifugo from your application backend. Specifically, in most cases this is an entry point for publications into channels (see [publish](#publish) method). It also allows getting information about Centrifugo cluster, disconnect users, extract channel online presence information, channel history, and so on.
+
+There are two kinds of server API available at the moment:
 
 * HTTP API
 * GRPC API
 
-Both are similar in terms of request/response structures.  
+Both are similar in terms of request/response structures because based on the same schema.
 
 ## HTTP API
 
-Server HTTP API works on `/api` path prefix (by default). The request format is super-simple: this is an HTTP POST request to a specific method API path with `application/json` Content-Type, `X-API-Key` header and with JSON body.
+HTTP API is the simplest way to communicate with Centrifugo from your application backend.
+
+Centrifugo HTTP API works on `/api` path prefix (by default). The request format is super-simple: this is an HTTP POST request to a specific method API path with `application/json` Content-Type, `X-API-Key` header and with JSON body.
 
 Instead of many words, here is an example how to call `publish` method:
 
@@ -29,7 +33,7 @@ You can just use one of our [available HTTP API libraries](../server/server_api.
 
 :::
 
-Below we look at all aspects of HTTP API in detail, starting with information about authorization.
+Below we look at all aspects of Centrifugo HTTP API in detail, starting with information about authorization.
 
 ## HTTP API authorization
 
@@ -171,6 +175,12 @@ curl --header "X-API-Key: <API_KEY>" \
 ### subscribe
 
 `subscribe` allows subscribing active user's sessions to a channel. Note, it's mostly for dynamic [server-side subscriptions](./server_subs.md).
+
+:::tip
+
+This is not a real-time streaming subscription request – it's just a command to subscribe a specific online session to some channel.
+
+:::
 
 #### Subscribe request
 

@@ -3,7 +3,7 @@ id: authentication
 title: Client JWT authentication
 ---
 
-To authenticate an incoming connection (client), Centrifugo can use a [JSON Web Token](https://jwt.io/introduction) (JWT) provided by your application backend to the client-side. This allows Centrifugo to identify the user ID within your application in a secure way. Also, the application can pass additional data to Centrifugo inside JWT claims. This chapter explains this authentication mechanism.
+To securely authenticate incoming client connections, Centrifugo can use a [JSON Web Token](https://jwt.io/introduction) (JWT) issued by your application backend. This process allows Centrifugo to identify the user's ID in your application securely. Additionally, your application can include extra information within the JWT claims, which Centrifugo can then utilize. This chapter will explain how such connection token may be created and used.
 
 :::tip
 
@@ -237,7 +237,7 @@ You should provide the same connection JWT you issued when the page was initiall
 
 When you load new token from your app backend user authentication must be facilitated by your app's session mechanism. So you know for whom you are are going to generate an updated token.
 
-## Examples
+## Examples: create connection JWT
 
 Let's look at how to generate connection HS256 JWT in Python:
 
@@ -393,7 +393,15 @@ const jose = require('jose')
 </Tabs>
 ````
 
-### Investigating problems with JWT
+## Example: connect with JWT
+
+To connect with JWT it should be passed to Centrifugo from the client-side upon establishing real-time connection.
+
+Our bidirectional SDKs provide options to set initial token as well as an option to set the function to load new connection token (required to handle refresh of expiring tokens). See [examples in client SDK spec](../transports/client_api.md#client-connection-token).
+
+Our unidirectional transports accept JWT as part of the connect payload. The way how connect payload is passed to Centrifugo differs for each unidirectional transport.
+
+## Investigating problems with JWT
 
 You can use [jwt.io](https://jwt.io/) site to investigate the contents of your tokens. Also, server logs usually contain some useful information.
 

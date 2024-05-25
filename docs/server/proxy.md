@@ -3,7 +3,9 @@ id: proxy
 title: Proxy events to the backend
 ---
 
-It's possible to proxy some client connection events from Centrifugo to the application backend and react to them in a custom way. For example, it's possible to authenticate connection via request from Centrifugo to application backend, refresh client sessions and answer to RPC calls sent by a client over bidirectional connection. Also, you may control subscription and publication permissions using these hooks. 
+Centrifugo provides a way to proxy client connection events to your application backend, allowing you to respond in a customized manner. In other words, this is a mechanism of sending (web)hooks from Centrifugo to the backend to control the behavior of real-time connections. 
+
+For example, it's possible to authenticate connection attempt by using a request from Centrifugo to your application backend, refresh client sessions and handle RPC calls sent by a client over a bidirectional connection. Also, you may control subscription and publication permissions using these proxy hooks. 
 
 The list of events that can be proxied:
 
