@@ -17,9 +17,24 @@ Centrifugo v5.4.0 introduced [delta compression](/docs/server/delta_compression)
 
 This post outlines our approach to estimating the potential profit from implementing delta compression. It demonstrates the reduction in data transfer using once concrete use case across various configurations, including different Centrifugo protocol formats and the additional use of WebSocket permessage-deflate compression. Although these numbers can vary significantly depending on the data, we believe the results are valuable for providing a general understanding of Centrifugo compression options. This information can help Centrifugo users apply these insights to their use cases.
 
+## About delta compression
+
+![delta frames](/img/delta_abstract.png)
+
+For a good overview of delta compression topic for the real-time messaging applications I suggest starting with a [blog post in Ably engineeiring blog](https://ably.com/blog/message-delta-compression).
+
+Centrifugo is very similar to Ably in many aspects (though self-hosted), so everything said in the linked post equally applies to Centrifugo use cases too. Though we have differences in the final implementation, one notable is that we are using [Fossil](https://fossil-scm.org/home/doc/tip/www/delta_format.wiki) delta algorithm in Centrifugo instead of VCDIFF. The reason over VCDIFF was mainly two factors:
+
+* availability of several Fossil delta implementations, specifically there are good libraries for Go (see [shadowspore/fossil-delta](https://github.com/shadowspore/fossil-delta)), and for Javascript - [fossil-delta-js](https://github.com/dchest/fossil-delta-js).
+* the compactness of the algorithm implementation – under 500 lines of code in JavaScript
+
+The compactness property is nice because there are no OSS Fossil implementations for Java, Dart and Swift – languages we have SDKs for – so we may have to implement this algorithm in the future ourselves.
+
+Having said this all, let's proceed to the description of experiment we did to understand possible benefits of various compression techniques, and delta compression in particular. 
+
 ## Experiment Overview
 
-In this experiment, we simulated a football match, sending the entire game state over a WebSocket connection upon every match event. Our compression playground looks like this:
+In the experiment, we simulated a football match, sending the entire game state over a WebSocket connection upon every match event. Our compression playground looks like this:
 
 <video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/el_classico.mp4"></video>
 
@@ -487,6 +502,10 @@ Analysis: Compression with Protobuf encoding brings similar benefits as with JSO
 Bytes Sent: 4287
 Percentage: 10.65%
 Analysis: Delta compression with Protobuf is effective, reducing data to 10.65%. It's almost x10 reduction in bandwidth compared to the baseline!
+
+I guess at this point you may be curious how delta frames look like in case of JSON protocol. Here is a screenshot:
+
+![delta frames](/img/delta_frames.png)
 
 8. JSON over Protobuf (With Compression and Delta)
 Bytes Sent: 4126

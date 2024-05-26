@@ -3,7 +3,7 @@ id: presence
 title: Online presence
 ---
 
-The online presence feature of Centrifugo is a powerful tool that allows you to monitor and manage active users inside a specific channel. It provides an instantaneous snapshot of users currently subscribed to a specific channel. Additionally, Centrifugo may emit join and leave events when clients subscribe to channel and unsubscribe from it.  
+The online presence feature in Centrifugo is a powerful tool for monitoring and managing active users within a specific channel. It provides a real-time view of users currently subscribed to that channel. Additionally, Centrifugo can emit join and leave events to all channel subscribers whenever clients subscribe to or unsubscribe from a channel, allowing you to track user activity more effectively.
 
 ## Enabling online presence
 

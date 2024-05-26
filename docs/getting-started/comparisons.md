@@ -53,4 +53,3 @@ How Centrifugo is special:
 * Centrifugo provides client connection event proxy features - it's possible to delegate authentication, channel authorization to the application backend, and provides channel state events (when a channel is occupied or vacated) in the PRO version.
 
 Nats is great, and we are constantly looking for tighter integration with Nats. But both systems have unique sets of features and may be better or worse for various tasks.
-

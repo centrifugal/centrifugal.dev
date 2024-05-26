@@ -5,9 +5,9 @@ title: Channel JWT authorization
 
 In the chapter about [channel permissions](channel_permissions.md) we mentioned that to subscribe on a channel client can provide subscription token. This chapter has more information about the subscription token mechanism in Centrifugo.
 
-Subscription token is also JWT. Very similar to [connection token](authentication.md), but with specific custom claims.
+Subscription token is also JWT. The concept is very similar to the [connection token](authentication.md), but with specific custom claims.
 
-Valid subscription token passed to Centrifugo in subscribe request will tell Centrifugo that subscription must be accepted.
+Valid subscription token passed to Centrifugo in a subscribe request will tell Centrifugo that subscription must be accepted.
 
 ![](/img/subscription_token.png)
 

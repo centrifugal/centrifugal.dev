@@ -3,11 +3,11 @@ id: channels
 title: Channels and namespaces
 ---
 
-Upon connecting to a server, clients can subscribe to channels. A channel is one of the core concepts of Centrifugo. Most of the time when integrating Centrifugo, you will work with channels and determine the optimal channel configuration for your application.
+Centrifugo operates on a PUB/SUB model. Upon connecting to a server, clients can subscribe to channels. A channel is one of the core concepts of Centrifugo. Most of the time when integrating Centrifugo, you will work with channels and determine the optimal channel configuration for your application.
 
-## What is a channel
+## What is a channel?
 
-Centrifugo operates on a PUB/SUB model - it has publishers and subscribers. A channel acts as a conduit for publications. Clients can subscribe to a channel to receive all the real-time messages published there. Subscribers to a channel may also request information about the channel's online presence or its history.
+Centrifugo operates on a PUB/SUB model - it has publishers and subscribers. A channel serves as a pathway for messages. Clients can subscribe to a channel to receive all the real-time messages published there. Subscribers to a channel may also request information about the channel's online presence or its history.
 
 ![pub_sub](/img/pub_sub.png)
 
@@ -40,19 +40,19 @@ Several symbols in channel names reserved for Centrifugo internal needs:
 
 ### namespace boundary (`:`)
 
-``:`` – is a channel namespace boundary. Namespaces are used to set custom options to a group of channels. Each channel belonging to the same namespace will have the same channel options. Read more about about [namespaces](#channel-namespaces) and [channel options](#channel-options) below.
+``:`` – is a channel namespace boundary. Namespaces are used to set custom options to a group of channels. Each channel belonging to the same namespace will have the same channel options. Read more about [namespaces](#channel-namespaces) and [channel options](#channel-options) below.
 
 If the channel is `public:chat` - then Centrifugo will apply options to this channel from the channel namespace with the name `public`.
 
 :::info
 
-A namespace is a inalienable component of the channel name. If a user is subscribed to a channel with a namespace, such as `public:chat`, then you must publish messages to the `public:chat` channel for them to be delivered to the user. There is often confusion among developers who try to publish messages to `chat`, mistakenly believing that the namespace is stripped upon subscription. This is not the case. You must publish exactly to the same channel string you used for subscribing.
+A namespace is an inalienable component of the channel name. If a user is subscribed to a channel with a namespace, such as `public:chat`, then you must publish messages to the `public:chat` channel for them to be delivered to the user. There is often confusion among developers who try to publish messages to `chat`, mistakenly believing that the namespace is stripped upon subscription. This is not the case. You must publish exactly to the same channel string you used for subscribing.
 
 :::
 
 ### user channel boundary (`#`)
 
-`#` symbol serves as the user channel boundary. It acts as a separator to create personal channels for users—referred to as *user-limited channels*—without requiring a subscription token.
+The `#` symbol serves as the user channel boundary. It acts as a separator to create personal channels for users, known as *user-limited channels*, without requiring a subscription token.
 
 For instance, if the channel is named `news#42`, then only the user with ID `42` can subscribe to this channel. Centrifugo identifies the user ID from the connection credentials provided in the connection JWT.
 
@@ -76,7 +76,7 @@ However, for namespaces where the `allow_subscribe_for_client` option is activat
 
 ### Channel is just a string
 
-Bear in mind that a channel is uniquely identified by its string representation. Do not assume that channels `$news` and `news` are the same; they differ because their strings are not identical. Thus, if a user is subscribed to `$news`, they will not receive messages published to `news`.
+Remember that a channel is uniquely identified by its string name. Do not assume that `$news` and `news` are the same; they are different because their names are not identical. Therefore, if a user is subscribed to `$news`, they will not receive messages published to `news`.
 
 The channels `dialog#42,43` and `dialog#43,42` are considered different as well. Centrifugo only applies permission checks when a user subscribes to a channel. So if user-limited channels are enabled then the user with ID `42` will be able to subscribe on both `dialog#42,43` and `dialog#43,42`. But Centrifugo does no magic regarding channel strings when keeping channel->to->subscribers map. So if the user subscribed on `dialog#42,43` you must publish messages to exactly that channel: `dialog#42,43`.
 
@@ -86,7 +86,7 @@ The same reasoning applies to channels within namespaces. Channels `chat:index` 
 
 Centrifugo allows configuring a list of channel namespaces. Namespaces are optional but super-useful.
 
-A namespace acts as a container for options that are applied to channels starting with the namespace name. I.e. if you defined namespace with a name `personal` in config, then all the channels starting with `personal:`, like `personal:1` or `personal:2`, will inherit options defined for `personal` namespace. This provides great control over channel behavior, so you have a flexible way to define different channel options for various real-time features in the application.
+A namespace is a container for options applied to channels that start with the namespace name + `:` separator. For example, if you define a namespace named `personal` in the configuration, all channels starting with `personal:` (such as `personal:1` or `personal:2`) will inherit the options defined for the `personal` namespace. This gives you great control over channel behavior, allowing you to set different options for various real-time features in your application.
 
 Namespace has a name, and can contain all the [channel options](#channel-options). Namespace `name` is required to be set. Name of namespace must be unique, must consist of letters, numbers, underscores, or hyphens and be more than 2 symbols length i.e. satisfy regexp `^[-a-zA-Z0-9_]{2,}$`.
 
@@ -143,7 +143,8 @@ Channel behavior can be modified by using channel options. Channel options can b
 
 Online presence is information about clients currently subscribed to the channel. It contains each subscriber's client ID, user ID, connection info, and channel info. By default, this option is off so no presence information will be available for channels.
 
-Let's say you have a channel `chat:index` and 2 users (with ID `2694` and `56`) subscribed to it. And user `2694` has 2 connections to Centrifugo in different browser tabs. In presence data you may see sth like this:
+Let's say you have a channel `chat:index` with two users subscribed (IDs `2694` and `56`). User `56` has one connection to Centrifugo. User `2694` has two connections to Centrifugo from different browser tabs. The presence data might look like this:
+
 
 ```bash
 curl --header "Content-Type: application/json" \
@@ -240,7 +241,7 @@ For example for top-level channels (which do not belong to a namespace):
 }
 ```
 
-Let's look at example. You enabled history for a namespace `chat` and sent two messages in channel `chat:index`. Then history will contain sth like this:
+Here's an example. You enabled history for the `chat` namespace and sent two messages in the `chat:index` channel. The history will look like this:
 
 ```bash
 curl --header "Content-Type: application/json" \
@@ -270,13 +271,13 @@ curl --header "Content-Type: application/json" \
 }
 ```
 
-To call history API from the client connection side client must have permission to do so. See [history permission model](./channel_permissions.md#history-permission-model).
+To call the history API from the client side, the client must have the necessary permissions. For more details, see the [history permission model](./channel_permissions.md#history-permission-model).
 
 See additional information about offsets and epoch in [History and recovery](./history_and_recovery.md) chapter.
 
 :::tip
 
-History persistence properties are dictated by Centrifugo [engine](./engines.md) used. For example, when using memory engine history is only kept till Centrifugo node restart. In Redis engine case persistence is determined by a Redis server persistence configuration (same for KeyDB and Tarantool).
+The persistence properties of history data depend on the Centrifugo engine in use. For instance, with the Memory engine (default), history is retained only until the Centrifugo node restarts. In contrast, with the Redis engine, persistence is determined by the Redis server's configuration (similarly for Redis-compatible storages and Tarantool).
 
 :::
 

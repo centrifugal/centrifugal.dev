@@ -3,7 +3,7 @@ id: configuration
 title: Configure Centrifugo
 ---
 
-Centrifugo starts fine without any configuration. In most cases though, you need to configure it to set options for [server API](./server_api.md), [connection JWT authentication](./authentication.md) or maybe authentication over [connect proxy](./proxy.md), describe the desired [channel behaviour](./channels.md), and so on.
+Centrifugo can start without any configuration. In most cases though, you need to configure it to set options for [server API](./server_api.md), [connection JWT authentication](./authentication.md) or maybe authentication over [connect proxy](./proxy.md), describe the desired [channel behaviour](./channels.md), and so on.
 
 This chapter describes configuration principles and some important configuration options. There are more options not mentioned here but described throughout the doc in the context of each individual server feature.
 

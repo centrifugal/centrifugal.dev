@@ -3,7 +3,7 @@ id: authentication
 title: Client JWT authentication
 ---
 
-To securely authenticate incoming client connections, Centrifugo can use a [JSON Web Token](https://jwt.io/introduction) (JWT) issued by your application backend. This process allows Centrifugo to identify the user's ID in your application securely. Additionally, your application can include extra information within the JWT claims, which Centrifugo can then utilize. This chapter will explain how such connection token may be created and used.
+To securely authenticate incoming real-time client connections, Centrifugo can use a [JSON Web Token](https://jwt.io/introduction) (JWT) issued by your application backend. This process allows Centrifugo to identify the user's ID in your application securely. Additionally, your application can include extra information within the JWT claims, which Centrifugo can then utilize. This chapter will explain how such connection token may be created and used.
 
 :::tip
 

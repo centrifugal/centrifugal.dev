@@ -3,17 +3,18 @@ id: server_subs
 title: Server-side subscriptions
 ---
 
-Centrifugo clients can initiate a subscription to a channel by calling the `subscribe` method of client API. In most cases, client-side subscriptions is a more flexible and recommended approach since a frontend usually knows which channels it needs to consume at a concrete moment.
+Centrifugo clients can initiate a subscription to a channel by calling the `subscribe` method of client API. We call it client-side subscriptions. In most cases, client-side subscriptions is a flexible and recommended approach to subscribe to channels. A frontend usually knows which channels it needs to consume at a concrete moment.
 
-But in some situations, all you need is to subscribe your connections to several channels on a server-side at the moment of connection establishment. So client effectively starts receiving publications from those channels without calling the `subscribe` API at all.
+But in some situations, all you need is to subscribe your connections to several channels on a server-side at the moment of connection establishment. So client effectively starts receiving publications from those channels without calling the `subscribe` API at all. Centrifugo allows doing this with its server-side subscriptions feature.
 
-You can set a list of channels for a connection in two ways at the moment:
+It's possible to set a list of channels for a connection in several ways:
 
 * over connection JWT using `channels` claim, which is an array of strings
 * over connect proxy returning `channels` field in result (also an array of strings)
+* providing channels as part of unidirectional transport connect payload – if client has enough permissions subscriptions will be created
 * dynamically over server subscribe API
 
-On the client-side, you need to listen for publications from server-side channels using a top-level client event handler. For example with `centrifuge-js`:
+On the client-side, when using bidirectional transport and our SDKs you need to listen for publications from server-side channels using a top-level client event handler. For example with `centrifuge-js`:
 
 ```javascript
 const centrifuge = new Centrifuge(address);
@@ -27,7 +28,7 @@ centrifuge.on('publication', function(ctx) {
 centrifuge.connect();
 ```
 
-I.e. listen for publications without any usage of subscription objects. You can look at channel publication relates to using field in callback context as shown in the example.
+I.e. listen for publications without any usage of subscription objects. You can get a channel publication relates to by using field in the callback context as shown in the example above.
 
 :::tip
 
