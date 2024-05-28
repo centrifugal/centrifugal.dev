@@ -199,7 +199,57 @@ That's it. Here is [a full code](https://raw.githubusercontent.com/centrifugal/c
 
 ## Let's apply it
 
-TBD.
+I've made a [POC](https://github.com/centrifugal/centrifuge/tree/master/_examples/document_sync) with Centrifuge library to make sure this works.
+
+In that example I tried to apply `RealTimeDocument` class to synchronize state of the counter. Periodically timer is incremented on a random value in range [0,9] on the backend and these increments are published to the real-time channel. Note, I could simply publish counter value in every publication over WebSocket – but intentionally decided to send counter increments instead. To make sure nothing is lost during state synchronization so counter value is always correct on the client side.
+
+Here is a demo:
+
+<div class="vimeo-full-width">
+   <iframe src="/img/docsync.mp4" frameBorder="0" allow="autoplay; fullscreen" allowFullScreen></iframe>
+</div>
+
+Let's look at how `RealTimeDocument` class was used in the example:
+
+```javascript
+const counterContainer = document.getElementById("counter");
+
+const client = new Centrifuge('ws://localhost:8000/connection/websocket', {});
+const subscription = client.newSubscription('counter', {});
+
+const realTimeDocument = new RealTimeDocument({
+    subscription,
+    load: async () => {
+        const response = await fetch('/api/counter');
+        const result = await response.json();
+        return { document: result.value, version: result.version };
+    },
+    applyUpdate: (document, update) => {
+        document += update.increment
+        return document
+    },
+    compareVersion: (currentVersion, update) => {
+        const newVersion = update.version;
+        return newVersion > currentVersion ? newVersion : null;
+    },
+    onChange: (document) => {
+        counterContainer.textContent = document;
+    },
+    debug: true,
+});
+client.connect();
+
+// Note – we can call sync even before connect.
+realTimeDocument.startSync();
+```
+
+Things to observe:
+
+* We return `{"version":4823,"value":21656}` from `/api/counter`
+* Send `{"version":4824,"increment":9}` over real-time channel
+* Counter updated every 250 milliseconds, history size is 20, retention 10 seconds
+* Upon going offline for a short period we see that `/api/counter` endpoint not called at all - state fully cought up from Centrifugo history stream
+* Upon going offline for a longer period Centrifugo was not able to recover the state, so we re-fetched data from scratch and attached to the stream again. 
 
 ## Conclusion
 

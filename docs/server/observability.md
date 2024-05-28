@@ -231,6 +231,20 @@ Here is a description of various metrics exposed by Centrifugo.
 - **Description:** Tracks the duration of API commands.
 - **Usage:** Helps in monitoring the API performance and ensuring timely responses.
 
+#### centrifugo_node_pub_sub_lag_seconds
+
+- **Type:** Histogram
+- **Labels:**
+- **Description:** Tracks pub sub lag in seconds.
+- **Usage:** Helps in monitoring of PUB/SUB layer performance. Note, this metric may be not exact in distributed environment due to time skew (to minify effect use NTP). In this case it still may be useful to identifies growth in lag.
+
+#### centrifugo_node_broadcast_duration_seconds
+
+- **Type:** Histogram
+- **Labels:**
+- **Description:** Tracks broadcast duration in seconds.
+- **Usage:** Useful to monitor time required for broadcasting the message to subscribers on the node. If it grows and the number of messages increases – may indicate the need to scale.
+
 ## Traces
 
 ### OpenTelemetry
