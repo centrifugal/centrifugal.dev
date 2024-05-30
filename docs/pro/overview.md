@@ -46,7 +46,7 @@ You can try out Centrifugo PRO for free. When you start Centrifugo PRO without l
 * up to 2 server nodes supported
 * up to 5 API requests per second allowed
 
-This mode should be enough for development and trying out PRO features, but must not be used in production environment as we can introduce additional limitations in the future.
+This mode should be enough for development and trying out PRO features, but must not be used in production environment.
 
 :::caution Centrifugo PRO license agreement
 

@@ -57,14 +57,14 @@ module.exports = {
         },
         {
           type: 'doc',
-          docId: "faq/faq_index",
-          label: "FAQ",
+          docId: 'pro/overview',
+          label: "Centrifugo PRO ♻️",
           position: "left",
         },
         {
           type: 'doc',
-          docId: 'pro/overview',
-          label: "Centrifugo PRO",
+          docId: "faq/faq_index",
+          label: "FAQ",
           position: "left",
         },
         { to: 'blog', label: 'Blog', position: 'left' },

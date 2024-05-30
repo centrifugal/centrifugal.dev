@@ -32,7 +32,7 @@
 
 html[data-theme="dark"] {
   --palette-background-alt: #0c0d0e;
-  --ifm-navbar-background-color: var(--palette-background-main);
+  --ifm-navbar-background-color: #0C0D0E;
   --ifm-background-color: var(--palette-background-main);
 }
 
