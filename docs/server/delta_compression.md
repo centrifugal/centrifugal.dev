@@ -18,7 +18,7 @@ The diff is calculated using [Fossil](https://fossil-scm.org/home/doc/tip/www/de
 
 :::tip
 
-At this point delta compression is only available for bidirectional client-side subscriptions and supported by Centrifugo Javascript SDK `centrifuge-js`.
+At this point delta compression is only available for bidirectional client-side subscriptions and supported by Centrifugo Javascript SDK [centrifuge-js](https://github.com/centrifugal/centrifuge-js) (since 5.2.0).
 
 :::
 
