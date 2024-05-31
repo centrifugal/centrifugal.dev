@@ -9,6 +9,6 @@ If you find Centrifugo interesting – please welcome to our community rooms in 
 
 We are trying to create a respectful and curious community. In those rooms you may find answers to questions not fully covered by the documentation, share your thoughts and ideas on the real-time messaging topics and Centrifugo in particular.  
 
-We also have [Twitter account](https://twitter.com/centrifugal_dev) and [Youtube channel](https://www.youtube.com/channel/UCdQmdbYM5pzqrrRFmt6KA1Q).
+We also have [Twitter account](https://x.com/centrifugalabs) and [Youtube channel](https://www.youtube.com/channel/UCdQmdbYM5pzqrrRFmt6KA1Q).
 
 See you there!

@@ -106,7 +106,7 @@ module.exports = {
             },
             {
               label: "Twitter",
-              href: "https://twitter.com/centrifugal_dev",
+              href: "https://twitter.com/centrifugalabs",
             },
           ],
         },
