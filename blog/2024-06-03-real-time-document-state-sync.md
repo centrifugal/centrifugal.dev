@@ -7,6 +7,7 @@ authorTitle: Founder of Centrifugal Labs
 authorImageURL: /img/alexander_emelin.jpeg
 image: /img/docsync_cover.jpg
 hide_table_of_contents: false
+draft: true
 ---
 
 <img src="/img/docsync_cover.jpg" />
