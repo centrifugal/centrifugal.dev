@@ -5,11 +5,11 @@ description: This post shows the potential profit of enabling delta compression 
 author: Alexander Emelin
 authorTitle: Founder of Centrifugal Labs
 authorImageURL: /img/alexander_emelin.jpeg
-image: /img/football_match_compression.png
+image: /img/football_match_compression.jpg
 hide_table_of_contents: false
 ---
 
-<img src="/img/football_match_compression.png" />
+<img src="/img/football_match_compression.jpg" />
 
 Optimizing data transfer over WebSocket connections can significantly reduce bandwidth costs. Compressing data usually leads to memory and CPU resource usage overhead – but in many cases it worth doing anyway since it positively impacts the final bill from the provider (bandwidth cost reduction overweights resource usage increase).
 

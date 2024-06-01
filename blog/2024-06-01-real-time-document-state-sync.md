@@ -5,12 +5,11 @@ description: A simple yet cool example of document state synchronization on top 
 author: Alexander Emelin
 authorTitle: Founder of Centrifugal Labs
 authorImageURL: /img/alexander_emelin.jpeg
-image: /img/docsync_cover.png
+image: /img/docsync_cover.jpg
 hide_table_of_contents: false
-draft: true
 ---
 
-<img src="/img/docsync_cover.png" />
+<img src="/img/docsync_cover.jpg" />
 
 Centrifugo and its main building block Centrifuge library for Go both provide a way for clients to receive a stream of events in channels using Subscription objects. Also, there is an automatic history recovery feature which allows clients catching up with missed publications after the reconnect to the WebSocket server and restore the state of a real-time component. While the continuity in the stream is not broken clients can avoid re-fetching a state from the main application database – which optimizes a scenario when many real-time connections reconnect all within a short time interval (for example, during a load balancer restart) by reducing the excessive load on the application database.
 
@@ -50,7 +49,7 @@ The good thing is that this helper class is compact enough to be implemented in 
 
 We will build the helper on top of several core principles:
 
-* The document has an incremental version which is managed atomically and transactionally on the backend
+* The document has an incremental version which is managed atomically and transactionally on the backend.
 * Initial state loading returns document state together with the current version, loading happens with at least `read committed` transactional isolation level (default in many databases, ex. PostgreSQL)
 * All real-time updates published to the document channel have the version attached, and updates are published to the channel in the correct version order.
 
