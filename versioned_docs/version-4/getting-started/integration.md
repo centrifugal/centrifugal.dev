@@ -77,7 +77,7 @@ Don't forget to configure [metrics monitoring](../server/monitoring.md) your pro
 
 ## 8. Scale Centrifugo
 
-As soon as you are close to machine resource limits you may want to scale Centrifugo – you can run many Centrifugo instances and load-balance clients between them using Redis engine, or with KeyDB, or with Tarantool, or with Nats broker. [Engines and scalability](../server/engines.md) chapter describes available options in detail.
+As soon as you are close to machine resource limits you may want to scale Centrifugo – you can run many Centrifugo instances and load-balance clients between them using Redis engine (or using Redis-compatible storage), or with Nats broker. [Engines and scalability](../server/engines.md) chapter describes available options in detail.
 
 ## 9. Read FAQ
 

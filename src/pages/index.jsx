@@ -116,7 +116,7 @@ function Home() {
                 backend, and much more. It comes with official SDK libraries for both web and mobile development.
               </Feature>
               <Feature title="Out-of-the-box Scalability" imageUrl="img/feature_scalability.png">
-                Scale connections over many Centrifugo nodes by using built-in integrations with efficient brokers: Redis (or Redis Cluster, or Redis-compatible storages like AWS Elasticache, DragonflyDB, Valkey, KeyDB, with client-side sharding support), Tarantool and Nats.
+                Scale connections over many Centrifugo nodes by using built-in integrations with efficient brokers: Redis (or Redis Cluster, or Redis-compatible storages like AWS Elasticache, DragonflyDB, Valkey, KeyDB, with client-side sharding support), and Nats.
               </Feature>
               <Feature title="Proven in Production" imageUrl="img/feature_production.png">
                 Started a decade ago, Centrifugo (and Centrifuge library for Go
