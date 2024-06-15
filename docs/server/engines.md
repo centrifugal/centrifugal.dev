@@ -373,13 +373,13 @@ Some known options:
 
 ## Tarantool engine
 
-**EXPERIMENTAL**
+**DEPRECATED**
 
 [Tarantool](https://www.tarantool.io) is a fast and flexible in-memory storage with different persistence/replication schemes and LuaJIT for writing custom logic on the Tarantool side. It allows implementing Centrifugo engine with unique characteristics.
 
-:::caution
+:::danger
 
-**EXPERIMENTAL** status of Tarantool integration means that we are still going to improve it and there could be breaking changes as integration evolves. It may also be excluded from the future major releases of Centrifugo.
+Tarantool engine is DEPRECATED and will be removed in Centrifugo v6. See [the issue on Github](https://github.com/centrifugal/centrifugo/issues/830).
 
 :::
 
