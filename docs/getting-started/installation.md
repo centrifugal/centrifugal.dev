@@ -140,6 +140,7 @@ At moment, we support versions of the following distributions:
 
 * 64-bit Debian 10 Buster
 * 64-bit Debian 11 Bullseye
+* 64-bit Debian 12 Bookworm
 * 64-bit Ubuntu 18.04 Bionic
 * 64-bit Ubuntu 20.04 Focal Fossa
 * 64-bit Ubuntu 20.04 Jammy
