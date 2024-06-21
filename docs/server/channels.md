@@ -72,7 +72,7 @@ User-limited channels must be enabled for a channel namespace using [allow_user_
 
 Centrifugo maintains compatibility with its previous versions which had concept of private channels. In earlier versions — specifically Centrifugo v1, v2, and v3—only – only channels beginning with `$` required a subscription JWT for subscribing. With Centrifugo v4, this is no longer the case; clients can subscribe to any channel if they have a valid subscription token.
 
-However, for namespaces where the `allow_subscribe_for_client` option is activated, Centrifugo prohibits subscriptions to channels that start with the `private_channel_prefix` (which defaults to `$`) unless a subscription token is provided. This restriction is designed to facilitate a secure migration to Centrifugo v4 or later versions.
+However, for namespaces where the `allow_subscribe_for_client` option is activated, Centrifugo prohibits subscriptions to channels that start with the `channel_private_prefix` (which defaults to `$`) unless a subscription token is provided. This restriction is designed to facilitate a secure migration to Centrifugo v4 or later versions.
 
 ### Channel is just a string
 
