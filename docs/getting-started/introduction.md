@@ -15,7 +15,7 @@ Several official SDKs for browser and mobile development wrap the bidirectional 
 
 :::info Real-time?
 
-By real-time, we mean a soft real-time. Due to network latencies, garbage collection cycles, etc., the delay of a delivered message can be up to several hundred milliseconds or higher.
+By real-time, we refer to a soft real-time system. This means there are no strict timing constraints. Due to factors like network latencies, garbage collection cycles, and so on, those can't be guaranteed.
 
 :::
 
