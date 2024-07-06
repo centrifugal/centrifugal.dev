@@ -143,7 +143,7 @@ At moment, we support versions of the following distributions:
 * 64-bit Debian 12 Bookworm
 * 64-bit Ubuntu 18.04 Bionic
 * 64-bit Ubuntu 20.04 Focal Fossa
-* 64-bit Ubuntu 20.04 Jammy
+* 64-bit Ubuntu 22.04 Jammy
 * 64-bit Centos 7
 
 See [full list of available packages](https://packagecloud.io/FZambia/centrifugo) and [installation instructions](https://packagecloud.io/FZambia/centrifugo/install).
