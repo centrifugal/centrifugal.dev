@@ -606,13 +606,13 @@ delayed
 
 Cancel delayed push notification (which was sent with custom `send_at` value).
 
-#### update_push_status request
+#### cancel_push request
 
 | Field | Type | Required | Description |
 |-------|------|----|-------------|
 | `uid` | string | Yes | `uid` of push notification to cancel |
 
-#### update_push_status result
+#### cancel_push result
 
 Empty object.
 
@@ -630,10 +630,10 @@ This is a part of server API at the moment, so you need to proxy requests to thi
 
 | Field | Type | Required | Description |
 |-------|------|----|-------------|
-| `analytics_uid` | string | Yes | `uid` (unique send id) from `send_push_notification` |
+| `analytics_uid` | string | Yes | `analytics_uid` from `send_push_notification` |
 | `status`   | string | Yes | Status of push notification - `delivered` or `interacted` |
 | `device_id` | string | Yes | Device ID |
-| `msg_id` | string | No | Message ID |
+| `msg_id` | string | No | Optional Message ID of push notification issued by used provider  |
 
 #### update_push_status result
 
