@@ -502,3 +502,9 @@ Timeout for dialing with Nats.
 Duration, default `1s`.
 
 Write (and flush) timeout for a connection to Nats.
+
+#### nats_tls
+
+[TLS object](./tls.md#unified-tls-config-object) - allows configuring Nats client TLS.
+
+Available since Centrifugo v5.4.2

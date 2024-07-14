@@ -532,6 +532,31 @@ CENTRIFUGO_NAMESPACES='[{"name": "ns1"}, {"name": "ns2"}]' ./centrifugo
 
 I.e. `CENTRIFUGO_NAMESPACES` environment variable should be a valid JSON string that represents namespaces array.
 
+## Enable RPC ping extension
+
+New in Centrifugo v5.4.2
+
+Sometimes you may need a way to just ping Centrifugo server from the client-side. For example, some Centrifugo users wanted this to show RTT time to server in UI. It's possible to enable RPC extension which simply returns an empty reply to RPC `ping`: 
+
+```json title="config.json"
+{
+  ...
+  "rpc_ping": true
+}
+```
+
+After that, on SDK side you can do sth like this:
+
+```javascript
+const startTime = performance.now();
+centrifuge.rpc('ping', {}).then(function() {
+  const endTime = performance.now();
+  console.log('rtt', ((endTime - startTime)).toFixed(2).toString(), 'ms');  // Output: rtt 0.90 ms
+})
+```
+
+If you are not happy with method name `ping` – you can use a different one by setting `rpc_ping_method` option to a string you want. 
+
 ## Anonymous usage stats
 
 Centrifugo periodically sends anonymous usage information (once in 24 hours). That information is impersonal and does not include sensitive data, passwords, IP addresses, hostnames, etc. Only counters to estimate version and installation size distribution, and feature usage.

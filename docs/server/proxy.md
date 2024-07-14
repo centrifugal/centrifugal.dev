@@ -807,6 +807,12 @@ String, default: `""`.
 
 Path to cert file for secure TLS connection. If not set then an insecure connection with the backend endpoint is used.
 
+#### proxy_grpc_tls
+
+[TLS object](./tls.md#unified-tls-config-object) - allows setting GRPC client TLS configuration.
+
+Available since Centrifugo v5.4.2
+
 #### proxy_grpc_credentials_key
 
 String, default `""` (i.e. not used).
@@ -950,6 +956,7 @@ Let's look at all fields for a proxy object which is possible to set for each pr
 | binary_encoding       | `bool`  | no | Use base64 for payloads       |
 | include_connection_meta | `bool`  | no | Include meta information (attached on connect)       |
 | grpc_cert_file       | `string`  | no | Path to cert file for secure TLS connection. If not set then an insecure connection with the backend endpoint is used.       |
+| grpc_tls       | [TLS object](./tls.md#unified-tls-config-object)  | no | Allows configuring GRPC client TLS, available since Centrifugo v5.4.2       |
 | grpc_credentials_key       | `string`  | no | Add custom key to per-RPC credentials.       |
 | grpc_credentials_value       | `string`  | no | A custom value for `grpc_credentials_key`.       |
 | grpc_compression       | `bool`  | no | If `true` then gzip compression will be used for each GRPC proxy call (available since Centrifugo v5.1.0)       |
