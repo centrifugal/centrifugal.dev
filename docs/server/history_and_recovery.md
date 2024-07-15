@@ -7,7 +7,7 @@ Centrifugo engines can maintain publication history for channels with configured
 
 ## History design
 
-History properties configured on a namespace level, to enable history both `history_size` and `history_ttl` should be set to a value greater than zero. 
+History properties configured on a namespace level, to enable history both [history_size](./channels.md#history_size) and [history_ttl](./channels.md#history_ttl) should be set to a value greater than zero. 
 
 Centrifugo is designed with an idea that history streams are ephemeral (can be created on the fly without explicit create call from Centrifugo users) and can expire or can be lost at any moment. Centrifugo provides a way for a client to understand that channel history lost. In this case, the main application database should be the source of truth and state recovery.
 
@@ -121,7 +121,7 @@ Message recovery protocol feature designed to be used together with reasonably s
 
 :::
 
-To enable recovery mechanism for channels set the `force_recovery` boolean configuration option to `true` on the configuration file top-level or for a channel namespace. Make sure to enable this option in namespaces where history is on. It's also possible to ask for enabling recovery from the client-side when configuring Subscription object – in this case client must have a permission to call history API.
+To enable recovery mechanism for channels set the [force_recovery](./channels.md#force_recovery) boolean configuration option to `true` on the configuration file top-level or for a channel namespace. Make sure to enable this option in namespaces where history is on. It's also possible to ask for enabling recovery from the client-side when configuring Subscription object – in this case client must have a permission to call history API.
 
 When re-subscribing on channels Centrifugo will return missed `publications` to a client in a subscribe `Reply`, also it will return a special `recovered` boolean flag to indicate whether all missed publications successfully recovered after a disconnect or not.
 

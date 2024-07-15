@@ -17,6 +17,9 @@ Usually, our users who use recovery features load the document state from the ba
 
 There are several hidden complexities in the process though and things left for users to implement. We want to address those here.
 
+In the post we assume that you are using a channnel with history configured and recovery on, i.e. using a namespace with `history_size`, `history_ttl` and `force_recovery` on, see more details in [History and recovery
+](/docs/server/history_and_recovery) doc chapter.
+
 ## Complexities in state sync
 
 ### Gap in time
