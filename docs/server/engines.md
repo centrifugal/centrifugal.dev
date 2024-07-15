@@ -557,6 +557,8 @@ Here is how raw mode may be enabled:
 
 `channel_replacements` is a `map[string]string` option which allows transforming Centrifugo channel to Nats channel before subscribing and back when consuming a message from Nats. For example, in the example above we can see `channel_replacements` set in a way to transform `chat:index` Centrifugo channel to `chat.index` Nats topic upon subscription. Centrifugo simply replaces all occurences of symbols in `channel_replacements` map to corresponding values.
 
+If you publish to Centrifugo API with raw mode enabled – publication payloads will be simply published to Nats subject without any Centrifugo-specific wrapping too.
+
 :::tip
 
 Centrifugo PRO [granular engines](../pro/granular_engines.md) feature provides a way to use Nats raw mode only for specific channel namespace.  
