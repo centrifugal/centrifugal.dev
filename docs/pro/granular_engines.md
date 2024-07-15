@@ -3,7 +3,7 @@ id: granular_engines
 title: Granular engines
 ---
 
-Centrifugo OSS allows [specifying an engine](../server/engines.md). Engine is responsible for PUB/SUB and channel stream/history features (we call this part `Broker`), and for online presence (this part is called `PresenceManager`). Engine in Centrifugo OSS is global for the entire Centrifugo setup – once defined, all channels use it to make operations.
+Centrifugo OSS allows [specifying an engine](../server/engines.md). Engine is responsible for PUB/SUB and channel stream/history features (we call this part `Broker`), and for online presence (this part is called `Presence Manager`). Engine in Centrifugo OSS is global for the entire Centrifugo setup – once defined, all channels use it to make operations.
 
 Centrifugo PRO allows redefining brokers and presence managers on a namespace level. This may help with individual scaling based on channel activity, using different properties inside different channel namespaces within a single Centrifugo setup. This feature significantly enhances Centrifugo's adaptability, making it easier to meet diverse and evolving application demands.
 
@@ -23,13 +23,17 @@ First, you need create configuration for additional brokers:
       "enabled": true,
       "name": "mycustomredis",
       "type": "redis",
-      "redis": {}
+      "redis": {
+        "address": "127.0.0.1:6379"
+      }
     },
     {
       "enabled": true,
       "name": "mycustomnats",
       "type": "nats",
-      "nats": {}
+      "nats": {
+        "url": "nats://localhost:4222"
+      }
     }
   ]
 }
@@ -37,8 +41,8 @@ First, you need create configuration for additional brokers:
 
 At this point Centrifugo PRO supports two broker types:
 
-* `redis`
-* `nats`
+* `redis` - inherits all the possibilities of Centrifugo [built-in Redis Engine](../server/engines.md#redis-engine)
+* `nats` –  inherits all the possibilities of Centrifugo [integration with Nats broker](../server/engines.md#nats-broker).
 
 These brokers inherit all options described in [Engines and scalability](../server/engines.md) chapter. The only difference that it's possible to specify which custom broker to use inside a channel namespace:
 

@@ -154,7 +154,7 @@ Here is a description of various metrics exposed by Centrifugo.
 - **Description:** Number of refused connections due to the node client connection limit.
 - **Usage:** Useful for monitoring the load on the Centrifugo node and identifying when clients are being refused connections due to reaching the connection limit.
 
-#### centrifugo_client_ping_pong_duration_seconds_histogram
+#### centrifugo_client_ping_pong_duration_seconds
 
 - **Type:** Histogram
 - **Labels:** transport

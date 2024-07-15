@@ -450,7 +450,7 @@ It's possible to scale with [Nats](https://nats.io/) PUB/SUB server. Keep in min
 Limitations:
 
 * Nats integration works only for unreliable at most once PUB/SUB. This means that history, presence, and message recovery Centrifugo features won't be available.
-* Nats wildcard channel subscriptions with symbols `*` and `>` not supported.
+* Nats wildcard channel subscriptions with symbols `*` and `>` not supported (until explicitly on using [nats_allow_wildcards](#nats_allow_wildcards) option).
 
 First start Nats server:
 
@@ -505,6 +505,60 @@ Write (and flush) timeout for a connection to Nats.
 
 #### nats_tls
 
+Available since Centrifugo v5.4.2
+
 [TLS object](./tls.md#unified-tls-config-object) - allows configuring Nats client TLS.
 
+#### nats_allow_wildcards
+
 Available since Centrifugo v5.4.2
+
+Boolean, default `false`. When on – Centrifugo allows subscribing to [wildcard Nats subjects](https://docs.nats.io/nats-concepts/subjects#wildcards) (containing `*` and `>` symbols). This way client can receive messages from many channels while only having a single subscription.
+
+:::info
+
+Centrifugo join/leave feature won't work for wildcard channels. 
+
+:::
+
+:::caution
+
+Be careful with permission management in this case – wildcards allow subscribing to all channels matching a pattern, so you need to carefully design and check channel permissions in this case.
+
+:::
+
+### Nats raw mode
+
+Available since Centrifugo v5.4.2
+
+Nats raw mode when on tells Centrifugo to consume core Nats topics and not expecting any Centrifugo internal message wrapping. I.e. it allows direct mapping of Centrifugo channels to Nats topics. Your clients will simply get the raw payload Centrifugo consumed from Nats. Also note, that `nats_prefix` is not used when raw mode is on, if you still need some – there is an option to set prefix inside `nats_raw_mode` configuration option. 
+
+:::info
+
+When using Nats raw mode join/leave feature of Centrifugo can't be used.
+
+:::
+
+Here is how raw mode may be enabled:
+
+
+```json
+{
+    ...
+    "nats_raw_mode": {
+        "enabled": true,
+        "channel_replacements": {
+            ":": "."
+        },
+        "prefix": ""
+    }
+}
+```
+
+`channel_replacements` is a `map[string]string` option which allows transforming Centrifugo channel to Nats channel before subscribing and back when consuming a message from Nats. For example, in the example above we can see `channel_replacements` set in a way to transform `chat:index` Centrifugo channel to `chat.index` Nats topic upon subscription. Centrifugo simply replaces all occurences of symbols in `channel_replacements` map to corresponding values.
+
+:::tip
+
+Centrifugo PRO [granular engines](../pro/granular_engines.md) feature provides a way to use Nats raw mode only for specific channel namespace.  
+
+:::
