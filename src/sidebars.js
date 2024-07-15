@@ -92,7 +92,7 @@ module.exports = {
         "pro/rate_limiting",
         // "pro/distributed_rate_limit",
         "pro/push_notifications",
-        "pro/granular_engines",
+        "pro/namespace_engines",
         "pro/admin_idp_auth",
         "pro/user_status",
         "pro/connections",

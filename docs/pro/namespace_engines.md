@@ -1,6 +1,6 @@
 ---
-id: granular_engines
-title: Granular engines
+id: namespace_engines
+title: Per-namespace engines
 ---
 
 Centrifugo OSS allows [specifying an engine](../server/engines.md). Engine is responsible for PUB/SUB and channel stream/history features (we call this part `Broker`), and for online presence (this part is called `Presence Manager`). Engine in Centrifugo OSS is global for the entire Centrifugo setup – once defined, all channels use it to make operations.
@@ -9,7 +9,7 @@ Centrifugo PRO allows redefining brokers and presence managers on a namespace le
 
 For example, you can configure Centrifugo to use Redis engine by default, but for some specific namespace use Nats for PUB/SUB – this may be handy if you need wildcard subscriptions for one of the features in the app, or maybe you want to consume from raw Nats topics for some app feature, but for other features you still need functionality implemented by Centrifugo Redis Engine - like history in channels, automatic recovery. Or, maybe you want to separate Redis setups used for broker purposes and online presence purposes.
 
-In general, the idea here is very similar to [Granular proxy mode](../server/proxy.md#granular-proxy-mode) – define some custom object, and then point a specific channel namespace to use it.
+In general, the idea here is very similar to [Granular proxy mode](../server/proxy.md#granular-proxy-mode) – configure a list of custom Brokers or Presence Managers, and then point a specific channel namespace to use it.
 
 ## Defining brokers
 

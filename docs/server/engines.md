@@ -541,7 +541,6 @@ When using Nats raw mode join/leave feature of Centrifugo can't be used.
 
 Here is how raw mode may be enabled:
 
-
 ```json
 {
     ...
