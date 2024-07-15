@@ -560,6 +560,6 @@ If you publish to Centrifugo API with raw mode enabled – publication payloads 
 
 :::tip
 
-Centrifugo PRO [granular engines](../pro/granular_engines.md) feature provides a way to use Nats raw mode only for specific channel namespace.  
+Centrifugo PRO [per-namespace engines](../pro/namespace_engines.md) feature provides a way to use Nats raw mode only for specific channel namespace.  
 
 :::
