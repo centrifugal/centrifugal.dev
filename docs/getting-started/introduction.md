@@ -15,7 +15,7 @@ Several official SDKs for browser and mobile development wrap the bidirectional 
 
 :::info Real-time?
 
-By real-time, we refer to a soft real-time system. This means there are no strict timing constraints. Due to factors like network latencies, garbage collection cycles, and so on, those can't be guaranteed.
+By real-time, we refer to a soft real-time system. This means there are no strict latency timing constraints. Centrifugo does its best to minimize delivery delays, but due to factors like network latencies, garbage collection cycles, and so on, those can't be guaranteed.
 
 :::
 
