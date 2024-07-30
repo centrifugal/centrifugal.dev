@@ -597,6 +597,14 @@ Now, as soon as Centrifugo started – you can send GRPC commands to it. To do t
 
 Then see [GRPC docs specific to your language](https://grpc.io/docs/) to find out how to generate client code from definitions and use generated code to communicate with Centrifugo.
 
+### GRPC API options
+
+* `grpc_api` - boolean, default `false`. Enables GRPC API server.
+* `grpc_api_port` - integer, default `10000`. Port on which GRPC API server runs.
+* `grpc_api_address` - string, default `""`. Custom address to run GRPC API server on.
+* `grpc_api_max_receive_message_size` – integer (number of bytes), default `0`. If set to a value > 0 allows tuning the max size of message GRPC server can receive. By default, GRPC library's default is used which is 4194304 bytes (4MB). Available since Centrifugo v5.4.3.
+* `grpc_api_reflection` - boolean, default `false`. Enables GRPC reflection API for introspection.
+
 ### GRPC example for Python
 
 For example for Python you need to run sth like this according to GRPC docs:
@@ -713,7 +721,7 @@ The program starts and periodically publishes the same payload into `chat:index`
 
 ### GRPC API key authorization
 
-You can also set `grpc_api_key` (string) in Centrifugo configuration to protect GRPC API with key. In this case, you should set per RPC metadata with key `authorization` and value `apikey <KEY>`. For example in Go language:
+You can also set `grpc_api_key` option (string) in Centrifugo configuration to protect GRPC API with key. In this case, you should set per RPC metadata with key `authorization` and value `apikey <KEY>`. For example in Go language:
 
 ```go
 package main
