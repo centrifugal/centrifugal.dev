@@ -735,6 +735,12 @@ GRPC proxy inherits all the fields for HTTP proxy – so you can refer to field 
 
 :::
 
+:::tip
+
+We publish [Centrifugo GRPC proxy Protobuf definitions](https://buf.build/centrifugo/proxyproto/docs/main:centrifugal.centrifugo.proxy) to [Buf Schema Registry](https://buf.build/product/bsr). This means that it's possible to depend on pre-generated Protobuf definitions for your programming language instead of manually generating them from the schema file (see [SDKs supported by Buf registry here](https://buf.build/centrifugo/proxyproto/sdks)).
+
+:::
+
 Every proxy call in this case is a unary GRPC call. Centrifugo puts client headers into GRPC metadata (since GRPC doesn't have headers concept).
 
 All you need to do to enable proxying over GRPC instead of HTTP is to use `grpc` schema in endpoint, for example for the connect proxy:

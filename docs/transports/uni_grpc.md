@@ -8,6 +8,12 @@ It's possible to connect to GRPC unidirectional stream to consume real-time mess
 
 Protobuf definitions can be found [here](https://github.com/centrifugal/centrifugo/blob/master/internal/unigrpc/unistream/unistream.proto).
 
+:::tip
+
+We publish [Centrifugo GRPC uni stream Protobuf definitions](https://buf.build/centrifugo/unistream/docs/main:centrifugal.centrifugo.unistream) to [Buf Schema Registry](https://buf.build/product/bsr). This means that it's possible to depend on pre-generated Protobuf definitions for your programming language instead of manually generating them from the schema file (see [SDKs supported by Buf registry here](https://buf.build/centrifugo/unistream/sdks)).
+
+:::
+
 GRPC server will start on port `11000` (default).
 
 ## Supported data formats

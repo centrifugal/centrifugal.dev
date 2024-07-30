@@ -719,6 +719,16 @@ go run main.go
 
 The program starts and periodically publishes the same payload into `chat:index` channel.
 
+### Integration with Buf schema registry
+
+We publish [Centrifugo GRPC API Protobuf definitions](https://buf.build/centrifugo/apiproto/docs/main:centrifugal.centrifugo.api) to [Buf Schema Registry](https://buf.build/product/bsr). This means that to use Centrifugo GRPC APIs it's possible to depend on pre-generated Protobuf definitions for your programming language instead of manually generating them from the schema file (see [SDKs supported by Buf registry here](https://buf.build/centrifugo/apiproto/sdks)).
+
+:::caution
+
+Note, Centrifugo is not compatible with Buf Connect HTTP protocol – i.e. you can use Buf tools to communicate with Centrifugo GRPC API only.
+
+:::
+
 ### GRPC API key authorization
 
 You can also set `grpc_api_key` option (string) in Centrifugo configuration to protect GRPC API with key. In this case, you should set per RPC metadata with key `authorization` and value `apikey <KEY>`. For example in Go language:
