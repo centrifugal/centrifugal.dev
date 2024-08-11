@@ -178,8 +178,36 @@ This is what application returns to Centrifugo inside `result` field in case of 
 | data         | JSON     | yes | a custom data to send to the client in connect command response.           |
 | b64data      | string     | yes | a custom data to send to the client in the connect command response for binary connections, will be decoded to raw bytes on Centrifugo side before sending to client            |
 | channels      | array of strings     | yes | allows providing a list of server-side channels to subscribe connection to. See more details about [server-side subscriptions](server_subs.md)       |
-| subs         | map of SubscribeOptions     | yes | map of channels with options to subscribe connection to. See more details about [server-side subscriptions](server_subs.md)           |
+| subs         | `map[string]SubscribeOptions`     | yes | map of channels with options to subscribe connection to. See more details about [server-side subscriptions](server_subs.md)           |
 | meta         | JSON object (ex. `{"key": "value"}`) | yes | a custom data to attach to connection (this **won't be exposed to client-side**)  |
+
+`SubscribeOptions`:
+
+| Field | Type | Optional | Description  |
+| -------------- | -------------- | ------------ | ---- |
+| info       | JSON object       | yes | Custom channel info   |
+| b64info       | string       | yes | Custom channel info in Base64 - to pass binary channel info   |
+| data       | JSON object       | yes | Custom JSON data to return in subscription context inside Connect reply    |
+| b64data       | string       | yes |  Same as `data` but in Base64 to send binary data   |
+| override       | `SubscribeOptionOverride` | yes |  Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields)  |
+
+`SubscribeOptionOverride` allow per-connection overrides of some channel namespace options:
+
+| Field | Type | Optional | Description  |
+| -------------- | -------------- | ------------ | ---- |
+| presence       | `BoolValue`       | yes | Override `presence` from namespace options   |
+| join_leave       | `BoolValue`       | yes | Override `join_leave` from namespace options   |
+| force_recovery       | `BoolValue`       | yes | Override `force_recovery` from namespace options   |
+| force_positioning       | `BoolValue`       | yes |  Override `force_positioning` from namespace options   |
+| force_push_join_leave       | `BoolValue`       | yes |  Override `force_push_join_leave` from namespace options   |
+
+`BoolValue` is an object like this:
+
+```json
+{
+  "value": true/false
+}
+```
 
 #### Options
 

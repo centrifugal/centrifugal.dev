@@ -174,18 +174,21 @@ Example:
 | b64info       | string       | yes | Custom channel info in Base64 - to pass binary channel info   |
 | data       | JSON object       | yes | Custom JSON data to return in subscription context inside Connect reply    |
 | b64data       | string       | yes |  Same as `data` but in Base64 to send binary data   |
-| override       | Override object       | yes |  Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields)  |
+| override       | `SubscribeOptionOverride`       | yes |  Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields)  |
 
-#### Override object
+#### SubscribeOptionOverride
+
+Allow per-connection overrides of some channel namespace options:
 
 | Field | Type | Optional | Description  |
 | -------------- | -------------- | ------------ | ---- |
-| presence       | BoolValue       | yes | Override presence   |
-| join_leave       | BoolValue       | yes | Override join_leave   |
-| position       | BoolValue       | yes | Override position   |
-| recover       | BoolValue       | yes |  Override recover   |
+| presence       | `BoolValue`       | yes | Override `presence` from namespace options   |
+| join_leave       | `BoolValue`       | yes | Override `join_leave` from namespace options   |
+| force_recovery       | `BoolValue`       | yes | Override `force_recovery` from namespace options   |
+| force_positioning       | `BoolValue`       | yes |  Override `force_positioning` from namespace options   |
+| force_push_join_leave       | `BoolValue`       | yes |  Override `force_push_join_leave` from namespace options   |
 
-BoolValue is an object like this:
+`BoolValue` is an object like this:
 
 ```json
 {
