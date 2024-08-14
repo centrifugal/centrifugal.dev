@@ -80,6 +80,19 @@ Boolean, default `false` – turns on using Redis Lists instead of Stream data s
 
 Boolean, default `false`. If set to true it forces using RESP2 protocol for communicating with Redis. By default, Redis client used by Centrifugo tries to detect supported Redis protocol automatically trying RESP3 first.
 
+#### redis_presence_hash_field_ttl
+
+Boolean, default `false`.
+
+By default, Centrifugo uses online presence implementation with ZSET to track expiring items. Redis 7.4 introduced a [per HASH field TTL](https://redis.io/blog/announcing-redis-community-edition-and-redis-stack-74/#:~:text=You%20can%20now%20set%20an%20expiration%20for%20hash%20fields.). Option `redis_presence_hash_field_ttl` allows configuring Centrifugo to use the feature when storing online presence. 
+
+Benefits:
+
+* less memory in Redis for presence information since less data to keep (no need in separate ZSET), up to 1.6x improvement.
+* slightly better CPU utilization on Redis side since less keys to deal with in LUA scripts during presence get, add, remove operations.
+
+Since HASH per field TTL is only available in Redis >= 7.4, Centrifugo requires explicit intent to enable its usage.
+
 ### Configuring Redis TLS
 
 Some options may help you configuring TLS-protected communication between Centrifugo and Redis. 
