@@ -33,6 +33,14 @@ Centrifugo PRO has an optimized decoding of JWT claims.
 
 Centrifugo PRO has an optimized Protobuf deserialization for GRPC unidirectional stream. This only affects deserialization of initial connect command.
 
+## WebSocket compression optimizations
+
+Centrifugo PRO provides an integer option `websocket_compression_prepared_message_size` (in bytes, default `0`) which when set to a value > 0 tells Centrifugo to use a cache or prepared websocket messages when working with connections with WebSocket compression negotiated.
+
+This can significantly improve CPU and memory Centrifufo resource usage when using [WebSocket compression feature](../transports/websocket.md#websocket_compression).
+
+Check out blog post [Performance optimizations of WebSocket compression in Go application](/blog/2024/08/19/optimizing-websocket-compression) which describes the possible effect of this optimization.
+
 ## Examples
 
 Let's look at quick live comparisons of Centrifugo OSS and Centrifugo PRO regarding HTTP API performance.
