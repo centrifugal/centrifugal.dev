@@ -154,6 +154,23 @@ This means that if we broadcast the same prepared message to many connections, w
 
 For broadcasts, `PreparedMessage` approach significantly reduces CPU usage by minimizing the need to construct and compress WebSocket frames, especially as the number of concurrent subscribers increases. Additionally, it reduces the allocation of large `flate.Writer` objects, further optimizing CPU utilization.
 
+Gorilla WebSocket contains [benchmarks](https://github.com/gorilla/websocket/blob/3810b2346f49a47aa0b99c23a7aa619d5f5dcf80/conn_broadcast_test.go) which compare message broadcast to many connections with enabled compression without and with `PreparedMessage` usage. Let's run them:
+
+```go
+❯ go test -run xxx -bench BenchmarkBroadcast -benchmem
+
+Compression_100_conn-8             198619 ns/op	   14113 B/op	    301 allocs/op
+CompressionPrepared_100_conn-8      42643 ns/op	   12320 B/op	     19 allocs/op
+
+Compression_1000_conn-8           1797432 ns/op	  123864 B/op	   3001 allocs/op
+CompressionPrepared_1000_conn-8    649506 ns/op	   11421 B/op	     19 allocs/op
+
+Compression_10000_conn-8         16506132 ns/op	 1040709 B/op	  30007 allocs/op
+CompressionPrepared_10000_conn-8  7702265 ns/op	   11631 B/op	     21 allocs/op
+```
+
+Benchmarks demonstrate that `PreparedMessage` significantly reduces memory allocations during broadcasts, with the impact becoming more significant as the number of connections increases.
+
 ## PreparedMessage cache
 
 For Centrifuge/Centrifugo though, we couldn't directly use `PreparedMessage` in the part of the code responsible for preparing messages for channel broadcasts. This is because doing so would introduce a dependency on a WebSocket-specific type in a layer of code that should remain agnostic to the underlying real-time transport.
