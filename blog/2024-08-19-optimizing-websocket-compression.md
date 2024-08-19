@@ -152,6 +152,8 @@ _ := conn.WritePreparedMessage(preparedMessage)
 
 This means that if we broadcast the same prepared message to many connections, we remove the excessive load on `sync.Pool`, just taking a one `flate.Writer` from the pool instead of many. This way, we avoid large memory spikes due to big size of `flate.Writer` objects and `sync.Pool` growth.
 
+For broadcasts, `PreparedMessage` approach significantly reduces CPU usage by minimizing the need to construct and compress WebSocket frames, especially as the number of concurrent subscribers increases. Additionally, it reduces the allocation of large flate.Writer objects, further optimizing CPU utilization.
+
 ## PreparedMessage cache
 
 For Centrifuge/Centrifugo though, we couldn't directly use `PreparedMessage` in the part of the code responsible for preparing messages for channel broadcasts. This is because doing so would introduce a dependency on a WebSocket-specific type in a layer of code that should remain agnostic to the underlying real-time transport.
