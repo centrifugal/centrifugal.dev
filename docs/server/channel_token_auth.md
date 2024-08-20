@@ -49,7 +49,11 @@ Required. Channel that client tries to subscribe to with this token (**string**)
 
 ### info
 
-Optional. Additional information for connection inside this channel (**valid JSON**).
+Optional. Additional channel-specific information about connection (**valid JSON**). This information will be included:
+
+* in online presence data
+* join/leave events
+* and into client-side channel publications
 
 ### b64info
 

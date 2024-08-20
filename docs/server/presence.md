@@ -66,6 +66,30 @@ Also, `presenceStats` method is avalable:
 const resp = await subscription.presenceStats(channel);
 ```
 
+## Connection and channel custom info
+
+It's possible to extend presence information with `info` (connection-wide) and `chan_info` (channel specific) additional information.
+
+For connection wide `info` data may be taken by Centrifugo from:
+
+* connection token [info](https://centrifugal.dev/docs/server/authentication#info) claim
+* connect proxy [result](https://centrifugal.dev/docs/server/proxy#connect-result-fields) `info` field
+
+For channel-specific `chan_info`:
+
+* from subscription token [info](https://centrifugal.dev/docs/server/channel_token_auth#info) claim
+* from subscribe proxy [result](https://centrifugal.dev/docs/server/proxy#subscribe-result-fields) `info` field
+
+After adding additional information you will receive `info` and `chan_info` in presence responses.
+
+:::tip
+
+Be careful to not expose specific connection sensitive data with all other users in channel.
+
+:::
+
+Both `info` and `chan_info` once specified will be also attached to join and leave events.
+
 ## Join and leave events
 
 It's also possible to enable real-time tracking of users joining or leaving a channel by listening to `join` and `leave` events on the client side.

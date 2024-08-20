@@ -122,7 +122,11 @@ Setting `token_issuer` will also affect subscription tokens (used for [channel t
 
 ### info
 
-This optional claim provides additional information about the client's connection for Centrifugo. This information will be included in presence data, join/leave events, and client-side channel publications.
+This optional claim provides additional information about the client's connection for Centrifugo. This information will be included:
+
+* in online presence data
+* join/leave events
+* and into client-side channel publications
 
 ### b64info
 

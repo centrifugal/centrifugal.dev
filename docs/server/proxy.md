@@ -173,7 +173,7 @@ This is what application returns to Centrifugo inside `result` field in case of 
 | ------------ | -------------- | ------------ | ---- |
 | user       | string     | no |  user ID (calculated on app backend based on request cookie header for example). Return it as an empty string for accepting unauthenticated requests |
 | expire_at    | integer     | yes | a timestamp (Unix seconds in the future) when connection must be considered expired. If not set or set to `0` connection won't expire at all        |
-| info     | JSON     | yes | a connection info JSON            |
+| info     | JSON     | yes | a connection info JSON. This information will be included in online presence data, join/leave events and into client-side channel publications            |
 | b64info     | string     | yes | binary connection info encoded in base64 format, will be decoded to raw bytes on Centrifugo before using in messages            |
 | data         | JSON     | yes | a custom data to send to the client in connect command response.           |
 | b64data      | string     | yes | a custom data to send to the client in the connect command response for binary connections, will be decoded to raw bytes on Centrifugo side before sending to client            |
@@ -185,7 +185,7 @@ This is what application returns to Centrifugo inside `result` field in case of 
 
 | Field | Type | Optional | Description  |
 | -------------- | -------------- | ------------ | ---- |
-| info       | JSON object       | yes | Custom channel info   |
+| info       | JSON object       | yes | Additional channel-specific information about connection (**valid JSON**). This information will be included in online presence data, join/leave events and into client-side channel publications   |
 | b64info       | string       | yes | Custom channel info in Base64 - to pass binary channel info   |
 | data       | JSON object       | yes | Custom JSON data to return in subscription context inside Connect reply    |
 | b64data       | string       | yes |  Same as `data` but in Base64 to send binary data   |
@@ -314,8 +314,8 @@ Expected response example:
 | ------------ | -------------- | ------------ | ---- |
 | expired       | bool     | yes |  a flag to mark the connection as expired - the client will be disconnected  |
 | expire_at    | integer     | yes | a timestamp in the future when connection must be considered expired       |
-| info     | JSON     | yes | a connection info JSON            |
-| b64info     | string     | yes | binary connection info encoded in base64 format, will be decoded to raw bytes on Centrifugo before using in messages            |
+| info     | JSON     | yes | update connection info JSON            |
+| b64info     | string     | yes | alternative to `info` - a binary connection info encoded in base64 format, will be decoded to raw bytes on Centrifugo side            |
 
 #### Options
 
@@ -466,10 +466,10 @@ Expected response example if subscription is allowed:
 
 | Field | Type | Optional | Description |
 | ------------ | -------------- | ------------ | ---- |
-| info     | JSON     | yes | a channel info JSON         |
-| b64info     | string     | yes | a binary connection channel info encoded in base64 format, will be decoded to raw bytes on Centrifugo before using   |
-| data         | JSON     | yes | a custom data to send to the client in subscribe command reply.           |
-| b64data      | string     | yes | a custom data to send to the client in subscribe command reply, will be decoded to raw bytes on Centrifugo side before sending to client |
+| info     | JSON     | yes | Additional channel-specific information about connection (**valid JSON**). This information will be included in online presence data, join/leave events and into client-side channel publications         |
+| b64info     | string     | yes | An alternative to `info` – a binary connection channel information encoded in base64 format, will be decoded to raw bytes on Centrifugo before using   |
+| data         | JSON     | yes | Custom data to send to the client in subscribe command reply.           |
+| b64data      | string     | yes | Custom data to send to the client in subscribe command reply, will be decoded to raw bytes on Centrifugo side before sending to client |
 | override       | Override object       | yes |  Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields)  |
 | expire_at    | integer     | yes | a timestamp (Unix seconds in the future) when subscription must be considered expired. If not set or set to `0` subscription won't expire at all. Supported since Centrifugo v5.0.4        |
 
@@ -697,7 +697,7 @@ Expected response example:
 | ------------ | -------------- | ------------ | ---- |
 | expired       | bool     | yes |  a flag to mark the subscription as expired - the client will be disconnected  |
 | expire_at    | integer     | yes | a timestamp in the future (Unix seconds) when subscription must be considered expired       |
-| info     | JSON     | yes | a channel info JSON            |
+| info     | JSON     | yes | update channel-specific information about connection           |
 | b64info     | string     | yes | binary channel info encoded in base64 format, will be decoded to raw bytes on Centrifugo before using in messages            |
 
 #### Options
