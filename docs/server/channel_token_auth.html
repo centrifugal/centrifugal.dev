@@ -15,7 +15,7 @@
 
 <link rel="search" type="application/opensearchdescription+xml" title="Centrifugo" href="/opensearch.xml">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.446fbcdd.css">
-<script src="/assets/js/runtime~main.5fa144a3.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.24ce68ee.js" defer="defer"></script>
 <script src="/assets/js/main.dd41ea7a.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -36,7 +36,12 @@
 <h3 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="channel">channel<a href="#channel" class="hash-link" aria-label="Direct link to channel" title="Direct link to channel">​</a></h3>
 <p>Required. Channel that client tries to subscribe to with this token (<strong>string</strong>).</p>
 <h3 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="info">info<a href="#info" class="hash-link" aria-label="Direct link to info" title="Direct link to info">​</a></h3>
-<p>Optional. Additional information for connection inside this channel (<strong>valid JSON</strong>).</p>
+<p>Optional. Additional channel-specific information about connection (<strong>valid JSON</strong>). This information will be included:</p>
+<ul>
+<li>in online presence data</li>
+<li>join/leave events</li>
+<li>and into client-side channel publications</li>
+</ul>
 <h3 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="b64info">b64info<a href="#b64info" class="hash-link" aria-label="Direct link to b64info" title="Direct link to b64info">​</a></h3>
 <p>Optional. Additional information for connection inside this channel in base64 format (<strong>string</strong>). Will be decoded by Centrifugo to raw bytes.</p>
 <h3 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="exp">exp<a href="#exp" class="hash-link" aria-label="Direct link to exp" title="Direct link to exp">​</a></h3>

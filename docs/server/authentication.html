@@ -15,7 +15,7 @@
 
 <link rel="search" type="application/opensearchdescription+xml" title="Centrifugo" href="/opensearch.xml">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.446fbcdd.css">
-<script src="/assets/js/runtime~main.5fa144a3.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.24ce68ee.js" defer="defer"></script>
 <script src="/assets/js/main.dd41ea7a.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -59,7 +59,12 @@
 <div class="language-json codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockTitle_Ktv7">config.json</div><div class="codeBlockContent_biex"><pre tabindex="0" class="prism-code language-json codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token punctuation" style="color:rgb(199, 146, 234)">{</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  </span><span class="token property">&quot;token_issuer&quot;</span><span class="token operator" style="color:rgb(137, 221, 255)">:</span><span class="token plain"> </span><span class="token string" style="color:rgb(195, 232, 141)">&quot;my_app&quot;</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain"></span><span class="token punctuation" style="color:rgb(199, 146, 234)">}</span><br></span></code></pre><div class="buttonGroup__atx"><button type="button" aria-label="Copy code to clipboard" title="Copy" class="clean-btn"><span class="copyButtonIcons_eSgA" aria-hidden="true"><svg viewBox="0 0 24 24" class="copyButtonIcon_y97N"><path fill="currentColor" d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path></svg><svg viewBox="0 0 24 24" class="copyButtonSuccessIcon_LjdS"><path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path></svg></span></button></div></div></div>
 <div class="theme-admonition theme-admonition-caution admonition_xJq3 alert alert--warning"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z"></path></svg></span>caution</div><div class="admonitionContent_BuS1"><p>Setting <code>token_issuer</code> will also affect subscription tokens (used for <a href="/docs/server/channel_token_auth">channel token authorization</a>). If you need to separate connection token configuration and subscription token configuration check out <a href="/docs/server/channel_token_auth#separate-subscription-token-config">separate subscription token config</a> feature.</p></div></div>
 <h3 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="info">info<a href="#info" class="hash-link" aria-label="Direct link to info" title="Direct link to info">​</a></h3>
-<p>This optional claim provides additional information about the client&#x27;s connection for Centrifugo. This information will be included in presence data, join/leave events, and client-side channel publications.</p>
+<p>This optional claim provides additional information about the client&#x27;s connection for Centrifugo. This information will be included:</p>
+<ul>
+<li>in online presence data</li>
+<li>join/leave events</li>
+<li>and into client-side channel publications</li>
+</ul>
 <h3 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="b64info">b64info<a href="#b64info" class="hash-link" aria-label="Direct link to b64info" title="Direct link to b64info">​</a></h3>
 <p>For those utilizing the binary Protobuf protocol and requiring the <code>info</code> to be custom bytes, this field should be used.</p>
 <p>It contains a <code>base64</code> encoded representation of your bytes. Centrifugo will decode the base64 back into bytes upon receipt and incorporate the result into the various places described above.</p>
