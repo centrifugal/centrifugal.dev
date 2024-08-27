@@ -534,16 +534,15 @@ This request happens BEFORE a message is published to a channel, so your backend
 
 ![](/img/diagram_publish_proxy.png)
 
-Like the subscribe proxy, publish proxy must be enabled per channel namespace. This means that every namespace (including the global/default one) has a boolean option `proxy_publish` that enables publish proxy for channels in the namespace. All other namespace options will be taken into account before making a proxy request, so you also need to turn on the `publish` option too.
+Like the subscribe proxy, publish proxy must be enabled per channel namespace. This means that every namespace (including the global/default one) has a boolean option `proxy_publish` that enables publish proxy for channels in the namespace.
 
-So to enable publish proxy for channels without namespace define `proxy_publish` and `publish` on a top configuration level:
+So to enable publish proxy for channels without namespace define `proxy_publish` on a top configuration level:
 
 ```json
 {
   ...
   "proxy_publish_endpoint": "http://localhost:3000/centrifugo/publish",
   "proxy_publish_timeout":  "1s",
-  "publish": true,
   "proxy_publish": true
 }
 ```
@@ -557,13 +556,10 @@ Or for channels in namespace `sun`:
   "proxy_publish_timeout":  "1s",
   "namespaces": [{
     "name": "sun",
-    "publish": true,
     "proxy_publish": true
   }]
 }
 ```
-
-Keep in mind that this will only work if the `publish` channel option is on for a channel namespace (or for a global top-level namespace).
 
 Payload example sent to app backend in a publish request:
 
@@ -811,7 +807,6 @@ For publish proxy in namespace `chat`:
   "namespaces": [
     {
       "name": "chat",
-      "publish": true,
       "proxy_publish": true
     }
   ]
@@ -1037,13 +1032,11 @@ Subscribe, publish and sub refresh proxies work per-namespace. This means that `
     {
       "name": "ns1",
       "subscribe_proxy_name": "subscribe1",
-      "publish": true,
       "publish_proxy_name": "publish1"
     },
     {
       "name": "ns2",
       "subscribe_proxy_name": "subscribe2",
-      "publish": true,
       "publish_proxy_name": "publish2"
     }
   ]
