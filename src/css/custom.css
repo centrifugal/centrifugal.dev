@@ -62,9 +62,11 @@ html[data-theme="light"] .button--secondary:hover {
   color: var(--ifm-color-primary);
 }
 
-.menu__link {
-  line-height: 0.89;
-  font-size: 0.89em;
+@media screen and (min-width: 996px) {
+  .menu__link {
+    line-height: 0.89;
+    font-size: 0.89em;
+  }
 }
 
 .table-of-contents li {
