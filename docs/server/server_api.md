@@ -561,9 +561,10 @@ But we have several official HTTP API libraries for different languages, to help
 Also, there are Centrifugo server API libraries created by community:
 
 * [javacent](https://github.com/katarinamolotova/javacent) HTTP API client for Java
-* [crystalcent](https://github.com/devops-israel/crystalcent) API client for Crystal language
 * [cent.js](https://github.com/SocketSomeone/cent.js) API client for NodeJS
+* [CentriAgent](https://github.com/sajjad-fatehi/centri-agent) - one more API client for NodeJS
 * [Centrifugo.AspNetCore](https://github.com/ismkdc/Centrifugo.AspNetCore) API client for ASP.NET Core
+* [crystalcent](https://github.com/devops-israel/crystalcent) API client for Crystal language
 
 :::tip
 
