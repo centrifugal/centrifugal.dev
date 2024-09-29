@@ -144,7 +144,7 @@ function Home() {
                 are delivered to online users with minimal delay.
               </p>
               <p>
-                Chats apps, live comments, multiplayer games, real-time data visualizations, collaborative tools, etc. can all be built on top of a real-time messaging system.
+                Chats apps, live comments, multiplayer games, real-time data visualizations, collaborative tools, AI streaming responses, etc. can all be built on top of a real-time messaging system.
               </p>
               <p>
                 Centrifugo is a user facing <b>PUB/SUB</b> server that handles persistent connections over various real-time transports &mdash; <b>WebSocket</b>, HTTP-streaming, SSE (Server-Sent Events), WebTransport, GRPC.
