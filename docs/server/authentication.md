@@ -465,3 +465,22 @@ When using `token_issuer_regex` and `token_audience_regex` make sure `token_issu
 Setting `token_issuer_regex` and `token_audience_regex` will also affect subscription tokens (used for [channel token authorization](channel_token_auth.md)). If you need to separate connection token configuration and subscription token configuration check out [separate subscription token config](./channel_token_auth.md#separate-subscription-token-config) feature.
 
 :::
+
+## Custom token user id claim
+
+New in Centrifugo v5.4.6.
+
+It's possible to use alternative claim in token to pass user ID: with `token_user_id_claim` option (string, by default `""` – i.e. not used).
+
+```json title=config.json
+{
+  ...
+  "token_user_id_claim": "user_id"
+}
+```
+
+By default, Centrifugo uses `sub` claim of JWT to extract user ID - this is defined in JWT spec and is the recommended way to pass user ID.
+
+Custom claim set by `token_user_id_claim` must follow the following regexp at this point: `^[a-zA-Z_]+$`.
+
+Setting alternative user id claim also affects subscription tokens, like any other token options. To use different config for subscription tokens Centrifugo provides [separate_subscription_token_config](./channel_token_auth.md#separate-subscription-token-config) option.
