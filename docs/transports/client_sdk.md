@@ -82,6 +82,6 @@ Below you can find an information regarding support of different features in our
 | handle unsubscribe advice from server  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |  ✅  |
 | manage subscription registry  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |  ✅  |
 | optimistic subscriptions  | ✅  |    |    |   |    |    |
-| delta compression  | ✅  |    |    |   |    |    |
+| delta compression  | ✅  |    |    |   |  ✅   |  ✅   |
 
 </div>
