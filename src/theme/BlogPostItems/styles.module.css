@@ -28,3 +28,7 @@
         grid-template-columns: 1fr;
     }
 }
+
+audio {
+    width: 100%;
+}

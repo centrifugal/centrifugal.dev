@@ -7,6 +7,14 @@ title: Centrifugo introduction
 
 Centrifugo is an open-source real-time messaging server. Centrifugo can instantly deliver messages to application online users connected over supported transports (WebSocket, HTTP-streaming, SSE/EventSource, WebTransport, GRPC). Centrifugo is built around channel concept – clients subscribe to channels to receive publications – so it's a user-facing PUB/SUB server.
 
+:::tip Prefer podcast format? (22 MB)
+
+<audio controls>
+  <source src="/img/podcast-0001-introduction.wav" type="audio/wav" />
+</audio>
+
+:::
+
 Centrifugo is language-agnostic and can be used to build chat apps, live comments, multiplayer games, real-time data visualizations, collaborative tools, AI streaming responses, etc., in combination with any backend and frontend. It is well suited for modern architectures and allows decoupling of business logic from the real-time transport layer.
 
 Centrifugo scales horizontally, allowing multiple Centrifugo nodes in a cluster to load balance client connections. A message published to any Centrifugo node in this setup will be delivered to online subscribers connected to other nodes. This is achieved through an integration with a set of high-performance PUB/SUB brokers capable of handling millions of concurrent channels.
