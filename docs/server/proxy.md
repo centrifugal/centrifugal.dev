@@ -648,7 +648,7 @@ Or for channels in namespace `sun`:
 ```json
 {
   ...
-  "proxy_sub_refresh_endpoint": "http://localhost:3000/centrifugo/publish",
+  "proxy_sub_refresh_endpoint": "http://localhost:3000/centrifugo/sub_refresh",
   "namespaces": [{
     "name": "sun",
     "proxy_sub_refresh": true
