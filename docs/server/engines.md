@@ -5,7 +5,7 @@ title: Engines and scalability
 
 The Engine in Centrifugo is responsible for publishing messages between nodes, handle PUB/SUB broker subscriptions, save/retrieve online presence and history data.
 
-By default, Centrifugo uses a Memory engine. There are also Redis and Tarantool engines available. And Nats broker which also supports at most once PUB/SUB. Centrifugo also works with Redis-compatible storages such as AWS Elasticache, KeyDB, DragonflyDB.
+By default, Centrifugo uses a Memory engine. There is also Redis engine available. And Nats broker which also supports at most once PUB/SUB. Centrifugo also works with Redis-compatible storages such as AWS Elasticache, KeyDB, DragonflyDB.
 
 With default Memory engine you can start only one node of Centrifugo, while other engines allow running several nodes on different machines to scale client connections and for Centrifugo node high availability. In distributed case all Centrifugo nodes will be connected via broker PUB/SUB, will discover each other and deliver publications to the node where active channel subscribers exist.
 

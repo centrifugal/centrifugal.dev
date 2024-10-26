@@ -39,7 +39,7 @@ While Centrifugo has channel history, it has been mostly designed to be a hot ca
 
 The addition of the history iteration API shifts possible use cases a bit. Manually calling history chunk by chunk allows for keeping a larger number of publications per channel.
 
-Depending on the Engine used and the configuration of the underlying storage, history stream persistence characteristics can vary. For example, with the Memory Engine, history will be lost upon Centrifugo restart. With Redis or Tarantool engines, history will survive Centrifugo restarts, but depending on the storage configuration, it can be lost upon storage restart – so you should take into account storage configuration and persistence properties as well. For example, consider enabling Redis AOF with `fsync` for maximum durability, or configure replication for high availability, use Redis Cluster, or maybe synchronous replication with Tarantool.
+Depending on the Engine used and the configuration of the underlying storage, history stream persistence characteristics can vary. For example, with the Memory Engine, history will be lost upon Centrifugo restart. With Redis engine, history will survive Centrifugo restarts, but depending on the storage configuration, it can be lost upon storage restart – so you should take into account storage configuration and persistence properties as well. For example, consider enabling Redis AOF with `fsync` for maximum durability, or configure replication for high availability, use Redis Cluster.
 
 When using history with automatic recovery, Centrifugo provides clients with a flag to distinguish whether the missed messages were all successfully restored from Centrifugo history upon recovery or not. If not – the client may restore the state from the main application database. Centrifugo message history can be used as a complementary way to restore messages and thus reduce the load on the main application database most of the time.
 
@@ -49,7 +49,7 @@ By default, the message delivery model of Centrifugo is 'at most once'. With his
 
 Without the positioning or recovery features enabled, a message sent to Centrifugo could theoretically be lost while moving towards clients. Centrifugo makes its best effort only to prevent message loss on the way to online clients, but the application should tolerate the loss.
 
-As noted, Centrifugo has a feature called message recovery to automatically recover messages missed due to short network disconnections. It also compensates for the 'at most once' delivery of a broker PUB/SUB system (Redis, Tarantool) by using additional publication offset checks and periodic offset synchronization. So publication loss missed in the PUB/SUB layer will be detected eventually, and the client may catch up on the state by loading it from history.
+As noted, Centrifugo has a feature called message recovery to automatically recover messages missed due to short network disconnections. It also compensates for the 'at most once' delivery of a Redis broker PUB/SUB system by using additional publication offset checks and periodic offset synchronization. So publication loss missed in the PUB/SUB layer will be detected eventually, and the client may catch up on the state by loading it from history.
 
 ## Message order guarantees
 
@@ -61,19 +61,19 @@ It is recommended to design an application in a way that users don't even notice
 
 ## Online presence considerations
 
-Online presence in a channel is designed to be eventually consistent. It will return the correct state most of the time. But when using Redis or Tarantool engines, due to network failures and the unexpected shutdown of a Centrifugo node, there are chances that clients can be present in a presence for up to one minute more (until the presence entry expires).
+Online presence in a channel is designed to be eventually consistent. It will return the correct state most of the time. But when using Redis engine, due to network failures and the unexpected shutdown of a Centrifugo node, there are chances that clients can be present in a presence for up to one minute more (until the presence entry expires).
 
 Also, channel presence does not scale well for channels with a lot of active subscribers. This is due to the fact that presence returns the entire snapshot of all clients in a channel – as soon as the number of active subscribers grows, the response size becomes larger. In some cases, the `presence_stats` API call can be sufficient to avoid receiving the entire presence state.
 
 ## Scalability considerations
 
-Centrifugo can scale horizontally with built-in engines (Redis, Tarantool, KeyDB) or with the Nats broker. See [engines](../server/engines.md).
+Centrifugo can scale horizontally with built-in Redis engine or with the Nats broker. See [engines](../server/engines.md).
 
 All supported brokers are fast – they can handle hundreds of thousands of requests per second. This should be enough for most applications.
 
 But if you approach broker resource limits (CPU or memory), then it's possible:
 
-* Use Centrifugo's consistent sharding support to balance queries between different broker instances (supported for Redis, KeyDB, Tarantool).
+* Use Centrifugo's consistent sharding support to balance queries between different Redis broker instances.
 * Use Redis Cluster (it's also possible to consistently shard data between different Redis Clusters).
 * Nats broker should scale well itself in a cluster setup.
 

@@ -23,7 +23,7 @@ This option can radically reduce a load on a broker in the following situations:
 * Many clients subscribed to the same channel and positioning feature is on so Centrifugo tracks client position
 * Many clients subscribed to the same channel and in case of massive reconnect scenario try to call presence or presence stats simultaneously
 
-Using this option only makes sense with remote engine (Redis, KeyDB, Tarantool), it won't provide a benefit in case of using a Memory engine.
+Using this option only makes sense with remote engine (such as Redis), it won't provide a benefit in case of using a Memory engine.
 
 To enable:
 

@@ -23,7 +23,7 @@ Centrifugo scales well to many machines with the help of PUB/SUB brokers. So as 
 
 The main PUB/SUB engine that Centrifugo integrates with is Redis. It supports client-side consistent sharding and Redis Cluster – so a single Redis instance won't be a bottleneck either.
 
-There are other options to scale: KeyDB, Nats, Tarantool. [See docs about available engines](../server/engines.md).
+There are other options to scale like Redis-compatible databases and Nats. [See docs about available engines](../server/engines.md).
 
 ### Strict client protocol
 

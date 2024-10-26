@@ -277,7 +277,7 @@ See additional information about offsets and epoch in [History and recovery](./h
 
 :::tip
 
-The persistence properties of history data depend on the Centrifugo engine in use. For instance, with the Memory engine (default), history is retained only until the Centrifugo node restarts. In contrast, with the Redis engine, persistence is determined by the Redis server's configuration (similarly for Redis-compatible storages and Tarantool).
+The persistence properties of history data depend on the Centrifugo engine in use. For instance, with the Memory engine (default), history is retained only until the Centrifugo node restarts. In contrast, with the Redis engine, persistence is determined by the Redis server's configuration (similarly for Redis-compatible storages).
 
 :::
 
