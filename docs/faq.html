@@ -15,7 +15,7 @@
 
 <link rel="search" type="application/opensearchdescription+xml" title="Centrifugo" href="/opensearch.xml">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.356fee74.css">
-<script src="/assets/js/runtime~main.647c7d4f.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.08d25a4f.js" defer="defer"></script>
 <script src="/assets/js/main.dd41ea7a.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -39,7 +39,7 @@
 <p>For example, you can expect that each WebSocket connection will cost about 30-50 KB of RAM, thus a server with 1 GB of RAM can handle about 20-30k connections.</p>
 <p>For other real-time transports, the memory usage per connection can differ (for example, SockJS connections will cost ~ 2 times more RAM than pure WebSocket connections). So the best way is again – measure for your custom case since depending on Centrifugo transport/features memory usage can vary.</p>
 <h3 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="can-centrifugo-scale-horizontally">Can Centrifugo scale horizontally?<a href="#can-centrifugo-scale-horizontally" class="hash-link" aria-label="Direct link to Can Centrifugo scale horizontally?" title="Direct link to Can Centrifugo scale horizontally?">​</a></h3>
-<p>Yes, it can do this using built-in engines: Redis or Tarantool. Centrifugo also works with Redis-compatible storages such as AWS Elasticache, KeyDB, DragonflyDB. It&#x27;s also possible to use Nats broker.</p>
+<p>Yes, it can do this using built-in Redis engine. Centrifugo also works with Redis-compatible storages such as AWS Elasticache, KeyDB, DragonflyDB. It&#x27;s also possible to use Nats broker (for at most once delivery only).</p>
 <p>See <a href="/docs/server/engines">engines</a> and <a href="/docs/getting-started/design#scalability-considerations">scalability considerations</a>.</p>
 <h3 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="message-delivery-model">Message delivery model<a href="#message-delivery-model" class="hash-link" aria-label="Direct link to Message delivery model" title="Direct link to Message delivery model">​</a></h3>
 <p>See <a href="/docs/getting-started/design#message-delivery-model">design overview</a></p>
