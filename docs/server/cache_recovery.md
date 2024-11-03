@@ -24,16 +24,17 @@ Configuration example:
 
 ```json title="config.json"
 {
-    ..
+  "channel": {
     "namespaces": [
-        {
-            "name": "example",
-            "force_recovery": true,
-            "force_recovery_mode": "cache",
-            "history_size": 1,
-            "history_ttl": "1h"
-        }
+      {
+        "name": "example",
+        "force_recovery": true,
+        "force_recovery_mode": "cache",
+        "history_size": 1,
+        "history_ttl": "1h"
+      }
     ]
+  }
 }
 ```
 
@@ -59,7 +60,7 @@ Using cache recovery mode may result into indermediary messages being lost and n
 
 The rest works very similar to stream recovery described in [history and recovery](./history_and_recovery.md) chapter. If there is an error upon using cache and Centrifugo can't receover state providing latest publication – then `ctx` will contain `recovered: false` flag, and `true` in case of success.
 
-Note, that history has retention TTL set over `history_ttl` option. So in case of retention expired, or maybe in case of restart of Centrifugo node with Memory Engine – the history is cleaned up, so your application should tolerate the missing value in case of insuccessful recovery.
+Note, that history has retention TTL set over `history_ttl` channel option. So in case of retention expired, or maybe in case of restart of Centrifugo node with Memory Engine – the history is cleaned up, so your application should tolerate the missing value in case of insuccessful recovery.
 
 Centrifugo PRO provide a feature to configure channel [cache empty event proxy](../pro/channel_cache_empty.md) to notify your backend about missing publication scenario. So that you can re-populate the channel history with an actual value.
 

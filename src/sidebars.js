@@ -9,7 +9,7 @@ module.exports = {
     "getting-started/design",
     "getting-started/ecosystem",
     "getting-started/comparisons",
-    "getting-started/migration_v5",
+    "getting-started/migration_v6",
   ],
   Tutorial: [
     "tutorial/intro",
@@ -61,7 +61,6 @@ module.exports = {
         "transports/websocket",
         "transports/http_stream",
         "transports/sse",
-        "transports/sockjs",
         "transports/webtransport",
         "transports/client_protocol"
       ],
@@ -90,7 +89,6 @@ module.exports = {
         "pro/tracing",
         "pro/analytics",
         "pro/rate_limiting",
-        // "pro/distributed_rate_limit",
         "pro/push_notifications",
         "pro/namespace_engines",
         "pro/admin_idp_auth",

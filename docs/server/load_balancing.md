@@ -31,8 +31,6 @@ domain or embed it to a location of your web site (for example to `/centrifugo`)
 
 ```
 upstream centrifugo {
-    # uncomment ip_hash if using SockJS transport with many upstream servers.
-    #ip_hash;
     server 127.0.0.1:8000;
 }
 
@@ -106,8 +104,6 @@ server {
 
 ```
 upstream centrifugo {
-    # uncomment ip_hash if using SockJS transport with many upstream servers.
-    #ip_hash;
     server 127.0.0.1:8000;
 }
 

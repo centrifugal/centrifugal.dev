@@ -30,11 +30,12 @@ Blocking data can be kept in Redis. To enable this configuration should be:
 
 ```json
 {
-    ...
-    "user_block": {
-        "persistence_engine": "redis",
-        "redis_address": "localhost:6379"
+  "user_block": {
+    "persistence_engine": "redis",
+    "redis": {
+      "address": "localhost:6379"
     }
+  }
 }
 ```
 
@@ -58,13 +59,14 @@ To enable this configuration should be like:
 
 ```json
 {
-    ...
-    "database": {
-        "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres"
-    },
-    "user_block": {
-        "persistence_engine": "database"
+  "database": {
+    "postgresql": {
+      "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres"
     }
+  },
+  "user_block": {
+    "persistence_engine": "database"
+  }
 }
 ```
 
@@ -92,14 +94,14 @@ curl --header "Content-Type: application/json" \
   http://localhost:8000/api/block_user
 ```
 
-#### block_user params
+#### BlockUserRequest
 
-| Parameter name | Parameter type | Required | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| user       | string  | yes | User ID to block       |
-| expire_at       | int  | no | Unix time in the future when user blocking information should expire (Unix seconds). While optional **we recommend to use a reasonably small expiration time** to keep working set of blocked users small (since Centrifugo nodes periodically load all entries from the storage to construct in-memory cache). |
+| Parameter name | Parameter type | Required | Description                                                                                                                                                                                                                                                                                                     |
+|----------------|----------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `user`         | `string`       | yes      | User ID to block                                                                                                                                                                                                                                                                                                |
+| `expire_at`    | `int`          | no       | Unix time in the future when user blocking information should expire (Unix seconds). While optional **we recommend to use a reasonably small expiration time** to keep working set of blocked users small (since Centrifugo nodes periodically load all entries from the storage to construct in-memory cache). |
 
-#### block_user result
+#### BlockUserResult
 
 Empty object at the moment.
 
@@ -115,12 +117,12 @@ curl --header "Content-Type: application/json" \
   http://localhost:8000/api/unblock_user
 ```
 
-#### unblock_user params
+#### UnblockUserRequest
 
-| Parameter name | Parameter type | Required | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| user       | string  | yes | User ID to unblock        |
+| Parameter name | Parameter type | Required | Description        |
+|----------------|----------------|----------|--------------------|
+| `user`         | `string`       | yes      | User ID to unblock |
 
-#### unblock_user result
+#### UnblockUserResult
 
 Empty object at the moment.

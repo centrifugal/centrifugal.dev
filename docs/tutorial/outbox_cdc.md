@@ -56,6 +56,7 @@ Also, add the following to Centrifugo configuration:
   ...
   "consumers": [
     {
+      "enabled": true,
       "name": "postgresql",
       "type": "postgresql",
       "postgresql": {
@@ -105,6 +106,7 @@ And then update consumer config – add `"partition_notification_channel"` optio
   ...
   "consumers": [
     {
+      "enabled": true,
       "name": "postgresql",
       ...
       "postgresql": {
@@ -269,6 +271,7 @@ Next step here is configure Centrifugo to consume Kafka topic:
   ...
   "consumers": [
     {
+      "enabled": true,
       "name": "my_kafka_consumer",
       "type": "kafka",
       "kafka": {

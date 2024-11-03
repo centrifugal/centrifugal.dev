@@ -13,8 +13,9 @@ To enable Prometheus endpoint start Centrifugo with `prometheus` option on:
 
 ```json title="config.json"
 {
-    ...
-    "prometheus": true
+  "prometheus": {
+    "enabled": true
+  }
 }
 ```
 
@@ -26,10 +27,11 @@ To enable automatic export to Graphite (via TCP):
 
 ```json title="config.json"
 {
-    ...
-    "graphite": true,
-    "graphite_host": "localhost",
-    "graphite_port": 2003
+  "graphite": {
+    "enabled": true,
+    "host": "localhost",
+    "port": 2003
+  }
 }
 ```
 
@@ -262,9 +264,10 @@ To enable:
 
 ```json
 {
-  ...
-  "opentelemetry": true,
-  "opentelemetry_api": true
+  "opentelemetry": {
+    "enabled": true,
+    "api": true
+  }
 }
 ```
 
@@ -305,4 +308,4 @@ Logging may be configured using `log_level` option. It may have the following va
 
 We generally do not recommend anything below info to be used in production.
 
-By default Centrifugo logs to STDOUT. Usually this is what you need when running servers on modern infrastructures. Logging into file may be configured using `log_file` option.
+By default, Centrifugo logs to STDOUT. Usually this is what you need when running servers on modern infrastructures. Logging into file may be configured using `log_file` option.

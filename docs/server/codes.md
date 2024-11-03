@@ -3,7 +3,7 @@ id: codes
 title: Client protocol codes
 ---
 
-This chapter describes error, unsubscribe and disconnect codes Centrifugo uses in a client protocol, also error codes which a server API can return in response.
+This chapter describes codes of errors, unsubscribes and disconnects from Centrifugo in a client protocol, also error codes which a [server API](./server_api.md) can return in the response.
 
 ## Client error codes
 

@@ -49,16 +49,19 @@ And the example of Centrifugo configuration:
 
 ```json title="config.json"
 {
-    ..
+  "channel": {
     "namespaces": [
-        {
-            "name": "example",
-            "allowed_delta_types": ["fossil"],
-            "force_positioning": true,
-            "history_size": 1,
-            "history_ttl": "60s"
-        }
+      {
+        "name": "example",
+        "allowed_delta_types": [
+          "fossil"
+        ],
+        "force_positioning": true,
+        "history_size": 1,
+        "history_ttl": "60s"
+      }
     ]
+  }
 }
 ```
 
@@ -81,17 +84,20 @@ For example, this means that to automatically use delta calculation for all publ
 
 ```json title="config.json"
 {
-    ..
+  "channel": {
     "namespaces": [
-        {
-            "name": "example",
-            "allowed_delta_types": ["fossil"],
-            "force_positioning": true,
-            "history_size": 1,
-            "history_ttl": "60s",
-            "delta_publish": true
-        }
+      {
+        "name": "example",
+        "allowed_delta_types": [
+          "fossil"
+        ],
+        "force_positioning": true,
+        "history_size": 1,
+        "history_ttl": "60s",
+        "delta_publish": true
+      }
     ]
+  }
 }
 ```
 

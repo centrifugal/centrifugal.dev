@@ -14,24 +14,30 @@ Add the following options to the configuration file:
 
 ```json
 {
-  ...
-  "proxy_cache_empty_endpoint": "http://localhost:3000/centrifugo/cache_empty",
-  "proxy_cache_empty_timeout":  "1s"
+  "unified_proxy": {
+    "cache_empty_endpoint": "http://localhost:3000/centrifugo/cache_empty",
+    "cache_empty_timeout": "1s"
+  }
 }
 ```
 
 – to configure proxy endpoint and timeout.
 
-To actually enable proxy for desired channels you must use `proxy_cache_empty` channel namespace option.
+To actually enable proxy for desired channels you must use `cache_empty_proxy_name` channel namespace option and point it to the name of proxy to use, for example `unified` which we just configured. Let's enable for channels without namespace:
 
 For example, to enable cache empty proxy for channels without namespace define `proxy_cache_empty` boolean flag on a top configuration level:
 
 ```json
 {
-  ...
-  "proxy_cache_empty_endpoint": "http://localhost:3000/centrifugo/subscribe",
-  "proxy_cache_empty_timeout":  "1s",
-  "proxy_cache_empty": true
+  "unified_proxy": {
+    "cache_empty_endpoint": "http://localhost:3000/centrifugo/subscribe",
+    "cache_empty_timeout": "1s"
+  },
+  "channel": {
+    "without_namespace": {
+      "cache_empty_proxy_name": "unified"
+    }
+  }
 }
 ```
 
@@ -39,13 +45,16 @@ Or if you want to use it in the namespace `example`:
 
 ```json
 {
-  ...
-  "proxy_cache_empty_endpoint": "http://localhost:3000/centrifugo/subscribe",
-  "proxy_cache_empty_timeout":  "1s",
-  "namespaces": [{
-    "name": "example",
-    "proxy_cache_empty": true
-  }]
+  "unified_proxy": {
+    "cache_empty_endpoint": "http://localhost:3000/centrifugo/subscribe",
+    "cache_empty_timeout": "1s"
+  },
+  "channel": {
+    "namespaces": [{
+      "name": "example",
+      "cache_empty_proxy_name": "unified"
+    }]
+  }
 }
 ```
 
@@ -67,24 +76,14 @@ Expected response example:
 
 If cache empty proxy is defined, but Centrifugo can't reach it – then subscription request which triggered the event will be rejected with the internal error.
 
-#### Cache empty request fields
+#### CacheEmptyRequest
 
 | Field | Type | Required | Description |
 | ------------ | -------------- | ------------ | ---- |
-| channel         | string     | yes |  A channel in which cache miss occurred         |
+| `channel`         | `string`     | yes |  A channel in which cache miss occurred         |
 
-#### Cache empty result fields
+#### CacheEmptyResult
 
 | Field | Type | Required | Description |
 | ------------ | -------------- | ------------ | ---- |
-| populated     | boolean     | no | Notify Centrifugo that channel cache was populated by the app backend – in this case Centrifugo will try to recover state one more time   |
-
-#### Options
-
-`proxy_cache_empty_timeout` (duration) config option controls timeout of HTTP POST request sent to app backend. By default `1s`.
-
-:::tip
-
-It's also possible to use cache empty proxy with in [granular proxy mode](../server/proxy.md#granular-proxy-mode). In this case use `cache_empty_proxy_name` namespace option instead of `proxy_cache_empty` to point Centrifugo to the name of proxy to use for the channel namespace.
-
-:::
+| `populated`     | `boolean`     | no | Notify Centrifugo that channel cache was populated by the app backend – in this case Centrifugo will try to recover state one more time   |

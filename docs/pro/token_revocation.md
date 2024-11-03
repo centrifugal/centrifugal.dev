@@ -35,15 +35,18 @@ Revocation data can be kept in Redis. To enable this configuration should be:
 
 ```json
 {
-    ...
-    "token_revoke": {
-        "persistence_engine": "redis",
-        "redis_address": "localhost:6379"
-    },
-    "user_tokens_invalidate": {
-        "persistence_engine": "redis",
-        "redis_address": "localhost:6379"
+  "user_tokens_invalidate": {
+    "persistence_engine": "redis",
+    "redis": {
+      "address": "localhost:6379"
     }
+  },
+  "token_revoke": {
+    "persistence_engine": "redis",
+    "redis": {
+      "address": "localhost:6379"
+    }
+  }
 }
 ```
 
@@ -67,16 +70,17 @@ To enable this configuration should be like:
 
 ```json
 {
-    ...
-    "database": {
-        "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres"
-    },
-    "token_revoke": {
-        "persistence_engine": "database"
-    },
-    "user_tokens_invalidate": {
-        "persistence_engine": "database"
+  "database": {
+    "postgresql": {
+      "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres"
     }
+  },
+  "user_tokens_invalidate": {
+    "persistence_engine": "database"
+  },
+  "token_revoke": {
+    "persistence_engine": "database"
+  }
 }
 ```
 
@@ -104,10 +108,10 @@ curl --header "Content-Type: application/json" \
 
 #### revoke_token params
 
-| Parameter name | Parameter type | Required | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| uid       | string  | yes | Token unique ID (JTI claim in case of JWT)        |
-| expire_at       | int  | no | Unix time in the future when revocation information should expire (Unix seconds). While optional **we recommend to use a reasonably small expiration time (matching the expiration time of your JWTs)** to keep working set of revocations small (since Centrifugo nodes periodically load all entries from the database table to construct in-memory cache).    |
+| Parameter name | Parameter type | Required | Description                                                                                                                                                                                                                                                                                                                                                   |
+|----------------|----------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `uid`          | `string`       | yes      | Token unique ID (JTI claim in case of JWT)                                                                                                                                                                                                                                                                                                                    |
+| `expire_at`    | `int`          | no       | Unix time in the future when revocation information should expire (Unix seconds). While optional **we recommend to use a reasonably small expiration time (matching the expiration time of your JWTs)** to keep working set of revocations small (since Centrifugo nodes periodically load all entries from the database table to construct in-memory cache). |
 
 #### revoke_token result
 
@@ -135,14 +139,14 @@ curl --header "Content-Type: application/json" \
   http://localhost:8000/api/invalidate_user_tokens
 ```
 
-#### invalidate_user_tokens params
+#### InvalidateUserTokensRequest
 
-| Parameter name | Parameter type | Required | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| user       | string  | yes | User ID to invalidate tokens for       |
-| issued_before       | int  | no | All tokens issued at before this Unix time will be considered revoked (in case of JWT this requires `iat` to be properly set in JWT), if not provided server uses current time         |
-| expire_at       | int  | no | Unix time in the future when revocation information should expire (Unix seconds). While optional **we recommend to use a reasonably small expiration time (matching the expiration time of your JWTs)** to keep working set of revocations small (since Centrifugo nodes periodically load all entries from the database table to construct in-memory cache).  |
+| Parameter name  | Parameter type | Required | Description                                                                                                                                                                                                                                                                                                                                                   |
+|-----------------|----------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `user`          | `string`       | yes      | User ID to invalidate tokens for                                                                                                                                                                                                                                                                                                                              |
+| `issued_before` | `int`          | no       | All tokens issued at before this Unix time will be considered revoked (in case of JWT this requires `iat` to be properly set in JWT), if not provided server uses current time                                                                                                                                                                                |
+| `expire_at`     | `int`          | no       | Unix time in the future when revocation information should expire (Unix seconds). While optional **we recommend to use a reasonably small expiration time (matching the expiration time of your JWTs)** to keep working set of revocations small (since Centrifugo nodes periodically load all entries from the database table to construct in-memory cache). |
 
-#### invalidate_user_tokens result
+#### InvalidateUserTokensRequestResult
 
 Empty object.

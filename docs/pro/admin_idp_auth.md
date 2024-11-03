@@ -17,37 +17,39 @@ As soon as OIDC integration configured, instead of password field Centrifugo PRO
 
 ```javascript title="config.json"
 {
-  ...
-  "admin_oidc": {
-    "enabled": true,
-    "display_name": "Keycloak",
-    "issuer": "http://localhost:8080/realms/master",
-    "client_id": "myclient",
-    "audience": "myclient",
-    "redirect_uri": "http://localhost:8000",
-    "extra_scopes": [],
-    "access_cel": "'centrifugo_admins' in claims.groups"
+  "admin": {
+    "oidc": {
+      "enabled": true,
+      "display_name": "Keycloak",
+      "issuer": "http://localhost:8080/realms/master",
+      "client_id": "myclient",
+      "audience": "myclient",
+      "redirect_uri": "http://localhost:8000",
+      "extra_scopes": [],
+      "access_cel": "'centrifugo_admins' in claims.groups"
+    }
   }
 }
 ```
 
-* `enabled` - boolean option which enables OIDC integration. When it's on, it's only possible to log in to Centrifugo over OIDC. By default, `false`. Enabling OIDC also enables validation of the required options below.
-* `display_name` – required string, name of IDP to be displayed on login button.
-* `issuer` - required string, the URL identifier of Identity Provider which will issue tokens. It's used for initializing OIDC provider and used as a base for the OIDC endpoint discovery.
-* `client_id` - required string, identifier for registered client in IDP for OIDC integration with Centrifugo.
-* `audience` - optional string, if not set Centrifugo expects access token audience (`aud`) to match configured `client_id` value (as required by the OIDC spec).
-* `redirect_uri` - required string, redirect URI to use.
-* `extra_scopes` - optional array of extra string scopes to request from IDP. Centrifugo always includes `openid` scope as it's required by OpenID Connect protocol.
-* `access_cel` – required string, this is a CEL expression which describes rule for checking access to Centrifugo admin resources. For now we don't provide RBAC – when this expression returns true the user gets full access to Centrifugo admin resources. If false – no access at all. For more information about what is CEL check out [Channel CEL expressions](./cel_expressions.md) chapter where CEL expressions are used for channel permission checks.
+* `admin.oidc.enabled` - boolean option which enables OIDC integration. When it's on, it's only possible to log in to Centrifugo over OIDC. By default, `false`. Enabling OIDC also enables validation of the required options below.
+* `admin.oidc.display_name` – required string, name of IDP to be displayed on login button.
+* `admin.oidc.issuer` - required string, the URL identifier of Identity Provider which will issue tokens. It's used for initializing OIDC provider and used as a base for the OIDC endpoint discovery.
+* `admin.oidc.client_id` - required string, identifier for registered client in IDP for OIDC integration with Centrifugo.
+* `admin.oidc.audience` - optional string, if not set Centrifugo expects access token audience (`aud`) to match configured `client_id` value (as required by the OIDC spec).
+* `admin.oidc.redirect_uri` - required string, redirect URI to use.
+* `admin.oidc.extra_scopes` - optional array of extra string scopes to request from IDP. Centrifugo always includes `openid` scope as it's required by OpenID Connect protocol.
+* `admin.oidc.access_cel` – required string, this is a CEL expression which describes rule for checking access to Centrifugo admin resources. For now we don't provide RBAC – when this expression returns true the user gets full access to Centrifugo admin resources. If false – no access at all. For more information about what is CEL check out [Channel CEL expressions](./cel_expressions.md) chapter where CEL expressions are used for channel permission checks.
 
-Let's look closer at `access_cel`. In the example above we check this based on a user group membership:
+Let's look closer at `admin.oidc.access_cel`. In the example above we check this based on a user group membership:
 
 ```javascript title="config.json"
 {
-  ...
-  "admin_oidc": {
-    ...
-    "access_cel": "'centrifugo_admins' in claims.groups"
+  "admin": {
+    "oidc": {
+      ...
+      "access_cel": "'centrifugo_admins' in claims.groups"
+    }
   }
 }
 ```
@@ -62,7 +64,11 @@ This is usually not recommended, since every new user in your IDP will get acces
 
 ```javascript title="config.json"
 {
-  ...
-  "access_cel": "true"
+  "admin": {
+    "oidc": {
+      ...
+      "access_cel": "true"
+    }
+  }
 }
 ```

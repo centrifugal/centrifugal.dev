@@ -17,8 +17,9 @@ For example to work with Redis engine:
 
 ```json title="config.json"
 {
-    ...
-    "engine": "redis"
+  "engine": {
+    "type": "redis"
+  }
 }
 ```
 
@@ -384,78 +385,6 @@ Some known options:
 * [DragonflyDB](https://dragonflydb.io/) - should work fine (if you experience issues with it try enabling `redis_force_resp2` option). We have not tested a Redis Cluster emulation mode provided by DragonflyDB yet. We suggest you testing the setup including failover tests and work under load.
 * [Valkey](https://github.com/valkey-io/valkey) – should work fine since it's based on Redis v7, but no tests were performed by Centrifugal Labs.
 
-## Tarantool engine
-
-**DEPRECATED**
-
-[Tarantool](https://www.tarantool.io) is a fast and flexible in-memory storage with different persistence/replication schemes and LuaJIT for writing custom logic on the Tarantool side. It allows implementing Centrifugo engine with unique characteristics.
-
-:::danger
-
-Tarantool engine is DEPRECATED and will be removed in Centrifugo v6. See [the issue on Github](https://github.com/centrifugal/centrifugo/issues/830).
-
-:::
-
-There are many ways to operate Tarantool in production and it's hard to distribute Centrifugo Tarantool engine in a way that suits everyone. Centrifugo tries to fit generic case by providing [centrifugal/tarantool-centrifuge](https://github.com/centrifugal/tarantool-centrifuge) module and by providing ready-to-use [centrifugal/rotor](https://github.com/centrifugal/rotor) project based on [centrifugal/tarantool-centrifuge](https://github.com/centrifugal/tarantool-centrifuge) and [Tarantool Cartridge](https://github.com/tarantool/cartridge).
-
-:::info
-
-To be honest we bet on the community help to push this integration further. Tarantool provides an incredible performance boost for presence and history operations (up to 5x more RPS compared to the Redis Engine) and a pretty fast PUB/SUB (comparable to what Redis Engine provides). Let's see what we can build together.
-
-:::
-
-There are several supported Tarantool topologies to which Centrifugo can connect:
-
-* One standalone Tarantool instance
-* Many standalone Tarantool instances and consistently shard data between them
-* Tarantool running in Cartridge
-* Tarantool with replica and automatic failover in Cartridge
-* Many Tarantool instances (or leader-follower setup) in Cartridge with consistent client-side sharding between them
-* Tarantool with synchronous replication (Raft-based, Tarantool >= 2.7)
-
-After running Tarantool you can point Centrifugo to it (and of course scale Centrifugo nodes):
-
-```json title="config.json"
-{
-    ...
-    "engine": "tarantool",
-    "tarantool_address": "127.0.0.1:3301"
-}
-```
-
-See [centrifugal/rotor](https://github.com/centrifugal/rotor) repo for ready-to-use engine based on Tarantool Cartridge framework.
-
-See [centrifugal/tarantool-centrifuge](https://github.com/centrifugal/tarantool-centrifuge) repo for examples on how to run engine with Standalone single Tarantool instance or with Raft-based synchronous replication.
-
-### Tarantool engine options
-
-#### tarantool_address
-
-String or array of strings. Default `tcp://127.0.0.1:3301`.
-
-Connection address to Tarantool.
-
-#### tarantool_mode
-
-String, default `standalone`
-
-A mode how to connect to Tarantool. Default is `standalone` which connects to a single Tarantool instance address. Possible values are: `leader-follower` (connects to a setup with Tarantool master and async replicas) and `leader-follower-raft` (connects to a Tarantool with synchronous Raft-based replication).
-
-All modes support client-side consistent sharding (similar to what Redis engine provides).
-
-#### tarantool_user
-
-String, default `""`. Allows setting a user.
-
-#### tarantool_password
-
-String, default `""`. Allows setting a password.
-
-### Tarantool engine limitations
-
-* idempotent publish is not implemented
-* delta compression for connections with positioning/recovery on is not implemented
-
 ## Nats broker
 
 It's possible to scale with [Nats](https://nats.io/) PUB/SUB server. Keep in mind, that Nats is called a **broker** here, **not an Engine** – Nats integration only implements PUB/SUB part of Engine, so carefully read limitations below.
@@ -556,14 +485,18 @@ Here is how raw mode may be enabled:
 
 ```json
 {
-    ...
-    "nats_raw_mode": {
+  "broker": {
+    "enabled": true,
+    "nats": {
+      "raw_mode": {
         "enabled": true,
         "channel_replacements": {
-            ":": "."
+          ":": "."
         },
         "prefix": ""
+      }
     }
+  }
 }
 ```
 

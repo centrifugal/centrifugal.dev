@@ -3,7 +3,7 @@ id: infra_tuning
 title: Infrastructure tuning
 ---
 
-As Centrifugo deals with lots of persistent connections your operating system and server infrastructure must be ready for it.
+Since Centrifugo deals with lots of persistent connections your operating system and server infrastructure must be ready for it too.
 
 ### Open files limit
 

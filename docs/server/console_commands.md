@@ -3,7 +3,7 @@ id: console_commands
 title: Helper CLI commands
 ---
 
-Here is a list of helpful command-line commands that come with Centrifugo executable.
+Here is a list of helpful built-in command-line commands that come with `centrifugo` executable.
 
 ## version
 
@@ -21,7 +21,7 @@ Another command is `genconfig`:
 centrifugo genconfig -c config.json
 ```
 
-It will automatically generate the minimal required configuration file. This is mostly useful for development.
+It will automatically generate the configuration file with some frequently required options. This is mostly useful for development.
 
 If any errors happen – program will exit with error message and exit code 1.
 
@@ -40,6 +40,44 @@ centrifugo checkconfig --config=config.json
 ```
 
 If any errors found during validation – program will exit with error message and exit code 1.
+
+## defaultconfig
+
+The `defaultconfig` generates the configuration file with all defaults for all all available configuration options.
+
+Try:
+
+```bash
+centrifugo defaultconfig -c config.json
+centrifugo defaultconfig -c config.yaml
+centrifugo defaultconfig -c config.toml
+```
+
+Also, in dry-run mode it will be posted to STDOUT instead of file:
+
+```bash
+centrifugo defaultconfig -c config.json --dry-run
+```
+
+Finally, it's possible to provide this command a base configuration file - so the result will inherit option values from base file and will extend it with defaults for everything else:
+
+```bash
+centrifugo defaultconfig -c config.json --dry-run --base existing_config.json
+```
+
+## defaultenv
+
+In addition to `defaultconfig` Centrifugo  has `defaultenv` command. The `defaultenv` prints all config options as environment vars with default values to STDOUT. Run:
+
+```bash
+centrifugo defaultenv
+```
+
+It also supports the base config file to inherit values from:
+
+```bash
+centrifugo defaultenv --base config.json
+```
 
 ## gentoken
 

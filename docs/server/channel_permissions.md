@@ -32,7 +32,7 @@ If client provides a valid token then subscription will be accepted. In Centrifu
 
 :::caution
 
-For namespaces with `allow_subscribe_for_client` option ON Centrifugo does not allow subscribing on channels starting with `channel_private_prefix` (`$` by default) without token. This limitation exists to help users migrate to Centrifugo v4 without security risks.
+For namespaces with `allow_subscribe_for_client` channel option ON Centrifugo does not allow subscribing on channels starting with `channel.private_prefix` (`$` by default) without token. This limitation exists to help users migrate to Centrifugo v4 without security risks.
 
 :::
 
@@ -48,13 +48,13 @@ If client subscribes on a user-limited channel and there is a user ID match then
 
 :::caution
 
-User-limited channels must be enabled in a namespace using `allow_user_limited_channels` option.
+User-limited channels must be enabled in a namespace using `allow_user_limited_channels` channel option.
 
 :::
 
 #### Use allow_subscribe_for_client namespace option
 
-`allow_subscribe_for_client` allows all authenticated non-anonymous connections to subscribe on all channels in a namespace.
+`allow_subscribe_for_client` channel option allows all authenticated non-anonymous connections to subscribe on all channels in a namespace.
 
 :::caution
 
@@ -204,12 +204,12 @@ Connect proxy can return capability object to allow client call presence from ce
 
 ### Positioning permission model
 
-Server can whether turn on positioning for all channels in a namespace using `"force_positioning": true` option or client can create positioned subscriptions (but in this case client must have access to `history` capability).
+Server can turn on positioning for all channels in a namespace using `"force_positioning": true` option or client can create positioned subscriptions (but in this case client must have access to `history` capability).
 
 ### Recovery permission model
 
-Server can whether turn on automatic recovery for all channels in a namespace using `"force_recovery": true` option or client can create recoverable subscriptions (but in this case client must have access to `history` capability).
+Server can turn on automatic recovery for all channels in a namespace using `"force_recovery": true` option or client can create recoverable subscriptions (but in this case client must have access to `history` capability).
 
 ### Join/Leave permission model
 
-Server can whether force sending join/leave messages to all subscribers for all channels in a namespace using `"force_push_join_leave": true` option or client can ask server to include join/leave messages upon subscribing (but in this case client must have access to `presence` capability).
+Server can force sending join/leave messages to all subscribers for all channels in a namespace using `"force_push_join_leave": true` option or client can ask server to include join/leave messages upon subscribing (but in this case client must have access to `presence` capability).

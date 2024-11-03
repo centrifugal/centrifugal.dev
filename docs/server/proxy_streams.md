@@ -86,9 +86,10 @@ First, configure subscribe stream proxy, pointing it to the backend which implem
 
 ```json title="config.json"
 {
-  ...
-  "proxy_subscribe_stream_endpoint": "grpc://localhost:12000",
-  "proxy_subscribe_stream_timeout": "3s"
+  "unified_proxy": {
+    "subscribe_stream_endpoint": "grpc://localhost:12000",
+    "subscribe_stream_timeout": "3s"
+  }
 }
 ```
 
@@ -98,15 +99,18 @@ Then you can enable subscription streams for channels on a namespace level:
 
 ```json title="config.json"
 {
-  ...
-  "proxy_subscribe_stream_endpoint": "grpc://localhost:12000",
-  "proxy_subscribe_stream_timeout": "3s",
-  "namespaces": [
-    {
+  "unified_proxy": {
+    "subscribe_stream_endpoint": "grpc://localhost:12000",
+    "subscribe_stream_timeout": "3s"
+  },
+  "channel": {
+    "namespaces": [
+      {
         "name": "streams",
-        "proxy_subscribe_stream": true
-    }
-  ]
+        "subscribe_stream_proxy_name": "unified"
+      }
+    ]
+  }
 }
 ```
 
@@ -228,16 +232,19 @@ When enabling subscription streams, Centrifugo uses unidirectional GRPC streams 
 
 ```json title="config.json"
 {
-  ...
-  "proxy_subscribe_stream_endpoint": "grpc://localhost:12000",
-  "proxy_subscribe_stream_timeout": "3s",
-  "namespaces": [
-    {
+  "unified_proxy": {
+    "subscribe_stream_endpoint": "grpc://localhost:12000",
+    "subscribe_stream_timeout": "3s"
+  },
+  "channel": {
+    "namespaces": [
+      {
         "name": "streams",
-        "proxy_subscribe_stream": true,
-        "proxy_subscribe_stream_bidirectional": true
-    }
-  ]
+        "subscribe_stream_proxy_name": "unified",
+        "subscribe_stream_bidirectional": true
+      }
+    ]
+  }
 }
 ```
 
@@ -283,7 +290,7 @@ func (s *streamerServer) SubscribeBidirectional(
 }
 ```
 
-## Granular proxy mode
+## With granular proxies
 
 [Granular proxy mode](./proxy.md#granular-proxy-mode) works with subscription streams in the same manner as for other Centrifugo proxy types.
 
@@ -291,28 +298,28 @@ Here is an example how you can define different subscribe stream proxies for dif
 
 ```json title=config.json
 {
-  ...
-  "granular_proxy_mode": true,
+  "channel": {
+    "namespaces": [
+      {
+        "name": "ns1",
+        "subscribe_stream_proxy_name": "stream_1"
+      },
+      {
+        "name": "ns2",
+        "subscribe_stream_proxy_name": "stream_2"
+      }
+    ]
+  },
   "proxies": [
     {
-	  "name": "stream_1",
-	  "endpoint": "grpc://localhost:3000",
-	  "timeout": "500ms",
+      "name": "stream_1",
+      "endpoint": "grpc://localhost:3000",
+      "timeout": "500ms"
     },
     {
-	  "name": "stream_2",
-	  "endpoint": "grpc://localhost:3001",
-	  "timeout": "500ms",
-    }
-  ],
-  "namespaces": [
-    {
-      "name": "ns1",
-      "subscribe_stream_proxy_name": "stream_1"
-    },
-    {
-      "name": "ns2",
-      "subscribe_stream_proxy_name": "stream_2"
+      "name": "stream_2",
+      "endpoint": "grpc://localhost:3001",
+      "timeout": "500ms"
     }
   ]
 }

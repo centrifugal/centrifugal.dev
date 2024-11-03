@@ -21,16 +21,24 @@ So the minimal config can look like this (`occupied` and `vacated` events for ch
 
 ```json title=config.json
 {
-    ...
-    "engine": "redis",
-    "proxy_channel_state_endpoint": "http://localhost:3000/centrifugo/channel_events",
+  "engine": {
+    "type": "redis"
+  },
+  "channel": {
     "namespaces": [
-        {
-            "name": "chat",
-            "presence": true,
-            "channel_state_events": ["occupied", "vacated"]
-        }
+      {
+        "name": "chat",
+        "presence": true,
+        "channel_state_events": [
+          "occupied",
+          "vacated"
+        ]
+      }
     ]
+  },
+  "unified_proxy": {
+    "channel_state_endpoint": "http://localhost:3000/centrifugo/channel_events"
+  }
 }
 ```
 

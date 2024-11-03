@@ -5,7 +5,7 @@ title: Centrifugo introduction
 
 <img src="/img/logo_animated_no_accel.svg" width="100px" height="100px" align="left" style={{'marginRight': '10px', 'float': 'left'}} />
 
-Centrifugo is an open-source real-time messaging server. Centrifugo can instantly deliver messages to application online users connected over supported transports (WebSocket, HTTP-streaming, SSE/EventSource, WebTransport, GRPC). Centrifugo is built around channel concept – clients subscribe to channels to receive publications – so it's a user-facing PUB/SUB server.
+Centrifugo is an open-source real-time messaging server. Centrifugo can instantly deliver messages to application online users connected over supported transports – WebSocket, HTTP-streaming, SSE/EventSource, WebTransport, GRPC. Centrifugo is built around channel concept – clients subscribe to channels to receive publications, different subscriptions are multiplexed over a single connection to the server. So Centrifugo is a user-facing PUB/SUB server, with many additional features around this core concept.
 
 :::tip Prefer podcast format? (22 MB)
 
@@ -39,4 +39,4 @@ Here, Centrifugo provides a straightforward and non-obtrusive way to introduce r
 
 These days, Centrifugo offers advanced and unique features that can significantly simplify a developer's workload and save months (if not years) of development time, even if the application's backend is built with an asynchronous concurrent language or framework. The documentation uncovers features step by step.
 
-Centrifugo fits well with modern architectures and can serve as a universal real-time component, regardless of the application's technology stack. It stands as a powerful self-hosted alternative to cloud solutions like Pusher, Ably, or PubNub.
+Centrifugo fits well with modern architectures and can serve as a universal real-time component, regardless of the application's technology stack. It stands as a powerful self-hosted alternative to cloud solutions like Pusher, Ably, or PubNub. Moreover, due to its self-hosted nature, Centrifugo may offer deeper integration of real-time connection management with your application backend.

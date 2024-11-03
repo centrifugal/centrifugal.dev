@@ -3,17 +3,15 @@ id: websocket
 title: WebSocket
 ---
 
-[Websocket](https://en.wikipedia.org/wiki/WebSocket) is the main transport in Centrifugo. It's a very efficient low-overhead protocol on top of TCP.
+[Websocket](https://en.wikipedia.org/wiki/WebSocket) is the main transport in Centrifugo. It's a very efficient low-overhead protocol on top of TCP. Websocket works out of the box in all modern browsers and almost all programming languages have Websocket implementations. This makes Websocket an efficient universal real-time transport which can be used to connect to Centrifugo from almost everywhere.
 
-The biggest advantage is that Websocket works out of the box in all modern browsers and almost all programming languages have Websocket implementations. This makes Websocket a universal transport that can be used to connect to Centrifugo from almost everywhere.
-
-Default WebSocket connection endpoint in Centrifugo is:
+WebSocket transport is enabled by default and the default WebSocket connection endpoint in Centrifugo is:
 
 ```
 /connection/websocket
 ```
 
-So to connect:
+To connect:
 
 ```javascript title="Connect to local Centrifugo with JavaScript SDK"
 const client = new Centrifuge('ws://localhost:8000/connection/websocket', {
@@ -26,39 +24,43 @@ client.connect();
 
 ## Options
 
-### websocket_message_size_limit
+### websocket.message_size_limit
 
 Default: 65536 (64KB)
 
 Maximum allowed size of a message received from WebSocket connection in bytes.
 
-### websocket_read_buffer_size
+### websocket.read_buffer_size
 
 In bytes, by default 0 which tells Centrifugo to reuse read buffer from HTTP server for WebSocket connection (usually 4096 bytes in size). If set to a lower value can reduce memory usage per WebSocket connection (but can increase number of system calls depending on average message size).
 
 ```json title="config.json"
 {
     ...
-    "websocket_read_buffer_size": 512
+    "websocket": {
+        "read_buffer_size": 512
+    }
 }
 ```
 
-### websocket_write_buffer_size
+### websocket.write_buffer_size
 
 In bytes, by default 0 which tells Centrifugo to reuse write buffer from HTTP server for WebSocket connection (usually 4096 bytes in size). If set to a lower value can reduce memory usage per WebSocket connection (but HTTP buffer won't be reused):
 
 ```json title="config.json"
 {
     ...
-    "websocket_write_buffer_size": 512
+    "websocket": {
+        "write_buffer_size": 512
+    }
 }
 ```
 
-### websocket_use_write_buffer_pool
+### websocket.use_write_buffer_pool
 
-If you have a few writes then `websocket_use_write_buffer_pool` (boolean, default `false`) option can reduce memory usage of Centrifugo a bit as there won't be separate write buffer binded to each WebSocket connection.
+If you have a few writes then `websocket.use_write_buffer_pool` (boolean, default `false`) option can reduce memory usage of Centrifugo a bit as there won't be separate write buffer binded to each WebSocket connection.
 
-### websocket_compression
+### websocket.compression
 
 Centrifugo supports `permessage-deflate` compression for websocket messages. Check out the [great article](https://www.igvita.com/2013/11/27/configuring-and-optimizing-websocket-compression/) about websocket compression for a general ovirview. WebSocket compression can reduce an amount of traffic travelling over the wire and reduce bandwidth costs.
 
@@ -68,11 +70,11 @@ Enabling WebSocket compression may result in more CPU and memory usage by Centri
 
 :::
 
-To enable WebSocket compression for raw WebSocket endpoint set `websocket_compression` to `true` in a configuration file. After this clients that support `permessage-deflate` will negotiate compression with server automatically. Note that enabling compression does not mean that every connection will use it - this depends on client support for this feature.
+To enable WebSocket compression for raw WebSocket endpoint set `websocket.compression` to `true` in a configuration file. After this clients that support `permessage-deflate` will negotiate compression with server automatically. Note that enabling compression does not mean that every connection will use it - this depends on client support for this feature.
 
-Another option is `websocket_compression_min_size`. Default 0. This is a minimal size of message in bytes for which we use `deflate` compression when writing it to client's connection. Default value `0` means that we will compress all messages when `websocket_compression` enabled and compression support negotiated with client.
+Another option is `websocket.compression_min_size`. Default 0. This is a minimal size of message in bytes for which we use `deflate` compression when writing it to client's connection. Default value `0` means that we will compress all messages when `websocket.compression` enabled and compression support negotiated with client.
 
-It's also possible to control websocket compression level defined at [compress/flate](https://golang.org/pkg/compress/flate/#NewWriter) By default when compression with a client negotiated Centrifugo uses compression level 1 (BestSpeed). If you want to set custom compression level use `websocket_compression_level` configuration option.
+It's also possible to control websocket compression level defined at [compress/flate](https://golang.org/pkg/compress/flate/#NewWriter) By default when compression with a client negotiated Centrifugo uses compression level 1 (BestSpeed). If you want to set custom compression level use `websocket.compression_level` configuration option.
 
 ## Protobuf binary protocol
 
@@ -82,11 +84,7 @@ In most cases you will use Centrifugo with JSON protocol which is used by defaul
 * you want maximum performance on server-side as Protobuf encoding/decoding is very efficient
 * you can sacrifice human-readable JSON for your application
 
-Binary protobuf protocol only works for raw Websocket connections (as SockJS can't deal with binary). With most clients to use binary you just need to provide query parameter `format` to Websocket URL, so final URL look like:
-
-```
-wss://centrifugo.example.com/connection/websocket?format=protobuf
-```
+To enable Protobuf protocol WebSocket clients should use `centrifuge-protobuf` subprotocol in the WebSocket Upgrade.
 
 After doing this Centrifugo will use binary frames to pass data between client and server. Your application specific payload can be random bytes.
 

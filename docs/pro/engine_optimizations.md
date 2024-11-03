@@ -29,8 +29,9 @@ To enable:
 
 ```json title="config.json"
 {
-    ...
-    "use_singleflight": true
+  "singleflight": {
+    "enabled": true
+  }
 }
 ```
 
@@ -48,12 +49,14 @@ To enable in the specific channel namespace use boolean channel option `shared_p
 
 ```json title="config.json"
 {
+  "channel": {
     "namespaces": [
-        {
-            "name": "example",
-            "force_recovery": true,
-            "shared_position_sync": true
-        }
+      {
+        "name": "example",
+        "force_recovery": true,
+        "shared_position_sync": true
+      }
     ]
+  }
 }
 ```

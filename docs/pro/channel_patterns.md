@@ -12,18 +12,17 @@ Let's look at the example:
 
 ```json
 {
-    // rest of the config ...
-    "channel_patterns": true, // required to turn on the feature.
+  "channel": {
     "namespaces": [
-        {
-            "name": "/users/:name"
-            // namespace options may go here ...
-        },
-        {
-            "name": "/events/:project/:type"
-            // namespace options may go here ...
-        }
-    ]
+      {
+        "name": "/users/:name"
+      },
+      {
+        "name": "/events/:project/:type"
+      }
+    ],
+    "patterns": true
+  }
 }
 ```
 

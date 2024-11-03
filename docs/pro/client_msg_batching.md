@@ -18,25 +18,26 @@ Note, this is only useful when you have lots of messages per client. This specif
 
 :::
 
-## client_write_delay
+## client.write_delay
 
-The `client_write_delay` is a duration option, it is a time Centrifugo will try to collect messages inside each connection message write loop before sending them towards the connection.
+The `client.write_delay` is a duration option, it is a time Centrifugo will try to collect messages inside each connection message write loop before sending them towards the connection.
 
-Enabling `client_write_delay` may reduce CPU usage of both server and client in case of high message rate inside individual connections. The reduction happens due to the lesser number of system calls to execute. Enabling `client_write_delay` limits the maximum throughput of messages towards the connection which may be achieved. For example, if `client_write_delay` is 100ms then the max throughput per second will be `(1000 / 100) * client_max_messages_in_frame` (16 by default), i.e. 160 messages per second. Though this should be more than enough for target Centrifugo use cases (frontend apps).
+Enabling `client.write_delay` may reduce CPU usage of both server and client in case of high message rate inside individual connections. The reduction happens due to the lesser number of system calls to execute. Enabling `client.write_delay` limits the maximum throughput of messages towards the connection which may be achieved. For example, if `client.write_delay` is 100ms then the max throughput per second will be `(1000 / 100) * client.max_messages_in_frame` (16 by default), i.e. 160 messages per second. Though this should be more than enough for target Centrifugo use cases (frontend apps).
 
 Example:
 
 ```json title="config.json"
 {
-    // Rest of config here ...
-    "client_write_delay": "100ms"
+  "client": {
+    "write_delay": "100ms"
+  }
 }
 ```
 
-## client_reply_without_queue
+## client.reply_without_queue
 
-The `client_reply_without_queue` is a boolean option to not use client queue for replies to commands. When `true` replies are written to the transport without going through the connection message queue.
+The `client.reply_without_queue` is a boolean option to not use client queue for replies to commands. When `true` replies are written to the transport without going through the connection message queue.
 
-## client_max_messages_in_frame
+## client.max_messages_in_frame
 
-The `client_max_messages_in_frame` is an integer option which controls the maximum number of messages which may be joined by Centrifugo into one transport frame. By default, 16. Use -1 for unlimited number.
+The `client.max_messages_in_frame` is an integer option which controls the maximum number of messages which may be joined by Centrifugo into one transport frame. By default, 16. Use -1 for unlimited number.

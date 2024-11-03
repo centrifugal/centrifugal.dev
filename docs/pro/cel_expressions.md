@@ -26,12 +26,14 @@ It's possible to configure `subscribe_cel` for a channel namespace (`subscribe_c
 
 ```json title="config.json"
 {
+  "channel": {
     "namespaces": [
-        {
-            "name": "admin",
-            "subscribe_cel": "'admin' in meta.roles"
-        }
+      {
+        "name": "admin",
+        "subscribe_cel": "'admin' in meta.roles"
+      }
     ]
+  }
 }
 ```
 
@@ -76,8 +78,11 @@ In this case, to allow admin to subscribe on any user's channel or allow non-adm
 
 ```json
 {
-    ...
-    "subscribe_cel": "vars.user == user or 'admin' in meta.roles"
+  "channel": {
+    "without_namespace": {
+      "subscribe_cel": "vars.user == user or 'admin' in meta.roles"
+    }
+  }
 }
 ```
 
@@ -85,12 +90,14 @@ Let's look at one more example. Say client with user ID `123` subscribes to a ch
 
 ```json
 {
+  "channel": {
     "namespaces": [
-        {
-            "name": "/:tenant/users/:user",
-            "subscribe_cel": "vars.tenant == meta.tenant && (vars.user == user or 'admin' in meta.roles)"
-        }
+      {
+        "name": "/:tenant/users/:user",
+        "subscribe_cel": "vars.tenant == meta.tenant && (vars.user == user or 'admin' in meta.roles)"
+      }
     ]
+  }
 }
 ```
 

@@ -14,13 +14,17 @@ To implement this, we need to extend the Centrifugo `personal` namespace configu
 
 ```json
 {
-    ...
-    "namespaces": [{
+  ...
+  "channel": {
+    "namespaces": [
+      {
         "name": "personal",
         "history_size": 300,
         "history_ttl": "600s",
         "force_recovery": true
-    }]
+      }
+    ]
+  }
 }
 ```
 

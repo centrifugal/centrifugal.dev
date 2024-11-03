@@ -16,31 +16,27 @@ This helper command will generate `config.json` file in the working directory wi
 
 ```json title="config.json"
 {
-  "token_hmac_secret_key": "bbe7d157-a253-4094-9759-06a8236543f9",
-  "admin_password": "d0683813-0916-4c49-979f-0e08a686b727",
-  "admin_secret": "4e9eafcf-0120-4ddd-b668-8dc40072c78e",
-  "api_key": "d7627bb6-2292-4911-82e1-615c0ed3eebb",
-  "allowed_origins": []
+  "client": {
+    "token": {
+      "hmac_secret_key": "bbe7d157-a253-4094-9759-06a8236543f9"
+    },
+    "allowed_origins": []
+  },
+  "http_api": {
+    "key": "d7627bb6-2292-4911-82e1-615c0ed3eebb"
+  },
+  "admin": {
+    "enabled": true,
+    "password": "d0683813-0916-4c49-979f-0e08a686b727",
+    "secret": "4e9eafcf-0120-4ddd-b668-8dc40072c78e"
+  }
 }
 ```
 
 Now we can start a server. Let's start Centrifugo with a built-in admin web interface:
 
 ```console
-./centrifugo --config=config.json --admin
-```
-
-We could also enable the admin web interface by not using `--admin` flag but by adding `"admin": true` option to the JSON configuration file:
-
-```json title="config.json"
-{
-  "token_hmac_secret_key": "bbe7d157-a253-4094-9759-06a8236543f9",
-  "admin": true,
-  "admin_password": "d0683813-0916-4c49-979f-0e08a686b727",
-  "admin_secret": "4e9eafcf-0120-4ddd-b668-8dc40072c78e",
-  "api_key": "d7627bb6-2292-4911-82e1-615c0ed3eebb",
-  "allowed_origins": []
-}
+./centrifugo --config=config.json
 ```
 
 And then running Centrifugo only with a path to a configuration file:
@@ -49,7 +45,7 @@ And then running Centrifugo only with a path to a configuration file:
 ./centrifugo --config=config.json
 ```
 
-Now open [http://localhost:8000](http://localhost:8000). You should see Centrifugo admin web panel. Enter `admin_password` value from the configuration file to log in (in our case it's `d0683813-0916-4c49-979f-0e08a686b727`, but you will have a different value).
+Now open [http://localhost:8000](http://localhost:8000). You should see Centrifugo admin web panel. Enter `admin.password` value from the configuration file to log in (in our case it's `d0683813-0916-4c49-979f-0e08a686b727`, but you will have a different value).
 
 ![Admin web panel](/img/quick_start_admin_v5.png)
 
@@ -68,7 +64,7 @@ Now let's create `index.html` file with our simple app:
 
 <body>
   <div id="counter">-</div>
-  <script src="https://unpkg.com/centrifuge@5.0.1/dist/centrifuge.js"></script>
+  <script src="https://unpkg.com/centrifuge@5.2.2/dist/centrifuge.js"></script>
   <script type="text/javascript">
     const container = document.getElementById('counter');
 
@@ -102,7 +98,7 @@ Now let's create `index.html` file with our simple app:
 </html>
 ```
 
-Note that we are using `centrifuge-js` 5.0.1 in this example, getting it from a CDN. You should use its latest version at the moment of reading this tutorial. In a real Javascript app, you would most likely load `centrifuge` from NPM.
+Note that we are using `centrifuge-js` 5.2.2 in this example, getting it from a CDN. You should use its latest version at the moment of reading this tutorial. In a real Javascript app, you would most likely load `centrifuge` from NPM, see more details in [centrifuge-js Github readme](https://github.com/centrifugal/centrifuge-js).
 
 In the `index.html` above, we created an instance of a Centrifuge client by passing the Centrifugo server's default WebSocket endpoint address to it. Then we subscribed to a channel called `channel` and provided a callback function to process incoming real-time messages (publications). Upon receiving a new publication, we update the page's HTML by setting the counter value to the page title. We call `.subscribe()` to initiate the subscription and the `.connect()` method of the Client to start a WebSocket connection. We also handle Client state transitions (disconnected, connecting, connected) and Subscription state transitions (unsubscribed, subscribing, subscribed) – see a detailed description in [client SDK spec](../transports/client_api.md).
 
@@ -126,16 +122,19 @@ Now if you look at browser developer tools or in Centrifugo logs you will notice
 2021-09-01 10:17:33 [INF] request Origin is not authorized due to empty allowed_origins origin=http://localhost:3000
 ```
 
-That's because we have not set `allowed_origins` in the configuration. Modify `allowed_origins` like this:
+That's because we have not set `allowed_origins` in the configuration (it's empty array now). Modify `allowed_origins` like this:
 
 ```json title="config.json"
 {
-  ...
-  "allowed_origins": ["http://localhost:3000"]
-}
+  "client": {
+    ...
+    "allowed_origins": ["http://localhost:3000"]
+  },
 ```
 
-Allowed origins is a security option for request originating from web browsers – see [more details](../server/configuration.md#allowed_origins) in server configuration docs. **Restart Centrifugo** after modifying `allowed_origins` in a configuration file.
+Allowed origins is a security option for request originating from web browsers – see [more details](../server/configuration.md#allowed_origins) in server configuration docs.
+
+**Restart Centrifugo** after modifying `allowed_origins` in a configuration file.
 
 Now if you reload a browser window with an application you should see new information logs in server output:
 
@@ -157,7 +156,7 @@ HMAC SHA-256 JWT for user "123722" with expiration TTL 168h0m0s:
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM3MjIiLCJleHAiOjE2NTU0NDgyOTl9.mUU9s5kj3yqp-SAEqloGy8QBgsLg0llA7lKUNwtHRnw
 ```
 
-– you will have a different token value since this one is based on the randomly generated `token_hmac_secret_key` from the configuration file we created at the beginning of this tutorial. See the [token authentication docs](../server/authentication.md) for information about proper token generation in a real application.
+– you will have a different token value since this one is based on the randomly generated `client.token.hmac_secret_key` from the configuration file we created at the beginning of this tutorial. See the [token authentication docs](../server/authentication.md) for information about proper token generation in a real application.
 
 Now we can copy generated HMAC SHA-256 JWT and paste it into Centrifugo constructor instead of `<TOKEN>` placeholder in `index.html` file. I.e.:
 
@@ -179,19 +178,18 @@ To do this let's extend the server configuration with the `allow_subscribe_for_c
 
 ```json title="config.json"
 {
-  "token_hmac_secret_key": "bbe7d157-a253-4094-9759-06a8236543f9",
-  "admin": true,
-  "admin_password": "d0683813-0916-4c49-979f-0e08a686b727",
-  "admin_secret": "4e9eafcf-0120-4ddd-b668-8dc40072c78e",
-  "api_key": "d7627bb6-2292-4911-82e1-615c0ed3eebb",
-  "allowed_origins": ["http://localhost:3000"],
-  "allow_subscribe_for_client": true
+  ...
+  "channel": {
+    "without_namespace": {
+      "allow_subscribe_for_client": true
+    }
+  }
 }
 ```
 
 :::tip
 
-A good practice with Centrifugo is to configure [channel namespaces](../server/channels.md#channel-namespaces) for the different types of real-time features you have in the application. By defining namespaces, you can achieve granular control over channel behavior and permissions.
+A good practice with Centrifugo is to configure [channel namespaces](../server/channels.md#channel-namespaces) for the different types of real-time features you have in the application. By defining namespaces, you can achieve granular control over channel behavior and permissions. Here we use configuration for channels which do not start with a channel namespace name.
 
 :::
 
