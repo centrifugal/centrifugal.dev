@@ -189,7 +189,7 @@ Then simply put message in the following format to Kafka topic:
 * `topics` - array of string (required), tells which topics to consume
 * `consumer_group` - string (required), sets the name of consumer group to use
 * `max_poll_records` - integer (default: `100`) - sets the maximum number of records to fetch from Kafka during a single poll operation.
-* `sasl_mechanism` - only `"plain"` is now supported
+* `sasl_mechanism` - SASL mechanism to use: `"plain"`, `"scram-sha-256"` (since 5.4.7), `"scram-sha-512"` (since 5.4.7), `"aws-msk-iam"` (since 5.4.7) are supported. Note, in case of `"aws-msk-iam"` Centrifugo uses `sasl_user` and `sasl_password` options as `access key` and `secret key` when configuring AWS auth.
 * `sasl_user` - string, user for plain SASL auth. To override `sasl_user` over environment variables use `CENTRIFUGO_CONSUMERS_KAFKA_<CONSUMER_NAME>_SASL_USER`.
 * `sasl_password` - string, password for plain SASL auth. To override `sasl_password` over environment variables use `CENTRIFUGO_CONSUMERS_KAFKA_<CONSUMER_NAME>_SASL_PASSWORD`.
 * `tls` - boolean (default: `false`) - enables TLS, if `true` – then all the [TLS options](#kafka-tls-options) may be additionally set.
