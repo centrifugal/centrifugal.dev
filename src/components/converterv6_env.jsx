@@ -146,6 +146,9 @@ const pathMap = {
     "client_connection_rate_limit":         "client.connection_rate_limit",
     "client_connect_include_server_time":   "client.connect_include_server_time",
 
+	"client_connect_code_to_unidirectional_disconnect.enabled":    "client.connect_code_to_unidirectional_disconnect.enabled",
+	"client_connect_code_to_unidirectional_disconnect.transforms": "client.connect_code_to_unidirectional_disconnect.transforms",
+
     "channel_max_length":         "channel.max_length",
     "channel_private_prefix":     "channel.private_prefix",
     "channel_namespace_boundary": "channel.namespace_boundary",
