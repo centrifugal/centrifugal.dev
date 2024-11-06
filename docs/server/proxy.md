@@ -1090,7 +1090,7 @@ The same as for channel namespaces and channel options you can define `rpc_proxy
 
 ## Unexpected error handling and code transforms
 
-If the unexpected error happens during `connect` proxy request, then:
+If the unexpected error happens (i.e. the one which have not been returned by your backend explicitly) during `connect` proxy request, then:
 
 * bidirectional client (i.e. Centrifugal client SDK) will receive `100: internal server error` error and must reconnect with the backoff.
 * unidirectional client will be disconnected with `3004 (internal server error)` disconnect code. In most cases this should result into a reconnect too – but the behaviour of unidirectional clients is controlled by application developers as no Centrifugal SDK is used in that case.
