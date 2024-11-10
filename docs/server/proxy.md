@@ -3,9 +3,9 @@ id: proxy
 title: Proxy events to the backend
 ---
 
-Due to its self-hosted nature Centrifugo can offer an efficient way to proxy client connection events to your application backend, allowing the backend to respond to client connection requests in a customized manner. In other words, this is a mechanism of sending (web)hooks from Centrifugo to the backend to control the behavior of real-time connections.
+Due to its self-hosted nature, Centrifugo can offer an efficient way to proxy client connection events to your application backend, enabling the backend to respond to client connection requests in a customized manner. In other words, this mechanism allows Centrifugo to send (web)hooks to the backend to control the behavior of real-time connections.
 
-For example, it's possible to authenticate connection attempt by responding to a request from Centrifugo to your application backend, subscribe connection to a stable set of channels, refresh client sessions and handle RPC calls sent by a client over a bidirectional real-time connection. Also, you may control subscription and publication permissions using these event proxy hooks.
+For example, you can authenticate connections by responding to requests from Centrifugo to your application backend, subscribe connections to a stable set of channels, refresh client sessions, and handle RPC calls sent by a client over a bidirectional real-time connection. Additionally, you can control subscription and publication permissions using these event proxy hooks.
 
 ## Supported proxy events
 
@@ -42,13 +42,13 @@ Before we dive into specifics of event configuration let's talk about protocols 
 * HTTP requests – using JSON-based communication with the backend
 * [GRPC](https://grpc.io/) – by exchanging messages based on the Protobuf schema
 
-Both HTTP and GRPC share [the same Protobuf schema](https://github.com/centrifugal/centrifugo/blob/master/internal/proxyproto/proxy.proto) for event format – so you can easily extrapolate all the request/response fields described here from one protocol to another.
+Both HTTP and GRPC share [the same Protobuf schema](https://github.com/centrifugal/centrifugo/blob/master/internal/proxyproto/proxy.proto) for event format – so you can easily extrapolate all the request/response fields described in this doc from one protocol to another.
 
 ### HTTP proxy
 
-HTTP proxy in Centrifugo converts client connection events into HTTP requests to the application backend. To use HTTP protocol when configuring event proxies use `http://` or `https://` in the proxy endpoint.
+HTTP proxy in Centrifugo converts client connection events into HTTP requests to the application backend. To use HTTP protocol when configuring event proxies use `http://` or `https://` in the proxy `endpoint`.
 
-All HTTP proxy requests from Centrifugo use HTTP POST method. These requests may have some headers copied from the original client connection request (see details below) and include JSON body which varies depending on proxy event type (see more details about different request bodies below). In response Centrifugo expects from the backend JSON with some predefined format (see below).
+All HTTP proxy requests from Centrifugo use HTTP POST method. These requests may have some headers copied from the original client connection request (see details below) and include JSON body which varies depending on the proxy event type (see more details about different request bodies below). In response Centrifugo expects JSON from the backend with some predefined format (also see the details below).
 
 For example, for connect event proxy the configuration which uses HTTP protocol may look like this:
 
@@ -71,7 +71,7 @@ Note `https` endpoint is used which gives the hint to Centrifugo to use HTTP pro
 
 Another transport Centrifugo can use to proxy connection events to the app backend is GRPC. In this case, Centrifugo acts as a GRPC client and your backend acts as a GRPC server. To use GRPC protocol in proxy configuration use `grpc://` prefix when configuring the `endpoint`.
 
-GRPC service definitions can be found in the Centrifugo repository, see [proxy.proto](https://github.com/centrifugal/centrifugo/blob/master/internal/proxyproto/proxy.proto).
+GRPC service definitions can be found in the Centrifugo repository, see [proxy.proto](https://github.com/centrifugal/centrifugo/blob/master/internal/proxyproto/proxy.proto). You can use the schema to generate GRPC server code in your programming language and write proxy handlers on top of it.
 
 :::tip
 
@@ -79,7 +79,7 @@ We also publish Centrifugo GRPC proxy Protobuf definitions to [Buf Schema Regist
 
 :::
 
-Every proxy call in this case is a unary GRPC call (except `subscribe_stream` case which is [a bit special](./proxy_streams.md)). Centrifugo transforms client HTTP request headers into GRPC metadata (since GRPC doesn't have headers concept).
+Every proxy call in this case is an unary GRPC call (except `subscribe_stream` case which is [a bit special](./proxy_streams.md) and represented by unidirectional or bidirectional GRPC stream). Note also that Centrifugo transforms real-time connection client HTTP request headers into GRPC metadata in this case (since GRPC doesn't have headers concept).
 
 Let's look on example how client connect proxy may be configured to use GRPC:
 
@@ -109,7 +109,7 @@ We have [an example of backend server](https://github.com/centrifugal/examples/t
 
 ## Proxy configuration object
 
-Centrifugo re-uses the same configuration object all proxy types. This object allows configuring the `endpoint` to use, `timeout` to apply, and various options how exactly to proxy the request to the backend, including possibility to configure protocol specific options (i.e. options specific to HTTP or GRPC requests to the backend):
+Centrifugo re-uses the same configuration object for all proxy types. This object allows configuring the `endpoint` to use, `timeout` to apply, and various options how exactly to proxy the request to the backend, including possibility to configure protocol specific options (i.e. options specific to HTTP or GRPC requests to the backend):
 
 | Field name                | Field type                                                     | Required | Description                                                                                                                                                             |
 |---------------------------|----------------------------------------------------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -957,6 +957,10 @@ Example of configuration:
 }
 ```
 
+The mechanics of RPC namespaces is the same as for channel namespaces. RPC requests with RPC method like `ns1:test` will use rpc proxy `rpc1`, RPC requests with RPC method like `ns2:test` will use rpc proxy `rpc2`. So Centrifugo uses `:` as RPC namespace boundary in RPC method (just like it does for channel namespaces, it's possible to configure this boundary).
+
+Just like channel namespaces RPC namespaces should have a name which match `^[-a-zA-Z0-9_.]{2,}$` regexp pattern – this is validated on Centrifugo start.
+
 Payload example sent to the app backend in RPC request in HTTP protocol case:
 
 ```json
@@ -1069,7 +1073,7 @@ It's possible to define a list of named proxies in Centrifugo configuration and 
 
 ### Defining a list of proxies
 
-On configuration top level you can define `"proxies"` array with a list of different proxy objects. Each proxy object in an array should have at least two required fields: `name` and `endpoint`.
+On configuration top level you can define `"proxies"` – an array with different named proxy objects. Each proxy object in the array must additionally have the `name` field. This `name` must be unique and match `^[-a-zA-Z0-9_.]{2,}$` regexp pattern.
 
 Here is an example:
 
@@ -1105,7 +1109,7 @@ Here is an example:
 }
 ```
 
-Note – there are different names and different endpoints in each proxy configuration object. These proxy objects may be then referenced from channel and RPC namespaces to be used instead of default proxy configuration we showed above.
+These proxy objects may be then referenced by `name` from channel and RPC namespaces to be used instead of default proxy configuration shown above. Outside the `name` rest of fields in the array proxy object are the same as for general [proxy configuration object](#proxy-configuration-object).
 
 ### Per-namespace channel-wide proxies
 
@@ -1189,10 +1193,6 @@ Analogous to channel namespaces it's possible to configure different proxies in 
   }
 }
 ```
-
-The mechanics is the same as for channel namespaces. RPC requests with RPC method like `ns1:test` will use rpc proxy `rpc1`, RPC requests with RPC method like `ns2:test` will use rpc proxy `rpc2`. So Centrifugo uses `:` as RPC namespace boundary in RPC method (just like it does for channel namespaces).
-
-Just like channel namespaces RPC namespaces should have a name which match `^[-a-zA-Z0-9_.]{2,}$` regexp pattern – this is validated on Centrifugo start.
 
 ## Header proxy rules
 
