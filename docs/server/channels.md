@@ -225,7 +225,7 @@ Enabling channel history adds some overhead (both memory and CPU) since Centrifu
 
 As all history is storing in process memory (or in a broker memory) it is also very important to get rid of old history data for unused (inactive for a long time) channels.
 
-By default history TTL duration is zero – this means that channel history is disabled.
+By default, history TTL duration is zero – this means that channel history is disabled.
 
 **Again – to turn on history you should wisely configure both `history_size` and `history_ttl` options**.
 

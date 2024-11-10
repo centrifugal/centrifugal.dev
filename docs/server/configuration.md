@@ -19,7 +19,7 @@ Centrifugo can be configured in several ways:
 
 Command-line options have the highest priority when set than other ways to configure Centrifugo.
 
-Centrifugo supports several command-line flags. See `centrifugo -h` for available flags. Command-line flags limited to most frequently used. Mostly useful for development. In general, **we recommend to avoid using flags for configuring Centrifugo in a production environment** – prefer using environment variables or configuration file.
+Centrifugo supports several command-line flags. See `centrifugo -h` for available flags. Command-line flags limited to most frequently used. Mostly useful for development. In general, **we recommend to avoid using flags for configuring Centrifugo in a production environment** because flags often harder to redefine without changes in how Centrifugo deployed – prefer using environment variables or configuration file.
 
 ### OS environment variables
 
@@ -955,23 +955,23 @@ Some examples:
 
 Most of TLS configurations in Centrifugo can be set using the following TLS object:
 
-| Field name           | Type    | Description                                                                                          |
-|-----------------------|---------|------------------------------------------------------------------------------------------------------|
-| `enabled`             | bool    | Turns on using TLS.                                                                                  |
-| `cert_pem`            | string  | Certificate in PEM format.                                                                           |
-| `cert_pem_b64`        | string  | Certificate in base64 encoded PEM format.                                                            |
-| `cert_pem_file`       | string  | Path to a file with certificate in PEM format.                                                       |
-| `key_pem`             | string  | Key in PEM format.                                                                                   |
-| `key_pem_b64`         | string  | Key in base64 encoded PEM format.                                                                    |
-| `key_pem_file`        | string  | Path to a file with key in PEM format.                                                               |
-| `server_ca_pem`       | string  | Server root CA certificate in PEM format used by client to verify server's certificate during handshake. |
-| `server_ca_pem_b64`   | string  | Server root CA certificate in base64 encoded PEM format.                                             |
-| `server_ca_pem_file`  | string  | Path to a file with server root CA certificate in PEM format.                                        |
-| `client_ca_pem`       | string  | Client CA certificate in PEM format used by server to verify client's certificate during handshake.  |
-| `client_ca_pem_b64`   | string  | Client CA certificate in base64 encoded PEM format.                                                  |
-| `client_ca_pem_file`  | string  | Path to a file with client CA certificate in PEM format.                                             |
-| `insecure_skip_verify`| bool    | Turns off server certificate verification.                                                           |
-| `server_name`         | string  | Used to verify the hostname on the returned certificates.                                            |
+| Field name             | Type   | Description                                                                                              |
+|------------------------|--------|----------------------------------------------------------------------------------------------------------|
+| `enabled`              | bool   | Turns on using TLS.                                                                                      |
+| `cert_pem`             | string | Certificate in PEM format.                                                                               |
+| `cert_pem_b64`         | string | Certificate in base64 encoded PEM format.                                                                |
+| `cert_pem_file`        | string | Path to a file with certificate in PEM format.                                                           |
+| `key_pem`              | string | Key in PEM format.                                                                                       |
+| `key_pem_b64`          | string | Key in base64 encoded PEM format.                                                                        |
+| `key_pem_file`         | string | Path to a file with key in PEM format.                                                                   |
+| `server_ca_pem`        | string | Server root CA certificate in PEM format used by client to verify server's certificate during handshake. |
+| `server_ca_pem_b64`    | string | Server root CA certificate in base64 encoded PEM format.                                                 |
+| `server_ca_pem_file`   | string | Path to a file with server root CA certificate in PEM format.                                            |
+| `client_ca_pem`        | string | Client CA certificate in PEM format used by server to verify client's certificate during handshake.      |
+| `client_ca_pem_b64`    | string | Client CA certificate in base64 encoded PEM format.                                                      |
+| `client_ca_pem_file`   | string | Path to a file with client CA certificate in PEM format.                                                 |
+| `insecure_skip_verify` | bool   | Turns off server certificate verification.                                                               |
+| `server_name`          | string | Used to verify the hostname on the returned certificates.                                                |
 
 - **Source Priority:** The configuration allows specifying TLS settings from multiple sources: file, base64 encoded PEM, and raw PEM. The sources are prioritized in the following order:
     1. File to PEM

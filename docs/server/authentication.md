@@ -194,25 +194,25 @@ Example:
 
 #### Subscribe options:
 
-| Field | Type | Optional | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| info       | JSON object       | yes | Custom channel info   |
-| b64info       | string       | yes | Custom channel info in Base64 - to pass binary channel info   |
-| data       | JSON object       | yes | Custom JSON data to return in subscription context inside Connect reply    |
-| b64data       | string       | yes |  Same as `data` but in Base64 to send binary data   |
-| override       | `SubscribeOptionOverride`       | yes |  Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields)  |
+| Field    | Type                      | Optional | Description                                                                                                                                 |
+|----------|---------------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| info     | JSON object               | yes      | Custom channel info                                                                                                                         |
+| b64info  | string                    | yes      | Custom channel info in Base64 - to pass binary channel info                                                                                 |
+| data     | JSON object               | yes      | Custom JSON data to return in subscription context inside Connect reply                                                                     |
+| b64data  | string                    | yes      | Same as `data` but in Base64 to send binary data                                                                                            |
+| override | `SubscribeOptionOverride` | yes      | Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields) |
 
 #### SubscribeOptionOverride
 
 Allow per-connection overrides of some channel namespace options:
 
-| Field | Type | Optional | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| presence       | `BoolValue`       | yes | Override `presence` from namespace options   |
-| join_leave       | `BoolValue`       | yes | Override `join_leave` from namespace options   |
-| force_recovery       | `BoolValue`       | yes | Override `force_recovery` from namespace options   |
-| force_positioning       | `BoolValue`       | yes |  Override `force_positioning` from namespace options   |
-| force_push_join_leave       | `BoolValue`       | yes |  Override `force_push_join_leave` from namespace options   |
+| Field                 | Type        | Optional | Description                                             |
+|-----------------------|-------------|----------|---------------------------------------------------------|
+| presence              | `BoolValue` | yes      | Override `presence` from namespace options              |
+| join_leave            | `BoolValue` | yes      | Override `join_leave` from namespace options            |
+| force_recovery        | `BoolValue` | yes      | Override `force_recovery` from namespace options        |
+| force_positioning     | `BoolValue` | yes      | Override `force_positioning` from namespace options     |
+| force_push_join_leave | `BoolValue` | yes      | Override `force_push_join_leave` from namespace options |
 
 `BoolValue` is an object like this:
 
@@ -224,7 +224,7 @@ Allow per-connection overrides of some channel namespace options:
 
 ### meta
 
-`meta` is an additional JSON object (e.g., `{"key": "value"}`) that is attached to a connection. It differs from `info` as it is never disclosed to clients within presence and join/leave events; it is only accessible on the server side. It can be included in proxy calls from Centrifugo to the application backend (refer to the `proxy_include_connection_meta` option). In Centrifugo PRO, there is a `connections` API method that returns this metadata within the connection description object.
+`meta` is an additional JSON object (e.g., `{"key": "value"}`) that is attached to a connection. It differs from `info` as it is never disclosed to clients within presence and join/leave events; it is only accessible on the server side. It can be included in proxy calls from Centrifugo to the application backend (refer to the `include_connection_meta` option of [proxy configuration object](./proxy.md#proxy-configuration-object)). In Centrifugo PRO, there is a `connections` API method that returns this metadata within the connection description object.
 
 ### expire_at
 
