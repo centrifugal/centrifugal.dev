@@ -7,7 +7,7 @@ Centrifugo comes with a built-in administrative web interface. It enables users 
 
 * Display general information and statistics from server nodes - including the number of connections, unique users, subscriptions, and unique channels, among others
 * Execute commands such as `publish`, `broadcast`, `subscribe`, `unsubscribe`, `disconnect`, `history`, `history_remove`, `presence`, `presence_stats`, `info`, `channels`, along with several additional Centrifugo PRO server API commands.
-* Trace connections in real-time (a feature [Centrifugo PRO](../pro/overview.md)).
+* Trace connections in real-time (a feature of [Centrifugo PRO](../pro/overview.md)).
 * View analytics widgets (a feature of Centrifugo PRO).
 * Visualize registered devices for push notifications (a feature of Centrifugo PRO).
 

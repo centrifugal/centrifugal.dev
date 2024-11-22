@@ -118,11 +118,11 @@ Centrifugo re-uses the same configuration object for all proxy types. This objec
 | `http_headers`            | `array[string]`                                                | no       | List of headers from incoming client connection to proxy, by default no headers will be proxied. See [Proxy HTTP headers](#proxy-http-headers) section.                 |
 | `grpc_metadata`           | `array[string]`                                                | no       | List of GRPC metadata keys from incomig GRPC connection to proxy, by default no metadata keys will be proxied. See [Proxy GRPC metadata](#proxy-grpc-metadata) section. |
 | `include_connection_meta` | `bool`                                                         | no       | Include meta information (attached on connect). This is noop for connect proxy now. See [Include connection meta](#include-connection-meta) section.                    |
-| `http`                    | [`Outgoing HTTP object`](#outgoing-http-object)                | no       | Allows configuring outgoing HTTP protocol specific options.                                                                                                             |
-| `grpc`                    | [`Outgoing GRPC object`](#outgoing-grpc-object)                | no       | Allows configuring outgoing GRPC protocol specific options.                                                                                                             |
+| `http`                    | [`HTTP options`](#http-options-object)                | no       | Allows configuring outgoing HTTP protocol specific options.                                                                                                             |
+| `grpc`                    | [`GRPC options`](#grpc-options-object)                | no       | Allows configuring outgoing GRPC protocol specific options.                                                                                                             |
 | `binary_encoding`         | `bool`                                                         | no       | Use base64 for payloads. See [Binary encoding mode](#binary-encoding-mode)                                                                                              |
 
-#### Outgoing HTTP object
+#### HTTP options object
 
 This object is used to configure outgoing HTTP-specific request options.
 
@@ -130,7 +130,7 @@ This object is used to configure outgoing HTTP-specific request options.
 |------------------|---------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `static_headers` | `map[string]string` | no       | Static set of headers to add to HTTP proxy requests. Note these headers only appended to HTTP proxy requests from Centrifugo to backend. See [Static HTTP headers](#static-http-headers) |
 
-#### Outgoing GRPC object
+#### GRPC options object
 
 This object is used to configure outgoing GRPC-specific options.
 
@@ -543,9 +543,9 @@ Example:
 }
 ```
 
-Note, there is no `enabled` option here. Unlike client-wide proxy types described above subscribe proxy must be enabled per channel namespace. This means that every namespace has a boolean option `proxy_subscribe_enabled` that allows enabling subscribe proxy for channels in a namespace.
+Note, there is no `enabled` option here. Unlike client-wide proxy types described above subscribe proxy must be enabled per channel namespace. This means that every namespace has a boolean option `subscribe_proxy_enabled` that allows enabling subscribe proxy for channels in a namespace.
 
-So to enable subscribe proxy for channels without namespace define `proxy_subscribe_enabled`:
+So to enable subscribe proxy for channels without namespace define `subscribe_proxy_enabled`:
 
 ```json
 {
@@ -557,7 +557,7 @@ So to enable subscribe proxy for channels without namespace define `proxy_subscr
       }
     },
     "without_namespace": {
-      "proxy_subscribe_enabled": true
+      "subscribe_proxy_enabled": true
     }
   }
 }
@@ -577,7 +577,7 @@ Or, for channels in the namespace `sun`:
     "namespaces": [
       {
         "name": "sun",
-        "proxy_subscribe_enabled": true
+        "subscribe_proxy_enabled": true
       }
     ]
   }
@@ -700,9 +700,9 @@ Example:
 }
 ```
 
-Note, there is no `enabled` option here – same as for subscribe proxy described above. Every namespace has a boolean option `proxy_publish_enabled` that allows enabling publish proxy for channels in a namespace.
+Note, there is no `enabled` option here – same as for subscribe proxy described above. Every namespace has a boolean option `publish_proxy_enabled` that allows enabling publish proxy for channels in a namespace.
 
-So to enable publish proxy for channels without namespace define `proxy_publish_enabled`:
+So to enable publish proxy for channels without namespace define `publish_proxy_enabled`:
 
 ```json title="config.json"
 {
@@ -714,7 +714,7 @@ So to enable publish proxy for channels without namespace define `proxy_publish_
       }
     },
     "without_namespace": {
-      "proxy_publish_enabled": true
+      "publish_proxy_enabled": true
     }
   }
 }
@@ -734,7 +734,7 @@ Or, for channels in the namespace `sun`:
     "namespaces": [
       {
         "name": "sun",
-        "proxy_publish_enabled": true
+        "publish_proxy_enabled": true
       }
     ]
   }
@@ -824,9 +824,9 @@ Example:
 }
 ```
 
-Like subscribe and publish proxy types, sub refresh proxy must be enabled per channel namespace. This means that every namespace has a boolean option `proxy_sub_refresh_enabled` that enables sub refresh proxy for channels in the namespace. Only subscriptions which have expiration time will be validated over sub refresh proxy endpoint.
+Like subscribe and publish proxy types, sub refresh proxy must be enabled per channel namespace. This means that every namespace has a boolean option `sub_refresh_proxy_enabled` that enables sub refresh proxy for channels in the namespace. Only subscriptions which have expiration time will be validated over sub refresh proxy endpoint.
 
-So to enable sub refresh proxy for channels without namespace define `proxy_sub_refresh_enabled`:
+So to enable sub refresh proxy for channels without namespace define `sub_refresh_proxy_enabled`:
 
 ```json title="config.json"
 {
@@ -838,7 +838,7 @@ So to enable sub refresh proxy for channels without namespace define `proxy_sub_
       }
     },
     "without_namespace": {
-      "proxy_sub_refresh_enabled": true
+      "sub_refresh_proxy_enabled": true
     }
   }
 }
@@ -858,7 +858,7 @@ Or, for channels in the namespace `sun`:
     "namespaces": [
       {
         "name": "sun",
-        "proxy_sub_refresh_enabled": true
+        "sub_refresh_proxy_enabled": true
       }
     ]
   }
@@ -1142,16 +1142,16 @@ To reference a named proxy use `subscribe_proxy_name`, `publish_proxy_name`, `su
     "namespaces": [
       {
         "name": "ns1",
-        "proxy_subscribe_enabled": true,
+        "subscribe_proxy_enabled": true,
         "subscribe_proxy_name": "subscribe1",
-        "proxy_publish_enabled": true,
+        "publish_proxy_enabled": true,
         "publish_proxy_name": "publish1"
       },
       {
         "name": "ns2",
-        "proxy_subscribe_enabled": true,
+        "subscribe_proxy_enabled": true,
         "subscribe_proxy_name": "subscribe2",
-        "proxy_publish_enabled": true,
+        "publish_proxy_enabled": true,
         "publish_proxy_name": "publish2"
       }
     ]
