@@ -28,7 +28,7 @@ Centrifugo PRO is packed with the following features:
 * ✍️ [Channel CEL expressions](./cel_expressions.md) to write custom efficient permission rules for channel operations.
 * 🗜️ [Delta compression for at most once](./delta_at_most_once.md) scenario.
 * 🚀 [Faster performance](./performance.md) to reduce resource usage on server side.
-* 🔮 [Engine load optimizations](./engine_optimizations.md) with singleflight technique and shared position synchronization.
+* 🔮 [Scalability optimizations](./scalability.md) with singleflight technique and shared position synchronization.
 * 🍔 [Message batching control](./client_msg_batching.md) for advanced tuning of client connection write behaviour.
 * 🧐 [Observability enhancements](./observability_enhancements.md) for additional more granular system state insights.
 * 🪵 [CPU and RSS memory](./process_stats.md) usage stats of Centrifugo nodes in admin UI.

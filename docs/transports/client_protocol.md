@@ -5,10 +5,12 @@ title: Client protocol
 
 This chapter describes the core concepts of Centrifugo bidirectional client protocol – concentrating on framing level. If you want to find out details about exposed client API then look at [client API](client_api.md) document.
 
-We need our own protocol on top of real-time transport due to several reasons:
+We need our own protocol on top of real-time transport due to various reasons:
 
-* We want request-response semantics (while our main transport – WebSocket – does not provide this out of the box)
+* Pass authentication and custom data to the server
+* Implement request-response semantics (our main transport – WebSocket – does not provide this out of the box)
 * Multiplex many subscriptions over a single physical connection
+* Push different types of messages – publications, join/leave notifications
 * Efficient ping-pong support
 * Handle server disconnect advices
 

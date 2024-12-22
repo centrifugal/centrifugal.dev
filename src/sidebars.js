@@ -103,7 +103,7 @@ module.exports = {
         "pro/cel_expressions",
         "pro/delta_at_most_once",
         "pro/performance",
-        "pro/engine_optimizations",
+        "pro/scalability",
         "pro/client_message_batching",
         "pro/observability_enhancements",
         "pro/process_stats",
