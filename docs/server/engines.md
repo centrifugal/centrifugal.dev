@@ -96,31 +96,7 @@ Since HASH per field TTL is only available in Redis >= 7.4, Centrifugo requires 
 
 ### Configuring Redis TLS
 
-Some options may help you configuring TLS-protected communication between Centrifugo and Redis. 
-
-#### redis_tls
-
-Boolean, default `false` - enable Redis TLS connection.
-
-#### redis_tls_insecure_skip_verify
-
-Boolean, default `false` - disable Redis TLS host verification. Centrifugo v4 also supports alias for this option – `redis_tls_skip_verify` – but it will be removed in v5.
-
-#### redis_tls_cert
-
-String, default `""` – path to TLS cert file. If you prefer passing certificate as a string instead of path to the file then use `redis_tls_cert_pem` option.
-
-#### redis_tls_key
-
-String, default `""` – path to TLS key file.  If you prefer passing cert key as a string instead of path to the file then use `redis_tls_key_pem` option.
-
-#### redis_tls_root_ca
-
-String, default `""` – path to TLS root CA file (in PEM format) to use. If you prefer passing root CA PEM as a string instead of path to the file then use `redis_tls_root_ca_pem` option.
-
-#### redis_tls_server_name
-
-String, default `""` – used to verify the hostname on the returned certificates. It is also included in the client's handshake to support virtual hosting unless it is an IP address.
+Under `redis_tls` key you can provide [unified TLS config](./configuration.md#tls-config-object) for Redis.
 
 ### Scaling with Redis tutorial
 
@@ -214,31 +190,7 @@ Sentinel configuration.
 
 ### Redis Sentinel TLS
 
-To configure TLS for Redis Sentinel use the following options.
-
-#### redis_sentinel_tls
-
-Boolean, default `false` - enable Redis TLS connection.
-
-#### redis_sentinel_tls_insecure_skip_verify
-
-Boolean, default `false` - disable Redis TLS host verification. Centrifugo v4 also supports alias for this option – `redis_sentinel_tls_skip_verify` – but it will be removed in v5.
-
-#### redis_sentinel_tls_cert
-
-String, default `""` – path to TLS cert file. If you prefer passing certificate as a string instead of path to the file then use `redis_sentinel_tls_cert_pem` option.
-
-#### redis_sentinel_tls_key
-
-String, default `""` – path to TLS key file.  If you prefer passing cert key as a string instead of path to the file then use `redis_sentinel_tls_key_pem` option.
-
-#### redis_sentinel_tls_root_ca
-
-String, default `""` – path to TLS root CA file (in PEM format) to use. If you prefer passing root CA PEM as a string instead of path to the file then use `redis_sentinel_tls_root_ca_pem` option.
-
-#### redis_sentinel_tls_server_name
-
-String, default `""` – used to verify the hostname on the returned certificates. It is also included in the client's handshake to support virtual hosting unless it is an IP address.
+Under `redis_sentinel_tls` key you can provide [unified TLS config](./configuration.md#tls-config-object) for Redis.
 
 ### Haproxy instead of Sentinel configuration
 

@@ -475,7 +475,7 @@ Centrifugo uses Go language [regexp](https://pkg.go.dev/regexp) package for regu
 
 ### shared_position_sync
 
-`shared_position_sync` (boolean, default `false`, Centrifugo PRO only) - can help reducing the number of position synchronization requests from Centrifugo to Broker's history API, see [more details](../pro/engine_optimizations.md#shared-position-sync) in Centrifugo PRO docs.
+`shared_position_sync` (boolean, default `false`, Centrifugo PRO only) - can help reducing the number of position synchronization requests from Centrifugo to Broker's history API, see [more details](../pro/scalability.md#shared-position-sync) in Centrifugo PRO docs.
 
 ### channel_state_events
 

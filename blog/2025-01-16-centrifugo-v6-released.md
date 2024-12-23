@@ -309,6 +309,22 @@ But it's not the end, and it also provides `centrifugo_client_subscriptions_infl
 
 While these metrics are great to have, ClickHouse analytics provides an individual connection and channel subsctiption resolution. But its usage may be now postponed if metrics provide enough information to answer your questions.
 
+### Sentry integration
+
+The next improvement for Centrifugo PRO observability is an integration with [Sentry](https://sentry.io/). Just a couple of lines in the configuration:
+
+```json
+{
+  ...
+  "sentry": {
+    "enabled": true,
+    "dsn": "your-project-public-dsn"
+  }
+}
+```
+
+– and you will see Centrifugo PRO errors collected by your self-hosted or cloud Sentry installation.
+
 ### Redis Cluster sharded PUB/SUB
 
 Another feature which is now available in Centrifugo PRO is sharded PUB/SUB support in Redis Cluster. Sharded PUB/SUB [was introduced in Redis 7.0](https://redis.io/docs/latest/develop/interact/pubsub/#sharded-pubsub) as an attempt to fix the problem with PUB/SUB scalability in Redis Cluster. With normal PUB/SUB all publications are spread towards all nodes of cluster. This makes Cluster PUB/SUB throughput less with adding more nodes to the cluster. In sharded PUB/SUB case channel keyspace is devided to slots in the same way as normal keys, and PUB/SUB is splitted over Redis Cluster nodes based on channel name.
