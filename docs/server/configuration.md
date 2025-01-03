@@ -11,8 +11,8 @@ This document describes configuration principles and configuration sections, and
 
 Centrifugo can be configured in several ways:
 
-* using command-line flags (highest priority, i.e. flags overwrite everything)
-* environment variables (medium priority, i.e. env vars overwrite config file options)
+* using command-line flags (highest priority – flags override everything)
+* environment variables (medium priority – env vars override config file options)
 * configuration file (lowest priority).
 
 ### Command-line flags
@@ -181,11 +181,19 @@ Example:
 
 ### tls
 
-An object with [TLS configuration options](#tls-config-object). If set and enabled Centrifugo will start with TLS support.
+TLS layer is very important not only for securing your connections but also to increase a chance to establish Websocket connection.
+
+:::tip
+
+In most situations you better put TLS termination task on your reverse proxy/load balancing software such as Nginx. This can be a good thing for performance.
+
+:::
+
+If you still need to configure Centrifugo server TLS then `tls` object can help you. This is a [unified TLS object](#tls-config-object). If set and enabled Centrifugo HTTP server will start with TLS support.
 
 ### tls_autocert
 
-An object which allows configuring [Automatic certificates](./tls.md#automatic-certificates) with Let's Encrypt.
+An object which allows configuring [Automatic TLS certificates](./autocert.md) with Let's Encrypt.
 
 ### tls_external
 
@@ -241,27 +249,19 @@ There is a possibility to use `redis` type for an alternative full-featured engi
 
 ## Broker config
 
-Centrifugo v6 introduced a new way to set a separate broker responsible for PUB/SUB and history cache related operations – using `broker` section og config..
+Centrifugo v6 introduced a new way to set a separate broker responsible for PUB/SUB and history cache related operations – using `broker` section of config.
 
-### broker.enabled
+Once a separate broker configured it will be used for Broker part instead of Engine's Broker part.
 
-TBD
+See more description in [dedicated chapter](engines.md#separate-broker-and-presence-manager).
 
-### broker.type
-
-TBD
-
-## Presence manager config
+## Presence Manager config
 
 Centrifugo v6 introduced a new way to set a separate presence manager responsible for online presence management – using `presence_manager` section of config.
 
-### presence_manager.enabled
+Once a separate presence manager configured it will be used for Presence Manager part instead of Engine's Presence Manager part.
 
-TBD
-
-### presence_manager.type
-
-TBD
+See more description in [dedicated chapter](engines.md#separate-broker-and-presence-manager).
 
 ## Server HTTP API config
 
@@ -467,8 +467,6 @@ This option allows tuning the maximum time Centrifugo will wait for the connect 
 
 String, default: `""`
 
-Available since v5.1.1
-
 Usually to authenticate client connections with Centrifugo you need to use [JWT authentication](./authentication.md) or [connect proxy](./proxy.md#connect-proxy). Sometimes though it may be convenient to pass user ID information in incoming HTTP request headers. This is usually the case when application backend infrastructure has some authentication proxy (like Envoy, etc). This proxy may set authenticated user ID to some header and proxy requests further to Centrifugo.
 
 When `client.user_id_http_header` is set to some non-empty header name Centrifugo will try to extract the authenticated user ID for client connections from that header. This mechanism works for all real-time transports based on HTTP (this also includes WebSocket since it starts with HTTP Upgrade request). Example:
@@ -494,8 +492,6 @@ When using authentication over proxy ensure your proxy strips the header you are
 Boolean, default: `false`
 
 When enabled, Centrifugo attaches `time` field to the connect reply (or connect push in the unidirectional transport case). This field contains current server time as Unix milliseconds. Ex. `1716198604052`.
-
-Available since Centrifugo v5.4.0
 
 ### client.allow_anonymous_connect_without_token
 
@@ -718,6 +714,12 @@ The option `prometheus.enabled` (by default `false`) allows enabling the Prometh
 }
 ```
 
+### prometheus.instrument_http_handlers
+
+Boolean, default `false`.
+
+When set to `true` Centrifugo will instrument HTTP handlers with additional Prometheus metrics – at this point only the number of requests to specific handler with status code resolution. This can be useful to get more detailed information about the number of HTTP requests to Centrifugo. Comes with a small overhead, thus disabled by default.
+
 ## Swagger UI config
 
 ### swagger.enabled
@@ -742,8 +744,6 @@ The following options may simplify integration with Centrifugo, but they are mos
 The boolean option `client.insecure` (default `false`) allows connecting to Centrifugo without JWT token. In this mode, there is no user authentication involved. It also disables permission checks on client API level - for presence and history calls. This mode can be useful for demo projects based on Centrifugo, integration tests, local projects, or real-time application prototyping. Don't use it in production until you 100% know what you are doing.
 
 ### client.insecure_skip_token_signature_verify
-
-Available since Centrifugo v5.0.4
 
 The boolean option `client.insecure_skip_token_signature_verify` (default `false`), if enabled – tells Centrifugo to skip JWT signature verification - for both connection and subscription tokens. This is absolutely **insecure** and must only be used for development and testing purposes. Token claims are parsed as usual - so token should still follow JWT format.
 

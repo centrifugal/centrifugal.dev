@@ -3,27 +3,39 @@ id: highlights
 title: Main highlights
 ---
 
-At this point, you know how to build the simplest real-time app with Centrifugo. Beyond the core PUB/SUB functionality, Centrifugo provides more features and primitives to build scalable real-time applications. Let's summarize the main Centrifugo ✨highlights✨ here. Every point is then extended throughout the documentation.
+At this point, you know how to build the simplest real-time app with Centrifugo. We also provide [a mode advanced tutorial](../tutorial/intro.md) which you can refer to when working with Centrifugo.
+
+Beyond the core PUB/SUB functionality, Centrifugo provides more features and primitives to build scalable real-time applications. Let's summarize the main Centrifugo ✨highlights✨ here. Every point is then extended throughout the documentation.
 
 ### Seamless integration
 
-Centrifugo was originally designed to be used in conjunction with frameworks without built-in concurrency support (like Django, Laravel, etc.).
+Centrifugo is purpose-built to integrate effortlessly with your existing backend, regardless of its architecture or concurrency model. Whether you're using frameworks like Django, Laravel, or others with or without native concurrency support, Centrifugo slides right in without disrupting your workflow.
 
-It works as a standalone service with well-defined communication contracts. It nicely fits both monolithic and microservice architectures. Application developers should not change the backend philosophy and technology stack at all – just integrate with Centrifugo [HTTP or GRPC API](../server/server_api.md) and let users enjoy real-time updates.
+Designed as a standalone service with clear and well-defined communication contracts, Centrifugo seamlessly supports both monolithic and microservice architectures. You don’t need to rethink your backend philosophy, rewrite your codebase, or adopt new paradigms.
+
+Simply connect your application to Centrifugo via its [HTTP or GRPC API](../server/server_api.md), or [built-in asynchronous consumers](../server/consumers.md) and let your users enjoy real-time updates.
 
 ### Great performance
 
-Centrifugo is fast. It's written in the Go language, built on top of fast and battle-tested open-source libraries, has some smart internal optimizations like message queuing on broadcasts, smart batching to reduce the number of RTTs with the broker, connection hub sharding to avoid lock contention, JSON and Protobuf encoding speedups through code generation, and others.
+Centrifugo is engineered for exceptional speed and efficiency, leveraging the power of the Go programming language and built on top of battle-tested open-source libraries. Its architecture incorporates smart optimizations to handle real-time communication at scale. To name some:
 
-See the [Million WebSocket with Centrifugo](/blog/2020/02/10/million-connections-with-centrifugo) post on our blog to see some real-world numbers.
+* Message queuing for broadcasts: ensures efficient distribution of messages to large numbers of subscribers.
+* Intelligent batching on all levels: to minimizes the number of Round-Trip Times (RTTs) and the number of sustem calls.
+* Subscription hub sharding: reduces lock contention for smoother performance under heavy loads.
+* Optimized encoding: Utilizes JSON and Protobuf encoding with code generation for faster serialization.
+* And more!
+
+These optimizations, combined with Go's natural concurrency strengths, allow Centrifugo to deliver unmatched real-time performance.
+
+Check out our blog post, [Million WebSocket with Centrifugo](/blog/2020/02/10/million-connections-with-centrifugo), to explore real-world benchmarks and performance numbers. 🚀
 
 ### Built-in scalability
 
-Centrifugo scales well to many machines with the help of PUB/SUB brokers. So as soon as you have more client connections in the application – you can spread them over different Centrifugo nodes which will be connected together into a cluster.
+Centrifugo is designed to scale well across multiple machines using PUB/SUB brokers. As your application grows and the number of client connections increases, Centrifugo allows you to distribute the load across multiple nodes, which are connected into a cluster.
 
-The main PUB/SUB engine that Centrifugo integrates with is Redis. It supports client-side consistent sharding and Redis Cluster – so a single Redis instance won't be a bottleneck either.
+At the core of this scalability lies Redis, Centrifugo's primary PUB/SUB engine. Redis supports client-side consistent sharding and Redis Cluster, ensuring that no single Redis instance becomes a bottleneck—even under heavy loads.
 
-There are other options to scale like Redis-compatible databases and Nats. [See docs about available engines](../server/engines.md).
+But Redis isn’t the only option. Centrifugo also supports Redis-compatible databases and Nats, giving you the flexibility to choose the engine that best fits your infrastructure. 👉 [See dedicated docs](../server/engines.md).
 
 ### Strict client protocol
 

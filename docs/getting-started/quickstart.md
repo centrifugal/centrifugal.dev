@@ -45,7 +45,7 @@ And then running Centrifugo only with a path to a configuration file:
 ./centrifugo --config=config.json
 ```
 
-Now open [http://localhost:8000](http://localhost:8000). You should see Centrifugo admin web panel. Enter `admin.password` value from the configuration file to log in (in our case it's `d0683813-0916-4c49-979f-0e08a686b727`, but you will have a different value).
+Now open [http://localhost:8000](http://localhost:8000). You should see Centrifugo admin web panel. Enter admin's password value from the configuration file to log in (in our case it's `d0683813-0916-4c49-979f-0e08a686b727`, but you will have a different value).
 
 ![Admin web panel](/img/quick_start_admin_v5.png)
 
@@ -200,6 +200,8 @@ Open the developer tools and look at the WebSocket frames panel; you should see 
 ![Connected](/img/quick_start_ws_frames_v4.png)
 
 Note that in this example, we generated a connection JWT – but it has an expiration time, so after some time, Centrifugo will stop accepting those tokens. In real life, you need to add a token refresh function to the client to rotate tokens. See our [client API SDK spec](../transports/client_api.md).
+
+Go back to Admin UI - http://localhost:8000/ - at make sure you see updated Centrifugo node stats – they should display one active client connection.
 
 OK, the last thing we need to do here is to publish a new counter value to a channel and make sure our app works properly.
 

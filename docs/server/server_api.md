@@ -134,8 +134,8 @@ In response, you will also get 200 OK, but payload will contain `error` field in
 | `skip_history`    | `bool`              | no       | Skip adding publication to history for this request                                                                                                                                                                                                                  |
 | `tags`            | `map[string]string` | no       | Publication tags - map with arbitrary string keys and values which is attached to publication and will be delivered to clients                                                                                                                                       |
 | `b64data`         | `string`            | no       | Custom binary data to publish into a channel encoded to base64 so it's possible to use HTTP API to send binary to clients. Centrifugo will decode it from base64 before publishing. In case of GRPC you can publish binary using `data` field.                       |
-| `idempotency_key` | `string`            | no       | Optional idempotency key to drop duplicate publications upon retries. It acts per channel. Centrifugo currently keeps the cache of idempotent publish results during 5 minutes window. Available since Centrifugo v5.2.0, supported only by Memory and Redis engines |
-| `delta`           | `boolean`           | no       | When set to true tells Centrifugo to construct delta update if possible when broadcasting message to subscribers. Available since Centrifugo v5.4.0                                                                                                                  |
+| `idempotency_key` | `string`            | no       | Optional idempotency key to drop duplicate publications upon retries. It acts per channel. Centrifugo currently keeps the cache of idempotent publish results during 5 minutes window. Supported only by Memory and Redis engines |
+| `delta`           | `boolean`           | no       | When set to true tells Centrifugo to construct delta update if possible when broadcasting message to subscribers.                                                                                                                  |
 
 #### PublishResponse
 
@@ -184,8 +184,8 @@ This command may be very useful when implementing messenger application, like we
 | `skip_history`    | `bool`              | no       | Skip adding publications to channels' history for this request                                                                                                                                                                                 |
 | `tags`            | `map[string]string` | no       | Publication tags - map with arbitrary string keys and values which is attached to publication and will be delivered to clients                                                                                                                 |
 | `b64data`         | `string`            | no       | Custom binary data to publish into a channel encoded to base64 so it's possible to use HTTP API to send binary to clients. Centrifugo will decode it from base64 before publishing. In case of GRPC you can publish binary using `data` field. |
-| `idempotency_key` | `string`            | no       | Optional idempotency key to drop duplicate publications upon retries. It acts per channel. Centrifugo currently keeps the cache of idempotent publish results during 5 minutes window. Available since Centrifugo v5.2.0                       |
-| `delta`           | `boolean`           | no       | When set to true tells Centrifugo to construct delta update if possible when broadcasting message to subscribers. Available since Centrifugo v5.4.0                                                                                            |
+| `idempotency_key` | `string`            | no       | Optional idempotency key to drop duplicate publications upon retries. It acts per channel. Centrifugo currently keeps the cache of idempotent publish results during 5 minutes window.                       |
+| `delta`           | `boolean`           | no       | When set to true tells Centrifugo to construct delta update if possible when broadcasting message to subscribers.                                                                                           |
 
 #### BroadcastResponse
 
@@ -655,8 +655,7 @@ Example response:
     ]
 }
 ```
-
-Starting from Centrifugo v5.2.0 it's also possible to pass `"parallel": true` on `batch` data top level to make batch commands processing parallel on Centrifugo side. This may provide reduced latency (especially in case of using Redis engine).
+It's also possible to pass `"parallel": true` on `batch` data top level to make batch commands processing parallel on Centrifugo side. This may provide reduced latency (especially in case of using Redis engine).
 
 ## HTTP API libraries
 
@@ -671,11 +670,12 @@ But we have several official HTTP API libraries for different languages, to help
 
 Also, there are Centrifugo server API libraries created by community:
 
-* [javacent](https://github.com/katarinamolotova/javacent) HTTP API client for Java
-* [cent.js](https://github.com/SocketSomeone/cent.js) API client for NodeJS
-* [CentriAgent](https://github.com/sajjad-fatehi/centri-agent) - one more API client for NodeJS
-* [Centrifugo.AspNetCore](https://github.com/ismkdc/Centrifugo.AspNetCore) API client for ASP.NET Core
-* [crystalcent](https://github.com/devops-israel/crystalcent) API client for Crystal language
+* [katarinamolotova/javacent](https://github.com/katarinamolotova/javacent) – HTTP API client for Java
+* [SocketSomeone/cent.js](https://github.com/SocketSomeone/cent.js) – API client for NodeJS
+* [sajjad-fatehi/CentriAgent](https://github.com/sajjad-fatehi/centri-agent) – one more API client for NodeJS
+* [ismkdc/Centrifugo.AspNetCore](https://github.com/ismkdc/Centrifugo.AspNetCore) – API client for ASP.NET Core
+* [devops-israel/crystalcent](https://github.com/devops-israel/crystalcent) – API client for Crystal language
+* [Cyberguru1/rucent](https://github.com/Cyberguru1/rucent) – HTTP API client for Rust
 
 :::tip
 
@@ -717,7 +717,7 @@ Then see [GRPC docs specific to your language](https://grpc.io/docs/) to find ou
 * `grpc_api.enabled` - boolean, default `false`. Enables GRPC API server.
 * `grpc_api.port` - integer, default `10000`. Port on which GRPC API server runs.
 * `grpc_api.address` - string, default `""`. Custom address to run GRPC API server on.
-* `grpc_api.max_receive_message_size` – integer (number of bytes), default `0`. If set to a value > 0 allows tuning the max size of message GRPC server can receive. By default, GRPC library's default is used which is 4194304 bytes (4MB). Available since Centrifugo v5.4.3.
+* `grpc_api.max_receive_message_size` – integer (number of bytes), default `0`. If set to a value > 0 allows tuning the max size of message GRPC server can receive. By default, GRPC library's default is used which is 4194304 bytes (4MB).
 * `grpc_api.reflection` - boolean, default `false`. Enables GRPC reflection API for introspection.
 
 ### GRPC example for Python

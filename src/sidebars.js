@@ -24,6 +24,7 @@ module.exports = {
     "tutorial/outro",
     "tutorial/improvements",
     "tutorial/tips_and_tricks",
+    "tutorial/monitoring",
   ],
   Guides: [
     "server/configuration",
@@ -45,7 +46,7 @@ module.exports = {
     "server/observability",
     "server/infra_tuning",
     "server/load_balancing",
-    "server/tls",
+    "server/autocert",
     "server/codes",
     "server/console_commands",
   ],

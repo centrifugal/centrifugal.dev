@@ -47,12 +47,15 @@ These brokers inherit all options described in [Engines and scalability](../serv
 ```json title="config.json"
 {
   ...
-  "namespaces": [
-    {
+  "channel": {
+    "namespaces": [
+      {
         "name": "rates",
         "broker_name": "mycustomnats"
-    }
-  ]
+      }
+    ]
+  }
+}
 ```
 
 ## Defining presence managers
@@ -61,7 +64,6 @@ And for custom Presence Managers a similar approach may be applied. First, defin
 
 ```json title="config.json"
 {
-  ...
   "presence_managers": [
     {
       "enabled": true,
@@ -80,11 +82,14 @@ And then enable it for namespace:
 ```json title="config.json"
 {
   ...
-  "namespaces": [
-    {
+  "channel": {
+    "namespaces": [
+      {
         "name": "rates",
         "broker_name": "mycustomnats",
         "presence_manager_name": "mycustomredis"
-    }
-  ]
+      }
+    ]
+  }
+}
 ```

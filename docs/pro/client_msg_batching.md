@@ -41,3 +41,14 @@ The `client.reply_without_queue` is a boolean option to not use client queue for
 ## client.max_messages_in_frame
 
 The `client.max_messages_in_frame` is an integer option which controls the maximum number of messages which may be joined by Centrifugo into one transport frame. By default, 16. Use -1 for unlimited number.
+
+Example:
+
+```json title="config.json"
+{
+  "client": {
+    "write_delay": "100ms",
+    "max_messages_in_frame": -1
+  }
+}
+```

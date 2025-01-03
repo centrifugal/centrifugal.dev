@@ -15,9 +15,10 @@ As soon as OIDC integration configured, instead of password field Centrifugo PRO
 
 ## Configuration
 
-```javascript title="config.json"
+```json title="config.json"
 {
   "admin": {
+    ...
     "oidc": {
       "enabled": true,
       "display_name": "Keycloak",
@@ -43,9 +44,10 @@ As soon as OIDC integration configured, instead of password field Centrifugo PRO
 
 Let's look closer at `admin.oidc.access_cel`. In the example above we check this based on a user group membership:
 
-```javascript title="config.json"
+```json title="config.json"
 {
   "admin": {
+    ...
     "oidc": {
       ...
       "access_cel": "'centrifugo_admins' in claims.groups"
@@ -62,9 +64,10 @@ This is usually not recommended, since every new user in your IDP will get acces
 
 :::
 
-```javascript title="config.json"
+```json title="config.json"
 {
   "admin": {
+    ...
     "oidc": {
       ...
       "access_cel": "true"

@@ -151,6 +151,7 @@ And then update consumer config – add `"partition_notification_channel"` optio
 * `consumers.postgresql.partition_select_limit` - integer (default: `100`) – max number of commands to select in one query to outbox table.
 * `consumers.postgresql.partition_poll_interval` - duration (default: `"300ms"`) - polling interval for each partition
 * `consumers.postgresql.partition_notification_channel` - string (default: `""`) - optional name of LISTEN/NOTIFY channel to trigger consuming upon data added to outbox partition.
+* `consumers.postgresql.tls` - [TLSConfig](./tls.md#unified-tls-config-object) to configure PostgreSQL client TLS.
 
 ## Kafka consumer
 
@@ -196,4 +197,4 @@ Then simply put message in the following format to Kafka topic:
 * `consumers.kafka.sasl_mechanism` - only `"plain"` is now supported
 * `consumers.kafka.sasl_user` - string, user for plain SASL auth. To override `sasl_user` over environment variables use `CENTRIFUGO_CONSUMERS_<CONSUMER_NAME>_KAFKA_SASL_USER`.
 * `consumers.kafka.sasl_password` - string, password for plain SASL auth. To override `sasl_password` over environment variables use `CENTRIFUGO_CONSUMERS_<CONSUMER_NAME>_KAFKA_SASL_PASSWORD`.
-* `consumers.kafka.tls` - [TLSConfig](./tls.md#unified-tls-config-object) (default: `false`) to configure TLS.
+* `consumers.kafka.tls` - [TLSConfig](./tls.md#unified-tls-config-object) to configure Kafka client TLS.

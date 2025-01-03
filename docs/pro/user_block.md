@@ -31,9 +31,9 @@ Blocking data can be kept in Redis. To enable this configuration should be:
 ```json
 {
   "user_block": {
-    "persistence_engine": "redis",
+    "storage_type": "redis",
     "redis": {
-      "address": "localhost:6379"
+      "address": "localhost:6379" 
     }
   }
 }
@@ -60,12 +60,13 @@ To enable this configuration should be like:
 ```json
 {
   "database": {
+    "enabled": true,
     "postgresql": {
       "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres"
     }
   },
   "user_block": {
-    "persistence_engine": "database"
+    "storage_type": "database"
   }
 }
 ```

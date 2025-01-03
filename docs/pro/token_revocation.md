@@ -33,16 +33,16 @@ There are two types of persistent engines supported at the moment:
 
 Revocation data can be kept in Redis. To enable this configuration should be:
 
-```json
+```json title="config.json"
 {
   "user_tokens_invalidate": {
-    "persistence_engine": "redis",
+    "storage_type": "redis",
     "redis": {
       "address": "localhost:6379"
     }
   },
   "token_revoke": {
-    "persistence_engine": "redis",
+    "storage_type": "redis",
     "redis": {
       "address": "localhost:6379"
     }
@@ -71,15 +71,16 @@ To enable this configuration should be like:
 ```json
 {
   "database": {
+    "enabled": true,
     "postgresql": {
       "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres"
     }
   },
   "user_tokens_invalidate": {
-    "persistence_engine": "database"
+    "storage_type": "database"
   },
   "token_revoke": {
-    "persistence_engine": "database"
+    "storage_type": "database"
   }
 }
 ```

@@ -9,7 +9,7 @@ Centrifugo server is written in the Go language. It's open-source software, and 
 
 For local development, you can download the prebuilt Centrifugo binary release (i.e., a single all-contained executable file) for your system.
 
-Binary releases are available on Github. [Download the latest release](https://github.com/centrifugal/centrifugo/releases) for your operating system, unpack it, and you are done. Centrifugo is pre-built for:
+Binary releases are available on GitHub. [Download the latest release](https://github.com/centrifugal/centrifugo/releases) for your operating system, unpack it, and you are done. Centrifugo is pre-built for:
 
 * Linux 64-bit (linux_amd64)
 * Linux 32-bit (linux_386)

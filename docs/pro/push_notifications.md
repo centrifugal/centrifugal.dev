@@ -12,7 +12,7 @@ With Centrifugo PRO push notifications may be delivered to all popular applicati
 * <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i> iOS devices
 * <i className="bi bi-globe" style={{color: 'orange'}}></i> Web browsers which support Web Push API (Chrome, Firefox, see <a href="https://caniuse.com/push-api">this matrix</a>)
 
-Centrifugo PRO provides API to manage user device tokens, device topic subscriptions and API to send push notifications towards registered devices and group of devices (subscribed to a topic). API also supports timezone-aware push notifications, push localizations, templating and per user device push rate limiting.
+Centrifugo PRO provides API to manage user device tokens, device topic subscriptions and API to send push notifications towards registered devices and group of devices (subscribed to a topic). API also supports timezone-aware push notifications, push localizations, templating and per user device push rate limiting. You can also use your own device token storage and use Centrifugo PRO as a high-performance way to send push notifications to supported providers. 
 
 ![Push](/img/push_notifications.png)
 
@@ -54,7 +54,7 @@ In addition, Centrifugo PRO includes a helpful web UI for inspecting registered 
 
 ## Motivation and design choices
 
-We tried to be practical with our Push Notification API, let's look at its design choices and implementation properties we were able to achieve.
+Centrifugo PRO tries to be practical with its Push Notification API, let's look at its design choices and implementation properties.
 
 ### Storage for tokens
 
@@ -122,19 +122,29 @@ In Centrifugo PRO you can configure one push provider or use all of them – thi
 
 ### FCM
 
-As mentioned above Centrifigo uses PostgreSQL for token storage. To enable push notifications make sure `database` section defined in the configration and `fcm` is in the `push_notifications.enabled_providers` list. Centrifugo PRO uses Redis for queuing push notification requests, so Redis address should be configured also. Finally, to integrate with FCM a path to the credentials file must be provided (see how to create one [in this instruction](https://github.com/Catapush/catapush-docs/blob/master/AndroidSDK/DOCUMENTATION_PLATFORM_GMS_FCM.md)). So the full configuration to start sending push notifications over FCM may look like this:
+As mentioned above, Centrifugo uses PostgreSQL for token storage. To enable push notifications make sure `database` section defined in the configration and `fcm` is in the `push_notifications.enabled_providers` list. Centrifugo PRO uses Redis for queuing push notification requests, so Redis address should be configured also. Finally, to integrate with FCM a path to the credentials file must be provided (see how to create one [in this instruction](https://github.com/Catapush/catapush-docs/blob/master/AndroidSDK/DOCUMENTATION_PLATFORM_GMS_FCM.md)). So the full configuration to start sending push notifications over FCM may look like this:
 
-```json
+```json title="config.json"
 {
-    ...
-    "database": {
-        "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres"
-    },
-    "push_notifications": {
-        "redis_address": "localhost:6379",
-        "enabled_providers": ["fcm"],
-        "fcm_credentials_file_path": "/path/to/service/account/credentials.json"
+  "database": {
+    "enabled": true,
+    "postgresql": {
+      "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres"
     }
+  },
+  "push_notifications": {
+    "queue": {
+      "redis": {
+        "address": "localhost:6379"
+      }
+    },
+    "enabled_providers": [
+      "fcm"
+    ],
+    "fcm": {
+      "credentials_file_path": "/path/to/service/account/credentials.json"
+    }
+  }
 }
 ```
 
@@ -148,16 +158,26 @@ Actually, PostgreSQL database configuration is optional here – you can use pus
 
 ```json
 {
-    ...
-    "database": {
-        "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres"
-    },
-    "push_notifications": {
-        "redis_address": "localhost:6379",
-        "enabled_providers": ["hms"],
-        "hms_app_id": "<your_app_id>",
-        "hms_app_secret": "<your_app_secret>",
+  "database": {
+    "enabled": true,
+    "postgresql": {
+      "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres"
     }
+  },
+  "push_notifications": {
+    "queue": {
+      "redis": {
+        "address": "localhost:6379"
+      }
+    },
+    "enabled_providers": [
+      "hms"
+    ],
+    "hms": {
+      "app_id": "<your_app_id>",
+      "app_secret": "<your_app_secret>"
+    }
+  }
 }
 ```
 
@@ -171,28 +191,37 @@ See example how to get app id and app secret [here](https://github.com/Catapush/
 
 ```json
 {
-    ...
-    "database": {
-        "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres"
-    },
-    "push_notifications": {
-        "redis_address": "localhost:6379",
-        "enabled_providers": ["apns"],
-        "apns_endpoint": "development",
-        "apns_bundle_id": "com.example.your_app",
-        "apns_auth": "token",
-        "apns_token_auth_key_path": "/path/to/auth/key/file.p8",
-        "apns_token_key_id": "<your_key_id>",
-        "apns_token_team_id": "your_team_id",
+  "database": {
+    "enabled": true,
+    "postgresql": {
+      "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres"
     }
+  },
+  "push_notifications": {
+    "queue": {
+      "redis": {
+        "address": "localhost:6379"
+      }
+    },
+    "enabled_providers": [
+      "apns"
+    ],
+    "apns": {
+      "endpoint": "development",
+      "bundle_id": "com.example.your_app",
+      "token_key_file": "/path/to/auth/key/file.p8",
+      "token_key_id": "<your_key_id>",
+      "token_team_id": "your_team_id"
+    }
+  }
 }
 ```
 
 We also support auth over p12 certificates with the following options:
 
-* `push_notifications.apns_cert_p12_path`
-* `push_notifications.apns_cert_p12_b64`
-* `push_notifications.apns_cert_p12_password`
+* `push_notifications.apns.cert_p12_file`
+* `push_notifications.apns.cert_p12_b64`
+* `push_notifications.apns.cert_p12_password`
 
 ### Other options
 
@@ -216,15 +245,18 @@ Adding `push_notifications.read_from_replica` option requires setting `database.
 
 ```json title="config.json"
 {
-    ...
-    "database": {
-        "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres",
-        "replica_dsn": ["postgresql://postgres:pass@127.0.0.1:5433/postgres"]
-    },
-    "push_notifications": {
-        "read_from_replica": true,
-        // rest of the options...
+  "database": {
+    "enabled": true,
+    "postgresql": {
+      "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres",
+      "replica_dsn": [
+        "postgresql://postgres:pass@127.0.0.1:5433/postgres"
+      ]
     }
+  },
+  "push_notifications": {
+    "read_from_replica": true
+  }
 }
 ```
 
@@ -234,14 +266,20 @@ Centrifugo PRO utilizes Redis Streams as the default queue engine for push notif
 
 ```json title="config.json"
 {
-    ...
-    "database": {
-        "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres"
+  "database": {
+    "postgresql": {
+      "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres"
     },
-    "push_notifications": {
-        "queue_engine": "database",
-        // rest of the options...
+    "enabled": true
+  },
+  "push_notifications": {
+    "queue": {
+      "type": "postgresql",
+      "postgresql": {
+        "reuse_from_database": true
+      }
     }
+  }
 }
 ```
 
@@ -250,6 +288,22 @@ Centrifugo PRO utilizes Redis Streams as the default queue engine for push notif
 Queue based on Redis streams is generally more efficient, so if you start with PostgreSQL based queue – you have an option to switch to a more performant implementation later. Though in-flight and currently queued push notifications will be lost during a switch.
 
 :::
+
+You can also use separate PostgreSQL instance for push notification queue, which may be beneficial:
+
+```json title="config.json"
+{
+  ...
+  "push_notifications": {
+    "queue": {
+      "type": "postgresql",
+      "postgresql": {
+        "dsn": "postgresql://postgres:pass@127.0.0.1:5432/push_queue"
+      }
+    }
+  }
+}
+```
 
 ## API description
 

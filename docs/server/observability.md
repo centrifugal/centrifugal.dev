@@ -43,7 +43,7 @@ If you need to change this aggregation interval use the `graphite_interval` opti
 
 Check out Centrifugo [official Grafana dashboard](https://grafana.com/grafana/dashboards/13039) for Prometheus storage. You can import that dashboard to your Grafana, point to Prometheus storage – and enjoy visualized metrics.
 
-![](https://grafana.com/api/dashboards/13039/images/8950/image)
+![](/img/grafana.jpg)
 
 ### Exposed metrics
 
@@ -162,13 +162,6 @@ Here is a description of various metrics exposed by Centrifugo.
 - **Labels:** transport
 - **Description:** Tracks the duration of ping/pong – i.e. time between sending ping to client and receiving pong from client.
 - **Usage:** Helps in monitoring the client protocol performance, latency, making sure frame processing does not take too much time on the client side.
-
-#### centrifugo_transport_connect_count
-
-- **Type:** Counter
-- **Labels:** transport
-- **Description:** Measures the number of connections to specific transports.
-- **Usage:** Use this to monitor the usage of different transports and ensure they are functioning as expected.
 
 #### centrifugo_transport_messages_sent
 

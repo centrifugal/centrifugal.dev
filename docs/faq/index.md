@@ -17,7 +17,7 @@ When connecting to Centrifugo client must authenticate using one of the supporte
 
 You can also [configure access without token](../server/configuration.md#allow_anonymous_connect_without_token) – in this case Centrifugo will consider a connection without provided token anonymous. Or, if you just want to quickly experiment with Centrifugo during development, it's possible to turn on [client_insecure](../server/configuration.md#insecure-client-connection) option – but it **should never be used in production** since disables most of security checks.
 
-Another possible reason of first time connection problems - not properly configured [allowed_origins](../server/configuration.md#allowed_origins). Centrifugo server logs should also clearly indicate such issues on INFO level.
+Another possible reason of first time connection problems - not properly configured [allowed_origins](../server/configuration.md#clientallowed_origins). Centrifugo server logs should also clearly indicate such issues on INFO level.
 
 ### How many connections can one Centrifugo instance handle?
 
@@ -132,7 +132,7 @@ If the underlying transport is HTTP-based, and you use HTTP/2 then this will wor
 
 ### What if I need to send push notifications to mobile or web applications?
 
-We provide [push notifications API](/docs/pro/push_notifications) implementation as part of Centrifugo PRO. It allows sending push notifications to devices - to Apple iOS devices via APNS, Android devices via FCM, or browsers over Web Push API. Also, we cover HMS (Huawei Mobile Services). But in general the task of push notification delivery may be done using another open-source solution, or with Firebase directly.
+We provide [push notifications API](/docs/pro/push_notifications) implementation as part of Centrifugo PRO. It allows sending push notifications to devices - to Apple iOS devices via APNS, Android/iOS/Web devices via FCM. Also, Centrifugo PRO covers HMS (Huawei Mobile Services). But in general the task of push notification delivery may be done using another open-source solution, or with Firebase directly.
 
 The reasonable question here is how can you know when you need to send a real-time message to an online client or push notification to its device for an offline client. The solution is pretty simple. You can keep critical notifications for a client in the database. And when a client reads a message you should send an ack to your backend marking the notification as read by the client. Periodically you can check which notifications were sent to clients but have not been read (no read ack received). For such notifications, you can send push notification to the device.
 

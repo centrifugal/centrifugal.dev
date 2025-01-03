@@ -31,58 +31,64 @@ In addition, Centrifugo allows defining two special buckets containers:
 
 ```json title="config.json"
 {
-    ...
-    "client_command_rate_limit": {
+  "client": {
+    "rate_limit": {
+      "client_command": {
         "enabled": true,
-
-        "default": {
-            "buckets": [
-                {
-                    "interval": "1s",
-                    "rate": 60
-                },
-            ]
-        },
         "total": {
-            "buckets": [
-                {
-                    "interval": "1s",
-                    "rate": 20
-                },
-                {
-                    "interval": "60s",
-                    "rate": 50
-                },
-            ]
+          "enabled": true,
+          "buckets": [
+            {
+              "interval": "1s",
+              "rate": 20
+            },
+            {
+              "interval": "60s",
+              "rate": 50
+            }
+          ]
+        },
+        "default": {
+          "enabled": true,
+          "buckets": [
+            {
+              "interval": "1s",
+              "rate": 60
+            }
+          ]
         },
         "publish": {
-            "buckets": [
-                {
-                    "interval": "1s",
-                    "rate": 1
-                },
-            ]
+          "enabled": true,
+          "buckets": [
+            {
+              "interval": "1s",
+              "rate": 1
+            }
+          ]
         },
         "rpc": {
-            "buckets": [
+          "enabled": true,
+          "buckets": [
+            {
+              "interval": "1s",
+              "rate": 10
+            }
+          ],
+          "method_override": {
+            "update_user_status": {
+              "enabled": true,
+              "buckets": [
                 {
-                    "interval": "1s",
-                    "rate": 10
+                  "interval": "20s",
+                  "rate": 1
                 }
-            ],
-            "method_override": [
-                {
-                    "method": "update_user_status",
-                    "buckets": [
-                        {
-                            "interval": "20s",
-                            "rate": 1
-                        }
-                    ]
-                }
-            ]
+              ]                
+            }
+          }
         }
+      }
     }
+  }
 }
 ```
 
@@ -116,46 +122,51 @@ The configuration is very similar:
 
 ```json title="config.json"
 {
-    ...
-    "user_command_rate_limit": {
+  "client": {
+    "rate_limit": {
+      "user_command": {
         "enabled": true,
-
         "default": {
-            "buckets": [
-                {
-                    "interval": "1s",
-                    "rate": 60
-                },
-            ]
+          "enabled": true,
+          "buckets": [
+            {
+              "interval": "1s",
+              "rate": 60
+            }
+          ]
         },
         "publish": {
-            "buckets": [
-                {
-                    "interval": "1s",
-                    "rate": 1
-                }
-            ]
+          "enabled": true,
+          "buckets": [
+            {
+              "interval": "1s",
+              "rate": 1
+            }
+          ]
         },
         "rpc": {
-            "buckets": [
+          "enabled": true,
+          "buckets": [
+            {
+              "interval": "1s",
+              "rate": 10
+            }
+          ],
+          "method_override": {
+            "update_user_status": {
+              "enabled": true,
+              "buckets": [
                 {
-                    "interval": "1s",
-                    "rate": 10
+                  "interval": "20s",
+                  "rate": 1
                 }
-            ],
-            "method_override": [
-                {
-                    "method": "update_user_status",
-                    "buckets": [
-                        {
-                            "interval": "20s",
-                            "rate": 1
-                        }
-                    ]
-                }
-            ]
+              ]
+            }
+          }
         }
+      }
     }
+  }
 }
 ```
 
@@ -182,47 +193,51 @@ The configuration is very similar:
 
 ```json title="config.json"
 {
-    ...
-    "redis_user_command_rate_limit": {
+  "client": {
+    "rate_limit": {
+      "redis_user_command": {
         "enabled": true,
-        "redis_address": "localhost:6379",
-
         "default": {
-            "buckets": [
-                {
-                    "interval": "1s",
-                    "rate": 60
-                },
-            ]
+          "enabled": true,
+          "buckets": [
+            {
+              "interval": "1s",
+              "rate": 60
+            }
+          ]
         },
         "publish": {
-            "buckets": [
-                {
-                    "interval": "1s",
-                    "rate": 1
-                }
-            ]
+          "enabled": true,
+          "buckets": [
+            {
+              "interval": "1s",
+              "rate": 1
+            }
+          ]
         },
         "rpc": {
-            "buckets": [
+          "enabled": true,
+          "buckets": [
+            {
+              "interval": "1s",
+              "rate": 10
+            }
+          ],
+          "method_override": {
+            "update_user_status": {
+              "enabled": true,
+              "buckets": [
                 {
-                    "interval": "1s",
-                    "rate": 10
+                  "interval": "20s",
+                  "rate": 1
                 }
-            ],
-            "method_override": [
-                {
-                    "method": "update_user_status",
-                    "buckets": [
-                        {
-                            "interval": "20s",
-                            "rate": 1
-                        }
-                    ]
-                }
-            ]
+              ]
+            }
+          }
         }
+      }
     }
+  }
 }
 ```
 
@@ -232,14 +247,22 @@ It's also possible to reuse Centrifugo Redis engine by setting `use_redis_from_e
 
 ```json title="config.json"
 {
-    ...
-    "engine": "redis",
-    "redis_address": "localhost:6379",
-    "redis_user_command_rate_limit": {
+  "engine": {
+    "redis": {
+      "address": "localhost:6379"
+    },
+    "type": "redis"
+  },
+  "client": {
+    "rate_limit": {
+      "redis_user_command": {
         "enabled": true,
-        "use_redis_from_engine": true,
-        ...
+        "redis": {
+          "reuse_from_engine": true
+        }
+      }
     }
+  }
 }
 ```
 
@@ -263,17 +286,23 @@ The configuration on error limits per connection may look like this:
 
 ```json title="config.json"
 {
-    ...
-    "client_error_limits": {
+  "client": {
+    "rate_limit": {
+      "client_error": {
         "enabled": true,
         "total": {
-            "buckets" : [
-                {
-                    "interval": "5s",
-                    "rate": 20
-                }
-            ]
+          "enabled": true,
+          "buckets": [
+            {
+              "interval": "5s",
+              "rate": 20
+            }
+          ]
         }
+      }
     }
+  }
 }
 ```
+
+If a client will have more than 20 protocol errors per 5 second – it will be disconnected.

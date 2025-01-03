@@ -169,7 +169,9 @@ It's also possible to reuse Centrifugo Redis engine by setting `use_redis_from_e
   },
   "user_status": {
     "enabled": true,
-    "use_redis_from_engine": true
+    "redis": {
+      "use_from_engine": true
+    }
   }
 }
 ```

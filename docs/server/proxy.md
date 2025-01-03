@@ -42,7 +42,7 @@ Before we dive into specifics of event configuration let's talk about protocols 
 * HTTP requests – using JSON-based communication with the backend
 * [GRPC](https://grpc.io/) – by exchanging messages based on the Protobuf schema
 
-Both HTTP and GRPC share [the same Protobuf schema](https://github.com/centrifugal/centrifugo/blob/master/internal/proxyproto/proxy.proto) for event format – so you can easily extrapolate all the request/response fields described in this doc from one protocol to another.
+Both HTTP and GRPC share [the same Protobuf schema](https://github.com/centrifugal/centrifugo/blob/master/internal/proxyproto/proxy.proto) under the hood for request/response format – so you can easily extrapolate all the request/response fields described in this doc from one protocol to another.
 
 ### HTTP proxy
 
@@ -129,6 +129,7 @@ This object is used to configure outgoing HTTP-specific request options.
 | Field name       | Field type          | Required | Description                                                                                                                                                                              |
 |------------------|---------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `static_headers` | `map[string]string` | no       | Static set of headers to add to HTTP proxy requests. Note these headers only appended to HTTP proxy requests from Centrifugo to backend. See [Static HTTP headers](#static-http-headers) |
+| `status_to_code_transforms` | `array[HttpStatusToCodeTransform]`  | no       | See [dedicated description](#unexpected-error-handling-and-code-transforms) |
 
 #### GRPC options object
 
@@ -1233,3 +1234,101 @@ The `meta` data can be attached to the connection in the following ways:
 
 * by setting `meta` field in [connection JWT token](./authentication.md#meta)
 * by setting `meta` field in [ConnectResult](#connectresult) of connect proxy.
+
+## Unexpected error handling and code transforms
+
+If the unexpected error happens (i.e. the one which have not been returned by your backend explicitly) during `connect` proxy request, then:
+
+* bidirectional client (i.e. Centrifugal client SDK) will receive `100: internal server error` error and must reconnect with the backoff.
+* unidirectional client will be disconnected with `3004 (internal server error)` disconnect code. In most cases this should result into a reconnect too – but the behaviour of unidirectional clients is controlled by application developers as no Centrifugal SDK is used in that case.
+
+For `subscribe`, `publish`, `rpc` proxies the error reaches bidirectional client (for unidirectional client this does not apply at all as unidirectional client can't issue these operations).
+
+For `publish` and `rpc` the error reaches app developer's code and developers can handle it in a custom way.
+
+Errors for `subscribe` are handled by the bidirectional SDKs automatically and my result into automatic re-subscription, or terminal unsubscribe (depending on the `temporary` flag of error object). The error `100: internal server error` used by default in case of non-200 HTTP proxy request status is temporary and leads to a re-subscription.
+
+If the error happens during `refresh` proxy call – Centrifugo automatically retries the refresh call after some time, so temporary downtime of the app backend does not corrupt established connections.
+
+It's possible to tweak default Centrifugo behaviors and configure HTTP proxy response status code transforms.
+
+```json title="config.json"
+{
+  "client": {
+    "proxy": {
+      "connect": {
+        "enabled": true,
+        "http": {
+          "status_to_code_transforms": [
+            {"status_code": 404, "to_error": {"code": 404, "message": "not found", "temporary": false}},
+            {"status_code": 403, "to_error": {"code": 403, "message": "permission denied", "temporary": false}},
+            {"status_code": 429, "to_error": {"code": 429, "message": "too many requests", "temporary": true}}
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+As mentioned, these codes will eventually reach client and it will act according to the specific error and event type as described above.
+
+For the unidirectional client and `connect` case a special care may be needed – caused by the fact that a unidirectional client can't receive an error reply to a connect command (it only receives Centrifugal client protocol `Push` types). That's why Centrifugo automatically transforms error codes to disconnect codes for unidirectional clients. As mentioned, by default any error from proxy level is transformed to `3004` disconnect code. If you need to use custom disconnect codes for errors you can provide Centrifugo a mapping of error codes to disconnect objects:
+
+```json title="config.json"
+{
+  "client": {
+    "connect_code_to_unidirectional_disconnect": {
+      "enabled": true,
+      "transforms": [
+        {"code": 404, "to": {"code": 4904, "reason": "not found"}},
+        {"code": 403, "to": {"code": 4903, "reason": "permission denied"}},
+        {"code": 429, "to": {"code": 4429, "reason": "too many requests"}}
+      ]
+    }
+  }
+}
+```
+
+This is then applied to all unidirectional transports.
+
+If you are using only unidirectional transports, then it's possible to avoid configuring two different mappings to transform status codes to errors and then error codes to disconnect codes, and use the following instead:
+
+```json title="config.json"
+{
+  "client": {
+    "proxy": {
+      "connect": {
+        "enabled": true,
+        "http": {
+          "status_to_code_transforms": [
+            {"status_code": 404, "to_disconnect": {"code": 4904, "reason": "not found"}},
+            {"status_code": 403, "to_disconnect": {"code": 4903, "reason": "permission denied"}},
+            {"status_code": 429, "to_disconnect": {"code": 4429, "reason": "too many requests"}}
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+For unidirectional SSE/EventSource (`uni_sse`) and unidirectional HTTP-streaming (`uni_http_stream`) it's also possible to return HTTP status codes instead of protocol-level disconnects. For example, for `uni_sse` transport:
+
+```json title="config.json"
+{
+  "uni_sse": {
+    "enabled": true,
+    "connect_code_to_http_response": {
+      "enabled": true,
+      "transforms": [
+        {"code": 404, "to": {"status_code": 404}},
+        {"code": 403, "to": {"status_code": 403}},
+        {"code": 429, "to": {"status_code": 429}}
+      ]
+    }
+  }
+}
+```
+
+While in this example codes match, there could be situations when protocol level error/disconnect codes can't match directly to HTTP codes, that's why Centrifugo requires an explicit configuration.
