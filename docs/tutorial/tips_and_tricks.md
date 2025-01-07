@@ -1,6 +1,6 @@
 ---
 id: tips_and_tricks
-sidebar_label: "Appx #2: tips and tricks"
+sidebar_label: "Appx #2: Tips and tricks"
 title: "Appendix #2: Tips and tricks"
 ---
 

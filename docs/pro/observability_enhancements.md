@@ -37,9 +37,7 @@ To enable:
 {
   "prometheus": {
     "enabled": true,
-    "channel_namespace_resolution": {
-      "enabled": true
-    }
+    "channel_namespace_resolution": true
   }
 }
 ```

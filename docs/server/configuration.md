@@ -953,7 +953,7 @@ Some examples:
 
 ## TLS config object
 
-Most of TLS configurations in Centrifugo can be set using the following TLS object:
+TLS configurations in Centrifugo can be set using the following TLS object:
 
 | Field name             | Type   | Description                                                                                              |
 |------------------------|--------|----------------------------------------------------------------------------------------------------------|

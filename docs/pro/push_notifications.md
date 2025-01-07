@@ -225,9 +225,9 @@ We also support auth over p12 certificates with the following options:
 
 ### Other options
 
-#### push_notifications.max_inactive_device_days
+#### push_notifications.max_inactive_device_interval
 
-This integer option configures the number of days to keep device without updates. By default Centrifugo does not remove inactive devices.
+This duration option configures the max time interval to keep device without updates. By default, Centrifugo does not remove inactive devices.
 
 #### push_notifications.dry_run
 
@@ -809,4 +809,7 @@ Several metrics are available to monitor the state of Centrifugo push worker sys
 
 ## Further reading and tutorials
 
-Coming soon.
+Some additional materials include:
+
+* Blog post [Discovering Centrifugo PRO: push notifications API](/blog/2023/10/29/discovering-centrifugo-pro-push-notifications)
+* Adding push notifications to our [Grand Messenger Tutorial](../tutorial/push_notifications.md)

@@ -37,23 +37,23 @@ At the core of this scalability lies Redis, Centrifugo's primary PUB/SUB engine.
 
 But Redis isn’t the only option. Centrifugo also supports Redis-compatible databases and Nats, giving you the flexibility to choose the engine that best fits your infrastructure. 👉 [See dedicated docs](../server/engines.md).
 
-### Strict client protocol
-
-Centrifugo supports JSON and binary Protobuf protocols for client-server communication. The bidirectional protocol is defined by a strict schema and several ready-to-use SDKs wrap this protocol, handle asynchronous message passing, timeouts, reconnects, and various Centrifugo client API features. See detailed information about client real-time transports in a [dedicated section](../transports/overview.md).
-
 ### Variety of real-time transports
 
 The main transport in Centrifugo is WebSocket. For web browsers with non-working WebSocket connection, Centrifugo provides its own bidirectional WebSocket emulation layer based on HTTP-streaming (using Fetch and Readable streams browser APIs) and SSE (EventSource). Additionally, WebTransport is supported in an experimental form.
 
-In addition to bidirectional transports, Centrifugo also supports a unidirectional approach for real-time updates: using SSE (EventSource), HTTP-streaming, and GRPC unidirectional stream. Utilizing a unidirectional transport is sufficient for many real-time applications and does not require using our client SDKs – just native standards or GRPC-generated code.
+In addition to bidirectional transports, Centrifugo also supports a unidirectional approach for real-time updates: using SSE (EventSource), HTTP-streaming, and GRPC unidirectional stream. Utilizing unidirectional transport is sufficient for many real-time applications and does not require using our client SDKs – just native standards or GRPC-generated code.
 
 See detailed information about client real-time transports in a [dedicated section](../transports/overview.md).
+
+### Strict client protocol
+
+Centrifugo supports JSON and binary Protobuf protocols for client-server communication. The bidirectional protocol is defined by a strict schema and several ready-to-use SDKs wrap this protocol, handle asynchronous message passing, channel subscription multiplexing, timeouts, reconnects, and various Centrifugo client API features. See detailed information about client real-time transports in a [dedicated section](../transports/overview.md).
 
 ### Flexible authentication
 
 Centrifugo can authenticate connections by checking [JWT (JSON Web Token)](../server/authentication.md) or by [issuing an HTTP/GRPC](../server/proxy.md) request to your application backend upon a client connection to Centrifugo. It's possible to proxy original request headers or request metadata (in the case of a GRPC connection).
 
-It supports the [JWK specification](https://datatracker.ietf.org/doc/html/rfc7517).
+Centrifugo supports the [JWK specification](https://datatracker.ietf.org/doc/html/rfc7517) which solves the problem of rotating JWT secret keys.
 
 ### Connection management
 
@@ -62,6 +62,8 @@ Connections can expire; developers can choose a way to handle connection refresh
 ### Channel (room) concept
 
 Centrifugo is a PUB/SUB server – users subscribe to [channels](../server/channels.md) to receive real-time updates. A message sent to a channel is delivered to all online channel subscribers.
+
+Subscriptions to channels may be authorized in different ways, including individual JWT or based on configuration rules.
 
 ### Different types of subscriptions
 
@@ -89,7 +91,7 @@ The built-in [admin UI](../server/admin_web.md) allows publishing messages to ch
 
 ### Cross-platform
 
-Centrifugo works on Linux, MacOS, and Windows.
+Centrifugo works on Linux, macOS, and Windows.
 
 ### Ready to deploy
 
@@ -105,5 +107,5 @@ Centrifugo PRO extends Centrifugo with several unique features which can provide
 
 * push notifications API – to send mobile and browser pushes over FCM, APNs, HMS
 * real-time analytics with ClickHouse for more insights about your real-time ecosystem
-* performance optimizations to reduce resource usage and thus reducing overall costs
-* many more, refer to the [Centrifugo PRO documentation](../pro/overview.md).
+* performance, compression, scalability optimizations to reduce resource usage and thus reducing overall costs
+* and many more, refer to the [Centrifugo PRO documentation](../pro/overview.md).

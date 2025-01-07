@@ -1,6 +1,6 @@
 ---
 id: improvements
-sidebar_label: "Appx #1: possible improvements"
+sidebar_label: "Appx #1: Possible improvements"
 title: "Appendix #1: Possible Improvements"
 ---
 
@@ -26,7 +26,7 @@ There are still many areas for improvement in GrandChat, but we had to halt at a
 
 💡 Support markdown as message content and add the ability to attach media to messages. Remember that messages should only have a link to media files; do not attempt to pass file content over WebSocket.
 
-💡 Add push notifications to engage offline users to come back to the app or notify them about important messages, such as when someone mentions a user in the room. Centrifugo PRO provides a [push notifications API](../pro/push_notifications.md), but you can also use any third-party service.
+💡 [Add push notifications](./push_notifications.md) to engage offline users to come back to the app or notify them about important messages, such as when someone mentions a user in the room. Centrifugo PRO provides a [push notifications API](../pro/push_notifications.md), but you can also use any third-party service.
 
 💡 There is one more possible issue in application state sync we've decided not to solve here – it may occur during the initial load of data from the backend upon page load. If a real-time message comes after the state is loaded but before a real-time subscription is established for the first time, the message won't be shown until page reload. There are multiple ways to fix this, such as establishing a real-time connection/subscription first and then loading the initial chat state and applying messages received while the state was loading. Or get stream top offset from Centrifigo history API before initial state load, then use it for the initial subscribe. Alternatively, silently re-sync the state in the background after setting up a real-time subscription to a personal channel.
 

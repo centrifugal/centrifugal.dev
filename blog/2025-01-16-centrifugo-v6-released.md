@@ -1,7 +1,7 @@
 ---
 title: Centrifugo v6 released 
 tags: [centrifugo, release]
-description: We are excited to tell the world about Centrifugo v6 – a new major release, which is now live. This release contains fundamental changes in the configuration and adds several useful features to Centrifugo OSS and Centrifugo PRO.
+description: We are excited to tell the world about Centrifugo v6 – a new major release, which is now live. This release contains fundamental changes in the configuration and adds several useful features and more observability to Centrifugo OSS and Centrifugo PRO.
 author: Centrifugal team
 authorTitle: 💻✨🔮✨💻
 authorImageURL: /img/logo_animated.svg
@@ -14,9 +14,11 @@ draft: true
 
 <img src="/img/v6.jpg" />
 
-We are excited to tell the world about Centrifugo v6 – a new major release, which is now live. This release contains fundamental improvements in the configuration to simplify working with Centrifugo from users and core development perspectives, and adds several useful features to Centrifugo OSS and Centrifugo PRO.
+We are excited to tell the world about Centrifugo v6 – a new major release, which is now live. This release contains fundamental improvements in the configuration to simplify working with Centrifugo from users and core development perspectives, adds several useful features and more observability to Centrifugo OSS and Centrifugo PRO.
 
 ## Why Centrifugo v6 was required?
+
+<img src="/img/v6_most_wanted.jpg" align="left" style={{'marginRight': '15px', 'marginBottom': '5px', 'float': 'left', 'maxWidth': '300px'}} />
 
 In recent blog post we talked about [notable Centrifugo v5 milestones](/blog/2024/12/23/centrifugo-v5-milestones). The v5 release was a significant milestone in the Centrifugo project's history, introducing a number of new features and improvements. The time for a new major release had come though.
 
@@ -36,9 +38,30 @@ We now have [our own WebSocket emulation layer](https://centrifugal.dev/blog/202
 
 That's why SockJS was removed in Centrifugo v6. Our Javascript SDK `centrifuge-js` will support SockJS transport for some time to work with Centrifugo v5, but we will remove it at some point from the client SDK also.
 
+To enable Centrifugo built-in bidirectional emulation you need to enable [HTTP streaming](/docs/transports/http_stream) or [SSE](/docs/transports/sse) transports in server configuration, then configure `centrifuge-js` to use those [as described here](https://github.com/centrifugal/centrifuge-js?tab=readme-ov-file#http-based-websocket-fallbacks):
+
+```javascript
+const transports = [
+    {
+        transport: 'websocket',
+        endpoint: 'ws://localhost:8000/connection/websocket'
+    },
+    {
+        transport: 'http_stream',
+        endpoint: 'http://localhost:8000/connection/http_stream'
+    },
+    {
+        transport: 'sse',
+        endpoint: 'http://localhost:8000/connection/sse'
+    }
+];
+const centrifuge = new Centrifuge(transports);
+centrifuge.connect()
+```
+
 ## Removing Tarantool
 
-The experimental Tarantool engine was introduced in Centrifugo v3, and we had hopes for it to be a good alternative to Redis. Unfortunately, Tarantool engine implementation has not received many updates since it was introduced and it now lacks several features of engine, such as idempotent publishing or delta compression. These features were added to memory and Redis engines during v5 release life cycle, but Tarantool was left behind.
+The experimental Tarantool engine was introduced in Centrifugo v3, and we had hopes for it to be a good alternative to Redis. Unfortunately, Tarantool engine implementation has not received many updates since it was introduced, and it now lacks several features of engine, such as idempotent publishing or delta compression. These features were added to memory and Redis engines during v5 release life cycle, but Tarantool was left behind.
 
 We were aware of only two setups where it was used – and both clients eventually moved away from the Tarantool engine with our help. Also, our usage stats do not show any notable usage of the Tarantool engine.
 
@@ -49,6 +72,8 @@ That's why we decided to remove Tarantool integration from Centrifugo. All Taran
 Sometimes, it's necessary to drop some ballast to continue the beautiful journey...
 
 <img src="/img/ballast.jpg" />
+
+Meanwhile, our Redis integration was improved, in Centrifugo v4 we migrated to [redis/rueidis](https://github.com/redis/rueidis) Go library which allowed Centrifugo node to have a better Redis communication throughput. See more details in [Improving Centrifugo Redis Engine throughput and allocation efficiency with Rueidis Go library](/blog/2022/12/20/improving-redis-engine-performance) blog post. We've put more effort to integrate with Redis-compatible storages, like [DragonflyDB](https://www.dragonflydb.io/) which may open new interesting properties without the need to maintain a separate engine.
 
 ## Configuration refactoring
 
@@ -264,7 +289,7 @@ See [exposed metrics](/docs/server/observability#exposed-metrics) for the descri
 
 ## Actualized Grafana dashboard
 
-We understand that it's important to have a good starting point for monitoring Centrifugo. That's why we updated our [Grafana dashboard](https://grafana.com/grafana/dashboards/13039-centrifugo/) to include all new metrics added during lifetime of Centrifugo v5 and added in Centrifugo v6. Instead of 22 panels it now includes 37 for the OSS edition and provides a better understanding of what's going on with your installation. We also re-considered how we display rate on a dashboard – instead of summing up rates per minute we now show rates per second which is more expected for most Prometheus users.
+We understand that it's important to have a good starting point for monitoring Centrifugo. That's why we updated our [Grafana dashboard](https://grafana.com/grafana/dashboards/13039-centrifugo/) to include all new metrics added during lifetime of Centrifugo v5 and added in Centrifugo v6. Instead of 22 panels it now includes 39 for the OSS edition and provides a better understanding of what's going on with your installation. We also re-considered how we display rate on a dashboard – instead of summing up rates per minute we now show rates per second which is more expected for most Prometheus users.
 
 <img src="/img/grafana.jpg" />
 
@@ -278,9 +303,9 @@ Other improvements done in v6 release include:
 * Added TLS support for PostgreSQL clients: for async consumer from PostgreSQL outbox table, for database connection and for PostgreSQL-based push notifications queue client.
 * New option `message_size_limit` for WebTransport – it effectively limits the maximum size of individual message through the WebTransport connection.
 * Better logging for TLS configuration on start on debug level to help to understand what's wrong with a TLS setup.
-* Possibility to set Redis Cluster and Sentinel configurations using Redis address configuration option. Previously it only supported a standalone single Redis setup. A notable addition here is that with new approach it's possible to set different Redis master names in setup which wants to re-use the same Sentinel nodes for managing different Redis shards.
-* We refactored logging approach throughout Centrifugo source code, making it more straightforward and consise. This allowed to remove dependency to Centrifuge Node object in many places where it lived only for logging purposes – a bit awkward legacy in source code which is now eliminated. And this opened a way to utilize the fastest way to write logs with `zerolog` library – writing strictly typed log values in many places where we previously used untyped field maps.
-* Centrifugo users from Mayflower company needed to figure out the best Redis setup for their load profile – we now have a simple tool to put Centrifugo specific load on Redis.
+* Possibility to set Redis Cluster and Sentinel configurations using Redis address configuration option – by using Redis URL with `redis+cluster://` and `redis+sentinel://` schemes correspondingly. Previously `address` only supported a standalone single Redis setup. A notable addition here is that with new approach it's possible to set different Redis master names in setup which wants to re-use the same Sentinel nodes for managing different Redis shards. And it generally simplifies Redis configuration, especially for sharded setup – each shard may be represented just by a separate address string with its own Redis options in `address` array. See updated [Engines and scalability](/docs/server/engines) doc chapter.
+* We refactored logging approach throughout Centrifugo source code, making it more straightforward and consise. This allowed to remove dependency to [Centrifuge](https://github.com/centrifugal/centrifuge) `Node` object in many places where it lived only for logging purposes – a bit awkward legacy in source code which is now eliminated. And this opened a way to utilize the fastest way to write logs with `zerolog` library – writing strictly typed log values in many places where we previously used untyped field maps.
+* Centrifugo users from Mayflower company needed to figure out the best Redis setup for their load profile – we now have a [simple tool](https://github.com/centrifugal/centrifuge/tree/master/_examples/redis_benchmark) to put Centrifugo specific load on Redis.
 
 A huge work has been done in the documentation – all chapters were reviewed, config samples updated.
 
@@ -307,6 +332,12 @@ We still consider this feature to be alpha state though.
 Dedicated PostgreSQL [push notifications](https://centrifugal.dev/docs/pro/push_notifications) queue config was added in Centrifugo PRO. Now it's not necessary to use the same PostgreSQL for push notifications queue as for device management – it can be separate.
 
 If you are using Centrifugo push notifications without a device management API, just for broadcasting pushes to known FCM/APNs/HMS tokens, extra tables in PostgreSQL which Centrifugo creates for device data storage and other functionality may be avoided.
+
+### Tutorial for push notifications
+
+We [extended Grand Chat tutorial](/docs/tutorial/push_notifications) to include a new appendix chapter on how to integrate push notifications with Centrifugo PRO. This tutorial will help you to understand how to send Web push notifications to mobile devices using Centrifugo PRO and FCM. The chapter is still under construction, but already has all the parts combined into a working implementation:
+
+<video width="100%" loop={true} muted controls src="/img/grand-chat-tutorial-demo-push.mp4"></video>
 
 ### Generalized channel patterns
 

@@ -25,6 +25,7 @@ module.exports = {
     "tutorial/improvements",
     "tutorial/tips_and_tricks",
     "tutorial/monitoring",
+    "tutorial/push_notifications",
   ],
   Guides: [
     "server/configuration",
