@@ -136,6 +136,10 @@ module.exports = {
         docs: {
           versions: {
             current: {
+              label: "v6",
+              badge: false
+            },
+            "5": {
               label: "v5",
               badge: false
             },
