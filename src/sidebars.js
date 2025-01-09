@@ -47,7 +47,6 @@ module.exports = {
     "server/observability",
     "server/infra_tuning",
     "server/load_balancing",
-    "server/autocert",
     "server/codes",
     "server/console_commands",
   ],

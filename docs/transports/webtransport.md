@@ -15,13 +15,15 @@ To use WebTransport you first need to run HTTP/3 experimental server and enable 
 
 ```json title="config.json"
 {
-  "tls": {
-    "enabled": true,
-    "key_pem_file": "path/to/key",
-    "cert_pem_file": "path/to/crt"
-  },
-  "http3": {
-    "enabled": true
+  "http_server": {
+    "tls": {
+      "enabled": true,
+      "key_pem_file": "path/to/key",
+      "cert_pem_file": "path/to/crt"
+    },
+    "http3": {
+      "enabled": true
+    }
   },
   "webtransport": {
     "enabled": true

@@ -9,7 +9,7 @@ const pathMap = {
     "redis_prefix": "engine.redis.prefix",
     "redis_connect_timeout": "engine.redis.connect_timeout",
     "redis_io_timeout": "engine.redis.io_timeout",
-    "redis_use_lists": "engine.redis.use_lists",
+    "redis_use_lists": "engine.redis.history_use_lists",
     "redis_db": "engine.redis.db",
     "redis_user": "engine.redis.user",
     "redis_password": "engine.redis.password",
@@ -23,25 +23,25 @@ const pathMap = {
     "redis_sentinel_client_name": "engine.redis.sentinel_client_name",
 
     "redis_tls": "engine.redis.tls.enabled",
-    "redis_tls_key": "engine.redis.tls.key_pem_file",
-    "redis_tls_cert": "engine.redis.tls.cert_pem_file",
+    "redis_tls_key": "engine.redis.tls.key_pem",
+    "redis_tls_cert": "engine.redis.tls.cert_pem",
     "redis_tls_cert_pem": "engine.redis.tls.cert_pem",
     "redis_tls_key_pem": "engine.redis.tls.key_pem",
-    "redis_tls_root_ca": "engine.redis.tls.server_ca_pem_file",
+    "redis_tls_root_ca": "engine.redis.tls.server_ca_pem",
     "redis_tls_root_ca_pem": "engine.redis.tls.server_ca_pem",
-    "redis_tls_client_ca": "engine.redis.tls.client_ca_pem_file",
+    "redis_tls_client_ca": "engine.redis.tls.client_ca_pem",
     "redis_tls_client_ca_pem": "engine.redis.tls.client_ca_pem",
     "redis_tls_server_name": "engine.redis.tls.server_name",
     "redis_tls_insecure_skip_verify": "engine.redis.tls.insecure_skip_verify",
 
     "redis_sentinel_tls": "engine.redis.sentinel_tls.enabled",
-    "redis_sentinel_tls_key": "engine.redis.sentinel_tls.key_pem_file",
-    "redis_sentinel_tls_cert": "engine.redis.sentinel_tls.cert_pem_file",
+    "redis_sentinel_tls_key": "engine.redis.sentinel_tls.key_pem",
+    "redis_sentinel_tls_cert": "engine.redis.sentinel_tls.cert_pem",
     "redis_sentinel_tls_cert_pem": "engine.redis.sentinel_tls.cert_pem",
     "redis_sentinel_tls_key_pem": "engine.redis.sentinel_tls.key_pem",
-    "redis_sentinel_tls_root_ca": "engine.redis.sentinel_tls.server_ca_pem_file",
+    "redis_sentinel_tls_root_ca": "engine.redis.sentinel_tls.server_ca_pem",
     "redis_sentinel_tls_root_ca_pem": "engine.redis.sentinel_tls.server_ca_pem",
-    "redis_sentinel_tls_client_ca": "engine.redis.sentinel_tls.client_ca_pem_file",
+    "redis_sentinel_tls_client_ca": "engine.redis.sentinel_tls.client_ca_pem",
     "redis_sentinel_tls_client_ca_pem": "engine.redis.sentinel_tls.client_ca_pem",
     "redis_sentinel_tls_server_name": "engine.redis.sentinel_tls.server_name",
     "redis_sentinel_tls_insecure_skip_verify": "engine.redis.sentinel_tls.insecure_skip_verify",
@@ -209,38 +209,32 @@ const pathMap = {
     "uni_http_stream_connect_code_to_http_response.enabled": "uni_http_stream.connect_code_to_http_response.enabled",
     "uni_http_stream_connect_code_to_http_response.transforms": "uni_http_stream.connect_code_to_http_response.transforms",
 
-    "log_level": "log_level",
-    "log_file": "log_file",
+    "log_level": "log.level",
+    "log_file": "log.file",
 
-    "tls": "tls.enabled",
-    "tls_key": "tls.key_pem_file",
-    "tls_cert": "tls.cert_pem_file",
-    "tls_cert_pem": "tls.cert_pem",
-    "tls_key_pem": "tls.key_pem",
-    "tls_root_ca": "tls.server_ca_pem_file",
-    "tls_root_ca_pem": "tls.server_ca_pem",
-    "tls_client_ca": "tls.client_ca_pem_file",
-    "tls_client_ca_pem": "tls.client_ca_pem",
+    "tls": "http_server.tls.enabled",
+    "tls_key": "http_server.tls.key_pem",
+    "tls_cert": "http_server.tls.cert_pem",
+    "tls_cert_pem": "http_server.tls.cert_pem",
+    "tls_key_pem": "http_server.tls.key_pem",
+    "tls_root_ca": "http_server.tls.server_ca_pem",
+    "tls_root_ca_pem": "http_server.tls.server_ca_pem",
+    "tls_client_ca": "http_server.tls.client_ca_pem",
+    "tls_client_ca_pem": "http_server.tls.client_ca_pem",
     "tls_server_name": "tls.server_name",
     "tls_insecure_skip_verify": "tls.insecure_skip_verify",
 
     "swagger": "swagger.enabled",
     "admin_external": "admin.external",
     "api_external": "http_api.external",
-    "address": "address",
-    "port": "port",
-    "internal_address": "internal_address",
-    "internal_port": "internal_port",
+    "address": "http_server.address",
+    "port": "http_server.port",
+    "internal_address": "http_server.internal_address",
+    "internal_port": "http_server.internal_port",
+    "tls_external": "http_server.tls_external",
 
     "webtransport": "webtransport.enabled",
-    "http3": "http3.enabled",
-
-    "tls_external": "tls_external",
-
-    "connect_proxy_name": "client.connect_proxy_name",
-    "refresh_proxy_name": "client.refresh_proxy_name",
-
-    "rpc_proxy_name": "rpc.without_namespace.rpc_proxy_name",
+    "http3": "http_server.http3.enabled",
 
     "proxy_connect_endpoint": "client.proxy.connect.endpoint",
     "proxy_refresh_endpoint": "client.proxy.refresh.endpoint",
@@ -290,13 +284,13 @@ const pathMap = {
     "grpc_api_key": "grpc_api.key",
     "grpc_api_reflection": "grpc_api.reflection",
     "grpc_api_tls": "grpc_api.tls.enabled",
-    "grpc_api_tls_key": "grpc_api.tls.key_pem_file",
-    "grpc_api_tls_cert": "grpc_api.tls.cert_pem_file",
+    "grpc_api_tls_key": "grpc_api.tls.key_pem",
+    "grpc_api_tls_cert": "grpc_api.tls.cert_pem",
     "grpc_api_tls_cert_pem": "grpc_api.tls.cert_pem",
     "grpc_api_tls_key_pem": "grpc_api.tls.key_pem",
-    "grpc_api_tls_root_ca": "grpc_api.tls.server_ca_pem_file",
+    "grpc_api_tls_root_ca": "grpc_api.tls.server_ca_pem",
     "grpc_api_tls_root_ca_pem": "grpc_api.tls.server_ca_pem",
-    "grpc_api_tls_client_ca": "grpc_api.tls.client_ca_pem_file",
+    "grpc_api_tls_client_ca": "grpc_api.tls.client_ca_pem",
     "grpc_api_tls_client_ca_pem": "grpc_api.tls.client_ca_pem",
     "grpc_api_tls_server_name": "grpc_api.tls.server_name",
     "grpc_api_tls_insecure_skip_verify": "grpc_api.tls.insecure_skip_verify",
@@ -337,13 +331,13 @@ const pathMap = {
     "uni_grpc_max_receive_message_size": "uni_grpc.max_receive_message_size",
     //"uni_grpc_tls_disable":              "uni_grpc.tls_disable",
     "uni_grpc_tls": "uni_grpc.tls.enabled",
-    "uni_grpc_tls_key": "uni_grpc.tls.key_pem_file",
-    "uni_grpc_tls_cert": "uni_grpc.tls.cert_pem_file",
+    "uni_grpc_tls_key": "uni_grpc.tls.key_pem",
+    "uni_grpc_tls_cert": "uni_grpc.tls.cert_pem",
     "uni_grpc_tls_cert_pem": "uni_grpc.tls.cert_pem",
     "uni_grpc_tls_key_pem": "uni_grpc.tls.key_pem",
-    "uni_grpc_tls_root_ca": "uni_grpc.tls.server_ca_pem_file",
+    "uni_grpc_tls_root_ca": "uni_grpc.tls.server_ca_pem",
     "uni_grpc_tls_root_ca_pem": "uni_grpc.tls.server_ca_pem",
-    "uni_grpc_tls_client_ca": "uni_grpc.tls.client_ca_pem_file",
+    "uni_grpc_tls_client_ca": "uni_grpc.tls.client_ca_pem",
     "uni_grpc_tls_client_ca_pem": "uni_grpc.tls.client_ca_pem",
     "uni_grpc_tls_server_name": "uni_grpc.tls.server_name",
     "uni_grpc_tls_insecure_skip_verify": "uni_grpc.tls.insecure_skip_verify",
@@ -394,8 +388,8 @@ const pathMap = {
     "client_queue_initial_cap": "client.queue_initial_cap",
 
     "cache.enabled": "cache.enabled",
-    "cache.engine": "cache.engine",
-    "cache.use_redis_from_engine": "cache.use_redis_from_engine",
+    "cache.engine": "cache.storage_type",
+    "cache.use_redis_from_engine": "cache.redis.use_from_engine",
     "cache.redis": "cache.redis",
 
     "clickhouse_analytics.enabled": "clickhouse_analytics.enabled",
@@ -540,6 +534,8 @@ const pathMap = {
     "admin_oidc.access_cel": "admin.oidc.access_cel",
 
     "websocket_compression_prepared_message_cache_size": "websocket.compression_prepared_message_cache_size",
+
+    "rpc_proxy_name": "rpc.without_namespace.proxy_name",
 };
 
 function convert(sourceObj, pathMap) {
@@ -1112,6 +1108,27 @@ function convert(sourceObj, pathMap) {
         newConfig.push_notifications.max_inactive_device_interval = `${newConfig.push_notifications.max_inactive_device_days * 24}h`;
         delete newConfig.push_notifications.max_inactive_device_days;
         log.push(`migrate value from "max_inactive_device_days" to path "max_inactive_device_interval" in push_notifications`);
+    }
+
+    // If there was rpc proxy endpoint - enable rpc proxy for methods without_namespace. Add explicit
+    // namespace boundary used by Centrifugo.
+    if (newConfig.rpc && newConfig.rpc.proxy && newConfig.rpc.proxy.endpoint && !newConfig.rpc.without_namespace) {
+        newConfig.rpc.without_namespace = {
+            'proxy_enabled': true,
+        };
+        newConfig.rpc.namespace_boundary = ":";
+        log.push(`set rpc.without_namespace.proxy_enabled`);
+    }
+
+    // Let's fix config options to enable proxy inside rpc namespaces array objects.
+    if (newConfig.rpc && newConfig.rpc.namespaces) {
+        newConfig.rpc.namespaces = newConfig.rpc.namespaces.map(namespace => {
+            if (namespace.rpc_proxy_name) {
+                namespace.proxy_enabled = true;
+                namespace.proxy_name = namespace.rpc_proxy_name;
+                delete namespace.rpc_proxy_name;
+            }
+        });
     }
 
     return {newConfig, log};

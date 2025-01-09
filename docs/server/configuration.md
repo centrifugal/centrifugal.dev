@@ -151,11 +151,13 @@ Centrifugo validates configuration on start, in case the configuration is invali
 
 Centrifugo also tries to help you find misconfigurations by writing logs on WARN level during server startup in case configuration file or environment variables have keys which are not known by Centrifugo. Unknown keys do not result into server exiting at this point.
 
-## Top-level config options
+It's recommended to pay attention to logs on server start to ensure that configuration is correct.
 
-Let's describe top-level configuration options you can set in Centrifugo.
+## HTTP server config options
 
-### port
+Let's describe configuration options you can set for Centrifugo HTTP server. They are combined under `http_server` section of configuration file.
+
+### http_server.port
 
 Port to bind Centrifugo to (string, by default `"8000"`).
 
@@ -163,11 +165,13 @@ Example:
 
 ```json title="config.json"
 {
-  "port": "8000"
+  "http_server" : {
+    "port": "8000"
+  }
 }
 ```
 
-### address
+### http_server.address
 
 Bind your Centrifugo to a specific interface address (string, by default `""` - listen on all available interfaces).
 
@@ -175,11 +179,13 @@ Example:
 
 ```json title="config.json"
 {
-  "address": "0.0.0.0"
+  "http_server" : {
+    "address": "0.0.0.0"
+  }
 }
 ```
 
-### tls
+### http_server.tls
 
 TLS layer is very important not only for securing your connections but also to increase a chance to establish Websocket connection.
 
@@ -191,37 +197,87 @@ In most situations you better put TLS termination task on your reverse proxy/loa
 
 If you still need to configure Centrifugo server TLS then `tls` object can help you. This is a [unified TLS object](#tls-config-object). If set and enabled Centrifugo HTTP server will start with TLS support.
 
-### tls_autocert
+### http_server.tls_autocert
 
-An object which allows configuring [Automatic TLS certificates](./autocert.md) with Let's Encrypt.
+Centrifugo supports certificate loading and renewal from Let's Encrypt using ACME protocol for HTTP server.
 
-### tls_external
+:::tip
+
+In most situations you better put TLS termination task on your reverse proxy/load balancing software such as Nginx. This can be a good thing for performance.
+
+:::
+
+For automatic certificates from Let's Encrypt add into configuration file:
+
+```json title="config.json"
+{
+  "http_server": {
+    "tls_autocert": {
+      "enabled": true,
+      "host_whitelist": "www.example.com",
+      "cache_dir": "/tmp/certs",
+      "email": "user@example.com",
+      "http": true,
+      "http_addr": ":80"
+    }
+  }
+}
+```
+
+`http_server.tls_autocert.enabled` (boolean) says Centrifugo that you want automatic certificate handling using ACME provider.
+
+`http_server.tls_autocert.host_whitelist` (string) is a string with your app domain address. This can be comma-separated
+list. It's optional but recommended for extra security.
+
+`http_server.tls_autocert.cache_dir` (string) is a path to a folder to cache issued certificate files. This is optional
+but will increase performance.
+
+`http_server.tls_autocert.email` (string) is optional - it's an email address ACME provider will send notifications
+about problems with your certificates.
+
+`http_server.tls_autocert.http` (boolean) is an option to handle http_01 ACME challenge on non-TLS port.
+
+`http_server.tls_autocert.http_addr` (string) can be used to set address for handling http_01 ACME challenge (default is `:80`)
+
+When configured correctly and your domain is valid (`localhost` will not work) - certificates will be retrieved on first request to Centrifugo.
+
+Also Let's Encrypt certificates will be automatically renewed.
+
+### http_server.tls_external
 
 Bool, default `false`.
 
 When set to `true` Centrifugo will use TLS configuration from `tls` option only for external endpoints (i.e. for client-facing ones – WebSocket, SSE, and so on).
 
-### internal_port
+### http_server.internal_port
 
 The port to bind internal endpoints to (string, by default `""` – not used). When set Centrifugo will bind internal endpoints to this port. See more about internal endpoints [below](#custom-internal-port).
 
-### internal_address
+### http_server.internal_address
 
 Bind internal endpoints to a specific interface address (string, by default `""` - listen on all available interfaces).
 
-### internal_tls
+### http_server.internal_tls
 
 [TLS configuration object](#tls-config-object). This is useful when you want to use different TLS settings for internal endpoints (like Prometheus, debug, health, etc).
 
-### pid_file
+## Logging configuration
 
-Path to a file where Centrifugo will write its PID (string, by default `""` – not used).
+Logging options may be set under `log` section of configuration file.
 
-### log_level
+### log.level
 
 Log level (string, by default `"info"`). Possible values are: `"none"`, `"trace"`, `"debug"`, `"info"`, `"warn"`, `"error"`. See also some info in [observability](./observability.md#logs) chapter.
 
-### log_file
+```json title="config.json"
+{
+  "log" : {
+    "level": "error"
+  }
+}
+```
+
+### log.file
 
 Path to a file to which Centrifugo will write logs (string, by default `""` – not used, logs go to STDOUT).
 
@@ -229,7 +285,7 @@ Path to a file to which Centrifugo will write logs (string, by default `""` – 
 
 Engine in Centrifugo is responsible for PUB/SUB, channel history cache, online presence features. By default, all Centrifugo PUB/SUB, channel history cache, online presence features are managed by in-memory engine. To scale Centrifugo to many nodes you may want to set alternative engine.
 
-We have a chapter [dedicated to engines](engines.md).
+Here we only mention `engine.type` option, but there are more available engine type specific options. We have a chapter dedicated to engines - [Engines and Scalability](engines.md).
 
 ### engine.type
 
@@ -245,7 +301,7 @@ By default, all Centrifugo PUB/SUB, channel history cache, online presence featu
 }
 ```
 
-There is a possibility to use `redis` type for an alternative full-featured engine implementation based on [Redis](https://redis.io/). Centrifugo also provides an integration with [Nats](https://nats.io/) server for at most once delivery cases. See more details in a [dedicated chapter](engines.md).
+There is a possibility to use `redis` type for an alternative full-featured engine implementation based on [Redis](https://redis.io/). Centrifugo also provides an integration with [Nats](https://nats.io/) server for at most once delivery cases. See more details in a dedicated chapter [Engines and Scalability](engines.md).
 
 ## Broker config
 
@@ -253,7 +309,7 @@ Centrifugo v6 introduced a new way to set a separate broker responsible for PUB/
 
 Once a separate broker configured it will be used for Broker part instead of Engine's Broker part.
 
-See more description in [dedicated chapter](engines.md#separate-broker-and-presence-manager).
+See more description of available options inside the section in [Engines and Scalability](engines.md#separate-broker-and-presence-manager) chapter.
 
 ## Presence Manager config
 
@@ -261,7 +317,7 @@ Centrifugo v6 introduced a new way to set a separate presence manager responsibl
 
 Once a separate presence manager configured it will be used for Presence Manager part instead of Engine's Presence Manager part.
 
-See more description in [dedicated chapter](engines.md#separate-broker-and-presence-manager).
+See more description of available options inside the section in [Engines and Scalability](engines.md#separate-broker-and-presence-manager) chapter.
 
 ## Server HTTP API config
 
@@ -371,13 +427,13 @@ The section `client.token` contains options for client connection and subscripti
 
 It's possible to use separate token options for channel subscription – see details [here](./channel_token_auth.md#separate-subscription-token-config).
 
-### client.connect_proxy_name
+### client.proxy.connect
 
-The name of proxy to use for connect events. See how to configure [event proxies](./proxy.md). 
+The configuration object for proxy to use for connect events. See how to configure [event proxies](./proxy.md).
 
-### client.refresh_proxy_name
+### client.proxy.refresh
 
-The name of proxy to use for refresh events. See how to configure [event proxies](./proxy.md). 
+The configuration object for proxy to use for refresh events. See how to configure [event proxies](./proxy.md).
 
 ### client.ping_interval
 
@@ -523,7 +579,37 @@ This is an array of objects with to configure [channel namespaces](./channels.md
 
 ### channel.history_meta_ttl
 
-TBD
+Duration, default `"720h"`.
+
+This option is a time to keep history meta information for channels when publication history is used. This value must be bigger than max `history_ttl` in all channel namespaces.
+
+The motivation to have history meta information TTL is as follows. When using a history in a channel, Centrifugo keeps some metadata for each channel stream. Metadata includes the latest stream offset and its epoch value. In some cases, when channels are created for а short time and then not used anymore, created metadata can stay in memory while not useful. For example, you can have a personal user channel but after using your app for a while user left it forever. From a long-term perspective, this can be an unwanted memory growth. Setting a reasonable value to this option can help to expire metadata faster (or slower if you need it).
+
+It's possible to redefine `history_meta_ttl` on channel namespace level.
+
+### channel.proxy.subscribe
+
+The configuration object for proxy to use for channel subscribe events. See how to configure [event proxies](./proxy.md).
+
+### channel.proxy.publish
+
+The configuration object for proxy to use for channel publish events. See how to configure [event proxies](./proxy.md).
+
+### channel.proxy.sub_refresh
+
+The configuration object for proxy to use for channel sub refresh events. See how to configure [event proxies](./proxy.md).
+
+### channel.proxy.subscribe_stream
+
+The configuration object for proxy to use for channel subscribe stream. See how to configure in [Proxy subscription streams](./proxy_streams.md).
+
+### channel.proxy.state
+
+The configuration object for proxy to use for channel state events. Centrifugo PRO only – see [docs](../pro/channel_events.md).
+
+### chanel.proxy.cache_empty
+
+The configuration object for proxy to use for cache empty events. Centrifugo PRO only – see [docs](../pro/channel_cache_empty.md).
 
 ### channel.max_length
 
@@ -537,22 +623,28 @@ The section `rpc` of configuration file allows configuring options for client in
 
 ### rpc.without_namespace
 
-TBD
+Analogous to `channel.without_namespace` but for client RPC calls.
 
 ### rpc.namespaces
 
-TBD
+Analogous to `channel.namespaces` but for client RPC calls.
+
+### rpc.namespace_boundary
+
+String, default `":"`.
+
+Analogue to `channel.namespace_boundary` but for client RPC calls.
 
 ### rpc.ping
-
-New in Centrifugo v5.4.2
 
 Sometimes you may need a way to just ping Centrifugo server from the client-side. For example, some Centrifugo users wanted this to show RTT time to server in UI. It's possible to enable RPC extension which simply returns an empty reply to RPC `ping`:
 
 ```json title="config.json"
 {
   "rpc": {
-    "ping": true
+    "ping": {
+      "enabled": true
+    }
   }
 }
 ```
@@ -572,8 +664,10 @@ If you are not happy with method name `ping` – you can use a different one by 
 ```json title="config.json"
 {
   "rpc": {
-    "ping": true,
-    "ping_method": "rtt"
+    "ping": {
+      "enabled": true,
+      "method": "rtt"
+    }
   }
 }
 ```
@@ -735,6 +829,12 @@ Use `swagger.enabled` boolean option (by default `false`) to enable Swagger UI f
 }
 ```
 
+## Miscellaneous options
+
+### pid_file
+
+Path to a file where Centrifugo will write its PID (string, by default `""` – not used).
+
 ## Insecure options
 
 The following options may simplify integration with Centrifugo, but they are mostly intended for development. In case of using in production – please make sure you understand the possible security risks.
@@ -880,13 +980,9 @@ To disable websocket endpoint set `websocket.disabled` boolean option to `true`.
 
 To disable API endpoint set `http_api.disabled` boolean option to `true`.
 
-## Unified proxy config
-
-It's possible to configure a special type of proxy called `unified` under `unified_proxy` config section. See the [dedicated chapter](./proxy.md) for more details.
-
 ## Proxies
 
-While unified proxy has the same options for all different type of events, the more granular way to configure proxies is using `proxies` config option. Which is an array of named proxy objects.
+Sometimes you need more flexibility when configuring channel proxies. Centrifugo provides a way to define custom proxy on channel namespace and rpc namespace levels. In that case you can reference a proxy defined in `proxies` array by name from a namespace.
 
 See the [dedicated chapter](./proxy.md) for more details.
 
@@ -955,41 +1051,33 @@ Some examples:
 
 TLS configurations in Centrifugo can be set using the following TLS object:
 
-| Field name             | Type   | Description                                                                                              |
-|------------------------|--------|----------------------------------------------------------------------------------------------------------|
-| `enabled`              | bool   | Turns on using TLS.                                                                                      |
-| `cert_pem`             | string | Certificate in PEM format.                                                                               |
-| `cert_pem_b64`         | string | Certificate in base64 encoded PEM format.                                                                |
-| `cert_pem_file`        | string | Path to a file with certificate in PEM format.                                                           |
-| `key_pem`              | string | Key in PEM format.                                                                                       |
-| `key_pem_b64`          | string | Key in base64 encoded PEM format.                                                                        |
-| `key_pem_file`         | string | Path to a file with key in PEM format.                                                                   |
-| `server_ca_pem`        | string | Server root CA certificate in PEM format used by client to verify server's certificate during handshake. |
-| `server_ca_pem_b64`    | string | Server root CA certificate in base64 encoded PEM format.                                                 |
-| `server_ca_pem_file`   | string | Path to a file with server root CA certificate in PEM format.                                            |
-| `client_ca_pem`        | string | Client CA certificate in PEM format used by server to verify client's certificate during handshake.      |
-| `client_ca_pem_b64`    | string | Client CA certificate in base64 encoded PEM format.                                                      |
-| `client_ca_pem_file`   | string | Path to a file with client CA certificate in PEM format.                                                 |
-| `insecure_skip_verify` | bool   | Turns off server certificate verification.                                                               |
-| `server_name`          | string | Used to verify the hostname on the returned certificates.                                                |
+| Field name             | Type   | Description                                                                                                                                       |
+|------------------------|--------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| `enabled`              | bool   | Turns on using TLS                                                                                                                                |
+| `cert_pem`             | string | Certificate in PEM format. Raw string, base64 PEM encoded string or path to a PEM file supported as a value. See more details below.              |
+| `key_pem`              | string | Key in PEM format. Same values as for `cert_pem` supported.                                                                                       |
+| `server_ca_pem`        | string | Server root CA certificate in PEM format used by client to verify server's certificate during handshake. Same values as for `cert_pem` supported. |
+| `client_ca_pem`        | string | Client CA certificate in PEM format used by server to verify client's certificate during handshake. Same values as for `cert_pem` supported.      |
+| `insecure_skip_verify` | bool   | Turns off server certificate verification.                                                                                                        |
+| `server_name`          | string | Used to verify the hostname on the returned certificates.                                                                                         |
 
-- **Source Priority:** The configuration allows specifying TLS settings from multiple sources: file, base64 encoded PEM, and raw PEM. The sources are prioritized in the following order:
-    1. File to PEM
+- **Source Priority:** The configuration allows specifying TLS settings from multiple sources: raw PEM string, base64 PEM encoded string, path to a PEM file. The sources are prioritized in the following order:
+    1. Raw PEM
     2. Base64 encoded PEM
-    3. Raw PEM
-- **Single Source Usage:** Users should ensure that only one source of configured values is used. For example, if both `cert_pem_file` and `cert_pem` are set, the file source (`cert_pem_file`) will be used, and the raw PEM (`cert_pem`) will be ignored.
-- **Server and Client CA:** `server_ca_pem` and `client_ca_pem` are used for verifying the server and client certificates respectively during the TLS handshake.
+    3. PEM file path
 - **Insecure Option:** The `insecure_skip_verify` option can be used to turn off server certificate verification, which is not recommended for production environments.
 - **Hostname Verification:** The `server_name` is utilized to verify the hostname on the returned certificates, providing an additional layer of security.
 
-So in the configuration the usage of TLS config may be like this:
+So in the configuration the usage of TLS config for HTTP server may be like this:
 
 ```json title="config.json"
 {
-  "tls": {
-    "enabled": true,
-    "cert_pem_file": "/path/to/cert.pem",
-    "key_pem_file": "/path/to/key.pem"
+  "http_server": {
+    "tls": {
+      "enabled": true,
+      "cert_pem": "/path/to/cert.pem",
+      "key_pem": "/path/to/key.pem"
+    }
   }
 }
 ```

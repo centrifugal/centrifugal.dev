@@ -25,7 +25,7 @@ Do not blindly deploy things to production – test your system first, go throug
 
 If you are using TOML or YAML configuration formats – you can transform them to JSON using some third-party converters, then put JSON here, then convert the new configuration back to YAML or TOML.
 
-For example, convert [YAML to JSON](https://onlineyamltools.com/convert-yaml-to-json) or [TOML to JSON](https://toml-to-json.matiaskorhonen.fi/). And there are many other converters in the web.
+There are many online converters. For example, convert [YAML to JSON](https://onlineyamltools.com/convert-yaml-to-json) or [TOML to JSON](https://toml-to-json.matiaskorhonen.fi/).
 
 :::
 
@@ -59,6 +59,31 @@ import EnvConfigConverter from "@site/src/components/converterv6_env"
 
 Deprecated SockJS transport [was removed in Centrifugo v6](/blog/2025/01/16/centrifugo-v6-released#removing-sockjs), you need to switch to [supported transports](../transports/overview.md). Note, Centrifugo also provides its own WebSocket emulation layer (which is more effective than SockJS and natively supported by our Javascript SDK without third-party requirements) – so you still have an option for automatic WebSocket fallback with Centrifugo.
 
+To enable Centrifugo built-in bidirectional emulation you need to enable [HTTP streaming](/docs/transports/http_stream) or [SSE](/docs/transports/sse) transports in server configuration, then configure `centrifuge-js` to use those [as described here](https://github.com/centrifugal/centrifuge-js?tab=readme-ov-file#http-based-websocket-fallbacks):
+
+```javascript
+const transports = [
+    {
+        transport: 'websocket',
+        endpoint: 'ws://localhost:8000/connection/websocket'
+    },
+    {
+        transport: 'http_stream',
+        endpoint: 'http://localhost:8000/connection/http_stream'
+    },
+    {
+        transport: 'sse',
+        endpoint: 'http://localhost:8000/connection/sse'
+    }
+];
+const centrifuge = new Centrifuge(transports);
+centrifuge.connect()
+```
+
 ## Tarantool engine migration
 
-Tarantool experimental engine [was removed in Centrifugo v6](/blog/2025/01/16/centrifugo-v6-released#removing-tarantool), so you need to migrate to [supported engines](../server/engines.md) such as in-memory or Redis, or use Nats broker.
+Tarantool experimental engine [was removed in Centrifugo v6](/blog/2025/01/16/centrifugo-v6-released#removing-tarantool), so you need to migrate to supported engines described in [Engines and Scalability](../server/engines.md) doc, i.e. choose from:
+
+* In memory Engine – ultrafast, but keeps data in Centrifugo process memory so publication history is lost on restart. And only one Centrifugo node can be used.
+* Redis Engine (Redis-compatible storages are supported also) - allows scaling Centrifugo nodes, data is kept in Redis so survives Centrifugo restarts.
+* Nats broker (supports at most once PUB/SUB, but does not support history/recovery features of Centrifugo).

@@ -495,8 +495,6 @@ Setting `client.token.issuer_regex` and `client.token.audience_regex` will also 
 
 ## Custom token user id claim
 
-New in Centrifugo v5.4.6.
-
 It's possible to use alternative claim in token to pass user ID: with `client.token.user_id_claim` option (string, by default `""` – i.e. not used).
 
 ```json title=config.json
