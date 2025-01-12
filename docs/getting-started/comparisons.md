@@ -21,6 +21,8 @@ So, when using Centrifugo, you need to configure and run it on your own; you nee
 
 With cloud services, all the hard work of setting up an infrastructure for a WebSocket server and its maintenance is done for you. But it's more expensive, and the data flows through an external network.
 
+Another bonus Centrifugo may provide due to its self-hosted nature is a deaper integration with your backend with connection event hooks. During Centrifugo to backend communication the traffic stays within your network infrastructure, which means no additional costs and great latencies.
+
 ## Centrifugo vs Redis
 
 A popular question from newcomers – does Centrifugo provide the same as Redis PUB/SUB? The answer is that Centrifugo and Redis can't be directly compared at all. Centrifugo uses Redis internally for PUB/SUB scalability, keeping channel message history, and online presence.
@@ -49,7 +51,7 @@ How Centrifugo is special:
 * Centrifugo was originally designed to be exposed to application frontend clients, providing various convenient authentication and channel authorization mechanisms for client-side integration.
 * It supports more transports, including WebSocket fallbacks.
 * It provides many unique features that are out of scope for Nats – like online presence, individual GRPC subscription streams, or some of Centrifugo PRO features like push notifications support, real-time analytics with ClickHouse, etc.
-* Topics in Jetstream still should be pre-created, while Centrifugo has ephemeral channels – created on the fly, even when using a channel history cache.
+* Topics in Jetstream still should be pre-created, while Centrifugo has ephemeral channels – created on the fly, even when using a channel history cache. I.e. no need to explicitly create streams.
 * Centrifugo provides client connection event proxy features - it's possible to delegate authentication, channel authorization to the application backend, and provides channel state events (when a channel is occupied or vacated) in the PRO version.
 
 Nats is great, and we are constantly looking for tighter integration with Nats. But both systems have unique sets of features and may be better or worse for various tasks.

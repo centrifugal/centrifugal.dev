@@ -25,7 +25,8 @@ Here is a list of SDKs maintained by Centrifugal Labs:
 SDKs driven by the community:
 
 * [PlugFox/spinify](https://github.com/PlugFox/spinify) – alternative SDK for Dart/Flutter with faster performance, custom HTTP client, and more
-* [centrifuge-csharp](https://github.com/charmy/centrifuge-csharp) - SDK in C# for .NET and Unity 2022.3+
+* [charmy/centrifuge-csharp](https://github.com/charmy/centrifuge-csharp) - SDK in C# for .NET and Unity 2022.3+
+* [IntrepidAI/tokio-centrifuge](https://github.com/IntrepidAI/tokio-centrifuge) – client SDK for Rust using Tokio
 
 See a description of [client protocol](./client_protocol.md) if you want to write a custom bidirectional connector or eager to learn how Centrifugo protocol internals are structured. In case of any question how protocol works take a look at existing SDK source code or reach out in the community rooms.
 

@@ -3,22 +3,22 @@ id: server_api
 title: Server API walkthrough
 ---
 
-Server API provides various methods to interact with Centrifugo from your application backend. Specifically, in most cases this is an entry point for publications into channels (see [publish](#publish) method). It also allows getting information about Centrifugo cluster, disconnect users, extract channel online presence information, channel history, and so on.
+Server API provides various methods to interact with Centrifugo from your application backend. Specifically, in most cases server API this is an entrypoint for publications into channels (see [publish](#publish) method). It also allows getting information about Centrifugo cluster, disconnect users, extract channel online presence information, channel history, and so on.
 
 There are two kinds of server API available at the moment:
 
 * HTTP API
 * GRPC API
 
-Both are similar in terms of request/response structures because based on the same schema.
+Both are similar in terms of request/response structures as they share the same schema under the hood.
 
 ## HTTP API
 
-HTTP API is the simplest way to communicate with Centrifugo from your application backend.
+HTTP API is the simplest way to communicate with Centrifugo from your application backend or from terminal.
 
-Centrifugo HTTP API works on `/api` path prefix (by default). The request format is super-simple: this is an HTTP POST request to a specific method API path with `application/json` Content-Type, `X-API-Key` header and with JSON body.
+Centrifugo HTTP API works on `/api` path prefix (by default). The request format is super-simple: HTTP POST request to a specific method API path with `application/json` Content-Type, `X-API-Key` header and with JSON body (specific for each API method).
 
-Instead of many words, here is an example how to call `publish` method:
+Instead of many words, here is an example how to call `publish` method to send some data to Centrifugo channel so that all active channel subscribers will receive the data:
 
 ```bash
 curl --header "X-API-Key: <API_KEY>" \
@@ -37,16 +37,18 @@ Below we look at all aspects of Centrifugo HTTP API in detail, starting with inf
 
 ## HTTP API authorization
 
-HTTP API is protected by `api_key` set in Centrifugo configuration. I.e. `api_key` option must be added to config, like:
+HTTP API is protected by `http_api.key` option set in Centrifugo configuration. I.e. `http_api.key` option must be added to the config, like:
 
 ```json title="config.json"
 {
-    ...
-    "api_key": "<YOUR_API_KEY>"
+  ...
+  "http_api": {
+    "key": "<YOUR_API_KEY>"  
+  }
 }
 ```
 
-This API key must be set in the request `X-API-Key` header in this way:
+This API key must be then set in the request `X-API-Key` header in this way:
 
 ```
 X-API-Key: <YOUR_API_KEY>
@@ -54,13 +56,13 @@ X-API-Key: <YOUR_API_KEY>
 
 It's also possible to pass API key over URL query param. Simply add `?api_key=<YOUR_API_KEY>` query param to the API endpoint. Keep in mind that passing the API key in the `X-API-Key` header is a recommended way as it is considered more secure.
 
-To disable API key check on Centrifugo side you can use `api_insecure` configuration option. Use it in development only or make sure to protect the API endpoint by proxy or firewall rules in production – to prevent anyone with access to the endpoint to send commands over your unprotected Centrifugo API.
+To disable API key check on Centrifugo side you can use `http_api.insecure` configuration option (boolean, default `false`). Use it in development only or make sure to protect the API endpoint by proxy or firewall rules in production – to prevent anyone with access to the endpoint to send commands over your unprotected Centrifugo API.
 
-API key auth is not very safe for man-in-the-middle so we also recommended protecting Centrifugo with TLS.
+We also recommended protecting Centrifugo API with TLS layer.
 
 ## API methods
 
-Server API supports many methods. Let's describe them starting with the most important publish operation. 
+Server API supports many methods. Let's describe them starting with the most important `publish` operation.
 
 ### publish
 
@@ -110,7 +112,7 @@ curl --header "X-API-Key: <API_KEY>" \
   http://localhost:8000/api/publish
 ```
 
-In response you will also get 200 OK, but payload will contain `error` field instead of `result`:
+In response, you will also get 200 OK, but payload will contain `error` field instead of `result`:
 
 ```json
 {
@@ -123,29 +125,46 @@ In response you will also get 200 OK, but payload will contain `error` field ins
 
 `error` object contains error code and message - this is also the same for other commands described below.
 
-#### Publish request
+#### PublishRequest
 
-| Field name | Field type | Required | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| channel       | string  | yes | Name of channel to publish        |
-| data       | any JSON       | yes | Custom JSON data to publish into a channel        |
-| skip_history  | bool       | no | Skip adding publication to history for this request            |
-| tags  | map[string]string  | no | Publication tags - map with arbitrary string keys and values which is attached to publication and will be delivered to clients            |
-| b64data       | string       | no | Custom binary data to publish into a channel encoded to base64 so it's possible to use HTTP API to send binary to clients. Centrifugo will decode it from base64 before publishing. In case of GRPC you can publish binary using `data` field.        |
-| idempotency_key       | string       | no | Optional idempotency key to drop duplicate publications upon retries. It acts per channel. Centrifugo currently keeps the cache of idempotent publish results during 5 minutes window. Available since Centrifugo v5.2.0, supported only by Memory and Redis engines       |
-| delta       | boolean       | no | When set to true tells Centrifugo to construct delta update if possible when broadcasting message to subscribers. Available since Centrifugo v5.4.0       |
+| Field name        | Field type          | Required | Description                                                                                                                                                                                                                                                          |
+|-------------------|---------------------|----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `channel`         | `string`            | yes      | Name of channel to publish                                                                                                                                                                                                                                           |
+| `data`            | any `JSON`          | yes      | Custom JSON data to publish into a channel                                                                                                                                                                                                                           |
+| `skip_history`    | `bool`              | no       | Skip adding publication to history for this request                                                                                                                                                                                                                  |
+| `tags`            | `map[string]string` | no       | Publication tags - map with arbitrary string keys and values which is attached to publication and will be delivered to clients                                                                                                                                       |
+| `b64data`         | `string`            | no       | Custom binary data to publish into a channel encoded to base64 so it's possible to use HTTP API to send binary to clients. Centrifugo will decode it from base64 before publishing. In case of GRPC you can publish binary using `data` field.                       |
+| `idempotency_key` | `string`            | no       | Optional idempotency key to drop duplicate publications upon retries. It acts per channel. Centrifugo currently keeps the cache of idempotent publish results during 5 minutes window. Supported only by Memory and Redis engines |
+| `delta`           | `boolean`           | no       | When set to true tells Centrifugo to construct delta update if possible when broadcasting message to subscribers.                                                                                                                  |
 
+#### PublishResponse
 
-#### Publish result
+| Field name | Field type                        | Optional | Description         |
+|------------|-----------------------------------|----------|---------------------|
+| `error`    | [`Error`](#Error)                 | yes      | Error of operation  |
+| `result`   | [`PublishResult`](#PublishResult) | yes      | Result of operation |
 
-| Field name   | Field type     | Optional | Description  |
-| -------------- | -------------- | ------ | ------------ |
-| offset       | integer  | yes | Offset of publication in history stream        |
-| epoch       | string       | yes |   Epoch of current stream        |
+Always check whether `error` is set, otherwise consider publish successful and can use `result`.
+
+#### Error
+
+`Error` type represents Centrifugo-level API call error and it has common structure for all server API responses:
+
+| Field name | Field type | Optional | Description   |
+|------------|------------|----------|---------------|
+| `code`     | `integer`  | no       | Error code    |
+| `message`  | `string`   | yes      | Error message |
+
+#### PublishResult
+
+| Field name | Field type | Optional | Description                             |
+|------------|------------|----------|-----------------------------------------|
+| `offset`   | `integer`  | yes      | Offset of publication in history stream |
+| `epoch`    | `string`   | yes      | Epoch of current stream                 |
 
 ### broadcast
 
-`broadcast` is similar to `publish` but allows to efficiently send the same data into many channels:
+`broadcast` is similar to `publish` but allows to efficiently send the **same data** into **many channels**:
 
 ```bash
 curl --header "X-API-Key: <API_KEY>" \
@@ -154,23 +173,34 @@ curl --header "X-API-Key: <API_KEY>" \
   http://localhost:8000/api/broadcast
 ```
 
-#### Broadcast request
+This command may be very useful when implementing messenger application, like we show in [Grand Tutorial](../tutorial/intro.md).
 
-| Field name | Field type | Required | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| channels       | Array of strings  | yes | List of channels to publish data to        |
-| data       | any JSON       | yes | Custom JSON data to publish into each channel        |
-| skip_history  | bool       | no | Skip adding publications to channels' history for this request            |
-| tags  | map[string]string  | no | Publication tags - map with arbitrary string keys and values which is attached to publication and will be delivered to clients           |
-| b64data       | string       | no | Custom binary data to publish into a channel encoded to base64 so it's possible to use HTTP API to send binary to clients. Centrifugo will decode it from base64 before publishing. In case of GRPC you can publish binary using `data` field.        |
-| idempotency_key       | string       | no | Optional idempotency key to drop duplicate publications upon retries. It acts per channel. Centrifugo currently keeps the cache of idempotent publish results during 5 minutes window. Available since Centrifugo v5.2.0       |
-| delta       | boolean       | no | When set to true tells Centrifugo to construct delta update if possible when broadcasting message to subscribers. Available since Centrifugo v5.4.0       |
+#### BroadcastRequest
 
-#### Broadcast result
+| Field name        | Field type          | Required | Description                                                                                                                                                                                                                                    |
+|-------------------|---------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `channels`        | `array[string]`     | yes      | List of channels to publish data to                                                                                                                                                                                                            |
+| `data`            | any `JSON`          | yes      | Custom JSON data to publish into each channel                                                                                                                                                                                                  |
+| `skip_history`    | `bool`              | no       | Skip adding publications to channels' history for this request                                                                                                                                                                                 |
+| `tags`            | `map[string]string` | no       | Publication tags - map with arbitrary string keys and values which is attached to publication and will be delivered to clients                                                                                                                 |
+| `b64data`         | `string`            | no       | Custom binary data to publish into a channel encoded to base64 so it's possible to use HTTP API to send binary to clients. Centrifugo will decode it from base64 before publishing. In case of GRPC you can publish binary using `data` field. |
+| `idempotency_key` | `string`            | no       | Optional idempotency key to drop duplicate publications upon retries. It acts per channel. Centrifugo currently keeps the cache of idempotent publish results during 5 minutes window.                       |
+| `delta`           | `boolean`           | no       | When set to true tells Centrifugo to construct delta update if possible when broadcasting message to subscribers.                                                                                           |
 
-| Field name   | Field type     | Optional | Description  |
-| -------------- | -------------- | ------ | ------------ |
-| responses       | Array of publish responses  | no | Responses for each individual publish (with possible error and publish result)        |
+#### BroadcastResponse
+
+| Field name | Field type                            | Optional | Description         |
+|------------|---------------------------------------|----------|---------------------|
+| `error`    | [`Error`](#error)                     | yes      | Error of operation  |
+| `result`   | [`BroadcastResult`](#broadcastresult) | yes      | Result of operation |
+
+Always check whether `error` is set, otherwise consider publish successful and can use `result`.
+
+#### BroadcastResult
+
+| Field name  | Field type                                   | Optional | Description                                                                    |
+|-------------|----------------------------------------------|----------|--------------------------------------------------------------------------------|
+| `responses` | [`array[PublishResponse]`](#publishresponse) | no       | Responses for each individual publish (with possible error and publish result) |
 
 ### subscribe
 
@@ -184,28 +214,30 @@ This is not a real-time streaming subscription request – it's just a command t
 
 #### Subscribe request
 
-| Field name | Field type | Required | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| user       | string       | yes | User ID to subscribe        |
-| channel       | string  | yes | Name of channel to subscribe user to        |
-| info       | any JSON  | no | Attach custom data to subscription (will be used in presence and join/leave messages)        |
-| b64info       | string  | no | info in base64 for binary mode (will be decoded by Centrifugo)      |
-| client       | string  | no | Specific client ID to subscribe (user still required to be set, will ignore other user connections with different client IDs)       |
-| session       | string       | no | Specific client session to subscribe (user still required to be set) |
-| data       | any JSON  | no | Custom subscription data (will be sent to client in Subscribe push)        |
-| b64data       | string  | no | Same as data but in base64 format (will be decoded by Centrifugo)        |
-| recover_since       | StreamPosition object  | no | Stream position to recover from        |
-| override       | Override object       | no |  Allows dynamically override some channel options defined in Centrifugo configuration (see below available fields)  |
+| Field name      | Field type                          | Required | Description                                                                                                                   |
+|-----------------|-------------------------------------|----------|-------------------------------------------------------------------------------------------------------------------------------|
+| `user`          | `string`                            | yes      | User ID to subscribe                                                                                                          |
+| `channel`       | `string`                            | yes      | Name of channel to subscribe user to                                                                                          |
+| `info`          | any `JSON`                          | no       | Attach custom data to subscription (will be used in presence and join/leave messages)                                         |
+| `b64info`       | `string`                            | no       | info in base64 for binary mode (will be decoded by Centrifugo)                                                                |
+| `client`        | `string`                            | no       | Specific client ID to subscribe (user still required to be set, will ignore other user connections with different client IDs) |
+| `session`       | `string`                            | no       | Specific client session to subscribe (user still required to be set)                                                          |
+| `data`          | any `JSON`                          | no       | Custom subscription data (will be sent to client in Subscribe push)                                                           |
+| `b64data`       | `string`                            | no       | Same as data but in base64 format (will be decoded by Centrifugo)                                                             |
+| `recover_since` | [`StreamPosition`](#streamposition) | no       | Stream position to recover from                                                                                               |
+| `override`      | [`Override`](#override-object)      | no       | Allows dynamically override some channel options defined in Centrifugo configuration (see below available fields)             |
 
 #### Override object
 
-| Field | Type | Optional | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| presence       | BoolValue       | yes | Override presence   |
-| join_leave       | BoolValue       | yes | Override join_leave   |
-| force_push_join_leave       | BoolValue       | yes | Override force_push_join_leave   |
-| force_positioning       | BoolValue       | yes | Override force_positioning   |
-| force_recovery       | BoolValue       | yes |  Override force_recovery   |
+| Field                   | Type                      | Optional | Description                    |
+|-------------------------|---------------------------|----------|--------------------------------|
+| `presence`              | [`BoolValue`](#boolvalue) | yes      | Override presence              |
+| `join_leave`            | [`BoolValue`](#boolvalue) | yes      | Override join_leave            |
+| `force_push_join_leave` | [`BoolValue`](#boolvalue) | yes      | Override force_push_join_leave |
+| `force_positioning`     | [`BoolValue`](#boolvalue) | yes      | Override force_positioning     |
+| `force_recovery`        | [`BoolValue`](#boolvalue) | yes      | Override force_recovery        |
+
+#### BoolValue
 
 BoolValue is an object like this:
 
@@ -215,7 +247,16 @@ BoolValue is an object like this:
 }
 ```
 
-#### Subscribe result
+#### SubscribeResponse
+
+| Field name | Field type                            | Optional | Description         |
+|------------|---------------------------------------|----------|---------------------|
+| `error`    | [`Error`](#error)                     | yes      | Error of operation  |
+| `result`   | [`SubscribeResult`](#subscriberesult) | yes      | Result of operation |
+
+Always check whether `error` is set, otherwise consider publish successful and can use `result`.
+
+#### SubscribeResult
 
 Empty object at the moment.
 
@@ -223,16 +264,23 @@ Empty object at the moment.
 
 `unsubscribe` allows unsubscribing user from a channel.
 
-#### Unsubscribe request
+#### UnsubscribeRequest
 
-| Field name | Field type | Required | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| user       | string       | yes | User ID to unsubscribe        |
-| channel       | string  | yes | Name of channel to unsubscribe user to        |
-| client       | string  | no | Specific client ID to unsubscribe (user still required to be set)       |
-| session       | string | no | Specific client session to disconnect (user still required to be set).  |
+| Field name | Field type | Required | Description                                                            |
+|------------|------------|----------|------------------------------------------------------------------------|
+| `user`     | `string`   | yes      | User ID to unsubscribe                                                 |
+| `channel`  | `string`   | yes      | Name of channel to unsubscribe user to                                 |
+| `client`   | `string`   | no       | Specific client ID to unsubscribe (user still required to be set)      |
+| `session`  | `string`   | no       | Specific client session to disconnect (user still required to be set). |
 
-#### Unsubscribe result
+#### UnsubscribeResponse
+
+| Field name | Field type                                | Optional | Description         |
+|------------|-------------------------------------------|----------|---------------------|
+| `error`    | [`Error`](#error)                         | yes      | Error of operation  |
+| `result`   | [`UnsubscribeResult`](#unsubscriberesult) | yes      | Result of operation |
+
+#### UnsubscribeResult
 
 Empty object at the moment.
 
@@ -240,24 +288,31 @@ Empty object at the moment.
 
 `disconnect` allows disconnecting a user by ID.
 
-#### Disconnect request
+#### DisconnectRequest
 
-| Field name | Field type | Required | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| user       | string       | yes | User ID to disconnect        |
-| client       | string       | no | Specific client ID to disconnect (user still required to be set)       |
-| session       | string       | no | Specific client session to disconnect (user still required to be set).     |
-| whitelist       | Array of strings       | no | Array of client IDs to keep       |
-| disconnect       | Disconnect object       | no | Provide custom disconnect object, see below      |
+| Field name   | Field type                         | Required | Description                                                            |
+|--------------|------------------------------------|----------|------------------------------------------------------------------------|
+| `user`       | `string`                           | yes      | User ID to disconnect                                                  |
+| `client`     | `string`                           | no       | Specific client ID to disconnect (user still required to be set)       |
+| `session`    | `string`                           | no       | Specific client session to disconnect (user still required to be set). |
+| `whitelist`  | `array[string]`                    | no       | Array of client IDs to keep                                            |
+| `disconnect` | [`Disconnect`](#disconnect-object) | no       | Provide custom disconnect object, see below                            |
 
 #### Disconnect object
 
-| Field name | Field type | Required | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| code       | int       | yes | Disconnect code        |
-| reason       | string       | yes | Disconnect reason   |
+| Field name | Field type | Required | Description       |
+|------------|------------|----------|-------------------|
+| `code`     | `int`      | yes      | Disconnect code   |
+| `reason`   | `string`   | yes      | Disconnect reason |
 
-#### Disconnect result
+#### DisconnectResponse
+
+| Field name | Field type                              | Optional | Description         |
+|------------|-----------------------------------------|----------|---------------------|
+| `error`    | [`Error`](#error)                       | yes      | Error of operation  |
+| `result`   | [`DisconnectResult`](#disconnectresult) | yes      | Result of operation |
+
+#### DisconnectResult
 
 Empty object at the moment.
 
@@ -265,17 +320,24 @@ Empty object at the moment.
 
 `refresh` allows refreshing user connection (mostly useful when unidirectional transports are used).
 
-#### Refresh request
+#### RefreshRequest
 
-| Field name | Field type | Required | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| user       | string       | yes | User ID to refresh       |
-| client       | string       | no | Client ID to refresh  (user still required to be set)      |
-| session       | string       | no | Specific client session to refresh (user still required to be set).    |
-| expired       | bool       | no | Mark connection as expired and close with Disconnect Expired reason |
-| expire_at       | int       | no | Unix time (in seconds) in the future when the connection will expire        |
+| Field name  | Field type | Required | Description                                                          |
+|-------------|------------|----------|----------------------------------------------------------------------|
+| `user`      | `string`   | yes      | User ID to refresh                                                   |
+| `client`    | `string`   | no       | Client ID to refresh  (user still required to be set)                |
+| `session`   | `string`   | no       | Specific client session to refresh (user still required to be set).  |
+| `expired`   | `bool`     | no       | Mark connection as expired and close with Disconnect Expired reason  |
+| `expire_at` | `int`      | no       | Unix time (in seconds) in the future when the connection will expire |
 
-#### Refresh result
+#### RefreshResponse
+
+| Field name | Field type                            | Optional | Description         |
+|------------|---------------------------------------|----------|---------------------|
+| `error`    | [`Error`](#error)                     | yes      | Error of operation  |
+| `result`   | [`RefreshResult`](#refreshresult)     | yes      | Result of operation |
+
+#### RefreshResult
 
 Empty object at the moment.
 
@@ -298,7 +360,7 @@ curl --header "X-API-Key: <API_KEY>" \
 
 Example response:
 
-```bash
+```json
 {
     "result": {
         "presence": {
@@ -315,26 +377,33 @@ Example response:
 }
 ```
 
-#### Presence request
+#### PresenceRequest
 
-| Field name | Field type | Required | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| channel       | string  | yes | Name of channel to call presence from        |
+| Field name | Field type | Required | Description                           |
+|------------|------------|----------|---------------------------------------|
+| `channel`  | `string`   | yes      | Name of channel to call presence from |
 
-#### Presence result
+#### PresenceResponse
 
-| Field name   | Field type     | Optional | Description  |
-| -------------- | -------------- | ------ | ------------ |
-| presence       | Map of client ID (string) to ClientInfo object  | no | Offset of publication in history stream        |
+| Field name | Field type                          | Optional | Description         |
+|------------|-------------------------------------|----------|---------------------|
+| `error`    | [`Error`](#error)                   | yes      | Error of operation  |
+| `result`   | [`PresenceResult`](#presenceresult) | yes      | Result of operation |
+
+#### PresenceResult
+
+| Field name | Field type              | Optional | Description                             |
+|------------|-------------------------|----------|-----------------------------------------|
+| `presence` | `map[string]ClientInfo` | no       | Offset of publication in history stream |
 
 #### ClientInfo
 
-| Field name   | Field type     | Optional | Description  |
-| -------------- | -------------- | ------ | ------------ |
-| client       | string  | no | Client ID        |
-| user       | string  | no | User ID        |
-| conn_info       | JSON  | yes | Optional connection info        |
-| chan_info       | JSON  | yes | Optional channel info        |
+| Field name  | Field type | Optional | Description              |
+|-------------|------------|----------|--------------------------|
+| `client`    | `string`   | no       | Client ID                |
+| `user`      | `string`   | no       | User ID                  |
+| `conn_info` | `JSON`     | yes      | Optional connection info |
+| `chan_info` | `JSON`     | yes      | Optional channel info    |
 
 ### presence_stats
 
@@ -358,18 +427,25 @@ Example response:
 }
 ```
 
-#### Presence stats request
+#### PresenceStatsRequest
 
-| Field name | Field type | Required | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| channel       | string  | yes | Name of channel to call presence from        |
+| Field name | Field type | Required | Description                           |
+|------------|------------|----------|---------------------------------------|
+| `channel`  | `string`   | yes      | Name of channel to call presence from |
 
-#### Presence stats result
+#### PresenceStatsResponse
 
-| Field name   | Field type     | Optional | Description  |
-| -------------- | -------------- | ------ | ------------ |
-| num_clients       | integer  | no | Total number of clients in channel         |
-| num_users       | integer  | no | Total number of unique users in channel         |
+| Field name | Field type                                    | Optional | Description         |
+|------------|-----------------------------------------------|----------|---------------------|
+| `error`    | [`Error`](#error)                             | yes      | Error of operation  |
+| `result`   | [`PresenceStatsResult`](#presencestatsresult) | yes      | Result of operation |
+
+#### PresenceStatsResult
+
+| Field name    | Field type | Optional | Description                             |
+|---------------|------------|----------|-----------------------------------------|
+| `num_clients` | `integer`  | no       | Total number of clients in channel      |
+| `num_users`   | `integer`  | no       | Total number of unique users in channel |
 
 ### history
 
@@ -414,41 +490,55 @@ Example response:
 }
 ```
 
-#### History request
+#### HistoryRequest
 
-| Field name | Field type | Required | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| channel       | string  | yes | Name of channel to call history from        |
-| limit       | int  | no | Limit number of returned publications, if not set in request then only current stream position information will present in result (without any publications)         |
-| since       | StreamPosition object  | no | To return publications after this position        |
-| reverse       | bool  | no | Iterate in reversed order (from latest to earliest)        |
+| Field name | Field type       | Required | Description                                                                                                                                                  |
+|------------|------------------|----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `channel`  | `string`         | yes      | Name of channel to call history from                                                                                                                         |
+| `limit`    | `int`            | no       | Limit number of returned publications, if not set in request then only current stream position information will present in result (without any publications) |
+| `since`    | `StreamPosition` | no       | To return publications after this position                                                                                                                   |
+| `reverse`  | `bool`           | no       | Iterate in reversed order (from latest to earliest)                                                                                                          |
 
 #### StreamPosition
 
-| Field name | Field type | Required | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| offset       | integer  | yes | Offset in a stream        |
-| epoch       | string  | yes | Stream epoch        |
+| Field name | Field type | Required | Description        |
+|------------|------------|----------|--------------------|
+| `offset`   | `integer`  | yes      | Offset in a stream |
+| `epoch`    | `string`   | yes      | Stream epoch       |
 
-#### History result
+#### HistoryResponse
 
-| Field name   | Field type     | Optional | Description  |
-| -------------- | -------------- | ------ | ------------ |
-| publications       | Array of publication objects  | yes | List of publications in channel         |
-| offset       | integer  | yes | Top offset in history stream        |
-| epoch       | string       | yes |   Epoch of current stream        |
+| Field name | Field type                        | Optional | Description         |
+|------------|-----------------------------------|----------|---------------------|
+| `error`    | [`Error`](#error)                 | yes      | Error of operation  |
+| `result`   | [`HistoryResult`](#historyresult) | yes      | Result of operation |
+
+#### HistoryResult
+
+| Field name     | Field type           | Optional | Description                     |
+|----------------|----------------------|----------|---------------------------------|
+| `publications` | `array[Publication]` | yes      | List of publications in channel |
+| `offset`       | `integer`            | yes      | Top offset in history stream    |
+| `epoch`        | `string`             | yes      | Epoch of current stream         |
 
 ### history_remove
 
 `history_remove` allows removing publications in channel history. Current top stream position meta data kept untouched to avoid client disconnects due to insufficient state.
 
-#### History remove request
+#### HistoryRemoveRequest
 
-| Field name | Field type | Required | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| channel       | string  | yes | Name of channel to remove history        |
+| Field name | Field type | Required | Description                       |
+|------------|------------|----------|-----------------------------------|
+| `channel`  | `string`   | yes      | Name of channel to remove history |
 
-#### History remove result
+### HistoryRemoveResponse
+
+| Field name | Field type                                    | Optional | Description         |
+|------------|-----------------------------------------------|----------|---------------------|
+| `error`    | [`Error`](#error)                             | yes      | Error of operation  |
+| `result`   | [`HistoryRemoveResult`](#historyremoveresult) | yes      | Result of operation |
+
+#### HistoryRemoveResult
 
 Empty object at the moment.
 
@@ -463,23 +553,30 @@ curl --header "X-API-Key: <API_KEY>" \
   http://localhost:8000/api/channels
 ```
 
-#### Channels request
+#### ChannelsRequest
 
-| Field name | Field type | Required | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| pattern       | string  | no | Pattern to filter channels, we are using [gobwas/glob](https://github.com/gobwas/glob) library for matching         |
+| Field name | Field type | Required | Description                                                                                                 |
+|------------|------------|----------|-------------------------------------------------------------------------------------------------------------|
+| `pattern`  | `string`   | no       | Pattern to filter channels, we are using [gobwas/glob](https://github.com/gobwas/glob) library for matching |
 
-#### Channels result
+#### ChannelsResponse
 
-| Field name   | Field type     | Optional | Description  |
-| -------------- | -------------- | ------ | ------------ |
-| channels       | Map of string to ChannelInfo  | no |  Map where key is channel and value is ChannelInfo (see below)      |
+| Field name | Field type                          | Optional | Description         |
+|------------|-------------------------------------|----------|---------------------|
+| `error`    | [`Error`](#error)                   | yes      | Error of operation  |
+| `result`   | [`ChannelsResult`](#channelsresult) | yes      | Result of operation |
+
+#### ChannelsResult
+
+| Field name | Field type               | Optional | Description                                                   |
+|------------|--------------------------|----------|---------------------------------------------------------------|
+| `channels` | `map[string]ChannelInfo` | no       | Map where key is channel and value is ChannelInfo (see below) |
 
 #### ChannelInfo
 
-| Field name   | Field type     | Optional | Description  |
-| -------------- | -------------- | ------ | ------------ |
-| num_clients       | integer  | no |  Total number of connections currently subscribed to a channel      |
+| Field name    | Field type | Optional | Description                                                   |
+|---------------|------------|----------|---------------------------------------------------------------|
+| `num_clients` | `integer`  | no       | Total number of connections currently subscribed to a channel |
 
 :::caution
 
@@ -490,6 +587,13 @@ Keep in mind that since the `channels` method by default returns all active chan
 ### info
 
 `info` method allows getting information about running Centrifugo nodes.
+
+```bash
+curl --header "X-API-Key: <API_KEY>" \
+  --request POST \
+  --data '{}' \
+  http://localhost:8000/api/info
+```
 
 Example response:
 
@@ -511,15 +615,22 @@ Example response:
 }
 ```
 
-#### Info request
+#### InfoRequest
 
 Empty object at the moment.
 
-#### Info result
+#### InfoResponse
 
-| Field name   | Field type     | Optional | Description  |
-| -------------- | -------------- | ------ | ------------ |
-| nodes       | Array of Node objects  | no | Information about all nodes in a cluster  |
+| Field name | Field type                        | Optional | Description         |
+|------------|-----------------------------------|----------|---------------------|
+| `error`    | [`Error`](#error)                 | yes      | Error of operation  |
+| `result`   | [`InfoResult`](#inforesult)       | yes      | Result of operation |
+
+#### InfoResult
+
+| Field name | Field type    | Optional | Description                              |
+|------------|---------------|----------|------------------------------------------|
+| `nodes`    | `array[Node]` | no       | Information about all nodes in a cluster |
 
 ### batch
 
@@ -544,8 +655,7 @@ Example response:
     ]
 }
 ```
-
-Starting from Centrifugo v5.2.0 it's also possible to pass `"parallel": true` on `batch` data top level to make batch commands processing parallel on Centrifugo side. This may provide reduced latency (especially in case of using Redis engine).
+It's also possible to pass `"parallel": true` on `batch` data top level to make batch commands processing parallel on Centrifugo side. This may provide reduced latency (especially in case of using Redis engine).
 
 ## HTTP API libraries
 
@@ -560,11 +670,12 @@ But we have several official HTTP API libraries for different languages, to help
 
 Also, there are Centrifugo server API libraries created by community:
 
-* [javacent](https://github.com/katarinamolotova/javacent) HTTP API client for Java
-* [cent.js](https://github.com/SocketSomeone/cent.js) API client for NodeJS
-* [CentriAgent](https://github.com/sajjad-fatehi/centri-agent) - one more API client for NodeJS
-* [Centrifugo.AspNetCore](https://github.com/ismkdc/Centrifugo.AspNetCore) API client for ASP.NET Core
-* [crystalcent](https://github.com/devops-israel/crystalcent) API client for Crystal language
+* [katarinamolotova/javacent](https://github.com/katarinamolotova/javacent) – HTTP API client for Java
+* [SocketSomeone/cent.js](https://github.com/SocketSomeone/cent.js) – API client for NodeJS
+* [sajjad-fatehi/CentriAgent](https://github.com/sajjad-fatehi/centri-agent) – one more API client for NodeJS
+* [ismkdc/Centrifugo.AspNetCore](https://github.com/ismkdc/Centrifugo.AspNetCore) – API client for ASP.NET Core
+* [devops-israel/crystalcent](https://github.com/devops-israel/crystalcent) – API client for Crystal language
+* [Cyberguru1/rucent](https://github.com/Cyberguru1/rucent) – HTTP API client for Rust
 
 :::tip
 
@@ -584,16 +695,18 @@ GRPC API allows calling all commands described in [HTTP API doc](#http-api), act
 
 :::
 
-You can enable GRPC API in Centrifugo using `grpc_api` option:
+You can enable GRPC API in Centrifugo using `grpc_api.enabled` option:
 
 ```json title="config.json"
 {
     ...
-    "grpc_api": true
+    "grpc_api": {
+        "enabled": true
+    }
 }
 ```
 
-By default, GRPC will be served on port `10000` but you can change it using the `grpc_api_port` option.
+By default, GRPC will be served on port `10000` but you can change it using the `grpc_api.port` option.
 
 Now, as soon as Centrifugo started – you can send GRPC commands to it. To do this get our API Protocol Buffer definitions [from this file](https://github.com/centrifugal/centrifugo/blob/master/internal/apiproto/api.proto).
 
@@ -601,11 +714,11 @@ Then see [GRPC docs specific to your language](https://grpc.io/docs/) to find ou
 
 ### GRPC API options
 
-* `grpc_api` - boolean, default `false`. Enables GRPC API server.
-* `grpc_api_port` - integer, default `10000`. Port on which GRPC API server runs.
-* `grpc_api_address` - string, default `""`. Custom address to run GRPC API server on.
-* `grpc_api_max_receive_message_size` – integer (number of bytes), default `0`. If set to a value > 0 allows tuning the max size of message GRPC server can receive. By default, GRPC library's default is used which is 4194304 bytes (4MB). Available since Centrifugo v5.4.3.
-* `grpc_api_reflection` - boolean, default `false`. Enables GRPC reflection API for introspection.
+* `grpc_api.enabled` - boolean, default `false`. Enables GRPC API server.
+* `grpc_api.port` - integer, default `10000`. Port on which GRPC API server runs.
+* `grpc_api.address` - string, default `""`. Custom address to run GRPC API server on.
+* `grpc_api.max_receive_message_size` – integer (number of bytes), default `0`. If set to a value > 0 allows tuning the max size of message GRPC server can receive. By default, GRPC library's default is used which is 4194304 bytes (4MB).
+* `grpc_api.reflection` - boolean, default `false`. Enables GRPC reflection API for introspection.
 
 ### GRPC example for Python
 
@@ -733,7 +846,7 @@ Note, Centrifugo is not compatible with Buf Connect HTTP protocol – i.e. you c
 
 ### GRPC API key authorization
 
-You can also set `grpc_api_key` option (string) in Centrifugo configuration to protect GRPC API with key. In this case, you should set per RPC metadata with key `authorization` and value `apikey <KEY>`. For example in Go language:
+You can also set `grpc_api.key` option (string) in Centrifugo configuration to protect GRPC API with key. In this case, you should set per RPC metadata with key `authorization` and value `apikey <KEY>`. For example in Go language:
 
 ```go
 package main
@@ -831,8 +944,18 @@ Date: Sat, 19 Aug 2023 07:23:59 GMT
 
 Transport error mode may be turned on globally:
 
-* using `"api_error_mode": "transport"` option for HTTP server API
-* using `"grpc_api_error_mode": "transport"` option for GRPC server API
+* using `"http_api.error_mode"` option with `"transport"` value for HTTP server API
+* using `"grpc_api.error_mode"` option with `"transport"` value for GRPC server API
+
+Example:
+
+```json title="config.json"
+{
+    "http_api": {
+        "error_mode": "transport"
+    }
+}
+```
 
 Also, this mode may be used on per-request basis:
 

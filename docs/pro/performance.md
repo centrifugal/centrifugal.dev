@@ -35,7 +35,15 @@ Centrifugo PRO has an optimized Protobuf deserialization for GRPC unidirectional
 
 ## WebSocket compression optimizations
 
-Centrifugo PRO provides an integer option `websocket_compression_prepared_message_size` (in bytes, default `0`) which when set to a value > 0 tells Centrifugo to use a cache or prepared websocket messages when working with connections with WebSocket compression negotiated.
+Centrifugo PRO provides an integer option `websocket.compression_prepared_message_size` (in bytes, default `0`) which when set to a value > 0 tells Centrifugo to use a cache or prepared websocket messages when working with connections with WebSocket compression negotiated.
+
+```json title="config.json"
+{
+  "websocket": {
+    "compression_prepared_message_size": 10485760
+  }
+}
+```
 
 This can significantly improve CPU and memory Centrifufo resource usage when using [WebSocket compression feature](../transports/websocket.md#websocket_compression).
 

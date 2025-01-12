@@ -4,7 +4,7 @@ sidebar_label: Delta compression
 title: Delta compression in channels
 ---
 
-Delta compression feature allows a client to subscribe to a channel in a way so that message payloads contain only the differences between the current message and the previous one sent on the channel. The feature is available **since Centrifugo v5.4.0**.
+Delta compression feature allows a client to subscribe to a channel in a way so that message payloads contain only the differences between the current message and the previous one sent on the channel.
 
 Delta compression is beneficial for channels that send a series of updates to a particular object or document with high similarity between successive publications. A client can apply the delta to the previous message to reconstruct the full payload.
 
@@ -18,7 +18,7 @@ The diff is calculated using [Fossil](https://fossil-scm.org/home/doc/tip/www/de
 
 :::tip
 
-At this point delta compression is only available for bidirectional client-side subscriptions and supported by Centrifugo Javascript SDK [centrifuge-js](https://github.com/centrifugal/centrifuge-js) (since 5.2.0).
+At this point delta compression is only available for bidirectional client-side subscriptions and supported by Centrifugo Javascript SDK [centrifuge-js](https://github.com/centrifugal/centrifuge-js), Java SDK [centrifuge-java](https://github.com/centrifugal/centrifuge-js), Python SDK [centrifuge-python](https://github.com/centrifugal/centrifuge-python). There is also [unfinished PR](https://github.com/centrifugal/centrifuge-swift/pull/104) to Swift SDK. See also [SDK feature matrix](../transports/client_sdk.md#sdk-feature-matrix).
 
 :::
 
@@ -49,16 +49,19 @@ And the example of Centrifugo configuration:
 
 ```json title="config.json"
 {
-    ..
+  "channel": {
     "namespaces": [
-        {
-            "name": "example",
-            "allowed_delta_types": ["fossil"],
-            "force_positioning": true,
-            "history_size": 1,
-            "history_ttl": "60s"
-        }
+      {
+        "name": "example",
+        "allowed_delta_types": [
+          "fossil"
+        ],
+        "force_positioning": true,
+        "history_size": 1,
+        "history_ttl": "60s"
+      }
     ]
+  }
 }
 ```
 
@@ -81,17 +84,20 @@ For example, this means that to automatically use delta calculation for all publ
 
 ```json title="config.json"
 {
-    ..
+  "channel": {
     "namespaces": [
-        {
-            "name": "example",
-            "allowed_delta_types": ["fossil"],
-            "force_positioning": true,
-            "history_size": 1,
-            "history_ttl": "60s",
-            "delta_publish": true
-        }
+      {
+        "name": "example",
+        "allowed_delta_types": [
+          "fossil"
+        ],
+        "force_positioning": true,
+        "history_size": 1,
+        "history_ttl": "60s",
+        "delta_publish": true
+      }
     ]
+  }
 }
 ```
 

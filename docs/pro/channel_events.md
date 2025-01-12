@@ -6,31 +6,38 @@ title: Channel state events
 
 Centrifugo PRO has a feature to enable channel state event webhooks to be sent to your configured backend endpoint:
 
-* channel `occupied` event - called whenever first subscriber occipies the channel
+* channel `occupied` event - called whenever first subscriber occupies the channel
 * channel `vacated` event - called whenever last subscriber leaves the channel
 
 :::info Preview state
 
-This feature is **in the preview state now**. We still need some time before it will be ready for usage in production. But starting from Centrifugo PRO v5.1.1 the feature is avalable for evaluation.
+This feature is **in the preview state now**. We still need some time before it will be ready for usage in production. But the feature is available for evaluation.
 
 :::
 
-To enable the feature you must use `redis` engine. Also, only channels with `presence` enabled and `channel_state_events` explicitly configured may deliver channel state notifications. When enabling channel state proxy Centrifugo PRO starts using another approach to create Redis keys for presence for namespaces where channel state events enabled, this is an important implementation detail.
+To enable the feature you must use `redis` engine. Also, only channels with `presence` enabled may deliver channel state notifications. When enabling channel state proxy Centrifugo PRO starts using another approach to create Redis keys for presence for namespaces where channel state events enabled, this is an important implementation detail.
 
-So the minimal config can look like this (`occupied` and `vacated` events for channels in `chat` namespace will be sent to `proxy_channel_state_endpoint`):
+So the minimal config can look like this (`occupied` and `vacated` events for channels in `chat` namespace will be sent to `channel.proxy.state.endpoint`):
 
 ```json title=config.json
 {
-    ...
-    "engine": "redis",
-    "proxy_channel_state_endpoint": "http://localhost:3000/centrifugo/channel_events",
+  "engine": {
+    "type": "redis"
+  },
+  "channel": {
+    "proxy": {
+      "state": {
+        "endpoint": "http://localhost:3000/centrifugo/channel_events"
+      }
+    },
     "namespaces": [
-        {
-            "name": "chat",
-            "presence": true,
-            "channel_state_events": ["occupied", "vacated"]
-        }
+      {
+        "name": "chat",
+        "presence": true,
+        "state_proxy_enabled": true
+      }
     ]
+  }
 }
 ```
 

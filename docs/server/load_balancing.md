@@ -25,14 +25,12 @@ Minimal Nginx version – **1.3.13** because it was the first version that can p
 Websocket connections.
 
 There are 2 ways: running Centrifugo server as separate service on its own
-domain or embed it to a location of your web site (for example to `/centrifugo`).
+domain or embed it to a location of your website (for example to `/centrifugo`).
 
 ### Separate domain for Centrifugo
 
 ```
 upstream centrifugo {
-    # uncomment ip_hash if using SockJS transport with many upstream servers.
-    #ip_hash;
     server 127.0.0.1:8000;
 }
 
@@ -48,25 +46,17 @@ map $http_upgrade $connection_upgrade {
 #}
 
 server {
-
     server_name centrifugo.example.com;
 
     listen 80;
 
     #listen 443 ssl;
-    #ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+    #ssl_protocols TLSv1.2;
     #ssl_certificate /etc/nginx/ssl/server.crt;
     #ssl_certificate_key /etc/nginx/ssl/server.key;
 
     include /etc/nginx/mime.types;
     default_type application/octet-stream;
-
-    sendfile on;
-    tcp_nopush on;
-    tcp_nodelay on;
-    gzip on;
-    gzip_min_length 1000;
-    gzip_proxied any;
 
     # Only retry if there was a communication error, not a timeout
     # on the Centrifugo server (to avoid propagating "queries of death"
@@ -106,8 +96,6 @@ server {
 
 ```
 upstream centrifugo {
-    # uncomment ip_hash if using SockJS transport with many upstream servers.
-    #ip_hash;
     server 127.0.0.1:8000;
 }
 

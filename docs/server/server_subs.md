@@ -44,17 +44,17 @@ See subscribe and unsubscribe [server API](server_api.md)
 
 It's possible to automatically subscribe a user to a personal server-side channel.
 
-To enable this you need to enable the `user_subscribe_to_personal` boolean option (by default `false`). As soon as you do this every connection with a non-empty user ID will be automatically subscribed to a personal user-limited channel. Anonymous users with empty user IDs won't be subscribed to any channel.
+To enable this you need to enable the `client.subscribe_to_user_personal_channel.enabled` boolean option (by default `false`). As soon as you do this every connection with a non-empty user ID will be automatically subscribed to a personal user-limited channel. Anonymous users with empty user IDs won't be subscribed to any channel.
 
 For example, if you set this option and the user with ID `87334` connects to Centrifugo it will be automatically subscribed to channel `#87334` and you can process personal publications on the client-side in the same way as shown above.
 
-As you can see by default generated personal channel name belongs to the default namespace (i.e. no explicit namespace used). To set custom namespace name use `user_personal_channel_namespace` option (string, default `""`) – i.e. the name of namespace from configured configuration namespaces array. In this case, if you set `user_personal_channel_namespace` to `personal` for example – then the automatically generated personal channel will be `personal:#87334` – user will be automatically subscribed to it on connect and you can use this channel name to publish personal notifications to the online user.
+As you can see by default generated personal channel name belongs to the default namespace (i.e. no explicit namespace used). To set custom namespace name use `client.subscribe_to_user_personal_channel.personal_channel_namespace` option (string, default `""`) – i.e. the name of namespace from configured configuration namespaces array. In this case, if you set `client.subscribe_to_user_personal_channel.personal_channel_namespace` to `personal` for example – then the automatically generated personal channel will be `personal:#87334` – user will be automatically subscribed to it on connect and you can use this channel name to publish personal notifications to the online user.
 
 ### Maintain single user connection
 
 Usage of personal channel subscription also opens a road to enable one more feature: maintaining only a single connection for each user globally around all Centrifugo nodes.
 
-`user_personal_single_connection` boolean option (default `false`) turns on a mode in which Centrifugo will try to maintain only a single connection for each user at the same moment. As soon as the user establishes a connection other connections from the same user will be closed with connection limit reason (client won't try to automatically reconnect).
+`client.subscribe_to_user_personal_channel.single_connection` boolean option (default `false`) turns on a mode in which Centrifugo will try to maintain only a single connection for each user at the same moment. As soon as the user establishes a connection other connections from the same user will be closed with connection limit reason (client won't try to automatically reconnect).
 
 This feature works with a help of presence information inside a personal channel. So **presence should be turned on in a personal channel**.
 
@@ -62,15 +62,21 @@ Example config:
 
 ```json title="config.json"
 {
-  "user_subscribe_to_personal": true,
-  "user_personal_single_connection": true,
-  "user_personal_channel_namespace": "personal",
-  "namespaces": [
-    {
-      "name": "personal",
-      "presence": true
+  "client": {
+    "subscribe_to_user_personal_channel": {
+      "enabled": true,
+      "personal_channel_namespace": "personal",
+      "single_connection": true
     }
-  ]
+  },
+  "channel": {
+    "namespaces": [
+      {
+        "name": "personal",
+        "presence": true
+      }
+    ]
+  }
 }
 ```
 

@@ -6,6 +6,16 @@ sidebar_label: SSE (EventSource)
 
 [Server-Sent Events or EventSource](https://developer.mozilla.org/en-US/docs/Web/API/EventSource) is a well-known HTTP-based transport available in all modern browsers and loved by many developers. 
 
+Can be enabled using:
+
+```json title=config.json
+{
+  "uni_sse": {
+    "enabled": true
+  }
+}
+```
+
 Default unidirectional SSE (EventSource) connection endpoint in Centrifugo is:
 
 ```
@@ -47,7 +57,7 @@ JSON
 
 ## Options
 
-### uni_sse
+### uni_sse.enabled
 
 Boolean, default: `false`.
 
@@ -56,11 +66,13 @@ Enables unidirectional SSE (EventSource) endpoint.
 ```json title="config.json"
 {
     ...
-    "uni_sse": true
+    "uni_sse": {
+        "enabled": true
+    }
 }
 ```
 
-### uni_sse_max_request_body_size
+### uni_sse.max_request_body_size
 
 Default: 65536 (64KB)
 

@@ -26,12 +26,14 @@ It's possible to configure `subscribe_cel` for a channel namespace (`subscribe_c
 
 ```json title="config.json"
 {
+  "channel": {
     "namespaces": [
-        {
-            "name": "admin",
-            "subscribe_cel": "'admin' in meta.roles"
-        }
+      {
+        "name": "admin",
+        "subscribe_cel": "'admin' in meta.roles"
+      }
     ]
+  }
 }
 ```
 
@@ -64,20 +66,23 @@ Information about current `user` ID, `meta` information attached to the connecti
 
 Say client with user ID `123` subscribes to a channel `/users/4` which matched the [channel pattern](./channel_patterns.md) `/users/:user`:
 
-| Variable | Type | Example |  Description |
-| ------------ | -------------- | ---- | ------------ |
-| subscribed | `bool` | `false` |  Whether client is subscribed to channel, always `false` for `subscribe` operation |
-| user       | `string`     | `"123"` |  Current authenticated user ID (known from from JWT or connect proxy result) |
-| meta     | `map[string]any` | `{"roles": ["admin"]}` | Meta information attached to the connection by the apllication backend (in JWT or over connect proxy result) |
-| channel    | `string`     | `"/users/4"` | Channel client tries to subscribe      |
-| vars | `map[string]string` | `{"user": "4"}` |  Extracted variables from the matched channel pattern. It's empty in case of using channels without variables. |
+| Variable   | Type                | Example                | Description                                                                                                   |
+|------------|---------------------|------------------------|---------------------------------------------------------------------------------------------------------------|
+| subscribed | `bool`              | `false`                | Whether client is subscribed to channel, always `false` for `subscribe` operation                             |
+| user       | `string`            | `"123"`                | Current authenticated user ID (known from from JWT or connect proxy result)                                   |
+| meta       | `map[string]any`    | `{"roles": ["admin"]}` | Meta information attached to the connection by the apllication backend (in JWT or over connect proxy result)  |
+| channel    | `string`            | `"/users/4"`           | Channel client tries to subscribe                                                                             |
+| vars       | `map[string]string` | `{"user": "4"}`        | Extracted variables from the matched channel pattern. It's empty in case of using channels without variables. |
 
 In this case, to allow admin to subscribe on any user's channel or allow non-admin user to subscribe only on its own channel, you may construct an expression like this:
 
 ```json
 {
-    ...
-    "subscribe_cel": "vars.user == user or 'admin' in meta.roles"
+  "channel": {
+    "without_namespace": {
+      "subscribe_cel": "vars.user == user or 'admin' in meta.roles"
+    }
+  }
 }
 ```
 
@@ -85,12 +90,14 @@ Let's look at one more example. Say client with user ID `123` subscribes to a ch
 
 ```json
 {
+  "channel": {
     "namespaces": [
-        {
-            "name": "/:tenant/users/:user",
-            "subscribe_cel": "vars.tenant == meta.tenant && (vars.user == user or 'admin' in meta.roles)"
-        }
+      {
+        "name": "/:tenant/users/:user",
+        "subscribe_cel": "vars.tenant == meta.tenant && (vars.user == user or 'admin' in meta.roles)"
+      }
     ]
+  }
 }
 ```
 

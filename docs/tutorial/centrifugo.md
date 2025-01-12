@@ -22,13 +22,25 @@ And put `config.json` to local `centrifugo` directory with the following content
 
 ```json
 {
-    "log_level": "debug",
-    "allowed_origins": ["http://localhost:9000"],
-    "token_hmac_secret_key": "secret",
-    "api_key": "api_key",
-    "namespaces": [{
+  "log_level": "debug",
+  "client": {
+    "token": {
+      "hmac_secret_key": "secret"
+    },
+    "allowed_origins": [
+      "http://localhost:9000"
+    ]
+  },
+  "http_api": {
+    "key": "api_key"
+  },
+  "channel": {
+    "namespaces": [
+      {
         "name": "personal"
-    }]
+      }
+    ]
+  }
 }
 ```
 

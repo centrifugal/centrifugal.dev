@@ -19,62 +19,66 @@ To enable integration with ClickHouse add the following section to a configurati
 
 ```json title="config.json"
 {
-    ...
-    "clickhouse_analytics": {
+  "clickhouse_analytics": {
+    "enabled": true,
+    "clickhouse_dsn": [
+      "tcp://127.0.0.1:9000",
+      "tcp://127.0.0.1:9001",
+      "tcp://127.0.0.1:9002",
+      "tcp://127.0.0.1:9003"
+    ],
+    "clickhouse_database": "centrifugo",
+    "clickhouse_cluster": "centrifugo_cluster",
+    "export": {
+      "connections": {
         "enabled": true,
-        "clickhouse_dsn": [
-            "tcp://127.0.0.1:9000",
-            "tcp://127.0.0.1:9001",
-            "tcp://127.0.0.1:9002",
-            "tcp://127.0.0.1:9003"
-        ],
-        "clickhouse_database": "centrifugo",
-        "clickhouse_cluster": "centrifugo_cluster",
-        "export_connections": true,
-        "export_subscriptions": true,
-        "export_operations": true,
-        "export_publications": true,
-        "export_notifications": true,
-        "export_http_headers": [
-            "User-Agent",
-            "Origin",
-            "X-Real-Ip"
+        "http_headers": [
+          "User-Agent",
+          "Origin",
+          "X-Real-Ip"
         ]
+      },
+      "subscriptions": {
+        "enabled": true
+      },
+      "operations": {
+        "enabled": true
+      },
+      "publications": {
+        "enabled": true
+      },
+      "notifications": {
+        "enabled": true
+      }
     }
+  }
 }
 ```
 
 All ClickHouse analytics options scoped to `clickhouse_analytics` section of configuration.
 
-Toggle this feature using `enabled` boolean option.
+Toggle this feature using `clickhouse_analytics.enabled` boolean option.
 
-:::tip
+Centrifugo can export data to different ClickHouse instances, addresses of ClickHouse can be set over `clickhouse_analytics.clickhouse_dsn` option.
 
-While we have a nested configuration here it's still possible to use environment variables to set options. For example, use `CENTRIFUGO_CLICKHOUSE_ANALYTICS_ENABLED` env var name for configure `enabled` option mentioned above. I.e. nesting expressed as `_` in Centrifugo.
+You also need to set a ClickHouse cluster name (`clickhouse_analytics.clickhouse_cluster`) and database name `clickhouse_analytics.clickhouse_database`.
 
-:::
+`clickhouse_analytics.skip_schema_initialization` - boolean, default `false`. By default Centrifugo tries to initialize table schema on start (if not exists). This flag allows skipping initialization process.
 
-Centrifugo can export data to different ClickHouse instances, addresses of ClickHouse can be set over `clickhouse_dsn` option.
+`clickhouse_analytics.skip_ping_on_start` - boolean, default `false`. Centrifugo pings Clickhouse servers by default on start, if any of servers is unavailable – Centrifugo fails to start. This option allow skipping this check thus Centrifugo is able to start even if Clickhouse cluster not working correctly.
 
-You also need to set a ClickHouse cluster name (`clickhouse_cluster`) and database name `clickhouse_database`.
+The `export` section allows configuring which data to export to ClickHouse:
 
-`export_connections` tells Centrifugo to export connection information snapshots. Information about connection will be exported once a connection established and then periodically while connection alive. See below on table structure to see which fields are available.
+* `clickhouse_analytics.export.connections.enabled` – enables exporting connection information.
+* `clickhouse_analytics.export.subscriptions.enabled` – enables exporting subscription information.
+* `clickhouse_analytics.export.operations.enabled` – enables exporting individual client operation information.
+* `clickhouse_analytics.export.publications.enabled` – enables exporting publications for channels.
+* `clickhouse_analytics.export.notifications.enabled` – enables exporting push notifications.
 
-`export_subscriptions` tells Centrifugo to export subscription information snapshots. Information about subscription will be exported once a subscription established and then periodically while connection alive. See below on table structure to see which fields are available.
+Additionally:
 
-`export_operations` tells Centrifugo to export individual client operation information. See below on table structure to see which fields are available.
-
-`export_publications` tells Centrifugo to export publications for channels to a separate ClickHouse table.
-
-`export_notifications` tells Centrifugo to export push notifications to a separate ClickHouse table.
-
-`export_http_headers` is a list of HTTP headers to export for connection information.
-
-`export_grpc_metadata` is a list of metadata keys to export for connection information for GRPC unidirectional transport.
-
-`skip_schema_initialization` - boolean, default `false`. By default Centrifugo tries to initialize table schema on start (if not exists). This flag allows skipping initialization process.
-
-`skip_ping_on_start` - boolean, default `false`. Centrifugo pings Clickhouse servers by default on start, if any of servers is unavailable – Centrifugo fails to start. This option allow skipping this check thus Centrifugo is able to start even if Clickhouse cluster not working correctly.
+* `clickhouse_analytics.export.connections.http_headers` is a list of HTTP headers to export for connection information.
+* `clickhouse_analytics.export.connections.grpc_metadata` is a list of metadata keys to export for connection information for GRPC unidirectional transport.
 
 ## Connections table
 

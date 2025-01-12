@@ -13,7 +13,7 @@ Centrifugo operates on a PUB/SUB model - it has publishers and subscribers. A ch
 
 A channel is simply a string - names like `news`, `comments`, `personal_feed` are examples of valid channel names. However, there are [predefined rules](#channel-name-rules) for these strings, as we will discuss later. You can define different behaviors for a channel using a range of available [channel options](#channel-options).
 
-Channels are ephemeral – there is no need to create them explicitly. Channels are automatically created by Centrifugo as soon as the first client subscribes. Similarly, when the last subscriber leaves, the channel is automatically cleaned up.
+Channels are ephemeral – there is no need to create them explicitly. Channels are automatically created by Centrifugo as soon as the first client subscribes. Similarly, when the last subscriber leaves, the channel is automatically cleaned up. Channels with history enabled additionally maintain the list of publications for a configured retention window.
 
 A channel can be part of a channel namespace. [Channel namespacing](#channel-namespaces) is a mechanism to define different behaviors for various channels within Centrifugo. Using namespaces is the recommended approach to manage channels – enabling only those channel options which are necessary for the specific real-time feature you are implementing with Centrifugo.
 
@@ -94,34 +94,34 @@ When you want to use specific namespace options your channel must be prefixed wi
 
 Centrifugo looks for `:` symbol in the channel name, if found – extracts the namespace name, and applies all the configured namespace channel options while processing protocol commands from a client or server API calls.
 
-All things together here is an example of `config.json` which includes some top-level channel options set and has 2 additional channel namespaces configured:
+All things together here is an example of `config.json` which includes some top-level (without namespace) channel options set and has 2 additional channel namespaces configured:
 
 ```json title="config.json"
 {
-  "token_hmac_secret_key": "very-long-secret-key",
-  "api_key": "secret-api-key",
-  
-  "presence": true,
-  "history_size": 10,
-  "history_ttl": "30s",
-  
-  "namespaces": [
-    {
-      "name": "facts",
+  "channel": {
+    "without_namespace": {
+      "presence": true,
       "history_size": 10,
-      "history_ttl": "300s"
+      "history_ttl": "30s"
     },
-    {
-      "name": "gossips"
-    }
-  ]
+    "namespaces": [
+      {
+        "name": "facts",
+        "history_size": 10,
+        "history_ttl": "300s"
+      },
+      {
+        "name": "gossips"
+      }
+    ]
+  }
 }
 ```
 
-* Channel `news` will use globally defined channel options.
-* Channel `facts:sport` will use `facts` namespace options.
-* Channel `gossips:sport` will use `gossips` namespace options.
-* Channel `xxx:hello` will result into subscription error since there is no `xxx` namespace defined in the configuration above.
+* Channel `news` will use channel options from `channel.without_namespace`.
+* Channel `facts:sport` will use options from `facts` namespace.
+* Channel `gossips:sport` will use options from `gossips` namespace.
+* Channel `xxx:hello` will result into `102: unknown channel` subscription error since it belongs to `xxx` namespace but there is no `xxx` namespace defined in the configuration above.
 
 **Channel namespaces also work with private channels and user-limited channels**. For example, if you have a namespace called `dialogs` then the private channel can be constructed as `$dialogs:gossips`, user-limited channel can be constructed as `dialogs:dialog#1,2`.
 
@@ -225,7 +225,7 @@ Enabling channel history adds some overhead (both memory and CPU) since Centrifu
 
 As all history is storing in process memory (or in a broker memory) it is also very important to get rid of old history data for unused (inactive for a long time) channels.
 
-By default history TTL duration is zero – this means that channel history is disabled.
+By default, history TTL duration is zero – this means that channel history is disabled.
 
 **Again – to turn on history you should wisely configure both `history_size` and `history_ttl` options**.
 
@@ -235,9 +235,13 @@ For example for top-level channels (which do not belong to a namespace):
 
 ```json title="config.json"
 {
-    ...
-    "history_size": 10,
-    "history_ttl": "60s"
+  ...
+  "channel": {
+    "without_namespace": {
+      "history_size": 10,
+      "history_ttl": "60s"
+    }
+  }
 }
 ```
 
@@ -399,13 +403,15 @@ For example, let's only allow digits after `chat:` for channel names in a `chat`
 
 ```json
 {
-  "namespaces": [
-    {
-      "name": "chat",
-      "allow_subscribe_for_client": true,
-      "channel_regex": "^[\d+]$"
-    }
-  ]
+  "channel": {
+    "namespaces": [
+      {
+        "name": "chat",
+        "allow_subscribe_for_client": true,
+        "channel_regex": "^[\d+]$"
+      }
+    ]
+  }
 }
 ```
 
@@ -469,7 +475,7 @@ Centrifugo uses Go language [regexp](https://pkg.go.dev/regexp) package for regu
 
 ### shared_position_sync
 
-`shared_position_sync` (boolean, default `false`, Centrifugo PRO only) - can help reducing the number of position synchronization requests from Centrifugo to Broker's history API, see [more details](../pro/engine_optimizations.md#shared-position-sync) in Centrifugo PRO docs.
+`shared_position_sync` (boolean, default `false`, Centrifugo PRO only) - can help reducing the number of position synchronization requests from Centrifugo to Broker's history API, see [more details](../pro/scalability.md#shared-position-sync) in Centrifugo PRO docs.
 
 ### channel_state_events
 
@@ -497,20 +503,30 @@ Let's look at how to set some of these options in a config. In this example we t
 
 ```json title="config.json"
 {
-    "token_hmac_secret_key": "my-secret-key",
-    "api_key": "secret-api-key",
-    "presence": true,
-    "history_size": 10,
-    "history_ttl": "300s",
-    "force_recovery": true,
-    "allow_subscribe_for_client": true,
-    "allow_subscribe_for_anonymous": true,
-    "allow_publish_for_subscriber": true,
-    "allow_publish_for_anonymous": true,
-    "allow_history_for_subscriber": true,
-    "allow_history_for_anonymous": true,
-    "allow_presence_for_subscriber": true,
-    "allow_presence_for_anonymous": true
+  "client": {
+    "token": {
+      "hmac_secret_key": "my-secret-key"
+    }
+  },
+  "channel": {
+    "without_namespace": {
+      "presence": true,
+      "history_size": 10,
+      "history_ttl": "300s",
+      "force_recovery": true,
+      "allow_subscribe_for_anonymous": true,
+      "allow_subscribe_for_client": true,
+      "allow_publish_for_anonymous": true,
+      "allow_publish_for_subscriber": true,
+      "allow_presence_for_anonymous": true,
+      "allow_presence_for_subscriber": true,
+      "allow_history_for_anonymous": true,
+      "allow_history_for_subscriber": true
+    }
+  },
+  "http_api": {
+    "key": "secret-api-key"
+  }
 }
 ```
 
@@ -518,25 +534,33 @@ Here we set channel options on config top-level – these options will affect ch
 
 ```json title="config.json"
 {
-    "token_hmac_secret_key": "my-secret-key",
-    "api_key": "secret-api-key",
+  "client": {
+    "token": {
+      "hmac_secret_key": "my-secret-key"
+    }
+  },
+  "http_api": {
+    "key": "secret-api-key"
+  },
+  "channel": {
     "namespaces": [
-        {
-            "name": "feed",
-            "presence": true,
-            "history_size": 10,
-            "history_ttl": "300s",
-            "force_recovery": true,
-            "allow_subscribe_for_client": true,
-            "allow_subscribe_for_anonymous": true,
-            "allow_publish_for_subscriber": true,
-            "allow_publish_for_anonymous": true,
-            "allow_history_for_subscriber": true,
-            "allow_history_for_anonymous": true,
-            "allow_presence_for_subscriber": true,
-            "allow_presence_for_anonymous": true
-        }
+      {
+        "name": "feed",
+        "presence": true,
+        "history_size": 10,
+        "history_ttl": "300s",
+        "force_recovery": true,
+        "allow_subscribe_for_client": true,
+        "allow_subscribe_for_anonymous": true,
+        "allow_publish_for_subscriber": true,
+        "allow_publish_for_anonymous": true,
+        "allow_history_for_subscriber": true,
+        "allow_history_for_anonymous": true,
+        "allow_presence_for_subscriber": true,
+        "allow_presence_for_anonymous": true
+      }
     ]
+  }
 }
 ```
 

@@ -37,13 +37,13 @@ Get current stream top offset and epoch:
 history(limit: 0, since: null, reverse: false)
 ```
 
-Get full history from the current beginning (but up to `client_history_max_publication_limit`, which is `300` by default):
+Get full history from the current beginning (but up to `client.history_max_publication_limit`, which is `300` by default):
 
 ```
 history(limit: -1, since: null, reverse: false)
 ```
 
-Get full history from the current end (but up to `client_history_max_publication_limit`, which is `300` by default):
+Get full history from the current end (but up to `client.history_max_publication_limit`, which is `300` by default):
 
 ```
 history(limit: -1, since: null, reverse: true)
@@ -125,7 +125,7 @@ To enable recovery mechanism for channels set the [force_recovery](./channels.md
 
 When re-subscribing on channels Centrifugo will return missed `publications` to a client in a subscribe `Reply`, also it will return a special `recovered` boolean flag to indicate whether all missed publications successfully recovered after a disconnect or not.
 
-The number of publications that is possible to automatically recover is controlled by the `client_recovery_max_publication_limit` option which is `300` by default. 
+The number of publications that is possible to automatically recover is controlled by the `client.recovery_max_publication_limit` option which is `300` by default. 
 
 Centrifugo recovery model based on two fields in the protocol: `offset` and `epoch`. All fields are managed automatically by Centrifugo client SDKs (for bidirectional transport).
 
@@ -143,7 +143,7 @@ The recovery process works this way:
 
 To summarize, here is a list of possible scenarios when Centrifugo can't recover client's state for a channel and provides `recovered: false` flag in subscribed event context:
 
-* number of missed publications exceeds `client_recovery_max_publication_limit` option
+* number of missed publications exceeds `client.recovery_max_publication_limit` option
 * number of missed publications exceeds `history_size` namespace option
 * client was away for a long time and history stream expired according to `history_ttl` namespace option
 * storage used by Centrifugo engine lost the stream (restart, number of shards changed, cleared by the administrator, etc.)

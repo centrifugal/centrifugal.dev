@@ -14,6 +14,16 @@ We publish [Centrifugo GRPC uni stream Protobuf definitions](https://buf.build/c
 
 :::
 
+Can be enabled using:
+
+```json title=config.json
+{
+  "uni_grpc": {
+    "enabled": true
+  }
+}
+```
+
 GRPC server will start on port `11000` (default).
 
 ## Supported data formats
@@ -22,7 +32,7 @@ JSON and binary.
 
 ## Options
 
-### uni_grpc
+### uni_grpc.enabled
 
 Boolean, default: `false`.
 
@@ -31,45 +41,35 @@ Enables unidirectional GRPC endpoint.
 ```json title="config.json"
 {
     ...
-    "uni_grpc": true
+    "uni_grpc": {
+        "enabled": true
+    }
 }
 ```
 
-### uni_grpc_port
+### uni_grpc.port
 
 String, default `"11000"`.
 
 Port to listen on.
 
-### uni_grpc_address
+### uni_grpc.address
 
 String, default `""` (listen on all interfaces)
 
 Address to bind uni GRPC to.
 
-### uni_grpc_max_receive_message_size
+### uni_grpc.max_receive_message_size
 
 Default: `65536` (64KB)
 
 Maximum allowed size of a first connect message received from GRPC connection in bytes.
 
-### uni_grpc_tls
+### uni_grpc.tls
 
-Boolean, default: `false`
+[TLSConfig](../server/tls.md#unified-tls-config-object).
 
-Enable custom TLS for unidirectional GRPC server.
-
-### uni_grpc_tls_cert
-
-String, default: `""`.
-
-Path to cert file.
-
-### uni_grpc_tls_key
-
-String, default: `""`.
-
-Path to key file.
+Allows configuring TLS for unidirectional GRPC server.
 
 ## Example
 

@@ -37,29 +37,30 @@ Our [Chat/Messenger tutorial](../tutorial/outbox_cdc.md) shows PostgreSQL outbox
 
 Consumers can be set in the configuration using `consumers` array:
 
-```json
+```json title="config.json"
 {
-    ...
-    "consumers": [
-        {
-            "name": "xxx",
-            "type": "postgresql",
-            "postgresql": {...}
-        },
-        {
-            "name": "yyy",
-            "type": "kafka",
-            "kafka": {...}
-        },
-    ]
+  "consumers": [
+    {
+      "enabled": true,
+      "name": "xxx",
+      "type": "postgresql",
+      "postgresql": {...}
+    },
+    {
+      "enabled": true,
+      "name": "yyy",
+      "type": "kafka",
+      "kafka": {...}
+    }
+  ]
 }
 ```
 
 On top level each consumer object has the following fields:
 
+* `enabled` - boolean (default: `false`), when set to `true` allows enabling the configured consumer
 * `name` - string (required), described name of consumer. Must be unique for each consumer and match the regex `^[a-zA-Z0-9_]{2,}` - i.e. latin symbols, digits and underscores and be at least 2 symbols. This name will be used for logging purposes, metrics, also to override some options with environment variables. 
 * `type` - string (required), type of consumer. At this point can be `postgresql` or `kafka`
-* `disabled` - boolean (default: `false`), when set to `true` allows disabling the consumer
 
 To provide `consumers` over environment variable provide `CENTRIFUGO_CONSUMERS` var with JSON array serialized to string. It's also possible to override some specific consumer options over environment variables – see below. 
 
@@ -84,6 +85,7 @@ Then configure consumer of `postgresql` type in Centrifugo config:
   ...
   "consumers": [
     {
+      "enabled": true,
       "name": "my_postgresql_consumer",
       "type": "postgresql",
       "postgresql": {
@@ -129,6 +131,7 @@ And then update consumer config – add `"partition_notification_channel"` optio
   ...
   "consumers": [
     {
+      "enabled": true,
       "name": "my_postgresql_consumer",
       "type": "postgresql",
       "postgresql": {
@@ -142,21 +145,23 @@ And then update consumer config – add `"partition_notification_channel"` optio
 
 ### PostgreSQL consumer options
 
-* `dsn` - string (required), DSN to PostgreSQL database, ex. `"postgresql://user:password@localhost:5432/db"`. To override `dsn` over environment variables use `CENTRIFUGO_CONSUMERS_POSTGRESQL_<CONSUMER_NAME>_DSN`.
-* `outbox_table_name` - string (required), the name of outbox table in selected database, ex. `"centrifugo_outbox"`
-* `num_partitions` - integer (default: `1`), the number of partitions to use. Centrifugo keeps strict order of commands per-partition by default. This option provides a way to create concurrent consumers each consuming from different partition of outbox table. Note, that partition numbers in start with `0`, so when using `1` as `num_partitions` insert data with `partition` == `0` to the outbox table.
-* `partition_select_limit` - integer (default: `100`) – max number of commands to select in one query to outbox table.
-* `partition_poll_interval` - duration (default: `"300ms"`) - polling interval for each partition
-* `partition_notification_channel` - string (default: `""`) - optional name of LISTEN/NOTIFY channel to trigger consuming upon data added to outbox partition.
+* `consumers.postgresql.dsn` - string (required), DSN to PostgreSQL database, ex. `"postgresql://user:password@localhost:5432/db"`. To override `dsn` over environment variables use `CENTRIFUGO_CONSUMERS_<CONSUMER_NAME>_POSTGRESQL_DSN`.
+* `consumers.postgresql.outbox_table_name` - string (required), the name of outbox table in selected database, ex. `"centrifugo_outbox"`
+* `consumers.postgresql.num_partitions` - integer (default: `1`), the number of partitions to use. Centrifugo keeps strict order of commands per-partition by default. This option provides a way to create concurrent consumers each consuming from different partition of outbox table. Note, that partition numbers in start with `0`, so when using `1` as `num_partitions` insert data with `partition` == `0` to the outbox table.
+* `consumers.postgresql.partition_select_limit` - integer (default: `100`) – max number of commands to select in one query to outbox table.
+* `consumers.postgresql.partition_poll_interval` - duration (default: `"300ms"`) - polling interval for each partition
+* `consumers.postgresql.partition_notification_channel` - string (default: `""`) - optional name of LISTEN/NOTIFY channel to trigger consuming upon data added to outbox partition.
+* `consumers.postgresql.tls` - [TLSConfig](./tls.md#unified-tls-config-object) to configure PostgreSQL client TLS.
 
 ## Kafka consumer
 
 Another built-in consumer – is Kafka topics consumer. To configure Centrifugo to consume Kafka topic:
 
-```json
+```json title="config.json"
   ...
   "consumers": [
     {
+      "enabled": true,
       "name": "my_kafka_consumer",
       "type": "kafka",
       "kafka": {
@@ -185,24 +190,46 @@ Then simply put message in the following format to Kafka topic:
 
 ### Kafka consumer options
 
-* `brokers` - array of strings (required), points Centrifugo to Kafka brokers. To override `brokers` over environment variables use `CENTRIFUGO_CONSUMERS_KAFKA_<CONSUMER_NAME>_BROKERS` – string with broker addresses separated by space.
-* `topics` - array of string (required), tells which topics to consume
-* `consumer_group` - string (required), sets the name of consumer group to use
-* `max_poll_records` - integer (default: `100`) - sets the maximum number of records to fetch from Kafka during a single poll operation.
-* `sasl_mechanism` - SASL mechanism to use: `"plain"`, `"scram-sha-256"` (since 5.4.7), `"scram-sha-512"` (since 5.4.7), `"aws-msk-iam"` (since 5.4.7) are supported. Note, in case of `"aws-msk-iam"` Centrifugo uses `sasl_user` and `sasl_password` options as `access key` and `secret key` when configuring AWS auth.
-* `sasl_user` - string, user for plain SASL auth. To override `sasl_user` over environment variables use `CENTRIFUGO_CONSUMERS_KAFKA_<CONSUMER_NAME>_SASL_USER`.
-* `sasl_password` - string, password for plain SASL auth. To override `sasl_password` over environment variables use `CENTRIFUGO_CONSUMERS_KAFKA_<CONSUMER_NAME>_SASL_PASSWORD`.
-* `tls` - boolean (default: `false`) - enables TLS, if `true` – then all the [TLS options](#kafka-tls-options) may be additionally set.
+* `consumers.kafka.brokers` - `array[string]` (required), points Centrifugo to Kafka brokers. To override `brokers` over environment variables use `CENTRIFUGO_CONSUMERS_<CONSUMER_NAME>_KAFKA_BROKERS` – string with broker addresses separated by space.
+* `consumers.kafka.topics` - array of string (required), tells which topics to consume
+* `consumers.kafka.consumer_group` - string (required), sets the name of consumer group to use
+* consumers.kafka.`max_poll_records` - integer (default: `100`) - sets the maximum number of records to fetch from Kafka during a single poll operation.
+* `consumers.kafka.sasl_mechanism` - only `"plain"` is now supported
+* `consumers.kafka.sasl_user` - string, user for plain SASL auth. To override `sasl_user` over environment variables use `CENTRIFUGO_CONSUMERS_<CONSUMER_NAME>_KAFKA_SASL_USER`.
+* `consumers.kafka.sasl_password` - string, password for plain SASL auth. To override `sasl_password` over environment variables use `CENTRIFUGO_CONSUMERS_<CONSUMER_NAME>_KAFKA_SASL_PASSWORD`.
+* `consumers.kafka.tls` - [TLSConfig](./tls.md#unified-tls-config-object) to configure Kafka client TLS.
 
-### Kafka TLS options
+### Publication data mode
 
-- `tls_cert` – `string` representing the path on disk to the TLS certificate. This is typically used for the server certificate in TLS connections.
-- `tls_key` – `string` representing the path on disk to the TLS key associated with the certificate.
-- `tls_cert_pem` – `string` containing the PEM (Privacy Enhanced Mail) encoded TLS certificate.
-- `tls_key_pem` – `string` containing the PEM encoded TLS key.
-- `tls_root_ca` – `string` representing the path on disk to the root CA certificate. This is used to verify the server certificate.
-- `tls_root_ca_pem` – `string` containing the PEM encoded root CA certificate.
-- `tls_client_ca` – `string` representing the path on disk to the client CA certificate. This is used in mutual TLS
-- `tls_client_ca_pem` – `string` containing the PEM encoded client CA certificate.
-- `tls_insecure_skip_verify` – `boolean` indicating whether to skip verifying the server's certificate chain and host name. If `true`, TLS accepts any certificate presented by the server and any host name in that certificate.
-- `server_name` – `string` specifying the server name to use for server certificate verification if `tls_insecure_skip_verify` is false. This is also used in the client's SNI (Server Name Indication) extension in TLS handshake.
+Publication data mode for Kafka consumer simplifies integrating Centrifugo with existing Kafka topics. By default, Centrifugo can integrate with Kafka topics but requires a special payload format, where each message in the topic represented a Centrifugo API command. This approach works well for Kafka topics specifically set up for Centrifugo.
+
+When **Publication Data Mode** is enabled, Centrifugo expects messages in Kafka topics to contain data ready for direct publication, rather than server API commands. It is also possible to use special Kafka headers to specify the channels to which the data should be published.
+
+The primary goal of this mode is to simplify Centrifugo's integration with existing Kafka topics, making it easier to deliver real-time messages to clients without needing to restructure the topic's payload format.
+
+BTW, don't forget that since Centrifugo allows configuring an array of asynchronous consumers, it is possible to use Kafka consumers in different modes simultaneously.
+
+To enable publication data mode:
+
+```json title="config.json"
+  "consumers": [
+    {
+      "enabled": true,
+      "name": "my_kafka_consumer",
+      "type": "kafka",
+      "kafka": {
+        "brokers": ["localhost:9092"],
+        "topics": ["my_topic"],
+        "consumer_group": "centrifugo",
+        "publication_data_mode": {
+          "enabled": true,
+          "channels_header": "x-centrifugo-channels"
+          "idempotency_key_header": "x-centrifugo-idempotency-key"
+        }
+      }
+    }
+  ]
+}
+```
+
+As you can see, channels to forward publication to may be provided as a value of a configured header. So you don't need to change payloads in topic to transform them to real-time messages with Centrifugo.

@@ -9,7 +9,7 @@ Centrifugo server is written in the Go language. It's open-source software, and 
 
 For local development, you can download the prebuilt Centrifugo binary release (i.e., a single all-contained executable file) for your system.
 
-Binary releases are available on Github. [Download the latest release](https://github.com/centrifugal/centrifugo/releases) for your operating system, unpack it, and you are done. Centrifugo is pre-built for:
+Binary releases are available on GitHub. [Download the latest release](https://github.com/centrifugal/centrifugo/releases) for your operating system, unpack it, and you are done. Centrifugo is pre-built for:
 
 * Linux 64-bit (linux_amd64)
 * Linux 32-bit (linux_386)
@@ -72,20 +72,20 @@ Centrifugo server has a docker image [available on Docker Hub](https://hub.docke
 
 Generate a configuration file.
 ```
-docker run --rm -v$PWD:/centrifugo centrifugo/centrifugo:v5 centrifugo genconfig
+docker run --rm -v$PWD:/centrifugo centrifugo/centrifugo:v6 centrifugo genconfig
 ```
 
 Run:
 
 ```bash
-docker run --rm --ulimit nofile=262144:262144 -v /host/dir/with/config/file:/centrifugo -p 8000:8000 centrifugo/centrifugo:v5 centrifugo -c config.json
+docker run --rm --ulimit nofile=262144:262144 -v /host/dir/with/config/file:/centrifugo -p 8000:8000 centrifugo/centrifugo:v6 centrifugo -c config.json
 ```
 
 Note that docker allows setting `nofile` limits in command-line arguments, which is quite important to handle many simultaneous persistent connections and not run out of the open file limit (each connection requires one file descriptor). See also [infrastructure tuning chapter](../server/infra_tuning.md).
 
 :::caution
 
-Pin to the exact Docker Image tag in production, for instance: `centrifugo/centrifugo:v5.0.0`. This will help to avoid unexpected problems during redeployment process.
+Pin to the exact Docker Image tag in production, for instance: `centrifugo/centrifugo:v6.0.0`. This will help to avoid unexpected problems during redeployment process.
 
 :::
 
@@ -95,11 +95,20 @@ Create configuration file `config.json`:
 
 ```json
 {
-  "token_hmac_secret_key": "my_secret",
-  "api_key": "my_api_key",
-  "admin_password": "password",
-  "admin_secret": "secret",
-  "admin": true
+  "client": {
+    "token": {
+      "hmac_secret_key": "my_secret"
+    },
+    "allowed_origins": ["*"]
+  },
+  "http_api": {
+    "key": "my_api_key"
+  },
+  "admin": {
+    "password": "password",
+    "secret": "secret",
+    "enabled": true
+  }
 }
 ```
 
@@ -110,7 +119,7 @@ version: "3.9"
 services:
   centrifugo:
     container_name: centrifugo
-    image: centrifugo/centrifugo:v5
+    image: centrifugo/centrifugo:v6
     volumes:
       - ./config.json:/centrifugo/config.json
     command: centrifugo -c config.json

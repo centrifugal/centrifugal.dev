@@ -10,7 +10,7 @@ This is an experimental extension of Centrifugo [proxy](./proxy.md). We apprecia
 
 :::
 
-Proxy subscription streams (available since Centrifugo v5.1.0) allow pushing data towards client channel subscription directly and individually from your application backend over the unidirectional [GRPC](https://grpc.io/) stream. Additionally, bidirectional GRPC streams may be utilized to stream data in both directions.
+Proxy subscription streams allow pushing data towards client channel subscription directly and individually from your application backend over the unidirectional [GRPC](https://grpc.io/) stream. Additionally, bidirectional GRPC streams may be utilized to stream data in both directions.
 
 The stream is established between Centrifugo and your application backend as soon as user subscribes to a channel. Subscription streams may be useful if you want to generate individual streams and these streams should only work for a time while client is subscribed to a channel.
 
@@ -86,27 +86,37 @@ First, configure subscribe stream proxy, pointing it to the backend which implem
 
 ```json title="config.json"
 {
-  ...
-  "proxy_subscribe_stream_endpoint": "grpc://localhost:12000",
-  "proxy_subscribe_stream_timeout": "3s"
+  "channel": {
+    "proxy": {
+      "subscribe_stream": {
+        "endpoint": "grpc://localhost:12000",
+        "timeout": "3s"
+      }
+    }
+  }
 }
 ```
 
-Only `grpc://` endpoints are supported since we are heavily relying on GRPC streaming ecosystem here. In this case `proxy_subscribe_stream_timeout` defines a time how long Centrifugo waits for a first message from a stream which contains subscription details to transfer to a client.
+Only `grpc://` endpoints are supported since we are heavily relying on GRPC streaming ecosystem here. In this case `timeout` defines a time how long Centrifugo waits for a first message from a stream which contains subscription details to transfer to a client.
 
 Then you can enable subscription streams for channels on a namespace level:
 
 ```json title="config.json"
 {
-  ...
-  "proxy_subscribe_stream_endpoint": "grpc://localhost:12000",
-  "proxy_subscribe_stream_timeout": "3s",
-  "namespaces": [
-    {
+  "channel": {
+    "proxy": {
+      "subscribe_stream": {
+        "endpoint": "grpc://localhost:12000",
+        "timeout": "3s"
+      }
+    },
+    "namespaces": [
+      {
         "name": "streams",
-        "proxy_subscribe_stream": true
-    }
-  ]
+        "subscribe_stream_proxy_enabled": true
+      }
+    ]
+  }
 }
 ```
 
@@ -228,16 +238,21 @@ When enabling subscription streams, Centrifugo uses unidirectional GRPC streams 
 
 ```json title="config.json"
 {
-  ...
-  "proxy_subscribe_stream_endpoint": "grpc://localhost:12000",
-  "proxy_subscribe_stream_timeout": "3s",
-  "namespaces": [
-    {
+  "channel": {
+    "proxy": {
+      "subscribe_stream": {
+        "endpoint": "grpc://localhost:12000",
+        "timeout": "3s"
+      }
+    },
+    "namespaces": [
+      {
         "name": "streams",
-        "proxy_subscribe_stream": true,
-        "proxy_subscribe_stream_bidirectional": true
-    }
-  ]
+        "subscribe_stream_proxy_enabled": true,
+        "subscribe_stream_proxy_bidirectional": true
+      }
+    ]
+  }
 }
 ```
 
@@ -283,36 +298,36 @@ func (s *streamerServer) SubscribeBidirectional(
 }
 ```
 
-## Granular proxy mode
-
-[Granular proxy mode](./proxy.md#granular-proxy-mode) works with subscription streams in the same manner as for other Centrifugo proxy types.
+## With named proxies
 
 Here is an example how you can define different subscribe stream proxies for different namespaces:
 
 ```json title=config.json
 {
-  ...
-  "granular_proxy_mode": true,
+  "channel": {
+    "namespaces": [
+      {
+        "name": "ns1",
+        "subscribe_stream_proxy_enabled": true,
+        "subscribe_stream_proxy_name": "stream_1"
+      },
+      {
+        "name": "ns2",
+        "subscribe_stream_proxy_enabled": true,
+        "subscribe_stream_proxy_name": "stream_2"
+      }
+    ]
+  },
   "proxies": [
     {
-	  "name": "stream_1",
-	  "endpoint": "grpc://localhost:3000",
-	  "timeout": "500ms",
+      "name": "stream_1",
+      "endpoint": "grpc://localhost:3000",
+      "timeout": "500ms"
     },
     {
-	  "name": "stream_2",
-	  "endpoint": "grpc://localhost:3001",
-	  "timeout": "500ms",
-    }
-  ],
-  "namespaces": [
-    {
-      "name": "ns1",
-      "subscribe_stream_proxy_name": "stream_1"
-    },
-    {
-      "name": "ns2",
-      "subscribe_stream_proxy_name": "stream_2"
+      "name": "stream_2",
+      "endpoint": "grpc://localhost:3001",
+      "timeout": "500ms"
     }
   ]
 }

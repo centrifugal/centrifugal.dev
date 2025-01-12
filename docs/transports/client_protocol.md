@@ -5,10 +5,12 @@ title: Client protocol
 
 This chapter describes the core concepts of Centrifugo bidirectional client protocol – concentrating on framing level. If you want to find out details about exposed client API then look at [client API](client_api.md) document.
 
-We need our own protocol on top of real-time transport due to several reasons:
+We need our own protocol on top of real-time transport due to various reasons:
 
-* We want request-response semantics (while our main transport – WebSocket – does not provide this out of the box)
+* Pass authentication and custom data to the server
+* Implement request-response semantics (our main transport – WebSocket – does not provide this out of the box)
 * Multiplex many subscriptions over a single physical connection
+* Push different types of messages – publications, join/leave notifications
 * Efficient ping-pong support
 * Handle server disconnect advices
 
@@ -187,6 +189,13 @@ Errors during `subscribe` must result in full client reconnect in case of intern
 The special corner case is client-side timeout during `subscribe` operation. As protocol is asynchronous it's possible in this case that server will eventually subscribe client on channel but client will think that it's not subscribed. It's possible to retry subscription request and tolerate `already subscribed` (code `105`) error as expected. But the simplest solution is to reconnect entirely as this is simpler and gives client a chance to connect to working server instance.
 
 Errors during rpc-like operations can be just returned to caller - i.e. user javascript code. Calls like `history` and `presence` are idempotent. You should be accurate with non-idempotent operations like `publish` - in case of client timeout it's possible to send the same message into channel twice if retry publish after timeout - so users of libraries must care about this case – making sure they have some protection from displaying message twice on client side (maybe some sort of unique key in payload).
+
+## Client name and version
+
+Client SDK should provide a way for users to configure two additional options: `name` and `version`:
+
+* `name` is used to identify the place from where the client is connected. Generally, it's a name of application. Our official SDKs use default names like `js`, `dart`, `swift`, etc. But it's possible to redefine according to application needs. This name is then used by Centrifugo PRO in observability and analitycs stacks – you can see various insights about connections from specific application. The name must not exceed 16 symbols in length.
+* `version` – client SDK also provides a way to configure application version. Note, it's not a version of Centrifugo client SDK, but a version of application which uses Centrifugo client SDK – becuase it makes more sense for users at the end. Version is also used for observability and analitycs stacks by Centrifugo PRO. The version must not exceed 16 symbols in length.
 
 ## Additional notes
 

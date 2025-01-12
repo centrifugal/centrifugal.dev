@@ -17,7 +17,7 @@ When connecting to Centrifugo client must authenticate using one of the supporte
 
 You can also [configure access without token](../server/configuration.md#allow_anonymous_connect_without_token) – in this case Centrifugo will consider a connection without provided token anonymous. Or, if you just want to quickly experiment with Centrifugo during development, it's possible to turn on [client_insecure](../server/configuration.md#insecure-client-connection) option – but it **should never be used in production** since disables most of security checks.
 
-Another possible reason of first time connection problems - not properly configured [allowed_origins](../server/configuration.md#allowed_origins). Centrifugo server logs should also clearly indicate such issues on INFO level.
+Another possible reason of first time connection problems - not properly configured [allowed_origins](../server/configuration.md#clientallowed_origins). Centrifugo server logs should also clearly indicate such issues on INFO level.
 
 ### How many connections can one Centrifugo instance handle?
 
@@ -33,7 +33,7 @@ Depending on transport used and features enabled the amount of RAM required per 
 
 For example, you can expect that each WebSocket connection will cost about 30-50 KB of RAM, thus a server with 1 GB of RAM can handle about 20-30k connections.
 
-For other real-time transports, the memory usage per connection can differ (for example, SockJS connections will cost ~ 2 times more RAM than pure WebSocket connections). So the best way is again – measure for your custom case since depending on Centrifugo transport/features memory usage can vary.
+For other real-time transports, the memory usage per connection can differ. So the best way is again – measure for your custom case since depending on Centrifugo transport/features memory usage can vary.
 
 ### Can Centrifugo scale horizontally?
 
@@ -116,7 +116,7 @@ You can disable HTTP/2 running Centrifugo server with `GODEBUG` environment vari
 GODEBUG="http2server=0" centrifugo -c config.json
 ```
 
-Keep in mind that when using WebSocket you are working only over HTTP/1.1, so HTTP/2 support mostly makes sense for SockJS HTTP transports and unidirectional transports: like EventSource (SSE) and HTTP-streaming.
+Keep in mind that when using WebSocket you are working only over HTTP/1.1, so HTTP/2 support mostly makes sense for HTTP based transports such as our WebSocket bidirectional fallbacks (EventSource (SSE) and HTTP-streaming with bidirectional emulation) and unidirectional transports (unidirectional EventSource (SSE) and HTTP-streaming).
 
 ### Does Centrifugo work with HTTP/3?
 
@@ -132,7 +132,7 @@ If the underlying transport is HTTP-based, and you use HTTP/2 then this will wor
 
 ### What if I need to send push notifications to mobile or web applications?
 
-We provide [push notifications API](/docs/pro/push_notifications) implementation as part of Centrifugo PRO. It allows sending push notifications to devices - to Apple iOS devices via APNS, Android devices via FCM, or browsers over Web Push API. Also, we cover HMS (Huawei Mobile Services). But in general the task of push notification delivery may be done using another open-source solution, or with Firebase directly.
+We provide [push notifications API](/docs/pro/push_notifications) implementation as part of Centrifugo PRO. It allows sending push notifications to devices - to Apple iOS devices via APNS, Android/iOS/Web devices via FCM. Also, Centrifugo PRO covers HMS (Huawei Mobile Services). But in general the task of push notification delivery may be done using another open-source solution, or with Firebase directly.
 
 The reasonable question here is how can you know when you need to send a real-time message to an online client or push notification to its device for an offline client. The solution is pretty simple. You can keep critical notifications for a client in the database. And when a client reads a message you should send an ack to your backend marking the notification as read by the client. Periodically you can check which notifications were sent to clients but have not been read (no read ack received). For such notifications, you can send push notification to the device.
 

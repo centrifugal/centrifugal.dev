@@ -82,55 +82,55 @@ Each connection can be annotated with meta JSON information which is set during 
 
 Returns information about active connections according to the request. 
 
-#### connections params
+#### ConnectionsRequest
 
-| Parameter name | Parameter type | Required | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| user       | string  | no | fast filter by User ID        |
-| expression       | string  | no | CEL expression to filter users        |
+| Parameter name | Parameter type | Required | Description                    |
+|----------------|----------------|----------|--------------------------------|
+| `user`         | `string`       | no       | fast filter by User ID         |
+| `expression`   | `string`       | no       | CEL expression to filter users |
 
-#### connections result
+#### ConnectionsResult
 
-| Field name   | Field type     | Optional | Description  |
-| -------------- | -------------- | ------ | ------------ |
-| connections       | `map[string]ConnectionInfo`  | no | active user connections map where key is client ID and value is ConnectionInfo      |
+| Field name    | Field type                  | Optional | Description                                                                    |
+|---------------|-----------------------------|----------|--------------------------------------------------------------------------------|
+| `connections` | `map[string]ConnectionInfo` | no       | active user connections map where key is client ID and value is ConnectionInfo |
 
 #### ConnectionInfo
 
-| Field name   | Field type     | Optional | Description  |
-| -------------- | -------------- | ------ | ------------ |
-| app_name       | string  | yes | client app name (if provided by client)         |
-| app_version       | string  | yes | client app version (if provided by client)         |
-| transport       | string  | no | client connection transport         |
-| protocol       | string  | no | client connection protocol (json or protobuf) |
-| user       | string  | yes | client user ID |
-| state       | `ConnectionState`  | yes | connection state |
+| Field name    | Field type        | Optional | Description                                   |
+|---------------|-------------------|----------|-----------------------------------------------|
+| `app_name`    | `string`          | yes      | client app name (if provided by client)       |
+| `app_version` | `string`          | yes      | client app version (if provided by client)    |
+| `transport`   | `string`          | no       | client connection transport                   |
+| `protocol`    | `string`          | no       | client connection protocol (json or protobuf) |
+| `user`        | `string`          | yes      | client user ID                                |
+| `state`       | `ConnectionState` | yes      | connection state                              |
 
 #### ConnectionState object
 
-| Field name   | Field type     | Optional | Description  |
-| -------------- | -------------- | ------ | ------------ |
-| channels       | `map[string]ChannelContext`  | yes | Channels client subscribed to         |
-| connection_token       | ConnectionTokenInfo  | yes | information about connection token         |
-| subscription_tokens       | `map<string, SubscriptionTokenInfo>`  | yes |  information about channel tokens used to subscribe         |
-| meta       | JSON object  | yes | meta information attached to a connection |
+| Field name            | Field type                         | Optional | Description                                        |
+|-----------------------|------------------------------------|----------|----------------------------------------------------|
+| `channels`            | `map[string]ChannelContext`        | yes      | Channels client subscribed to                      |
+| `connection_token`    | `ConnectionTokenInfo`              | yes      | information about connection token                 |
+| `subscription_tokens` | `map[string]SubscriptionTokenInfo` | yes      | information about channel tokens used to subscribe |
+| `meta`                | `JSON` object                      | yes      | meta information attached to a connection          |
 
 #### ChannelContext object
 
-| Field name   | Field type     | Optional | Description  |
-| -------------- | -------------- | ------ | ------------ |
-| source       | int  | yes | The source of channel subscription  |
+| Field name | Field type | Optional | Description                        |
+|------------|------------|----------|------------------------------------|
+| `source`   | `int`      | yes      | The source of channel subscription |
 
 #### ConnectionTokenInfo object
 
-| Field name   | Field type     | Optional | Description  |
-| -------------- | -------------- | ------ | ------------ |
-| uid       | string  | yes | unique token ID (jti)         |
-| issued_at       | int  | yes | time (Unix seconds) when token was issued         |
+| Field name  | Field type | Optional | Description                               |
+|-------------|------------|----------|-------------------------------------------|
+| `uid`       | `string`   | yes      | unique token ID (jti)                     |
+| `issued_at` | `int`      | yes      | time (Unix seconds) when token was issued |
 
 #### SubscriptionTokenInfo object
 
-| Field name   | Field type     | Optional | Description  |
-| -------------- | -------------- | ------ | ------------ |
-| uid       | string  | yes | unique token ID (jti)         |
-| issued_at       | int  | yes | time (Unix seconds) when token was issued         |
+| Field name  | Field type | Optional | Description                               |
+|-------------|------------|----------|-------------------------------------------|
+| `uid`       | `string`   | yes      | unique token ID (jti)                     |
+| `issued_at` | `int`      | yes      | time (Unix seconds) when token was issued |

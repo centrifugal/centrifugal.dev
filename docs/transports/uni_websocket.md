@@ -4,13 +4,23 @@ title: Unidirectional WebSocket
 sidebar_label: WebSocket
 ---
 
+While WebSocket is bidirectional transport in its nature Centrifugo provides its unidirectional version too to give developers more choice in transports when using the unidirectional approach.
+
+Can be enabled using:
+
+```json title=config.json
+{
+  "uni_websocket": {
+    "enabled": true
+  }
+}
+```
+
 Default unidirectional WebSocket connection endpoint in Centrifugo is:
 
 ```
 /connection/uni_websocket
 ```
-
-While WebSocket is bidirectional transport in its nature Centrifugo provides its unidirectional version too to give developers more choice in transports when using unidirectional approach.
 
 ## Connect command
 

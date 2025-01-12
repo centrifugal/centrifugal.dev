@@ -22,7 +22,7 @@ Bidirectional transports are capable to serve all Centrifugo features. These tra
 
 Bidirectional transports come with a cost that developers need to use a special client connector library (SDK) which speaks Centrifugo [client protocol](./client_protocol.md). The reason why we need a special client connector library is that a bidirectional connection is asynchronous – it's required to match requests to responses, properly manage connection state, handle request queueing/timeouts/errors, etc. And of course to multiplex subscriptions to different channels over a single connection.
 
-Centrifugo has several official [client SDKs](../transports/client_sdk.md) for popular environments. All of them work over [WebSocket](./websocket.md) transport. Our Javascript SDK also offers bidirectional fallbacks over [HTTP-Streaming](./http_stream.md), [Server-Sent Events (SSE)](./sse.md), [SockJS](./sockjs.md), and has an experimental support for [WebTransport](./webtransport.md).
+Centrifugo has several official [client SDKs](../transports/client_sdk.md) for popular environments. All of them work over [WebSocket](./websocket.md) transport. Our Javascript SDK also offers bidirectional fallbacks over [HTTP-Streaming](./http_stream.md), [Server-Sent Events (SSE)](./sse.md), and has an experimental support for [WebTransport](./webtransport.md).
 
 ## Unidirectional
 
@@ -38,18 +38,29 @@ Learn more about [unidirectional protocol](./uni_client_protocol.md) and availab
 
 Centrifugo server periodically sends pings to clients and expects pong from clients that works over bidirectional transports. Sending ping and receiving pong allows to find broken connections faster. Centrifugo sends pings on the Centrifugo client protocol level, thus it's possible for clients to handle ping messages on the client side to make sure connection is not broken (our bidirectional SDKs do this automatically).
 
-By default Centrifugo sends pings every 25 seconds. This may be changed using `ping_interval` option ([duration](../server/configuration.md#setting-time-duration-options), default `"25s"`).
+Here is a scheme how ping/pong works in bidirectional and unidirectional client scenarios:
 
-Centrifugo expects pong message from bidirectional client SDK after sending ping to it. By default, it waits no more than 8 seconds before closing a connection. This may be changed using `pong_timeout` option ([duration](../server/configuration.md#setting-time-duration-options), default `"8s"`).
+![](/img/ping_pong.png)
+
+By default Centrifugo sends pings every 25 seconds. This may be changed using `client.ping_interval` option ([duration](../server/configuration.md#setting-time-duration-options), default `"25s"`).
+
+Centrifugo expects pong message from bidirectional client SDK after sending ping to it. By default, it waits no more than 8 seconds before closing a connection. This may be changed using `client.pong_timeout` option ([duration](../server/configuration.md#setting-time-duration-options), default `"8s"`).
 
 In most cases default ping/pong intervals are fine so you don't really need to tweak them. Reducing timeouts may help you to find non-gracefully closed connections faster, but will increase network traffic and CPU resource usage since ping/pongs are sent faster.
 
 :::caution
 
-`ping_interval` must be greater than `pong_timeout` in the current implementation.
+When overriding default values make sure that `client.ping_interval` is greater than `client.pong_timeout` – this is required by the current server implementation.
 
 :::
 
-Here is a scheme how ping/pong works in bidirectional and unidirectional client scenarios:
+Example of configuration:
 
-![](/img/ping_pong.png)
+```json title="config.json"
+{
+  "client": {
+    "ping_interval": "25s",
+    "pong_timeout": "8s"
+  }   
+}
+```

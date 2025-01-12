@@ -6,6 +6,16 @@ sidebar_label: HTTP streaming
 
 HTTP streaming is a technique based on using a long-lived HTTP connection between a client and a server with a chunked transfer encoding. These days it's possible to use it from the web browser using modern [Fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) and [Readable Streams](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) API.
 
+Can be enabled using:
+
+```json title=config.json
+{
+  "uni_http_stream": {
+    "enabled": true
+  }
+}
+```
+
 Default unidirectional HTTP streaming connection endpoint in Centrifugo is:
 
 ```
@@ -30,7 +40,7 @@ Centrifugo will send different message types to a connection. Every message is J
 
 ## Options
 
-### uni_http_stream
+### uni_http_stream.enabled
 
 Boolean, default: `false`.
 
@@ -39,11 +49,13 @@ Enables unidirectional HTTP streaming endpoint.
 ```json title="config.json"
 {
     ...
-    "uni_http_stream": true
+    "uni_http_stream": {
+        "enabled": true
+    }
 }
 ```
 
-### uni_http_stream_max_request_body_size
+### uni_http_stream.max_request_body_size
 
 Default: 65536 (64KB)
 
@@ -63,9 +75,16 @@ Turn on uni HTTP stream and automatically subscribe users to personal channel up
 
 ```json title="config.json"
 {
-    ...
-    "uni_http_stream": true,
-    "user_subscribe_to_personal": true
+  "client": {
+    "subscribe_to_user_personal_channel": {
+      "enabled": true
+    }
+  },
+  "uni_http_stream": {
+    "enabled": {
+      "enabled": true
+    }
+  }
 }
 ```
 

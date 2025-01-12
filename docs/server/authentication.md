@@ -27,30 +27,42 @@ Currently, Centrifugo supports HMAC, RSA, and ECDSA JWT algorithms - specificall
 
 Here, we will demonstrate example snippets using the Javascript Centrifugo client for the client-side and the [PyJWT](https://github.com/jpadilla/pyjwt) Python library to generate a connection token on the backend side.
 
-To add an HMAC secret key to Centrifugo, insert `token_hmac_secret_key` into the configuration file:
+To add an HMAC secret key to Centrifugo, insert `client.token.hmac_secret_key` into the configuration file:
 
 ```json title="config.json"
 {
-    ...
-    "token_hmac_secret_key": "<YOUR-SECRET-STRING-HERE>"
+  ...
+  "client": {
+    "token": {
+      "hmac_secret_key": "<YOUR-SECRET-STRING-HERE>"
+    }
+  }
 }
 ```
 
-To add RSA public key (must be PEM encoded string) add `token_rsa_public_key` option, ex:
+To add RSA public key (must be PEM encoded string) add `client.token.rsa_public_key` option, ex:
 
 ```json title="config.json"
 {
-    ...
-    "token_rsa_public_key": "-----BEGIN PUBLIC KEY-----\nMFwwDQYJKoZ..."
+  ...
+  "client": {
+    "token": {
+      "rsa_public_key": "-----BEGIN PUBLIC KEY-----\nMFwwDQYJKoZ..."
+    }
+  }
 }
 ```
 
-To add ECDSA public key (must be PEM encoded string) add `token_ecdsa_public_key` option, ex:
+To add ECDSA public key (must be PEM encoded string) add `client.token.ecdsa_public_key` option, ex:
 
 ```json title="config.json"
 {
-    ...
-    "token_ecdsa_public_key": "-----BEGIN PUBLIC KEY-----\nxyz23adf..."
+  ...
+  "client": {
+    "token": {
+      "ecdsa_public_key": "-----BEGIN PUBLIC KEY-----\nxyz23adf..."
+    }
+  }
 }
 ```
 
@@ -88,17 +100,22 @@ This is a unique identifier for the token. Refer to the [definition in RFC 7519]
 
 By default, Centrifugo does not check JWT audience ([rfc7519 aud](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.3) claim).
 
-But you can force this check by setting `token_audience` string option:
+But you can force this check by setting `client.token.audience` string option:
 
 ```json title="config.json"
 {
-  "token_audience": "centrifugo"
+  "client": {
+    "token": {
+      ...
+      "audience": "centrifugo"
+    }
+  }
 }
 ```
 
 :::caution
 
-Setting `token_audience` will also affect subscription tokens (used for [channel token authorization](channel_token_auth.md)). If you need to separate connection token configuration and subscription token configuration check out [separate subscription token config](./channel_token_auth.md#separate-subscription-token-config) feature.
+Setting `client.token.audience` will also affect subscription tokens (used for [channel token authorization](channel_token_auth.md)). If you need to separate connection token configuration and subscription token configuration check out [separate subscription token config](./channel_token_auth.md#separate-subscription-token-config) feature.
 
 :::
 
@@ -106,17 +123,22 @@ Setting `token_audience` will also affect subscription tokens (used for [channel
 
 By default, Centrifugo does not check JWT issuer ([rfc7519 iss](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.1) claim).
 
-But you can force this check by setting `token_issuer` string option:
+But you can force this check by setting `client.token.issuer` string option:
 
 ```json title="config.json"
 {
-  "token_issuer": "my_app"
+  "client": {
+    "token": {
+      ...
+      "issuer": "my_app"
+    }
+  }
 }
 ```
 
 :::caution
 
-Setting `token_issuer` will also affect subscription tokens (used for [channel token authorization](channel_token_auth.md)). If you need to separate connection token configuration and subscription token configuration check out [separate subscription token config](./channel_token_auth.md#separate-subscription-token-config) feature.
+Setting `client.token.issuer` will also affect subscription tokens (used for [channel token authorization](channel_token_auth.md)). If you need to separate connection token configuration and subscription token configuration check out [separate subscription token config](./channel_token_auth.md#separate-subscription-token-config) feature.
 
 :::
 
@@ -172,25 +194,25 @@ Example:
 
 #### Subscribe options:
 
-| Field | Type | Optional | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| info       | JSON object       | yes | Custom channel info   |
-| b64info       | string       | yes | Custom channel info in Base64 - to pass binary channel info   |
-| data       | JSON object       | yes | Custom JSON data to return in subscription context inside Connect reply    |
-| b64data       | string       | yes |  Same as `data` but in Base64 to send binary data   |
-| override       | `SubscribeOptionOverride`       | yes |  Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields)  |
+| Field    | Type                      | Optional | Description                                                                                                                                 |
+|----------|---------------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| info     | JSON object               | yes      | Custom channel info                                                                                                                         |
+| b64info  | string                    | yes      | Custom channel info in Base64 - to pass binary channel info                                                                                 |
+| data     | JSON object               | yes      | Custom JSON data to return in subscription context inside Connect reply                                                                     |
+| b64data  | string                    | yes      | Same as `data` but in Base64 to send binary data                                                                                            |
+| override | `SubscribeOptionOverride` | yes      | Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields) |
 
 #### SubscribeOptionOverride
 
 Allow per-connection overrides of some channel namespace options:
 
-| Field | Type | Optional | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| presence       | `BoolValue`       | yes | Override `presence` from namespace options   |
-| join_leave       | `BoolValue`       | yes | Override `join_leave` from namespace options   |
-| force_recovery       | `BoolValue`       | yes | Override `force_recovery` from namespace options   |
-| force_positioning       | `BoolValue`       | yes |  Override `force_positioning` from namespace options   |
-| force_push_join_leave       | `BoolValue`       | yes |  Override `force_push_join_leave` from namespace options   |
+| Field                 | Type        | Optional | Description                                             |
+|-----------------------|-------------|----------|---------------------------------------------------------|
+| presence              | `BoolValue` | yes      | Override `presence` from namespace options              |
+| join_leave            | `BoolValue` | yes      | Override `join_leave` from namespace options            |
+| force_recovery        | `BoolValue` | yes      | Override `force_recovery` from namespace options        |
+| force_positioning     | `BoolValue` | yes      | Override `force_positioning` from namespace options     |
+| force_push_join_leave | `BoolValue` | yes      | Override `force_push_join_leave` from namespace options |
 
 `BoolValue` is an object like this:
 
@@ -202,7 +224,7 @@ Allow per-connection overrides of some channel namespace options:
 
 ### meta
 
-`meta` is an additional JSON object (e.g., `{"key": "value"}`) that is attached to a connection. It differs from `info` as it is never disclosed to clients within presence and join/leave events; it is only accessible on the server side. It can be included in proxy calls from Centrifugo to the application backend (refer to the `proxy_include_connection_meta` option). In Centrifugo PRO, there is a `connections` API method that returns this metadata within the connection description object.
+`meta` is an additional JSON object (e.g., `{"key": "value"}`) that is attached to a connection. It differs from `info` as it is never disclosed to clients within presence and join/leave events; it is only accessible on the server side. It can be included in proxy calls from Centrifugo to the application backend (refer to the `include_connection_meta` option of [proxy configuration object](./proxy.md#proxy-configuration-object)). In Centrifugo PRO, there is a `connections` API method that returns this metadata within the connection description object.
 
 ### expire_at
 
@@ -416,9 +438,9 @@ You can use [jwt.io](https://jwt.io/) site to investigate the contents of your t
 
 Centrifugo supports JSON Web Key (JWK) [spec](https://tools.ietf.org/html/rfc7517). This means that it's possible to improve JWT security by providing an endpoint to Centrifugo from where to load JWK (by looking at `kid` header of JWT).
 
-A mechanism can be enabled by providing `token_jwks_public_endpoint` string option to Centrifugo (HTTP address).
+A mechanism can be enabled by providing `client.token.jwks_public_endpoint` string option to Centrifugo (HTTP address).
 
-As soon as `token_jwks_public_endpoint` set all tokens will be verified using JSON Web Key Set loaded from JWKS endpoint. This makes it impossible to use non-JWK based tokens to connect and subscribe to private channels.
+As soon as `client.token.jwks_public_endpoint` set all tokens will be verified using JSON Web Key Set loaded from JWKS endpoint. This makes it impossible to use non-JWK based tokens to connect and subscribe to private channels.
 
 :::tip
 
@@ -444,43 +466,49 @@ It's possible to extract variables from `iss` and `aud` JWT claims using [Go reg
 
 To achieve this Centrifugo provides two additional options:
 
-* `token_issuer_regex` - match JWT issuer (`iss` claim) against this regex, extract named groups to variables, variables are then available for jwks endpoint construction.
-* `token_audience_regex` - match JWT audience (`aud` claim) against this regex, extract named groups to variables, variables are then available for jwks endpoint construction.
+* `client.token.issuer_regex` - match JWT issuer (`iss` claim) against this regex, extract named groups to variables, variables are then available for jwks endpoint construction.
+* `client.token.audience_regex` - match JWT audience (`aud` claim) against this regex, extract named groups to variables, variables are then available for jwks endpoint construction.
 
 Let's look at the example:
 
 ```json
 {
-  "token_issuer_regex": "https://example.com/auth/realms/(?P<realm>[A-z]+)",
-  "token_jwks_public_endpoint": "https://keycloak:443/{{realm}}/protocol/openid-connect/certs",
+  "client": {
+    "token": {
+      ...
+      "jwks_public_endpoint": "https://keycloak:443/{{realm}}/protocol/openid-connect/certs",
+      "issuer_regex": "https://example.com/auth/realms/(?P<realm>[A-z]+)"
+    }
+  }
 }
 ```
 
-To use variable in `token_jwks_public_endpoint` it must be wrapped in `{{` `}}`.
+To use variable in `client.token.jwks_public_endpoint` it must be wrapped in `{{` `}}`.
 
-When using `token_issuer_regex` and `token_audience_regex` make sure `token_issuer` and `token_audience` not used in the config - otherwise and error will be returned on Centrifugo start.
+When using `client.token.issuer_regex` and `client.token.audience_regex` make sure `client.token.issuer` and `client.token.audience` not used in the config - otherwise and error will be returned on Centrifugo start.
 
 :::caution
 
-Setting `token_issuer_regex` and `token_audience_regex` will also affect subscription tokens (used for [channel token authorization](channel_token_auth.md)). If you need to separate connection token configuration and subscription token configuration check out [separate subscription token config](./channel_token_auth.md#separate-subscription-token-config) feature.
+Setting `client.token.issuer_regex` and `client.token.audience_regex` will also affect subscription tokens (used for [channel token authorization](channel_token_auth.md)). If you need to separate connection token configuration and subscription token configuration check out [separate subscription token config](./channel_token_auth.md#separate-subscription-token-config) feature.
 
 :::
 
 ## Custom token user id claim
 
-New in Centrifugo v5.4.6.
-
-It's possible to use alternative claim in token to pass user ID: with `token_user_id_claim` option (string, by default `""` – i.e. not used).
+It's possible to use alternative claim in token to pass user ID: with `client.token.user_id_claim` option (string, by default `""` – i.e. not used).
 
 ```json title=config.json
 {
-  ...
-  "token_user_id_claim": "user_id"
+  "client": {
+    "token": {
+      "user_id_claim": "user_id"
+    }
+  }
 }
 ```
 
 By default, Centrifugo uses `sub` claim of JWT to extract user ID - this is defined in JWT spec and is the recommended way to pass user ID.
 
-Custom claim set by `token_user_id_claim` must follow the following regexp at this point: `^[a-zA-Z_]+$`.
+Custom claim set by `client.token.user_id_claim` must follow the following regexp at this point: `^[a-zA-Z_]+$`.
 
 Setting alternative user id claim also affects subscription tokens, like any other token options. To use different config for subscription tokens Centrifugo provides [separate_subscription_token_config](./channel_token_auth.md#separate-subscription-token-config) option.

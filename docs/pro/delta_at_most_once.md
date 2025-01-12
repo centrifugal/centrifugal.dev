@@ -10,13 +10,17 @@ All you need to do is enable `keep_latest_publication` for the desired namespace
 
 ```json title="config.json"
 {
+  "channel": {
     "namespaces": [
-        {
-            "name": "example",
-            "allowed_delta_types": ["fossil"],
-            "keep_latest_publication": true
-        }
+      {
+        "name": "example",
+        "allowed_delta_types": [
+          "fossil"
+        ],
+        "keep_latest_publication": true
+      }
     ]
+  }
 }
 ```
 

@@ -35,7 +35,7 @@ var upgrader = websocket.Upgrader{
 }
 ```
 
-Then it's possible to control whether or not to use compression for a message by using `EnableWriteCompression` method before you are writing data to the specific connection:
+Then it's possible to control whether to use compression for a message by using `EnableWriteCompression` method before you are writing data to the specific connection:
 
 ```go
 conn.EnableWriteCompression(false)

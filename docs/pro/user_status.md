@@ -29,7 +29,9 @@ Don't forget to debounce this method calls on a client side to avoid exposing RP
 
 This RPC call sets user's last active time value in Redis (with sharding and Cluster support). Information about active status will be kept in Redis for a configured time interval, then expire.
 
-### update_user_status server API
+## Server API methods
+
+### update_user_status
 
 It's also possible to call `update_user_status` using Centrifugo server API (for example if you want to force status during application development or you want to proxy status updates over your app backend when using unidirectional transports):
 
@@ -41,17 +43,17 @@ curl --header "Content-Type: application/json" \
   http://localhost:8000/api/update_user_status
 ```
 
-#### Update user status params
+#### UpdateUserStatusRequest
 
-| Parameter name | Parameter type | Required | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| users       | array of strings  | yes | List of users to update status for  |
+| Parameter name | Parameter type  | Required | Description                        |
+|----------------|-----------------|----------|------------------------------------|
+| `users`        | `array[string]` | yes      | List of users to update status for |
 
-#### Update user status result
+#### UpdateUserStatusResult
 
 Empty object at the moment.
 
-### get_user_status server API
+### get_user_status
 
 Now on a backend side you have access to a bulk API to effectively get status of particular users.
 
@@ -99,17 +101,17 @@ I.e. status object will present in a response but `active` field won't be set fo
 
 Note that Centrifugo also maintains `online` field inside user status object. This field updated periodically by Centrifugo itself while user has active connection with a server. So you can draw `away` statuses in your application: i.e. when user connected (`online` time) but not using application for a long time (`active` time).
 
-#### Get user status params
+#### GetUserStatusRequest
 
-| Parameter name | Parameter type | Required | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| users       | array of strings  | yes | List of users to get status for  |
+| Parameter name | Parameter type  | Required | Description                     |
+|----------------|-----------------|----------|---------------------------------|
+| `users`        | `array[string]` | yes      | List of users to get status for |
 
-#### Get user status result
+#### GetUserStatusResult
 
-| Field name   | Field type     | Optional | Description  |
-| -------------- | -------------- | ------ | ------------ |
-| statuses       | array of UserStatus  | no | Statuses for each user in params (same order)        |
+| Field name | Field type          | Optional | Description                                   |
+|------------|---------------------|----------|-----------------------------------------------|
+| `statuses` | `array[UserStatus]` | no       | Statuses for each user in params (same order) |
 
 #### UserStatus
 
@@ -119,7 +121,7 @@ Note that Centrifugo also maintains `online` field inside user status object. Th
 | active       | integer  | yes | Last active time (Unix seconds)    |
 | online       | integer  | yes | Last online time (Unix seconds)    |
 
-### delete_user_status server API
+### delete_user_status
 
 If you need to clear user status information for some reason there is a `delete_user_status` server API call:
 
@@ -131,27 +133,28 @@ curl --header "Content-Type: application/json" \
   http://localhost:8000/api/delete_user_status
 ```
 
-#### Delete user status params
+#### DeleteUserStatusResult
 
-| Parameter name | Parameter type | Required | Description  |
-| -------------- | -------------- | ------------ | ---- |
-| users       | array of strings  | yes | List of users to delete status for  |
+| Parameter name | Parameter type  | Required | Description                        |
+|----------------|-----------------|----------|------------------------------------|
+| `users`        | `array[string]` | yes      | List of users to delete status for |
 
-#### Delete user status result
+#### DeleteUserStatusResult
 
 Empty object at the moment.
 
-### Configuration
+## Configuration
 
 To enable Redis user status feature:
 
 ```json title="config.json"
 {
-    ...
-    "user_status": {
-        "enabled": true,
-        "redis_address": "127.0.0.1:6379"
+  "user_status": {
+    "enabled": true,
+    "redis": {
+      "address": "localhost:6379"
     }
+  }
 }
 ```
 
@@ -161,13 +164,15 @@ It's also possible to reuse Centrifugo Redis engine by setting `use_redis_from_e
 
 ```json title="config.json"
 {
-    ...
-    "engine": "redis",
-    "redis_address": "localhost:6379",
-    "user_status": {
-        "enabled": true,
-        "use_redis_from_engine": true,
+  "engine": {
+    "type": "redis"
+  },
+  "user_status": {
+    "enabled": true,
+    "redis": {
+      "use_from_engine": true
     }
+  }
 }
 ```
 
@@ -177,10 +182,10 @@ In this case Redis active status will simply connect to Redis instances configur
 
 ```json title="config.json"
 {
+  ...
+  "user_status": {
     ...
-    "user_status": {
-        ...
-        "expire_interval": "24h"
-    }
+    "expire_interval": "24h"        
+  }
 }
 ```
