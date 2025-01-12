@@ -28,7 +28,7 @@ Used by default. Supports only one node. Supports all engine features keeping ev
 
 Advantages:
 
-* Super fast since it does not involve network at all
+* Superfast since it does not involve network at all
 * Does not require separate broker setup, works out of the box
 
 Disadvantages:

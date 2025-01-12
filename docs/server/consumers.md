@@ -157,7 +157,7 @@ And then update consumer config – add `"partition_notification_channel"` optio
 
 Another built-in consumer – is Kafka topics consumer. To configure Centrifugo to consume Kafka topic:
 
-```json
+```json title="config.json"
   ...
   "consumers": [
     {
@@ -198,3 +198,38 @@ Then simply put message in the following format to Kafka topic:
 * `consumers.kafka.sasl_user` - string, user for plain SASL auth. To override `sasl_user` over environment variables use `CENTRIFUGO_CONSUMERS_<CONSUMER_NAME>_KAFKA_SASL_USER`.
 * `consumers.kafka.sasl_password` - string, password for plain SASL auth. To override `sasl_password` over environment variables use `CENTRIFUGO_CONSUMERS_<CONSUMER_NAME>_KAFKA_SASL_PASSWORD`.
 * `consumers.kafka.tls` - [TLSConfig](./tls.md#unified-tls-config-object) to configure Kafka client TLS.
+
+### Publication data mode
+
+Publication data mode for Kafka consumer simplifies integrating Centrifugo with existing Kafka topics. By default, Centrifugo can integrate with Kafka topics but requires a special payload format, where each message in the topic represented a Centrifugo API command. This approach works well for Kafka topics specifically set up for Centrifugo.
+
+When **Publication Data Mode** is enabled, Centrifugo expects messages in Kafka topics to contain data ready for direct publication, rather than server API commands. It is also possible to use special Kafka headers to specify the channels to which the data should be published.
+
+The primary goal of this mode is to simplify Centrifugo's integration with existing Kafka topics, making it easier to deliver real-time messages to clients without needing to restructure the topic's payload format.
+
+BTW, don't forget that since Centrifugo allows configuring an array of asynchronous consumers, it is possible to use Kafka consumers in different modes simultaneously.
+
+To enable publication data mode:
+
+```json title="config.json"
+  "consumers": [
+    {
+      "enabled": true,
+      "name": "my_kafka_consumer",
+      "type": "kafka",
+      "kafka": {
+        "brokers": ["localhost:9092"],
+        "topics": ["my_topic"],
+        "consumer_group": "centrifugo",
+        "publication_data_mode": {
+          "enabled": true,
+          "channels_header": "x-centrifugo-channels"
+          "idempotency_key_header": "x-centrifugo-idempotency-key"
+        }
+      }
+    }
+  ]
+}
+```
+
+As you can see, channels to forward publication to may be provided as a value of a configured header. So you don't need to change payloads in topic to transform them to real-time messages with Centrifugo.

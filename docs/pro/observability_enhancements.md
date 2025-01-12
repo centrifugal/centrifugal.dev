@@ -61,3 +61,21 @@ Centrifugo PRO comes with an integration with [Sentry](https://sentry.io/). Just
 – and you will see Centrifugo PRO errors collected by your self-hosted or cloud Sentry installation.
 
 <img src="/img/sentry.jpg" />
+
+### Sentry options
+
+#### sentry.enabled
+
+Boolean flag to enable Sentry integration.
+
+#### sentry.dsn
+
+Sentry DSN to use for error reporting.
+
+#### sentry.environment
+
+Environment name to set for Sentry events.
+
+#### sentry.sample_rate
+
+Sample rate to set for Sentry events. By default, all events are sent to Sentry. You can set a sample rate to send only a fraction of events to Sentry. For example, to send 1/10 of events set this to `0.1`.
