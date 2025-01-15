@@ -34,9 +34,9 @@ In a recent blog post, we talked about [notable Centrifugo v5 milestones](/blog/
 
 Over the years, Centrifugo has evolved into a robust platform packed with numerous features. However, as Centrifugo's capabilities expanded, so did the complexity of its configuration. Settings became increasingly dispersed across various parts of the codebase, making them harder to manage and understand. Adding new features required modifying more areas than it should have. With v6, we are addressing this challenge head-on by restructuring the configuration system and rethinking its organization.
 
-The Centrifugo v6 release introduces a more streamlined configuration layout, reducing code repetition and providing a clear separation of options and their relationships to Centrifugo’s different layers. These improvements are designed to enhance clarity, maintainability, and the overall developer experience, setting a solid foundation for future growth.
+Additionally, there were a few areas that required improvement but could not be addressed without breaking changes. A couple of deprecated features were removed in v6.
 
-Additionally, there were a few areas that required improvement but could not be addressed without breaking changes. A couple of deprecated features were removed in v6. Let's begin our dive into the Centrifugo v6 release with a description of the removed parts.
+Let's begin our dive into the Centrifugo v6 release with a description of the removed parts.
 
 ## Removing SockJS
 
@@ -79,7 +79,7 @@ centrifuge.connect()
 
 ## Removing Tarantool
 
-The experimental Tarantool engine was introduced in Centrifugo v3, and we had hopes for it to become a good alternative to Redis. Unfortunately, the Tarantool engine implementation has not received many updates since its introduction and now lacks several key features of the engine, such as idempotent publishing and delta compression. These features were added to the memory and Redis engines during the v5 release lifecycle, but Tarantool was left behind.
+Centrifugo v3 introduced the experimental Tarantool engine, and we were excited about it potentially being a solid alternative to Redis. However, since then, the Tarantool engine hasn’t seen many updates and is now missing some important features, like idempotent publishing and delta compression. These features were added to the memory and Redis engines during the v5 release, but unfortunately, Tarantool was left behind.
 
 We were aware of only two setups where the Tarantool engine was used – and both clients eventually moved away from it with our help. Additionally, our usage statistics do not show any notable adoption of the Tarantool engine.
 
@@ -123,13 +123,10 @@ It was moved under `client` section in v6:
 
 It is now clear which layer of Centrifugo a given option corresponds to. For instance, the `allowed_origins` option is related to client connections – not to the server API or the admin web interface.
 
-Internally, we eliminated the situation where options were scattered across the Centrifugo codebase, often with unclear defaults and a non-obvious process for adding a new option.
-
-Now, the configuration is represented by a single Go struct. Config sections are organized into nested structs. Defaults are explicitly defined using struct field definition tags, making them easy to identify. This approach is simple to follow and extend – in most cases, adding a new option is as straightforward as introducing a new field in the struct or a nested struct for more complex functionality. Having all options centralized in a single struct also unlocks new possibilities for working with the configuration, as we will explore below.
-
-By the way, remember that Centrifugo supports not only JSON configuration files but also YAML and TOML? Let’s look at another example, this time in YAML format:
+Let's look at another example. Remember that Centrifugo supports not only JSON configuration files but also YAML and TOML? Let’s look at another example, this time in YAML format:
 
 ```yaml title="Centrifugo v5 YAML config example"
+port: 8000
 token_hmac_secret_key: XXX
 admin_password: XXX
 admin_secret: XXX
@@ -145,6 +142,8 @@ namespaces:
 In v6 becomes:
 
 ```yaml title="config.yaml"
+http_server:
+  port: 8000
 client:
   token:
     hmac_secret_key: XXX
@@ -163,11 +162,15 @@ channel:
     presence: true
 ```
 
-One aspect we'd like to highlight is that channel options for channels without any namespace prefix are now defined under the `channel -> without_namespace` block. This change ensures that options for channels without a namespace are not mixed with other Centrifugo options at the same level of configuration. Previously, the way namespace options were organized in the codebase led to several bugs – options for channels without a namespace required separate extraction, which was often overlooked. This issue has now been resolved. Additionally, with new config structure we more explicitly encourage users to adopt namespaces as a best practice when working with Centrifugo.
+Again – we believe it's much more clear now what part of server each option relates to.
+
+We eliminated the situation where options were scattered across the Centrifugo codebase, often with unclear defaults and a non-obvious process for adding a new option. Now, the configuration is represented by a single Go struct. Config sections are organized into nested structs. Defaults are explicitly defined using struct field definition tags, making them easy to identify. This approach is simple to follow and extend – in most cases, adding a new option is as straightforward as introducing a new field in the struct or a nested struct for more complex functionality. Having all options centralized in a single struct also unlocks new possibilities for working with the configuration, as we will explore below.
+
+One aspect we'd like to highlight is that channel options for channels without any namespace prefix are now defined under the `channel -> without_namespace` block (as shown in the example above). This change ensures that options for channels without a namespace are not mixed with other Centrifugo options at the same level of configuration. Previously, the way namespace options were organized in the codebase led to several bugs – options for channels without a namespace required separate extraction, which was often overlooked. This issue has now been resolved. Additionally, with new config structure we more explicitly encourage users to adopt channel namespaces as a best practice when working with Centrifugo.
 
 A great feature of Centrifugo is that it warns about unknown options in the configuration file and unknown environment variables at startup. This functionality, which helps users identify configuration mistakes, was already present in previous versions and remains in v6. Now, it also supports keys in deeply nested objects and arrays of objects without requiring excessive copy-paste in the codebase.
 
-Re-structuring the configuration also affects how environment variables are constructed to configure Centrifugo. This will require users to update their environment variable configurations. To assist with this, we have added configuration converters to the v6 migration guide and introduced new CLI commands, which should greatly simplify the process (see more details below). This re-organization has also eliminated the need for manually adding environment variable parsing code inside nested arrays of objects.
+Re-structuring the configuration also affects how environment variables are constructed to configure Centrifugo. This will require users to update their environment variable configurations. To assist with this, we have added configuration converters to the v6 migration guide and introduced new CLI commands, which should greatly simplify the process (see more details below).
 
 ## TLS config unification
 
@@ -183,9 +186,9 @@ So you can choose the method that is most convenient for you.
 
 ## Proxy config improvements
 
-Due to its self-hosted nature, Centrifugo can provide an efficient way to proxy various connection events to the application backend, enabling the backend to respond in a customized manner to control the flow. This feature, called "proxy" is widely used by Centrifugo users. It allows authenticating connections (when the built-in JWT Centrifugo authentication is not suitable), managing channel subscription permissions and publication validations, refreshing client sessions, and handling RPC calls sent by a client over a bidirectional real-time connection.
+Due to its self-hosted nature, Centrifugo can provide its users an efficient way to proxy various connection events to the application backend, enabling the backend to respond in a customized manner to control the flow. This feature, called [proxy](/docs/server/proxy) is widely used by Centrifugo users. It allows authenticating connections in a customized manner (when the built-in JWT Centrifugo authentication is not suitable), managing channel subscription permissions and publication validations, refreshing client sessions, and handling RPC calls sent by a client over a bidirectional real-time connection.
 
-In v6, there are a couple of notable improvements in the proxy feature configuration.
+In v6, there are a couple of notable improvements in the proxy feature configuration to make it simpler to use.
 
 First, the separation between granular and non-granular proxy modes has been removed. In other words, there is no need to switch to a granular mode and reconfigure everything – proxies may be added gradually in the way which is more suitable for a real-time feature.
 
@@ -223,7 +226,8 @@ In addition to `defaultconfig` added `defaultenv` command which prints all confi
 
 ```bash
 $ centrifugo defaultenv
-CENTRIFUGO_ADDRESS=""
+CENTRIFUGO_HTTP_SERVER_ADDRESS=""
+CENTRIFUGO_HTTP_SERVER_PORT="8000"
 CENTRIFUGO_ADMIN_ENABLED=false
 CENTRIFUGO_ADMIN_EXTERNAL=false
 CENTRIFUGO_ADMIN_HANDLER_PREFIX=""
@@ -233,19 +237,58 @@ CENTRIFUGO_ADMIN_SECRET=""
 ...
 ```
 
-It also supports the base config file to inherit values from:
+Like `defaultconfig`, it also supports the base config file to inherit values from:
 
 ```bash
-centrifugo defaultenv -b config.json
+centrifugo defaultenv --base config.json
 ```
 
-We already like this feature a lot ourselves when combined with `grep`, to quickly try configuring sth in development and finding out the necessary option:
+When using `--base`, if you additionally provide `--base-non-zero-only` flag – the output will contain only environment variables for keys which were set to non zero values in the base config file. For example, let's say you have Centrifugo v6 JSON configuration file:
+
+```json title="config.json"
+{
+  "client": {
+    "allowed_origins": ["http://localhost:8000"]
+  },
+  "engine": {
+    "type": "redis",
+    "redis": {
+        "address": "redis://localhost:6379"
+    }
+  },
+  "admin": {
+    "enabled": false
+  }
+}
+```
+
+Running:
+
+```bash
+centrifugo defaultenv --base config.json --base-non-zero-only
+```
+
+– will output only variables set in config file to non zero value (thus `admin.enabled` skipped also):
+
+```
+CENTRIFUGO_CLIENT_ALLOWED_ORIGINS="http://localhost:8000"
+CENTRIFUGO_ENGINE_REDIS_ADDRESS="redis://localhost:6379"
+CENTRIFUGO_ENGINE_TYPE="redis"
+```
+
+We already like `defaultenv` a lot ourselves when combined with `grep`, to quickly try configuring sth in development and finding out the necessary option:
 
 ```bash
 centrifugo defaultenv | grep "HMAC"
 ```
 
 ## Headers emulation
+
+:::tip TLDR
+
+Use headers emulation when using `centrifuge-js` SDK in browser and Centrifugo [proxy](/docs/server/proxy) feature to add a custom header to the request from Centrifugo to the backend.
+
+:::
 
 The WebSocket API in web browsers does not allow setting custom HTTP headers, which makes implementing authentication for WebSocket connections from browsers more challenging.
 
@@ -338,6 +381,7 @@ Other improvements introduced in the v6 release include:
 * The ability to configure custom TLS settings for the proxy HTTP client.
 * A new `message_size_limit` option for WebTransport, which effectively limits the maximum size of individual messages sent through a WebTransport connection.
 * Improved logging for TLS configuration at the debug level during startup to help diagnose issues with TLS setups.
+* Centrifugo now supports `.env` file with environment variables – can be handy for local development.
 * Redis Cluster and Sentinel setups can now be fully configured using the Redis `address` option, with support for `redis+cluster://` and `redis+sentinel://` schemes. Previously, the `address` option only supported standalone single Redis setups. A key addition is the ability to set different Redis master names for setups reusing the same Sentinel nodes to manage different Redis shards. This approach also simplifies Redis configuration, especially for sharded setups, as each shard can be represented by a separate address string with its own Redis options in the `address` array. See the updated [Engines and Scalability](/docs/server/engines) documentation chapter.
 * Refactored logging throughout the Centrifugo source code, making it more straightforward and concise. This eliminated the dependency on the [Centrifuge](https://github.com/centrifugal/centrifuge) `Node` object in many places where it was used only for logging purposes – an awkward legacy now resolved. This refactor also allowed us to utilize the `zerolog` library for the fastest way to write logs, with strictly typed log values replacing the previously used untyped field maps.
 * Centrifugo users from Mayflower needed a way to determine the best Redis setup for their load profile, so we created a [simple benchmarking tool](https://github.com/centrifugal/centrifuge/tree/master/_examples/redis_benchmark) to simulate Centrifugo-specific loads on Redis.
@@ -448,7 +492,7 @@ These enhancements extend Centrifugo's scalability options and can help users op
 
 ### Redis Cluster sharded PUB/SUB
 
-Another feature now available in Centrifugo PRO is support for sharded PUB/SUB in Redis Cluster. [Sharded PUB/SUB](https://redis.io/docs/latest/develop/interact/pubsub/#sharded-pubsub) was introduced in Redis 7.0 to address the scalability challenges of PUB/SUB in Redis Cluster. In a normal PUB/SUB setup, all publications are propagated to all nodes in the cluster, reducing throughput as more nodes are added. The utilization of Redis shards is usually unequal when using PUB/SUB in Redis Cluster as subscriptions land to one of the shards. With sharded PUB/SUB, the channel keyspace is divided into slots (similar to normal keys), and PUB/SUB operations are distributed across Redis Cluster nodes based on channel names.
+Another feature now available in Centrifugo PRO is support for sharded PUB/SUB in Redis Cluster. [Sharded PUB/SUB](https://redis.io/docs/latest/develop/interact/pubsub/#sharded-pubsub) was introduced in Redis 7.0 to address the scalability challenges of PUB/SUB in Redis Cluster. In a normal PUB/SUB setup, all publications are propagated to all nodes in the Redis Cluster, reducing throughput as more Redis nodes are added. The utilization of Redis shards is usually unequal when using PUB/SUB in Redis Cluster as subscriptions land to one of the shards. With sharded PUB/SUB, the channel keyspace is divided into slots (similar to normal keys), and PUB/SUB operations are distributed across Redis Cluster nodes based on channel names.
 
 #### Custom keyspace partitioning
 
@@ -472,14 +516,12 @@ If you reach the scalability limits of a single Redis Cluster with sharded PUB/S
 
 ![redis](/img/redis_arch.png)
 
-## What's next?
+## Migrate to v6
 
 For those who are not using Tarantool or SockJS, migrating to Centrifugo v6 is primarily a matter of updating the Centrifugo server configuration.
 
 We understand that, given the nature and number of configuration changes, this may not be straightforward. To simplify the migration process, we've prepared an automatic configuration migration tool (which supports both file and environment configuration migration). You can find more details in the [Centrifugo v6 migration guide](/docs/getting-started/migration_v6). 
 
-The client protocol, server API protocol, and proxy event protocol have remained unchanged. Therefore, after running Centrifugo v6 with an updated configuration, you can expect zero issues with your existing integrations.
+The client protocol, server API protocol, and proxy event protocol have remained unchanged. Therefore, after running Centrifugo v6 with a properly updated configuration, you can expect zero issues (well, zero new issues) with your existing integrations. If you have – let us know. If you need assistance with the migration process or have any other Centrifugo-related questions, check out our [community channels](https://centrifugal.dev/docs/getting-started/community) for support.
 
-If you need assistance with the migration process or have any other Centrifugo-related questions, check out our [community channels](https://centrifugal.dev/docs/getting-started/community) for support.
-
-We hope you enjoy the new Centrifugo! It's cleaner, simpler to extend, more developer-friendly, and comes packed with innovative features. As always, let the Centrifugal force be with you 🖲
+We hope you enjoy the new Centrifugo! It's cleaner, simpler to extend, more developer-friendly, and comes with ~~32-lines main.go~~ useful features. As always, let the Centrifugal force be with you 🖲
