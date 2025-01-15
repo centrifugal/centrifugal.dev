@@ -7,7 +7,6 @@ authorTitle: 💻✨🔮✨💻
 authorImageURL: /img/logo_animated.svg
 image: /img/v6.jpg
 hide_table_of_contents: false
-draft: true
 ---
 
 <!--truncate-->
