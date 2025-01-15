@@ -43,9 +43,9 @@ If any errors found during validation – program will exit with error message a
 
 ## defaultconfig
 
-The `defaultconfig` generates the configuration file with all defaults for all all available configuration options.
+The `defaultconfig` generates the configuration file with all defaults for all all available configuration options. See [docs](/docs/server/console_commands#defaultconfig)
 
-Try:
+It supports all three config file formats which Centrifugo recognizes:
 
 ```bash
 centrifugo defaultconfig -c config.json
@@ -53,13 +53,13 @@ centrifugo defaultconfig -c config.yaml
 centrifugo defaultconfig -c config.toml
 ```
 
-Also, in dry-run mode it will be posted to STDOUT instead of file:
+Also, in dry-run mode the output will be sent to STDOUT instead of file:
 
 ```bash
 centrifugo defaultconfig -c config.json --dry-run
 ```
 
-Finally, it's possible to provide this command a base configuration file - so the result will inherit option values from base file and will extend it with defaults for everything else:
+Finally, it's possible to provide this command a base configuration file - so the result will inherit option values from the base file and will extend it with defaults for everything else:
 
 ```bash
 centrifugo defaultconfig -c config.json --dry-run --base existing_config.json
@@ -67,7 +67,7 @@ centrifugo defaultconfig -c config.json --dry-run --base existing_config.json
 
 ## defaultenv
 
-In addition to `defaultconfig` Centrifugo  has `defaultenv` command. The `defaultenv` prints all config options as environment vars with default values to STDOUT. Run:
+In addition to `defaultconfig` Centrifugo now has `defaultenv` command ([docs](/docs/server/console_commands#defaultconfig)). The `defaultenv` prints all config options as environment vars with default values to STDOUT. Run:
 
 ```bash
 centrifugo defaultenv
@@ -77,6 +77,39 @@ It also supports the base config file to inherit values from:
 
 ```bash
 centrifugo defaultenv --base config.json
+```
+
+When using `--base`, if you additionally provide `--base-non-zero-only` flag – the output will contain only environment variables for keys which were set to non zero values in the base config file. For example, let's say you have Centrifugo v6 JSON configuration file:
+
+```json title="config.json"
+{
+  "client": {
+    "allowed_origins": ["http://localhost:8000"]
+  },
+  "engine": {
+    "type": "redis",
+    "redis": {
+        "address": "redis://localhost:6379"
+    }
+  },
+  "admin": {
+    "enabled": false
+  }
+}
+```
+
+Running:
+
+```bash
+centrifugo defaultenv --base config.json --base-non-zero-only
+```
+
+Will output only variables set in config file with non zero value (`admin.enabled` skipped also):
+
+```
+CENTRIFUGO_CLIENT_ALLOWED_ORIGINS="http://localhost:8000"
+CENTRIFUGO_ENGINE_REDIS_ADDRESS="redis://localhost:6379"
+CENTRIFUGO_ENGINE_TYPE="redis"
 ```
 
 ## gentoken

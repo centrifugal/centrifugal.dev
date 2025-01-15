@@ -42,9 +42,9 @@ import ConfigConverter from "@site/src/components/converterv6"
 
 ### Environment variable converter
 
-In addition to configuration file converter we are trying to help migrating environment configuration using the converter below. The converter is also **just a best-effort, fully client-side**.
+In addition to configuration file converter we are trying to help migrating environment configuration using the converter below. The converter is also **just a best-effort (it can convert things only partly for you, please follow the new docs and do tests), fully client-side**.
 
-Insert environment configuration in a format
+Insert environment configuration in a format:
 
 ```
 CENTRIFUGO_OPTION1="value"
@@ -54,6 +54,40 @@ CENTRIFUGO_OPTION2="value"
 import EnvConfigConverter from "@site/src/components/converterv6_env"
 
 <EnvConfigConverter />
+
+### Alternative way to get environment vars
+
+One alternative way to get environment variables in Centrifugo v6 is to use new `defaultenv` configuration command and use config file as a base.
+
+In this case, you follow Centrifugo v6 docs which contains many config examples, create `config.json` file, and then you can run `defaultenv` command with `--base` and `--base-non-zero-only` options to only output environment variables for values which were non zero in base config file. For example, let's say you have Centrifugo v6 configuration:
+
+```json title="config.json"
+{
+  "client": {
+    "allowed_origins": ["http://localhost:8000"]
+  },
+  "engine": {
+    "type": "redis",
+    "redis": {
+        "address": "redis://localhost:6379"
+    }
+  }
+}
+```
+
+Running:
+
+```bash
+centrifugo defaultenv --base config.json --base-non-zero-only
+```
+
+Will output only variables set in config file:
+
+```
+CENTRIFUGO_CLIENT_ALLOWED_ORIGINS="http://localhost:8000"
+CENTRIFUGO_ENGINE_REDIS_ADDRESS="redis://localhost:6379"
+CENTRIFUGO_ENGINE_TYPE="redis"
+```
 
 ## SockJS transport migration
 
