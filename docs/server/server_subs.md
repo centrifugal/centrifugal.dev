@@ -32,7 +32,7 @@ I.e. listen for publications without any usage of subscription objects. You can 
 
 :::tip
 
-The same [best practices](../faq/index.md#what-about-best-practices-with-amount-of-channels) of working with channels and client-side subscriptions equally applicable to server-side subscription. 
+The same [best practices](../faq/index.md#what-about-best-practices-with-the-number-of-channels) of working with channels and client-side subscriptions equally applicable to server-side subscription. 
 
 :::
 

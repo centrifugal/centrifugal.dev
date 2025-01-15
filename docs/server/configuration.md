@@ -943,7 +943,7 @@ http://localhost:8000/connection/uni_websocket
 http://localhost:8000/api
 ```
 
-By default, all endpoints work on port `8000`. This can be changed with [port](#port) option:
+By default, all endpoints work on port `8000`. This can be changed with [port](#http_serverport) option:
 
 ```json title="config.json"
 {

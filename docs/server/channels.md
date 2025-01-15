@@ -433,53 +433,61 @@ Centrifugo uses Go language [regexp](https://pkg.go.dev/regexp) package for regu
 
 `allowed_delta_types` (array of strings, the only allowed value now is `fossil`) - provide an array of allowed delta compression types in the namespace. If not specified – client won't be able to negotiate delta compression in channels.
 
-### proxy_subscribe
+### subscribe_proxy_enabled
 
-`proxy_subscribe` (boolean, default `false`) – turns on subscribe proxy, more info in [proxy chapter](proxy.md)
-
-### proxy_publish
-
-`proxy_publish` (boolean, default `false`) – turns on publish proxy, more info in [proxy chapter](proxy.md)
-
-### proxy_sub_refresh
-
-`proxy_sub_refresh` (boolean, default `false`) – turns on sub refresh proxy, more info in [proxy chapter](proxy.md)
-
-### proxy_subscribe_stream
-
-`proxy_subscribe_stream` (boolean, default `false`) - turns on subscribe stream proxy, see [subscription streams](./proxy_streams.md)
+`subscribe_proxy_enabled` (boolean, default `false`) – turns on subscribe proxy, more info in [proxy chapter](proxy.md)
 
 ### subscribe_proxy_name
 
-`subscribe_proxy_name` (string, default `""`) – turns on subscribe proxy when [granular proxy mode](proxy.md#granular-proxy-mode) is used. Note that `proxy_subscribe` option defined above is ignored in granular proxy mode.
+`subscribe_proxy_name` (string, default `""`) – allows setting custom subscribe proxy to use by name. More info in [proxy chapter](proxy.md).
+
+### publish_proxy_enabled
+
+`publish_proxy_enabled` (boolean, default `false`) – turns on publish proxy, more info in [proxy chapter](proxy.md).
 
 ### publish_proxy_name
 
-`publish_proxy_name` (string, default `""`) – turns on publish proxy when [granular proxy mode](proxy.md#granular-proxy-mode) is used. Note that `proxy_publish` option defined above is ignored in granular proxy mode.
+`publish_proxy_name` (string, default `""`) – allows setting custom publish proxy to use by name. More info in [proxy chapter](proxy.md).
+
+### sub_refresh_proxy_enabled
+
+`sub_refresh_proxy_enabled` (boolean, default `false`) – turns on sub refresh proxy, more info in [proxy chapter](proxy.md).
 
 ### sub_refresh_proxy_name
 
-`sub_refresh_proxy_name` (string, default `""`) – turns on sub refresh proxy when [granular proxy mode](proxy.md#granular-proxy-mode) is used. Note that `proxy_sub_refresh` option defined above is ignored in granular proxy mode.
+`sub_refresh_proxy_name` (string, default `""`) – allows setting custom sub refresh proxy to use by name. More info in [proxy chapter](proxy.md).
+
+### subscribe_stream_proxy_enabled
+
+`subscribe_stream_proxy_enabled` (boolean, default `false`) - turns on subscribe stream proxy, see [subscription streams](./proxy_streams.md).
 
 ### subscribe_stream_proxy_name
 
-`subscribe_stream_proxy_name` (string, default `""`) – turns on subscribe stream proxy when [granular proxy mode](./proxy_streams.md#granular-proxy-mode) is used. Note that `proxy_subscribe_stream` option defined above is ignored in granular proxy mode.
+`subscribe_stream_proxy_name` (string, default `""`) – allows setting custom subscribe stream proxy to use by name. See [subscription streams](./proxy_streams.md).
+
+### subscribe_stream_proxy_bidirectional
+
+`subscribe_stream_proxy_bidirectional` (boolean, default `false`) – allows using bidirectional subscribe stream. See [subscription streams](./proxy_streams.md).
+
+### cache_empty_proxy_enabled
+
+`cache_empty_proxy_enabled` (boolean, default `false`, Centrifugo PRO only) – turns on [cache empty proxy](../pro/channel_cache_empty.md).
 
 ### cache_empty_proxy_name
 
-`cache_empty_proxy_name` (string, default `""`, Centrifugo PRO only) – turns on [cache empty proxy](../pro/channel_cache_empty.md) when [granular proxy mode](./proxy_streams.md#granular-proxy-mode) is used. Note that `proxy_cache_empty` option is ignored in granular proxy mode.
+`cache_empty_proxy_name` (string, default `""`, Centrifugo PRO only) – allows setting custom cache empty proxy to use by name.
 
-### proxy_cache_empty
+### state_proxy_enabled
 
-`proxy_cache_empty` (boolean, default `false`, Centrifugo PRO only) - turns on cache empty proxy, see [more details](../pro/channel_cache_empty.md) in Centrifugo PRO docs.
+`state_proxy_enabled` (boolean, default `false`, Centrifugo PRO only) - allows enabling [channel state proxy](../pro/channel_events.md)
+
+### state_events
+
+`state_events` (array of strings, empty by default, Centrifugo PRO only) - can help configuring notifications about channel's `occupied` and `vacated` state. See [more details](../pro/channel_events.md) in Centrifugo PRO docs.
 
 ### shared_position_sync
 
 `shared_position_sync` (boolean, default `false`, Centrifugo PRO only) - can help reducing the number of position synchronization requests from Centrifugo to Broker's history API, see [more details](../pro/scalability.md#shared-position-sync) in Centrifugo PRO docs.
-
-### channel_state_events
-
-`channel_state_events` (array of strings, empty by default, Centrifugo PRO only) - can help configuring notifications about channel's `occupied` and `vacated` state. See [more details](../pro/channel_events.md) in Centrifugo PRO docs.
 
 ### subscribe_cel
 

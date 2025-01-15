@@ -78,7 +78,7 @@ If all conditions met – subscriber will negotiate compression with a server. I
 If subscriber successfully negotiated delta compression with Centrifugo, it will start receiving deltas for publications marked with delta flag by the publisher. It's possible to mark channel publications to use delta compression upon broadcasting to subscribers in the following ways:
 
 * enable it for all publications in the channel namespace by setting a boolean channel option [delta_publish](./channels.md#delta_publish)
-* `delta` flag may be set on a per call basis (in publish or broadcast server APIs). For example, see `delta` field in [publish request](./server_api.md#publish-request) description.
+* `delta` flag may be set on a per call basis (in publish or broadcast server APIs). For example, see `delta` field in [publish request](./server_api.md#publishrequest) description.
 
 For example, this means that to automatically use delta calculation for all publications in the namespace the configuration example above evolves to:
 

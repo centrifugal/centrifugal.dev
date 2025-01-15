@@ -785,7 +785,7 @@ Client implementation can use codes < 3000 for client-side specific disconnect r
 
 ## RPC
 
-An SDK provides a way to send RPC to a server. RPC is sent over the real-time connection - i.e. if your client uses WebSocket, then RPC will be sent over WebSocket, just like any other Centrifugo protocol command. In most cases RPC is only useful when [RPC proxy](../server/proxy.md#rpc-proxy) is configured – so Centrifugo proxies the RPC to your application backend to be processed (otherwise, Centrifugo simply does not know how to react on such custom RPCs).
+An SDK provides a way to send RPC to a server. RPC is sent over the real-time connection - i.e. if your client uses WebSocket, then RPC will be sent over WebSocket, just like any other Centrifugo protocol command. In most cases RPC is only useful when [RPC proxy](../server/proxy.md#client-rpc-proxy) is configured – so Centrifugo proxies the RPC to your application backend to be processed (otherwise, Centrifugo simply does not know how to react on such custom RPCs).
 
 RPC is not related to channels – it's a generic way to call the backend with some custom method and custom payload in the context of client real-time connection.
 

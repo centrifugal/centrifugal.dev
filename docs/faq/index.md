@@ -13,9 +13,9 @@ When connecting to Centrifugo client must authenticate using one of the supporte
 
 * [JWT authentication](../server/authentication.md)
 * [Connect proxy](../server/proxy.md#connect-proxy) authentication
-* Using proxy to set [user authentication header](../server/configuration.md#client_user_id_http_header)
+* Using proxy to set [user authentication header](../server/configuration.md#clientuser_id_http_header)
 
-You can also [configure access without token](../server/configuration.md#allow_anonymous_connect_without_token) – in this case Centrifugo will consider a connection without provided token anonymous. Or, if you just want to quickly experiment with Centrifugo during development, it's possible to turn on [client_insecure](../server/configuration.md#insecure-client-connection) option – but it **should never be used in production** since disables most of security checks.
+You can also [configure access without token](../server/configuration.md#clientallow_anonymous_connect_without_token) – in this case Centrifugo will consider a connection without provided token anonymous. Or, if you just want to quickly experiment with Centrifugo during development, it's possible to turn on [client.insecure](../server/configuration.md#clientinsecure) option – but it **should never be used in production** since disables most of security checks.
 
 Another possible reason of first time connection problems - not properly configured [allowed_origins](../server/configuration.md#clientallowed_origins). Centrifugo server logs should also clearly indicate such issues on INFO level.
 
@@ -147,7 +147,7 @@ It's possible to publish messages into channels directly from a client (when `pu
 We suggest using one of the available approaches:
 
 * When a user generates an event it must be first delivered to your app backend using a convenient way (for example AJAX POST request for a web application), processed on the backend (validated, saved into the main application database), and then published to Centrifugo using Centrifugo HTTP or GRPC API.
-* Utilize the [RPC proxy feature](../server/proxy.md#rpc-proxy) – in this case, you can call RPC over Centrifugo WebSocket which will be translated to an HTTP request to your backend. After receiving this request on the backend you can publish a message to Centrifugo server API. This way you can utilize WebSocket transport between the client and your server in a bidirectional way. HTTP traffic will be concentrated inside your private network.
+* Utilize the [RPC proxy feature](../server/proxy.md#client-rpc-proxy) – in this case, you can call RPC over Centrifugo WebSocket which will be translated to an HTTP request to your backend. After receiving this request on the backend you can publish a message to Centrifugo server API. This way you can utilize WebSocket transport between the client and your server in a bidirectional way. HTTP traffic will be concentrated inside your private network.
 * Utilize the [publish proxy feature](../server/proxy.md#publish-proxy) – in this case client can call publish on the frontend, this publication request will be transformed into HTTP or GRPC call to the application backend. If your backend allows publishing - Centrifugo will pass the payload to the channel (i.e. will publish message to the channel itself). 
 
 Sometimes publishing from a client directly into a channel (without any backend involved) can be useful though - for personal projects, for demonstrations (like we do in our [examples](https://github.com/centrifugal/examples)) or if you trust your users and want to build an application without backend. In all cases when you don't need any message control on your backend.
@@ -156,8 +156,8 @@ Sometimes publishing from a client directly into a channel (without any backend 
 
 There are several ways to achieve it:
 
-* use a private channel (starting with `$`) - every time a user subscribes to it your backend should provide a sign to confirm that subscription request. Read more in [channels chapter](../server/channels.md#private-channel-prefix)
-* next is [user limited channels](../server/channels.md#user-channel-boundary) (with `#`) - you can create a channel with a name like `dialog#42,567` to limit subscribers only to the user with id `42` and user with ID `567`, this does not fit well for channels with many or dynamic possible subscribers
+* use a private channel (starting with `$`) - every time a user subscribes to it your backend should provide a sign to confirm that subscription request. Read more in [channels chapter](../server/channels.md#private-channel-prefix-)
+* next is [user limited channels](../server/channels.md#user-channel-boundary-) (with `#`) - you can create a channel with a name like `dialog#42,567` to limit subscribers only to the user with id `42` and user with ID `567`, this does not fit well for channels with many or dynamic possible subscribers
 * you can use subscribe proxy feature to validate subscriptions, see [chapter about proxy](../server/proxy.md)
 * finally, you can create a hard-to-guess channel name (based on some secret key and user IDs or just generate and save this long unique name into your main app database) so other users won't know this channel to subscribe on it. This is the simplest but not the safest way - but can be reasonable to consider in many situations
 

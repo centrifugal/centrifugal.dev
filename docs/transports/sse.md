@@ -47,7 +47,7 @@ centrifuge.connect()
 
 :::danger
 
-Make sure [allowed_origins](../server/configuration.md#allowed_origins) are properly configured.
+Make sure [allowed_origins](../server/configuration.md#clientallowed_origins) are properly configured.
 
 :::
 
@@ -68,7 +68,7 @@ Enables SSE (EventSource) endpoint. And enables emulation endpoint (`/emulation`
 }
 ```
 
-When enabling `sse` you can connect to `/connection/sse` from `centrifuge-js`. Note that our bidirectional emulation also uses `/emulation` endpoint of Centrifugo to send requests from client to server. This is required because SSE/EventSource is a unidirectional transport in its nature. So we use HTTP call to send data from client to server and proxy this call to the correct Centrifugo node which handles the connection. Thus achieving bidirectional behaviour - see details about [Centrifugo bidirectional emulation layer](https://centrifugal.dev/blog/2022/07/19/centrifugo-v4-released#modern-websocket-emulation-in-javascript). Make sure `/emulation` endpoint is available for requests from the client side too. If required, you can also control both SSE connection url prefix and emulation endpoint prefix, see [customizing endpoints](../server/configuration.md#customize-handler-endpoints).
+When enabling `sse` you can connect to `/connection/sse` from `centrifuge-js`. Note that our bidirectional emulation also uses `/emulation` endpoint of Centrifugo to send requests from client to server. This is required because SSE/EventSource is a unidirectional transport in its nature. So we use HTTP call to send data from client to server and proxy this call to the correct Centrifugo node which handles the connection. Thus achieving bidirectional behaviour - see details about [Centrifugo bidirectional emulation layer](https://centrifugal.dev/blog/2022/07/19/centrifugo-v4-released#modern-websocket-emulation-in-javascript). Make sure `/emulation` endpoint is available for requests from the client side too. If required, you can also control both SSE connection url prefix and emulation endpoint prefix, see [customizing endpoints](../server/configuration.md#endpoint-management).
 
 ### sse.max_request_body_size
 

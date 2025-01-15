@@ -253,7 +253,7 @@ Above, we already gave some examples on how to enable connect proxy, let's re-it
 
 :::danger
 
-Make sure you properly configured [allowed_origins](configuration.md#allowed_origins) Centrifugo option or check request origin on your backend side upon receiving connect request from Centrifugo. Otherwise, your site can be vulnerable to CSRF attacks if you are using WebSocket transport for client connections.
+Make sure you properly configured [allowed_origins](configuration.md#clientallowed_origins) Centrifugo option or check request origin on your backend side upon receiving connect request from Centrifugo. Otherwise, your site can be vulnerable to CSRF attacks if you are using WebSocket transport for client connections.
 
 :::
 

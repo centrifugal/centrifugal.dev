@@ -132,7 +132,7 @@ That's because we have not set `allowed_origins` in the configuration (it's empt
   },
 ```
 
-Allowed origins is a security option for request originating from web browsers – see [more details](../server/configuration.md#allowed_origins) in server configuration docs.
+Allowed origins is a security option for request originating from web browsers – see [more details](../server/configuration.md#clientallowed_origins) in server configuration docs.
 
 **Restart Centrifugo** after modifying `allowed_origins` in a configuration file.
 

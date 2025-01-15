@@ -35,7 +35,7 @@ Create a basic configuration file with `token_hmac_secret_key` (or `token_rsa_pu
 
 – which will generate `config.json` file for you with a minimal set of fields to start from.
 
-Properly configure [allowed_origins](../server/configuration.md#allowed_origins) option.
+Properly configure [allowed_origins](../server/configuration.md#clientallowed_origins) option.
 
 ## 2. Configure your backend
 
@@ -43,7 +43,7 @@ In the configuration file **of your application backend**, register several vari
 
 ## 3. Connect to Centrifugo
 
-Now your users can start connecting to Centrifugo. You should get a client library (see [the list of available client SDKs](../transports/client_sdk.md)) for your application frontend. Every library has a method to connect to Centrifugo. See information about Centrifugo connection endpoints [here](../server/configuration.md#endpoint-configuration).
+Now your users can start connecting to Centrifugo. You should get a client library (see [the list of available client SDKs](../transports/client_sdk.md)) for your application frontend. Every library has a method to connect to Centrifugo. See information about Centrifugo connection endpoints [here](../server/configuration.md#endpoint-management).
 
 Every client should provide a connection token (JWT) upon connecting. You must generate this token on your backend side using the Centrifugo secret key you set in the backend configuration (note that in the case of RSA tokens, you are generating JWT with a private key). See how to generate this JWT [in the special chapter](../server/authentication.md).
 

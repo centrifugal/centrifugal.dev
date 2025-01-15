@@ -375,7 +375,7 @@ Additionally, we've expanded the Grand Chat tutorial to include a [new chapter o
 
 Other improvements introduced in the v6 release include:
 
-* The ability to set custom [TLS configurations for internal](/docs/server/configuration#internal_tls) HTTP endpoints. Previously, it was only possible to disable TLS for internal endpoints while keeping TLS for external ones.
+* The ability to set custom [TLS configurations for internal](/docs/server/configuration#http_serverinternal_tls) HTTP endpoints. Previously, it was only possible to disable TLS for internal endpoints while keeping TLS for external ones.
 * Added TLS support for PostgreSQL clients, including support for asynchronous consumers from PostgreSQL outbox tables, database connections, and PostgreSQL-based push notification queue clients.
 * The ability to configure custom TLS settings for the proxy HTTP client.
 * A new `message_size_limit` option for WebTransport, which effectively limits the maximum size of individual messages sent through a WebTransport connection.
@@ -462,7 +462,7 @@ Moreover, the metrics mentioned above, including channel namespace resolution an
 
 The next improvement for Centrifugo PRO observability is integration with [Sentry](https://sentry.io/).
 
-With just [a couple of lines in the configuration]((/docs/pro/observability_enhancements#sentry-integration)), you can enable this feature:
+With just [a couple of lines in the configuration](/docs/pro/observability_enhancements#sentry-integration), you can enable this feature:
 
 ```json
 {

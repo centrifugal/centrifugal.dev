@@ -47,7 +47,7 @@ centrifuge.connect()
 
 :::danger
 
-Make sure [allowed_origins](../server/configuration.md#allowed_origins) are properly configured.
+Make sure [allowed_origins](../server/configuration.md#clientallowed_origins) are properly configured.
 
 :::
 
