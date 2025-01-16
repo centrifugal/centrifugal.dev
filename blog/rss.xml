@@ -228,7 +228,7 @@
 <p>For those who are not using Tarantool or SockJS, migrating to Centrifugo v6 is primarily a matter of updating the Centrifugo server configuration.</p>
 <p>We understand that, given the nature and number of configuration changes, this may not be straightforward. To simplify the migration process, we've prepared an automatic configuration migration tool (which supports both file and environment configuration migration). You can find more details in the <a href="https://centrifugal.dev/docs/getting-started/migration_v6">Centrifugo v6 migration guide</a>.</p>
 <p>The client protocol, server API protocol, and proxy event protocol have remained unchanged. Therefore, after running Centrifugo v6 with a properly updated configuration, you can expect zero issues (well, zero new issues) with your existing integrations. If you have – let us know. If you need assistance with the migration process or have any other Centrifugo-related questions, check out our <a href="https://centrifugal.dev/docs/getting-started/community" target="_blank" rel="noopener noreferrer">community channels</a> for support.</p>
-<p>We hope you enjoy the new Centrifugo! It's cleaner, simpler to extend, more developer-friendly, and comes with <del>32-lines main.go</del> useful features. As always, let the Centrifugal force be with you 🖲</p>]]></content:encoded>
+<p>We hope you enjoy the new Centrifugo! It's cleaner, simpler to extend, more developer-friendly, and comes with useful features. As always, let the Centrifugal force be with you 🖲</p>]]></content:encoded>
             <category>centrifugo</category>
             <category>release</category>
         </item>
