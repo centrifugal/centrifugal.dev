@@ -523,4 +523,4 @@ We understand that, given the nature and number of configuration changes, this m
 
 The client protocol, server API protocol, and proxy event protocol have remained unchanged. Therefore, after running Centrifugo v6 with a properly updated configuration, you can expect zero issues (well, zero new issues) with your existing integrations. If you have – let us know. If you need assistance with the migration process or have any other Centrifugo-related questions, check out our [community channels](https://centrifugal.dev/docs/getting-started/community) for support.
 
-We hope you enjoy the new Centrifugo! It's cleaner, simpler to extend, more developer-friendly, and comes with ~~32-lines main.go~~ useful features. As always, let the Centrifugal force be with you 🖲
+We hope you enjoy the new Centrifugo! It's cleaner, simpler to extend, more developer-friendly, and comes with useful features. As always, let the Centrifugal force be with you 🖲
