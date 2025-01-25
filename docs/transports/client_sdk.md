@@ -50,21 +50,22 @@ Below you can find an information regarding support of different features in our
 
 <div className="features">
 
-| Client feature  | js  | dart | swift | go | java | python |
-| ------ | ------ | ------ | ------- | ------- | ------- | ----- |
-| connect to a server | ✅ | ✅  |  ✅  | ✅  |  ✅  |  ✅  |
-| setting client options | ✅ | ✅  |  ✅  | ✅  |  ✅  |  ✅  |
-| automatic reconnect with backoff algorithm  | ✅  | ✅  | ✅ | ✅  |  ✅  |  ✅  |
-| client state changes  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |  ✅  |
-| command-reply  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |  ✅  |
-| command timeouts  | ✅  | ✅  | ✅ | ✅  |  ✅  |  ✅  |
-| async pushes  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |  ✅  |
-| ping-pong  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |  ✅  |
-| connection token refresh  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |  ✅  |
-| handle disconnect advice from server  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |  ✅  |
-| server-side subscriptions  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |  ✅  |
-| batching API  | ✅  |    |    |   |    |    |
-| bidirectional WebSocket emulation  | ✅  |    |    |   |    |    |
+| Client feature                             | js | dart | swift | go | java | python |
+|--------------------------------------------|----|------|-------|----|------|--------|
+| connect to a server                        | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
+| setting client options                     | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
+| automatic reconnect with backoff algorithm | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
+| client state changes                       | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
+| command-reply                              | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
+| command timeouts                           | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
+| async pushes                               | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
+| ping-pong                                  | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
+| connection token refresh                   | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
+| handle disconnect advice from server       | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
+| server-side subscriptions                  | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
+| batching API                               | ✅  |      |       |    |      |        |
+| bidirectional WebSocket emulation          | ✅  |      |       |    |      |        |
+| headers emulation                          | ✅  | ✅    | na    | na | na   | na     |
 
 </div>
 
@@ -72,18 +73,18 @@ Below you can find an information regarding support of different features in our
 
 <div className="features">
 
-| Client feature  | js  | dart | swift | go | java | python |
-| ------- | ------- | ------- | ------- | ------- | ------- | ------- |
-| subscrbe to a channel  | ✅  | ✅  | ✅ | ✅  |  ✅  |  ✅  |
-| setting subscription options  | ✅  | ✅  | ✅ | ✅  |  ✅  |  ✅  |
-| automatic resubscribe with backoff algorithm  | ✅  | ✅  | ✅ | ✅  |  ✅  |  ✅  |
-| subscription state changes  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |  ✅  |
-| subscription command-reply  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |  ✅  |
-| subscription async pushes  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |  ✅  |
-| subscription token refresh  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |  ✅  |
-| handle unsubscribe advice from server  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |  ✅  |
-| manage subscription registry  | ✅  |  ✅  |  ✅  | ✅  |  ✅  |  ✅  |
-| optimistic subscriptions  | ✅  |    |    |   |    |    |
-| delta compression  | ✅  |    |    |   |  ✅   |  ✅   |
+| Client feature                               | js | dart | swift | go | java | python |
+|----------------------------------------------|----|------|-------|----|------|--------|
+| subscrbe to a channel                        | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
+| setting subscription options                 | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
+| automatic resubscribe with backoff algorithm | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
+| subscription state changes                   | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
+| subscription command-reply                   | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
+| subscription async pushes                    | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
+| subscription token refresh                   | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
+| handle unsubscribe advice from server        | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
+| manage subscription registry                 | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
+| optimistic subscriptions                     | ✅  |      |       |    |      |        |
+| delta compression                            | ✅  |      |       |    | ✅    | ✅      |
 
 </div>
