@@ -75,7 +75,7 @@ Below you can find an information regarding support of different features in our
 
 | Client feature                               | js | dart | swift | go | java | python |
 |----------------------------------------------|----|------|-------|----|------|--------|
-| subscrbe to a channel                        | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
+| subscribe to a channel                       | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
 | setting subscription options                 | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
 | automatic resubscribe with backoff algorithm | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
 | subscription state changes                   | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
