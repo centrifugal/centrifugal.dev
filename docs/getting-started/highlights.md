@@ -20,7 +20,7 @@ Simply connect your application to Centrifugo via its [HTTP or GRPC API](../serv
 Centrifugo is engineered for exceptional speed and efficiency, leveraging the power of the Go programming language and built on top of battle-tested open-source libraries. Its architecture incorporates smart optimizations to handle real-time communication at scale. To name some:
 
 * Message queuing for broadcasts: ensures efficient distribution of messages to large numbers of subscribers.
-* Intelligent batching on all levels: to minimizes the number of Round-Trip Times (RTTs) and the number of sustem calls.
+* Intelligent batching on all levels: to minimize the number of Round-Trip Times (RTTs) and the number of system calls.
 * Subscription hub sharding: reduces lock contention for smoother performance under heavy loads.
 * Optimized encoding: Utilizes JSON and Protobuf encoding with code generation for faster serialization.
 * And more!
