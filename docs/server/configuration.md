@@ -155,13 +155,15 @@ It's recommended to pay attention to logs on server start to ensure that configu
 
 ## `http_server`
 
-Let's describe configuration options you can set for Centrifugo HTTP server. They are combined under `http_server` section of configuration file.
+Object.
+
+Configuration options of Centrifugo HTTP server are combined under `http_server` section of configuration file.
 
 ### `http_server.port`
 
-Port to bind Centrifugo to (string, by default `"8000"`).
+String. Default: `"8000"`.
 
-Example:
+Port to bind Centrifugo to. Example:
 
 ```json title="config.json"
 {
@@ -171,11 +173,17 @@ Example:
 }
 ```
 
+Alternatively, to set over environment variables:
+
+```
+CENTRIFUGO_HTTP_SERVER_PORT="8000"
+```
+
 ### `http_server.address`
 
-Bind your Centrifugo to a specific interface address (string, by default `""` - listen on all available interfaces).
+String. Default: `""`.
 
-Example:
+Bind your Centrifugo to a specific interface address. By default `""` - listen on all available interfaces. Example:
 
 ```json title="config.json"
 {
@@ -186,6 +194,8 @@ Example:
 ```
 
 ### `http_server.tls`
+
+[Unified TLS object](#tls-config-object). By default – disabled.
 
 TLS layer is very important not only for securing your connections but also to increase a chance to establish Websocket connection.
 
@@ -199,7 +209,7 @@ If you still need to configure Centrifugo server TLS then `tls` object can help 
 
 ### `http_server.tls_autocert`
 
-Object.
+Object. By default – disabled.
 
 Centrifugo supports certificate loading and renewal from Let's Encrypt using ACME protocol for HTTP server.
 
@@ -247,7 +257,7 @@ Also Let's Encrypt certificates will be automatically renewed.
 
 ### `http_server.tls_external`
 
-Bool. Default `false`.
+Boolean. Default: `false`.
 
 When set to `true` Centrifugo will use TLS configuration from `tls` option only for external endpoints (i.e. for client-facing ones – WebSocket, SSE, and so on).
 
@@ -265,9 +275,9 @@ Bind internal endpoints to a specific interface address (string, by default `""`
 
 ### `http_server.internal_tls`
 
-Object.
+[Unified TLS object](#tls-config-object). By default – disabled.
 
-[TLS configuration object](#tls-config-object). This is useful when you want to use different TLS settings for internal endpoints (like Prometheus, debug, health, etc).
+This is useful when you want to use different TLS settings for internal endpoints (like Prometheus, debug, health, etc).
 
 ### `http_server.http3`
 
@@ -276,6 +286,8 @@ Object.
 Centrifugo experimentally supports HTTP/3. We can't guarantee stability of this component at this point and given Centrifugo is usually running behind load balancer – this reduces a scope where HTTP/3 may be useful. It's required to support [WebTransport](../transports/webtransport.md) though.
 
 ## `log`
+
+Object.
 
 Logging options may be set under `log` section of configuration file.
 
@@ -301,6 +313,8 @@ Path to a file to which Centrifugo will write logs (string, by default `""` – 
 
 ## `engine`
 
+Object.
+
 Engine in Centrifugo is responsible for PUB/SUB, channel history cache, online presence features. By default, all Centrifugo PUB/SUB, channel history cache, online presence features are managed by in-memory engine. To scale Centrifugo to many nodes you may want to set alternative engine.
 
 Here we only mention `engine.type` option, but there are more available engine type specific options. We have a chapter dedicated to engines - [Engines and Scalability](engines.md).
@@ -323,6 +337,8 @@ There is a possibility to use `redis` type for an alternative full-featured engi
 
 ## `broker`
 
+Object.
+
 Centrifugo v6 introduced a new way to set a separate broker responsible for PUB/SUB and history cache related operations – using `broker` section of config.
 
 Once a separate broker configured it will be used for Broker part instead of Engine's Broker part.
@@ -331,6 +347,8 @@ See more description of available options inside the section in [Engines and Sca
 
 ## `presence_manager`
 
+Object.
+
 Centrifugo v6 introduced a new way to set a separate presence manager responsible for online presence management – using `presence_manager` section of config.
 
 Once a separate presence manager configured it will be used for Presence Manager part instead of Engine's Presence Manager part.
@@ -338,6 +356,8 @@ Once a separate presence manager configured it will be used for Presence Manager
 See more description of available options inside the section in [Engines and Scalability](engines.md#separate-broker-and-presence-manager) chapter.
 
 ## `http_api`
+
+Object.
 
 Options related to server HTTP API may be set under `http_api` section of configuration.
 
@@ -353,6 +373,8 @@ See more details in [dedicated chapter](../server/server_api.md).
 
 ## `grpc_api`
 
+Object.
+
 Options related to server GRPC API may be set under `grpc_api` section of configuration.
 
 See more details in [dedicated chapter](../server/server_api.md).
@@ -367,6 +389,8 @@ See more details in [dedicated chapter](../server/server_api.md).
 
 ## `client`
 
+Object.
+
 Client connection options may be set under `client` section of configuration:
 
 ```json title="config.json"
@@ -379,7 +403,7 @@ Client connection options may be set under `client` section of configuration:
 
 ### `client.allowed_origins`
 
-Default: empty array.
+Array of strings. Default: empty array.
 
 This option allows setting an array of allowed origin patterns (array of strings) for WebSocket endpoints to prevent [CSRF](https://en.wikipedia.org/wiki/Cross-site_request_forgery) or WebSocket hijacking attacks. Also, it's used for HTTP-based unidirectional transports to enable CORS for configured origins.
 
@@ -439,9 +463,13 @@ It's also possible to allow all origins in the following way (but this is discou
 
 ### `client.token`
 
+Object.
+
 The section `client.token` contains options for client connection and subscription JWT auth. See more details in [JWT authentication](./authentication.md) and [Channel JWT authorization](./channel_token_auth.md).
 
 ### `client.subscription_token`
+
+Object.
 
 It's possible to use separate token options for channel subscription – see details [here](./channel_token_auth.md#separate-subscription-token-config).
 
@@ -543,7 +571,7 @@ By default, concurrency disabled – Centrifugo processes commands received from
 
 ### `client.stale_close_delay`
 
-Duration. Default: `"10s"`
+[Duration](#setting-time-duration-options). Default: `"10s"`
 
 This option allows tuning the maximum time Centrifugo will wait for the connect frame (which contains authentication information) from the client after establishing connection. Default value should be reasonable for most use cases.
 
