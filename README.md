@@ -31,3 +31,9 @@ GIT_USER=<Your GitHub username> USE_SSH=true yarn deploy
 ```
 
 If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+
+## Build AI context example:
+
+```
+npm run build-context -- ./docs/faq "Centrifugo FAQ" ../centrifugo/config.default.json "Centrifugo default JSON configuration" ../centrifuge-js/src "centrifuge-js SDK source code (Javascript)" ../centrifuge-dart/lib "centrifuge-dart SDK source code (Dart)"
+```

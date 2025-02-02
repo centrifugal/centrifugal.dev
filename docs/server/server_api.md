@@ -37,6 +37,10 @@ Below we look at all aspects of Centrifugo HTTP API in detail, starting with inf
 
 ## HTTP API authorization
 
+### `http_api.key`
+
+String. Default: `""`.
+
 HTTP API is protected by `http_api.key` option set in Centrifugo configuration. I.e. `http_api.key` option must be added to the config, like:
 
 ```json title="config.json"
@@ -55,6 +59,16 @@ X-API-Key: <YOUR_API_KEY>
 ```
 
 It's also possible to pass API key over URL query param. Simply add `?api_key=<YOUR_API_KEY>` query param to the API endpoint. Keep in mind that passing the API key in the `X-API-Key` header is a recommended way as it is considered more secure.
+
+### `http_api.insecure`
+
+:::danger INSECURE OPTION.
+
+This option is insecure and mostly intended for development. In case of using in production – please make sure you understand the possible security risks.
+
+:::
+
+Boolean. Default: `false`.
 
 To disable API key check on Centrifugo side you can use `http_api.insecure` configuration option (boolean, default `false`). Use it in development only or make sure to protect the API endpoint by proxy or firewall rules in production – to prevent anyone with access to the endpoint to send commands over your unprotected Centrifugo API.
 

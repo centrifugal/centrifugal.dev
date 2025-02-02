@@ -153,11 +153,11 @@ Centrifugo also tries to help you find misconfigurations by writing logs on WARN
 
 It's recommended to pay attention to logs on server start to ensure that configuration is correct.
 
-## HTTP server config options
+## `http_server`
 
 Let's describe configuration options you can set for Centrifugo HTTP server. They are combined under `http_server` section of configuration file.
 
-### http_server.port
+### `http_server.port`
 
 Port to bind Centrifugo to (string, by default `"8000"`).
 
@@ -171,7 +171,7 @@ Example:
 }
 ```
 
-### http_server.address
+### `http_server.address`
 
 Bind your Centrifugo to a specific interface address (string, by default `""` - listen on all available interfaces).
 
@@ -185,7 +185,7 @@ Example:
 }
 ```
 
-### http_server.tls
+### `http_server.tls`
 
 TLS layer is very important not only for securing your connections but also to increase a chance to establish Websocket connection.
 
@@ -197,7 +197,9 @@ In most situations you better put TLS termination task on your reverse proxy/loa
 
 If you still need to configure Centrifugo server TLS then `tls` object can help you. This is a [unified TLS object](#tls-config-object). If set and enabled Centrifugo HTTP server will start with TLS support.
 
-### http_server.tls_autocert
+### `http_server.tls_autocert`
+
+Object.
 
 Centrifugo supports certificate loading and renewal from Let's Encrypt using ACME protocol for HTTP server.
 
@@ -243,31 +245,45 @@ When configured correctly and your domain is valid (`localhost` will not work) -
 
 Also Let's Encrypt certificates will be automatically renewed.
 
-### http_server.tls_external
+### `http_server.tls_external`
 
-Bool, default `false`.
+Bool. Default `false`.
 
 When set to `true` Centrifugo will use TLS configuration from `tls` option only for external endpoints (i.e. for client-facing ones – WebSocket, SSE, and so on).
 
-### http_server.internal_port
+### `http_server.internal_port`
+
+String. Default: `""`.
 
 The port to bind internal endpoints to (string, by default `""` – not used). When set Centrifugo will bind internal endpoints to this port. See more about internal endpoints [below](#custom-internal-port).
 
-### http_server.internal_address
+### `http_server.internal_address`
+
+String. Default: `""`.
 
 Bind internal endpoints to a specific interface address (string, by default `""` - listen on all available interfaces).
 
-### http_server.internal_tls
+### `http_server.internal_tls`
+
+Object.
 
 [TLS configuration object](#tls-config-object). This is useful when you want to use different TLS settings for internal endpoints (like Prometheus, debug, health, etc).
 
-## Logging configuration
+### `http_server.http3`
+
+Object.
+
+Centrifugo experimentally supports HTTP/3. We can't guarantee stability of this component at this point and given Centrifugo is usually running behind load balancer – this reduces a scope where HTTP/3 may be useful. It's required to support [WebTransport](../transports/webtransport.md) though.
+
+## `log`
 
 Logging options may be set under `log` section of configuration file.
 
-### log.level
+### `log.level`
 
-Log level (string, by default `"info"`). Possible values are: `"none"`, `"trace"`, `"debug"`, `"info"`, `"warn"`, `"error"`. See also some info in [observability](./observability.md#logs) chapter.
+String. Default: `"info"`.
+
+Log level to use. Possible values are: `"none"`, `"trace"`, `"debug"`, `"info"`, `"warn"`, `"error"`. See also some info in [observability](./observability.md#logs) chapter.
 
 ```json title="config.json"
 {
@@ -277,19 +293,21 @@ Log level (string, by default `"info"`). Possible values are: `"none"`, `"trace"
 }
 ```
 
-### log.file
+### `log.file`
+
+String. Default: `""`.
 
 Path to a file to which Centrifugo will write logs (string, by default `""` – not used, logs go to STDOUT).
 
-## Engine config
+## `engine`
 
 Engine in Centrifugo is responsible for PUB/SUB, channel history cache, online presence features. By default, all Centrifugo PUB/SUB, channel history cache, online presence features are managed by in-memory engine. To scale Centrifugo to many nodes you may want to set alternative engine.
 
 Here we only mention `engine.type` option, but there are more available engine type specific options. We have a chapter dedicated to engines - [Engines and Scalability](engines.md).
 
-### engine.type
+### `engine.type`
 
-Default: memory
+String. Default: `"memory"`.
 
 By default, all Centrifugo PUB/SUB, channel history cache, online presence features are managed by in-memory engine:
 
@@ -303,7 +321,7 @@ By default, all Centrifugo PUB/SUB, channel history cache, online presence featu
 
 There is a possibility to use `redis` type for an alternative full-featured engine implementation based on [Redis](https://redis.io/). Centrifugo also provides an integration with [Nats](https://nats.io/) server for at most once delivery cases. See more details in a dedicated chapter [Engines and Scalability](engines.md).
 
-## Broker config
+## `broker`
 
 Centrifugo v6 introduced a new way to set a separate broker responsible for PUB/SUB and history cache related operations – using `broker` section of config.
 
@@ -311,7 +329,7 @@ Once a separate broker configured it will be used for Broker part instead of Eng
 
 See more description of available options inside the section in [Engines and Scalability](engines.md#separate-broker-and-presence-manager) chapter.
 
-## Presence Manager config
+## `presence_manager`
 
 Centrifugo v6 introduced a new way to set a separate presence manager responsible for online presence management – using `presence_manager` section of config.
 
@@ -319,7 +337,7 @@ Once a separate presence manager configured it will be used for Presence Manager
 
 See more description of available options inside the section in [Engines and Scalability](engines.md#separate-broker-and-presence-manager) chapter.
 
-## Server HTTP API config
+## `http_api`
 
 Options related to server HTTP API may be set under `http_api` section of configuration.
 
@@ -333,9 +351,9 @@ See more details in [dedicated chapter](../server/server_api.md).
 }
 ```
 
-## Server GRPC API config
+## `grpc_api`
 
-Options related to server HTTP API may be set under `grpc_api` section of configuration.
+Options related to server GRPC API may be set under `grpc_api` section of configuration.
 
 See more details in [dedicated chapter](../server/server_api.md).
 
@@ -347,7 +365,7 @@ See more details in [dedicated chapter](../server/server_api.md).
 }
 ```
 
-## Client connection config
+## `client`
 
 Client connection options may be set under `client` section of configuration:
 
@@ -359,7 +377,7 @@ Client connection options may be set under `client` section of configuration:
 }
 ```
 
-### client.allowed_origins
+### `client.allowed_origins`
 
 Default: empty array.
 
@@ -419,49 +437,59 @@ It's also possible to allow all origins in the following way (but this is discou
 }
 ```
 
-### client.token
+### `client.token`
 
 The section `client.token` contains options for client connection and subscription JWT auth. See more details in [JWT authentication](./authentication.md) and [Channel JWT authorization](./channel_token_auth.md).
 
-### client.subscription_token
+### `client.subscription_token`
 
 It's possible to use separate token options for channel subscription – see details [here](./channel_token_auth.md#separate-subscription-token-config).
 
-### client.proxy.connect
+### `client.proxy.connect`
+
+Object.
 
 The configuration object for proxy to use for connect events. See how to configure [event proxies](./proxy.md).
 
-### client.proxy.refresh
+### `client.proxy.refresh`
+
+Object.
 
 The configuration object for proxy to use for refresh events. See how to configure [event proxies](./proxy.md).
 
-### client.ping_interval
+### `client.ping_interval`
+
+[Duration](#setting-time-duration-options). Default `"25s"`.
 
 Interval to send pings to clients – see [more about ping/pong](../transports/overview.md#pingpong-behavior)
 
-### client.pong_timeout
+### `client.pong_timeout`
+
+[Duration](#setting-time-duration-options). Default `"8s"`.
 
 Timeout to wait pong from clients after sending ping to them – see [more about ping/pong](../transports/overview.md#pingpong-behavior)
 
-### client.queue_max_size
+### `client.queue_max_size`
+
+Integer. Default: `1048576`.
 
 Each client connection has individual message queue, this is the size of that queue in bytes. Default: 1048576 bytes (1MB).
 
-### client.history_max_publication_limit
+### `client.history_max_publication_limit`
 
-Default: 300
+Integer. Default: `300`
 
 Limit for the max number of publications to be returned via client protocol. See more in [History and recovery](./history_and_recovery.md)
 
-### client.recovery_max_publication_limit
+### `client.recovery_max_publication_limit`
 
-Default: 300
+Integer. Default: `300`
 
 Limit for the max number of publications to be recovered via client protocol. See more in [History and recovery](./history_and_recovery.md)
 
-### client.channel_limit
+### `client.channel_limit`
 
-Default: 128
+Integer. Default: `128`
 
 Sets the maximum number of different channel subscriptions a single client can have.
 
@@ -471,17 +499,17 @@ When designing an application avoid subscribing to an unlimited number of channe
 
 :::
 
-### client.user_connection_limit
+### `client.user_connection_limit`
 
-Default: 0
+Integer. Default: `0`
 
 The maximum number of connections from a user (with known user ID) to Centrifugo node. By default, unlimited.
 
 The important thing to emphasize is that `client_user_connection_limit` works only per one Centrifugo node and exists mostly to protect Centrifugo from many connections from a single user – but not for business logic limitations. This means that if you set this to 1 and scale nodes – say run 10 Centrifugo nodes – then a user will be able to create 10 connections (one to each node).
 
-### client.connection_limit
+### `client.connection_limit`
 
-Default: 0
+Integer. Default: `0`
 
 When set to a value > 0 `client.connection_limit` limits the max number of connections single Centrifugo node can handle. It acts on HTTP middleware level and stops processing request if the condition met. It logs a warning into logs in this case and increments `centrifugo_node_client_connection_limit` Prometheus counter. Client SDKs will attempt reconnecting.
 
@@ -489,9 +517,9 @@ Some motivation behind this option may be found in [this issue](https://github.c
 
 Note, that at this point `client.connection_limit` does not affect connections coming over GRPC unidirectional transport.
 
-### client.connection_rate_limit
+### `client.connection_rate_limit`
 
-Default: 0
+Integer. Default: `0`
 
 `client.connection_rate_limit` sets the maximum number of HTTP requests to establish a new real-time connection a single Centrifugo node will accept per second (on real-time transport endpoints). All requests outside the limit will get 503 Service Unavailable code in response. Our SDKs handle this with backoff reconnection.
 
@@ -499,29 +527,29 @@ By default, no limit is used.
 
 Note, that at this point `client.connection_rate_limit` does not affect connections coming over GRPC unidirectional transport.
 
-### client.queue_max_size
+### `client.queue_max_size`
 
-Default: 1048576
+Integer. Default: `1048576`
 
 Maximum client message queue size in bytes to close slow reader connections. By default - 1mb.
 
-### client.concurrency
+### `client.concurrency`
 
-Default: 0
+Integer. Default: `0`
 
 `client.concurrency` when set tells Centrifugo that commands from a client must be processed concurrently.
 
 By default, concurrency disabled – Centrifugo processes commands received from a client one by one. This means that if a client issues two RPC requests to a server then Centrifugo will process the first one, then the second one. If the first RPC call is slow then the client will wait for the second RPC response much longer than it could (even if the second RPC is very fast). If you set `client.concurrency` to some value greater than 1 then commands will be processed concurrently (in parallel) in separate goroutines (with maximum concurrency level capped by `client.concurrency` value). Thus, this option can effectively reduce the latency of individual requests. Since separate goroutines are involved in processing this mode adds some performance and memory overhead – though it should be pretty negligible in most cases. This option applies to all commands from a client (including subscribe, publish, presence, etc).
 
-### client.stale_close_delay
+### `client.stale_close_delay`
 
-Duration, default: 10s
+Duration. Default: `"10s"`
 
 This option allows tuning the maximum time Centrifugo will wait for the connect frame (which contains authentication information) from the client after establishing connection. Default value should be reasonable for most use cases.
 
-### client.user_id_http_header
+### `client.user_id_http_header`
 
-String, default: `""`
+String. Default: `""`
 
 Usually to authenticate client connections with Centrifugo you need to use [JWT authentication](./authentication.md) or [connect proxy](./proxy.md#connect-proxy). Sometimes though it may be convenient to pass user ID information in incoming HTTP request headers. This is usually the case when application backend infrastructure has some authentication proxy (like Envoy, etc). This proxy may set authenticated user ID to some header and proxy requests further to Centrifugo.
 
@@ -543,43 +571,73 @@ When using authentication over proxy ensure your proxy strips the header you are
 
 :::
 
-### client.connect_include_server_time
+### `client.connect_include_server_time`
 
-Boolean, default: `false`
+Boolean. Default: `false`.
 
 When enabled, Centrifugo attaches `time` field to the connect reply (or connect push in the unidirectional transport case). This field contains current server time as Unix milliseconds. Ex. `1716198604052`.
 
-### client.allow_anonymous_connect_without_token
+### `client.allow_anonymous_connect_without_token`
 
-Boolean, default: `false`
+Boolean, default: `false`.
 
 Enable a mode when all clients can connect to Centrifugo without JWT. In this case, all connections without a token will be treated as anonymous (i.e. with empty user ID). Access to channel operations should be explicitly enabled for anonymous connections.
 
-### client.disallow_anonymous_connection_tokens
+### `client.disallow_anonymous_connection_tokens`
 
-Boolean, default: `false`
+Boolean. Default: `false`.
 
 When the option is set Centrifugo won't accept connections from anonymous users even if they provided a valid JWT. I.e. if token is valid, but `sub` claim is empty – then Centrifugo closes connection with advice to not reconnect again.
 
-### client.subscribe_to_user_personal_channel
+### `client.subscribe_to_user_personal_channel`
+
+Object.
 
 An object to configure user personal channel subscription and optionally enable single connection from user. See [dedicated description](./server_subs.md#automatic-personal-channel-subscription).
 
-## Channel configuration
+### `client.insecure`
 
-Let's describe some options for the `channel` section.
+:::danger INSECURE OPTION.
 
-### channel.without_namespace
+This option is insecure and mostly intended for development. In case of using in production – please make sure you understand the possible security risks.
+
+:::
+
+The boolean option `client.insecure` (default `false`) allows connecting to Centrifugo without JWT token. In this mode, there is no user authentication involved. It also disables permission checks on client API level - for presence and history calls. This mode can be useful for demo projects based on Centrifugo, integration tests, local projects, or real-time application prototyping. Don't use it in production until you 100% know what you are doing.
+
+### `client.insecure_skip_token_signature_verify`
+
+:::danger INSECURE OPTION.
+
+This option is insecure and mostly intended for development. In case of using in production – please make sure you understand the possible security risks.
+
+:::
+
+Boolean. Default: `false`.
+
+The boolean option `client.insecure_skip_token_signature_verify` (default `false`), if enabled – tells Centrifugo to skip JWT signature verification - for both connection and subscription tokens. This is absolutely **insecure** and must only be used for development and testing purposes. Token claims are parsed as usual - so token should still follow JWT format.
+
+## `channel`
+
+Object.
+
+Let's describe some options for the `channel` section – these options relate to channel behavior. Learn more about channels in [Channels and namespaces](./channels.md) chapter.
+
+### `channel.without_namespace`
+
+Object.
 
 This is an object with [channel options](./channels.md#channel-options) which are applied to all channels which do not belong to any namespace.
 
-### channel.namespaces
+### `channel.namespaces`
+
+Array of objects.
 
 This is an array of objects with to configure [channel namespaces](./channels.md#channel-namespaces). Each object in the array represents a namespace. Namespaces allow you to apply specific options to a group of channels starting with a namespace name.
 
-### channel.history_meta_ttl
+### `channel.history_meta_ttl`
 
-Duration, default `"720h"`.
+[Duration](#setting-time-duration-options). Default `"720h"`.
 
 This option is a time to keep history meta information for channels when publication history is used. This value must be bigger than max `history_ttl` in all channel namespaces.
 
@@ -587,55 +645,75 @@ The motivation to have history meta information TTL is as follows. When using a 
 
 It's possible to redefine `history_meta_ttl` on channel namespace level.
 
-### channel.proxy.subscribe
+### `channel.proxy.subscribe`
+
+Object.
 
 The configuration object for proxy to use for channel subscribe events. See how to configure [event proxies](./proxy.md).
 
-### channel.proxy.publish
+### `channel.proxy.publish`
+
+Object.
 
 The configuration object for proxy to use for channel publish events. See how to configure [event proxies](./proxy.md).
 
-### channel.proxy.sub_refresh
+### `channel.proxy.sub_refresh`
+
+Object.
 
 The configuration object for proxy to use for channel sub refresh events. See how to configure [event proxies](./proxy.md).
 
-### channel.proxy.subscribe_stream
+### `channel.proxy.subscribe_stream`
+
+Object.
 
 The configuration object for proxy to use for channel subscribe stream. See how to configure in [Proxy subscription streams](./proxy_streams.md).
 
-### channel.proxy.state
+### `channel.proxy.state`
+
+Object.
 
 The configuration object for proxy to use for channel state events. Centrifugo PRO only – see [docs](../pro/channel_events.md).
 
-### chanel.proxy.cache_empty
+### `chanel.proxy.cache_empty`
+
+Object.
 
 The configuration object for proxy to use for cache empty events. Centrifugo PRO only – see [docs](../pro/channel_cache_empty.md).
 
-### channel.max_length
+### `channel.max_length`
 
-Default: 255
+Integer. Default: `255`
 
 Sets the maximum length of the channel name.
 
-## Client RPC configuration
+## `rpc`
+
+Object.
 
 The section `rpc` of configuration file allows configuring options for client initiated RPC calls.
 
-### rpc.without_namespace
+### `rpc.without_namespace`
+
+Object.
 
 Analogous to `channel.without_namespace` but for client RPC calls.
 
-### rpc.namespaces
+### `rpc.namespaces`
+
+Array of objects.
 
 Analogous to `channel.namespaces` but for client RPC calls.
 
-### rpc.namespace_boundary
+### `rpc.namespace_boundary`
 
-String, default `":"`.
+String. Default `":"`.
 
 Analogue to `channel.namespace_boundary` but for client RPC calls.
 
-### rpc.ping
+### `rpc.ping`
+
+Object.
 
 Sometimes you may need a way to just ping Centrifugo server from the client-side. For example, some Centrifugo users wanted this to show RTT time to server in UI. It's possible to enable RPC extension which simply returns an empty reply to RPC `ping`:
 
@@ -672,88 +750,106 @@ If you are not happy with method name `ping` – you can use a different one by 
 }
 ```
 
-## Real-time transports
+## `websocket`
 
-Centrifugo supports various real-time transports for client connections. Each transport has specific configuration options.
-
-### websocket
+Object.
 
 WebSocket transport related options can be defined under `websocket` section of config.
 
 See [WebSocket](../transports/websocket.md) chapter for all the configuration options.
 
-### sse
+## `sse`
+
+Object.
 
 SSE transport related options can be defined under `sse` section of config.
 
 See [SSE (EventSource), with bidirectional emulation](../transports/sse.md) chapter for all the configuration options.
 
-### http_stream
+## `http_stream`
+
+Object.
 
 HTTP-streaming transport related options can be defined under `http_stream` section of config.
 
 See [HTTP streaming, with bidirectional emulation](../transports/http_stream.md) chapter for all the configuration options.
 
-### webtransport
+## `webtransport`
+
+Object.
 
 WebTransport transport related options can be defined under `webtransport` section of config.
 
 See [WebTransport](../transports/webtransport.md) chapter for all the configuration options.
 
-### uni_websocket
+## `uni_websocket`
+
+Object.
 
 Unidirectional WebSocket transport related options can be defined under `uni_websocket` section of config.
 
 See [unidirectional WebSocket](../transports/uni_websocket.md) chapter for all the configuration options.
 
-### uni_sse
+## `uni_sse`
+
+Object.
 
 Unidirectional SSE transport related options can be defined under `uni_sse` section of config.
 
 See [Unidirectional SSE](../transports/uni_sse.md) chapter for all the configuration options.
 
-### uni_http_stream
+## `uni_http_stream`
+
+Object.
 
 Unidirectional HTTP-streaming transport related options can be defined under `uni_http_stream` section of config.
 
 See [Unidirectional HTTP-streaming](../transports/uni_http_stream.md) chapter for all the configuration options.
 
-### uni_grpc
+## `uni_grpc`
+
+Object.
 
 Unidirectional GRPC transport related options can be defined under `uni_grpc` section of config.
 
 See [Unidirectional GRPC](../transports/uni_grpc.md) chapter for all the configuration options.
 
-## Emulation config
+## `emulation`
+
+Object.
 
 Emulation endpoint enables automatically as soon as `http_stream.enabled` or `sse.enabled` set to `true`. It's required for
 bidirectional emulation over HTTP-streaming and SSE to handle client to server part of communication.
 
-### emulation.max_request_body_size
+### `emulation.max_request_body_size`
 
-Default: 65536
+Integer. Default: `65536`.
 
 Maximum size of POST request body in bytes for bidirectional emulation endpoint.
 
-## Admin UI config
+## `admin`
+
+Object.
 
 Admin web UI endpoint works on root path by default, i.e. `http://localhost:8000`.
 
 For more details about admin web UI, refer to the [Admin web UI documentation](admin_web.md).
 
-### admin.enabled
+### `admin.enabled`
 
-Boolean, default `false`.
+Boolean. Default: `false`.
 
 When set to `true` Centrifugo will serve an admin web interface. This interface is useful for monitoring and managing Centrifugo server. It's a single-page application built with ReactJS, it's embedded to Centrifugo binary – so you don't need to serve any additional files.
 
-## Debug config
+## `debug`
+
+Object.
 
 Next, when Centrifugo started in debug mode some extra debug endpoints become available. To start in debug mode add `debug` option to config:
 
-### debug.enabled
+### `debug.enabled`
 
-Boolean, default `false`.
+Boolean. Default: `false`.
 
 When set to `true` Centrifugo will serve debug endpoints. For example, with the following config:
 
@@ -774,11 +870,15 @@ http://localhost:8000/debug/pprof/
 
 – will show useful information about the internal state of Centrifugo instance. This info is especially helpful when troubleshooting. See [wiki page](https://github.com/centrifugal/centrifugo/wiki/Investigating-performance-issues) for more info.
 
-## Health config
+## `health`
+
+Object.
 
 Health endpoint configuration – useful for K8S liveness and readiness probes.
 
-### health.enabled
+### `health.enabled`
+
+Boolean. Default: `false`.
 
 Use `health.enabled` boolean option (by default `false`) to enable the health check endpoint which will be available on path `/health`.
 
@@ -791,11 +891,15 @@ Use `health.enabled` boolean option (by default `false`) to enable the health ch
 }
 ```
 
-## Prometheus config
+## `prometheus`
+
+Object.
 
 Prometheus endpoint configuration – useful for monitoring Centrifugo with Prometheus.
 
-### prometheus.enabled
+### `prometheus.enabled`
+
+Boolean. Default: `false`.
 
 The option `prometheus.enabled` (by default `false`) allows enabling the Prometheus endpoint. Metrics are then available on path `/metrics`.
 
@@ -808,15 +912,21 @@ The option `prometheus.enabled` (by default `false`) allows enabling the Prometh
 }
 ```
 
-### prometheus.instrument_http_handlers
+### `prometheus.instrument_http_handlers`
 
-Boolean, default `false`.
+Boolean. Default `false`.
 
 When set to `true` Centrifugo will instrument HTTP handlers with additional Prometheus metrics – at this point only the number of requests to specific handler with status code resolution. This can be useful to get more detailed information about the number of HTTP requests to Centrifugo. Comes with a small overhead, thus disabled by default.
 
-## Swagger UI config
+## `swagger`
 
-### swagger.enabled
+Object.
+
+Swagger UI config.
+
+### `swagger.enabled`
+
+Boolean. Default: `false`.
 
 Use `swagger.enabled` boolean option (by default `false`) to enable Swagger UI for [server HTTP API](./server_api.md). UI will be available on path `/swagger`. Also available over command-line flag:
 
@@ -829,33 +939,49 @@ Use `swagger.enabled` boolean option (by default `false`) to enable Swagger UI f
 }
 ```
 
-## Miscellaneous options
+## `proxies`
 
-### pid_file
+Array of objects.
+
+Sometimes you need more flexibility when configuring channel proxies. Centrifugo provides a way to define custom proxy on channel namespace and rpc namespace levels. In that case you can reference a proxy defined in `proxies` array by name from a namespace.
+
+See the [dedicated chapter](./proxy.md) for more details.
+
+## `consumers`
+
+Array of objects.
+
+Centrifugo supports asynchronous reading of API commands from external queue systems, inclusing Kafka and PostgreSQL outbox table. It's possible to configure using `consumers` array option. See the [dedicated chapter about consumers](./consumers.md) for more details and configuration details.
+
+## `opentelemetry`
+
+Object.
+
+See description in [dedicated chapter](./observability.md#opentelemetry).
+
+## `graphite`
+
+Object.
+
+See description in [dedicated chapter](./observability.md#graphite-metrics).
+
+## `shutdown`
+
+Object.
+
+Section to configure server shutdown behavior.
+
+### `shutdown.timeout`
+
+[Duration](#setting-time-duration-options). Default `"30s"`.
+
+Allows configuring max shutdown duration.
+
+## `pid_file`
+
+String. Default: `""`.
 
 Path to a file where Centrifugo will write its PID (string, by default `""` – not used).
-
-## Insecure options
-
-The following options may simplify integration with Centrifugo, but they are mostly intended for development. In case of using in production – please make sure you understand the possible security risks.
-
-### client.insecure
-
-The boolean option `client.insecure` (default `false`) allows connecting to Centrifugo without JWT token. In this mode, there is no user authentication involved. It also disables permission checks on client API level - for presence and history calls. This mode can be useful for demo projects based on Centrifugo, integration tests, local projects, or real-time application prototyping. Don't use it in production until you 100% know what you are doing.
-
-### client.insecure_skip_token_signature_verify
-
-The boolean option `client.insecure_skip_token_signature_verify` (default `false`), if enabled – tells Centrifugo to skip JWT signature verification - for both connection and subscription tokens. This is absolutely **insecure** and must only be used for development and testing purposes. Token claims are parsed as usual - so token should still follow JWT format.
-
-### http_api.insecure
-
-This mode can be enabled using the boolean option `http_api.insecure` (default `false`). When on there is no need to provide API key in HTTP requests. When using this mode everyone that has access to `/api` endpoint can send any command to server. Enabling this option can be reasonable if `/api` endpoint is protected by firewall rules.
-
-The option is also useful in development to simplify sending API commands to Centrifugo using CURL for example without specifying `Authorization` header in requests.
-
-### admin.insecure
-
-This mode can be enabled using the boolean option `admin.insecure` (default `false`). When on there is no authentication in the admin web interface. Again - this is not secure but can be justified if you protected the admin interface by firewall rules or you want to use basic authentication for the Centrifugo admin interface (configured on proxy level).
 
 ## Custom internal port
 
@@ -979,28 +1105,6 @@ Centrifugo starts with bidirectional WebSocket and HTTP API enabled.
 To disable websocket endpoint set `websocket.disabled` boolean option to `true`.
 
 To disable API endpoint set `http_api.disabled` boolean option to `true`.
-
-## Proxies
-
-Sometimes you need more flexibility when configuring channel proxies. Centrifugo provides a way to define custom proxy on channel namespace and rpc namespace levels. In that case you can reference a proxy defined in `proxies` array by name from a namespace.
-
-See the [dedicated chapter](./proxy.md) for more details.
-
-## Consumers
-
-Centrifugo supports asynchronous reading of API commands from external queue systems, inclusing Kafka and PostgreSQL outbox table. It's possible to configure using `consumers` array option. See the [dedicated chapter about consumers](./consumers.md) for more details and configuration details.
-
-## Opentelemetry
-
-TBD
-
-## Graphite
-
-TBD
-
-## Shutdown
-
-TBD
 
 ## Signal handling
 

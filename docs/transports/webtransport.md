@@ -18,8 +18,8 @@ To use WebTransport you first need to run HTTP/3 experimental server and enable 
   "http_server": {
     "tls": {
       "enabled": true,
-      "key_pem_file": "path/to/key",
-      "cert_pem_file": "path/to/crt"
+      "key_pem": "path/to/key",
+      "cert_pem": "path/to/crt"
     },
     "http3": {
       "enabled": true

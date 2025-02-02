@@ -68,6 +68,12 @@ This can be useful if you want to modify official [web interface code](https://g
 
 ## Admin insecure mode
 
+:::danger INSECURE OPTION.
+
+This option is insecure and mostly intended for development. In case of using in production – please make sure you understand the possible security risks.
+
+:::
+
 There is also an option to run Centrifugo in insecure admin mode. In this mode, it's unnecessary to set `admin.password` and `admin.secret` in the configuration – you will be automatically logged into the web interface without any password. Note that this mode should only be considered for production if you have protected the admin web interface with firewall rules. Without such protection, anyone on the internet would have full access to the admin functionalities described above. To enable insecure admin mode:
 
 ```json title="config.json"
