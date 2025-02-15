@@ -453,7 +453,7 @@ For Redis broker and presence manager implementations Centrifugo basically re-us
 [Nats](https://nats.io/) is a high-performance messaging server. Among many other features it provides a very efficient PUB/SUB. Centrifugo can use it for a Broker part. Nats integration comes with limitations:
 
 * Nats integration works only for unreliable at most once PUB/SUB. This means that history and message recovery Centrifugo features won't be available. Centrifugo does not integrate with Nats JetStream due to a different stream model.
-* Nats wildcard channel subscriptions with symbols `*` and `>` are not supported (until explicitly on using [nats_allow_wildcards](#nats_allow_wildcards) option).
+* Nats wildcard channel subscriptions with symbols `*` and `>` are not supported (until explicitly on using [nats_allow_wildcards](#brokernatsallow_wildcards) option).
 
 ### Nats broker quickstart
 

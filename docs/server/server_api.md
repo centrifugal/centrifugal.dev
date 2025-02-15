@@ -155,8 +155,8 @@ In response, you will also get 200 OK, but payload will contain `error` field in
 
 | Field name | Field type                        | Optional | Description         |
 |------------|-----------------------------------|----------|---------------------|
-| `error`    | [`Error`](#Error)                 | yes      | Error of operation  |
-| `result`   | [`PublishResult`](#PublishResult) | yes      | Result of operation |
+| `error`    | [`Error`](#error)                 | yes      | Error of operation  |
+| `result`   | [`PublishResult`](#publishresult) | yes      | Result of operation |
 
 Always check whether `error` is set, otherwise consider publish successful and can use `result`.
 

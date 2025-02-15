@@ -43,7 +43,7 @@ url.searchParams.append("cf_connect", JSON.stringify({
 const eventSource = new EventSource(url);
 ```
 
-Refer to the full Connect command description – it's [the same as for unidirectional WebSocket](./uni_websocket.md#connect-command).
+Refer to the full [connect request description](./uni_client_protocol.md#connectrequest).
 
 The length of URL query should be kept less than 2048 characters to work throughout browsers. This should be more than enough for most use cases.  
 

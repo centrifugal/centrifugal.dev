@@ -189,7 +189,7 @@ See more details about [online presence design](../getting-started/design.md#onl
 
 `join_leave` (boolean, default `false`) – enable/disable sending join and leave messages when the client subscribes to a channel (unsubscribes from a channel). Join/leave event includes information about the connection that triggered an event – client ID, user ID, connection info, and channel info (similar to entry inside presence information).
 
-Enabling `join_leave` means that Join/Leave messages will start being emitted, but by default they are not delivered to clients subscribed to a channel. You need to force this using namespace option [force_push_join_leave](#forcepushjoinleave) or explicitly provide intent from a client-side (in this case client must have permission to call presence API).
+Enabling `join_leave` means that Join/Leave messages will start being emitted, but by default they are not delivered to clients subscribed to a channel. You need to force this using namespace option [force_push_join_leave](#force_push_join_leave) or explicitly provide intent from a client-side (in this case client must have permission to call presence API).
 
 :::caution
 

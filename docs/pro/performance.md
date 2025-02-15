@@ -45,7 +45,7 @@ Centrifugo PRO provides an integer option `websocket.compression_prepared_messag
 }
 ```
 
-This can significantly improve CPU and memory Centrifufo resource usage when using [WebSocket compression feature](../transports/websocket.md#websocket_compression).
+This can significantly improve CPU and memory Centrifufo resource usage when using [WebSocket compression feature](../transports/websocket.md#websocketcompression).
 
 Check out blog post [Performance optimizations of WebSocket compression in Go application](/blog/2024/08/19/optimizing-websocket-compression) which describes the possible effect of this optimization.
 
