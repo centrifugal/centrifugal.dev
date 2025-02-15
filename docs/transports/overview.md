@@ -7,30 +7,30 @@ Centrifugo supports a variety of transports to deliver real-time messages to cli
 
 :::info Every transport is a persistent connection
 
-Here we describe supported transports between your application frontend and Centrifugo itself. Every Centrifugo transport is a persistent connection so the server can push data towards clients at any moment.
+Here we describe supported transports between your application frontend and Centrifugo. Every Centrifugo real-time transport is a persistent connection so the server can push data towards clients at any moment.
 
 :::
 
 The important distinction here is that all supported transports belong to one of two possible groups:
 
-* Bidirectional
-* Unidirectional
+* [Bidirectional](#bidirectional)
+* [Unidirectional](#unidirectional)
 
 ## Bidirectional
 
 Bidirectional transports are capable to serve all Centrifugo features. These transports are the main Centrifugo focus and where Centrifugo really shines.
 
-Bidirectional transports come with a cost that developers need to use a special client connector library (SDK) which speaks Centrifugo [client protocol](./client_protocol.md). The reason why we need a special client connector library is that a bidirectional connection is asynchronous – it's required to match requests to responses, properly manage connection state, handle request queueing/timeouts/errors, etc. And of course to multiplex subscriptions to different channels over a single connection.
+Bidirectional transports come with the requirement that developers use a special client connector library (real-time SDK) that communicates with Centrifugo over custom [client protocol](./client_protocol.md). This is necessary because bidirectional connections are asynchronous, meaning requests must be matched to their corresponding responses, connection state must be properly managed, and request queueing, timeouts, and errors must be handled. Additionally, the SDK is needed to multiplex subscriptions to different channels over a single connection.
 
-Centrifugo has several official [client SDKs](../transports/client_sdk.md) for popular environments. All of them work over [WebSocket](./websocket.md) transport. Our Javascript SDK also offers bidirectional fallbacks over [HTTP-Streaming](./http_stream.md), [Server-Sent Events (SSE)](./sse.md), and has an experimental support for [WebTransport](./webtransport.md).
+Centrifugo has several official [client real-time SDKs](../transports/client_sdk.md) for popular environments. All of them work over [WebSocket](./websocket.md) transport. Our Javascript SDK also offers bidirectional fallbacks over [HTTP-Streaming](./http_stream.md), [Server-Sent Events (SSE)](./sse.md), and has an experimental support for [WebTransport](./webtransport.md).
 
 ## Unidirectional
 
-Unidirectional transports suit well for simple use-cases with stable subscriptions, usually known at connection time.
+Unidirectional transports suit well for use cases without dynamic subscriptions, where channels to subscribe are known at connection time.
 
-The advantage is that unidirectional transports do not require special client connectors - developers can use native browser APIs (like [WebSocket](./uni_websocket.md), [EventSource/SSE](./uni_sse.md), [HTTP-streaming](./uni_http_stream.md)), or [GRPC](./uni_grpc.md) generated code to receive real-time updates from Centrifugo. Thus avoiding dependency to a client connector that abstracts bidirectional communication.
+The main advantage is that unidirectional transports do not require special client connectors. Developers can use native browser APIs, such as [WebSocket](./uni_websocket.md), [Server-Sent Events (SSE)](./uni_sse.md), or [HTTP-streaming](./uni_http_stream.md)), as well as [gRPC](./uni_grpc.md) to receive real-time updates from Centrifugo. This eliminates the need for a client connector that abstracts bidirectional communication.
 
-The drawback is that with unidirectional transports you are not inheriting all Centrifugo features out of the box (like dynamic subscriptions/unsubscriptions, automatic message recovery on reconnect, possibility to send RPC calls over persistent connection). But some of the missing client APIs can be mimicked by using calls to Centrifugo [server API](../server/server_api.md) (i.e. over client -> application backend -> Centrifugo).
+However, the tradeoff is that with unidirectional transports, you won't get some of Centrifugo's advanced features implemented in bidirectional SDKs, such as dynamic subscriptions/unsubscriptions, automatic message recovery on reconnect, ability to send RPC to the backend over a persistent real-time connection.
 
 Learn more about [unidirectional protocol](./uni_client_protocol.md) and available unidirectional transports.
 

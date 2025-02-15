@@ -6,7 +6,7 @@ sidebar_label: HTTP streaming
 
 HTTP streaming is a technique based on using a long-lived HTTP connection between a client and a server with a chunked transfer encoding. Usually it only allows unidirectional flow of messages from server to client but with [Centrifugo bidirectional emulation layer](https://centrifugal.dev/blog/2022/07/19/centrifugo-v4-released#modern-websocket-emulation-in-javascript) it may be used as a full-featured fallback or alternative to WebSocket.
 
-Can be enabled using:
+## How to enable
 
 ```json title=config.json
 {
@@ -16,11 +16,15 @@ Can be enabled using:
 }
 ```
 
+## Default endpoint
+
 HTTP-streaming connection endpoint in Centrifugo is:
 
 ```
 /connection/http_stream
 ```
+
+## How to use
 
 :::info
 
@@ -51,9 +55,9 @@ Make sure [allowed_origins](../server/configuration.md#clientallowed_origins) ar
 
 :::
 
-## Options
+## `http_stream`
 
-### http_stream.enabled
+### `http_stream.enabled`
 
 Boolean, default: `false`.
 
@@ -70,7 +74,7 @@ Enables HTTP streaming endpoint. And enables emulation endpoint (`/emulation` by
 
 When enabling `http_stream` you can connect to `/connection/http_stream` from `centrifuge-js`. Note that our bidirectional emulation also uses `/emulation` endpoint of Centrifugo to send requests from client to server. This is required because HTTP streaming is a unidirectional transport in its nature. So we use HTTP call to send data from client to server and proxy this call to the correct Centrifugo node which handles the connection. Thus achieving bidirectional behaviour - see details about [Centrifugo bidirectional emulation layer](https://centrifugal.dev/blog/2022/07/19/centrifugo-v4-released#modern-websocket-emulation-in-javascript). Make sure `/emulation` endpoint is available for requests from the client side too. If required, you can also control both HTTP streaming connection url prefix and emulation endpoint prefix, see [customizing endpoints](../server/configuration.md#customize-handler-endpoints).
 
-### http_stream.max_request_body_size
+### `http_stream.max_request_body_size`
 
 Default: 65536 (64KB)
 

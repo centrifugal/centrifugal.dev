@@ -4,9 +4,9 @@ title: Unidirectional HTTP streaming
 sidebar_label: HTTP streaming
 ---
 
-HTTP streaming is a technique based on using a long-lived HTTP connection between a client and a server with a chunked transfer encoding. These days it's possible to use it from the web browser using modern [Fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) and [Readable Streams](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) API.
+HTTP streaming is a technique based on using a long-lived HTTP connection between a client and a server with a chunked transfer encoding. These days it's possible to use it from the web browser using modern [Fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) and [Readable Streams](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) API. See [example](#browser-example) below.
 
-Can be enabled using:
+## How to enable
 
 ```json title=config.json
 {
@@ -16,6 +16,8 @@ Can be enabled using:
 }
 ```
 
+## Default endpoint
+
 Default unidirectional HTTP streaming connection endpoint in Centrifugo is:
 
 ```
@@ -24,23 +26,21 @@ Default unidirectional HTTP streaming connection endpoint in Centrifugo is:
 
 Streaming endpoint accepts HTTP POST requests and sends JSON messages to a connection. These JSON messages can have different meaning according to Centrifuge protocol Protobuf definitions. But in most cases you will be interested in Publication push types.
 
-## Connect command
+## Send connect request
 
-It's possible to pass initial connect command by posting a JSON body to a streaming endpoint. 
-
-Refer to the full Connect command description – it's [the same as for unidirectional WebSocket](./uni_websocket.md#connect-command).
+It's possible to pass initial [ConnectRequest](./uni_client_protocol.md#connectrequest) by posting a JSON body to a streaming endpoint. 
 
 ## Supported data formats
 
 JSON
 
-## Pings
+## Ping
 
 Centrifugo will send different message types to a connection. Every message is JSON encoded. A special JSON value `null` used as a PING message. You can simply ignore it on a client side upon receiving. You can ignore such messages or use them to detect broken connections (nothing received from a server for a long time).
 
-## Options
+## `uni_http_stream`
 
-### uni_http_stream.enabled
+### `uni_http_stream.enabled`
 
 Boolean, default: `false`.
 
@@ -55,13 +55,13 @@ Enables unidirectional HTTP streaming endpoint.
 }
 ```
 
-### uni_http_stream.max_request_body_size
+### `uni_http_stream.max_request_body_size`
 
 Default: 65536 (64KB)
 
 Maximum allowed size of a initial HTTP POST request in bytes.
 
-## Connecting using CURL
+## Example connect with CURL
 
 Let's look how simple it is to connect to Centrifugo using HTTP streaming.
 
@@ -125,4 +125,70 @@ That's all, happy streaming!
 
 ## Browser example
 
-A basic browser will come soon as we update docs for v4.
+It's possible to connect to HTTP-streaming from web browser and use Readable Streams API to process incoming messages.
+
+Here is an example using `fetch` and using Readable Streams API to parse new line delimited JSON messages:
+
+```javascript
+const token = 'CENTRIFUGO_JWT_TOKEN_HERE';
+
+fetch('http://localhost:8000/connection/uni_http_stream', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ token })
+})
+    .then(response => {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
+
+        function read() {
+            reader.read().then(({ done, value }) => {
+                if (done) {
+                    console.log('Stream complete');
+                    return;
+                }
+
+                // Decode the new chunk and append to the buffer.
+                buffer += decoder.decode(value, { stream: true });
+
+                // Split the buffer on newlines.
+                const lines = buffer.split('\n');
+
+                // The last element may be an incomplete message; keep it in the buffer.
+                buffer = lines.pop();
+
+                // Process each complete line.
+                for (const line of lines) {
+                    if (!line.trim()) continue; // Skip empty lines (e.g., ping messages could be null)
+
+                    try {
+                        const message = JSON.parse(line);
+                        // Process your message here.
+                        console.log('Received message:', message);
+                    } catch (error) {
+                        console.error('Error parsing JSON:', error);
+                    }
+                }
+
+                // Continue reading the next chunk.
+                read();
+            });
+        }
+
+        read();
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+    });
+```
+
+How it works:
+
+* **Fetch request**: a POST request is sent to the Centrifugo uni HTTP stream endpoint with the JWT token in the body. As always, if you are using [connect proxy](../server/proxy.md#connect-proxy) – then you can go without JWT for authentication. Same concepts as for bidirectional connection here.
+* **Readable Stream**: the response's body is a `ReadableStream`. We obtain a reader via `response.body.getReader()`.
+* **Buffer and Decoding**: Data chunks are decoded into a string and appended to a buffer. The buffer is split by newline characters to get complete JSON messages.
+* **Processing Lines**: Each complete line is parsed using JSON.parse. You can handle parsed [push messages](./uni_client_protocol.md#unidirectional-pushes) as needed.
+* **Recursive Read**: The function read continues to pull new data until the stream is complete.

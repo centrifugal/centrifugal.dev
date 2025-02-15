@@ -1,12 +1,12 @@
 ---
 id: uni_sse
-title: Unidirectional SSE (EventSource)
-sidebar_label: SSE (EventSource)
+title: Unidirectional Server-Sent Events (SSE)
+sidebar_label: Server-Sent Events (SSE)
 ---
 
-[Server-Sent Events or EventSource](https://developer.mozilla.org/en-US/docs/Web/API/EventSource) is a well-known HTTP-based transport available in all modern browsers and loved by many developers. 
+[Server-Sent Events or EventSource](https://developer.mozilla.org/en-US/docs/Web/API/EventSource) is a well-known HTTP-based transport available in all modern browsers (over `EventSource` object) and loved by many developers due to its simplicity.
 
-Can be enabled using:
+## How to enable
 
 ```json title=config.json
 {
@@ -15,6 +15,8 @@ Can be enabled using:
   }
 }
 ```
+
+## Default endpoint
 
 Default unidirectional SSE (EventSource) connection endpoint in Centrifugo is:
 
@@ -28,7 +30,7 @@ Only parts of EventSource spec that make sense for Centrifugo are implemented. F
 
 :::
 
-## Connect command
+## Send connect request
 
 Unfortunately SSE specification does not allow POST requests from a web browser, so the only way to pass initial connect command is over URL params. Centrifugo is looking for `cf_connect` URL param for connect command. Connect command value expected to be a JSON-encoded string, properly encoded into URL. For example:
 
@@ -55,9 +57,28 @@ Centrifugo unidirectional SSE endpoint also supports POST requests. While it's n
 
 JSON
 
-## Options
+## Ping
 
-### uni_sse.enabled
+SSE data frame with `{}` is used as a ping.
+
+For example, see how unidirectional SSE session may look like after initial establishment and which only receives periodic pings:
+
+```bash
+❯ curl http://localhost:8000/connection/uni_sse
+
+data: {"connect":{"client":"c09d1965...","version":"0.0.0 OSS","subs":{"#2694":{}},"ping":25,"session":"1cf6d9f5..."}}
+
+data: {}
+
+data: {}
+
+data: {}
+
+```
+
+## `uni_sse`
+
+### `uni_sse.enabled`
 
 Boolean, default: `false`.
 
@@ -72,7 +93,7 @@ Enables unidirectional SSE (EventSource) endpoint.
 }
 ```
 
-### uni_sse.max_request_body_size
+### `uni_sse.max_request_body_size`
 
 Default: 65536 (64KB)
 
@@ -80,4 +101,17 @@ Maximum allowed size of a initial HTTP POST request in bytes when using HTTP POS
 
 ## Browser example
 
-Coming soon.
+Here is an example of how to connect to Centrifugo unidirectional SSE endpoint from a browser:
+
+```javascript
+const url = new URL('http://localhost:8000/connection/uni_sse');
+url.searchParams.append("cf_connect", JSON.stringify({
+    'token': '<Centrifugo JWT>'
+}))
+const eventSource = new EventSource(url);
+eventSource.onmessage = function(event) {
+    console.log(event.data);
+};
+```
+
+As always, if you are using [connect proxy](../server/proxy.md#connect-proxy) – then you can go without JWT for authentication. Same concepts as for bidirectional connection here.

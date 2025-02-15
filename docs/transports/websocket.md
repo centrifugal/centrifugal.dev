@@ -5,7 +5,13 @@ title: WebSocket
 
 [Websocket](https://en.wikipedia.org/wiki/WebSocket) is the main transport in Centrifugo. It's a very efficient low-overhead protocol on top of TCP. Websocket works out of the box in all modern browsers and almost all programming languages have Websocket implementations. This makes Websocket an efficient universal real-time transport which can be used to connect to Centrifugo from almost everywhere.
 
-WebSocket transport is enabled by default and the default WebSocket connection endpoint in Centrifugo is:
+## How to enable
+
+Unlike other transports, WebSocket transport is enabled in Centrifugo by default. See below how to disable it if needed.
+
+## Default endpoint
+
+The default WebSocket connection endpoint in Centrifugo is:
 
 ```
 /connection/websocket
@@ -22,15 +28,19 @@ const client = new Centrifuge('ws://localhost:8000/connection/websocket', {
 client.connect();
 ```
 
-## Options
+## `websocket`
 
-### websocket.message_size_limit
+### `websocket.disabled`
+
+Boolean, default: `false`.
+
+### `websocket.message_size_limit`
 
 Default: 65536 (64KB)
 
 Maximum allowed size of a message received from WebSocket connection in bytes.
 
-### websocket.read_buffer_size
+### `websocket.read_buffer_size`
 
 In bytes, by default 0 which tells Centrifugo to reuse read buffer from HTTP server for WebSocket connection (usually 4096 bytes in size). If set to a lower value can reduce memory usage per WebSocket connection (but can increase number of system calls depending on average message size).
 
@@ -43,7 +53,7 @@ In bytes, by default 0 which tells Centrifugo to reuse read buffer from HTTP ser
 }
 ```
 
-### websocket.write_buffer_size
+### `websocket.write_buffer_size`
 
 In bytes, by default 0 which tells Centrifugo to reuse write buffer from HTTP server for WebSocket connection (usually 4096 bytes in size). If set to a lower value can reduce memory usage per WebSocket connection (but HTTP buffer won't be reused):
 
@@ -56,11 +66,11 @@ In bytes, by default 0 which tells Centrifugo to reuse write buffer from HTTP se
 }
 ```
 
-### websocket.use_write_buffer_pool
+### `websocket.use_write_buffer_pool`
 
 If you have a few writes then `websocket.use_write_buffer_pool` (boolean, default `false`) option can reduce memory usage of Centrifugo a bit as there won't be separate write buffer binded to each WebSocket connection.
 
-### websocket.compression
+### `websocket.compression`
 
 Centrifugo supports `permessage-deflate` compression for websocket messages. Check out the [great article](https://www.igvita.com/2013/11/27/configuring-and-optimizing-websocket-compression/) about websocket compression for a general ovirview. WebSocket compression can reduce an amount of traffic travelling over the wire and reduce bandwidth costs.
 

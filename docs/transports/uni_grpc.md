@@ -14,7 +14,7 @@ We publish [Centrifugo GRPC uni stream Protobuf definitions](https://buf.build/c
 
 :::
 
-Can be enabled using:
+## How to enable
 
 ```json title=config.json
 {
@@ -24,15 +24,17 @@ Can be enabled using:
 }
 ```
 
-GRPC server will start on port `11000` (default).
+## Default endpoint
+
+Centrifugo runs uni GRPC server on port `11000` (by default).
 
 ## Supported data formats
 
 JSON and binary.
 
-## Options
+## `uni_grpc`
 
-### uni_grpc.enabled
+### `uni_grpc.enabled`
 
 Boolean, default: `false`.
 
@@ -47,27 +49,27 @@ Enables unidirectional GRPC endpoint.
 }
 ```
 
-### uni_grpc.port
+### `uni_grpc.port`
 
 String, default `"11000"`.
 
 Port to listen on.
 
-### uni_grpc.address
+### `uni_grpc.address`
 
 String, default `""` (listen on all interfaces)
 
 Address to bind uni GRPC to.
 
-### uni_grpc.max_receive_message_size
+### `uni_grpc.max_receive_message_size`
 
 Default: `65536` (64KB)
 
 Maximum allowed size of a first connect message received from GRPC connection in bytes.
 
-### uni_grpc.tls
+### `uni_grpc.tls`
 
-[TLSConfig](../server/tls.md#unified-tls-config-object).
+[TLSConfig](../server/configuration.md#tls-config-object).
 
 Allows configuring TLS for unidirectional GRPC server.
 
@@ -76,6 +78,6 @@ Allows configuring TLS for unidirectional GRPC server.
 We have [example for Go](https://github.com/centrifugal/examples/tree/master/v4/unidirectional/grpc) language. In general, the algorithm is like this: 
 
 1. Copy Protobuf definitions
-1. Generate GRPC client code
-1. Use generated code to connect to Centrifugo
-1. Process Push messages, drop unknown Pushes, handle those necessary for the application.
+2. Generate GRPC client code
+3. Use generated code to connect to Centrifugo
+4. Process Push messages, drop unknown Pushes, handle those necessary for the application.

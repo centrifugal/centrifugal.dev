@@ -1,12 +1,12 @@
 ---
 id: sse
-title: SSE (EventSource), with bidirectional emulation 
-sidebar_label: SSE (EventSource)
+title: Server-Sent Events (SSE), with bidirectional emulation 
+sidebar_label: Server-Sent Events (SSE)
 ---
 
 [Server-Sent Events or EventSource](https://developer.mozilla.org/en-US/docs/Web/API/EventSource) is a well-known HTTP-based transport available in all modern browsers and loved by many developers. It's unidirectional in its nature but with [Centrifugo bidirectional emulation layer](https://centrifugal.dev/blog/2022/07/19/centrifugo-v4-released#modern-websocket-emulation-in-javascript) it may be used as a fallback or alternative to WebSocket.
 
-Can be enabled using:
+## How to enable
 
 ```json title=config.json
 {
@@ -16,11 +16,15 @@ Can be enabled using:
 }
 ```
 
+## Default endpoint
+
 SSE (EventSource) connection endpoint in Centrifugo is:
 
 ```
 /connection/sse
 ```
+
+## How to use
 
 :::info
 
@@ -51,9 +55,9 @@ Make sure [allowed_origins](../server/configuration.md#clientallowed_origins) ar
 
 :::
 
-## Options
+## `sse`
 
-### sse.enabled
+### `sse.enabled`
 
 Boolean, default: `false`.
 
@@ -70,7 +74,7 @@ Enables SSE (EventSource) endpoint. And enables emulation endpoint (`/emulation`
 
 When enabling `sse` you can connect to `/connection/sse` from `centrifuge-js`. Note that our bidirectional emulation also uses `/emulation` endpoint of Centrifugo to send requests from client to server. This is required because SSE/EventSource is a unidirectional transport in its nature. So we use HTTP call to send data from client to server and proxy this call to the correct Centrifugo node which handles the connection. Thus achieving bidirectional behaviour - see details about [Centrifugo bidirectional emulation layer](https://centrifugal.dev/blog/2022/07/19/centrifugo-v4-released#modern-websocket-emulation-in-javascript). Make sure `/emulation` endpoint is available for requests from the client side too. If required, you can also control both SSE connection url prefix and emulation endpoint prefix, see [customizing endpoints](../server/configuration.md#endpoint-management).
 
-### sse.max_request_body_size
+### `sse.max_request_body_size`
 
 Default: 65536 (64KB)
 
