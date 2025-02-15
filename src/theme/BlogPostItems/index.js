@@ -1,8 +1,8 @@
 import React from 'react';
 import Link from "@docusaurus/Link";
-import { useBlogPost } from "@docusaurus/theme-common/internal";
+import {useBlogPost} from '@docusaurus/plugin-content-blog/client'
 import BlogPostItemContainer from "@theme/BlogPostItem/Container";
-import { BlogPostProvider } from '@docusaurus/theme-common/internal';
+import { BlogPostProvider } from '@docusaurus/plugin-content-blog/client';
 import styles from './styles.module.css';
 
 export default function BlogPostItemsWrapper(props) {

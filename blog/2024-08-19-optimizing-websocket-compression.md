@@ -15,6 +15,8 @@ In a recent blog post, we [talked about the Delta Compression](https://centrifug
 
 The optimizations described here allowed our customer to reduce the transmit bandwidth used for real-time communication by 3x by enabling WebSocket compression, while keeping server CPU and memory utilization at comparable levels. This eventually resulted in notable savings of up to $12,000 per month on their bandwidth bill.
 
+<!-- truncate -->
+
 The optimization is now part of our open-source [centrifugal/centrifuge](https://github.com/centrifugal/centrifuge) library for the Go language and [Centrifugo PRO](https://centrifugal.dev/docs/pro/overview) offering. However, the concepts described here can be applied not only to other Go projects but also beyond the Go ecosystem.
 
 :::tip Thanks

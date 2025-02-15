@@ -163,6 +163,8 @@ module.exports = {
           anonymizeIP: true,
         },
         blog: {
+          onInlineAuthors: 'ignore', // It's possible to define authors only once, but we do not use the feature yet and suppress warning here.
+
           showReadingTime: true,
           /**
            * Path to data on filesystem relative to site dir.

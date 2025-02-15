@@ -13,6 +13,8 @@ hide_table_of_contents: false
 
 Optimizing data transfer over WebSocket connections can significantly reduce bandwidth costs. Compressing data usually leads to memory and CPU resource usage overhead – but in many cases it worth doing anyway since it positively impacts the final bill from the provider (bandwidth cost reduction overweights resource usage increase).
 
+<!-- truncate -->
+
 Centrifugo v5.4.0 introduced [delta compression](/docs/server/delta_compression) feature. But before implementing it we wanted a playground which could demonstrate the potential benefit of using delta compression in Centrifugo channels.
 
 This post outlines our approach to estimating the potential profit from implementing delta compression. It demonstrates the reduction in data transfer using once concrete use case across various configurations, including different Centrifugo protocol formats and the additional use of WebSocket permessage-deflate compression. Although these numbers can vary significantly depending on the data, we believe the results are valuable for providing a general understanding of Centrifugo compression options. This information can help Centrifugo users apply these insights to their use cases.
