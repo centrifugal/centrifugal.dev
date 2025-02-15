@@ -16,7 +16,7 @@
 
 <link rel="search" type="application/opensearchdescription+xml" title="Centrifugo" href="/opensearch.xml">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.b45c6643.css">
-<script src="/assets/js/runtime~main.0e3df728.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.8157bc11.js" defer="defer"></script>
 <script src="/assets/js/main.df29f4cc.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -87,7 +87,7 @@
 <p>See more details about <a href="/docs/getting-started/design#online-presence-considerations">online presence design</a>.</p>
 <h3 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="join_leave">join_leave<a href="#join_leave" class="hash-link" aria-label="Direct link to join_leave" title="Direct link to join_leave">​</a></h3>
 <p><code>join_leave</code> (boolean, default <code>false</code>) – enable/disable sending join and leave messages when the client subscribes to a channel (unsubscribes from a channel). Join/leave event includes information about the connection that triggered an event – client ID, user ID, connection info, and channel info (similar to entry inside presence information).</p>
-<p>Enabling <code>join_leave</code> means that Join/Leave messages will start being emitted, but by default they are not delivered to clients subscribed to a channel. You need to force this using namespace option <a href="#forcepushjoinleave">force_push_join_leave</a> or explicitly provide intent from a client-side (in this case client must have permission to call presence API).</p>
+<p>Enabling <code>join_leave</code> means that Join/Leave messages will start being emitted, but by default they are not delivered to clients subscribed to a channel. You need to force this using namespace option <a href="#force_push_join_leave">force_push_join_leave</a> or explicitly provide intent from a client-side (in this case client must have permission to call presence API).</p>
 <div class="theme-admonition theme-admonition-caution admonition_xJq3 alert alert--warning"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z"></path></svg></span>caution</div><div class="admonitionContent_BuS1"><p>Keep in mind that join/leave messages can generate a huge number of messages in a system if turned on for channels with a large number of active subscribers. If you have channels with a large number of subscribers consider avoiding using this feature. It&#x27;s hard to say what is &quot;large&quot; for you though – just estimate the load based on the fact that each subscribe/unsubscribe event in a channel with N subscribers will result into N messages broadcasted to all. If all clients reconnect at the same time the amount of generated messages is N^2.</p></div></div>
 <p>Join/leave messages distributed only with at most once delivery guarantee.</p>
 <h3 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="force_push_join_leave">force_push_join_leave<a href="#force_push_join_leave" class="hash-link" aria-label="Direct link to force_push_join_leave" title="Direct link to force_push_join_leave">​</a></h3>
