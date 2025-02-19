@@ -58,6 +58,24 @@ Default: 65536 (64KB)
 
 Maximum allowed size of a first connect message received from WebSocket connection in bytes.
 
+### `uni_websocket.join_push_messages`
+
+Boolean. Default: `false`. New in Centrifugo v6.0.3
+
+Once the option enabled, Centrifugo can join different messages going through unidirectional WebSocket into a single websocket frame. The messages are joined using the same approach as Centrifugo uses for bidirectional protocol. This means that for JSON case messages are joined with new line.
+
+:::caution
+
+In other words, you can benefit from message batching and less system calls (which is positive for server CPU usage). But your client side must be prepared to decode the WebSocket message into separate `Push` messages: For JSON case split by `\n`:
+
+```javascript
+const messages = data.trim().split('\n').map(r => JSON.parse(r));
+```
+
+Note, `trim` is important since message may end on `\n` too: `{}\n{}\n`.
+
+:::
+
 ## Example
 
 Let's connect to a unidirectional WebSocket endpoint using [wscat](https://github.com/websockets/wscat) tool – it allows connecting to WebSocket servers interactively from a terminal.

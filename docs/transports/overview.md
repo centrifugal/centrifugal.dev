@@ -20,7 +20,7 @@ The important distinction here is that all supported transports belong to one of
 
 Bidirectional transports are capable to serve all Centrifugo features. These transports are the main Centrifugo focus and where Centrifugo really shines.
 
-Bidirectional transports come with the requirement that developers use a special client connector library (real-time SDK) that communicates with Centrifugo over custom [client protocol](./client_protocol.md). This is necessary because bidirectional connections are asynchronous, meaning requests must be matched to their corresponding responses, connection state must be properly managed, and request queueing, timeouts, and errors must be handled. Additionally, the SDK is needed to multiplex subscriptions to different channels over a single connection.
+Bidirectional transports come with the requirement that developers use a special client connector library (real-time SDK) that communicates with Centrifugo over custom [client protocol](./client_protocol.md). This is necessary because bidirectional connections are asynchronous, meaning requests must be matched to their corresponding responses, connection state must be properly managed, and request queueing, timeouts, and errors must be handled. Additionally, the SDK is needed to multiplex subscriptions to different channels over a single connection. Bidirectional SDKs allow binary communication with Centrifugo (using Protobuf protocol).
 
 Centrifugo has several official [client real-time SDKs](../transports/client_sdk.md) for popular environments. All of them work over [WebSocket](./websocket.md) transport. Our Javascript SDK also offers bidirectional fallbacks over [HTTP-Streaming](./http_stream.md), [Server-Sent Events (SSE)](./sse.md), and has an experimental support for [WebTransport](./webtransport.md).
 
@@ -32,6 +32,8 @@ The main advantage is that unidirectional transports do not require special clie
 
 However, the tradeoff is that with unidirectional transports, you won't get some of Centrifugo's advanced features implemented in bidirectional SDKs, such as dynamic subscriptions/unsubscriptions, automatic message recovery on reconnect, ability to send RPC to the backend over a persistent real-time connection.
 
+At this point, unidirectional transports only support JSON format for communication.
+
 Learn more about [unidirectional protocol](./uni_client_protocol.md) and available unidirectional transports.
 
 ## PING/PONG behavior
@@ -42,11 +44,11 @@ Here is a scheme how ping/pong works in bidirectional and unidirectional client 
 
 ![](/img/ping_pong.png)
 
-By default Centrifugo sends pings every 25 seconds. This may be changed using `client.ping_interval` option ([duration](../server/configuration.md#setting-time-duration-options), default `"25s"`).
+By default, Centrifugo sends pings every 25 seconds. This may be changed using `client.ping_interval` option ([duration](../server/configuration.md#setting-time-duration-options), default `"25s"`).
 
 Centrifugo expects pong message from bidirectional client SDK after sending ping to it. By default, it waits no more than 8 seconds before closing a connection. This may be changed using `client.pong_timeout` option ([duration](../server/configuration.md#setting-time-duration-options), default `"8s"`).
 
-In most cases default ping/pong intervals are fine so you don't really need to tweak them. Reducing timeouts may help you to find non-gracefully closed connections faster, but will increase network traffic and CPU resource usage since ping/pongs are sent faster.
+In most cases default ping/pong intervals are fine so you don't really need to tweak them. Reducing timeouts may help you find non-gracefully closed connections faster, but will increase network traffic and CPU resource usage since ping/pongs are sent faster.
 
 :::caution
 

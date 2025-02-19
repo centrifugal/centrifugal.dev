@@ -21,6 +21,30 @@ Centrifugo PRO has an optimized Protobuf serialization/deserialization for GRPC 
 
 Centrifugo PRO has an optimized JSON serialization/deserialization for HTTP proxy. The effect can be noticeable under load. The exact numbers heavily depend on usage scenario.
 
+### Faster HTTP proxy client
+
+Centrifugo PRO adds a boolean option `use_fast_client` which enables using fast optimized HTTP client for proxy requests. In the benchmarks we did, the effect was up to 2x more request throughput for HTTP proxy and 10 times fewer allocations for each request. This will result into significant CPU and latency reductions under load.
+
+The option may be defined inside `http` section of proxy object. For example, to enable it for a connect proxy:
+
+```json title="config.json"
+{
+  "client": {
+    "proxy": {
+      "connect": {
+        "enabled": true,
+        "endpoint": "https://your_backend/centrifugo/connect",
+        "http": {
+          "use_fast_client": true
+        }
+      }
+    }
+  }
+}
+```
+
+This is a separate option because the optimized version only supports HTTP 1.1, so we try to avoid unexpected side effects when migrating from Centrifugo OSS to Centrifugo PRO.
+
 ## Faster GRPC proxy
 
 Centrifugo PRO has an optimized Protobuf serialization/deserialization for GRPC API. The effect can be noticeable under load. The exact numbers heavily depend on usage scenario.
