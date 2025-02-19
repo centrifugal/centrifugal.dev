@@ -21,7 +21,7 @@ curl -sSLf https://centrifugal.dev/install_pro.sh | sh
 
 ### Docker image
 
-Centrifugo PRO uses a different image from OSS version – [centrifugo/centrifugo-pro](https://hub.docker.com/repository/docker/centrifugo/centrifugo-pro):
+Centrifugo PRO uses a different image from OSS version – [centrifugo/centrifugo-pro](https://hub.docker.com/r/centrifugo/centrifugo-pro):
 
 ```
 docker run --ulimit nofile=262144:262144 -v /host/dir/with/config/file:/centrifugo -p 8000:8000 centrifugo/centrifugo-pro:v6.0.3 centrifugo -c config.json
