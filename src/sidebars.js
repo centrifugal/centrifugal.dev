@@ -71,10 +71,10 @@ module.exports = {
       label: 'PRO version features',
       collapsed: false,
       items: [
+        "pro/push_notifications",
         "pro/tracing",
         "pro/analytics",
         "pro/rate_limiting",
-        "pro/push_notifications",
         "pro/namespace_engines",
         "pro/admin_idp_auth",
         "pro/user_status",

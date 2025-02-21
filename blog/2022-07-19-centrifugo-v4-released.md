@@ -17,7 +17,7 @@ Today we are excited to announce the next generation of Centrifugo – Centrifug
 
 :::info About Centrifugo
 
-If you've never heard of Centrifugo before, it's an open-source scalable real-time messaging server written in Go language. Centrifugo can instantly deliver messages to application online users connected over supported transports (WebSocket, HTTP-streaming, SSE/EventSource, GRPC, SockJS). Centrifugo has the concept of a channel – so it's a user-facing PUB/SUB server.
+If you've never heard of Centrifugo before, it's an open-source scalable real-time messaging server written in Go language. Centrifugo can instantly deliver messages to application online users connected over supported transports (WebSocket, HTTP-streaming, Server-Sent Events (SSE), GRPC, SockJS). Centrifugo has the concept of a channel – so it's a user-facing PUB/SUB server.
 
 Centrifugo is language-agnostic and can be used to build chat apps, live comments, multiplayer games, real-time data visualizations, collaborative tools, etc. in combination with any backend. It is well suited for modern architectures and allows decoupling the business logic from the real-time transport layer.
 

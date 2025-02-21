@@ -116,7 +116,7 @@ You can disable HTTP/2 running Centrifugo server with `GODEBUG` environment vari
 GODEBUG="http2server=0" centrifugo -c config.json
 ```
 
-Keep in mind that when using WebSocket you are working only over HTTP/1.1, so HTTP/2 support mostly makes sense for HTTP based transports such as our WebSocket bidirectional fallbacks (EventSource (SSE) and HTTP-streaming with bidirectional emulation) and unidirectional transports (unidirectional EventSource (SSE) and HTTP-streaming).
+Keep in mind that when using WebSocket you are working only over HTTP/1.1, so HTTP/2 support mostly makes sense for HTTP based transports such as our WebSocket bidirectional fallbacks (Server-Sent Events (SSE) and HTTP-streaming with bidirectional emulation) and unidirectional transports (unidirectional Server-Sent Events (SSE) and HTTP-streaming).
 
 ### Does Centrifugo work with HTTP/3?
 

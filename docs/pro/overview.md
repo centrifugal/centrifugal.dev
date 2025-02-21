@@ -11,10 +11,10 @@ Centrifugo PRO is the enhanced version of Centrifugo offered by Centrifugal Labs
 Centrifugo PRO is packed with the following features:
 
 * Everything from Centrifugo OSS
+* 🔥 [Push notification API](./push_notifications.md) to manage device tokens and send mobile and browser push notifications.
 * 🔍 [Channel and user tracing](./tracing.md) allows watching client protocol frames in channel or per user ID in real time.
 * 💹 [Real-time analytics with ClickHouse](./analytics.md) for a great system observability, reporting and trending.
 * 🛡️ [Operation rate limits](./rate_limiting.md) to protect server from the real-time API misusing and frontend bugs.
-* 🔥 [Push notification API](./push_notifications.md) to manage device tokens and send mobile and browser push notifications.
 * 📚 [Per-namespace engines](./namespace_engines.md) to configure various PUB/SUB brokers and presence managers on namespace level.
 * 🔐 [SSO for admin UI](./admin_idp_auth.md) using OpenID Connect (OIDC) protocol.
 * 🟢 [User status API](./user_status.md) feature allows understanding activity state for a list of users.

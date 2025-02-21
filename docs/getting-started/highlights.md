@@ -33,9 +33,11 @@ Check out our blog post, [Million WebSocket with Centrifugo](/blog/2020/02/10/mi
 
 Centrifugo is designed to scale well across multiple machines using PUB/SUB brokers. As your application grows and the number of client connections increases, Centrifugo allows you to distribute the load across multiple nodes, which are connected into a cluster.
 
+With Centrifugo, you can easily scale horizontally by adding more nodes to your cluster. Once you publish message to a channel over some Centrifugo node – it will be delivered to all subscribers across the cluster.
+
 At the core of this scalability lies Redis, Centrifugo's primary PUB/SUB engine. Redis supports client-side consistent sharding and Redis Cluster, ensuring that no single Redis instance becomes a bottleneck—even under heavy loads.
 
-But Redis isn’t the only option. Centrifugo also supports Redis-compatible databases and Nats, giving you the flexibility to choose the engine that best fits your infrastructure. 👉 [See dedicated docs](../server/engines.md).
+But Redis isn’t the only option. Centrifugo also supports Redis-compatible databases (Valkey, Elasticache, KeyDB, DragonflyDB, etc.) and Nats, giving you the flexibility to choose the engine that best fits your infrastructure. 👉 [See dedicated docs](../server/engines.md).
 
 ### Variety of real-time transports
 

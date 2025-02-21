@@ -8,7 +8,7 @@ As mentioned earlier, you can bypass the need for Centrifugo bidirectional real-
 
 By sticking with the unidirectional approach, you'll need to implement some basic parsing on the client side to handle the message types sent by Centrifugo over unidirectional connections.
 
-Currently, Centrifugo supports unidirectional transports including WebSocket, HTTP streaming, SSE (EventSource), and gRPC. All of these share the same protocol structure, ensuring consistency across different transport methods.
+Currently, Centrifugo supports unidirectional transports including WebSocket, HTTP streaming, Server-Sent Events (EventSource), and gRPC. All of these share the same protocol structure, ensuring consistency across different transport methods.
 
 First of all let's look at possible unidirectional transport session (in this example HTTP-streaming) with Centrifugo to show the simplicity and look at general structure before diving into the details.
 
@@ -55,7 +55,7 @@ The exact endpoint to connect varies depending on the transport you choose, you 
 
 * [Unidirectional WebSocket](./uni_websocket.md) - `/connection/uni_websocket`
 * [Unidirectional HTTP streaming](./uni_http_stream.md) - `/connection/uni_http_stream`
-* [Unidirectional SSE (EventSource)](./uni_sse.md) - `/connection/uni_sse`
+* [Unidirectional Server-Sent Events (EventSource)](./uni_sse.md) - `/connection/uni_sse`
 * [Unidirectional gRPC](./uni_grpc.md) - uses custom GRPC server and port to connect.
 
 Upon connection, you can pass initial connection payload to Centrifugo. The way you send it varies for different unidirectional transports.  But generally the connect request structure is the same and is defined in [Centrifugo protocol Protobuf schema](https://github.com/centrifugal/protocol/blob/master/definitions/client.proto) - see `ConnectRequest` message type. Let's describe it in more detail in relation to unidirectional transports.
@@ -73,7 +73,7 @@ Upon connection, you can pass initial connection payload to Centrifugo. The way 
 
 * [Unidirectional WebSocket](./uni_websocket.md) - send as first WebSocket message to a server
 * [Unidirectional HTTP streaming](./uni_http_stream.md) - send as JSON body of HTTP-streaming POST request
-* [Unidirectional SSE (EventSource)](./uni_sse.md) - send in URL parameter `cf_connect` (also possible in JSON body of POST request – but web browsers do not allow that)
+* [Unidirectional Server-Sent Events (EventSource)](./uni_sse.md) - send in URL parameter `cf_connect` (also possible in JSON body of POST request – but web browsers do not allow that)
 * [Unidirectional gRPC](./uni_grpc.md) - send as a part of gRPC unidirectional connect request.
 
 See more details in the corresponding transport documentation.

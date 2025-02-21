@@ -102,3 +102,8 @@ For example, this means that to automatically use delta calculation for all publ
 ```
 
 Again – subscribers which support delta compression and do not support it can co-exist in one channel.
+
+### Further reading
+
+* [Delta compression in Centrifugo PRO](../pro/delta_at_most_once.md) – allows using delta compression in at most once scenario.
+* Blog post [Experimenting with real-time data compression by simulating a football match events](/blog/2024/05/30/real-time-data-compression-experiments) showcases benefits which could be achieved with delta compression.
