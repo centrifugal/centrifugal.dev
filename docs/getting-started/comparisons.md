@@ -9,7 +9,7 @@ Let's compare Centrifugo with various systems. These comparisons arose from popu
 
 Socket.io is a library; you need to write your own server on top of it. Centrifugo is a ready-to-use standalone server.
 
-Because of this, Socket.io may give you more flexibility, but you are mostly limited to writing code in JavaScript on the backend to get the most out of it.
+Because of this, Socket.io may give you more flexibility, but you are mostly limited to writing code in JavaScript on the backend to get the most out of it. Usually socket.io server implementations in other languages are incomplete or becoming outdated very soon.
 
 Since Centrifugo is a standalone server, it's a universal, language-agnostic element that integrates well with a backend written in any language. But because it's universal, it comes with integration rules, its own mechanics, and limitations of such a design.
 
