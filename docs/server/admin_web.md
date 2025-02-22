@@ -11,6 +11,8 @@ Centrifugo comes with a built-in administrative web interface. It enables users 
 * View analytics widgets (a feature of Centrifugo PRO).
 * Visualize registered devices for push notifications (a feature of Centrifugo PRO).
 
+## How to enable
+
 To activate the administrative web interface, run Centrifugo with the `admin` UI enabled and configure security settings in the configuration file:
 
 ```json title="config.json"
@@ -22,14 +24,6 @@ To activate the administrative web interface, run Centrifugo with the `admin` UI
   }
 }
 ```
-
-## Options
-
-* `admin.enabled` (boolean, default: `false`) – enables/disables admin web UI
-* `admin.password` (string, default: `""`) – this is a password to log into admin web interface
-* `admin.secret` (string, default: `""`) - this is a secret key for authentication token set on successful login.
-
-Make both `admin.password` and `admin.secret` strong and keep them in secret.
 
 After configuring, restart Centrifugo and go to [http://localhost:8000](http://localhost:8000) (by default) - you should see web interface.
 
@@ -48,6 +42,79 @@ Log in using `admin.password` value:
 Centrifugo PRO [supports Single Sign-On](../pro/admin_idp_auth.md) (SSO) authentication for web interface using OpenID Connect (OIDC) protocol.
 
 :::
+
+## `admin`
+
+### `admin.enabled`
+
+Boolean, default: `false`.
+
+Enables the admin web interface.
+
+```json title="config.json"
+{
+    "admin": {
+        "enabled": true
+    }
+}
+```
+
+### `admin.password`
+
+String, default: `""`.
+
+This is the password to log into the admin web interface.
+
+Make it strong and keep it in secret!
+
+### `admin.secret`
+
+String, default: `""`.
+
+This is the secret key for the authentication token used after successful login.
+
+Make it strong and keep it in secret!
+
+### `admin.insecure`
+
+Boolean, default: `false`.
+
+Enables insecure mode for the admin web interface. In this mode, no authentication is required to connect to the web interface or make requests to the admin API. Admin resources must be protected by firewall rules in production when this option is enabled, otherwise, everyone from the internet can make admin actions.
+
+See [Admin insecure mode](#admin-insecure-mode) for more details.
+
+### `admin.handler_prefix`
+
+String, default: `""`.
+
+Customize handler prefix for admin web interface. By default, the admin web interface is served at the root path `/`. If you want to serve the admin web interface at a different path, you can set this option to the desired path, ex.:
+
+```json title="config.json"
+{
+  "admin": {
+    ...
+    "handler_prefix": "/admin"
+  }
+}
+```
+
+### `admin.web_path`
+
+String, default: `""`.
+
+Path to the admin web application to serve. If not set then the built-in web interface will be used. See [Using custom web interface](#using-custom-web-interface) for more details.
+
+### `admin.web_proxy_address`
+
+String, default: `""`.
+
+An address for proxying to the running admin web application app. So it's possible to run the web app in dev mode and point Centrifugo to its address for development purposes.
+
+### `admin.external`
+
+Boolean, default: `false`.
+
+A flag to run the admin interface on an external port.
 
 ## Using custom web interface
 
