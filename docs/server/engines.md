@@ -20,25 +20,17 @@ With default `memory` engine you can start only one node of Centrifugo, while Re
 
 Memory engine keeps history and presence data in process memory, so the data is lost upon server restart. Given the ephemeral nature of Centrifugo data – the loss may be totally acceptable. When using Redis Engine the data is kept in Redis (where you can configure the desired persistence properties) instead of Centrifugo node process memory, so channel channel history data won't be lost upon Centrifugo server restart.
 
-See below the description of possible options available for engine configuration.
+## `engine`
 
-## Memory engine
+The `engine` section in Centrifugo configuration is a top-level object. It allows configuring the engine used by Centrifugo.
 
-Used by default. Supports only one node. Supports all engine features keeping everything in Centrifugo node process memory.
+### `engine.type`
 
-Advantages:
+String. Default: `memory`.
 
-* Superfast since it does not involve network at all
-* Does not require separate broker setup, works out of the box
+Allows setting the type of engine. The default engine type is `memory` – you don't even need to explicitly configure it.
 
-Disadvantages:
-
-* Does not allow scaling nodes (actually you still can scale Centrifugo with Memory engine in some cases, for example when each connection is isolated and there is no need to deliver messages between nodes)
-* Does not persist publication history in channels between Centrifugo restarts.
-
-## Redis engine
-
-To switch from memory to Redis engine:
+But to switch to the Redis engine:
 
 ```json title="config.json"
 {
@@ -49,23 +41,64 @@ To switch from memory to Redis engine:
 }
 ```
 
-[Redis](https://redis.io/) is an open-source, in-memory data structure store, used as a database, cache, and message broker.
+## Memory engine
 
-Centrifugo Redis engine allows scaling Centrifugo nodes to different machines. Nodes will use Redis as a message broker (utilizing Redis PUB/SUB for node communication) and keep presence and history data in Redis.
+Used by default. Supports only one node. Supports all engine features keeping everything in Centrifugo node process memory.
 
-**Minimal Redis version is 6.2.0**
+Advantages:
+
+* Superfast since it does not involve network round trips at all
+* Does not require separate broker setup, works out of the box
+
+Trade-offs:
+
+* Does not allow scaling nodes (actually you still can scale Centrifugo with Memory engine in some cases, for example when each connection is isolated and there is no need to deliver messages between nodes)
+* Does not persist publication history in channels between Centrifugo restarts.
+
+## Redis engine
+
+[Redis](https://redis.io/) is an open-source, in-memory data structure store, often used as a lightweight database solution, cache, and message broker.
+
+Centrifugo integrates with it to provide a scalable and highly available real-time messaging solution. When running multiple Centrifugo nodes and pointing them to a Redis installation by configuring the Redis engine, you get a distributed real-time messaging system where Centrifugo nodes form a cluster and communicate with each other over Redis PUB/SUB. In this case, channel history and presence information are stored in Redis.
+
+These days, the engine also supports Redis-compatible storage solutions such as AWS ElastiCache, KeyDB, DragonflyDB, and Valkey (see more information [below](#redis-compatible-storages)).
+
+To switch from the in-memory engine to the Redis engine, update your configuration as follows:
+
+```json title="config.json"
+{
+  "engine": {
+    "type": "redis",
+    "redis": {}
+  }
+}
+```
+
+Advantages:
+
+* Scale Centrifugo horizontally by running multiple nodes without worrying about which node a client connects to—everything works seamlessly. You can execute publish API command on any Centrifugo node, and publication will be delivered to all online channel subscribers. 
+* Message history in channels persists even after Centrifugo node restarts.
+
+Trade-offs:
+
+* Redis requires a separate deployment.
+* Network round trips between Centrifugo nodes and Redis introduce some latency.
 
 With Redis it's possible to come to the architecture like this:
 
 ![redis](/img/redis_arch.png)
 
-### Redis engine options
+**Minimal required Redis version is 6.2.0**
+
+## `engine.redis`
 
 Let's describe various options available to configure Redis engine.
 
-#### engine.redis.address
+### `engine.redis.address`
 
-Redis server address. String, default `"127.0.0.1:6379"`.
+String or array of strings, default `"127.0.0.1:6379"`.
+
+Redis server address. Using a single address string it's possible to describe standalone Redis, Redis with Sentinel and Redis cluster endpoints. In most cases you will use a single address string here, but see below how passing an array of addresses allows enabling Centrifugo Redis sharding.
 
 ```json title="config.json"
 {
@@ -97,25 +130,25 @@ Note, if you want to use Redis Sentinel or Redis Cluster – then you must use a
 
 :::
 
-#### engine.redis.prefix
+### `engine.redis.prefix`
 
 String, default `"centrifugo"` – custom prefix to use for channels and keys in Redis.
 
-#### engine.redis.force_resp2
+### `engine.redis.force_resp2`
 
 Boolean, default `false`. If set to true it forces using RESP2 protocol for communicating with Redis. By default, Redis client used by Centrifugo tries to detect supported Redis protocol automatically trying RESP3 first.
 
-#### engine.redis.history_use_lists
+### `engine.redis.history_use_lists`
 
 Boolean, default `false` – turns on using Redis Lists instead of Stream data structure for keeping history (not recommended, keeping this for backwards compatibility mostly).
 
-#### engine.redis.presence_ttl
+### `engine.redis.presence_ttl`
 
 Duration, default `"60s"`.
 
 How long presence is considered valid if not confirmed by active client connection.
 
-#### engine.redis.presence_hash_field_ttl
+### `engine.redis.presence_hash_field_ttl`
 
 Boolean, default `false`.
 
@@ -128,7 +161,7 @@ Benefits:
 
 Since HASH per field TTL is only available in Redis >= 7.4, Centrifugo requires explicit intent to enable its usage.
 
-#### engine.redis.presence_user_mapping
+### `engine.redis.presence_user_mapping`
 
 Boolean, default `false`.
 
@@ -142,9 +175,9 @@ The feature comes with a cost – it increases memory usage in Redis, possibly u
 
 To enable set the option to `true`.
 
-### Configuring Redis TLS
+### `engine.redis.tls`
 
-Under `engine.redis.tls` key you can provide [unified TLS config](./configuration.md#tls-config-object) for Redis.
+Under `engine.redis.tls` key you can provide [unified TLS config](./configuration.md#tls-config-object) for Redis. It allows configuring TLS for Redis client connections.
 
 ### Scaling with Redis tutorial
 
@@ -401,6 +434,10 @@ Centrifugo PRO makes one more step here by allowing to specify custom Broker and
 
 :::
 
+## `broker`
+
+### `broker.enabled`
+
 To set a separate broker use config like this:
 
 ```json title="config.json"
@@ -412,7 +449,33 @@ To set a separate broker use config like this:
 }
 ```
 
-Allowed options for `broker.type` are `redis` and `nats`. To set a separate presence manager use config like this:
+### `broker.type`
+
+Allowed options for `broker.type` are `redis` and `nats`.
+
+### `broker.redis`
+
+Object.
+
+For Redis broker implementation Centrifugo basically re-uses the same configuration options as described above as part of Redis engine description. Nats broker is a bit special and comes with its own properties and limitations, we will describe it below.
+
+```json title="config.json"
+{
+  "broker": {
+    "enabled": true,
+    "type": "redis"
+    "redis": {
+      "address": "redis://..."
+    }
+  }
+}
+```
+
+## `presence_manager`
+
+### `presence_manager.enabled`
+
+To set a separate presence manager use config like this:
 
 ```json title="config.json"
 {
@@ -425,9 +488,13 @@ Allowed options for `broker.type` are `redis` and `nats`. To set a separate pres
 
 At this point only `redis` is allowed for `presence_manager.type`.
 
-For Redis broker and presence manager implementations Centrifugo basically re-uses the same configuration options as described above as part of Redis engine description. Nats broker is a bit special and comes with its own properties and limitations, we describe it shortly.
+### `presence_manager.redis`
 
-### Example: configure separate Redis instances
+Object.
+
+For Redis presence manager implementation Centrifugo basically re-uses the same configuration options as described above as part of Redis engine description.
+
+### Example: separate Redis for broker and presence manager
 
 ```json title="config.json"
 {
@@ -493,39 +560,39 @@ centrifugo --config=config.json --port=8001
 
 Now you can scale connections over Centrifugo instances, instances will be connected over Nats server.
 
-### Nats broker options
+## `broker.nats`
 
 Under the `broker.nats` section you can specify options specific to Nats.
 
-#### broker.nats.url
+### `broker.nats.url`
 
 String, default `nats://127.0.0.1:4222`.
 
 Connection url in format `nats://derek:pass@localhost:4222`.
 
-#### broker.nats.prefix
+### `broker.nats.prefix`
 
 String, default `centrifugo`.
 
 Prefix for channels used by Centrifugo inside Nats.
 
-#### broker.nats.dial_timeout
+### `broker.nats.dial_timeout`
 
 Duration, default `1s`.
 
 Timeout for dialing with Nats.
 
-#### broker.nats.write_timeout
+### `broker.nats.write_timeout`
 
 Duration, default `1s`.
 
 Write (and flush) timeout for a connection to Nats.
 
-#### broker.nats.tls
+### `broker.nats.tls`
 
 [TLS object](./tls.md#unified-tls-config-object) - allows configuring Nats client TLS.
 
-#### broker.nats.allow_wildcards
+### `broker.nats.allow_wildcards`
 
 Boolean, default `false`. When on – Centrifugo allows subscribing to [wildcard Nats subjects](https://docs.nats.io/nats-concepts/subjects#wildcards) (containing `*` and `>` symbols). This way client can receive messages from many channels while only having a single subscription.
 
@@ -541,7 +608,7 @@ Be careful with permission management in this case – wildcards allow subscribi
 
 :::
 
-### Nats raw mode
+## Nats raw mode
 
 Nats raw mode when on tells Centrifugo to consume core Nats topics and not expecting any Centrifugo internal message wrapping. I.e. it allows direct mapping of Centrifugo channels to Nats topics. Your clients will simply get the raw payload Centrifugo consumed from Nats. Also note, that `nats_prefix` is not used when raw mode is on, if you still need some – there is an option to set prefix inside `nats_raw_mode` configuration option. 
 
@@ -580,3 +647,21 @@ If you publish to Centrifugo API with raw mode enabled – publication payloads 
 Centrifugo PRO [per-namespace engines](../pro/namespace_engines.md) feature provides a way to use Nats raw mode only for specific channel namespace.  
 
 :::
+
+### `broker.nats.raw_mode.enabled`
+
+Boolean, default `false`.
+
+Enables using Nats raw mode.
+
+### `broker.nats.raw_mode.channel_replacements`
+
+Map with string keys and string values, default `{}`.
+
+Allows transforming Centrifugo channel to Nats channel before subscribing and back when consuming a message from Nats.
+
+### `broker.nats.raw_mode.prefix`
+
+String, default `""`.
+
+Prefix for channels used by Centrifugo inside Nats when raw mode is on. In raw mode Centrifugo does not use default `broker.nats.prefix` option to be as `raw` as possible by default (i.e. to translate channels 1 to 1).
