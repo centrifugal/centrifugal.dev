@@ -7,6 +7,10 @@ Centrifugo can start without any configuration – it runs out-of-the-box with e
 
 This document describes configuration principles and configuration sections, and most of the options available in Centrifugo. Where the feature requires more description we point from here to the dedicated documentation chapters.
 
+### Lost in options?
+
+Before we start, a little disclaimer: Centrifugo has many configuration options. If you feel lost, you can always use the [defaultconfig](./console_commands.md#defaultconfig) and [defaultenv](./console_commands.md#defaultenv) CLI commands to check how config file options may be set and how environment variables should be named. Centrifugo also [warns you in logs](#validation-and-warnings-on-start) on start if sth unknown found in the configuration file or environment variables.
+
 ### Configuration sources
 
 Centrifugo can be configured in several ways:
