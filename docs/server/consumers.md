@@ -366,3 +366,7 @@ Header name to extract Publication idempotency key from Kafka message. See [Publ
 String. Default: `""`.
 
 Header name to extract Publication delta flag from Kafka message which tells Centrifugo whether to use delta compression for message or not. See [delta compression](./delta_compression.md) and [PublishRequest](./server_api.md#publishrequest).
+
+### Compatibility with Redpanda
+
+Our local test suite for Kafka consumer passed with [Redpanda](https://www.redpanda.com/) v24.3.6, so it's generally compatible.
