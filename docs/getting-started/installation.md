@@ -153,7 +153,6 @@ At moment, we support versions of the following distributions:
 * 64-bit Ubuntu 20.04 Focal Fossa
 * 64-bit Ubuntu 22.04 Jammy
 * 64-bit Ubuntu 24.04 Noble Numbat
-
 * 64-bit Centos 7
 
 See [full list of available packages](https://packagecloud.io/FZambia/centrifugo) and [installation instructions](https://packagecloud.io/FZambia/centrifugo/install).
