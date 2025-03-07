@@ -379,18 +379,7 @@ When sharding enabled Centrifugo will spread channels and history/presence keys 
 
 ### Redis Cluster support
 
-Centrifugo supports Redis Cluster also. Running with Redis Cluster can be achieved using `redis+cluster` scheme for Redis address. For example:
-
-```json title="config.json"
-{
-  "engine": {
-    "type": "redis",
-    "redis": {
-      "address": "redis+cluster://127.0.0.1:7000"
-    }
-  }
-}
-```
+Centrifugo supports Redis Cluster also. In the Redis Cluster case Centrifugo starts generating keys using hash tags to take care about distributed slot logic. Redis Cluster is detected automatically by Centrifugo.
 
 You can provide more Redis Cluster seed nodes using `addr` param of Redis URL.
 
@@ -400,13 +389,15 @@ If you need to shard data (using [app-level sharding](#redis-sharding)) between 
 {
     ...
     "address": [
-        "redis+cluster://127.0.0.1:7000",
-        "redis+cluster://127.0.0.1:8000"
+        "redis://127.0.0.1:7000",
+        "redis://127.0.0.1:8000"
     ]
 }
 ```
 
 Sharding between different Redis clusters can make sense due to the fact how PUB/SUB works in the Redis cluster. It does not scale linearly when adding nodes as all PUB/SUB messages got copied to every cluster node. See [this discussion](https://github.com/antirez/redis/issues/2672) for more information on topic. To spread data between different Redis clusters Centrifugo uses the same consistent hashing algorithm described above (i.e. `Jump`).
+
+Centrifugo PRO supports Redis Cluster [sharded PUB/SUB](../pro/scalability.md#redis-cluster-sharded-pubsub) and allows [utilizing Redis replicas](../pro/scalability.md#leverage-redis-replicas) in Cluster setup.
 
 ### Redis compatible storages
 
