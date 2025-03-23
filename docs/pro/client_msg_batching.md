@@ -18,7 +18,7 @@ Note, this is only useful when you have lots of messages per client. This specif
 
 :::
 
-## client.write_delay
+## `client.write_delay`
 
 The `client.write_delay` is a duration option, it is a time Centrifugo will try to collect messages inside each connection message write loop before sending them towards the connection.
 
@@ -34,11 +34,7 @@ Example:
 }
 ```
 
-## client.reply_without_queue
-
-The `client.reply_without_queue` is a boolean option to not use client queue for replies to commands. When `true` replies are written to the transport without going through the connection message queue.
-
-## client.max_messages_in_frame
+## `client.max_messages_in_frame`
 
 The `client.max_messages_in_frame` is an integer option which controls the maximum number of messages which may be joined by Centrifugo into one transport frame. By default, 16. Use -1 for unlimited number.
 
@@ -52,3 +48,7 @@ Example:
   }
 }
 ```
+
+## `client.reply_without_queue`
+
+The `client.reply_without_queue` is a boolean option to not use client queue for replies to commands. When `true` replies are written to the transport without going through the connection message queue.
