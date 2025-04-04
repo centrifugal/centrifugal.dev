@@ -141,6 +141,155 @@ Line.prototype.render = function render(elapsedTime) {
     this.draw();
 };
 
+function Bubble(ctx, canvasWidth, canvasHeight, bubbleColor) {
+    this.ctx = ctx;
+    this.canvasWidth = canvasWidth;
+    this.canvasHeight = canvasHeight;
+    // Use the original color passed in.
+    this.color = 'rgba(46, 3, 15, 0.35)';
+    // Start at a random position.
+    this.x = Math.random() * canvasWidth;
+    this.y = Math.random() * canvasHeight;
+    // Random radius between 5 and 20.
+    this.radius = Math.random() * canvasWidth/50 + 5;
+    // Random velocities for a gentle drifting effect.
+    this.vx = (Math.random() - 0.5) * 50;
+    this.vy = (Math.random() - 0.5) * 50;
+    // Base opacity for the bubble (more opaque).
+    this.alpha = Math.random() * 0.3 + 0.7;
+    // Variables for a pulsating (breathing) effect.
+    this.pulse = Math.random() * Math.PI * 2;
+    this.pulseSpeed = Math.random() * 2 + 1;
+    // Burst parameters.
+    this.burstInterval = Math.random() * 100 + 1; // seconds until burst.
+    this.timeSinceLastBurst = 0;
+    this.bursting = false;
+    this.burstProgress = 0;
+    this.burstDuration = 0.5; // seconds for burst animation.
+    // Appear (fade-in) parameters.
+    this.appearDuration = Math.random() * 2 + 10; // seconds to fully appear.
+    this.appearProgress = 0; // start completely invisible.
+    // Splash particles will be generated on burst.
+    this.splashParticles = null;
+}
+
+Bubble.prototype.reset = function() {
+    // Reset bubble after burst.
+    this.x = Math.random() * this.canvasWidth;
+    this.y = Math.random() * this.canvasHeight;
+    this.radius = Math.random() * this.canvasWidth/50 + 5;
+    this.vx = (Math.random() - 0.5) * 50;
+    this.vy = (Math.random() - 0.5) * 50;
+    this.alpha = Math.random() * 0.3 + 0.7;
+    this.pulse = Math.random() * Math.PI * 2;
+    this.pulseSpeed = Math.random() * 2 + 1;
+    this.burstInterval = Math.random() * 100 + 1;
+    this.timeSinceLastBurst = 0;
+    this.bursting = false;
+    this.burstProgress = 0;
+    this.appearProgress = 0;
+    this.splashParticles = null;
+};
+
+Bubble.prototype.update = function(elapsedTime) {
+    // Always update movement.
+    this.x += this.vx * elapsedTime;
+    this.y += this.vy * elapsedTime;
+
+    // Bounce off the canvas edges.
+    if (this.x < 0) { this.x = 0; this.vx *= -1; }
+    if (this.x > this.canvasWidth) { this.x = this.canvasWidth; this.vx *= -1; }
+    if (this.y < 0) { this.y = 0; this.vy *= -1; }
+    if (this.y > this.canvasHeight) { this.y = this.canvasHeight; this.vy *= -1; }
+
+    if (!this.bursting) {
+        // Normal behavior when not bursting.
+        this.pulse += this.pulseSpeed * elapsedTime;
+        this.appearProgress = Math.min(1, this.appearProgress + elapsedTime / this.appearDuration);
+        this.timeSinceLastBurst += elapsedTime;
+        if (this.timeSinceLastBurst >= this.burstInterval) {
+            this.bursting = true;
+            this.burstProgress = 0;
+            let numSplashes = Math.floor(Math.random() * 6) + 10;
+            this.splashParticles = [];
+            for (let i = 0; i < numSplashes; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                // Speed controls how fast the splash particle moves outward.
+                let speed = Math.random() * 50 + 50;
+                // Each particle's "length" defines its initial size.
+                let length = Math.random() * 10 + 5;
+                this.splashParticles.push({angle: angle, speed: speed, length: length});
+            }
+        }
+    } else {
+        // Update burst progress while still moving.
+        this.burstProgress += elapsedTime / this.burstDuration;
+        if (this.burstProgress >= 1) {
+            // Reset bubble after burst.
+            this.reset();
+        }
+    }
+};
+
+Bubble.prototype.draw = function() {
+    const ctx = this.ctx;
+    ctx.save();
+
+    if (!this.bursting) {
+        // Normal bubble drawing with pulsating and fade-in effect.
+        const dynamicAlpha = (this.alpha + 0.3 * Math.sin(this.pulse)) * this.appearProgress;
+        ctx.globalAlpha = Math.max(0, Math.min(0.4, dynamicAlpha));
+
+        // Create a radial gradient with a white center highlight,
+        // transitioning to a colored rim and then fading out.
+        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+        gradient.addColorStop(0, 'rgba(255,255,255,0.9)'); // bright white center
+        gradient.addColorStop(0.7, 'rgba(17, 16, 17, 0.29)');
+        gradient.addColorStop(1, 'rgba(255,255,255,0)');      // transparent edge
+        
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+    } else {
+        // Bursting animation: bubble expands and fades out.
+        const burstRadius = this.radius * (1 + 0.1*this.burstProgress);
+        ctx.globalAlpha = Math.max(0, 1 - this.burstProgress);
+        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, burstRadius);
+        gradient.addColorStop(0, 'rgba(0, 0, 0, 0.9)');
+        gradient.addColorStop(0.6, 'rgba(100, 82, 82, 0.29)');
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, burstRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Draw splash particles to simulate droplets flying outward.
+        if (this.splashParticles) {
+            for (let i = 0; i < this.splashParticles.length; i++) {
+                let p = this.splashParticles[i];
+                // Calculate outward displacement based on burst progress.
+                let offset = p.speed * this.burstProgress;
+                let splashX = this.x + Math.cos(p.angle) * offset;
+                let splashY = this.y + Math.sin(p.angle) * offset;
+                // Gradually decrease the size of the splash particle.
+                let splashRadius = p.length * (1 - this.burstProgress);
+                ctx.globalAlpha = Math.max(0, 1 - this.burstProgress);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.71)';
+                ctx.beginPath();
+                ctx.arc(splashX, splashY, 0.08*splashRadius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+    }
+    ctx.restore();
+};
+
+Bubble.prototype.render = function(elapsedTime) {
+    this.update(elapsedTime);
+    this.draw();
+};
+
 function drawBranch(ctx, startX, startY, endX, endY, thickness) {
     ctx.beginPath();
     ctx.moveTo(startX, startY);
@@ -229,6 +378,13 @@ function draw(canvas, X, Y, isDarkTheme) {
             setTimeout(cb, 17);
         };
 
+    const bubbleCount = 32; // Or however many bubbles you prefer.
+    const bubbles = [];
+    for (let i = 0; i < bubbleCount; i++) {
+        // Use the same color as your original line color.
+        bubbles.push(new Bubble(ctx, X, Y, lineColor));
+    }
+
     for (let i = 0; i < linesNum; i += 1) {
         const line = new Line(ctx, X, Y, rand(0, X), rand(0, Y), lineColor);
         lines.push(line);
@@ -274,11 +430,21 @@ function draw(canvas, X, Y, isDarkTheme) {
         if (isCanvasVisible()) {
             ctx.clearRect(0, 0, X, Y);
 
-            for (let i = 0; i < lines.length; i += 1) {
-                lines[i].render(secondsSinceLastRender);
+            if (!isDarkTheme) {
+                for (let i = 0; i < lines.length; i += 1) {
+                    lines[i].render(secondsSinceLastRender);
+                }
             }
+
             for (let i = 0; i < segments.length; i += 1) {
                 segments[i].render(secondsSinceLastRender);
+            }
+
+            if (isDarkTheme) {
+                // Instead of rendering lines, render bubbles.
+                for (let i = 0; i < bubbles.length; i++) {
+                    bubbles[i].render(secondsSinceLastRender);
+                }
             }
 
             if (isDarkTheme && useLightnings && X > 1280) {
