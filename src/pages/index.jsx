@@ -45,7 +45,10 @@ function Header() {
           {/* </span> */}
         </div>
         <div className={styles.subTitle}>
-          Wash away WebSocket issues. Clean and scalable real-time messaging.
+          Wash away WebSocket scalability issues.
+        </div>
+        <div className={styles.subSubTitle}>
+          Reliable real-time messaging, for any stack. Set up once and forever.
         </div>
         <div className={styles.buttons}>
           <Link

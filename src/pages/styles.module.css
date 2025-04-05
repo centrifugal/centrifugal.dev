@@ -43,9 +43,16 @@
 }
 
 .subTitle {
-  margin: 0 0 5% 0;
-  font-size: 1.6rem;
+  margin: 0 0 0 0;
+  font-size: 2rem;
   font-weight: 600;
+  font-family: "Nunito";
+}
+
+.subSubTitle {
+  margin: 0 0 5% 0;
+  font-size: 1.3rem;
+  font-weight: 400;
   font-family: "Nunito";
 }
 
@@ -163,6 +170,11 @@ html[data-theme="dark"] .logos svg * {
   .subTitle {
     width: 100%;
     font-size: 0.9rem;
+  }
+
+  .subSubTitle {
+    width: 100%;
+    font-size: 0.7rem;
   }
 
   .featureImage {
