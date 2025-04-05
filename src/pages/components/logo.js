@@ -153,15 +153,15 @@ function Bubble(ctx, canvasWidth, canvasHeight, bubbleColor) {
     // Random radius between 5 and 20.
     this.radius = Math.random() * canvasWidth/50 + 5;
     // Random velocities for a gentle drifting effect.
-    this.vx = (Math.random() - 0.5) * 50;
-    this.vy = (Math.random() - 0.5) * 50;
+    this.vx = (Math.random() - 0.5) * 70;
+    this.vy = (Math.random() - 0.5) * 70;
     // Base opacity for the bubble (more opaque).
     this.alpha = Math.random() * 0.3 + 0.7;
     // Variables for a pulsating (breathing) effect.
     this.pulse = Math.random() * Math.PI * 2;
     this.pulseSpeed = Math.random() * 2 + 1;
     // Burst parameters.
-    this.burstInterval = Math.random() * 100 + 1; // seconds until burst.
+    this.burstInterval = Math.random() * 50 + 1; // seconds until burst.
     this.timeSinceLastBurst = 0;
     this.bursting = false;
     this.burstProgress = 0;
@@ -183,7 +183,7 @@ Bubble.prototype.reset = function() {
     this.alpha = Math.random() * 0.3 + 0.7;
     this.pulse = Math.random() * Math.PI * 2;
     this.pulseSpeed = Math.random() * 2 + 1;
-    this.burstInterval = Math.random() * 100 + 1;
+    this.burstInterval = Math.random() * 50 + 1;
     this.timeSinceLastBurst = 0;
     this.bursting = false;
     this.burstProgress = 0;
@@ -238,7 +238,7 @@ Bubble.prototype.draw = function() {
     if (!this.bursting) {
         // Normal bubble drawing with pulsating and fade-in effect.
         const dynamicAlpha = (this.alpha + 0.3 * Math.sin(this.pulse)) * this.appearProgress;
-        ctx.globalAlpha = Math.max(0, Math.min(0.4, dynamicAlpha));
+        ctx.globalAlpha = Math.max(0, Math.min(0.7, dynamicAlpha));
 
         // Create a radial gradient with a white center highlight,
         // transitioning to a colored rim and then fading out.
@@ -378,7 +378,7 @@ function draw(canvas, X, Y, isDarkTheme) {
             setTimeout(cb, 17);
         };
 
-    const bubbleCount = 32; // Or however many bubbles you prefer.
+    const bubbleCount = 64; // Or however many bubbles you prefer.
     const bubbles = [];
     for (let i = 0; i < bubbleCount; i++) {
         // Use the same color as your original line color.
