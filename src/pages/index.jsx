@@ -45,7 +45,7 @@ function Header() {
           {/* </span> */}
         </div>
         <div className={styles.subTitle}>
-          Scalable real-time messaging server. Set up once and forever.
+          Wash away WebSocket issues. A clean way to scale real-time.
         </div>
         <div className={styles.buttons}>
           <Link
