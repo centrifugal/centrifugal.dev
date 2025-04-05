@@ -141,8 +141,9 @@ Line.prototype.render = function render(elapsedTime) {
     this.draw();
 };
 
-function Bubble(ctx, canvasWidth, canvasHeight, bubbleColor) {
+function Bubble(ctx, canvasWidth, canvasHeight, isDarkTheme) {
     this.ctx = ctx;
+    this.isDarkTheme = isDarkTheme;
     this.canvasWidth = canvasWidth;
     this.canvasHeight = canvasHeight;
     // Use the original color passed in.
@@ -243,9 +244,15 @@ Bubble.prototype.draw = function() {
         // Create a radial gradient with a white center highlight,
         // transitioning to a colored rim and then fading out.
         const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
-        gradient.addColorStop(0, 'rgba(255,255,255,0.9)'); // bright white center
-        gradient.addColorStop(0.7, 'rgba(17, 16, 17, 0.29)');
-        gradient.addColorStop(1, 'rgba(255,255,255,0)');      // transparent edge
+        if (this.isDarkTheme) {
+            gradient.addColorStop(0, 'rgba(255,255,255,0.9)'); // bright white center
+            gradient.addColorStop(0.7, 'rgba(17, 16, 17, 0.29)');
+            gradient.addColorStop(1, 'rgba(255,255,255,0)');      // transparent edge
+        } else {
+            gradient.addColorStop(0, 'rgba(255,255,255,0.9)'); // bright white center
+            gradient.addColorStop(0.7, 'rgba(128, 122, 128, 0.29)');
+            gradient.addColorStop(1, 'rgba(255,255,255,0)');      // transparent edge
+        }
         
         ctx.fillStyle = gradient;
         ctx.beginPath();
@@ -256,9 +263,15 @@ Bubble.prototype.draw = function() {
         const burstRadius = this.radius * (1 + 0.1*this.burstProgress);
         ctx.globalAlpha = Math.max(0, 1 - this.burstProgress);
         const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, burstRadius);
-        gradient.addColorStop(0, 'rgba(0, 0, 0, 0.9)');
-        gradient.addColorStop(0.6, 'rgba(100, 82, 82, 0.29)');
-        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        if (this.isDarkTheme) {
+            gradient.addColorStop(0, 'rgba(0, 0, 0, 0.9)');
+            gradient.addColorStop(0.6, 'rgba(100, 82, 82, 0.29)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        } else {
+            gradient.addColorStop(0, 'rgba(217, 217, 217, 0.9)');
+            gradient.addColorStop(0.6, 'rgba(234, 227, 227, 0.29)');
+            gradient.addColorStop(1, 'rgba(204, 204, 204, 0)');
+        }
         ctx.fillStyle = gradient;
         ctx.beginPath();
         ctx.arc(this.x, this.y, burstRadius, 0, Math.PI * 2);
@@ -275,9 +288,13 @@ Bubble.prototype.draw = function() {
                 // Gradually decrease the size of the splash particle.
                 let splashRadius = p.length * (1 - this.burstProgress);
                 ctx.globalAlpha = Math.max(0, 1 - this.burstProgress);
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.71)';
+                if (this.isDarkTheme) {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.71)';
+                } else {
+                    ctx.fillStyle = 'rgb(176, 226, 253)';
+                }
                 ctx.beginPath();
-                ctx.arc(splashX, splashY, 0.08*splashRadius, 0, Math.PI * 2);
+                ctx.arc(splashX, splashY, 0.1*splashRadius, 0, Math.PI * 2);
                 ctx.fill();
             }
         }
@@ -382,7 +399,7 @@ function draw(canvas, X, Y, isDarkTheme) {
     const bubbles = [];
     for (let i = 0; i < bubbleCount; i++) {
         // Use the same color as your original line color.
-        bubbles.push(new Bubble(ctx, X, Y, lineColor));
+        bubbles.push(new Bubble(ctx, X, Y, isDarkTheme));
     }
 
     for (let i = 0; i < linesNum; i += 1) {
@@ -430,22 +447,22 @@ function draw(canvas, X, Y, isDarkTheme) {
         if (isCanvasVisible()) {
             ctx.clearRect(0, 0, X, Y);
 
-            if (!isDarkTheme) {
-                for (let i = 0; i < lines.length; i += 1) {
-                    lines[i].render(secondsSinceLastRender);
-                }
-            }
+            // if (!isDarkTheme) {
+            //     for (let i = 0; i < lines.length; i += 1) {
+            //         lines[i].render(secondsSinceLastRender);
+            //     }
+            // }
 
             for (let i = 0; i < segments.length; i += 1) {
                 segments[i].render(secondsSinceLastRender);
             }
 
-            if (isDarkTheme) {
+            // if (isDarkTheme) {
                 // Instead of rendering lines, render bubbles.
                 for (let i = 0; i < bubbles.length; i++) {
                     bubbles[i].render(secondsSinceLastRender);
                 }
-            }
+            // }
 
             if (isDarkTheme && useLightnings && X > 1280) {
                 if (Math.random() > 0.95) {

@@ -44,7 +44,7 @@
 
 .subTitle {
   margin: 0 0 0 0;
-  font-size: 2rem;
+  font-size: 2.1rem;
   font-weight: 600;
   font-family: "Nunito";
 }
@@ -54,6 +54,22 @@
   font-size: 1.3rem;
   font-weight: 400;
   font-family: "Nunito";
+}
+
+html[data-theme="light"] .mainTitle {
+  color: #590f07;
+}
+
+html[data-theme="light"] .subTitle {
+  color: #E84C3B;
+}
+
+html[data-theme="dark"] .subTitle {
+  color: #fe5e5e;
+}
+
+html[data-theme="light"] .subSubTitle {
+  color: #590f07;
 }
 
 .section {
