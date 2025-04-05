@@ -159,8 +159,8 @@ function Bubble(ctx, canvasWidth, canvasHeight, isDarkTheme) {
     // Base opacity for the bubble (more opaque).
     this.alpha = Math.random() * 0.3 + 0.7;
     // Variables for a pulsating (breathing) effect.
-    this.pulse = Math.random() * Math.PI * 2;
-    this.pulseSpeed = Math.random() * 2 + 1;
+    this.pulse = 0;//Math.random() * Math.PI * 2;
+    this.pulseSpeed = 0;// Math.random() * 2 + 1;
     // Burst parameters.
     this.burstInterval = Math.random() * 50 + 1; // seconds until burst.
     this.timeSinceLastBurst = 0;
@@ -395,7 +395,7 @@ function draw(canvas, X, Y, isDarkTheme) {
             setTimeout(cb, 17);
         };
 
-    const bubbleCount = 64; // Or however many bubbles you prefer.
+    const bubbleCount = 48; // Or however many bubbles you prefer.
     const bubbles = [];
     for (let i = 0; i < bubbleCount; i++) {
         // Use the same color as your original line color.
