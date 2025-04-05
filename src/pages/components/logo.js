@@ -291,7 +291,7 @@ Bubble.prototype.draw = function() {
                 if (this.isDarkTheme) {
                     ctx.fillStyle = 'rgba(255, 255, 255, 0.71)';
                 } else {
-                    ctx.fillStyle = 'rgb(176, 226, 253)';
+                    ctx.fillStyle = 'rgb(76, 187, 247)';
                 }
                 ctx.beginPath();
                 ctx.arc(splashX, splashY, 0.1*splashRadius, 0, Math.PI * 2);
