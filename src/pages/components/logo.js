@@ -152,7 +152,7 @@ function Bubble(ctx, canvasWidth, canvasHeight, isDarkTheme) {
     this.x = Math.random() * canvasWidth;
     this.y = Math.random() * canvasHeight;
     // Random radius between 5 and 20.
-    this.radius = Math.random() * canvasWidth/50 + 5;
+    this.radius = Math.random() * canvasWidth/60 + 5;
     // Random velocities for a gentle drifting effect.
     this.vx = (Math.random() - 0.5) * 70;
     this.vy = (Math.random() - 0.5) * 70;
@@ -162,13 +162,13 @@ function Bubble(ctx, canvasWidth, canvasHeight, isDarkTheme) {
     this.pulse = 0;//Math.random() * Math.PI * 2;
     this.pulseSpeed = 0;// Math.random() * 2 + 1;
     // Burst parameters.
-    this.burstInterval = Math.random() * 50 + 1; // seconds until burst.
+    this.burstInterval = Math.random() * 50 + 3; // seconds until burst.
     this.timeSinceLastBurst = 0;
     this.bursting = false;
     this.burstProgress = 0;
     this.burstDuration = 0.5; // seconds for burst animation.
     // Appear (fade-in) parameters.
-    this.appearDuration = Math.random() * 2 + 10; // seconds to fully appear.
+    this.appearDuration = Math.random() * 1 + 5; // seconds to fully appear.
     this.appearProgress = 0; // start completely invisible.
     // Splash particles will be generated on burst.
     this.splashParticles = null;
@@ -178,13 +178,13 @@ Bubble.prototype.reset = function() {
     // Reset bubble after burst.
     this.x = Math.random() * this.canvasWidth;
     this.y = Math.random() * this.canvasHeight;
-    this.radius = Math.random() * this.canvasWidth/50 + 5;
+    this.radius = Math.random() * this.canvasWidth/60 + 5;
     this.vx = (Math.random() - 0.5) * 50;
     this.vy = (Math.random() - 0.5) * 50;
     this.alpha = Math.random() * 0.3 + 0.7;
     this.pulse = Math.random() * Math.PI * 2;
     this.pulseSpeed = Math.random() * 2 + 1;
-    this.burstInterval = Math.random() * 50 + 1;
+    this.burstInterval = Math.random() * 50 + 3;
     this.timeSinceLastBurst = 0;
     this.bursting = false;
     this.burstProgress = 0;
@@ -245,13 +245,13 @@ Bubble.prototype.draw = function() {
         // transitioning to a colored rim and then fading out.
         const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
         if (this.isDarkTheme) {
-            gradient.addColorStop(0, 'rgba(255,255,255,0.9)'); // bright white center
-            gradient.addColorStop(0.7, 'rgba(17, 16, 17, 0.29)');
-            gradient.addColorStop(1, 'rgba(255,255,255,0)');      // transparent edge
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.69)');
+            gradient.addColorStop(0.95, 'rgba(31, 15, 15, 0.06)');
+            gradient.addColorStop(1, 'rgba(163, 191, 194, 0.28)');
         } else {
-            gradient.addColorStop(0, 'rgba(255,255,255,0.9)'); // bright white center
-            gradient.addColorStop(0.7, 'rgba(128, 122, 128, 0.29)');
-            gradient.addColorStop(1, 'rgba(255,255,255,0)');      // transparent edge
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+            gradient.addColorStop(0.95, 'rgba(139, 131, 148, 0.17)');
+            gradient.addColorStop(1, 'rgba(6, 5, 81, 0.23)');
         }
         
         ctx.fillStyle = gradient;
@@ -291,7 +291,7 @@ Bubble.prototype.draw = function() {
                 if (this.isDarkTheme) {
                     ctx.fillStyle = 'rgba(255, 255, 255, 0.71)';
                 } else {
-                    ctx.fillStyle = 'rgb(76, 187, 247)';
+                    ctx.fillStyle = 'rgb(247, 76, 76)';
                 }
                 ctx.beginPath();
                 ctx.arc(splashX, splashY, 0.1*splashRadius, 0, Math.PI * 2);
@@ -395,7 +395,7 @@ function draw(canvas, X, Y, isDarkTheme) {
             setTimeout(cb, 17);
         };
 
-    const bubbleCount = 48; // Or however many bubbles you prefer.
+    const bubbleCount = 32; // Or however many bubbles you prefer.
     const bubbles = [];
     for (let i = 0; i < bubbleCount; i++) {
         // Use the same color as your original line color.
