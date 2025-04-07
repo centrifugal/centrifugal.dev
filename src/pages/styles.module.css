@@ -40,6 +40,7 @@
   font-size: 3.2rem;
   font-weight: 600;
   font-family: "Nunito";
+  pointer-events: none;
 }
 
 .subTitle {
@@ -47,6 +48,7 @@
   font-size: 2.1rem;
   font-weight: 600;
   font-family: "Nunito";
+  pointer-events: none;
 }
 
 .subSubTitle {
@@ -54,6 +56,7 @@
   font-size: 1.3rem;
   font-weight: 400;
   font-family: "Nunito";
+  pointer-events: none;
 }
 
 html[data-theme="light"] .mainTitle {
@@ -88,6 +91,10 @@ html[data-theme="light"] .subSubTitle {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.buttons a {
+  pointer-events: all;
 }
 
 .logos {

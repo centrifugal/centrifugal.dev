@@ -382,9 +382,7 @@ function draw(canvas, X, Y, isDarkTheme) {
     }
 
     const linesNum = 3;
-
     const lines = [];
-
     const segments = [];
     const radius = Y / 7;
     const lw = radius / 15;
@@ -401,6 +399,35 @@ function draw(canvas, X, Y, isDarkTheme) {
         // Use the same color as your original line color.
         bubbles.push(new Bubble(ctx, X, Y, isDarkTheme));
     }
+    
+    // --- New: Burst only the bubble clicked ---
+    canvas.addEventListener('click', (event) => {
+        console.log(1)
+        // Get the click coordinates relative to the canvas.
+        const rect = canvas.getBoundingClientRect();
+        const clickX = event.clientX - rect.left;
+        const clickY = event.clientY - rect.top;
+        bubbles.forEach(bubble => {
+            // Check if the click is inside the bubble.
+            const dx = clickX - bubble.x;
+            const dy = clickY - bubble.y;
+            if (Math.sqrt(dx * dx + dy * dy) <= bubble.radius) {
+                if (!bubble.bursting) {
+                    bubble.bursting = true;
+                    bubble.burstProgress = 0;
+                    let numSplashes = Math.floor(Math.random() * 6) + 10;
+                    bubble.splashParticles = [];
+                    for (let i = 0; i < numSplashes; i++) {
+                        let angle = Math.random() * Math.PI * 2;
+                        let speed = Math.random() * 50 + 50;
+                        let length = Math.random() * 10 + 5;
+                        bubble.splashParticles.push({ angle, speed, length });
+                    }
+                }
+            }
+        });
+    });
+    // --- End new code ---
 
     for (let i = 0; i < linesNum; i += 1) {
         const line = new Line(ctx, X, Y, rand(0, X), rand(0, Y), lineColor);
@@ -430,11 +457,10 @@ function draw(canvas, X, Y, isDarkTheme) {
     ));
 
     let lastRenderTime = 0;
-
     const useLightnings = localStorage.getItem("lights") == "up";
 
     function isCanvasVisible() {
-        return !(canvas.offsetParent === null)
+        return !(canvas.offsetParent === null);
     }
 
     function render(currentTime) {
@@ -442,27 +468,24 @@ function draw(canvas, X, Y, isDarkTheme) {
             return;
         }
 
-        const secondsSinceLastRender = (currentTime - lastRenderTime) / 1000
+        const secondsSinceLastRender = (currentTime - lastRenderTime) / 1000;
 
         if (isCanvasVisible()) {
             ctx.clearRect(0, 0, X, Y);
 
-            // if (!isDarkTheme) {
-            //     for (let i = 0; i < lines.length; i += 1) {
-            //         lines[i].render(secondsSinceLastRender);
-            //     }
+            // Uncomment the following if you wish to render lines when not dark.
+            // for (let i = 0; i < lines.length; i += 1) {
+            //     lines[i].render(secondsSinceLastRender);
             // }
 
             for (let i = 0; i < segments.length; i += 1) {
                 segments[i].render(secondsSinceLastRender);
             }
 
-            // if (isDarkTheme) {
-                // Instead of rendering lines, render bubbles.
-                for (let i = 0; i < bubbles.length; i++) {
-                    bubbles[i].render(secondsSinceLastRender);
-                }
-            // }
+            // Render bubbles.
+            for (let i = 0; i < bubbles.length; i++) {
+                bubbles[i].render(secondsSinceLastRender);
+            }
 
             if (isDarkTheme && useLightnings && X > 1280) {
                 if (Math.random() > 0.95) {

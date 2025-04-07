@@ -38,7 +38,7 @@ function Header() {
   return (
     <header id="hero" className={clsx("hero hero--primary", styles.heroBanner)}>
       <Logo isDarkTheme={isDarkTheme} />
-      <div className="container" style={{ "zIndex": 1 }}>
+      <div className="container" style={{ "zIndex": 1, pointerEvents: "none" }}>
         <div className={styles.mainTitle}>
           {/* <span style={{ "color": "#d34343" }}> */}
           CENTRIFUGO
