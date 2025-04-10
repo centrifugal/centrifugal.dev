@@ -16,7 +16,7 @@
 
 <link rel="search" type="application/opensearchdescription+xml" title="Centrifugo" href="/opensearch.xml">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.31ee2c0c.css">
-<script src="/assets/js/runtime~main.51955af9.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.0c799951.js" defer="defer"></script>
 <script src="/assets/js/main.df29f4cc.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -45,7 +45,14 @@
 <p>Without the positioning or recovery features enabled, a message sent to Centrifugo could theoretically be lost while moving towards clients. Centrifugo makes its best effort only to prevent message loss on the way to online clients, but the application should tolerate the loss.</p>
 <p>As noted, Centrifugo has a feature called message recovery to automatically recover messages missed due to short network disconnections. It also compensates for the &#x27;at most once&#x27; delivery of a Redis broker PUB/SUB system by using additional publication offset checks and periodic offset synchronization. So publication loss missed in the PUB/SUB layer will be detected eventually, and the client may catch up on the state by loading it from history.</p>
 <h2 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="message-order-guarantees">Message order guarantees<a href="#message-order-guarantees" class="hash-link" aria-label="Direct link to Message order guarantees" title="Direct link to Message order guarantees">​</a></h2>
-<p>Message order in channels is guaranteed to be the same when you publish messages into a channel one after another or publish them in one request. If you do parallel publications into the same channel, then Centrifugo can&#x27;t guarantee message order since those are processed in parallel.</p>
+<p>Centrifugo <a href="/docs/server/server_api#publish">server publish API</a> guarantees message order within a channel only when messages are published sequentially or within a single request. If messages are published in parallel, ordering is not guaranteed due to concurrent processing.</p>
+<p>In detail:</p>
+<ul>
+<li>If you publish message 1, wait for the request to complete, and then publish message 2 to the same channel, Centrifugo ensures that subscribers receive the messages in the correct order: message 1, then message 2.</li>
+<li>If message 1 and message 2 are published concurrently to the same channel, the delivery order is not guaranteed. Subscribers may receive them as message 1 then message 2, or vice versa. However, all subscribers will receive the messages in the same order.</li>
+</ul>
+<p>The same is applied for publishing over real-time client protocol <code>publish</code> method.</p>
+<p>When using <a href="/docs/server/consumers">asynchronous consumers</a>, ordering also depends on the consumer implementation. For example, Kafka can preserve order within partitions, while other systems may not guarantee any ordering. Refer to the particular consumer description.</p>
 <h2 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="graceful-degradation">Graceful degradation<a href="#graceful-degradation" class="hash-link" aria-label="Direct link to Graceful degradation" title="Direct link to Graceful degradation">​</a></h2>
 <p>It is recommended to design an application in a way that users don&#x27;t even notice when Centrifugo does not work. Use graceful degradation. For example, if a user posts a new comment over AJAX to your application backend - you should not rely solely on Centrifugo to receive a new comment from a channel and display it. You should return new comment data in the AJAX call response and render it. This way, the user that posts a comment will think that everything works just fine. Be careful not to draw comments twice in this case because you may also receive the same data from a channel - think about idempotent identifiers for your entities.</p>
 <h2 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="online-presence-considerations">Online presence considerations<a href="#online-presence-considerations" class="hash-link" aria-label="Direct link to Online presence considerations" title="Direct link to Online presence considerations">​</a></h2>
