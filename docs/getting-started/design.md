@@ -53,7 +53,16 @@ As noted, Centrifugo has a feature called message recovery to automatically reco
 
 ## Message order guarantees
 
-Message order in channels is guaranteed to be the same when you publish messages into a channel one after another or publish them in one request. If you do parallel publications into the same channel, then Centrifugo can't guarantee message order since those are processed in parallel.
+Centrifugo [server publish API](../server/server_api.md#publish) guarantees message order within a channel only when messages are published sequentially or within a single request. If messages are published in parallel, ordering is not guaranteed due to concurrent processing.
+
+In detail:
+
+* If you publish message 1, wait for the request to complete, and then publish message 2 to the same channel, Centrifugo ensures that subscribers receive the messages in the correct order: message 1, then message 2.
+* If message 1 and message 2 are published concurrently to the same channel, the delivery order is not guaranteed. Subscribers may receive them as message 1 then message 2, or vice versa. However, all subscribers will receive the messages in the same order.
+
+The same is applied for publishing over real-time client protocol `publish` method.
+
+When using [asynchronous consumers](../server/consumers.md), ordering also depends on the consumer implementation. For example, Kafka can preserve order within partitions, while other systems may not guarantee any ordering. Refer to the particular consumer description.
 
 ## Graceful degradation
 
