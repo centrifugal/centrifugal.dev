@@ -60,7 +60,7 @@
 }
 
 html[data-theme="light"] .mainTitle {
-  color: #590f07;
+  color: #1c1e21;
 }
 
 html[data-theme="light"] .subTitle {
@@ -72,7 +72,7 @@ html[data-theme="dark"] .subTitle {
 }
 
 html[data-theme="light"] .subSubTitle {
-  color: #590f07;
+  color: #1c1e21;
 }
 
 .section {
