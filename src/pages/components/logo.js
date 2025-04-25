@@ -245,11 +245,11 @@ Bubble.prototype.draw = function() {
         // transitioning to a colored rim and then fading out.
         const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
         if (this.isDarkTheme) {
-            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.69)');
-            gradient.addColorStop(0.95, 'rgba(31, 15, 15, 0.06)');
-            gradient.addColorStop(1, 'rgba(163, 191, 194, 0.28)');
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
+            gradient.addColorStop(0.95, 'rgba(98, 86, 86, 0.04)');
+            gradient.addColorStop(1, 'rgba(255, 255, 255, 0.33)');
         } else {
-            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.68)');
             gradient.addColorStop(0.95, 'rgba(139, 131, 148, 0.17)');
             gradient.addColorStop(1, 'rgba(6, 5, 81, 0.23)');
         }

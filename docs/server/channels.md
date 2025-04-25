@@ -505,13 +505,17 @@ Centrifugo uses Go language [regexp](https://pkg.go.dev/regexp) package for regu
 
 `presence_cel` (string, default `""`, Centrifugo PRO only) – CEL expression for presence permission, see more details in [Channel CEL expressions](../pro/cel_expressions.md) of Centrifugo PRO.
 
-### max_batch_size
+### batch_max_size
 
-`max_batch_size` (integer, default `0`) – maximum batch size when using per-channel batching. See more details in Centrifugo PRO [Message batching control](../pro/client_msg_batching.md) documentation.
+`batch_max_size` (integer, default `0`) – maximum batch size when using per-channel batching. See more details in Centrifugo PRO [Message batching control](../pro/client_msg_batching.md) documentation.
 
-### max_batch_delay
+### batch_max_delay
 
-`max_batch_delay` ([duration](./configuration.md#setting-time-duration-options), default `0s`) – maximum delay time when using per-channel batching. See more details in Centrifugo PRO [Message batching control](../pro/client_msg_batching.md) documentation.
+`batch_max_delay` ([duration](./configuration.md#setting-time-duration-options), default `0s`) – maximum delay time when using per-channel batching. See more details in Centrifugo PRO [Message batching control](../pro/client_msg_batching.md) documentation.
+
+### batch_flush_latest
+
+`batch_flush_latest` (bool, default `false`) – allows sending only the latest message in collected batch. See more details in Centrifugo PRO [Message batching control](../pro/client_msg_batching.md) documentation.
 
 ## Channel config examples
 
