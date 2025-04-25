@@ -92,6 +92,9 @@ Or for some namespace:
 }
 ```
 
-You can also have only one of these options set.
+These options can be set independently:
+
+* if only `max_batch_delay` is set – then there is no max size limit for batching algorithm, it will always flush upon reaching `max_batch_delay`.
+* if only `max_batch_size` is set – then there is no max delay limit for batching algorithm, it will flush only upon reaching `max_batch_size`. Can make sense in channels with stable high rate of messages.
 
 Note, that channel batching is applied for each individual channel in namespace separately. Batching may introduce memory overhead, which depends on the load profile in your setup. If batching is not effective (for example due to low rate in channels) – then it can also come with CPU overhead.
