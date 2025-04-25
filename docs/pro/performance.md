@@ -7,6 +7,24 @@ title: Faster performance
 
 Centrifugo PRO has performance improvements for several server parts. These improvements can help to reduce tail end-to-end latencies in the application, increase server throughput and/or reduce CPU usage on server machines. Our open-source version has a decent performance by itself, with PRO improvements Cenrifugo steps even further.
 
+## Faster connections runtime
+
+New in Centrifugo v6.2.0
+
+EXPERIMENTAL option on `client` level is `client.batch_periodic_events` (boolean, by default, `false`). To enable:
+
+```json title="config.json"
+{
+  "client": {
+    "batch_periodic_events": true
+  }
+}
+```
+
+Once enabled Centrifugo will batch client connection periodic events such as ping and presence updates together instead of having them to work in isolated way. This may result into noticeable CPU savings when working with many mostly idle connections.
+
+In our local experiments we observed 3x CPU reduction for 20k mostly idle connections setup, but the ratio is highly dependent on the Centrifugo specific setup load and usage scenario.
+
 ## Faster HTTP API
 
 Centrifugo PRO has an optimized JSON serialization/deserialization for HTTP API.
@@ -49,6 +67,10 @@ This is a separate option because the optimized version only supports HTTP 1.1, 
 
 Centrifugo PRO has an optimized Protobuf serialization/deserialization for GRPC API. The effect can be noticeable under load. The exact numbers heavily depend on usage scenario.
 
+## Faster async consumers
+
+When asynchronous consumers are used and payload represents encoded request type Centrifugo PRO leverages optimized JSON decoder.
+
 ## Faster JWT decoding
 
 Centrifugo PRO has an optimized decoding of JWT claims.
@@ -72,6 +94,13 @@ Centrifugo PRO provides an integer option `websocket.compression_prepared_messag
 This can significantly improve CPU and memory Centrifufo resource usage when using [WebSocket compression feature](../transports/websocket.md#websocketcompression).
 
 Check out blog post [Performance optimizations of WebSocket compression in Go application](/blog/2024/08/19/optimizing-websocket-compression) which describes the possible effect of this optimization.
+
+## Other optimizations
+
+Centrifugo PRO also provides other optimizations which can significantly affect resource usage and which are described individually, see:
+
+* [Message batching control](./client_msg_batching.md)
+* [Scalability optimizations](./scalability.md)
 
 ## Examples
 

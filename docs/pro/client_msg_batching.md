@@ -18,7 +18,9 @@ Note, this is only useful when you have lots of messages per client. This specif
 
 :::
 
-## `client.write_delay`
+## Client level controls
+
+### `client.write_delay`
 
 The `client.write_delay` is a duration option, it is a time Centrifugo will try to collect messages inside each connection message write loop before sending them towards the connection.
 
@@ -34,7 +36,7 @@ Example:
 }
 ```
 
-## `client.max_messages_in_frame`
+### `client.max_messages_in_frame`
 
 The `client.max_messages_in_frame` is an integer option which controls the maximum number of messages which may be joined by Centrifugo into one transport frame. By default, 16. Use -1 for unlimited number.
 
@@ -49,6 +51,47 @@ Example:
 }
 ```
 
-## `client.reply_without_queue`
+### `client.reply_without_queue`
 
 The `client.reply_without_queue` is a boolean option to not use client queue for replies to commands. When `true` replies are written to the transport without going through the connection message queue.
+
+## Channel level controls
+
+Centrifugo PRO provides a couple of additional channel namespace options to control message batching on the channel level.
+
+This may be useful if you want to reduce number of system calls (thus improve CPU) using latency trade-off for specific channels only.
+
+Two available options are [max_batch_size](../server/channels.md#max_batch_size) and [max_batch_delay](../server/channels.md#max_batch_delay).
+
+Here is an example how you can configure these options for a channel namespace:
+
+```json title="config.json"
+{
+  "channel": {
+    "without_namespace": {
+      "max_batch_size": 10,
+      "max_batch_delay": "200ms"
+    }
+  }
+}
+```
+
+Or for some namespace:
+
+```json title="config.json"
+{
+  "channel": {
+    "namespaces": [
+      {
+        "name": "example",
+        "max_batch_size": 10,
+        "max_batch_delay": "200ms"
+      }
+    ]
+  }
+}
+```
+
+You can also have only one of these options set.
+
+Note, that channel batching is applied for each individual channel in namespace separately. Batching may introduce memory overhead, which depends on the load profile in your setup. If batching is not effective (for example due to low rate in channels) – then it can also come with CPU overhead.

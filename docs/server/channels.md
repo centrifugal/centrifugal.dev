@@ -505,6 +505,14 @@ Centrifugo uses Go language [regexp](https://pkg.go.dev/regexp) package for regu
 
 `presence_cel` (string, default `""`, Centrifugo PRO only) – CEL expression for presence permission, see more details in [Channel CEL expressions](../pro/cel_expressions.md) of Centrifugo PRO.
 
+### max_batch_size
+
+`max_batch_size` (integer, default `0`) – maximum batch size when using per-channel batching. See more details in Centrifugo PRO [Message batching control](../pro/client_msg_batching.md) documentation.
+
+### max_batch_delay
+
+`max_batch_delay` ([duration](./configuration.md#setting-time-duration-options), default `0s`) – maximum delay time when using per-channel batching. See more details in Centrifugo PRO [Message batching control](../pro/client_msg_batching.md) documentation.
+
 ## Channel config examples
 
 Let's look at how to set some of these options in a config. In this example we turning on presence, history features, forcing publication recovery. Also allowing all client connections (including anonymous users) to subscribe to channels and call publish, history, presence APIs if subscribed.

@@ -221,6 +221,12 @@ If you want to use Centrifugo with different projects the recommended approach i
 
 It's possible to share one Redis setup though by setting unique `redis_prefix`. But we recommend having completely isolated setups.
 
+### Is Centrifugo FIPS compliant?
+
+See [FIPS 140-3 Compliance](https://go.dev/doc/security/fips140) document which is a part of Go 1.24 release. Basically, with Go it's now possible to use GODEBUG runtime toggles to turn on FIPS 140-3 compliance mode (only on Linux). Centrifugo logs `"fips": true` on start if FIPS mode is enabled.
+
+If you need FIPS compliant Docker image also, then you can do it using binary from Centrifugo releases on Github.
+
 ### I have not found an answer to my question here
 
 Ask in our community rooms:

@@ -269,7 +269,7 @@ Bubble.prototype.draw = function() {
             gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
         } else {
             gradient.addColorStop(0, 'rgba(217, 217, 217, 0.9)');
-            gradient.addColorStop(0.6, 'rgba(234, 227, 227, 0.29)');
+            gradient.addColorStop(0.6, 'rgba(255, 199, 199, 0.29)');
             gradient.addColorStop(1, 'rgba(204, 204, 204, 0)');
         }
         ctx.fillStyle = gradient;
