@@ -205,21 +205,21 @@ This Lua script:
 2. Maintains a HASH to give Centrifugo a tip about leaderboard state version and version epoch
 3. Retrieves the current leaderboard data and adds it to Redis STREAM together with version and version epoch fields. It adds it in a format which Centrifugo Redis Stream consumer understands.
 
-1 and 3 are rather self-explaining. But why we need to maintain leaderboard state incremental version and its epoch?
+1 and 3 are rather self-explaining. But why do we need to maintain leaderboard state incremental version and its epoch?
 
-The reason is that Redis Stream concurrent consumers working with consumer group can not maintain message ordering. So, if you have several Centrifugo instances consuming from the same Redis Stream, they are not able to guarantee that messages are processed in the order they were added to the stream.
+The reason is that Redis Stream concurrent consumers working with a consumer group cannot maintain message ordering. So, if you have several Centrifugo instances consuming from the same Redis Stream, they are not able to guarantee that messages are processed in the order they were added to the stream.
 
-Starting from Centrifugo v6.2.0, we can use `version` and `version_epoch` fields to ensure that clients always receive the most up-to-date state of the leaderboard, even if messages are processed out of order. When Centrifugo receives publications with versions less or equal than already seen – it skips them, so client does not receive non-actual data. Of course this makes sense in cases like the one in this tutorial, where we are publishing entire state to a channel. The important note, that for version logic to work we will need to enable Centrifugo history for channels since version information is kept by Centrifugo in history stream meta information object. 
+Starting from Centrifugo v6.2.0, we can use `version` and `version_epoch` fields to ensure that clients always receive the most up-to-date state of the leaderboard, even if messages are processed out of order. When Centrifugo receives publications with versions less or equal to those already seen – it skips them, so the client does not receive non-actual data. Of course, this makes sense in cases like the one in this tutorial, where we are publishing the entire state to a channel. An important note is that for version logic to work, we will need to enable Centrifugo history for channels since version information is kept by Centrifugo in the history stream meta information object.
 
-The `version` is an incremental number and the logic with it should be straightforward to understand. But why we need `version_epoch`? The `version_epoch` is a string which is used to identify the generation of the data. Since Redis is an in-memory data store, it is possible that the data may be lost if the Redis server is restarted or if the data is evicted from memory. By using `version_epoch` and tracking its change, Centrifugo avoids a situation when `version` counter is restarted and Centrifugo ignores all updates until `version` reaches the number seen before. Using `version_epoch` is optional – if it's not passed to Centrifugo, then Centrifugo only looks at `version` field to make the decision.
+The `version` is an incremental number, and the logic with it should be straightforward to understand. But why do we need `version_epoch`? The `version_epoch` is a string that is used to identify the generation of the data. Since Redis is an in-memory data store, it is possible that the data may be lost if the Redis server is restarted or if the data is evicted from memory. By using `version_epoch` and tracking its change, Centrifugo avoids a situation where the `version` counter is restarted and Centrifugo ignores all updates until `version` reaches the number seen before. Using `version_epoch` is optional – if it's not passed to Centrifugo, then Centrifugo only looks at the `version` field to make the decision.
 
-Note, that while we are using a single leaderboard in this tutorial, you can extend the Lua script to support multiple leaderboards by adding a leaderboard id/name to leaderboard ZSET and state HASH keys. Redis STREAM key will stay the same – all updates will go through it, just use different channels in publication object.
+Note that while we are using a single leaderboard in this tutorial, you can extend the Lua script to support multiple leaderboards by adding a leaderboard id/name to leaderboard ZSET and state HASH keys. The Redis STREAM key will stay the same – all updates will go through it, just use different channels in the publication object.
 
 ## Configuring Centrifugo
 
 Now let's configure Centrifugo to consume the Redis Stream and push updates to connected clients.
 
-To do this we need Centrifugo to consume Redis Stream:, so `centrifugo/config.json` may look like this:
+To do this, we need Centrifugo to consume the Redis Stream, so `centrifugo/config.json` may look like this:
 
 ```json
 {
@@ -249,9 +249,9 @@ To do this we need Centrifugo to consume Redis Stream:, so `centrifugo/config.js
 }
 ```
 
-This configuration consumes Redis Stream, also enables insecure WebSocket connections which is handy for the tutorial purposes – so we don't need to think about client authentication and channel permissions here.
+This configuration consumes the Redis Stream and also enables insecure WebSocket connections, which is handy for tutorial purposes – so we don't need to think about client authentication and channel permissions here.
 
-Another important thing here is that enabling channel history is required for version logic to work, because Centrifugo keeps version data in history meta information.
+Another important thing here is that enabling channel history is required for version logic to work because Centrifugo keeps version data in the history meta information.
 
 ## Creating the Frontend React Application
 
@@ -379,7 +379,7 @@ File `web/src/App.css` has some CSS styles to make it look better. Here we skip 
 
 ## Configuring Nginx
 
-Finally let's add Nginx which is useful to have a single app endpoint which proxies requests to the React frontend and Centrifugo WebSocket connection:
+Finally, let's add Nginx, which is useful to have a single app endpoint that proxies requests to the React frontend and Centrifugo WebSocket connection:
 
 ```nginx
 server {
@@ -416,15 +416,15 @@ Once everything is running, you can access the application at http://localhost:8
 
 ## Adding Fossil delta compression
 
-We are sending full state in every publication now, but only part of the data changes. Centrifugo provides a [Fossil delta compression algorithm](/docs/server/delta_compression) which can be used to reduce the amount of data sent over the network.
+We are sending the full state in every publication now, but only part of the data changes. Centrifugo provides a [Fossil delta compression algorithm](/docs/server/delta_compression) which can be used to reduce the amount of data sent over the network.
 
-First, let's look how our WebSocket session looks like now by opening WebSocket tab in Chrome Dev Tools (right click and open image in new tab to see better):
+First, let's look at how our WebSocket session looks now by opening the WebSocket tab in Chrome Dev Tools (right-click and open the image in a new tab to see better):
 
 ![](/img/leaderboard_no_fossil.jpg)
 
 We see the full content is being sent in every message.
 
-Let's add Fossil delta compression. To do this we need to modify client-side subscription:
+Let's add Fossil delta compression. To do this, we need to modify the client-side subscription:
 
 ```javascript
 const sub = centrifuge.newSubscription("leaderboard", {
@@ -452,13 +452,13 @@ Reload the app, and see how WebSocket frames look now:
 
 ![](/img/leaderboard_fossil.jpg)
 
-Instead of full payloads we see deltas, with much smaller data size (x2 reduction), and Centrifugo SDK automatically applies deltas correctly under the hood, so no other changes to the application code is required.
+Instead of full payloads, we see deltas with much smaller data size (x2 reduction), and the Centrifugo SDK automatically applies deltas correctly under the hood, so no other changes to the application code are required.
 
 ## Adding cache recovery mode
 
 Leaderboard data is also a good candidate for Centrifugo cache recovery mode feature. We can instantly and automatically load the latest publication known data upon subscription from Centrifugo stream history.
 
-To do this we need history to be enabled (we already have) and add a couple of extra options to configuration:
+To do this, we need history to be enabled (we already have) and add a couple of extra options to the configuration:
 
 ```javascript
 {
@@ -474,7 +474,7 @@ To do this we need history to be enabled (we already have) and add a couple of e
 }
 ```
 
-And one more option (`since` object) to client-side subscription to trigger recovery upon initial subscription:
+And one more option (`since` object) to the client-side subscription to trigger recovery upon the initial subscription:
 
 ```javascript
 const sub = centrifuge.newSubscription("leaderboard", {
@@ -483,13 +483,13 @@ const sub = centrifuge.newSubscription("leaderboard", {
 });
 ```
 
-After making this, latest leaderboard data will be immediately displayed to the user upon subscription without the need in extra synchronization of initial state loading and real-time updates.
+After making this, the latest leaderboard data will be immediately displayed to the user upon subscription without the need for extra synchronization of initial state loading and real-time updates.
 
-This is how it looks from WebSocket frame perspective:
+This is how it looks from the WebSocket frame perspective:
 
 ![](/img/leaderboard_cache.jpg)
 
-I.e. we see that initial data was sent withing subscribe response. And it's in JSON string format here because we are using delta compression. If we disable delta compression, we will see the initial data just as a regular JSON object.
+I.e., we see that the initial data was sent within the subscribe response. And it's in JSON string format here because we are using delta compression. If we disable delta compression, we will see the initial data just as a regular JSON object.
 
 ## Other possible improvements
 
@@ -498,7 +498,7 @@ With Centrifugo, only with a little extra effort you can:
 * Add authentication to the WebSocket connection
 * Use Centrifugo built-in channel permissions to restrict access to channels
 * Use Centrifugo built-in online presence feature to show who is online
-* Use binary protocol to reduce the amount of data sent over the network and serialization performance
+* Use binary protocol to reduce the amount of data sent over the network and improve serialization performance
 * Provide WebSocket fallbacks based on Server-Sent Events (SSE) or HTTP-streaming
 * Scale Centrifugo nodes to handle [millions of connections](/blog/2020/02/10/million-connections-with-centrifugo).
 
@@ -506,6 +506,6 @@ With Centrifugo, only with a little extra effort you can:
 
 In this tutorial, we've built a real-time leaderboard application using Centrifugo, Redis, and React. This demonstrates how Centrifugo can be used to create interactive, real-time applications with minimal effort.
 
-By leveraging real-time capabilities of Centrifugo, you can create engaging, interactive applications that provide users with immediate feedback and updates.
+By leveraging the real-time capabilities of Centrifugo, you can create engaging, interactive applications that provide users with immediate feedback and updates.
 
 Moreover, Centrifugo comes with many optimizations to make it the most effective solution for real-time applications. For example, it may use Fossil delta compression to reduce the amount of data sent over the network, and it has a cache recovery mode to ensure that clients can recover from network interruptions without losing updates.
