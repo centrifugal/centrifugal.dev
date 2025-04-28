@@ -18,7 +18,9 @@ Note, this is only useful when you have lots of messages per client. This specif
 
 :::
 
-## `client.write_delay`
+## Client level controls
+
+### `client.write_delay`
 
 The `client.write_delay` is a duration option, it is a time Centrifugo will try to collect messages inside each connection message write loop before sending them towards the connection.
 
@@ -34,7 +36,7 @@ Example:
 }
 ```
 
-## `client.max_messages_in_frame`
+### `client.max_messages_in_frame`
 
 The `client.max_messages_in_frame` is an integer option which controls the maximum number of messages which may be joined by Centrifugo into one transport frame. By default, 16. Use -1 for unlimited number.
 
@@ -49,6 +51,73 @@ Example:
 }
 ```
 
-## `client.reply_without_queue`
+### `client.reply_without_queue`
 
 The `client.reply_without_queue` is a boolean option to not use client queue for replies to commands. When `true` replies are written to the transport without going through the connection message queue.
+
+## Channel level controls
+
+### `batch_max_size` and `batch_max_delay`
+
+Centrifugo PRO provides a couple of additional channel namespace options to control message batching on the channel level.
+
+This may be useful if you want to reduce number of system calls (thus improve CPU) using latency trade-off for specific channels only.
+
+Two available options are [batch_max_size](../server/channels.md#batch_max_size) and [batch_max_delay](../server/channels.md#batch_max_delay).
+
+Here is an example how you can configure these options for a channel namespace:
+
+```json title="config.json"
+{
+  "channel": {
+    "without_namespace": {
+      "batch_max_size": 10,
+      "batch_max_delay": "200ms"
+    }
+  }
+}
+```
+
+Or for some namespace:
+
+```json title="config.json"
+{
+  "channel": {
+    "namespaces": [
+      {
+        "name": "example",
+        "batch_max_size": 10,
+        "batch_max_delay": "200ms"
+      }
+    ]
+  }
+}
+```
+
+These options can be set independently:
+
+* if only `batch_max_delay` is set – then there is no max size limit for batching algorithm, it will always flush upon reaching `batch_max_delay`.
+* if only `batch_max_size` is set – then there is no max delay limit for batching algorithm, it will flush only upon reaching `batch_max_size`. Can make sense in channels with stable high rate of messages.
+
+Note, that channel batching is applied for each individual channel in namespace separately. Batching may introduce memory overhead, which depends on the load profile in your setup. If batching is not effective (for example due to low rate in channels) – then it can also come with CPU overhead.
+
+### `batch_flush_latest`
+
+One more option related to per-channel batching algorithm is `batch_flush_latest` (boolean, default `false`). Once you enable it then Centrifugo only sends the latest message in the collected batch to the client connection. This is useful for channels where each message contains the entire state, so skipping intermediary messages is beneficial to reduce CPU utilization, bandwidth and the processing work required on the client side.
+
+Example of configuration:
+
+```json title="config.json"
+{
+  "channel": {
+    "namespaces": [
+      {
+        "name": "example",
+        "batch_max_size": 10,
+        "batch_max_delay": "200ms",
+        "batch_flush_latest": true
+      }
+    ]
+  }
+}
+```

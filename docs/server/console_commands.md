@@ -112,6 +112,30 @@ CENTRIFUGO_ENGINE_REDIS_ADDRESS="redis://localhost:6379"
 CENTRIFUGO_ENGINE_TYPE="redis"
 ```
 
+## configdoc
+
+Another command is `configdoc`:
+
+```
+centrifugo configdoc
+```
+
+Once you run it, a web server will start on port `6060` and you can open the following URL in your browser – http://localhost:6060 – to see the generated HTML page with all Centrifugo configuration options described, with default values, environment variable tips and description:
+
+![Centrifugo configdoc](/img/configdoc.jpg)
+
+If you pass `--markdown` flag, the output will be in Markdown format to stdout:
+
+```
+centrifugo configdoc --markdown
+```
+
+Also supports filtering by top level configuration section:
+
+```
+centrifugo configdoc --section=consumers
+```
+
 ## gentoken
 
 Another command is `gentoken`:
