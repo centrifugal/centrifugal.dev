@@ -223,16 +223,19 @@ It's possible to share one Redis setup though by setting unique `redis_prefix`. 
 
 ### Is Centrifugo FIPS compliant?
 
-See [FIPS 140-3 Compliance](https://go.dev/doc/security/fips140) document which is a part of Go 1.24 release. Basically, with Go it's now possible to use GODEBUG runtime toggles to turn on FIPS 140-3 compliance mode (only on Linux). Centrifugo logs `"fips": true` on start if FIPS mode is enabled.
+See the [FIPS 140-3 Compliance](https://go.dev/doc/security/fips140) document, which is part of the Go 1.24 release. With this release, it is now possible to use `GODEBUG` runtime toggles to enable FIPS 140-3 compliance mode (Linux only). Centrifugo logs `"fips": true` at startup if FIPS mode is enabled.
 
-Note, Centrifugo uses SHA-1 digest for two purposes:
+Note, Centrifugo uses the SHA-1 digest for two purposes:
 
-* Using SHA-1 as a hex digest for the Redis Lua [EVALSHA](https://redis.io/docs/latest/commands/evalsha/) command. SHA-1 is used there only for the digest of the Lua script, not for any cryptographic purposes. The digest is used to identify the script in Redis and is not used for any security properties.
-* Using SHA-1 during WebSocket upgrades, as specified in [RFC 6455](https://datatracker.ietf.org/doc/html/rfc6455). RFC [explicitly states in section 10.8](https://datatracker.ietf.org/doc/html/rfc6455#section-10.8) that SHA-1 usage doesn't depend on any security properties of SHA-1.
+* Using SHA-1 as a hex digest for the Redis Lua [`EVALSHA`](https://redis.io/docs/latest/commands/evalsha/) command. SHA-1 is used here only for the digest of the Lua script, not for any cryptographic purposes. The digest is used to identify the script in Redis and is not relied upon for any security properties.
+* Using SHA-1 during WebSocket upgrades, as specified in [RFC 6455](https://datatracker.ietf.org/doc/html/rfc6455). The RFC [explicitly states in section 10.8](https://datatracker.ietf.org/doc/html/rfc6455#section-10.8) that SHA-1 usage does not depend on any of SHA-1’s cryptographic security properties.
 
-This means that running Centrifugo with `GODEBUG=fips140=on` will work for all the functionality, and when running with `GODEBUG=fips140=only` Centrifugo will panic in case of using Redis integrations or WebSocket transport.
+This means that:
 
-If you need FIPS compliant Docker image also, then you can do it using binary from Centrifugo releases on Github.
+* When running Centrifugo with `GODEBUG=fips140=on`, all functionality will work as expected.
+* When running with `GODEBUG=fips140=only`, Centrifugo will panic if it attempts to use Redis integrations or WebSocket transport.
+
+If you also need a FIPS-compliant Docker image, you can create one using the binary from the Centrifugo releases on GitHub.
 
 ### I have not found an answer to my question here
 
