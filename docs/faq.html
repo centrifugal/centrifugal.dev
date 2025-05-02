@@ -16,7 +16,7 @@
 
 <link rel="search" type="application/opensearchdescription+xml" title="Centrifugo" href="/opensearch.xml">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.c8d82cd5.css">
-<script src="/assets/js/runtime~main.9010d894.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.f01e7fe1.js" defer="defer"></script>
 <script src="/assets/js/main.48ec878f.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -143,6 +143,12 @@
 <p>It&#x27;s possible to share one Redis setup though by setting unique <code>redis_prefix</code>. But we recommend having completely isolated setups.</p>
 <h3 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="is-centrifugo-fips-compliant">Is Centrifugo FIPS compliant?<a href="#is-centrifugo-fips-compliant" class="hash-link" aria-label="Direct link to Is Centrifugo FIPS compliant?" title="Direct link to Is Centrifugo FIPS compliant?">​</a></h3>
 <p>See <a href="https://go.dev/doc/security/fips140" target="_blank" rel="noopener noreferrer">FIPS 140-3 Compliance</a> document which is a part of Go 1.24 release. Basically, with Go it&#x27;s now possible to use GODEBUG runtime toggles to turn on FIPS 140-3 compliance mode (only on Linux). Centrifugo logs <code>&quot;fips&quot;: true</code> on start if FIPS mode is enabled.</p>
+<p>Note, Centrifugo uses SHA-1 digest for two purposes:</p>
+<ul>
+<li>Using SHA-1 as a hex digest for the Redis Lua <a href="https://redis.io/docs/latest/commands/evalsha/" target="_blank" rel="noopener noreferrer">EVALSHA</a> command. SHA-1 is used there only for the digest of the Lua script, not for any cryptographic purposes. The digest is used to identify the script in Redis and is not used for any security properties.</li>
+<li>Using SHA-1 during WebSocket upgrades, as specified in <a href="https://datatracker.ietf.org/doc/html/rfc6455" target="_blank" rel="noopener noreferrer">RFC 6455</a>. RFC <a href="https://datatracker.ietf.org/doc/html/rfc6455#section-10.8" target="_blank" rel="noopener noreferrer">explicitly states in section 10.8</a> that SHA-1 usage doesn&#x27;t depend on any security properties of SHA-1.</li>
+</ul>
+<p>This means than running Centrifugo with <code>GODEBUG=fips140=on</code> is totally fine, when running with <code>GODEBUG=fips140=only</code> Centrifugo will panic in case of using Redis integrations or WebSocket transport.</p>
 <p>If you need FIPS compliant Docker image also, then you can do it using binary from Centrifugo releases on Github.</p>
 <h3 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="i-have-not-found-an-answer-to-my-question-here">I have not found an answer to my question here<a href="#i-have-not-found-an-answer-to-my-question-here" class="hash-link" aria-label="Direct link to I have not found an answer to my question here" title="Direct link to I have not found an answer to my question here">​</a></h3>
 <p>Ask in our community rooms:</p>
