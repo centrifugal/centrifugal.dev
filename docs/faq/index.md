@@ -230,7 +230,7 @@ Note, Centrifugo uses SHA-1 digest for two purposes:
 * Using SHA-1 as a hex digest for the Redis Lua [EVALSHA](https://redis.io/docs/latest/commands/evalsha/) command. SHA-1 is used there only for the digest of the Lua script, not for any cryptographic purposes. The digest is used to identify the script in Redis and is not used for any security properties.
 * Using SHA-1 during WebSocket upgrades, as specified in [RFC 6455](https://datatracker.ietf.org/doc/html/rfc6455). RFC [explicitly states in section 10.8](https://datatracker.ietf.org/doc/html/rfc6455#section-10.8) that SHA-1 usage doesn't depend on any security properties of SHA-1.
 
-This means than running Centrifugo with `GODEBUG=fips140=on` is totally fine, when running with `GODEBUG=fips140=only` Centrifugo will panic in case of using Redis integrations or WebSocket transport.
+This means that running Centrifugo with `GODEBUG=fips140=on` will work for all the functionality, and when running with `GODEBUG=fips140=only` Centrifugo will panic in case of using Redis integrations or WebSocket transport.
 
 If you need FIPS compliant Docker image also, then you can do it using binary from Centrifugo releases on Github.
 
