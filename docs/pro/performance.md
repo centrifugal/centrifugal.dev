@@ -23,7 +23,7 @@ EXPERIMENTAL option on `client` level is `client.batch_periodic_events` (boolean
 
 Once enabled Centrifugo will batch client connection periodic events such as ping and presence updates together instead of having them to work in isolated way. This may result into noticeable CPU savings when working with many mostly idle connections.
 
-In our local experiments we observed more than 2x CPU reduction for 10k mostly idle connections setup, but the ratio is highly dependent on the Centrifugo specific setup load and usage scenario (first image is OSS CPU utilization, second one is PRO with periodic events batching enabled):
+In our local experiments we observed more than 2x CPU reduction for 10k mostly idle connections setup (first image is OSS CPU utilization, second one is PRO with periodic events batching enabled):
 
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
@@ -42,6 +42,8 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
     style={{ width: '50%', objectFit: 'contain' }}
   />
 </div>
+
+Of course the ratio is highly dependent on the Centrifugo specific setup load profile and usage scenarios.
 
 ## Faster HTTP API
 
