@@ -402,7 +402,6 @@ function draw(canvas, X, Y, isDarkTheme) {
     
     // --- New: Burst only the bubble clicked ---
     canvas.addEventListener('click', (event) => {
-        console.log(1)
         // Get the click coordinates relative to the canvas.
         const rect = canvas.getBoundingClientRect();
         const clickX = event.clientX - rect.left;

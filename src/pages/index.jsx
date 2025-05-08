@@ -127,7 +127,7 @@ function Home() {
                 production by many companies around the world: VK, Badoo, ManyChat, OpenWeb, Grafana, and others.
               </Feature>
               <Feature title="Centrifugo PRO" imageUrl="img/feature_pro.png">
-                <a href="/docs/pro/overview">Centrifugo PRO</a> offers great benefits for corporate and enterprise environments by providing unique features on top of the OSS version: analytics
+                <a href="/pro">Centrifugo PRO</a> offers great benefits for corporate and enterprise environments by providing unique features on top of the OSS version: analytics
                 with ClickHouse, real-time tracing, performance optimizations, push notification API, SSO integrations for web UI, etc.
               </Feature>
             </div>
@@ -238,7 +238,7 @@ function Home() {
                     "button button--outline button--secondary button--lg",
                     styles.getStarted
                   )}
-                  to={useBaseUrl("docs/pro/overview")}
+                  to={useBaseUrl("/pro")}
                 >
                   More about Centrifugo PRO
                 </Link>

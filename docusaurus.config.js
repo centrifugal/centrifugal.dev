@@ -86,8 +86,12 @@ module.exports = {
       style: "dark",
       links: [
         {
-          title: "Contact us",
+          title: "Contacts",
           items: [
+            {
+              label: "About us",
+              to: "/company",
+            },
             {
               label: "Send e-mail",
               to: "mailto:hello@centrifugal.dev",

@@ -42,7 +42,7 @@ function Header() {
                     Unlock the full power of Centrifugo
                 </div>
                 <div className={styles.subSubTitle}>
-                    Next-level self-hosted real-time messaging
+                    Next-level real-time messaging for your organization
                 </div>
                 <div className={styles.buttons}>
                     <Link
@@ -77,7 +77,7 @@ function Pro() {
                     text={
                         <>
                             <p>
-                                Centrifugal Labs offers a PRO version of Centrifugo featuring unique capabilities, additional APIs, and enhanced performance. These improvements are the result of real-world experience managing large-scale concurrent connections in production environments. You gain more features, greater scalability and performance, improved observability, prioritized support for your business.
+                                Centrifugal Labs offers a PRO version of Centrifugo featuring unique capabilities, additional APIs, and enhanced performance. These improvements are the result of real-world experience managing large-scale concurrent connections in production environments. You gain more features, greater scalability and performance, improved observability, prioritized support for the business.
                             </p>
                             <div className={styles.buttons}>
                                 <Link
@@ -100,7 +100,7 @@ function Pro() {
                                 PRO version <a href={"/docs/pro/performance"}>pushes the performance</a> of Centrifugo to the next level. Optimizations for higher throughput, lower latency, better resource usage.
                             </Feature>
                             <Feature title="Push notifications" imageUrl="img/feature_mail.png">
-                                Unique API for <a href={"/docs/pro/push_notifications"}>push notifications</a> with secure topics and flexible API. Integrates with FCM, APNs and HMS push providers.
+                                Support for sending <a href={"/docs/pro/push_notifications"}>push notifications</a> with secure topics and flexible API. Integrates with FCM, APNs and HMS push providers.
                             </Feature>
                             <Feature title="Enhanced Admin UI" imageUrl="img/feature_thumbs.png">
                                 Built-in <a href={"/docs/pro/admin_idp_auth"}>SSO integration over OIDC</a> protocol, user or channel real-time tracing, analytical widgets, push notification devices and more.
@@ -131,10 +131,10 @@ function Pro() {
                             We currently provide Centrifugo PRO licenses only to corporate customers. The license key allows running Centrifugo PRO without any limits for organization projects, includes 1 year of prioritized support and updates.
                         </p>
                         <p>
-                            Our pricing is flat and based on your company size. Please contact us for more details and a quote.
+                            Our pricing is flat, based on your company size and Centrifugo role. Please contact us for more details and a quote.
                         </p>
                         <p>
-                            <div className={styles.buttons}>
+                            <span className={styles.buttons}>
                                 <Link
                                     className={clsx(
                                         "button button--outline button--secondary button--lg"
@@ -143,7 +143,7 @@ function Pro() {
                                 >
                                     CONTACT SALES
                                 </Link>
-                            </div>
+                            </span>
                         </p>
                     </>
                 }

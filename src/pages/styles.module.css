@@ -205,3 +205,21 @@ html[data-theme="dark"] .logos svg * {
     margin: 2.25em 0;
   }
 }
+
+:global(.button--outline.button--secondary.button--lg) {
+  transition:
+          transform 0.25s ease-out,
+          box-shadow 0.25s ease-out,
+
+            /* add these for color transitions */
+          background-color 0.25s ease-out,
+          border-color 0.25s ease-out,
+          color 0.25s ease-out;
+}
+
+/* change to filled secondary on hover */
+:global(.button--outline.button--secondary.button--lg:hover) {
+  /* keep the “pop” too */
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
