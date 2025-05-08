@@ -49,12 +49,13 @@ module.exports = {
           label: "Real-time transports / SDK",
           position: "left",
         },
-        {
-          type: 'doc',
-          docId: 'pro/overview',
-          label: "Centrifugo PRO ♻️",
-          position: "left",
-        },
+        { to: '/pro', label: 'Centrifugo PRO ♻️' },
+        // {
+        //   type: 'doc',
+        //   docId: 'pro/overview',
+        //   label: "Centrifugo PRO ♻️",
+        //   position: "left",
+        // },
         {
           type: 'doc',
           docId: "faq/faq_index",
