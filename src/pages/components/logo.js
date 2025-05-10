@@ -269,7 +269,7 @@ Bubble.prototype.draw = function() {
             gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
         } else {
             gradient.addColorStop(0, 'rgba(217, 217, 217, 0.9)');
-            gradient.addColorStop(0.6, 'rgba(255, 199, 199, 0.29)');
+            gradient.addColorStop(0.6, 'rgba(177,246,255,0.29)');
             gradient.addColorStop(1, 'rgba(204, 204, 204, 0)');
         }
         ctx.fillStyle = gradient;
@@ -291,7 +291,7 @@ Bubble.prototype.draw = function() {
                 if (this.isDarkTheme) {
                     ctx.fillStyle = 'rgba(255, 255, 255, 0.71)';
                 } else {
-                    ctx.fillStyle = 'rgb(247, 76, 76)';
+                    ctx.fillStyle = 'rgb(174,174,174)';
                 }
                 ctx.beginPath();
                 ctx.arc(splashX, splashY, 0.1*splashRadius, 0, Math.PI * 2);

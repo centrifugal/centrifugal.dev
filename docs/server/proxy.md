@@ -350,39 +350,39 @@ This is what sent from Centrifugo to application backend in case of connect prox
 
 This is what an application returns to Centrifugo inside `result` field in of `ConnectResponse`.
 
-| Field       | Type                                   | Required | Description                                                                                                                                                          |
-|-------------|----------------------------------------|----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `user`      | `string`                               | yes      | user ID (calculated on app backend based on request cookie header for example). Return it as an empty string for accepting unauthenticated requests                  |
-| `expire_at` | `integer`                              | no       | a timestamp (Unix seconds in the future) when connection must be considered expired. If not set or set to `0` connection won't expire at all                         |
-| `info`      | `JSON`                                 | no       | a connection info JSON. This information will be included in online presence data, join/leave events and into client-side channel publications                       |
-| `b64info`   | `string`                               | no       | binary connection info encoded in base64 format, will be decoded to raw bytes on Centrifugo before using in messages                                                 |
-| `data`      | `JSON`                                 | no       | a custom data to send to the client in connect command response.                                                                                                     |
-| `b64data`   | `string`                               | no       | a custom data to send to the client in the connect command response for binary connections, will be decoded to raw bytes on Centrifugo side before sending to client |
-| `channels`  | `array[string]`                        | no       | allows providing a list of server-side channels to subscribe connection to. See more details about [server-side subscriptions](server_subs.md)                       |
-| subs        | `map[string]SubscribeOptions`          | no       | map of channels with options to subscribe connection to. See more details about [server-side subscriptions](server_subs.md)                                          |
-| `meta`      | `JSON` object (ex. `{"key": "value"}`) | no       | a custom data to attach to connection (this **won't be exposed to client-side**)                                                                                     |
+| Field       | Type                                   | Required | Description                                                                                                                                                                                     |
+|-------------|----------------------------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `user`      | `string`                               | yes      | user ID (calculated on app backend based on request cookie header for example). Return it as an empty string for accepting unauthenticated requests                                             |
+| `expire_at` | `integer`                              | no       | a timestamp (Unix seconds in the future) when connection must be considered expired. If not set or set to `0` connection won't expire at all                                                    |
+| `info`      | `JSON`                                 | no       | a connection info JSON. This information will be included in online presence data, join/leave events and into client-side channel publications                                                  |
+| `b64info`   | `string`                               | no       | binary connection info encoded in base64 format, will be decoded to raw bytes on Centrifugo before using in messages                                                                            |
+| `data`      | `JSON`                                 | no       | a custom data to send to the client in connect command response.                                                                                                                                |
+| `b64data`   | `string`                               | no       | a custom data to send to the client in the connect command response for binary connections, will be decoded to raw bytes on Centrifugo side before sending to client                            |
+| `channels`  | `array[string]`                        | no       | allows providing a list of server-side channels to subscribe connection to. See more details about [server-side subscriptions](server_subs.md)                                                  |
+| `subs`      | `map[string]SubscribeOptions`          | no       | map of channels with options to subscribe connection to. Each channel may have [SubscribeOptions](#subscribeoptions) object. See more details about [server-side subscriptions](server_subs.md) |
+| `meta`      | `JSON` object (ex. `{"key": "value"}`) | no       | a custom data to attach to connection (this **won't be exposed to client-side**)                                                                                                                |
 
 #### SubscribeOptions
 
-| Field      | Type                      | Optional | Description                                                                                                                                                                                       |
-|------------|---------------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `info`     | `JSON` object             | yes      | Additional channel-specific information about connection (**valid JSON**). This information will be included in online presence data, join/leave events and into client-side channel publications |
-| `b64info`  | `string`                  | yes      | Custom channel info in Base64 - to pass binary channel info                                                                                                                                       |
-| `data`     | `JSON` object             | yes      | Custom JSON data to return in subscription context inside Connect reply                                                                                                                           |
-| `b64data`  | `string`                  | yes      | Same as `data` but in Base64 to send binary data                                                                                                                                                  |
-| `override` | `SubscribeOptionOverride` | yes      | Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields)                                                       |
+| Field      | Type                                                  | Optional | Description                                                                                                                                                                                       |
+|------------|-------------------------------------------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `info`     | `JSON` object                                         | yes      | Additional channel-specific information about connection (**valid JSON**). This information will be included in online presence data, join/leave events and into client-side channel publications |
+| `b64info`  | `string`                                              | yes      | Custom channel info in Base64 - to pass binary channel info                                                                                                                                       |
+| `data`     | `JSON` object                                         | yes      | Custom JSON data to return in subscription context inside Connect reply                                                                                                                           |
+| `b64data`  | `string`                                              | yes      | Same as `data` but in Base64 to send binary data                                                                                                                                                  |
+| `override` | [`SubscribeOptionOverride`](#subscribeoptionoverride) | yes      | Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields)                                                       |
 
 #### SubscribeOptionOverride
 
 Allow per-connection overrides of some channel namespace options:
 
-| Field                   | Type        | Optional | Description                                             |
-|-------------------------|-------------|----------|---------------------------------------------------------|
-| `presence`              | `BoolValue` | yes      | Override `presence` from namespace options              |
-| `join_leave`            | `BoolValue` | yes      | Override `join_leave` from namespace options            |
-| `force_recovery`        | `BoolValue` | yes      | Override `force_recovery` from namespace options        |
-| `force_positioning`     | `BoolValue` | yes      | Override `force_positioning` from namespace options     |
-| `force_push_join_leave` | `BoolValue` | yes      | Override `force_push_join_leave` from namespace options |
+| Field                   | Type                      | Optional | Description                                             |
+|-------------------------|---------------------------|----------|---------------------------------------------------------|
+| `presence`              | [`BoolValue`](#boolvalue) | yes      | Override `presence` from namespace options              |
+| `join_leave`            | [`BoolValue`](#boolvalue) | yes      | Override `join_leave` from namespace options            |
+| `force_recovery`        | [`BoolValue`](#boolvalue) | yes      | Override `force_recovery` from namespace options        |
+| `force_positioning`     | [`BoolValue`](#boolvalue) | yes      | Override `force_positioning` from namespace options     |
+| `force_push_join_leave` | [`BoolValue`](#boolvalue) | yes      | Override `force_push_join_leave` from namespace options |
 
 #### BoolValue
 

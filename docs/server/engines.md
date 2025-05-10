@@ -124,6 +124,21 @@ You can also use an address with `redis://` scheme to set Redis address. In that
 }
 ```
 
+When you need to connect to Redis with TLS enabled, use `rediss://` scheme:
+
+```json title="config.json"
+{
+  "engine": {
+    "type": "redis",
+    "redis": {
+      "address": "rediss://user:password@127.0.0.1:6379/0"
+    }
+  }
+}
+```
+
+For additional TLS settings see [engine.redis.tls](#engineredistls).
+
 :::info
 
 Note, if you want to use Redis Sentinel or Redis Cluster – then you must use a special scheme for Redis address to explicitly tell Centrifugo the type of Redis setup. See below the details.
