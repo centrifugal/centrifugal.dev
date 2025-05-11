@@ -9,6 +9,7 @@ import Logo from "../components/logo";
 import { useColorMode } from '@docusaurus/theme-common';
 import Highlight from '../components/Highlight'
 import ImageRotator from '../../components/ImageRotator';
+import Pricing from '../components/Pricing';
 
 function Feature({ imageUrl, title, children }) {
     const imgUrl = useBaseUrl(imageUrl);
@@ -33,11 +34,6 @@ function Header() {
         <header id="hero" className={clsx("hero hero--primary", styles.heroBanner)}>
             <Logo isDarkTheme={isDarkTheme} />
             <div className="container" style={{ "zIndex": 1, pointerEvents: "none" }}>
-                {/*<div className={styles.mainTitle}>*/}
-                {/*    /!* <span style={{ "color": "#d34343" }}> *!/*/}
-                {/*    CENTRIFUGO PRO*/}
-                {/*    /!* </span> *!/*/}
-                {/*</div>*/}
                 <div className={styles.mainTitle}>
                   <span>CENTRIFUGO</span>
                   <span className={styles.proSuffix}>&nbsp;PRO</span>
@@ -122,36 +118,7 @@ function Pro() {
                     </div>
                 </section>
             </main >
-            <Highlight
-                img={
-                    <video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/logo.mp4"></video>
-                }
-                reversed
-                isDark
-                title="Pricing"
-                text={
-                    <>
-                        <p>
-                            We currently provide Centrifugo PRO licenses only to corporate customers. The license key allows running Centrifugo PRO without any limits for organization projects, includes 1 year of prioritized support and updates.
-                        </p>
-                        <p>
-                            Our pricing is flat, based on your company size and Centrifugo role. Please contact us for more details and a quote.
-                        </p>
-                        <p>
-                            <span className={styles.buttons}>
-                                <Link
-                                    className={clsx(
-                                        "button button--outline button--secondary button--lg"
-                                    )}
-                                    to={useBaseUrl("docs/pro/overview#pricing")}
-                                >
-                                    CONTACT SALES
-                                </Link>
-                            </span>
-                        </p>
-                    </>
-                }
-            />
+            <Pricing />
         </Layout >
     );
 }
