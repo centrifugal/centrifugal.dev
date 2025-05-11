@@ -33,10 +33,14 @@ function Header() {
         <header id="hero" className={clsx("hero hero--primary", styles.heroBanner)}>
             <Logo isDarkTheme={isDarkTheme} />
             <div className="container" style={{ "zIndex": 1, pointerEvents: "none" }}>
+                {/*<div className={styles.mainTitle}>*/}
+                {/*    /!* <span style={{ "color": "#d34343" }}> *!/*/}
+                {/*    CENTRIFUGO PRO*/}
+                {/*    /!* </span> *!/*/}
+                {/*</div>*/}
                 <div className={styles.mainTitle}>
-                    {/* <span style={{ "color": "#d34343" }}> */}
-                    CENTRIFUGO PRO
-                    {/* </span> */}
+                  <span>CENTRIFUGO</span>
+                  <span className={styles.proSuffix}>&nbsp;PRO</span>
                 </div>
                 <div className={styles.subTitle}>
                     Unlock the full power of Centrifugo
