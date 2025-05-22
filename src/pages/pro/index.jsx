@@ -103,7 +103,7 @@ function Pro() {
                                 Support for sending <a href={"/docs/pro/push_notifications"}>push notifications</a> with secure topics and flexible API. Integrates with FCM, APNs and HMS push providers.
                             </Feature>
                             <Feature title="Enhanced Admin UI" imageUrl="img/feature_thumbs.png">
-                                Built-in <a href={"/docs/pro/admin_idp_auth"}>SSO integration over OIDC</a> protocol, user or channel real-time tracing, analytical widgets, push notification devices and more.
+                                Built-in <a href={"/docs/pro/admin_ui"}>SSO integration over OIDC</a> protocol, user or channel real-time tracing, analytical widgets, push notification devices, more state data and more.
                             </Feature>
                             <Feature title="Flexible scalability" imageUrl="img/feature_cloud.png">
                                 More options to layout your architecture: <a href={"/docs/pro/scalability#subscribe-on-replica"}>Redis replicas</a>, Redis <a href={"/docs/pro/scalability#redis-cluster-sharded-pubsub"}>sharded PUB/SUB</a>, <a href={"/docs/pro/namespace_engines"}>per-namespace Broker</a> configurations.
