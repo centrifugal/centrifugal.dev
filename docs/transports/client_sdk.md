@@ -85,6 +85,6 @@ Below you can find an information regarding support of different features in our
 | handle unsubscribe advice from server        | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
 | manage subscription registry                 | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
 | optimistic subscriptions                     | ✅  |      |       |    |      |        |
-| delta compression                            | ✅  |  [#95](https://github.com/centrifugal/centrifuge-dart/issues/95)    |  ✅   |  [#100](https://github.com/centrifugal/centrifuge-go/issues/100)   | ✅    | ✅      |
+| delta compression                            | ✅  |  ✅   |  ✅   |  ✅  | ✅    | ✅      |
 
 </div>
