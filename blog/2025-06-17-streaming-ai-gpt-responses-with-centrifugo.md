@@ -1,7 +1,7 @@
 ---
 title: Streaming AI responses with Centrifugo
 tags: [centrifugo, ai, python, tutorial]
-description: Centrifugo is an efficient and scalable transport for streaming AI responses. In this article, we will stream ChatGPT responses in real-time using Centrifugo temporary channels and Python. Simple and effective!
+description: Centrifugo is an efficient and scalable transport for streaming AI responses. In this article, we will stream GPT-3.5 Turbo responses in real-time using Centrifugo temporary channels and Python. Simple and effective!
 author: Alexander Emelin
 authorTitle: Founder of Centrifugal Labs
 authorImageURL: /img/alexander_emelin.jpeg
@@ -11,7 +11,7 @@ hide_table_of_contents: false
 
 <!--truncate-->
 
-Centrifugo may be used as an efficient and scalable transport for streaming AI responses. In this article, we will stream ChatGPT responses in real-time using Centrifugo temporary channels and Python. We will use OpenAI API to get the answers to user's prompts and stream them to the user using Centrifugo. The user will be able to see the response as it is being generated, similar to how ChatGPT works.
+Centrifugo may be used as an efficient and scalable transport for streaming AI responses. In this article, we will stream GPT-3.5 Turbo responses in real-time using Centrifugo temporary channels and Python. We will use OpenAI API to get the answers to user's prompts and stream them to the user using Centrifugo. The user will be able to see the response as it is being generated, similar to how ChatGPT works.
 
 Here is a video of the final result:
 
