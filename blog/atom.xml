@@ -16,7 +16,8 @@
         <content type="html"><![CDATA[<p>Centrifugo may be used as an efficient and scalable transport for streaming AI responses. In this article, we will stream ChatGPT responses in real-time using Centrifugo temporary channels and Python. We will use OpenAI API to get the answers to user's prompts and stream them to the user using Centrifugo. The user will be able to see the response as it is being generated, similar to how ChatGPT works.</p>
 <p>Here is a video of the final result:</p>
 <video width="100%" loop="" autoplay="" muted="" src="/img/gpt.mp4"></video>
-<p>And the source code is available on <a href="https://github.com/centrifugal/examples/tree/master/v6/gpt-stream" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
+<h2 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="source-code">Source code<a href="https://centrifugal.dev/blog/2025/06/17/streaming-ai-gpt-responses-with-centrifugo#source-code" class="hash-link" aria-label="Direct link to Source code" title="Direct link to Source code">​</a></h2>
+<p>The source code of this example is available on <a href="https://github.com/centrifugal/examples/tree/master/v6/gpt-stream" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
 <h2 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="-tech-stack">🧰 Tech Stack<a href="https://centrifugal.dev/blog/2025/06/17/streaming-ai-gpt-responses-with-centrifugo#-tech-stack" class="hash-link" aria-label="Direct link to 🧰 Tech Stack" title="Direct link to 🧰 Tech Stack">​</a></h2>
 <p>In this example, we will use the following technologies:</p>
 <ul>
