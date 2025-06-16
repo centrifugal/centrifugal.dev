@@ -17,7 +17,9 @@ Here is a video of the final result:
 
 <video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/gpt.mp4"></video>
 
-And the source code is available on [GitHub](https://github.com/centrifugal/examples/tree/master/v6/gpt-stream).
+## Source code
+
+The source code of this example is available on [GitHub](https://github.com/centrifugal/examples/tree/master/v6/gpt-stream).
 
 ## 🧰 Tech Stack
 
