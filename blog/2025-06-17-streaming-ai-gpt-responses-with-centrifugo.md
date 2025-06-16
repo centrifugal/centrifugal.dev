@@ -135,28 +135,39 @@ Here is the code for the frontend (`frontend/index.html`):
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Chat with GPT Streaming</title>
-  <script src="https://unpkg.com/centrifuge@5.3.5/dist/centrifuge.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8" />
+    <title>Chat with GPT Streaming</title>
+    <script src="https://unpkg.com/centrifuge@5.3.5/dist/centrifuge.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
-<body class="bg-black text-gray-200 min-h-screen flex flex-col items-center justify-start py-6 px-4 text-base">
-  <div class="w-full max-w-2xl bg-black shadow-lg rounded-xl overflow-hidden border border-gray-700">
-    <div class="bg-gradient-to-r from-blue-700 to-indigo-700 text-white px-6 py-4 text-2xl font-bold">
-      🧠 Chat with GPT Streaming
+<body class="bg-gradient-to-br from-gray-900 via-black to-gray-900 text-gray-200 min-h-screen flex flex-col items-center justify-start py-6 px-4 text-base">
+<div class="w-full max-w-2xl bg-gray-800/40 backdrop-blur-lg border border-gray-700 shadow-2xl rounded-2xl overflow-hidden">
+    <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-4 text-2xl font-bold tracking-wide">
+        🔮 Chat with GPT with streaming over Centrifugo
     </div>
-    <div id="chat" class="h-96 overflow-y-auto p-4 space-y-3 bg-black text-base"></div>
-    <div class="border-t border-gray-700 px-4 py-3 bg-black flex gap-3">
-      <input id="input" type="text" placeholder="Type your question..."
-        class="flex-1 border border-gray-600 bg-gray-900 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        onkeydown="if(event.key === 'Enter') handleSend()" />
-      <button onclick="handleSend()"
-        class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition text-base">Send</button>
+    <div
+            id="chat"
+            class="h-96 overflow-y-auto p-4 space-y-3 bg-gray-900 scrollbar-thin scrollbar-thumb-purple-500 scrollbar-track-gray-800 transition-colors duration-300"
+    ></div>
+    <div class="border-t border-gray-700 px-4 py-3 bg-gray-900 flex gap-3">
+        <input
+                id="input"
+                type="text"
+                placeholder="Type your question..."
+                class="flex-1 border border-gray-600 bg-gray-800 placeholder-gray-400 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 transition-shadow duration-200"
+                onkeydown="if(event.key === 'Enter') handleSend()"
+        />
+        <button
+                onclick="handleSend()"
+                class="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-purple-500 hover:to-indigo-600 text-white font-medium px-4 py-2 rounded-lg transition-shadow duration-200 shadow-lg hover:shadow-2xl"
+        >
+            Send
+        </button>
     </div>
-  </div>
+</div>
 
-  <script>
+<script>
     const USER = "User_" + Math.floor(Math.random() * 1000);
     const BACKEND_URL = "/api/execute";
     const CENTRIFUGO_WS = "ws://" + location.host + "/connection/websocket";
@@ -167,63 +178,63 @@ Here is the code for the frontend (`frontend/index.html`):
     const input = document.getElementById("input");
 
     function appendMessage(text, id = null, type = "user") {
-      let el = id ? document.getElementById(id) : null;
-      if (!el) {
-        el = document.createElement("div");
-        el.className = `msg px-3 py-2 rounded-lg max-w-full break-words ${
-          type === "user" ? "bg-blue-500 text-white self-end ml-auto" : "bg-gray-700 text-gray-100"
-        }`;
-        el.id = id || "";
-        chat.appendChild(el);
-      }
+        let el = id ? document.getElementById(id) : null;
+        if (!el) {
+            el = document.createElement("div");
+            el.className = `msg px-3 py-2 rounded-lg max-w-full break-words ${
+                    type === "user" ? "bg-blue-500 text-white self-end ml-auto" : "bg-gray-700 text-gray-100"
+            }`;
+            el.id = id || "";
+            chat.appendChild(el);
+        }
 
-      el.innerHTML = text.replace(/\n/g, '<br>');
-      chat.scrollTop = chat.scrollHeight;
+        el.innerHTML = text.replace(/\n/g, '<br>');
+        chat.scrollTop = chat.scrollHeight;
     }
 
     async function handleStreamSubscription(channel, replyId) {
-      const sub = centrifuge.newSubscription(channel);
-      let reply = "";
+        const sub = centrifuge.newSubscription(channel);
+        let reply = "";
 
-      sub.on("publication", ctx => {
-        const msg = ctx.data;
-        if (msg.text) {
-          const token = msg.text || "";
-          reply += token;
-          appendMessage(`GPTBot: ${reply}`, replyId, "bot");
-        }
-        if (msg.done) {
-          sub.unsubscribe();
-        }
-      });
+        sub.on("publication", ctx => {
+            const msg = ctx.data;
+            if (msg.text) {
+                const token = msg.text || "";
+                reply += token;
+                appendMessage(`GPTBot: ${reply}`, replyId, "bot");
+            }
+            if (msg.done) {
+                sub.unsubscribe();
+            }
+        });
 
-      sub.subscribe();
-      await sub.ready();
+        sub.subscribe();
+        await sub.ready();
     }
 
     async function handleSend() {
-      const text = input.value.trim();
-      if (!text) return;
-      input.value = "";
-      const msgId = crypto.randomUUID();
-      const channel = `stream_${msgId}`;
+        const text = input.value.trim();
+        if (!text) return;
+        input.value = "";
+        const msgId = crypto.randomUUID();
+        const channel = `stream_${msgId}`;
 
-      appendMessage(`${USER}: ${text}`, null, "user");
+        appendMessage(`${USER}: ${text}`, null, "user");
 
-      const cmd = {
-        text: text,
-        channel: channel,
-      };
+        const cmd = {
+            text: text,
+            channel: channel,
+        };
 
-      await handleStreamSubscription(channel, msgId);
+        await handleStreamSubscription(channel, msgId);
 
-      await fetch(BACKEND_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(cmd)
-      });
+        await fetch(BACKEND_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(cmd)
+        });
     }
-  </script>
+</script>
 </body>
 </html>
 ```
