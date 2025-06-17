@@ -16,7 +16,7 @@
 
 <link rel="search" type="application/opensearchdescription+xml" title="Centrifugo" href="/opensearch.xml">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.03564f59.css">
-<script src="/assets/js/runtime~main.36873010.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.1c2f77cb.js" defer="defer"></script>
 <script src="/assets/js/main.9fa26985.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -41,7 +41,7 @@
 <p>Centrifugo is designed to scale well across multiple machines using PUB/SUB brokers. As your application grows and the number of client connections increases, Centrifugo allows you to distribute the load across multiple nodes, which are connected into a cluster.</p>
 <p>With Centrifugo, you can easily scale horizontally by adding more nodes to your cluster. Once you publish message to a channel over some Centrifugo node – it will be delivered to all subscribers across the cluster.</p>
 <p>At the core of this scalability lies Redis, Centrifugo&#x27;s primary PUB/SUB engine. Redis supports client-side consistent sharding and Redis Cluster, ensuring that no single Redis instance becomes a bottleneck—even under heavy loads.</p>
-<p>But Redis isn’t the only option. Centrifugo also supports Redis-compatible databases (Valkey, Elasticache, KeyDB, DragonflyDB, etc.) and Nats, giving you the flexibility to choose the engine that best fits your infrastructure. 👉 <a href="/docs/server/engines">See dedicated docs</a>.</p>
+<p>But Redis isn’t the only option. Centrifugo also supports Redis-compatible databases (Valkey, AWS Elasticache, Google Memorystore, KeyDB, DragonflyDB, etc.) and Nats, giving you the flexibility to choose the engine that best fits your infrastructure. 👉 <a href="/docs/server/engines">See dedicated docs</a>.</p>
 <h3 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="variety-of-real-time-transports">Variety of real-time transports<a href="#variety-of-real-time-transports" class="hash-link" aria-label="Direct link to Variety of real-time transports" title="Direct link to Variety of real-time transports">​</a></h3>
 <p>The main transport in Centrifugo is WebSocket. For web browsers with non-working WebSocket connection, Centrifugo provides its own bidirectional WebSocket emulation layer based on HTTP-streaming (using Fetch and Readable streams browser APIs) and SSE (EventSource). Additionally, WebTransport is supported in an experimental form.</p>
 <p>In addition to bidirectional transports, Centrifugo also supports a unidirectional approach for real-time updates: using SSE (EventSource), HTTP-streaming, and GRPC unidirectional stream. Utilizing unidirectional transport is sufficient for many real-time applications and does not require using our client SDKs – just native standards or GRPC-generated code.</p>
