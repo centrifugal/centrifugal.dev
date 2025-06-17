@@ -14,7 +14,7 @@ The Engine in Centrifugo is responsible for:
 * keep publication history (in channels where it was configured to be kept)
 * save/retrieve online presence information
 
-By default, Centrifugo uses a `memory` engine – where all the data is kept in Centrifugo process memory. And there is another full-featured Engine implementation – `redis` – where Centrifugo utilizes [Redis](https://redis.io/) (or Redis-compatible storages like AWS Elasticache, KeyDB, DragonflyDB, Valkey).
+By default, Centrifugo uses a `memory` engine – where all the data is kept in Centrifugo process memory. And there is another full-featured Engine implementation – `redis` – where Centrifugo utilizes [Redis](https://redis.io/) (or Redis-compatible storages like AWS Elasticache, Google Memorystore, KeyDB, DragonflyDB, Valkey).
 
 With default `memory` engine you can start only one node of Centrifugo, while Redis engine allows running several nodes on different machines for high availability and to scale client connections. In distributed case all Centrifugo nodes will be connected via broker PUB/SUB, will discover each other and deliver publications to the node where active channel subscribers exist – so it's possible to publish message to a channel on any node and it will be automatically delivered to subscriber which can be connected to another Centrifugo node.
 
@@ -420,7 +420,8 @@ When using Redis engine it's possible to point Centrifugo not only to Redis itse
 
 Some known options:
 
-* [AWS Elasticache](https://aws.amazon.com/elasticache/) – it was reported to work, but we suggest you testing the setup including failover tests and work under load.
+* [AWS Elasticache](https://aws.amazon.com/elasticache/) – it was reported to work, but we suggest you testing the setup including failover tests and the work under load.
+* [Google Memorystore](https://cloud.google.com/memorystore) – was also reported to work, we also suggest you testing the setup including failover tests and the work under load.
 * [KeyDB](https://keydb.dev/) – should work fine with Centrifugo, no known problems at this point regarding Centrifugo compatibility.
 * [DragonflyDB](https://dragonflydb.io/) - should work fine (if you experience issues with it try enabling `redis_force_resp2` option). We have not tested a Redis Cluster emulation mode provided by DragonflyDB yet. We suggest you testing the setup including failover tests and work under load.
 * [Valkey](https://github.com/valkey-io/valkey) – should work fine since it's based on Redis v7, but no tests were performed by Centrifugal Labs.

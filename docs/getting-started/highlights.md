@@ -37,7 +37,7 @@ With Centrifugo, you can easily scale horizontally by adding more nodes to your 
 
 At the core of this scalability lies Redis, Centrifugo's primary PUB/SUB engine. Redis supports client-side consistent sharding and Redis Cluster, ensuring that no single Redis instance becomes a bottleneck—even under heavy loads.
 
-But Redis isn’t the only option. Centrifugo also supports Redis-compatible databases (Valkey, Elasticache, KeyDB, DragonflyDB, etc.) and Nats, giving you the flexibility to choose the engine that best fits your infrastructure. 👉 [See dedicated docs](../server/engines.md).
+But Redis isn’t the only option. Centrifugo also supports Redis-compatible databases (Valkey, AWS Elasticache, Google Memorystore, KeyDB, DragonflyDB, etc.) and Nats, giving you the flexibility to choose the engine that best fits your infrastructure. 👉 [See dedicated docs](../server/engines.md).
 
 ### Variety of real-time transports
 

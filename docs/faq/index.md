@@ -37,7 +37,7 @@ For other real-time transports, the memory usage per connection can differ. So t
 
 ### Can Centrifugo scale horizontally?
 
-Yes, it can do this using built-in Redis engine. Centrifugo also works with Redis-compatible storages such as AWS Elasticache, KeyDB, DragonflyDB. It's also possible to use Nats broker (for at most once delivery only).
+Yes, it can do this using built-in Redis engine. Centrifugo also works with Redis-compatible storages such as AWS Elasticache, Google Memorystore, KeyDB, DragonflyDB. It's also possible to use Nats broker (for at most once delivery only).
 
 See [engines](../server/engines.md) and [scalability considerations](../getting-started/design.md#scalability-considerations).
 
