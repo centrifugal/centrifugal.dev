@@ -245,6 +245,12 @@ Optional name of LISTEN/NOTIFY channel to trigger consuming upon data added to o
 
 Client TLS configuration for PostgreSQL connection.
 
+### `consumers[].postgresql.use_try_lock`
+
+Boolean. Default: `false`.
+
+Use `pg_try_advisory_xact_lock` instead of `pg_advisory_xact_lock` for locking outbox table. This may help to reduce the number of longer-running transactions on PG side.
+
 ## Kafka consumer
 
 Another built-in consumer – is Kafka topics consumer. To configure Centrifugo to consume Kafka topic:

@@ -79,6 +79,10 @@ Additionally:
 
 * `clickhouse_analytics.export.connections.http_headers` is a list of HTTP headers to export for connection information.
 * `clickhouse_analytics.export.connections.grpc_metadata` is a list of metadata keys to export for connection information for GRPC unidirectional transport.
+* `clickhouse_analytics.export.connections.export_users` - list of strings. Option `export_users` is a list of users for which Centrifugo will export connections data to ClickHouse. If not set, all users will be exported. Allows enabling ClickHouse analytics for a subset of users which is generally simpler/safer/more effective than enabling connections analytics for all users.
+* `clickhouse_analytics.export.subscriptions.export_users` - list of strings. Option `export_users` is a list of users for which Centrifugo will export subscriptions data to ClickHouse. If not set, all users will be exported. Allows enabling ClickHouse analytics for a subset of users which is generally simpler/safer/more effective than enabling subscriptions analytics for all users.
+* `clickhouse_analytics.export.operations.export_users` - list of strings. Option `export_users` is a list of users for which Centrifugo will export operations data to ClickHouse. If not set, all users will be exported. Allows enabling ClickHouse analytics for a subset of users which is generally simpler/safer/more effective than enabling operations analytics for all users.
+* `clickhouse_analytics.export.publications.export_channels` - list of strings. Option `export_channels` is a list of channels for which Centrifugo will export publications data to ClickHouse. If not set, all channels will be exported. Allows enabling ClickHouse analytics for a subset of channels which is generally simpler/safer/more effective than enabling publications analytics for all channels.
 
 ## Connections table
 
