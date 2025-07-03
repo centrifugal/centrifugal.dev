@@ -147,3 +147,39 @@ Here is how to enable sharded PUB/SUB in Centrifugo PRO:
 ```
 
 Sharded PUB/SUB support is a powerful feature which will push your Redis Cluster to its PUB/SUB limits, but it requires careful consideration given the implementation details described above.
+
+## Setting custom Controller
+
+Controller in Centrifugo is responsible for cross-node communication in cluster. Centrifugo PRO allows using a custom controller configuration. This may be useful to isolate controller load from channel load, or to use Redis for channel operations and Nats for controller operations, or use Redis for channel operations, but sth like DragonflyDB for controller operations, etc.
+
+To use a custom controller you need to set `controller` configuration option and set `enabled` to `true`. You can use `redis` or `nats` as a controller type. Here is an example of using custom Redis setup as a controller:
+
+```json title="config.json"
+{
+  "controller": {
+    "enabled": true,
+    "type": "redis",
+    "redis": {
+      "address": "redis://localhost:6379"
+    }
+  }
+}
+```
+
+Redis options are the same as for the Redis Engine configuration (except those which only make sense for Broker or PresenceManager).
+
+Same for Nats:
+
+```json title="config.json"
+{
+  "controller": {
+    "enabled": true,
+    "type": "nats",
+    "nats": {
+      "url": "nats://localhost:4222"
+    }
+  }
+}
+```
+
+Nats options are the same as for the Nats Broker configuration (except those which only make sense for Broker).
