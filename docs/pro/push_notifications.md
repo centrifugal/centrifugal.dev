@@ -142,7 +142,7 @@ As mentioned above, Centrifugo uses PostgreSQL for token storage. To enable push
       "fcm"
     ],
     "fcm": {
-      "credentials_file_path": "/path/to/service/account/credentials.json"
+      "credentials_file": "/path/to/service/account/credentials.json"
     }
   }
 }
