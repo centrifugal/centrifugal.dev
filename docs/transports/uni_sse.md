@@ -114,4 +114,6 @@ eventSource.onmessage = function(event) {
 };
 ```
 
+For a more complete unidirectional SSE example with a simple backend and JWT auth see [this example](https://github.com/centrifugal/examples/tree/master/v6/unidirectional_sse).
+
 As always, if you are using [connect proxy](../server/proxy.md#connect-proxy) – then you can go without JWT for authentication. Same concepts as for bidirectional connection here.
