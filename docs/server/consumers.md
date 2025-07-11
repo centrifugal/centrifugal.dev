@@ -322,6 +322,18 @@ Integer. Default: `52428800` (50MB).
 
 Sets the maximum number of bytes to fetch from Kafka in a single request. In many cases setting this to lower value can help with aggressive Kafka client memory usage under load.
 
+### `consumers[].kafka.fetch_max_wait`
+
+Type: `Duration`. Default: `500ms`. New in Centrifugo v6.2.3
+
+Sets the maximum time to wait for records when polling.
+
+### `consumers[].kafka.fetch_read_uncommitted`
+
+Boolean. Default: `false`. New in Centrifugo v6.2.3
+
+If set to `true`, the consumer will read uncommitted messages from Kafka. By default, it uses `ReadCommitted` mode.
+
 ### `consumers[].kafka.sasl_mechanism`
 
 String. Default: `""`.
