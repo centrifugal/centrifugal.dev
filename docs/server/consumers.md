@@ -324,13 +324,13 @@ Sets the maximum number of bytes to fetch from Kafka in a single request. In man
 
 ### `consumers[].kafka.fetch_max_wait`
 
-Type: `Duration`. Default: `500ms`
+Type: `Duration`. Default: `500ms`. New in Centrifugo v6.2.3
 
 Sets the maximum time to wait for records when polling.
 
 ### `consumers[].kafka.fetch_read_uncommitted`
 
-Boolean. Default: `false`.
+Boolean. Default: `false`. New in Centrifugo v6.2.3
 
 If set to `true`, the consumer will read uncommitted messages from Kafka. By default, it uses `ReadCommitted` mode.
 
