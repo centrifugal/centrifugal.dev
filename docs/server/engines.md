@@ -394,9 +394,22 @@ When sharding enabled Centrifugo will spread channels and history/presence keys 
 
 ### Redis Cluster support
 
-Centrifugo supports Redis Cluster also. In the Redis Cluster case Centrifugo starts generating keys using hash tags to take care about distributed slot logic. Redis Cluster is detected automatically by Centrifugo.
+Centrifugo supports Redis Cluster also. In the Redis Cluster case Centrifugo starts generating keys using [hash tags](https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/#hash-tags) to take care about distributed slot logic. Redis Cluster is detected automatically by Centrifugo.
 
-You can provide more Redis Cluster seed nodes using `addr` param of Redis URL.
+This means that you can just use Redis Cluster address in the same way as you would use a single Redis instance address pointing Centrifugo to Redis Cluster node:
+
+```json title="config.json"
+{
+  "engine": {
+    "type": "redis",
+    "redis": {
+      "address": "redis://127.0.0.1:6380"
+    }
+  }
+}
+```
+
+It's possible to provide more Redis Cluster seed nodes using `addr` param of Redis URL (`redis://127.0.0.1:6380?addr=127.0.0.1:6381&addr=127.0.0.1:6382`)
 
 If you need to shard data (using [app-level sharding](#redis-sharding)) between several Redis clusters:
 
