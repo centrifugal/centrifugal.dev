@@ -364,6 +364,8 @@ Centrifugo has built-in application-level Redis sharding support.
 
 This resolves the situation when Redis becoming a bottleneck on a large Centrifugo setup. Redis is a single-threaded server, it's very fast but its power is not infinite so when your Redis approaches 100% CPU usage then the sharding feature can help your application to scale.
 
+![](/img/redis_app_level_sharding.png)
+
 At moment Centrifugo supports a simple comma-based approach to configuring Redis shards. Let's just look at examples.
 
 To start Centrifugo with 2 Redis shards use config like this:
