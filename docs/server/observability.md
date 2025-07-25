@@ -145,9 +145,18 @@ Here is a description of various metrics exposed by Centrifugo.
 #### centrifugo_client_recover
 
 - **Type:** Counter
-- **Labels:** recovered
+- **Labels:** recovered, has_recovered_publications
 - **Description:** Counts the number of recover operations performed.
-- **Usage:** Helps in tracking the system's resilience and recovery mechanisms.
+- **Usage:** Helps in tracking the system's resilience and recovery mechanisms. Label `recovered` - was recovery successful or not. Label `has_recovered_publications` -  did successful recovery contain some publications or no publications were missed by a client.
+
+### centrifugo_client_recovered_publications
+
+New in Centrifugo v6.2.4
+
+- **Type:** Histogram
+- **Labels:** channel_namespace
+- **Description:** Measures the number of publications recovered by clients.
+- **Usage:** Use this metric to monitor the effectiveness of the recovery process.
 
 #### centrifugo_client_connection_limit_reached_total
 
