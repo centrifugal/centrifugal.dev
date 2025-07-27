@@ -153,6 +153,16 @@ Here is a description of various metrics exposed by Centrifugo.
 
 New in Centrifugo v6.2.4
 
+Note, this metric is disabled by default. To enable it set `prometheus.recovered_publications_histogram` option to `true` in the configuration file.
+
+```json title="config.json"
+{
+  "prometheus": {
+    "recovered_publications_histogram": true
+  }
+}
+```
+
 - **Type:** Histogram
 - **Labels:** channel_namespace
 - **Description:** Measures the number of publications recovered by clients.
