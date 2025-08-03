@@ -748,7 +748,7 @@ Type: `string`
 
 Env: `CENTRIFUGO_GRPC_API_ERROR_MODE`
 
-No documentation available.
+Allows setting `transport` as an error mode. See [Transport error mode](#transport-error-mode) for the details.
 
 #### `grpc_api.address`
 
@@ -772,7 +772,7 @@ Type: `string`
 
 Env: `CENTRIFUGO_GRPC_API_KEY`
 
-No documentation available.
+Allows to enable per RPC auth. If key is set to a non-empty string then clients should provide per RPC credentials: set `authorization` key to metadata with a value `apikey <KEY>`.
 
 #### `grpc_api.tls`
 
