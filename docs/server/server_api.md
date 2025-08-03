@@ -732,11 +732,69 @@ Then see [GRPC docs specific to your language](https://grpc.io/docs/) to find ou
 
 ### GRPC API options
 
-* `grpc_api.enabled` - boolean, default `false`. Enables GRPC API server.
-* `grpc_api.port` - integer, default `10000`. Port on which GRPC API server runs.
-* `grpc_api.address` - string, default `""`. Custom address to run GRPC API server on.
-* `grpc_api.max_receive_message_size` – integer (number of bytes), default `0`. If set to a value > 0 allows tuning the max size of message GRPC server can receive. By default, GRPC library's default is used which is 4194304 bytes (4MB).
-* `grpc_api.reflection` - boolean, default `false`. Enables GRPC reflection API for introspection.
+`grpc_api` is a configuration section for gRPC server API. It's disabled by default.
+
+#### `grpc_api.enabled`
+
+Type: `bool`
+
+Env: `CENTRIFUGO_GRPC_API_ENABLED`
+
+Enables GRPC API server.
+
+#### `grpc_api.error_mode`
+
+Type: `string`
+
+Env: `CENTRIFUGO_GRPC_API_ERROR_MODE`
+
+No documentation available.
+
+#### `grpc_api.address`
+
+Type: `string`
+
+Env: `CENTRIFUGO_GRPC_API_ADDRESS`
+
+Custom address to run GRPC API server on.
+
+#### `grpc_api.port`
+
+Type: `int`. Default: `10000`
+
+Env: `CENTRIFUGO_GRPC_API_PORT`
+
+Port on which GRPC API server runs.
+
+#### `grpc_api.key`
+
+Type: `string`
+
+Env: `CENTRIFUGO_GRPC_API_KEY`
+
+No documentation available.
+
+#### `grpc_api.tls`
+
+Type: [TLSConfig](./configuration.md#tls-config-object) object.
+
+TLS config for GRPC server.
+
+#### `grpc_api.reflection`
+
+Type: `bool`
+
+Env: `CENTRIFUGO_GRPC_API_REFLECTION`
+
+Enables GRPC reflection API for introspection.
+
+#### `grpc_api.max_receive_message_size`
+
+Type: `int`
+
+Env: `CENTRIFUGO_GRPC_API_MAX_RECEIVE_MESSAGE_SIZE`
+
+If set to a value > 0 allows tuning the max size of message GRPC server can receive. By default, GRPC library's default is used which is 4194304 bytes (4MB).
 
 ### GRPC example for Python
 
