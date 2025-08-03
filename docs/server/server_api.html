@@ -16,7 +16,7 @@
 
 <link rel="search" type="application/opensearchdescription+xml" title="Centrifugo" href="/opensearch.xml">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.85a9a7f7.css">
-<script src="/assets/js/runtime~main.86c051b6.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.432f6096.js" defer="defer"></script>
 <script src="/assets/js/main.158e7b5d.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -233,13 +233,38 @@
 <p>Now, as soon as Centrifugo started – you can send GRPC commands to it. To do this get our API Protocol Buffer definitions <a href="https://github.com/centrifugal/centrifugo/blob/master/internal/apiproto/api.proto" target="_blank" rel="noopener noreferrer">from this file</a>.</p>
 <p>Then see <a href="https://grpc.io/docs/" target="_blank" rel="noopener noreferrer">GRPC docs specific to your language</a> to find out how to generate client code from definitions and use generated code to communicate with Centrifugo.</p>
 <h3 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="grpc-api-options">GRPC API options<a href="#grpc-api-options" class="hash-link" aria-label="Direct link to GRPC API options" title="Direct link to GRPC API options">​</a></h3>
-<ul>
-<li><code>grpc_api.enabled</code> - boolean, default <code>false</code>. Enables GRPC API server.</li>
-<li><code>grpc_api.port</code> - integer, default <code>10000</code>. Port on which GRPC API server runs.</li>
-<li><code>grpc_api.address</code> - string, default <code>&quot;&quot;</code>. Custom address to run GRPC API server on.</li>
-<li><code>grpc_api.max_receive_message_size</code> – integer (number of bytes), default <code>0</code>. If set to a value &gt; 0 allows tuning the max size of message GRPC server can receive. By default, GRPC library&#x27;s default is used which is 4194304 bytes (4MB).</li>
-<li><code>grpc_api.reflection</code> - boolean, default <code>false</code>. Enables GRPC reflection API for introspection.</li>
-</ul>
+<p><code>grpc_api</code> is a configuration section for gRPC server API. It&#x27;s disabled by default.</p>
+<h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="grpc_apienabled"><code>grpc_api.enabled</code><a href="#grpc_apienabled" class="hash-link" aria-label="Direct link to grpc_apienabled" title="Direct link to grpc_apienabled">​</a></h4>
+<p>Type: <code>bool</code></p>
+<p>Env: <code>CENTRIFUGO_GRPC_API_ENABLED</code></p>
+<p>Enables GRPC API server.</p>
+<h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="grpc_apierror_mode"><code>grpc_api.error_mode</code><a href="#grpc_apierror_mode" class="hash-link" aria-label="Direct link to grpc_apierror_mode" title="Direct link to grpc_apierror_mode">​</a></h4>
+<p>Type: <code>string</code></p>
+<p>Env: <code>CENTRIFUGO_GRPC_API_ERROR_MODE</code></p>
+<p>No documentation available.</p>
+<h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="grpc_apiaddress"><code>grpc_api.address</code><a href="#grpc_apiaddress" class="hash-link" aria-label="Direct link to grpc_apiaddress" title="Direct link to grpc_apiaddress">​</a></h4>
+<p>Type: <code>string</code></p>
+<p>Env: <code>CENTRIFUGO_GRPC_API_ADDRESS</code></p>
+<p>Custom address to run GRPC API server on.</p>
+<h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="grpc_apiport"><code>grpc_api.port</code><a href="#grpc_apiport" class="hash-link" aria-label="Direct link to grpc_apiport" title="Direct link to grpc_apiport">​</a></h4>
+<p>Type: <code>int</code>. Default: <code>10000</code></p>
+<p>Env: <code>CENTRIFUGO_GRPC_API_PORT</code></p>
+<p>Port on which GRPC API server runs.</p>
+<h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="grpc_apikey"><code>grpc_api.key</code><a href="#grpc_apikey" class="hash-link" aria-label="Direct link to grpc_apikey" title="Direct link to grpc_apikey">​</a></h4>
+<p>Type: <code>string</code></p>
+<p>Env: <code>CENTRIFUGO_GRPC_API_KEY</code></p>
+<p>No documentation available.</p>
+<h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="grpc_apitls"><code>grpc_api.tls</code><a href="#grpc_apitls" class="hash-link" aria-label="Direct link to grpc_apitls" title="Direct link to grpc_apitls">​</a></h4>
+<p>Type: <a href="/docs/server/configuration#tls-config-object">TLSConfig</a> object.</p>
+<p>TLS config for GRPC server.</p>
+<h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="grpc_apireflection"><code>grpc_api.reflection</code><a href="#grpc_apireflection" class="hash-link" aria-label="Direct link to grpc_apireflection" title="Direct link to grpc_apireflection">​</a></h4>
+<p>Type: <code>bool</code></p>
+<p>Env: <code>CENTRIFUGO_GRPC_API_REFLECTION</code></p>
+<p>Enables GRPC reflection API for introspection.</p>
+<h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="grpc_apimax_receive_message_size"><code>grpc_api.max_receive_message_size</code><a href="#grpc_apimax_receive_message_size" class="hash-link" aria-label="Direct link to grpc_apimax_receive_message_size" title="Direct link to grpc_apimax_receive_message_size">​</a></h4>
+<p>Type: <code>int</code></p>
+<p>Env: <code>CENTRIFUGO_GRPC_API_MAX_RECEIVE_MESSAGE_SIZE</code></p>
+<p>If set to a value &gt; 0 allows tuning the max size of message GRPC server can receive. By default, GRPC library&#x27;s default is used which is 4194304 bytes (4MB).</p>
 <h3 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="grpc-example-for-python">GRPC example for Python<a href="#grpc-example-for-python" class="hash-link" aria-label="Direct link to GRPC example for Python" title="Direct link to GRPC example for Python">​</a></h3>
 <p>For example for Python you need to run sth like this according to GRPC docs:</p>
 <div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token plain">pip install grpcio-tools</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">python -m grpc_tools.protoc -I ./ --python_out=. --grpc_python_out=. api.proto</span><br></span></code></pre></div></div>
