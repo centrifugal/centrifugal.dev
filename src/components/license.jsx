@@ -1,11 +1,11 @@
 import React from 'react';
 import CodeBlock from '@theme/CodeBlock';
 
+const backendUrl = 'https://centrifugal.fly.dev';
+
 export default class LicenseInput extends React.Component {
     constructor() {
         super();
-        this.onChange = this.onChange.bind(this);
-        this.onClick = this.onClick.bind(this);
         this.state = {
             providerKey: '',
             centrifugalKey: '',
@@ -13,73 +13,97 @@ export default class LicenseInput extends React.Component {
     }
 
     async exchangeLicense(key) {
-        const res = await fetch('https://centrifugal.fly.dev/centrifugo/license/exchange/' + this.props.providerName + '?license=' + key);
+        const res = await fetch(`${backendUrl}/centrifugo/license/exchange/${this.props.providerName}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ license: key })
+        });
+
         if (!res.ok) {
-            // Any other error thrown will result into token refresh re-attempts.
             throw new Error(`Unexpected status code ${res.status}`);
         }
+
         const data = await res.json();
+        if (data.error) {
+            throw new Error(data.error);
+        }
         this.setState({ centrifugalKey: data.license, providerKey: '' });
     }
 
-    onClick(e) {
+    handleSubmit = async () => {
         if (!this.state.providerKey) {
             alert("Provide a license key received in the purchase confirmation on email");
             return;
         }
-        this.exchangeLicense(this.state.providerKey);
+
+        try {
+            const license = await this.exchangeLicense(this.state.providerKey);
+            this.setState({ centrifugalKey: data.license, providerKey: '' });
+        } catch (error) {
+            alert(`Error issuing staging license: ${error.message}`);
+        }
     }
 
-    onChange(e) {
+    handleInputChange = (e) => {
         this.setState({ providerKey: e.target.value });
     }
 
     render() {
-        const buttonStyle = {
-            'background': '#FC6459',
-            'height': 50,
-            'border': 'none',
-            'textAlign': 'center',
-            'cursor': 'pointer',
-            'textTransform': 'uppercase',
-            'outline': 'none',
-            'overflow': 'hidden',
-            'position': 'relative',
-            'color': '#fff',
-            'fontWeight': 700,
-            'fontSize': 15,
-            'padding': '17px 17px',
-            'marginTop': 10,
-            'borderRadius': '5px'
-        }
+        const { providerHuman = 'the provider' } = this.props;
 
-        const placeholder = 'Paste the key received from ' + this.props.providerHuman + ' here...';
+        const styles = {
+            input: {
+                backgroundColor: '#230808',
+                color: '#ccc',
+                width: '100%',
+                height: '3em',
+                border: "1px solid #ccc",
+                padding: "5px",
+                fontSize: '1em',
+                borderRadius: '5px'
+            },
+            button: {
+                background: '#FC6459',
+                height: 50,
+                border: 'none',
+                textAlign: 'center',
+                cursor: 'pointer',
+                textTransform: 'uppercase',
+                outline: 'none',
+                overflow: 'hidden',
+                position: 'relative',
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: 15,
+                padding: '17px 17px',
+                marginTop: 10,
+                borderRadius: '5px'
+            },
+            result: {
+                marginTop: '10px'
+            }
+        };
 
         return (
             <div>
                 <input
-                    onChange={this.onChange}
+                    onChange={this.handleInputChange}
                     value={this.state.providerKey}
-                    placeholder={placeholder}
-                    style={{
-                        backgroundColor: '#230808',
-                        color: '#ccc',
-                        width: '100%',
-                        height: '3em',
-                        border: "1px solid #ccc",
-                        padding: "5px",
-                        fontSize: '1em',
-                        borderRadius: '5px'
-                    }}>
-                </input>
-                <button onClick={this.onClick} style={buttonStyle}>Exchange</button>
-                {this.state.centrifugalKey &&
-                    <div style={{ marginTop: '10px' }}>
+                    placeholder={`Paste the key received from ${providerHuman} here...`}
+                    style={styles.input}
+                />
+                <button onClick={this.handleSubmit} style={styles.button}>
+                    Exchange
+                </button>
+                {this.state.centrifugalKey && (
+                    <div style={styles.result}>
                         <CodeBlock language="text">
                             {this.state.centrifugalKey}
                         </CodeBlock>
                     </div>
-                }
+                )}
             </div>
         );
     }
