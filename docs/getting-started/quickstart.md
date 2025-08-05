@@ -53,7 +53,7 @@ Inside the admin panel, you should see that one Centrifugo node is running, and 
 
 ![Admin web panel](/img/quick_start_logged_in_v4.png)
 
-Now let's create `index.html` file with our simple app:
+Now let's create `index.html` file with our simple app - it won't work quite yet, but we'll set the configuration it needs below:
 
 ```html title="index.html"
 <html>
