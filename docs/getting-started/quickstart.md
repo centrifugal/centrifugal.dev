@@ -26,7 +26,7 @@ This helper command will generate `config.json` file in the working directory wi
     "key": "d7627bb6-2292-4911-82e1-615c0ed3eebb"
   },
   "admin": {
-    "enabled": true,
+    "enabled": false,
     "password": "d0683813-0916-4c49-979f-0e08a686b727",
     "secret": "4e9eafcf-0120-4ddd-b668-8dc40072c78e"
   }
@@ -36,10 +36,10 @@ This helper command will generate `config.json` file in the working directory wi
 Now we can start a server. Let's start Centrifugo with a built-in admin web interface:
 
 ```console
-./centrifugo --config=config.json
+./centrifugo --config=config.json --admin.enabled=true
 ```
 
-And then running Centrifugo only with a path to a configuration file:
+You can also enable the admin interface permanently by changing `admin.enabled` to `true` in `config.json`, and then running Centrifugo only with a path to a configuration file:
 
 ```console
 ./centrifugo --config=config.json
