@@ -690,10 +690,10 @@ function convert(sourceObj, pathMap) {
     }
 
     if (newConfig.channel && newConfig.channel.proxy && newConfig.channel.proxy.subscribe && newConfig.channel.proxy.subscribe.endpoint) {
-        newConfig.client.proxy.subscribe.http = {}
+        newConfig.channel.proxy.subscribe.http = {}
         if (sourceObj.proxy_http_status_code_transforms) {
             newConfig.channel.proxy.subscribe.http.status_to_code_transforms = sourceObj.proxy_http_status_code_transforms;
-            log.push(`migrate value from "proxy_http_status_code_transforms" to path "client.proxy.subscribe.http.status_to_code_transforms"`);
+            log.push(`migrate value from "proxy_http_status_code_transforms" to path "channel.proxy.subscribe.http.status_to_code_transforms"`);
         }
         if (sourceObj.proxy_grpc_metadata) {
             newConfig.channel.proxy.subscribe.grpc_metadata = sourceObj.proxy_grpc_metadata;
@@ -731,10 +731,10 @@ function convert(sourceObj, pathMap) {
     }
 
     if (newConfig.channel && newConfig.channel.proxy && newConfig.channel.proxy.publish && newConfig.channel.proxy.publish.endpoint) {
-        newConfig.client.proxy.publish.http = {}
+        newConfig.channel.proxy.publish.http = {}
         if (sourceObj.proxy_http_status_code_transforms) {
             newConfig.channel.proxy.publish.http.status_to_code_transforms = sourceObj.proxy_http_status_code_transforms;
-            log.push(`migrate value from "proxy_http_status_code_transforms" to path "client.proxy.publish.http.status_to_code_transforms"`);
+            log.push(`migrate value from "proxy_http_status_code_transforms" to path "channel.proxy.publish.http.status_to_code_transforms"`);
         }
         if (sourceObj.proxy_grpc_metadata) {
             newConfig.channel.proxy.publish.grpc_metadata = sourceObj.proxy_grpc_metadata;
@@ -776,10 +776,10 @@ function convert(sourceObj, pathMap) {
     }
 
     if (newConfig.channel && newConfig.channel.proxy && newConfig.channel.proxy.sub_refresh && newConfig.channel.proxy.sub_refresh.endpoint) {
-        newConfig.client.proxy.sub_refresh.http = {}
+        newConfig.channel.proxy.sub_refresh.http = {}
         if (sourceObj.proxy_http_status_code_transforms) {
             newConfig.channel.proxy.sub_refresh.http.status_to_code_transforms = sourceObj.proxy_http_status_code_transforms;
-            log.push(`migrate value from "proxy_http_status_code_transforms" to path "client.proxy.sub_refresh.http.status_to_code_transforms"`);
+            log.push(`migrate value from "proxy_http_status_code_transforms" to path "channel.proxy.sub_refresh.http.status_to_code_transforms"`);
         }
         if (sourceObj.proxy_grpc_metadata) {
             newConfig.channel.proxy.sub_refresh.grpc_metadata = sourceObj.proxy_grpc_metadata;
@@ -821,7 +821,7 @@ function convert(sourceObj, pathMap) {
     }
 
     if (newConfig.channel && newConfig.channel.proxy && newConfig.channel.proxy.subscribe_stream && newConfig.channel.proxy.subscribe_stream.endpoint) {
-        newConfig.client.proxy.subscribe_stream.http = {}
+        newConfig.channel.proxy.subscribe_stream.http = {}
         if (sourceObj.proxy_grpc_metadata) {
             newConfig.channel.proxy.subscribe_stream.grpc_metadata = sourceObj.proxy_grpc_metadata;
             log.push(`migrate value from "proxy_grpc_metadata" to path "channel.proxy.subscribe_stream.grpc_metadata"`);
@@ -862,7 +862,7 @@ function convert(sourceObj, pathMap) {
     }
 
     if (newConfig.channel && newConfig.channel.proxy && newConfig.channel.proxy.state && newConfig.channel.proxy.state.endpoint) {
-        newConfig.client.proxy.state.http = {}
+        newConfig.channel.proxy.state.http = {}
         if (sourceObj.proxy_grpc_metadata) {
             newConfig.channel.proxy.state.grpc_metadata = sourceObj.proxy_grpc_metadata;
             log.push(`migrate value from "proxy_grpc_metadata" to path "channel.proxy.state.grpc_metadata"`);
@@ -903,7 +903,7 @@ function convert(sourceObj, pathMap) {
     }
 
     if (newConfig.channel && newConfig.channel.proxy && newConfig.channel.proxy.cache_empty && newConfig.channel.proxy.cache_empty.endpoint) {
-        newConfig.client.proxy.cache_empty.http = {}
+        newConfig.channel.proxy.cache_empty.http = {}
         if (sourceObj.proxy_grpc_metadata) {
             newConfig.channel.proxy.cache_empty.grpc_metadata = sourceObj.proxy_grpc_metadata;
             log.push(`migrate value from "proxy_grpc_metadata" to path "channel.proxy.cache_empty.grpc_metadata"`);
