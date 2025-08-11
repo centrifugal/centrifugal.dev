@@ -1,4 +1,4 @@
-name: AI Fix Generator
+name: AI Fix
 on:
   issues:
     types: [labeled]
@@ -18,12 +18,38 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Get issue details
+        id: issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            core.setOutput('title', issue.title);
+            core.setOutput('body', issue.body || '');
+            core.setOutput('number', issue.number);
+
       - name: Run Claude Code Action
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           timeout_minutes: "5"
 
+      - name: Run Claude Code Action with direct prompt
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          timeout_minutes: "60"
+          direct_prompt: |
+            Analyze this GitHub issue and create a fix:
+            Issue #${{ steps.issue.outputs.number }}: ${{ steps.issue.outputs.title }}
+            Description:
+            ${{ steps.issue.outputs.body }}
+            Make sure to:
+            1. Understand the problem described in the issue
+            2. Locate relevant files that need changes
+            3. Implement a proper solution
+            4. Create a pull request with the fix
+            5. After implementing the fix, please comment on the original issue with a summary of what was changed and link to the pull request.
       - name: Remove ai-fix label
         uses: actions/github-script@v7
         with:
