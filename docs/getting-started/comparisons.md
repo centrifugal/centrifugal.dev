@@ -21,7 +21,7 @@ So, when using Centrifugo, you need to configure and run it on your own; you nee
 
 With cloud services, all the hard work of setting up an infrastructure for a WebSocket server and its maintenance is done for you. But it's more expensive, and the data flows through an external network.
 
-Another bonus Centrifugo may provide due to its self-hosted nature is a deaper integration with your backend with connection event hooks. During Centrifugo to backend communication the traffic stays within your network infrastructure, which means no additional costs and great latencies.
+Another bonus Centrifugo may provide due to its self-hosted nature is a deeper integration with your backend with connection event hooks. During Centrifugo to backend communication the traffic stays within your network infrastructure, which means no additional costs and great latencies.
 
 ## Centrifugo vs Redis
 
