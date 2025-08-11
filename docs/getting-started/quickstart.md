@@ -39,12 +39,6 @@ Now we can start a server. Let's start Centrifugo with a built-in admin web inte
 ./centrifugo --config=config.json
 ```
 
-And then running Centrifugo only with a path to a configuration file:
-
-```console
-./centrifugo --config=config.json
-```
-
 Now open [http://localhost:8000](http://localhost:8000). You should see Centrifugo admin web panel. Enter admin's password value from the configuration file to log in (in our case it's `d0683813-0916-4c49-979f-0e08a686b727`, but you will have a different value).
 
 ![Admin web panel](/img/quick_start_admin_v5.png)
@@ -201,7 +195,7 @@ Open the developer tools and look at the WebSocket frames panel; you should see 
 
 Note that in this example, we generated a connection JWT – but it has an expiration time, so after some time, Centrifugo will stop accepting those tokens. In real life, you need to add a token refresh function to the client to rotate tokens. See our [client API SDK spec](../transports/client_api.md).
 
-Go back to Admin UI - http://localhost:8000/ - at make sure you see updated Centrifugo node stats – they should display one active client connection.
+Go back to Admin UI - http://localhost:8000/ - and make sure you see updated Centrifugo node stats – they should display one active client connection.
 
 OK, the last thing we need to do here is to publish a new counter value to a channel and make sure our app works properly.
 
@@ -223,7 +217,7 @@ Open several browser tabs with our app and make sure all tabs receive a message 
 
 ![Message received](/img/quick_start_message_v4.png)
 
-BTW, let's also look at how you can publish data to a channel over Centrifugo server API from a terminal using `curl` tool:
+Let's also look at how you can publish data to a channel over Centrifugo server API from a terminal using `curl` tool:
 
 ```bash
 curl --header "Content-Type: application/json" \
@@ -233,6 +227,6 @@ curl --header "Content-Type: application/json" \
   http://localhost:8000/api/publish
 ```
 
-– where for `Authorization` header we set `api_key` value from Centrifugo config file generated above.
+– where for `X-API-Key` header we set `api_key` value from Centrifugo config file generated above.
 
 We did it! We built the simplest browser real-time app with Centrifugo and its JavaScript client. It doesn't have a backend; it's not very useful, to be honest, but it should give you an insight into how to start working with the Centrifugo server. Read more about the Centrifugo server in the next documentation chapters – it can do much more than we just showed here. The [Integration guide](integration.md) describes the process of idiomatic Centrifugo integration with your application backend. And [chat/messenger app tutorial](../tutorial/intro.md) provides a comprehensive guide how to build real-time app with Centrifugo from scratch. 
