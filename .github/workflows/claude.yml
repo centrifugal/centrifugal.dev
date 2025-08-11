@@ -45,6 +45,7 @@ jobs:
           model: ${{ steps.config.outputs.model }}
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           timeout_minutes: "60"
+          disallowed_tools: "TodoWrite"
           direct_prompt: |
             Analyze this GitHub issue and create a fix:
             Issue #${{ steps.issue.outputs.number }}: ${{ steps.issue.outputs.title }}
