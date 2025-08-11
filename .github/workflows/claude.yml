@@ -55,9 +55,7 @@ jobs:
             Make sure to:
             1. Understand the problem described in the issue
             2. Locate relevant files that need changes
-            3. Implement a proper solution
-            4. Create a pull request with the fix
-            5. After implementing the fix, comment on the original issue with a summary of what was changed and link to the pull request.
+            3. Implement a proper solution and post comment on the issue with a link to create PR.
 
       - name: Remove applied label
         uses: actions/github-script@v7
