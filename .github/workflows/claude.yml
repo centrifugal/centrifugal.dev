@@ -32,7 +32,7 @@ jobs:
         id: config
         run: |
           if [[ "${{ github.event.label.name }}" == "ai-fix-easy" ]]; then
-            echo "model=claude-3-5-haiku-20241022" >> $GITHUB_OUTPUT
+            echo "model=claude-3-7-sonnet-20250219" >> $GITHUB_OUTPUT
             echo "label=ai-fix-easy" >> $GITHUB_OUTPUT
           else
             echo "model=claude-sonnet-4-20250514" >> $GITHUB_OUTPUT
