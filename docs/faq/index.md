@@ -23,7 +23,7 @@ Another possible reason of first time connection problems - not properly configu
 
 This depends on many factors. Real-time transport choice, hardware, message rate, size of messages, Centrifugo features enabled, client distribution over channels, compression on/off, etc. So no certain answer to this question exists. Common sense, performance measurements, and monitoring can help here. 
 
-Generally, we suggest not put more than 50-100k clients on one node - but you should measure for your use case.
+Generally, we suggest not putting more than 50-100k clients on one node - but you should measure for your use case.
 
 You can find a description of a test stand with million WebSocket connections in [this blog post](/blog/2020/02/10/million-connections-with-centrifugo). Though the point above is still valid – measure and [monitor](../server/monitoring.md) your setup.
 
@@ -59,7 +59,7 @@ When history inside the channel is on then a window of last messages is kept aut
 
 Channel is a very lightweight ephemeral entity - Centrifugo can deal with lots of channels, don't be afraid to have many channels in an application.
 
-But keep in mind that one client should be subscribed to a reasonable number of channels at one moment. Client-side subscription to a channel requires a separate frame from client to server – more frames mean more heavy initial connection, more heavy reconnect, etc.
+But keep in mind that one client should be subscribed to a reasonable number of channels at one moment. Client-side subscription to a channel requires a separate frame from client to server – more frames mean heavier initial connection, heavier reconnect, etc.
 
 One example which may lead to channel misusing is a messenger app where user can be part of many groups. In this case, using a separate channel for each group/chat in a messenger may be a bad approach. The problem is that messenger app may have chat list screen – a view that displays all user groups (probably with pagination). If you are using separate channel for each group then this may lead to lots of subscriptions. Also, with pagination, to receive updates from older chats (not visible on a screen due to pagination) – user may need to subscribe on their channels too. In this case, using a single personal channel for each user is a preferred approach. As soon as you need to deliver a message to a group you can use Centrifugo `broadcast` API to send it to many users. If your chat groups are huge in size then you may also need additional queuing system between your application backend and Centrifugo to broadcast a message to many personal channels.
 
@@ -96,7 +96,7 @@ To summarize:
 
 While online presence is a good feature it does not fit well for some apps. For example, if you make a chat app - you may probably use a single personal channel for each user. In this case, you cannot find who is online at moment using the built-in Centrifugo presence feature as users do not share a common channel.
 
-You can solve this using a separate service that tracks the online status of your users (for example in Redis) and has a bulk API that returns online status approximation for a list of users. This way you will have an efficient scalable way to deal with online statuses. This is also available as [Centrifugo PRO feature](../pro/user_status.md).
+You can solve this using a separate service that tracks the online status of your users (for example in Redis) and has a bulk API that returns online status approximation for a list of users. This way you will have an efficient scalable way to deal with online statuses. This is also available as a [Centrifugo PRO feature](../pro/user_status.md).
 
 ### Centrifugo stops accepting new connections, why?
 
@@ -132,7 +132,7 @@ If the underlying transport is HTTP-based, and you use HTTP/2 then this will wor
 
 ### What if I need to send push notifications to mobile or web applications?
 
-We provide [push notifications API](/docs/pro/push_notifications) implementation as part of Centrifugo PRO. It allows sending push notifications to devices - to Apple iOS devices via APNS, Android/iOS/Web devices via FCM. Also, Centrifugo PRO covers HMS (Huawei Mobile Services). But in general the task of push notification delivery may be done using another open-source solution, or with Firebase directly.
+We provide a [push notifications API](/docs/pro/push_notifications) implementation as part of Centrifugo PRO. It allows sending push notifications to devices - to Apple iOS devices via APNS, Android/iOS/Web devices via FCM. Also, Centrifugo PRO covers HMS (Huawei Mobile Services). But in general the task of push notification delivery may be done using another open-source solution, or with Firebase directly.
 
 The reasonable question here is how can you know when you need to send a real-time message to an online client or push notification to its device for an offline client. The solution is pretty simple. You can keep critical notifications for a client in the database. And when a client reads a message you should send an ack to your backend marking the notification as read by the client. Periodically you can check which notifications were sent to clients but have not been read (no read ack received). For such notifications, you can send push notification to the device.
 
@@ -187,11 +187,11 @@ Centrifugo does not support disconnect hooks at this point. We understand that t
 
 Let's consider a case when Centrifugo node is unexpectedly killed. In this case there is no chance for Centrifugo to emit disconnect events for connections on that node. While this may be rare thing in practice – it may lead to inconsistent state in your app if you'd rely on disconnect hooks.
 
-Another reason is that Centrifugo designed to scale to many concurrent connections. Think millions of them. As we [mentioned in our blog](https://centrifugal.dev/blog/2020/11/12/scaling-websocket#massive-reconnect) there are cases when all connections start reconnecting at the same time. In this case Centrifugo could potentially generate lots of disconnect events. Even if disconnect events were queued, rate-limited, or suppressed for quickly reconnected clients there could be situations when your app processes disconnect hook after user already reconnected. This is a racy situation which also can lead to the inconsistency if not properly addressed.
+Another reason is that Centrifugo is designed to scale to many concurrent connections. Think millions of them. As we [mentioned in our blog](https://centrifugal.dev/blog/2020/11/12/scaling-websocket#massive-reconnect) there are cases when all connections start reconnecting at the same time. In this case, Centrifugo could potentially generate lots of disconnect events. Even if disconnect events were queued, rate-limited, or suppressed for quickly reconnected clients there could be situations when your app processes disconnect hook after user already reconnected. This is a racy situation which also can lead to the inconsistency if not properly addressed.
 
 Is there a workaround though? If you need to know that client disconnected and program your business logic around this fact then the reasonable approach could be periodically call your backend while client connection is active and update status somewhere on the backend (possibly using Redis for this). Then periodically do clealup logic for connections/users not updated for a configured interval. This is a robust solution where you can't occasionally miss disconnect events. You can also utilize Centrifugo [connect proxy](../server/proxy.md#connect-proxy) + [refresh proxy](../server/proxy.md#refresh-proxy) for getting notified about initial connection and get periodic refresh requests while connection is alive.
 
-The trade-off of the described workaround scenario is that you will notice disconnection only with some delay – this may be a acceptable in many cases though.
+The trade-off of the described workaround scenario is that you will notice disconnection only with some delay – this may be acceptable in many cases though.
 
 Having said that, processing disconnect events may be reasonable – as a best-effort solution while taking into account everything said above. [Centrifuge](https://github.com/centrifugal/centrifuge) library for Go language (which is the core of Centrifugo) supports client disconnect callbacks on a server-side – so technically the possibility exists. If someone comes with a use case which definitely wins from having disconnect hooks in Centrifugo we are ready to discuss this and try to design a proper solution together.
 
@@ -199,7 +199,7 @@ All the pitfalls and workarounds here may be also applied to unsubscribe event h
 
 ### Is it possible to listen to join/leave events on the app backend side?
 
-No, join/leave events are only available in the client protocol. In most cases join event can be handled by using [subscribe proxy](../server/proxy.md#subscribe-proxy). Leave events are harder – there is no unsubscribe hook available (mostly the same reasons as for disconnect hook described above). So the workaround here can be similar to one for disconnect – ping an app backend periodically while client is subscribed and thus know that client is currently in a channel with some approximation in time.
+No, join/leave events are only available in the client protocol. In most cases join event can be handled by using [subscribe proxy](../server/proxy.md#subscribe-proxy). Leave events are harder – there is no unsubscribe hook available (mostly for the same reasons as for disconnect hook described above). So the workaround here can be similar to one for disconnect – ping an app backend periodically while client is subscribed and thus know that client is currently in a channel with some approximation in time.
 
 ### How scalable is the online presence and join/leave features?
 
@@ -209,11 +209,11 @@ There is `presence_stats` API method that can be helpful if you only need to kno
 
 You may consider using a separate service to deal with presence status information that provides information in near real-time maybe with some reasonable approximation. Centrifugo PRO provides a [user status](../pro/user_status.md) feature which may fit your needs.
 
-The same is true for join/leave messages - as soon as you turn on join/leave events for a channel with many active subscribers each subscriber starts generating indiviaual join/leave events. This may result in many messages sent to each subscriber in a channel, drastically multiplying amount of messages traveling through the system. Especially when all clients reconnect simulteniously. So be careful and estimate the possible load. There is no magic, unfortunately.
+The same is true for join/leave messages - as soon as you turn on join/leave events for a channel with many active subscribers each subscriber starts generating indiviaual join/leave events. This may result in many messages sent to each subscriber in a channel, drastically multiplying the amount of messages traveling through the system. Especially when all clients reconnect simultaneously. So be careful and estimate the possible load. There is no magic, unfortunately.
 
 ### How to send initial data to channel subscriber?
 
-Sometimes you need to send some initial state towards channel subscriber. Centrifugo provides a way to attach any data to a successful subscribe reply when using [subscribe proxy](../server/proxy.md#subscribe-proxy) feature. See `data` and `b64data` fields. This data will be part of `subscribed` event context. And of course, you can always simply send request to get initial data from the application backend before or after subscribing to a channel without Centrifugo connection involved (i.e. using sth like general AJAX/HTTP call or passing data to the template when rendering an application page).
+Sometimes you need to send some initial state to a channel subscriber. Centrifugo provides a way to attach any data to a successful subscribe reply when using [subscribe proxy](../server/proxy.md#subscribe-proxy) feature. See `data` and `b64data` fields. This data will be part of `subscribed` event context. And of course, you can always simply send request to get initial data from the application backend before or after subscribing to a channel without Centrifugo connection involved (i.e. using sth like general AJAX/HTTP call or passing data to the template when rendering an application page).
 
 ### Does Centrifugo support multitenancy?
 
