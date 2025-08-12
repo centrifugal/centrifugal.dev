@@ -26,14 +26,26 @@ This helper command will generate `config.json` file in the working directory wi
     "key": "d7627bb6-2292-4911-82e1-615c0ed3eebb"
   },
   "admin": {
-    "enabled": true,
+    "enabled": false,
     "password": "d0683813-0916-4c49-979f-0e08a686b727",
     "secret": "4e9eafcf-0120-4ddd-b668-8dc40072c78e"
   }
 }
 ```
 
-Now we can start a server. Let's start Centrifugo with a built-in admin web interface:
+Let's change `admin.enabled` to `true`:
+
+```json title="config.json"
+{
+  ...
+  "admin": {
+    "enabled": true,
+    ...
+  }
+}
+```
+
+Now we can start a server:
 
 ```console
 ./centrifugo --config=config.json
@@ -58,7 +70,7 @@ Now let's create `index.html` file with our simple app - it won't work quite yet
 
 <body>
   <div id="counter">-</div>
-  <script src="https://unpkg.com/centrifuge@5.2.2/dist/centrifuge.js"></script>
+  <script src="https://unpkg.com/centrifuge@5.4.0/dist/centrifuge.js"></script>
   <script type="text/javascript">
     const container = document.getElementById('counter');
 
@@ -92,7 +104,7 @@ Now let's create `index.html` file with our simple app - it won't work quite yet
 </html>
 ```
 
-Note that we are using `centrifuge-js` 5.2.2 in this example, getting it from a CDN. You should use its latest version at the moment of reading this tutorial. In a real Javascript app, you would most likely load `centrifuge` from NPM, see more details in [centrifuge-js Github readme](https://github.com/centrifugal/centrifuge-js).
+Note that we are using `centrifuge-js` 5.4.0 in this example, getting it from a CDN. You should use its latest version at the moment of reading this tutorial. In a real Javascript app, you would most likely load `centrifuge` from NPM, see more details in [centrifuge-js Github readme](https://github.com/centrifugal/centrifuge-js).
 
 In the `index.html` above, we created an instance of a Centrifuge client by passing the Centrifugo server's default WebSocket endpoint address to it. Then we subscribed to a channel called `channel` and provided a callback function to process incoming real-time messages (publications). Upon receiving a new publication, we update the page's HTML by setting the counter value to the page title. We call `.subscribe()` to initiate the subscription and the `.connect()` method of the Client to start a WebSocket connection. We also handle Client state transitions (disconnected, connecting, connected) and Subscription state transitions (unsubscribed, subscribing, subscribed) – see a detailed description in [client SDK spec](../transports/client_api.md).
 
