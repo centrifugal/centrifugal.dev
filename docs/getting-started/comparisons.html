@@ -16,7 +16,7 @@
 
 <link rel="search" type="application/opensearchdescription+xml" title="Centrifugo" href="/opensearch.xml">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.85a9a7f7.css">
-<script src="/assets/js/runtime~main.e2bfcc1a.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.235d972a.js" defer="defer"></script>
 <script src="/assets/js/main.d1e766b8.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -32,7 +32,7 @@
 <p>The main difference is that Centrifugo is a self-hosted solution, while the mentioned technologies are all cloud SaaS platforms.</p>
 <p>So, when using Centrifugo, you need to configure and run it on your own; you need to be skilled in engineering. The benefit is obvious – it&#x27;s much cheaper once the integration is done. And all the data stays within your organization.</p>
 <p>With cloud services, all the hard work of setting up an infrastructure for a WebSocket server and its maintenance is done for you. But it&#x27;s more expensive, and the data flows through an external network.</p>
-<p>Another bonus Centrifugo may provide due to its self-hosted nature is a deaper integration with your backend with connection event hooks. During Centrifugo to backend communication the traffic stays within your network infrastructure, which means no additional costs and great latencies.</p>
+<p>Another bonus Centrifugo may provide due to its self-hosted nature is a deeper integration with your backend with connection event hooks. During Centrifugo to backend communication the traffic stays within your network infrastructure, which means no additional costs and great latencies.</p>
 <h2 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="centrifugo-vs-redis">Centrifugo vs Redis<a href="#centrifugo-vs-redis" class="hash-link" aria-label="Direct link to Centrifugo vs Redis" title="Direct link to Centrifugo vs Redis">​</a></h2>
 <p>A popular question from newcomers – does Centrifugo provide the same as Redis PUB/SUB? The answer is that Centrifugo and Redis can&#x27;t be directly compared at all. Centrifugo uses Redis internally for PUB/SUB scalability, keeping channel message history, and online presence.</p>
 <p>You can build a system similar to Centrifugo on top of Redis – but you would need to write a lot of code, i.e., replicate everything that Centrifugo provides out of the box – like real-time client SDKs, client protocol, re-implement all the transport endpoints, write efficient Redis integration, etc.</p>
