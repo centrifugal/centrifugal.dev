@@ -7,6 +7,9 @@ export default class LicenseManager extends React.Component {
     constructor() {
         super();
         this.state = {
+            projectMainKey: '',
+            projectName: '',
+            projectKey: '',
             stagingProviderKey: '',
             stagingKey: '',
             developerProviderKey: '',
@@ -52,6 +55,24 @@ export default class LicenseManager extends React.Component {
         }
     }
 
+    handleProjectSubmit = async () => {
+        if (!this.state.projectMainKey) {
+            alert("Provide a main license key");
+            return;
+        }
+        if (!this.state.projectName) {
+            alert("Provide a project name");
+            return;
+        }
+
+        try {
+            const license = await this.issueLicense(this.state.projectMainKey, 'project', this.state.projectName);
+            this.setState({ projectKey: license, projectMainKey: '', projectName: '' });
+        } catch (error) {
+            alert(`Error issuing project license: ${error.message}`);
+        }
+    }
+
     handleDeveloperSubmit = async () => {
         if (!this.state.developerProviderKey) {
             alert("Provide a license key");
@@ -91,7 +112,7 @@ export default class LicenseManager extends React.Component {
             border: "1px solid #ccc",
             borderRadius: '5px',
             padding: "25px",
-            marginTop: title.includes('organization') ? '20px' : '0'
+            marginTop: '20px'
         };
 
         const inputStyle = {
@@ -139,7 +160,7 @@ export default class LicenseManager extends React.Component {
                     <input
                         onChange={this.handleInputChange(nameField)}
                         value={nameValue}
-                        placeholder="Write the name of the developer here..."
+                        placeholder={nameField === 'projectName' ? "Enter the project name here..." : "Write the name of the developer here..."}
                         style={{
                             ...inputStyle,
                             marginTop: '10px'
@@ -166,11 +187,24 @@ export default class LicenseManager extends React.Component {
         return (
             <div>
                 {this.renderKeyIssueForm({
+                    title: "Create derived project key from main license key",
+                    description: "Generate a project-specific license key from your main license. This allows different projects within your company to have their own keys while deriving from the main license.",
+                    providerKeyValue: this.state.projectMainKey,
+                    providerKeyField: 'projectMainKey',
+                    nameValue: this.state.projectName,
+                    nameField: 'projectName',
+                    keyPlaceholder: "Paste the main license key received from Centrifugal Labs here...",
+                    showNameInput: true,
+                    onSubmit: this.handleProjectSubmit,
+                    resultKey: 'projectKey'
+                })}
+
+                {this.renderKeyIssueForm({
                     title: "Issue the staging license key (for staging or test environments)",
-                    description: "This is a separate key that may be used for staging or test environments. It references the production key.",
+                    description: "This is a separate key that may be used for staging or test environments. It references the project key.",
                     providerKeyValue: this.state.stagingProviderKey,
                     providerKeyField: 'stagingProviderKey',
-                    keyPlaceholder: "Paste the production license key received from Centrifugal Labs here...",
+                    keyPlaceholder: "Paste the project license key here...",
                     onSubmit: this.handleStagingSubmit,
                     resultKey: 'stagingKey'
                 })}
