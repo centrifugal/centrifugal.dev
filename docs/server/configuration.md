@@ -66,6 +66,17 @@ export CENTRIFUGO_PROMETHEUS_ENABLED="true"
 
 Empty environment variables are considered unset (!) and will fall back to the next configuration source.
 
+Since v6.3.0 Centrifugo supports extrapolating custom env variables in `MapStringString` config fields. This may help to define secret map values in config via separate env variables. All such environment vars must have `CENTRIFUGO_VAR_` prefix. For example, when defining static HTTP headers in [proxy](./proxy.md) config:
+
+```json title="config.json"
+  ...
+  "http": {
+    "static_headers": {
+      "Authorization": "Bearer ${CENTRIFUGO_VAR_API_TOKEN}"
+    }
+  }
+```
+
 ### Configuration file
 
 Configuration file supports all options mentioned in Centrifugo documentation and can be in one of three supported formats: JSON, YAML, or TOML.

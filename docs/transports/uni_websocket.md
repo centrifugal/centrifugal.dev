@@ -6,6 +6,8 @@ sidebar_label: WebSocket
 
 While WebSocket is bidirectional transport in its nature Centrifugo provides its unidirectional version too to give developers more choice in transports when using the unidirectional approach.
 
+When using unidirectional WebSocket Centrifugo uses both native frame ping/pong mechanism and periodic Centrifugo protocol specific application-level pings. This combination allows to detect broken connections faster and still have server ping accessible for application-level logic.
+
 ## How to enable
 
 ```json title=config.json
@@ -26,7 +28,9 @@ Default unidirectional WebSocket connection endpoint in Centrifugo is:
 
 ## Send connect request
 
-Once connection established you must pass [ConnectRequest](./uni_client_protocol.md#connectrequest) as first WebSocket message to server.
+Once connection established you should pass [ConnectRequest](./uni_client_protocol.md#connectrequest) as first WebSocket message to server. This allows Centrifugo to authenticate the connection.
+
+Alternatively, since Centrifugo v6.3.0 you can use `cf_connect` URL query parameter to pass connection command in the URL itself. This way you can connect to unidirectional WebSocket endpoint without sending the first connect message from client to server. This works similar to what [Centrifugo has for unidirectional SSE](./uni_sse.md#send-connect-request) transport.
 
 ## Supported data formats
 

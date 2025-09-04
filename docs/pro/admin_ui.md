@@ -1,7 +1,7 @@
 ---
 id: admin_ui
-sidebar_label: "Admin UI: SSO, more data"
-title: "Admin UI: SSO and more system state data"
+sidebar_label: "Admin UI: SSO, Snapshots"
+title: "Admin UI: SSO, State Snapshots, and more"
 ---
 
 Admin UI of Centrifugo OSS supports only one admin user identified by the preconfigured password. For the corporate and enterprise environments Centrifugo PRO provides a way to integrate with popular User [Identity Providers](https://en.wikipedia.org/wiki/Identity_provider) (IDP), such as Okta, KeyCloak, Google Workspace, Azure and others. Most of the modern providers which support [OpenID connect](https://openid.net/specs/openid-connect-core-1_0.html) (OIDC) protocol with [Proof Key for Code Exchange](https://oauth.net/2/pkce/)
@@ -15,7 +15,7 @@ As soon as OIDC integration configured, instead of password field Centrifugo PRO
 
 ![](/img/admin_idp_auth.png)
 
-## Configuration
+### Configuration
 
 ```json title="config.json"
 {
@@ -78,17 +78,68 @@ This is usually not recommended, since every new user in your IDP will get acces
 }
 ```
 
+## Channels and Connections Snapshots
+
+This feature allows using admin web UI to inspect current connections and channels state. It allows to:
+
+* See current connections and channels state in the cluster
+* Search connections by user ID, inspect subscribers of the channel
+* See connection details: transport, client info, subscribed channels, how subscription was made, connection latency (for bidirectional transports only), connection time, etc.
+* Disconnect/Reconnect a specific connection
+* Integrates with Centrifugo PRO [Tracing](./tracing.md) to trace particular channel or particular connection in real-time.
+
+Centrifugo PRO saves snapshot metadata to PostgreSQL database. The connections and channels raw data is effectively inserted to ClickHouse from each node during collection, so there is no expensive inter-node communication. Snapshot raw data in ClickHouse expires in 14 days by default.
+
+<video width="100%" loop={true} autoPlay="autoplay" muted controls src="/img/snapshots_demo.mp4"></video>
+
+:::caution
+
+This feature is in beta state now. Use with caution in production. Snapshot collection may add memory and CPU overhead to Centrifugo nodes.
+
+:::
+
+### Configuration
+
+To enable Snapshots feature you need to turn on admin web UI, enable `snapshots` inside `clickhouse_analytics` section and also enable `database` section with PostgreSQL.
+
+```json title="config.json"
+{
+  "admin": {
+    "enabled": true,
+    "password": "secure-password-here",
+    "secret": "long-secret-here"
+  },
+  "clickhouse_analytics": {
+    "enabled": true,
+    "clickhouse_dsn": [
+      "tcp://127.0.0.1:9000",
+    ],
+    "clickhouse_database": "centrifugo",
+    "clickhouse_cluster": "centrifugo_cluster",
+    "snapshots": {
+      "enabled": true
+    }
+  },
+  "database": {
+    "enabled": true,
+    "postgresql": {
+      "dsn": "postgres://test:test@localhost:5432/test?sslmode=disable"
+    }
+  }
+}
+```
+
 ## More data in admin UI
 
 * an ability to show: CPU and RSS memory usage of each node, updated in near real-time
 * show aggregations over `node.info_metrics_aggregate_interval` for each node:
-  * Distribution by client name
-  * Client incoming frames rate
-  * Client outgoing frames rate
-  * Client connect rate
-  * Client subscribe rate
-  * Server API calls rate
-  * Publication rate
+* Distribution by client name
+* Client incoming frames rate
+* Client outgoing frames rate
+* Client connect rate
+* Client subscribe rate
+* Server API calls rate
+* Publication rate
 
 Here is how this looks like:
 
