@@ -93,6 +93,39 @@ function Pro() {
                         </>
                     }
                 />
+                < Highlight
+                    img={
+                        <iframe
+                        width="560"
+                        height="315"
+                        src="/img/snapshots_demo.mp4"
+                        title="Messenger tutorial"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                        />
+                    }
+                    reversed
+                    isDark
+                    title="Unlimited power"
+                    text={
+                        <>
+                        <p>
+                            Centrifugo PRO allows you to monitor activity down to individual channels or connections. Scalability and performance improvements can dramatically increase throughput and optimize resource usage of the real-time application. You also get support for sending push notifications making the client-facing messaging system complete.
+                        </p>
+                        <div className={styles.buttons}>
+                            <Link
+                                className={clsx(
+                                    "button button--outline button--secondary button--lg",
+                                    styles.getStarted
+                                )}
+                                to={useBaseUrl("docs/pro/overview")}
+                            >
+                                Go to Centrifugo PRO docs
+                            </Link>
+                        </div>
+                        </>
+                    }
+                />
                 <section className={clsx("features-wrapper", styles.features)}>
                     <div className="container">
                         <div className="row">
@@ -109,7 +142,7 @@ function Pro() {
                                 More options to layout your architecture: <a href={"/docs/pro/scalability#subscribe-on-replica"}>Redis replicas</a>, Redis <a href={"/docs/pro/scalability#redis-cluster-sharded-pubsub"}>sharded PUB/SUB</a>, <a href={"/docs/pro/namespace_engines"}>per-namespace Broker</a> configurations.
                             </Feature>
                             <Feature title="Better observability" imageUrl="img/feature_pro.png">
-                                A <a href={"/docs/pro/observability_enhancements"}>better observability</a> of your Centrifugo cluster: additional metric insights, real-time tracing and <a href={"/docs/pro/analytics"}>ClickHouse integration</a>.
+                                A <a href={"/docs/pro/observability_enhancements"}>better observability</a> of your Centrifugo cluster: additional metric insights, real-time tracing and <a href={"/docs/pro/analytics"}>ClickHouse integration</a>, state <a href="/docs/pro/admin_ui#channels-and-connections-snapshots">snapshots</a>.
                             </Feature>
                             <Feature title="Protocol rate limits" imageUrl="img/feature_protection.png">
                                 <a href={"/docs/pro/rate_limiting"}>Protect your real-time APIs</a> from misusing and client-side bugs. Detect and disconnect clients generating lots of errors.
