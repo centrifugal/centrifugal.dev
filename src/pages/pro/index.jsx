@@ -106,11 +106,11 @@ function Pro() {
                     }
                     reversed
                     isDark
-                    title="Unlimited power"
+                    title="Powerful and complete"
                     text={
                         <>
                         <p>
-                            Centrifugo PRO allows you to monitor activity down to individual channels or connections. Scalability and performance improvements can dramatically increase throughput and optimize resource usage of the real-time application. You also get support for sending push notifications making the client-facing messaging system complete.
+                            Centrifugo PRO allows you to monitor activity down to individual channels or connections. Scalability and performance improvements can dramatically increase throughput and optimize resource usage of the real-time application. You also get support for sending push notifications making the client-facing real-time messaging system complete.
                         </p>
                         <div className={styles.buttons}>
                             <Link
