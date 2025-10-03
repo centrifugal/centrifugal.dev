@@ -1,6 +1,6 @@
 ---
 id: history_and_recovery
-title: History and recovery
+title: History and stream recovery
 ---
 
 Centrifugo engines can maintain publication history for channels with configured history size and TTL.

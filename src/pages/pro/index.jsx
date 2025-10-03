@@ -129,8 +129,8 @@ function Pro() {
                 <section className={clsx("features-wrapper", styles.features)}>
                     <div className="container">
                         <div className="row">
-                            <Feature title="Faster performance" imageUrl="img/feature_performance.png">
-                                PRO version <a href={"/docs/pro/performance"}>pushes the performance</a> of Centrifugo to the next level. Optimizations for higher throughput, lower latency, better resource usage.
+                            <Feature title="Lower resource costs" imageUrl="img/feature_performance.png">
+                                PRO version <a href={"/docs/pro/performance"}>pushes the performance</a> of Centrifugo to the next level. Optimizations for higher throughput. Lower latency, resource usage and <a href={"/docs/pro/bandwidth_optimizations"}>bandwidth</a>.
                             </Feature>
                             <Feature title="Push notifications" imageUrl="img/feature_mail.png">
                                 Support for sending <a href={"/docs/pro/push_notifications"}>push notifications</a> with secure topics and flexible API. Integrates with FCM, APNs and HMS push providers.

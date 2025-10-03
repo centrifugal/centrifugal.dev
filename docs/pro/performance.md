@@ -119,14 +119,15 @@ Check out blog post [Performance optimizations of WebSocket compression in Go ap
 
 Centrifugo PRO also provides other optimizations which can significantly affect resource usage and which are described individually, see:
 
-* [Message batching control](./client_msg_batching.md)
 * [Scalability optimizations](./scalability.md)
+* [Bandwidth optimizations](./bandwidth_optimizations.md)
+* [Message batching control](./client_msg_batching.md)
 
 ## Examples
 
 Let's look at quick live comparisons of Centrifugo OSS and Centrifugo PRO regarding HTTP API performance.
 
-### Publish HTTP API 
+### Publish HTTP API
 
 <video width="100%" controls>
   <source src="/img/pro_api_publish_perf.mp4" type="video/mp4" />
