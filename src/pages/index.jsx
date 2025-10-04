@@ -276,7 +276,7 @@ function Home() {
           text={
             <>
               <p>
-                Centrifugal Labs offers a PRO version of Centrifugo that includes a set of unique features, additional APIs, and enhanced performance. Ever dreamed about a self-hosted real-time messaging system combined with a push notification system? Want to benefit from analytics of real-time connections and subscriptions? Centrifugo PRO makes this possible. And much more actually.
+                Centrifugal Labs offers a PRO version of Centrifugo that includes a set of unique features, additional APIs, and enhanced performance. Ever dreamed about a self-hosted real-time messaging system combined with a push notification system? Want to benefit from analytics of real-time connections and subscriptions? Centrifugo PRO makes this all possible.
               </p>
               <div className={styles.buttons}>
                 <Link
