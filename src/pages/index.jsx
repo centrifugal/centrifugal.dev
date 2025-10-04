@@ -15,6 +15,7 @@ import OpenWeb from "./components/logos/OpenWeb";
 import TestimonialsCarousel from '../components/TestimonialsCarousel';
 import ProBanner from '../components/ProBanner';
 import ImageRotator from '../components/ImageRotator';
+import GitHubStarButton from '../components/GitHubStarButton';
 
 function Feature({ imageUrl, title, children }) {
   const imgUrl = useBaseUrl(imageUrl);
@@ -59,6 +60,7 @@ function Header() {
           >
             GET STARTED
           </Link>
+          <GitHubStarButton />
         </div>
       </div>
     </header >

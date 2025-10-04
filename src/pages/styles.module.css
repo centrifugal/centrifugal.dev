@@ -91,6 +91,8 @@ html[data-theme="light"] .subSubTitle {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
 }
 
 .buttons a {
