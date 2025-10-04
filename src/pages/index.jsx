@@ -16,6 +16,7 @@ import TestimonialsCarousel from '../components/TestimonialsCarousel';
 import ProBanner from '../components/ProBanner';
 import ImageRotator from '../components/ImageRotator';
 import GitHubStarButton from '../components/GitHubStarButton';
+import QuickStart, { QuickStartDescription } from '../components/QuickStart';
 
 function Feature({ imageUrl, title, children }) {
   const imgUrl = useBaseUrl(imageUrl);
@@ -102,6 +103,20 @@ function Home() {
             </div>
           </div>
         </section>
+        <Highlight
+          img={<QuickStart />}
+          title=""
+          text={
+            <QuickStartDescription>
+              <p>
+                Get Centrifugo running in seconds with a single Docker command.
+              </p>
+              <p>
+                Lightweight but with Centrifugal force inside. See <a href="/docs/getting-started/installation">all the ways to install</a>.
+              </p>
+            </QuickStartDescription>
+          }
+        />
         <section className={clsx("features-wrapper", styles.features)}>
           <div className="container">
             <div className="row">

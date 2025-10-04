@@ -1,0 +1,200 @@
+.quickStart {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.terminalWindow {
+    background: #1e1e1e;
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    width: 100%;
+    max-width: 600px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+}
+
+.terminalHeader {
+    background: #2d2d2d;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #3d3d3d;
+}
+
+.terminalButtons {
+    display: flex;
+    gap: 6px;
+}
+
+.terminalButtons span {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.buttonRed {
+    background: #ff5f56;
+}
+
+.buttonYellow {
+    background: #ffbd2e;
+}
+
+.buttonGreen {
+    background: #27c93f;
+}
+
+.terminalTitle {
+    color: #888;
+    font-size: 13px;
+    flex: 1;
+    text-align: center;
+    margin-right: 60px;
+}
+
+.terminalBody {
+    padding: 20px;
+    position: relative;
+    min-height: 60px;
+}
+
+.commandLine {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #f8f8f2;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.prompt {
+    color: #50fa7b;
+    font-weight: bold;
+    user-select: none;
+}
+
+.command {
+    color: #f8f8f2;
+    word-break: break-all;
+}
+
+.copyButton {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    padding: 8px;
+    cursor: pointer;
+    color: #f8f8f2;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.copyButton:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.copyButton:active {
+    transform: scale(0.95);
+}
+
+.copyButton svg {
+    display: block;
+}
+
+/* Light theme adjustments */
+html[data-theme="light"] .terminalWindow {
+    background: #f5f5f5;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+html[data-theme="light"] .terminalHeader {
+    background: #e8e8e8;
+    border-bottom: 1px solid #d0d0d0;
+}
+
+html[data-theme="light"] .terminalBody {
+    background: #606060;
+}
+
+html[data-theme="light"] .terminalTitle {
+    color: #666;
+}
+
+/* Description styling for accompanying text */
+.description {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+    font-size: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 0 10px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.description p {
+    margin: 0;
+    padding: 15px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 0.9rem;
+    line-height: 1.6em !important;
+    color: #a4a4a4;
+}
+
+.description p:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.description p:first-child {
+    padding-top: 0;
+}
+
+html[data-theme="light"] .description {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+html[data-theme="light"] .description p {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    color: #676767;
+}
+
+html[data-theme="light"] .description p:last-child {
+    border-bottom: none;
+}
+
+/* Responsive */
+@media screen and (max-width: 600px) {
+    .terminalWindow {
+        max-width: 100%;
+    }
+
+    .commandLine {
+        font-size: 12px;
+    }
+
+    .terminalTitle {
+        margin-right: 40px;
+        font-size: 11px;
+    }
+
+    .command {
+        word-break: break-word;
+    }
+
+    .description p:first-child {
+        padding-top: 0;
+    }
+}
