@@ -6,6 +6,11 @@
   top: 0.5em;
 }
 
+.proCat {
+  top: -40px;
+  width: 210px;
+}
+
 @media screen and (max-width: 600px) {
   .proSuffixPosition {
     right: -45px;
