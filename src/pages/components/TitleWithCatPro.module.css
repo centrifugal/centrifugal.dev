@@ -1,0 +1,13 @@
+.proSuffixPosition {
+  position: absolute;
+  right: -65px;
+  white-space: nowrap;
+  font-size: 0.5em;
+  top: 0.5em;
+}
+
+@media screen and (max-width: 600px) {
+  .proSuffixPosition {
+    right: -45px;
+  }
+}

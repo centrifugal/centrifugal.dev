@@ -8,6 +8,7 @@ import styles from "../styles.module.css";
 import Logo from "../components/logo";
 import { useColorMode } from '@docusaurus/theme-common';
 import Highlight from '../components/Highlight'
+import TitleWithCatPro from '../components/TitleWithCatPro'
 import ImageRotator from '../../components/ImageRotator';
 import Pricing from '../components/Pricing';
 
@@ -35,8 +36,7 @@ function Header() {
             <Logo isDarkTheme={isDarkTheme} />
             <div className="container" style={{ "zIndex": 1, pointerEvents: "none" }}>
                 <div className={styles.mainTitle}>
-                  <span>CENTRIFUGO</span>
-                  <span className={styles.proSuffix}>&nbsp;PRO</span>
+                  <TitleWithCatPro />
                 </div>
                 <div className={styles.subTitle}>
                     Unlock the full power of Centrifugo

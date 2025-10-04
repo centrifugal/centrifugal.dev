@@ -1,0 +1,36 @@
+.titleContainer {
+  position: relative;
+  display: inline-block;
+}
+
+.title {
+  position: relative;
+  z-index: 2;
+}
+
+.cat {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-40%) translateY(1px);
+  width: 200px;
+  height: auto;
+  pointer-events: none;
+  display: none;
+}
+
+.catLeft {
+  z-index: 3;
+  clip-path: inset(0 50% 0 0);
+}
+
+.catRight {
+  z-index: 1;
+  clip-path: inset(0 0 0 50%);
+}
+
+@media (min-width: 997px) {
+  .cat {
+    display: block;
+  }
+}
