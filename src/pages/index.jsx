@@ -173,6 +173,33 @@ function Home() {
             </>
           }
         />
+        < Highlight
+          img={
+            <img src="/img/broadcast.svg" alt="Broadcast illustration" style={{ backgroundColor: '#17171B', borderRadius: '10px' }} />
+          }
+          title="Efficient message broadcast"
+          text={
+            <>
+              <p>
+                Centrifugo excels at broadcasting messages to many subscribers simultaneously. The effective client protocol minimizes resource usage, allowing for high-throughput message distribution at scale.
+              </p>
+              <p>
+                The design of Centrifugo is optimized for scenarios where a single message needs to be sent to thousands or even millions of clients, making it ideal for real-time applications that require instant updates to large audiences.
+              </p>
+              <div className={styles.buttons}>
+                <Link
+                    className={clsx(
+                        "button button--outline button--secondary button--lg",
+                        styles.getStarted
+                    )}
+                    to={useBaseUrl("/blog/2020/02/10/million-connections-with-centrifugo")}
+                >
+                  Million connections and 500K msg/s in K8S
+                </Link>
+              </div>
+            </>
+          }
+        />
         <TestimonialsCarousel />
         < Highlight
           img={
@@ -186,6 +213,7 @@ function Home() {
             />
           }
           title="Looking for a cool demo?"
+          reversed
           text={
             <>
               <p>
@@ -217,7 +245,6 @@ function Home() {
               allowFullScreen
             />
           }
-          reversed
           isDark
           title="Slack-scale messenger?"
           text={
@@ -245,6 +272,7 @@ function Home() {
             <ImageRotator />
           }
           title="Are you Enterprise?"
+          reversed
           text={
             <>
               <p>
