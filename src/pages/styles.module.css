@@ -103,7 +103,7 @@ html[data-theme="light"] .subSubTitle {
     opacity: 0.4;
     margin-top: 15px;
     text-align: center;
-    padding: 25px 0;
+    padding: 40px 0;
 }
 
 .logos svg {
@@ -112,6 +112,61 @@ html[data-theme="light"] .subSubTitle {
 
 html[data-theme="dark"] .logos svg * {
     fill: white;
+}
+
+.logosHeader,
+.logosFooter {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 30px;
+}
+
+.logosFooter {
+    margin-top: 30px;
+    margin-bottom: 0;
+}
+
+.logosGrid {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.logoItem {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 100px;
+}
+
+@media screen and (max-width: 996px) {
+    .logosGrid {
+        gap: 30px;
+    }
+
+    .logoItem {
+        min-width: 80px;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .logosGrid {
+        gap: 20px;
+    }
+
+    .logoItem {
+        min-width: 60px;
+    }
+
+    .logosHeader,
+    .logosFooter {
+        font-size: 12px;
+    }
 }
 
 .features {

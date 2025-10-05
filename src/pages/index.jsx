@@ -13,6 +13,14 @@ import Badoo from "./components/logos/Badoo";
 import Grafana from "./components/logos/Grafana";
 import ManyChat from "./components/logos/ManyChat";
 import OpenWeb from "./components/logos/OpenWeb";
+import Mayflower from "./components/logos/Mayflower";
+import Exness from "./components/logos/Exness";
+import InDrive from "./components/logos/InDrive";
+import Plata from "./components/logos/Plata";
+import AzuraCast from "./components/logos/AzuraCast";
+import Selectel from "./components/logos/Selectel";
+import Nobitex from "./components/logos/Nobitex";
+import Altamira from "./components/logos/Altamira";
 import TestimonialsCarousel from '../components/TestimonialsCarousel';
 import ProBanner from '../components/ProBanner';
 import ImageRotator from '../components/ImageRotator';
@@ -82,24 +90,45 @@ function Home() {
       <main>
         <section className={clsx("logos-wrapper", styles.logos)}>
           <div className="container">
-            <div className="row justify-content-center">
-              <div className="col" style={{ 'fontSize': '14px' }}>
-                USED IN PRODUCTS OF SUCCESSFUL COMPANIES
-              </div>
-              <div className="col">
+            <div className={styles.logosHeader}>
+              USED IN PRODUCTS OF SUCCESSFUL COMPANIES. THOUSANDS OF REAL INSTALLATIONS.
+            </div>
+            <div className={styles.logosGrid}>
+              <div className={styles.logoItem}>
                 <Badoo />
               </div>
-              <div className="col">
+              <div className={styles.logoItem}>
                 <Grafana />
               </div>
-              <div className="col">
+              <div className={styles.logoItem}>
                 <ManyChat />
               </div>
-              <div className="col">
+              <div className={styles.logoItem}>
                 <OpenWeb />
               </div>
-              <div className="col" style={{ 'fontSize': '14px' }}>
-                THOUSANDS OF REAL INSTALLATIONS
+              <div className={styles.logoItem}>
+                <Mayflower />
+              </div>
+              <div className={styles.logoItem}>
+                <Exness />
+              </div>
+              <div className={styles.logoItem}>
+                <AzuraCast />
+              </div>
+              <div className={styles.logoItem}>
+                <Selectel />
+              </div>
+              <div className={styles.logoItem}>
+                <Plata />
+              </div>
+              <div className={styles.logoItem}>
+                <Nobitex />
+              </div>
+              <div className={styles.logoItem}>
+                <InDrive />
+              </div>
+              <div className={styles.logoItem}>
+                <Altamira />
               </div>
             </div>
           </div>
