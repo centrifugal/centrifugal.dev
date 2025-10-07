@@ -7,8 +7,8 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 import styles from "./styles.module.css";
 import Logo from "./components/logo";
 import { useColorMode } from '@docusaurus/theme-common';
-import Highlight from './components/Highlight'
-import TitleWithCat from './components/TitleWithCat'
+import Highlight from './components/Highlight';
+import TitleWithCat from './components/TitleWithCat';
 import Badoo from "./components/logos/Badoo";
 import Grafana from "./components/logos/Grafana";
 import ManyChat from "./components/logos/ManyChat";
@@ -51,9 +51,7 @@ function Header() {
       <Logo isDarkTheme={isDarkTheme} />
       <div className="container" style={{ "zIndex": 1, pointerEvents: "none" }}>
         <div className={styles.mainTitle}>
-          {/* <span style={{ "color": "#d34343" }}> */}
           <TitleWithCat />
-          {/* </span> */}
         </div>
         <div className={styles.subTitle}>
           Wash away WebSocket scalability issues
@@ -73,7 +71,7 @@ function Header() {
           <GitHubStarButton />
         </div>
       </div>
-    </header >
+    </header>
   );
 }
 
