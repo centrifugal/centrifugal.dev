@@ -39,8 +39,7 @@ export default class LicenseInput extends React.Component {
         }
 
         try {
-            const license = await this.exchangeLicense(this.state.providerKey);
-            this.setState({ centrifugalKey: data.license, providerKey: '' });
+            await this.exchangeLicense(this.state.providerKey);
         } catch (error) {
             alert(`Error issuing staging license: ${error.message}`);
         }
