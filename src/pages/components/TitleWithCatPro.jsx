@@ -14,20 +14,26 @@ function TitleWithCatPro() {
   const eyePath1 = "M1670 1545 c-15 -18 -5 -64 15 -72 45 -17 87 26 65 67 -13 24 -61 27 -80 5z";
   const eyePath2 = "M2217 1540 c-28 -40 5 -86 51 -73 26 6 40 48 25 72 -16 25 -59 26 -76 1z";
 
-  const eyeBackgroundColor = isDarkTheme ? '#ffffff' : '#cfcfcf';
-  const eyePupilColor = isDarkTheme ? catColor : '#a8a6a6';
+  const eyeBackgroundColor = isDarkTheme ? '#699176' : '#cfcfcf';
+  const eyePupilColor = catColor;
 
   return (
     <div className={styles.titleContainer}>
       {/* Left part of cat - on top of title */}
-      <svg className={`${styles.cat} ${styles.catLeft} ${proLocalStyles.proCat}`} style={{ color: catColor }} version="1.0" xmlns="http://www.w3.org/2000/svg"
-        width="760.000000pt" height="233.000000pt" viewBox="0 0 760.000000 233.000000"
+      <svg
+        className={`${styles.cat} ${styles.catLeft} ${proLocalStyles.proCat}`}
+        style={{ '--eye-open-color': eyeBackgroundColor, '--cat-color': catColor, color: catColor }}
+        version="1.0"
+        xmlns="http://www.w3.org/2000/svg"
+        width="760.000000pt"
+        height="233.000000pt"
+        viewBox="0 0 760.000000 233.000000"
         preserveAspectRatio="xMidYMid meet">
         <g transform="translate(0.000000,233.000000) scale(0.100000,-0.100000)"
           fill="currentColor" stroke="none">
           <path d={mainPath}/>
-          <path fill={eyeBackgroundColor} d={eyeCircle1Path}/>
-          <path fill={eyeBackgroundColor} d={eyeCircle2Path}/>
+          <path className={proLocalStyles.eyeBlink} fill={eyeBackgroundColor} d={eyeCircle1Path}/>
+          <path className={proLocalStyles.eyeBlink} fill={eyeBackgroundColor} d={eyeCircle2Path}/>
           <path fill={eyePupilColor} d={eyePath1}/>
           <path fill={eyePupilColor} d={eyePath2}/>
         </g>
@@ -37,14 +43,20 @@ function TitleWithCatPro() {
         <span className={`${proStyles.proSuffix} ${proLocalStyles.proSuffixPosition}`}>PRO</span>
       </div>
       {/* Right part of cat - behind title */}
-      <svg className={`${styles.cat} ${styles.catRight} ${proLocalStyles.proCat}`} style={{ color: catColor }} version="1.0" xmlns="http://www.w3.org/2000/svg"
-        width="760.000000pt" height="233.000000pt" viewBox="0 0 760.000000 233.000000"
+      <svg
+        className={`${styles.cat} ${styles.catRight} ${proLocalStyles.proCat}`}
+        style={{ '--eye-open-color': eyeBackgroundColor, '--cat-color': catColor, color: catColor }}
+        version="1.0"
+        xmlns="http://www.w3.org/2000/svg"
+        width="760.000000pt"
+        height="233.000000pt"
+        viewBox="0 0 760.000000 233.000000"
         preserveAspectRatio="xMidYMid meet">
         <g transform="translate(0.000000,233.000000) scale(0.100000,-0.100000)"
           fill="currentColor" stroke="none">
           <path d={mainPath}/>
-          <path fill={eyeBackgroundColor} d={eyeCircle1Path}/>
-          <path fill={eyeBackgroundColor} d={eyeCircle2Path}/>
+          <path className={proLocalStyles.eyeBlink} fill={eyeBackgroundColor} d={eyeCircle1Path}/>
+          <path className={proLocalStyles.eyeBlink} fill={eyeBackgroundColor} d={eyeCircle2Path}/>
           <path d={eyePath1}/>
           <path d={eyePath2}/>
         </g>
