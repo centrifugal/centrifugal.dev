@@ -77,7 +77,7 @@ function Pro() {
                     text={
                         <>
                             <p>
-                                Centrifugal Labs offers a PRO version of Centrifugo featuring unique capabilities, additional APIs, and enhanced performance. These improvements are the result of real-world experience managing large-scale concurrent connections in production environments. You gain more features, greater scalability and performance, improved observability, prioritized support for the business.
+                                Centrifugal Labs offers a PRO version of Centrifugo featuring unique capabilities, additional APIs, enhanced performance. These improvements are the result of real-world experience managing large-scale concurrent connections in production environments. You gain more features, greater scalability and performance, improved observability, prioritized support for the business.
                             </p>
                             <div className={styles.buttons}>
                                 <Link

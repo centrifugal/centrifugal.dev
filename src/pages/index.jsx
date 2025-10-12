@@ -208,7 +208,7 @@ function Home() {
           text={
             <>
               <p>
-                Centrifugo excels at broadcasting messages to many subscribers simultaneously. The effective client protocol minimizes resource usage, allowing for high-throughput message distribution at scale.
+                Centrifugo excels at broadcasting messages to many subscribers simultaneously. The efficient client protocol (JSON or binary Protobuf) enables high-throughput messaging at scale.
               </p>
               <p>
                 The design of Centrifugo is optimized for scenarios where a single message needs to be sent to thousands or even millions of clients, making it ideal for real-time applications that require instant updates to large audiences.

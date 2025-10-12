@@ -68,6 +68,7 @@ Below you can find an information regarding support of different features in our
 | batching API                               | ✅  |      |       |    |      |        |
 | bidirectional WebSocket emulation          | ✅  |      |       |    |      |        |
 | headers emulation                          | ✅  | ✅    | na    | na | na   | na     |
+| channel compaction (Centrifugo PRO)        | ✅  |      |       |    |      |        |
 
 </div>
 
@@ -88,5 +89,6 @@ Below you can find an information regarding support of different features in our
 | manage subscription registry                 | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
 | optimistic subscriptions                     | ✅  |      |       |    |      |        |
 | delta compression                            | ✅  |  ✅   |  ✅   |  ✅  | ✅    | ✅      |
+| publication tags filter                      | ✅  |      |       |    |      |        |
 
 </div>
