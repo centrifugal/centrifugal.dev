@@ -433,6 +433,12 @@ Centrifugo uses Go language [regexp](https://pkg.go.dev/regexp) package for regu
 
 `allowed_delta_types` (array of strings, the only allowed value now is `fossil`) - provide an array of allowed delta compression types in the namespace. If not specified – client won't be able to negotiate delta compression in channels.
 
+### allow_tags_filter
+
+Available since Centrifugo v6.4.0.
+
+`allow_tags_filter` (boolean, default `false`) - allows using tags filter when subscribing to channels in a namespace. See [Channel publication filtering](./publication_filtering.md) chapter for more details.
+
 ### subscribe_proxy_enabled
 
 `subscribe_proxy_enabled` (boolean, default `false`) – turns on subscribe proxy, more info in [proxy chapter](proxy.md)
@@ -516,6 +522,12 @@ Centrifugo uses Go language [regexp](https://pkg.go.dev/regexp) package for regu
 ### batch_flush_latest
 
 `batch_flush_latest` (bool, default `false`) – allows sending only the latest message in collected batch. See more details in Centrifugo PRO [Message batching control](../pro/client_msg_batching.md) documentation.
+
+### allow_channel_compaction
+
+Available since Centrifugo v6.4.0.
+
+`allow_channel_compaction` (boolean, default `false`, Centrifugo PRO only) – allows real-time SDKs to negotiate [channel compaction](../pro/bandwidth_optimizations.md#channel-compaction) in a namespace.
 
 ## Channel config examples
 
