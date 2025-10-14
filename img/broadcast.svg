@@ -1,0 +1,229 @@
+<svg viewBox="10 30 390 240" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <radialGradient id="pulseGrad">
+            <stop offset="0%" style="stop-color:#FE5E5E;stop-opacity:0.8" />
+            <stop offset="100%" style="stop-color:#FE5E5E;stop-opacity:0" />
+        </radialGradient>
+
+        <filter id="glow">
+            <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+            <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+    </defs>
+
+    <!-- Broadcast wave pulses -->
+    <g opacity="0.4">
+        <circle cx="200" cy="150" r="0" fill="none" stroke="#FE5E5E" stroke-width="2">
+            <animate attributeName="r" values="0;120" dur="3s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="1;0" dur="3s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="200" cy="150" r="0" fill="none" stroke="#FE5E5E" stroke-width="2">
+            <animate attributeName="r" values="0;120" dur="3s" begin="1s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="1;0" dur="3s" begin="1s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="200" cy="150" r="0" fill="none" stroke="#FE5E5E" stroke-width="2">
+            <animate attributeName="r" values="0;120" dur="3s" begin="2s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="1;0" dur="3s" begin="2s" repeatCount="indefinite"/>
+        </circle>
+    </g>
+
+    <!-- Connection lines to subscribers -->
+    <g stroke="#393940" stroke-width="1" opacity="0.3">
+        <line x1="200" y1="150" x2="80" y2="60"/>
+        <line x1="200" y1="150" x2="150" y2="50"/>
+        <line x1="200" y1="150" x2="250" y2="50"/>
+        <line x1="200" y1="150" x2="320" y2="60"/>
+        <line x1="200" y1="150" x2="60" y2="150"/>
+        <line x1="200" y1="150" x2="340" y2="150"/>
+        <line x1="200" y1="150" x2="80" y2="240"/>
+        <line x1="200" y1="150" x2="150" y2="250"/>
+        <line x1="200" y1="150" x2="250" y2="250"/>
+        <line x1="200" y1="150" x2="320" y2="240"/>
+    </g>
+
+    <!-- Data packets traveling to subscribers -->
+    <g fill="#FE5E5E" filter="url(#glow)">
+        <!-- Top left -->
+        <circle r="3">
+            <animateMotion dur="2s" repeatCount="indefinite" path="M 200,150 L 80,60"/>
+            <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="2s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- Top center-left -->
+        <circle r="3">
+            <animateMotion dur="2s" begin="0.3s" repeatCount="indefinite" path="M 200,150 L 150,50"/>
+            <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="2s" begin="0.3s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- Top center-right -->
+        <circle r="3">
+            <animateMotion dur="2s" begin="0.6s" repeatCount="indefinite" path="M 200,150 L 250,50"/>
+            <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="2s" begin="0.6s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- Top right -->
+        <circle r="3">
+            <animateMotion dur="2s" begin="0.9s" repeatCount="indefinite" path="M 200,150 L 320,60"/>
+            <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="2s" begin="0.9s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- Left -->
+        <circle r="3">
+            <animateMotion dur="2s" begin="1.2s" repeatCount="indefinite" path="M 200,150 L 60,150"/>
+            <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="2s" begin="1.2s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- Right -->
+        <circle r="3">
+            <animateMotion dur="2s" begin="1.5s" repeatCount="indefinite" path="M 200,150 L 340,150"/>
+            <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="2s" begin="1.5s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- Bottom left -->
+        <circle r="3">
+            <animateMotion dur="2s" begin="1.8s" repeatCount="indefinite" path="M 200,150 L 80,240"/>
+            <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="2s" begin="1.8s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- Bottom center-left -->
+        <circle r="3">
+            <animateMotion dur="2s" begin="0.2s" repeatCount="indefinite" path="M 200,150 L 150,250"/>
+            <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="2s" begin="0.2s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- Bottom center-right -->
+        <circle r="3">
+            <animateMotion dur="2s" begin="0.5s" repeatCount="indefinite" path="M 200,150 L 250,250"/>
+            <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="2s" begin="0.5s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- Bottom right -->
+        <circle r="3">
+            <animateMotion dur="2s" begin="0.8s" repeatCount="indefinite" path="M 200,150 L 320,240"/>
+            <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="2s" begin="0.8s" repeatCount="indefinite"/>
+        </circle>
+    </g>
+
+    <!-- Subscriber nodes with receive animation -->
+    <g fill="#393940" stroke="#FE5E5E" stroke-width="2">
+        <!-- Top left -->
+        <circle cx="80" cy="60" r="6">
+            <animate attributeName="fill" values="#393940;#FE5E5E;#393940;#393940" keyTimes="0;0.15;0.3;1" dur="2s" begin="2s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="80" cy="60" r="6" fill="none" stroke="#FE5E5E" stroke-width="2" opacity="0">
+            <animate attributeName="r" values="6;15;15;6" keyTimes="0;0.25;0.5;1" dur="2s" begin="2s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.8;0;0;0" keyTimes="0;0.25;0.5;1" dur="2s" begin="2s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- Top center-left -->
+        <circle cx="150" cy="50" r="6">
+            <animate attributeName="fill" values="#393940;#FE5E5E;#393940;#393940" keyTimes="0;0.15;0.3;1" dur="2s" begin="2.2s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="150" cy="50" r="6" fill="none" stroke="#FE5E5E" stroke-width="2" opacity="0">
+            <animate attributeName="r" values="6;15;15;6" keyTimes="0;0.25;0.5;1" dur="2s" begin="2.2s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.8;0;0;0" keyTimes="0;0.25;0.5;1" dur="2s" begin="2.2s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- Top center-right -->
+        <circle cx="250" cy="50" r="6">
+            <animate attributeName="fill" values="#393940;#FE5E5E;#393940;#393940" keyTimes="0;0.15;0.3;1" dur="2s" begin="2.6s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="250" cy="50" r="6" fill="none" stroke="#FE5E5E" stroke-width="2" opacity="0">
+            <animate attributeName="r" values="6;15;15;6" keyTimes="0;0.25;0.5;1" dur="2s" begin="2.6s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.8;0;0;0" keyTimes="0;0.25;0.5;1" dur="2s" begin="2.6s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- Top right -->
+        <circle cx="320" cy="60" r="6">
+            <animate attributeName="fill" values="#393940;#FE5E5E;#393940;#393940" keyTimes="0;0.15;0.3;1" dur="2s" begin="2.9s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="320" cy="60" r="6" fill="none" stroke="#FE5E5E" stroke-width="2" opacity="0">
+            <animate attributeName="r" values="6;15;15;6" keyTimes="0;0.25;0.5;1" dur="2s" begin="2.9s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.8;0;0;0" keyTimes="0;0.25;0.5;1" dur="2s" begin="2.9s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- Left -->
+        <circle cx="60" cy="150" r="6">
+            <animate attributeName="fill" values="#393940;#FE5E5E;#393940;#393940" keyTimes="0;0.15;0.3;1" dur="2s" begin="3.2s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="60" cy="150" r="6" fill="none" stroke="#FE5E5E" stroke-width="2" opacity="0">
+            <animate attributeName="r" values="6;15;15;6" keyTimes="0;0.25;0.5;1" dur="2s" begin="3.2s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.8;0;0;0" keyTimes="0;0.25;0.5;1" dur="2s" begin="3.2s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- Right -->
+        <circle cx="340" cy="150" r="6">
+            <animate attributeName="fill" values="#393940;#FE5E5E;#393940;#393940" keyTimes="0;0.15;0.3;1" dur="2s" begin="3.5s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="340" cy="150" r="6" fill="none" stroke="#FE5E5E" stroke-width="2" opacity="0">
+            <animate attributeName="r" values="6;15;15;6" keyTimes="0;0.25;0.5;1" dur="2s" begin="3.5s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.8;0;0;0" keyTimes="0;0.25;0.5;1" dur="2s" begin="3.5s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- Bottom left -->
+        <circle cx="80" cy="240" r="6">
+            <animate attributeName="fill" values="#393940;#FE5E5E;#393940;#393940" keyTimes="0;0.15;0.3;1" dur="2s" begin="3.8s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="80" cy="240" r="6" fill="none" stroke="#FE5E5E" stroke-width="2" opacity="0">
+            <animate attributeName="r" values="6;15;15;6" keyTimes="0;0.25;0.5;1" dur="2s" begin="3.8s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.8;0;0;0" keyTimes="0;0.25;0.5;1" dur="2s" begin="3.8s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- Bottom center-left -->
+        <circle cx="150" cy="250" r="6">
+            <animate attributeName="fill" values="#393940;#FE5E5E;#393940;#393940" keyTimes="0;0.15;0.3;1" dur="2s" begin="2.2s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="150" cy="250" r="6" fill="none" stroke="#FE5E5E" stroke-width="2" opacity="0">
+            <animate attributeName="r" values="6;15;15;6" keyTimes="0;0.25;0.5;1" dur="2s" begin="2.2s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.8;0;0;0" keyTimes="0;0.25;0.5;1" dur="2s" begin="2.2s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- Bottom center-right -->
+        <circle cx="250" cy="250" r="6">
+            <animate attributeName="fill" values="#393940;#FE5E5E;#393940;#393940" keyTimes="0;0.15;0.3;1" dur="2s" begin="2.5s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="250" cy="250" r="6" fill="none" stroke="#FE5E5E" stroke-width="2" opacity="0">
+            <animate attributeName="r" values="6;15;15;6" keyTimes="0;0.25;0.5;1" dur="2s" begin="2.5s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.8;0;0;0" keyTimes="0;0.25;0.5;1" dur="2s" begin="2.5s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- Bottom right -->
+        <circle cx="320" cy="240" r="6">
+            <animate attributeName="fill" values="#393940;#FE5E5E;#393940;#393940" keyTimes="0;0.15;0.3;1" dur="2s" begin="2.8s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="320" cy="240" r="6" fill="none" stroke="#FE5E5E" stroke-width="2" opacity="0">
+            <animate attributeName="r" values="6;15;15;6" keyTimes="0;0.25;0.5;1" dur="2s" begin="2.8s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.8;0;0;0" keyTimes="0;0.25;0.5;1" dur="2s" begin="2.8s" repeatCount="indefinite"/>
+        </circle>
+    </g>
+
+    <!-- Centrifugo Logo (scaled and centered) -->
+    <g transform="translate(200, 150) scale(0.08) translate(-251, -251)">
+        <!-- Outer segments - rotating counter-clockwise -->
+        <g>
+            <path d="M429.4 232.6h70a250 250 0 00-232-232v70a180 180 0 01162 162zM232.6 70.6V.6a250 250 0 00-232 232h70a180 180 0 01162-162zM70.6 267.4H.6a250 250 0 00232 232v-70a180 180 0 01-162-162zM267.4 429.4v70a250 250 0 00232-232h-70a180 180 0 01-162 162z" fill="#393940"/>
+            <animateTransform
+                    attributeName="transform"
+                    type="rotate"
+                    from="0 251 251"
+                    to="-360 251 251"
+                    dur="8s"
+                    repeatCount="indefinite"/>
+        </g>
+
+        <!-- Inner segments - rotating clockwise -->
+        <g>
+            <path d="M312.5 171.7l42.5-42.5a160 160 0 00-210 0l42.5 42.5a100 100 0 01125 0zM171.7 187.5L129.2 145a160 160 0 000 210l42.5-42.5a100 100 0 010-125zM187.5 328.3L145 370.8a160 160 0 00210 0l-42.5-42.5a100 100 0 01-125 0z" fill="#E84C3B"/>
+            <animateTransform
+                    attributeName="transform"
+                    type="rotate"
+                    from="0 251 251"
+                    to="360 251 251"
+                    dur="8s"
+                    repeatCount="indefinite"/>
+        </g>
+    </g>
+</svg>
