@@ -78,7 +78,7 @@ INSTALLED_APPS = [
 Our backend service will expose REST API for the frontend. The simplest way to add REST in Django is to use [Django Rest framework](https://www.django-rest-framework.org/):
 
 ```bash
-pip install djangorestframework
+pip install djangorestframework==3.14.0
 pip freeze > requirements.txt
 ```
 
@@ -139,7 +139,14 @@ DATABASES = {
 
 Note that in this example we are running everything in Docker, that's why database host is `db` - it matches the service name in `docker-compose.yml`.
 
-Let's also serve Django application when we are running docker compose. We will serve Django using [Gunicorn](https://gunicorn.org/) web server. To achieve that create custom Dockerfile inside `backend` directory:
+Let's also serve Django application when we are running docker compose. We will serve Django using [Gunicorn](https://gunicorn.org/) web server. To add gunicorn to the project:
+
+```
+pip install gunicorn==21.2.0
+pip freeze > requirements.txt
+```
+
+Then create custom Dockerfile inside `backend` directory:
 
 ```Dockerfile title="backend/Dockerfile"
 FROM python:3.11.4-slim-buster
