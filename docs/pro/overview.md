@@ -18,6 +18,7 @@ Centrifugo PRO is packed with the following features:
 * 📚 [Per-namespace engines](./namespace_engines.md) to configure various PUB/SUB brokers and presence managers on namespace level.
 * 🔐 [SSO for admin UI](./admin_ui.md) using OpenID Connect (OIDC) protocol. Also, more data about the system state.
 * 📸 [Channels and connections snapshots](./admin_ui.md#channels-and-connections-snapshots) to drill down into the system state right from admin UI.
+* 🔑 [Server API JWKS auth](./server_api_auth.md) to protect HTTP API with JWT tokens validated against JWKS endpoint.
 * 🟢 [User status API](./user_status.md) feature allows understanding activity state for a list of users.
 * 🔌 [Connections API](./connections.md) to query, filter and inspect active connections.
 * ✋ [User blocking API](./user_block.md) to block/unblock abusive users by ID.

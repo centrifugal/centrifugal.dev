@@ -78,6 +78,7 @@ module.exports = {
         "pro/rate_limiting",
         "pro/namespace_engines",
         "pro/admin_ui",
+        "pro/server_api_auth",
         "pro/user_status",
         "pro/connections",
         "pro/user_block",
