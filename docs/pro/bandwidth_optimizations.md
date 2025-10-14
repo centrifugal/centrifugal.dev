@@ -50,3 +50,7 @@ To enable channel compaction, set the `allow_channel_compaction` option to `true
 After that client SDKs which support channel compaction will automatically negotiate it during the subscription, no additional steps required.
 
 At this moment only JavaScript SDK (`centrifuge-js`) supports this feature (since v5.5.0). And Centrifugo PRO supports this since v6.4.0.
+
+## Drop intermediary publications
+
+Another optimization related to bandwidth is the ability to drop intermediary publications in channels using [Message batching control](./client_msg_batching.md) features of Centrifugo PRO. Specifically, see [batch_flush_latest](./client_msg_batching.md#batch_flush_latest) option.

@@ -410,7 +410,7 @@ Here is how it may look like in real life with Centrifugo:
 
 <video width="100%" loop={true} muted controls src="/img/blog_filter_by_tags_demo.mp4"></video>
 
-You can see a simple browser app which subscribes to a channel with stock price ticks with a filter on `ticker` tag. After that, client only receives messages matching the filter.
+You can see a simple browser app which subscribes to a channel with stock price ticks with a filter on `ticker` tag. After that, client only receives messages matching the filter. You can find the client side source code [in Centrifuge Go lib examples](https://github.com/centrifugal/centrifuge/blob/c2caf7f4ef0dbc64689ddab438169b419693a11c/_examples/tags_filter/index.html#L226).
 
 In this example we're also demonstrating the change of filter on the fly by unsubscribing and subscribing again with a different filter. Also note that offsets of messages are not incremental here because of filtering – client only receives messages matching the filter.
 
