@@ -32,6 +32,12 @@ Everything else stays the same as described in [delta compression](../server/del
 
 ## Channel compaction
 
+:::note
+
+This is a beta feature. We suggest testing it carefully in your environment before using in production.
+
+:::
+
 Channel compaction is a feature that allows reducing the size of messages sent to clients by replacing full channel names with shorter numeric IDs. This can be particularly beneficial in scenarios where channel names are long as it helps to minimize the amount of data transmitted over the network. In protobuf protocol this allows using varint channel identifier type instead of string channel name.
 
 To enable channel compaction, set the `allow_channel_compaction` option to `true` in your Centrifugo configuration for the desired namespace:
