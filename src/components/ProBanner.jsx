@@ -10,8 +10,8 @@ const ProBanner = () => {
     // );
     return (
         <div className={styles.banner}>
-            <h2 className={styles.bannerTitle}>Centrifugo v6 <a className={styles.bannerLink} href="/blog/2025/01/16/centrifugo-v6-released">is now live!</a></h2>
-            <p className={styles.bannerText}>A better experience for everyone involved</p>
+            <h2 className={styles.bannerTitle}>New in Centrifugo: <a className={styles.bannerLink} href="/blog/2025/10/14/server-side-publication-filtering-by-tags">Publication filtering by tags</a></h2>
+            <p className={styles.bannerText}>Server-side publication filtering for reducing bandwidth and processing overhead</p>
         </div>
     );
 };

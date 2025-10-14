@@ -266,6 +266,13 @@ Note, this metric is disabled by default. To enable it set `prometheus.recovered
 - **Description:** Tracks broadcast duration in seconds.
 - **Usage:** Useful to monitor time required for broadcasting the message to subscribers on the node. If it grows and the number of messages increases – may indicate the need to scale.
 
+#### centrifugo_node_tags_filter_dropped_publications
+
+- **Type:** Counter
+- **Labels:** channel_namespace
+- **Description:** Counts the number of publications dropped due to tags filtering.
+- **Usage:** Helps in monitoring the effectiveness of tags filtering and identifying any potential issues.
+
 ## Traces
 
 ### OpenTelemetry
