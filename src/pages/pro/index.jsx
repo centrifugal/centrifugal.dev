@@ -36,7 +36,7 @@ function Header() {
             <Logo isDarkTheme={isDarkTheme} />
             <div className="container" style={{ "zIndex": 1, pointerEvents: "none" }}>
                 <div className={styles.mainTitle}>
-                  <TitleWithCatPro />
+                  <TitleWithCatPro isDarkTheme={isDarkTheme} />
                 </div>
                 <div className={styles.subTitle}>
                     Unlock the full power of Centrifugo

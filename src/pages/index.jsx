@@ -51,7 +51,7 @@ function Header() {
       <Logo isDarkTheme={isDarkTheme} />
       <div className="container" style={{ "zIndex": 1, pointerEvents: "none" }}>
         <div className={styles.mainTitle}>
-          <TitleWithCat />
+          <TitleWithCat isDarkTheme={isDarkTheme} />
         </div>
         <div className={styles.subTitle}>
           Wash away WebSocket scalability issues
