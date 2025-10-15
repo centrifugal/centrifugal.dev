@@ -250,6 +250,31 @@ Filter supports a comprehensive set of comparison and logical operators.
 
 More complex filtering with nested conditions may be built using logical operations: **and**, **or**, **not**.
 
+And the implementation of evaluation is a simple recursive function with zero allocations during evaluation. Here is a simplified version of it (with only one logical operator and a couple of comparisons, full code with all the above's features may be found [on Github](https://github.com/centrifugal/centrifuge/blob/master/internal/filter/filter.go))
+
+```go
+func Match(f *FilterNode, tags map[string]string) bool {
+  switch f.Op {
+  case OpLeaf:
+    val, ok := tags[f.Key]
+    switch f.Cmp {
+    case CompareEQ:
+      return ok && val == f.Val
+    case CompareExists:
+      return ok
+    }
+  case OpAnd:
+    for _, child := range f.Nodes {
+      if !Match(child, tags) {
+        return false
+      }
+    }
+    return true
+  }
+  return false
+}
+```
+
 Overall, this structure allows rather powerful filtering capabilities while maintaining zero-allocation evaluation performance in hot path.
 
 This is how filtering of football match events by `event_type` tag may look like with FilterNode structure:
