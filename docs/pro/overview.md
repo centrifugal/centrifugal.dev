@@ -15,9 +15,9 @@ Centrifugo PRO is packed with the following features:
 * 🔍 [Channel and user tracing](./tracing.md) allows watching client protocol frames in channel or per user ID in real time.
 * 💹 [Real-time analytics with ClickHouse](./analytics.md) for a great system observability, reporting and trending.
 * 🛡️ [Operation rate limits](./rate_limiting.md) to protect server from the real-time API misusing and frontend bugs.
-* 📚 [Per-namespace engines](./namespace_engines.md) to configure various PUB/SUB brokers and presence managers on namespace level.
 * 🔐 [SSO for admin UI](./admin_ui.md) using OpenID Connect (OIDC) protocol. Also, more data about the system state.
 * 📸 [Channels and connections snapshots](./admin_ui.md#channels-and-connections-snapshots) to drill down into the system state right from admin UI.
+* 🪪 [Multiple JWKS providers](./client_authentication#multiple-jwks-providers) for client authentication. And [Custom meta from JWT claims](./client_authentication#custom-meta-from-jwt-claims).
 * 🔑 [Server API JWKS auth](./server_api_auth.md) to protect HTTP API with JWT tokens validated against JWKS endpoint.
 * 🟢 [User status API](./user_status.md) feature allows understanding activity state for a list of users.
 * 🔌 [Connections API](./connections.md) to query, filter and inspect active connections.
@@ -30,12 +30,13 @@ Centrifugo PRO is packed with the following features:
 * ✍️ [Channel CEL expressions](./cel_expressions.md) to write custom efficient permission rules for channel operations.
 * 🚀 [Faster performance](./performance.md) to reduce resource usage on server side.
 * 🔮 [Scalability optimizations](./scalability.md) with singleflight technique and shared position synchronization.
-* 🍔 [Message batching control](./client_msg_batching.md) for advanced tuning of client connection write behaviour.
+* 📚 [Per-namespace engines](./scalability.md#per-namespace-engines) to configure various PUB/SUB brokers and presence managers on namespace level.
+* 🕹️ [Setting custom Controller](./scalability.md#setting-custom-controller) to isolate controller load from channel load (i.e. from Broker)
 * 🗜️ [Bandwidth optimizations](./bandwidth_optimizations.md) to reduce network costs. [Delta compression for at most once](./bandwidth_optimizations.md#delta-compression-for-at-most-once), [channel compaction](./bandwidth_optimizations.md#channel-compaction).
+* 🍔 [Message batching control](./client_msg_batching.md) for advanced tuning of client connection write behaviour.
 * 🧐 [Observability enhancements](./observability_enhancements.md) for additional more granular system state insights.
-* 🪵 [CPU and RSS memory](./process_stats.md) usage stats of Centrifugo nodes in admin UI.
 
-Also, explore our [Centrifugo PRO planned features](https://github.com/orgs/centrifugal/projects/3/views/1) board for a concise overview of upcoming features which are currently in progress and enhancements planned for a future.
+And more to come!
 
 ## Pricing
 
