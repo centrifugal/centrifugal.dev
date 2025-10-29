@@ -104,6 +104,33 @@ You still can continue to encode your application specific data as JSON when usi
 
 :::
 
+## WebSocket over HTTP/2 (RFC 8441)
+
+Since Centrifugo v6.5.0.
+
+Centrifugo provides an experimental support for establishing WebSocket connections over HTTP/2 transport as described in [RFC 8441](https://datatracker.ietf.org/doc/html/rfc8441). In that case each WebSocket connection is a separate HTTP/2 stream inside a single HTTP/2 connection.
+
+Why this may be important:
+
+* allows using WebSocket connections in environments where only HTTP/2 traffic is allowed (for example, some mobile networks or corporate networks).
+* allows multiplexing multiple WebSocket connections over a single HTTP/2 connection thus reducing number of TCP connections from client to Centrifugo server.
+* reduces TLS handshake latency overhead when using secure connections (WSS) as multiple WebSocket connections can share a single TLS session (saving 2 RTT).
+
+To enable WebSocket over HTTP/2 support in Centrifugo:
+
+* Go runtime environment variable `GODEBUG=http2xconnect=1` must be set. Once Go has another way to enable this feature we will update Centrifugo in order to provide a more convenient way to enable it.
+* Server must be run with [TLS enabled](../server/configuration.md#http_servertls) as HTTP/2 is available only for HTTPS servers. It's possible to also enable H2C (HTTP/2 CLEARTEXT) in Centrifugo by setting `http_server.h2c_external` boolean configuration option to `true`.
+* Note also, that in case of using any kind load balancer before Centrifugo – make sure it supports WebSocket over HTTP/2 proxying. Haproxy and Envoy support it.
+
+All major browsers support WebSocket over HTTP/2 and will use it automatically when supported by server:
+
+| Browser         | Version |
+| --------------- | ------- |
+| ✅ Chrome/Chromium | 67+     |
+| ✅ Firefox         | 65+     |
+| ✅ Safari          | 14.1+   |
+| ✅ Edge            | 79+     |
+
 ## Debugging with Postman, wscat, etc
 
 Centrifugo supports a special url parameter for bidirectional websocket which turns on using native WebSocket frame ping-pong mechanism instead of [server-to-client application level pings](./overview.md#pingpong-behavior) Centrifugo uses by default. This simplifies debugging Centrifugo protocol with tools like Postman, wscat, websocat, etc.
