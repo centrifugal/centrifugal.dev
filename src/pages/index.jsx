@@ -89,7 +89,7 @@ function Home() {
         <section className={clsx("logos-wrapper", styles.logos)}>
           <div className="container">
             <div className={styles.logosHeader}>
-              USED IN PRODUCTS OF SUCCESSFUL COMPANIES. THOUSANDS OF REAL INSTALLATIONS.
+              TRUSTED BY SUCCESSFUL COMPANIES WORLDWIDE. THOUSANDS OF REAL INSTALLATIONS.
             </div>
             <div className={styles.logosGrid}>
               <div className={styles.logoItem}>
