@@ -468,6 +468,12 @@ Object.
 
 Centrifugo experimentally supports HTTP/3. We can't guarantee stability of this component at this point and given Centrifugo is usually running behind load balancer – this reduces a scope where HTTP/3 may be useful. It's required to support [WebTransport](../transports/webtransport.md) though.
 
+### `http_server.h2c_external`
+
+Boolean, default `false`. Since Centrifugo v6.5.0
+
+This allows enabling H2C (HTTP/2 CLEARTEXT) on external endpoints of HTTP server.
+
 ## `log`
 
 Object.
@@ -1101,6 +1107,18 @@ Use `health.enabled` boolean option (by default `false`) to enable the health ch
   }
 }
 ```
+
+## `init`
+
+Object.
+
+Init endpoint for external endpoints. May be used as AWS LB ping endpoint, or as an endpoint to force HTTP/2 connection in Chrome (if there is no HTTP/2 connection established Chrome uses HTTP 1.1 for WebSocket). It's accessible over GET request, for now returns empty JSON object `{}`. It has the same CORS protection as other external real-time endpoints.
+
+### `init.enabled`
+
+Boolean. Default: `false`. Since Centrifugo v6.5.0
+
+This enables connection init endpoint (on `/connection/init` by default, may be changed with `init.handler_prefix` option).
 
 ## `prometheus`
 
