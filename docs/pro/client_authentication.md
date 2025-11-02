@@ -10,9 +10,7 @@ Centrifugo OSS provides JWT based client authentication. It's a very powerful me
 
 ## Extracting meta from JWT claims
 
-Centrifugo PRO can extract and populate connection [meta](../server/authentication.md#meta) object from JWT token claims based on the mapping in the configuration. This allows more convenient work with JWTs which are not under user's control, i.e., issued by third-party identity providers.
-
-When a client connects with a JWT token, Centrifugo PRO extracts specified claims from the token and maps them to fields in the connection `meta` object.
+Centrifugo PRO can automatically extract and populate connection [meta](../server/authentication.md#meta) object from JWT token claims based on the mapping in the configuration. This allows more convenient work with JWTs which are not under user's control, i.e., issued by third-party identity providers.
 
 This metadata is then available throughout the connection lifecycle and can be used in:
 
@@ -22,10 +20,10 @@ This metadata is then available throughout the connection lifecycle and can be u
 
 ### Example configuration
 
-Meta claims extraction is configured using the `claim_to_meta` option in the token configuration. This option accepts a map where:
+Meta claims extraction is configured using the `meta_from_claim` [StringKeyValues](../server/configuration.md#stringkeyvalues-type) option in the token configuration:
 
-- **Keys** are paths to extract values from JWT claims (may have `.` for nested objects)
-- **Values** are the field names to use in the resulting `meta` object (nesting is not supported - you need to use flat field names for the resulting `meta`)
+- **Keys** are the field names to use in the resulting `meta` object (to be placed on `meta` object top level)
+- **Values** are paths to extract values from JWT claims (may have `.` for extracting nested objects from JWT claims)
 
 Let's say we have the following configuration:
 
@@ -34,13 +32,28 @@ Let's say we have the following configuration:
     "client": {
         "token": {
             "hmac_secret_key": "your-secret-key",
-            "claim_to_meta": {
-                "user.role": "role",
-                "user.department": "dept",
-                "permissions.level": "access_level",
-                "features": "enabled_features",
-                "custom-info": "info"
-            }
+            "meta_from_claim": [
+                {
+                    "key": "role",
+                    "value": "user.role"
+                },
+                {
+                    "key": "dept",
+                    "value": "user.department"
+                },
+                {
+                    "key": "access_level",
+                    "value": "permissions.level"
+                },
+                {
+                    "key": "features",
+                    "value": "enabled_features"
+                },
+                {
+                    "key": "info",
+                    "value": "custom-info"
+                }
+            ],
         }
     }
 }
@@ -84,9 +97,9 @@ The connection will have the following `meta` object:
 
 ### Implementation notes
 
-* Meta claims extraction allows using dots for extracting values from JWT claims nested objects. In `claim_to_meta` keys Centrifugo does not allow using special characters like `@#[]{}*?!` by default, but you can use `\` character to escape them if needed. Keys are validated on Centrifugo start.
-* Meta field names (the values in the `claim_to_meta` map) must follow `^[A-Za-z_][A-Za-z0-9_]*$` regex. This is validated on Centrifugo start.
-* If a path in `claim_to_meta` doesn't exist in the JWT token, it will be **silently skipped**. Only claims that exist in the token will be extracted.
+* Meta field names (the keys in the `meta_from_claim` map) must follow `^[A-Za-z_][A-Za-z0-9_]*$` regex. This is validated on Centrifugo start.
+* Meta claims extraction allows using dots for extracting values from JWT claims nested objects. In `meta_from_claim` values Centrifugo does not allow using special characters like `@#[]{}*?!` by default, but you can use `\` character to escape them if needed. Values are validated on Centrifugo start.
+* If a path in `meta_from_claim` value doesn't exist in the JWT token, it will be **silently skipped**. Only claims that exist in the token will be extracted.
 * If your JWT token already contains a `meta` claim, the extracted fields will **override** the existing fields.
 * Meta claims extraction only works for connection tokens, not subscription tokens. Subscription tokens do not support the `meta` claim.
 
@@ -94,9 +107,9 @@ The connection will have the following `meta` object:
 
 Centrifugo PRO supports configuring multiple JWKS (JSON Web Key Set) providers for client connection authentication with automatic token routing based on the issuer (`iss`) claim. This may be useful for multi-tenant scenarios where tokens may come from different identity providers.
 
-While the standard `jwks_public_endpoint` configuration allows fetching public keys from a single JWKS endpoint, this feature enables you to configure multiple JWKS endpoints, each associated with a specific token issuer. Centrifugo will automatically route token verification to the correct provider based on the `iss` (issuer) claim in the JWT.
+While the standard `client.token.jwks_public_endpoint` configuration allows fetching public keys from a single JWKS endpoint, this feature enables you to configure multiple JWKS endpoints, each associated with a specific token issuer. Centrifugo will automatically route token verification to the correct provider based on the `iss` (issuer) claim in the JWT.
 
-**Note:** `jwks_public_endpoint` and `jwks_providers` are mutually exclusive - you cannot use both at the same time.
+**Note:** `client.token.jwks_public_endpoint` and `client.token.jwks.providers` are mutually exclusive at this point - you cannot use both at the same time.
 
 ### Configuration
 
@@ -104,24 +117,38 @@ While the standard `jwks_public_endpoint` configuration allows fetching public k
 {
     "client": {
         "token": {
-            "jwks_providers": [
-                {
-                    "name": "auth0",
-                    "enabled": true,
-                    "endpoint": "https://tenant.auth0.com/.well-known/jwks.json",
-                    "issuer": "https://tenant.auth0.com/"
-                },
-                {
-                    "name": "keycloak",
-                    "enabled": true,
-                    "endpoint": "https://keycloak.example.com/realms/myrealm/protocol/openid-connect/certs",
-                    "issuer": "https://keycloak.example.com/realms/myrealm"
-                }
-            ]
+            "jwks": {
+                "enabled": true,
+                "providers": [
+                    {
+                        "name": "auth0",
+                        "enabled": true,
+                        "endpoint": "https://tenant.auth0.com/.well-known/jwks.json",
+                        "issuer": "https://tenant.auth0.com/"
+                    },
+                    {
+                        "name": "keycloak",
+                        "enabled": true,
+                        "endpoint": "https://keycloak.example.com/realms/myrealm/protocol/openid-connect/certs",
+                        "issuer": "https://keycloak.example.com/realms/myrealm"
+                    }
+                ]
+            }
         }
     }
 }
 ```
+
+:::note
+The `client.token.jwks.enabled` field must be set to `true` to enable multiple JWKS providers feature. Without it, the providers configuration will be ignored.
+:::
+
+### JWKS configuration
+
+| Field    | Type    | Required | Description                                                               |
+|----------|---------|----------|---------------------------------------------------------------------------|
+| enabled  | `boolean` | Yes      | Must be `true` to enable multiple JWKS providers functionality          |
+| providers | `array`  | Yes      | Array of JWKS provider configurations (see below)                        |
 
 ### JWKS provider fields
 
@@ -133,7 +160,7 @@ While the standard `jwks_public_endpoint` configuration allows fetching public k
 | issuer   | `string`  | Yes*     | Expected issuer claim value (*required if enabled)                        |
 | audience | `string`  | No       | Expected audience claim value (optional)                                  |
 | tls      | [`TLS`](../server/configuration.md#tls-config-object) object  | No       | Custom TLS configuration for the JWKS endpoint HTTP client                            |
-| claim_to_meta      | `map[string]string`  | No       | Config to transform JWT claims to connection meta object                             |
+| meta_from_claim      | [StringKeyValues](../server/configuration.md#stringkeyvalues-type)  | No       | Config to transform JWT claims to connection meta object. Must be explicitly set for each provider, not inherited from upper config level.                              |
 
 How It Works
 
@@ -154,24 +181,30 @@ JWKS providers work for both connection tokens and subscription tokens. [As usua
 {
     "client": {
         "token": {
-            "jwks_providers": [{
-                "name": "auth0_connection",
+            "jwks": {
                 "enabled": true,
-                "endpoint": "https://tenant.auth0.com/.well-known/jwks.json",
-                "issuer": "https://tenant.auth0.com/"
-            }]
+                "providers": [{
+                    "name": "auth0_connection",
+                    "enabled": true,
+                    "endpoint": "https://tenant.auth0.com/.well-known/jwks.json",
+                    "issuer": "https://tenant.auth0.com/"
+                }]
+            }
         },
         "subscription_token": {
             "enabled": true,
-            "jwks_providers": [{
-                "name": "auth0_subscription",
+            "jwks": {
                 "enabled": true,
-                "endpoint": "https://tenant.auth0.com/.well-known/jwks.json",
-                "issuer": "https://tenant.auth0.com/subs"
-            }]
+                "providers": [{
+                    "name": "auth0_subscription",
+                    "enabled": true,
+                    "endpoint": "https://tenant.auth0.com/.well-known/jwks.json",
+                    "issuer": "https://tenant.auth0.com/subs"
+                }]
+            }
         }
     }
 }
 ```
 
-Note, `claim_to_meta` is not supported for subscription tokens as subscription tokens do not support `meta` claim at this moment. This is validated on Centrifugo start.
+Note, `meta_from_claim` is not supported for subscription tokens as subscription tokens do not support `meta` claim at this moment. This is validated on Centrifugo start.

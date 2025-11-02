@@ -44,9 +44,9 @@ Here is a scheme how ping/pong works in bidirectional and unidirectional client 
 
 ![](/img/ping_pong.png)
 
-By default, Centrifugo sends pings every 25 seconds. This may be changed using `client.ping_interval` option ([duration](../server/configuration.md#setting-time-duration-options), default `"25s"`).
+By default, Centrifugo sends pings every 25 seconds. This may be changed using `client.ping_interval` option ([duration](../server/configuration.md#duration-type), default `"25s"`).
 
-Centrifugo expects pong message from bidirectional client SDK after sending ping to it. By default, it waits no more than 8 seconds before closing a connection. This may be changed using `client.pong_timeout` option ([duration](../server/configuration.md#setting-time-duration-options), default `"8s"`).
+Centrifugo expects pong message from bidirectional client SDK after sending ping to it. By default, it waits no more than 8 seconds before closing a connection. This may be changed using `client.pong_timeout` option ([duration](../server/configuration.md#duration-type), default `"8s"`).
 
 In most cases default ping/pong intervals are fine so you don't really need to tweak them. Reducing timeouts may help you find non-gracefully closed connections faster, but will increase network traffic and CPU resource usage since ping/pongs are sent faster.
 
