@@ -178,7 +178,7 @@ It's also possible to reuse Centrifugo Redis engine by setting `use_redis_from_e
 
 In this case Redis active status will simply connect to Redis instances configured for Centrifugo Redis engine.
 
-`expire_interval` is a [duration](../server/configuration.md#setting-time-duration-options) for how long Redis keys will be kept for each user. Expiration time extended on every update. By default expiration time is 31 day. To set it to 1 day:
+`expire_interval` is a [duration](../server/configuration.md#duration-type) for how long Redis keys will be kept for each user. Expiration time extended on every update. By default expiration time is 31 day. To set it to 1 day:
 
 ```json title="config.json"
 {

@@ -229,7 +229,7 @@ Max number of commands to select in one query to outbox table.
 
 ### `consumers[].postgresql.partition_poll_interval`
 
-[Duration](./configuration.md#setting-time-duration-options). Default: `"300ms"`.
+[Duration](./configuration.md#duration-type). Default: `"300ms"`.
 
 Polling interval for each partition.
 

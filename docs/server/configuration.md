@@ -7,77 +7,19 @@ Centrifugo can start without any configuration – it runs out-of-the-box with e
 
 This document describes configuration principles and configuration sections, and most of the options available in Centrifugo. Where the feature requires more description we point from here to the dedicated documentation chapters.
 
-### Lost in options?
+## Lost in options?
 
 Before we start, a little disclaimer: Centrifugo has many configuration options. If you feel lost, you can always use the [defaultconfig](./console_commands.md#defaultconfig), [defaultenv](./console_commands.md#defaultenv) and [configdoc](./console_commands.md#configdoc) CLI commands to check how config file options may be set and how environment variables should be named. Centrifugo also [warns you in logs](#validation-and-warnings-on-start) on start if sth unknown found in the configuration file or environment variables.
 
-### Configuration sources
+## Configuration sources
 
 Centrifugo can be configured in several ways:
 
-* using command-line flags (highest priority – flags override everything)
-* environment variables (medium priority – env vars override config file options)
 * configuration file (lowest priority).
+* environment variables (medium priority – env vars override config file options)
+* using command-line flags (highest priority – flags override everything) - we recommended to use them only during development.
 
-### Command-line flags
-
-Command-line options have the highest priority when set than other ways to configure Centrifugo.
-
-Centrifugo supports several command-line flags. See `centrifugo -h` for available flags. Command-line flags limited to most frequently used. Mostly useful for development. In general, **we recommend to avoid using flags for configuring Centrifugo in a production environment** because flags often harder to redefine without changes in how Centrifugo deployed – prefer using environment variables or configuration file.
-
-### OS environment variables
-
-Environment variables have the second priority after flags. Flags override env vars, env vars override config file.
-
-Almost all Centrifugo options can be set over env in the format `CENTRIFUGO_<OPTION_NAME>`. Setting options over environment variables is mostly straightforward – you just prefix the option used in configuration file with `CENTRIFUGO_`, make it uppercase and replace nested levels with `_`.
-
-:::info
-
-There are some cases though where we need to configure arrays of objects. For arrays of objects Centrifugo either provides a way to point the specific array instance by name when setting environment variable, or provides a way to set the entire array of objects as a JSON string.
-
-:::
-
-Boolean options can be set using strings according to Go language [ParseBool](https://pkg.go.dev/strconv#ParseBool) function. I.e. to set `true` you can just use `"true"` value for an environment variable (or simply `"1"`). To set `false` use `"false"` or `"0"`.
-
-Array of strings can be set over env using space-separated string values.
-
-Let's look at the example. Suppose the configuration file looks like this:
-
-```json title="config.json"
-{
-  "client": {
-    "allowed_origins": [
-      "https://mysite1.com",
-      "https://mysite2.com"
-    ]
-  },
-  "prometheus": {
-    "enabled": true
-  }
-}
-```
-
-The same may be achieved using environment variables in this way:
-
-```bash
-export CENTRIFUGO_CLIENT_ALLOWED_ORIGINS="https://mysite1.com https://mysite2.com"
-export CENTRIFUGO_PROMETHEUS_ENABLED="true"
-```
-
-Empty environment variables are considered unset (!) and will fall back to the next configuration source.
-
-Since v6.3.0 Centrifugo supports extrapolating custom env variables in `MapStringString` config fields. This may help to define secret map values in config via separate env variables. All such environment vars must have `CENTRIFUGO_VAR_` prefix. For example, when defining static HTTP headers in [proxy](./proxy.md) config:
-
-```json title="config.json"
-  ...
-  "http": {
-    "static_headers": {
-      "Authorization": "Bearer ${CENTRIFUGO_VAR_API_TOKEN}"
-    }
-  }
-```
-
-### Configuration file
+## Configuration file
 
 Configuration file supports all options mentioned in Centrifugo documentation and can be in one of three supported formats: JSON, YAML, or TOML.
 
@@ -158,6 +100,232 @@ client:
   - http://localhost:3000
 http_api:
   key: "<YOUR-API-KEY-HERE>"
+```
+
+## OS environment variables
+
+Environment variables override configuration file options.
+
+Almost all Centrifugo options can be set over env in the format `CENTRIFUGO_<OPTION_NAME>`. Setting options over environment variables is mostly straightforward – you just prefix the option used in configuration file with `CENTRIFUGO_`, make it uppercase and replace nested levels with `_`.
+
+:::tip
+
+There are some cases with more complex config types where you need to configure maps or arrays of objects. See docs for [MapStringString](#mapstringstring-type) and [StringKeyValues](#stringkeyvalues-type) types which represent maps. For arrays of objects Centrifugo either provides a way to point the specific array instance by name when setting environment variable, or always supports [setting the entire array of objects as a JSON string](#setting-arrays-over-env).
+
+:::
+
+Boolean options can be set using strings according to Go language [ParseBool](https://pkg.go.dev/strconv#ParseBool) function. I.e. to set `true` you can just use `"true"` value for an environment variable (or simply `"1"`). To set `false` use `"false"` or `"0"`.
+
+Array of strings (`[]string`) can be set over env using space-separated string values.
+
+Let's look at the example. Suppose the configuration file looks like this:
+
+```json title="config.json"
+{
+  "client": {
+    "allowed_origins": [
+      "https://mysite1.com",
+      "https://mysite2.com"
+    ]
+  },
+  "prometheus": {
+    "enabled": true
+  }
+}
+```
+
+The same may be achieved using environment variables in this way:
+
+```bash
+export CENTRIFUGO_CLIENT_ALLOWED_ORIGINS="https://mysite1.com https://mysite2.com"
+export CENTRIFUGO_PROMETHEUS_ENABLED="true"
+```
+
+Empty environment variables are considered unset (!) and will fall back to the next configuration source.
+
+## Command-line flags
+
+Command-line options override options set over config file and env vars.
+
+Centrifugo supports several command-line flags. See `centrifugo -h` for available flags. Command-line flags limited to most frequently used. Mostly useful for development. In general, **we recommend to avoid using flags for configuring Centrifugo in a production environment** because flags often harder to redefine without changes in how Centrifugo deployed – prefer using environment variables or configuration file.
+
+## Configuration types
+
+Throughout Centrifugo documentation you may see references to several non-primitive configuration types. Here we describe them in more detail.
+
+### Duration type
+
+Time durations in Centrifugo can be set using strings where duration value and unit are both provided. For example, to set 5 seconds duration use `"5s"`.
+
+The minimal time resolution is 1ms. Some options of Centrifugo only support second precision (for example `history_ttl` channel option).
+
+Valid time units are `ms` (milliseconds), `s` (seconds), `m` (minutes), `h` (hours).
+
+Some examples:
+
+```js
+"1000ms" // 1000 milliseconds
+"1s"     // 1 second
+"12h"    // 12 hours
+"720h"   // 30 days
+```
+
+Example of setting duration type in config file:
+
+```json title="config.json"
+{
+  "client": {
+    "ping_interval": "25s",
+    "pong_timeout": "8s"
+  }
+}
+```
+
+Or using environment variables:
+
+```bash
+export CENTRIFUGO_CLIENT_PING_INTERVAL="30s"
+```
+
+### MapStringString type
+
+Some configuration options in Centrifugo use `MapStringString` type. This type represents a map where both keys and values are strings.
+
+This type is just a map in JSON configuration:
+
+```json title="config.json"
+{
+  "some_option": {
+    "key1": "value2",
+    "key2": "value2"
+  }
+}
+```
+
+It can be set using environment variables too – in that case Centrifugo expects JSON string representation of the map:
+
+```bash
+export CENTRIFUGO_SOME_OPTION='{"key1": "value1", "key2": "value2"}'
+```
+
+Configuration parser used by Centrifugo transforms keys of `MapStringString` type to lower case. This may be an issue in some corner cases, so Centrifugo uses [StringKeyValues](#stringkeyvalues-type) configuration type for options where the case may be an issue.
+
+To work around the issue in corner cases for `MapStringString` type Centrifugo supports setting it using list of key-value pairs too – in that case keys keep their case.
+
+Example of `MapStringString` type as a list of key-value pairs:
+
+```json title="config.json"
+{
+  "some_option": [
+    {"key": "FirstKey", "value": "first_value"},
+    {"key": "SecondKey", "value": "second_value"}
+  ]
+}
+```
+
+Since v6.3.0 Centrifugo supports extrapolating custom env variables in `MapStringString` config fields. This may help to define secret map values in config via separate env variables. All such environment vars must have `CENTRIFUGO_VAR_` prefix. For example, when defining static HTTP headers in [proxy](./proxy.md) config:
+
+```json title="config.json"
+  ...
+  "http": {
+    "static_headers": {
+      "authorization": "Bearer ${CENTRIFUGO_VAR_API_TOKEN}"
+    }
+  }
+```
+
+### StringKeyValues type
+
+For cases where case-insensitive keys of `MapStringString` may be a problem Centrifugo uses `StringKeyValues` type. This type represents a list of key-value pairs where both keys and values are strings. Keys must be unique.
+
+Example:
+
+```json title="config.json"
+{
+  "some_option": [
+    {"key": "key1", "value": "value1"},
+    {"key": "key2", "value": "value2"}
+  ]
+}
+```
+
+While more verbose to configure, this type does not have case-sensitivity issues like `MapStringString`. Centrifugo does not allow setting `StringKeyValues` as a map in the config file, protecting developer from the unexpected issues.
+
+Just like with `MapStringString` type – `StringKeyValues` type can be set using environment variables too. In that case Centrifugo expects JSON string representation of the key/value list or JSON object representation of the map.
+
+I.e. the following environment variable values are both valid for `some_option` of `StringKeyValues`:
+
+```bash
+export CENTRIFUGO_SOME_OPTION='[{"key": "key1", "value": "value1"}, {"key": "key2", "value": "value2"}]'
+export CENTRIFUGO_SOME_OPTION='{"first_key": "first_value", "second_key": "second_value"}'
+```
+
+Centrifugo supports extrapolating custom env variables in `StringKeyValues` values. This may help to define secret map values in config via separate env variables. All such environment vars must have `CENTRIFUGO_VAR_` prefix. For example, when defining static HTTP headers in [proxy](./proxy.md) config:
+
+```json title="config.json"
+{
+  "some_option": [
+    {"key": "key", "value": "${CENTRIFUGO_VAR_MY_VALUE}"}
+  ]
+}
+```
+
+### Array of objects
+
+Setting array of objects is straightforward in the config file:
+
+```json title="config.json"
+{
+  "channel": {
+    "namespaces": [
+      {"name": "ns1"},
+      {"name": "ns2"}
+    ]
+  }
+}
+```
+
+But when setting over the environment variable it must be an array of objects encoded to a JSON string:
+
+```console
+CENTRIFUGO_CHANNEL_NAMESPACES='[{"name": "ns1"}, {"name": "ns2"}]' ./centrifugo
+```
+
+This applies for other options which have are array of objects.
+
+### TLS config object
+
+TLS configurations in Centrifugo can be set using the following TLS object:
+
+| Field name             | Type   | Description                                                                                                                                       |
+|------------------------|--------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| `enabled`              | bool   | Turns on using TLS                                                                                                                                |
+| `cert_pem`             | string | Certificate in PEM format. Raw string, base64 PEM encoded string or path to a PEM file supported as a value. See more details below.              |
+| `key_pem`              | string | Key in PEM format. Same values as for `cert_pem` supported.                                                                                       |
+| `server_ca_pem`        | string | Server root CA certificate in PEM format used by client to verify server's certificate during handshake. Same values as for `cert_pem` supported. |
+| `client_ca_pem`        | string | Client CA certificate in PEM format used by server to verify client's certificate during handshake. Same values as for `cert_pem` supported.      |
+| `insecure_skip_verify` | bool   | Turns off server certificate verification.                                                                                                        |
+| `server_name`          | string | Used to verify the hostname on the returned certificates.                                                                                         |
+
+- **Source Priority:** The configuration allows specifying TLS settings from multiple sources: raw PEM string, base64 PEM encoded string, path to a PEM file. The sources are prioritized in the following order:
+    1. Raw PEM
+    2. Base64 encoded PEM
+    3. PEM file path
+- **Insecure Option:** The `insecure_skip_verify` option can be used to turn off server certificate verification, which is not recommended for production environments.
+- **Hostname Verification:** The `server_name` is utilized to verify the hostname on the returned certificates, providing an additional layer of security.
+
+So in the configuration the usage of TLS config for HTTP server may be like this:
+
+```json title="config.json"
+{
+  "http_server": {
+    "tls": {
+      "enabled": true,
+      "cert_pem": "/path/to/cert.pem",
+      "key_pem": "/path/to/key.pem"
+    }
+  }
+}
 ```
 
 ## Validation and warnings on start
@@ -502,13 +670,13 @@ The configuration object for proxy to use for refresh events. See how to configu
 
 ### `client.ping_interval`
 
-[Duration](#setting-time-duration-options). Default `"25s"`.
+[Duration](#duration-type). Default `"25s"`.
 
 Interval to send pings to clients – see [more about ping/pong](../transports/overview.md#pingpong-behavior)
 
 ### `client.pong_timeout`
 
-[Duration](#setting-time-duration-options). Default `"8s"`.
+[Duration](#duration-type). Default `"8s"`.
 
 Timeout to wait pong from clients after sending ping to them – see [more about ping/pong](../transports/overview.md#pingpong-behavior)
 
@@ -586,7 +754,7 @@ By default, concurrency disabled – Centrifugo processes commands received from
 
 ### `client.stale_close_delay`
 
-[Duration](#setting-time-duration-options). Default: `"10s"`
+[Duration](#duration-type). Default: `"10s"`
 
 This option allows tuning the maximum time Centrifugo will wait for the connect frame (which contains authentication information) from the client after establishing connection. Default value should be reasonable for most use cases.
 
@@ -680,7 +848,7 @@ This is an array of objects with to configure [channel namespaces](./channels.md
 
 ### `channel.history_meta_ttl`
 
-[Duration](#setting-time-duration-options). Default `"720h"`.
+[Duration](#duration-type). Default `"720h"`.
 
 This option is a time to keep history meta information for channels when publication history is used. This value must be bigger than max `history_ttl` in all channel namespaces.
 
@@ -1016,7 +1184,7 @@ Section to configure server shutdown behavior.
 
 ### `shutdown.timeout`
 
-[Duration](#setting-time-duration-options). Default `"30s"`.
+[Duration](#duration-type). Default `"30s"`.
 
 Allows configuring max shutdown duration.
 
@@ -1176,65 +1344,3 @@ To disable sending usage stats set `usage_stats_disable` option:
   }
 }
 ```
-
-## Setting time duration options
-
-Time durations in Centrifugo can be set using strings where duration value and unit are both provided. For example, to set 5 seconds duration use `"5s"`.
-
-The minimal time resolution is 1ms. Some options of Centrifugo only support second precision (for example `history_ttl` channel option).
-
-Valid time units are `ms` (milliseconds), `s` (seconds), `m` (minutes), `h` (hours).
-
-Some examples:
-
-```js
-"1000ms" // 1000 milliseconds
-"1s"     // 1 second
-"12h"    // 12 hours
-"720h"   // 30 days
-```
-
-## TLS config object
-
-TLS configurations in Centrifugo can be set using the following TLS object:
-
-| Field name             | Type   | Description                                                                                                                                       |
-|------------------------|--------|---------------------------------------------------------------------------------------------------------------------------------------------------|
-| `enabled`              | bool   | Turns on using TLS                                                                                                                                |
-| `cert_pem`             | string | Certificate in PEM format. Raw string, base64 PEM encoded string or path to a PEM file supported as a value. See more details below.              |
-| `key_pem`              | string | Key in PEM format. Same values as for `cert_pem` supported.                                                                                       |
-| `server_ca_pem`        | string | Server root CA certificate in PEM format used by client to verify server's certificate during handshake. Same values as for `cert_pem` supported. |
-| `client_ca_pem`        | string | Client CA certificate in PEM format used by server to verify client's certificate during handshake. Same values as for `cert_pem` supported.      |
-| `insecure_skip_verify` | bool   | Turns off server certificate verification.                                                                                                        |
-| `server_name`          | string | Used to verify the hostname on the returned certificates.                                                                                         |
-
-- **Source Priority:** The configuration allows specifying TLS settings from multiple sources: raw PEM string, base64 PEM encoded string, path to a PEM file. The sources are prioritized in the following order:
-    1. Raw PEM
-    2. Base64 encoded PEM
-    3. PEM file path
-- **Insecure Option:** The `insecure_skip_verify` option can be used to turn off server certificate verification, which is not recommended for production environments.
-- **Hostname Verification:** The `server_name` is utilized to verify the hostname on the returned certificates, providing an additional layer of security.
-
-So in the configuration the usage of TLS config for HTTP server may be like this:
-
-```json title="config.json"
-{
-  "http_server": {
-    "tls": {
-      "enabled": true,
-      "cert_pem": "/path/to/cert.pem",
-      "key_pem": "/path/to/key.pem"
-    }
-  }
-}
-```
-
-## Setting namespaces over env
-
-While setting most options in Centrifugo over env is pretty straightforward. Setting namespaces is a bit special:
-
-```console
-CENTRIFUGO_NAMESPACES='[{"name": "ns1"}, {"name": "ns2"}]' ./centrifugo
-```
-
-I.e. `CENTRIFUGO_NAMESPACES` environment variable should be a valid JSON string that represents namespaces array.
