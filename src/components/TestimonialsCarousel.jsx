@@ -9,6 +9,10 @@ const testimonials = [
         author: "Victor Pontis, Founder at Luma",
     },
     {
+        quote: "Migrating from our custom WebSocket setup to Centrifugo felt like trading a DIY van for a Ferrari.",
+        author: "Leonardo N., Founder & CEO at Noguel",
+    },
+    {
         quote: "Centrifugo listed in our tech radar, and new projects will use it by default.",
         author: "Marko Kevac, Engineering Manager at Badoo",
     },
