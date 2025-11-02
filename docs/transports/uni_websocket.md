@@ -80,6 +80,10 @@ Note, `trim` is important since message may end on `\n` too: `{}\n{}\n`.
 
 :::
 
+## WebSocket over HTTP/2 (RFC 8441)
+
+Same as for bidirectional WebSocket transport Centrifugo supports WebSocket over HTTP/2 (RFC 8441) for unidirectional WebSocket too. See [WebSocket over HTTP/2 (RFC 8441)](./websocket.md#websocket-over-http2-rfc-8441) for more details. It's enabled in the same way as for bidirectional WebSocket using `GODEBUG=http2xconnect=1` env var.
+
 ## Example
 
 Let's connect to a unidirectional WebSocket endpoint using [wscat](https://github.com/websockets/wscat) tool – it allows connecting to WebSocket servers interactively from a terminal.
