@@ -291,3 +291,126 @@ html[data-theme="dark"] .logos svg * {
   }
 }
 
+.useCases {
+    padding-bottom: 30px;
+    padding-top: 0px;
+    background-color: var(--palette-background-alt);
+}
+
+.useCasesTitle {
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin-bottom: 50px;
+    font-family: "Nunito";
+    color: var(--ifm-font-color-base);
+}
+
+.useCasesGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    margin: 0 auto;
+}
+
+.useCaseItem {
+    padding: 30px 25px;
+    text-align: center;
+    border-radius: 12px;
+    background: var(--ifm-card-background-color);
+    border: 1px solid var(--ifm-color-emphasis-200);
+    transition: transform 0.1s ease, box-shadow 0.1s ease, border-color 0.1s ease;
+}
+
+.useCaseItem:hover {
+    transform: scale(102%);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+html[data-theme="dark"] .useCaseItem:hover {
+    box-shadow: 0 10px 30px rgba(254, 94, 94, 0.15);
+}
+
+.useCaseIcon {
+    margin-bottom: 20px;
+    line-height: 1;
+    color: var(--ifm-color-primary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.useCaseIcon svg {
+    width: 48px;
+    height: 48px;
+    transition: transform 0.3s ease;
+}
+
+.useCaseItem:hover .useCaseIcon svg {
+    transform: scale(1.1);
+}
+
+html[data-theme="light"] .useCaseIcon {
+    color: #E84C3B;
+}
+
+html[data-theme="dark"] .useCaseIcon {
+    color: #fe5e5e;
+}
+
+.useCaseItem h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--ifm-font-color-base);
+    font-family: "Nunito";
+}
+
+.useCaseItem p {
+    font-size: 0.95rem;
+    color: var(--ifm-color-emphasis-700);
+    line-height: 1.5;
+    margin: 0;
+}
+
+@media screen and (max-width: 996px) {
+    .useCasesGrid {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 25px;
+    }
+
+    .useCasesTitle {
+        font-size: 2rem;
+        margin-bottom: 35px;
+    }
+
+    .useCases {
+        padding: 50px 0;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .useCasesGrid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .useCasesTitle {
+        font-size: 1.75rem;
+        margin-bottom: 30px;
+    }
+
+    .useCases {
+        padding: 40px 0;
+    }
+
+    .useCaseItem {
+        padding: 25px 20px;
+    }
+
+    .useCaseIcon svg {
+        width: 40px;
+        height: 40px;
+    }
+}
+

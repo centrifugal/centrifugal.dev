@@ -26,6 +26,7 @@ import ProBanner from '../components/ProBanner';
 import ImageRotator from '../components/ImageRotator';
 import GitHubStarButton from '../components/GitHubStarButton';
 import QuickStart, { QuickStartDescription } from '../components/QuickStart';
+import { ChatIcon, DashboardIcon, GameIcon, CollaborationIcon, FinancialIcon, NotificationIcon, IoTIcon, AIIcon } from './components/UseCaseIcons';
 
 function Feature({ imageUrl, title, children }) {
   const imgUrl = useBaseUrl(imageUrl);
@@ -200,6 +201,52 @@ function Home() {
             </>
           }
         />
+        <section className={styles.useCases}>
+          <div className="container">
+            <div className={styles.useCasesGrid}>
+              <div className={styles.useCaseItem}>
+                <div className={styles.useCaseIcon}><ChatIcon /></div>
+                <h3>Chat & Messaging</h3>
+                <p>Build real-time chat applications, live comments, and instant messaging systems</p>
+              </div>
+              <div className={styles.useCaseItem}>
+                <div className={styles.useCaseIcon}><DashboardIcon /></div>
+                <h3>Live Dashboards</h3>
+                <p>Stream metrics, analytics, and telemetry data for real-time visualization</p>
+              </div>
+              <div className={styles.useCaseItem}>
+                <div className={styles.useCaseIcon}><GameIcon /></div>
+                <h3>Multiplayer Games</h3>
+                <p>Synchronize game state and player actions in real-time gaming experiences</p>
+              </div>
+              <div className={styles.useCaseItem}>
+                <div className={styles.useCaseIcon}><CollaborationIcon /></div>
+                <h3>Collaboration Tools</h3>
+                <p>Enable co-editing, shared workspaces, and team coordination features</p>
+              </div>
+              <div className={styles.useCaseItem}>
+                <div className={styles.useCaseIcon}><FinancialIcon /></div>
+                <h3>Financial Data</h3>
+                <p>Deliver real-time stock prices, trading updates, and market information</p>
+              </div>
+              <div className={styles.useCaseItem}>
+                <div className={styles.useCaseIcon}><NotificationIcon /></div>
+                <h3>Notifications</h3>
+                <p>Push instant alerts, updates, and event notifications to connected users</p>
+              </div>
+              <div className={styles.useCaseItem}>
+                <div className={styles.useCaseIcon}><IoTIcon /></div>
+                <h3>IoT & Tracking</h3>
+                <p>Track vehicles, devices, and sensor data with live location updates</p>
+              </div>
+              <div className={styles.useCaseItem}>
+                <div className={styles.useCaseIcon}><AIIcon /></div>
+                <h3>AI Streaming</h3>
+                <p>Stream AI model responses and live generation results to users</p>
+              </div>
+            </div>
+          </div>
+        </section>        
         < Highlight
           img={
             <img src="/img/broadcast.svg" alt="Broadcast illustration" style={{ backgroundColor: '#17171B', borderRadius: '10px' }} />
@@ -293,7 +340,7 @@ function Home() {
               </div>
             </>
           }
-        />
+        />        
         < Highlight
           img={
             <ImageRotator />
