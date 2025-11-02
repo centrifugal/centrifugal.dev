@@ -52,21 +52,21 @@ Here is a description of various metrics exposed by Centrifugo.
 #### centrifugo_node_messages_sent_count
 
 - **Type:** Counter
-- **Labels:** type
+- **Labels:** type, channel_namespace (Centrifugo PRO)
 - **Description:** Tracks the number of messages sent by a node to the broker.
 - **Usage:** Use this metric to monitor the outgoing message rate and detect any anomalies or spikes in the data flow.
 
 #### centrifugo_node_messages_received_count
 
 - **Type:** Counter
-- **Labels:** type
+- **Labels:** type, channel_namespace (Centrifugo PRO)
 - **Description:** Measures the number of messages received from the broker.
 - **Usage:** Helps in understanding the incoming message rate and ensures the node is receiving data as expected.
 
 #### centrifugo_node_action_count
 
 - **Type:** Counter
-- **Labels:** action
+- **Labels:** action, channel_namespace (Centrifugo PRO)
 - **Description:** Counts the number of various actions called within the node.
 - **Usage:** Useful for tracking specific actions' usage and frequency.
 
@@ -117,14 +117,14 @@ Here is a description of various metrics exposed by Centrifugo.
 #### centrifugo_client_num_reply_errors
 
 - **Type:** Counter
-- **Labels:** method, code
+- **Labels:** method, code, channel_namespace (Centrifugo PRO)
 - **Description:** Counts the number of errors in replies sent to clients.
 - **Usage:** Critical for error monitoring and ensuring smooth client interactions.
 
 #### centrifugo_client_num_server_unsubscribes
 
 - **Type:** Counter
-- **Labels:** code
+- **Labels:** code, channel_namespace (Centrifugo PRO)
 - **Description:** Tracks the number of server-initiated unsubscribes.
 - **Usage:** Use this to monitor the health of client connections and identify potential issues with the server.
 
@@ -138,14 +138,14 @@ Here is a description of various metrics exposed by Centrifugo.
 #### centrifugo_client_command_duration_seconds
 
 - **Type:** Summary
-- **Labels:** method
+- **Labels:** method, channel_namespace (Centrifugo PRO)
 - **Description:** Measures the duration of commands executed by clients.
 - **Usage:** Essential for performance monitoring and ensuring timely responses to client commands.
 
 #### centrifugo_client_recover
 
 - **Type:** Counter
-- **Labels:** recovered, has_recovered_publications
+- **Labels:** recovered, channel_namespace (Centrifugo PRO), has_recovered_publications
 - **Description:** Counts the number of recover operations performed.
 - **Usage:** Helps in tracking the system's resilience and recovery mechanisms. Label `recovered` - was recovery successful or not. Label `has_recovered_publications` -  did successful recovery contain some publications or no publications were missed by a client.
 
@@ -174,6 +174,34 @@ Note, this metric is disabled by default. To enable it set `prometheus.recovered
 - **Labels:** None
 - **Description:** Number of refused connections due to the node client connection limit.
 - **Usage:** Useful for monitoring the load on the Centrifugo node and identifying when clients are being refused connections due to reaching the connection limit.
+
+#### centrifugo_client_connections_accepted
+
+- **Type:** Counter
+- **Labels:** transport, accept_protocol (Centrifugo PRO), client_name, client_version
+- **Description:** Count of accepted client connections by transport type, protocol, client name, and version.
+- **Usage:** Helps in tracking connection patterns, understanding which clients and transports are being used, and monitoring client version distribution across your infrastructure.
+
+#### centrifugo_client_connections_inflight
+
+- **Type:** Gauge
+- **Labels:** transport, accept_protocol (Centrifugo PRO), client_name, client_version
+- **Description:** Number of currently active client connections by transport type, protocol, client name, and version.
+- **Usage:** Useful for real-time monitoring of active connections, understanding the current load distribution across different transports and client types, and capacity planning.
+
+#### centrifugo_client_subscriptions_accepted
+
+- **Type:** Counter
+- **Labels:** client_name, channel_namespace (Centrifugo PRO)
+- **Description:** Count of accepted client subscriptions by client name and channel namespace.
+- **Usage:** Useful for monitoring subscription patterns, understanding which clients are subscribing to which channel namespaces, and tracking subscription volume over time.
+
+#### centrifugo_client_subscriptions_inflight
+
+- **Type:** Gauge
+- **Labels:** client_name, channel_namespace (Centrifugo PRO)
+- **Description:** Number of currently active client subscriptions by client name and channel namespace.
+- **Usage:** Essential for real-time monitoring of active subscriptions, understanding which clients and channel namespaces have the most active subscriptions, and capacity planning for subscription load.
 
 #### centrifugo_client_ping_pong_duration_seconds
 
@@ -262,16 +290,37 @@ Note, this metric is disabled by default. To enable it set `prometheus.recovered
 #### centrifugo_node_broadcast_duration_seconds
 
 - **Type:** Histogram
-- **Labels:**
+- **Labels:** type, channel_namespace (Centrifugo PRO)
 - **Description:** Tracks broadcast duration in seconds.
 - **Usage:** Useful to monitor time required for broadcasting the message to subscribers on the node. If it grows and the number of messages increases – may indicate the need to scale.
 
 #### centrifugo_node_tags_filter_dropped_publications
 
 - **Type:** Counter
-- **Labels:** channel_namespace
+- **Labels:** channel_namespace (Centrifugo PRO)
 - **Description:** Counts the number of publications dropped due to tags filtering.
 - **Usage:** Helps in monitoring the effectiveness of tags filtering and identifying any potential issues.
+
+#### centrifugo_broker_redis_pub_sub_errors
+
+- **Type:** Counter
+- **Labels:** broker_name, error
+- **Description:** Number of times there was an error in Redis PUB/SUB connection.
+- **Usage:** Critical for monitoring Redis broker health and identifying connection issues that could affect message delivery.
+
+#### centrifugo_broker_redis_pub_sub_dropped_messages
+
+- **Type:** Counter
+- **Labels:** broker_name, channel_type
+- **Description:** Number of dropped messages on application level in Redis PUB/SUB.
+- **Usage:** Helps identify message loss issues in the Redis broker, which could indicate performance problems or buffer overflows.
+
+#### centrifugo_broker_redis_pub_sub_buffered_messages
+
+- **Type:** Gauge
+- **Labels:** broker_name, channel_type, pub_sub_processor
+- **Description:** Number of messages buffered in Redis PUB/SUB.
+- **Usage:** Monitor buffer levels to detect potential bottlenecks in message processing and prevent message drops.
 
 ## Traces
 
