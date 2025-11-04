@@ -196,10 +196,10 @@ JWKS providers work for both connection tokens and subscription tokens. [As usua
             "jwks": {
                 "enabled": true,
                 "providers": [{
-                    "name": "auth0_subscription",
+                    "name": "subscription_identity",
                     "enabled": true,
-                    "endpoint": "https://tenant.auth0.com/.well-known/jwks.json",
-                    "issuer": "https://tenant.auth0.com/subs"
+                    "endpoint": "https://tenant.example.com/.well-known/jwks.json",
+                    "issuer": "https://tenant.example.com"
                 }]
             }
         }
