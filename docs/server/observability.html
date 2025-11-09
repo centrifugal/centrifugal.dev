@@ -15,9 +15,9 @@
 
 
 <link rel="search" type="application/opensearchdescription+xml" title="Centrifugo" href="/opensearch.xml">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.8ccd4a84.css">
-<script src="/assets/js/runtime~main.71db988a.js" defer="defer"></script>
-<script src="/assets/js/main.6af38268.js" defer="defer"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.2da952e4.css">
+<script src="/assets/js/runtime~main.2645e232.js" defer="defer"></script>
+<script src="/assets/js/main.44c02bca.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;"><defs>
@@ -42,21 +42,21 @@
 <h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="centrifugo_node_messages_sent_count">centrifugo_node_messages_sent_count<a href="#centrifugo_node_messages_sent_count" class="hash-link" aria-label="Direct link to centrifugo_node_messages_sent_count" title="Direct link to centrifugo_node_messages_sent_count">​</a></h4>
 <ul>
 <li><strong>Type:</strong> Counter</li>
-<li><strong>Labels:</strong> type</li>
+<li><strong>Labels:</strong> type, channel_namespace (Centrifugo PRO)</li>
 <li><strong>Description:</strong> Tracks the number of messages sent by a node to the broker.</li>
 <li><strong>Usage:</strong> Use this metric to monitor the outgoing message rate and detect any anomalies or spikes in the data flow.</li>
 </ul>
 <h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="centrifugo_node_messages_received_count">centrifugo_node_messages_received_count<a href="#centrifugo_node_messages_received_count" class="hash-link" aria-label="Direct link to centrifugo_node_messages_received_count" title="Direct link to centrifugo_node_messages_received_count">​</a></h4>
 <ul>
 <li><strong>Type:</strong> Counter</li>
-<li><strong>Labels:</strong> type</li>
+<li><strong>Labels:</strong> type, channel_namespace (Centrifugo PRO)</li>
 <li><strong>Description:</strong> Measures the number of messages received from the broker.</li>
 <li><strong>Usage:</strong> Helps in understanding the incoming message rate and ensures the node is receiving data as expected.</li>
 </ul>
 <h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="centrifugo_node_action_count">centrifugo_node_action_count<a href="#centrifugo_node_action_count" class="hash-link" aria-label="Direct link to centrifugo_node_action_count" title="Direct link to centrifugo_node_action_count">​</a></h4>
 <ul>
 <li><strong>Type:</strong> Counter</li>
-<li><strong>Labels:</strong> action</li>
+<li><strong>Labels:</strong> action, channel_namespace (Centrifugo PRO)</li>
 <li><strong>Description:</strong> Counts the number of various actions called within the node.</li>
 <li><strong>Usage:</strong> Useful for tracking specific actions&#x27; usage and frequency.</li>
 </ul>
@@ -107,14 +107,14 @@
 <h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="centrifugo_client_num_reply_errors">centrifugo_client_num_reply_errors<a href="#centrifugo_client_num_reply_errors" class="hash-link" aria-label="Direct link to centrifugo_client_num_reply_errors" title="Direct link to centrifugo_client_num_reply_errors">​</a></h4>
 <ul>
 <li><strong>Type:</strong> Counter</li>
-<li><strong>Labels:</strong> method, code</li>
+<li><strong>Labels:</strong> method, code, channel_namespace (Centrifugo PRO)</li>
 <li><strong>Description:</strong> Counts the number of errors in replies sent to clients.</li>
 <li><strong>Usage:</strong> Critical for error monitoring and ensuring smooth client interactions.</li>
 </ul>
 <h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="centrifugo_client_num_server_unsubscribes">centrifugo_client_num_server_unsubscribes<a href="#centrifugo_client_num_server_unsubscribes" class="hash-link" aria-label="Direct link to centrifugo_client_num_server_unsubscribes" title="Direct link to centrifugo_client_num_server_unsubscribes">​</a></h4>
 <ul>
 <li><strong>Type:</strong> Counter</li>
-<li><strong>Labels:</strong> code</li>
+<li><strong>Labels:</strong> code, channel_namespace (Centrifugo PRO)</li>
 <li><strong>Description:</strong> Tracks the number of server-initiated unsubscribes.</li>
 <li><strong>Usage:</strong> Use this to monitor the health of client connections and identify potential issues with the server.</li>
 </ul>
@@ -128,14 +128,14 @@
 <h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="centrifugo_client_command_duration_seconds">centrifugo_client_command_duration_seconds<a href="#centrifugo_client_command_duration_seconds" class="hash-link" aria-label="Direct link to centrifugo_client_command_duration_seconds" title="Direct link to centrifugo_client_command_duration_seconds">​</a></h4>
 <ul>
 <li><strong>Type:</strong> Summary</li>
-<li><strong>Labels:</strong> method</li>
+<li><strong>Labels:</strong> method, channel_namespace (Centrifugo PRO)</li>
 <li><strong>Description:</strong> Measures the duration of commands executed by clients.</li>
 <li><strong>Usage:</strong> Essential for performance monitoring and ensuring timely responses to client commands.</li>
 </ul>
 <h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="centrifugo_client_recover">centrifugo_client_recover<a href="#centrifugo_client_recover" class="hash-link" aria-label="Direct link to centrifugo_client_recover" title="Direct link to centrifugo_client_recover">​</a></h4>
 <ul>
 <li><strong>Type:</strong> Counter</li>
-<li><strong>Labels:</strong> recovered, has_recovered_publications</li>
+<li><strong>Labels:</strong> recovered, channel_namespace (Centrifugo PRO), has_recovered_publications</li>
 <li><strong>Description:</strong> Counts the number of recover operations performed.</li>
 <li><strong>Usage:</strong> Helps in tracking the system&#x27;s resilience and recovery mechanisms. Label <code>recovered</code> - was recovery successful or not. Label <code>has_recovered_publications</code> -  did successful recovery contain some publications or no publications were missed by a client.</li>
 </ul>
@@ -155,6 +155,34 @@
 <li><strong>Labels:</strong> None</li>
 <li><strong>Description:</strong> Number of refused connections due to the node client connection limit.</li>
 <li><strong>Usage:</strong> Useful for monitoring the load on the Centrifugo node and identifying when clients are being refused connections due to reaching the connection limit.</li>
+</ul>
+<h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="centrifugo_client_connections_accepted">centrifugo_client_connections_accepted<a href="#centrifugo_client_connections_accepted" class="hash-link" aria-label="Direct link to centrifugo_client_connections_accepted" title="Direct link to centrifugo_client_connections_accepted">​</a></h4>
+<ul>
+<li><strong>Type:</strong> Counter</li>
+<li><strong>Labels:</strong> transport, accept_protocol (Centrifugo PRO), client_name, client_version</li>
+<li><strong>Description:</strong> Count of accepted client connections by transport type, protocol, client name, and version.</li>
+<li><strong>Usage:</strong> Helps in tracking connection patterns, understanding which clients and transports are being used, and monitoring client version distribution across your infrastructure.</li>
+</ul>
+<h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="centrifugo_client_connections_inflight">centrifugo_client_connections_inflight<a href="#centrifugo_client_connections_inflight" class="hash-link" aria-label="Direct link to centrifugo_client_connections_inflight" title="Direct link to centrifugo_client_connections_inflight">​</a></h4>
+<ul>
+<li><strong>Type:</strong> Gauge</li>
+<li><strong>Labels:</strong> transport, accept_protocol (Centrifugo PRO), client_name, client_version</li>
+<li><strong>Description:</strong> Number of currently active client connections by transport type, protocol, client name, and version.</li>
+<li><strong>Usage:</strong> Useful for real-time monitoring of active connections, understanding the current load distribution across different transports and client types, and capacity planning.</li>
+</ul>
+<h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="centrifugo_client_subscriptions_accepted">centrifugo_client_subscriptions_accepted<a href="#centrifugo_client_subscriptions_accepted" class="hash-link" aria-label="Direct link to centrifugo_client_subscriptions_accepted" title="Direct link to centrifugo_client_subscriptions_accepted">​</a></h4>
+<ul>
+<li><strong>Type:</strong> Counter</li>
+<li><strong>Labels:</strong> client_name, channel_namespace (Centrifugo PRO)</li>
+<li><strong>Description:</strong> Count of accepted client subscriptions by client name and channel namespace.</li>
+<li><strong>Usage:</strong> Useful for monitoring subscription patterns, understanding which clients are subscribing to which channel namespaces, and tracking subscription volume over time.</li>
+</ul>
+<h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="centrifugo_client_subscriptions_inflight">centrifugo_client_subscriptions_inflight<a href="#centrifugo_client_subscriptions_inflight" class="hash-link" aria-label="Direct link to centrifugo_client_subscriptions_inflight" title="Direct link to centrifugo_client_subscriptions_inflight">​</a></h4>
+<ul>
+<li><strong>Type:</strong> Gauge</li>
+<li><strong>Labels:</strong> client_name, channel_namespace (Centrifugo PRO)</li>
+<li><strong>Description:</strong> Number of currently active client subscriptions by client name and channel namespace.</li>
+<li><strong>Usage:</strong> Essential for real-time monitoring of active subscriptions, understanding which clients and channel namespaces have the most active subscriptions, and capacity planning for subscription load.</li>
 </ul>
 <h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="centrifugo_client_ping_pong_duration_seconds">centrifugo_client_ping_pong_duration_seconds<a href="#centrifugo_client_ping_pong_duration_seconds" class="hash-link" aria-label="Direct link to centrifugo_client_ping_pong_duration_seconds" title="Direct link to centrifugo_client_ping_pong_duration_seconds">​</a></h4>
 <ul>
@@ -243,16 +271,37 @@
 <h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="centrifugo_node_broadcast_duration_seconds">centrifugo_node_broadcast_duration_seconds<a href="#centrifugo_node_broadcast_duration_seconds" class="hash-link" aria-label="Direct link to centrifugo_node_broadcast_duration_seconds" title="Direct link to centrifugo_node_broadcast_duration_seconds">​</a></h4>
 <ul>
 <li><strong>Type:</strong> Histogram</li>
-<li><strong>Labels:</strong></li>
+<li><strong>Labels:</strong> type, channel_namespace (Centrifugo PRO)</li>
 <li><strong>Description:</strong> Tracks broadcast duration in seconds.</li>
 <li><strong>Usage:</strong> Useful to monitor time required for broadcasting the message to subscribers on the node. If it grows and the number of messages increases – may indicate the need to scale.</li>
 </ul>
 <h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="centrifugo_node_tags_filter_dropped_publications">centrifugo_node_tags_filter_dropped_publications<a href="#centrifugo_node_tags_filter_dropped_publications" class="hash-link" aria-label="Direct link to centrifugo_node_tags_filter_dropped_publications" title="Direct link to centrifugo_node_tags_filter_dropped_publications">​</a></h4>
 <ul>
 <li><strong>Type:</strong> Counter</li>
-<li><strong>Labels:</strong> channel_namespace</li>
+<li><strong>Labels:</strong> channel_namespace (Centrifugo PRO)</li>
 <li><strong>Description:</strong> Counts the number of publications dropped due to tags filtering.</li>
 <li><strong>Usage:</strong> Helps in monitoring the effectiveness of tags filtering and identifying any potential issues.</li>
+</ul>
+<h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="centrifugo_broker_redis_pub_sub_errors">centrifugo_broker_redis_pub_sub_errors<a href="#centrifugo_broker_redis_pub_sub_errors" class="hash-link" aria-label="Direct link to centrifugo_broker_redis_pub_sub_errors" title="Direct link to centrifugo_broker_redis_pub_sub_errors">​</a></h4>
+<ul>
+<li><strong>Type:</strong> Counter</li>
+<li><strong>Labels:</strong> broker_name, error</li>
+<li><strong>Description:</strong> Number of times there was an error in Redis PUB/SUB connection.</li>
+<li><strong>Usage:</strong> Critical for monitoring Redis broker health and identifying connection issues that could affect message delivery.</li>
+</ul>
+<h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="centrifugo_broker_redis_pub_sub_dropped_messages">centrifugo_broker_redis_pub_sub_dropped_messages<a href="#centrifugo_broker_redis_pub_sub_dropped_messages" class="hash-link" aria-label="Direct link to centrifugo_broker_redis_pub_sub_dropped_messages" title="Direct link to centrifugo_broker_redis_pub_sub_dropped_messages">​</a></h4>
+<ul>
+<li><strong>Type:</strong> Counter</li>
+<li><strong>Labels:</strong> broker_name, channel_type</li>
+<li><strong>Description:</strong> Number of dropped messages on application level in Redis PUB/SUB.</li>
+<li><strong>Usage:</strong> Helps identify message loss issues in the Redis broker, which could indicate performance problems or buffer overflows.</li>
+</ul>
+<h4 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="centrifugo_broker_redis_pub_sub_buffered_messages">centrifugo_broker_redis_pub_sub_buffered_messages<a href="#centrifugo_broker_redis_pub_sub_buffered_messages" class="hash-link" aria-label="Direct link to centrifugo_broker_redis_pub_sub_buffered_messages" title="Direct link to centrifugo_broker_redis_pub_sub_buffered_messages">​</a></h4>
+<ul>
+<li><strong>Type:</strong> Gauge</li>
+<li><strong>Labels:</strong> broker_name, channel_type, pub_sub_processor</li>
+<li><strong>Description:</strong> Number of messages buffered in Redis PUB/SUB.</li>
+<li><strong>Usage:</strong> Monitor buffer levels to detect potential bottlenecks in message processing and prevent message drops.</li>
 </ul>
 <h2 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="traces">Traces<a href="#traces" class="hash-link" aria-label="Direct link to Traces" title="Direct link to Traces">​</a></h2>
 <h3 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="opentelemetry">OpenTelemetry<a href="#opentelemetry" class="hash-link" aria-label="Direct link to OpenTelemetry" title="Direct link to OpenTelemetry">​</a></h3>

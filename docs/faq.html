@@ -15,9 +15,9 @@
 
 
 <link rel="search" type="application/opensearchdescription+xml" title="Centrifugo" href="/opensearch.xml">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.8ccd4a84.css">
-<script src="/assets/js/runtime~main.71db988a.js" defer="defer"></script>
-<script src="/assets/js/main.6af38268.js" defer="defer"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.2da952e4.css">
+<script src="/assets/js/runtime~main.2645e232.js" defer="defer"></script>
+<script src="/assets/js/main.44c02bca.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;"><defs>
@@ -145,16 +145,26 @@
 <p>If you want to use Centrifugo with different projects the recommended approach is to have different Centrifugo installations for each project. Multitenancy is better to solve on infrastructure level in case of Centrifugo.</p>
 <p>It&#x27;s possible to share one Redis setup though by setting unique <code>redis_prefix</code>. But we recommend having completely isolated setups.</p>
 <h3 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="is-centrifugo-fips-compliant">Is Centrifugo FIPS compliant?<a href="#is-centrifugo-fips-compliant" class="hash-link" aria-label="Direct link to Is Centrifugo FIPS compliant?" title="Direct link to Is Centrifugo FIPS compliant?">​</a></h3>
-<p>See the <a href="https://go.dev/doc/security/fips140" target="_blank" rel="noopener noreferrer">FIPS 140-3 Compliance</a> document, which is part of the Go 1.24 release. With this release, it is now possible to use <code>GODEBUG</code> runtime toggles to enable FIPS 140-3 compliance mode (Linux only). Centrifugo logs <code>&quot;fips&quot;: true</code> at startup if FIPS mode is enabled.</p>
-<p>Note, Centrifugo uses the SHA-1 digest for two purposes:</p>
+<p>Starting from Go 1.24 there is a way to enable <a href="https://go.dev/doc/security/fips140" target="_blank" rel="noopener noreferrer">FIPS 140-3 Compliance</a>. Centrifugo is written in Go thus inherits this. It is possible to use <code>GODEBUG</code> runtime toggle to enable FIPS 140-3 compliance mode (on Linux only). Centrifugo logs <code>&quot;fips&quot;: true</code> at startup if FIPS mode is enabled.</p>
+<p>Note, Centrifugo uses the SHA-1 digest (which is not a FIPS-approved algorithm) for two purposes at this point:</p>
 <ul>
-<li>Using SHA-1 as a hex digest for the Redis Lua <a href="https://redis.io/docs/latest/commands/evalsha/" target="_blank" rel="noopener noreferrer"><code>EVALSHA</code></a> command. SHA-1 is used here only for the digest of the Lua script, not for any cryptographic purposes. The digest is used to identify the script in Redis and is not relied upon for any security properties.</li>
+<li>Using SHA-1 as a hex digest for the Redis Lua <a href="https://redis.io/docs/latest/commands/evalsha/" target="_blank" rel="noopener noreferrer"><code>EVALSHA</code></a> command. SHA-1 is used here only for the digest of the Lua script to identify the script in Redis and is not relied upon for any security related properties.</li>
 <li>Using SHA-1 during WebSocket upgrades, as specified in <a href="https://datatracker.ietf.org/doc/html/rfc6455" target="_blank" rel="noopener noreferrer">RFC 6455</a>. The RFC <a href="https://datatracker.ietf.org/doc/html/rfc6455#section-10.8" target="_blank" rel="noopener noreferrer">explicitly states in section 10.8</a> that SHA-1 usage does not depend on any of SHA-1’s cryptographic security properties.</li>
 </ul>
-<p>This means that:</p>
+<p>Having said that, the behavior of Centrifugo in FIPS modes is as follows:</p>
 <ul>
-<li>When running Centrifugo with <code>GODEBUG=fips140=on</code>, all functionality will work as expected.</li>
-<li>When running with <code>GODEBUG=fips140=only</code>, Centrifugo will panic if it attempts to use Redis integrations or WebSocket transport.</li>
+<li>When running Centrifugo with <code>GODEBUG=fips140=on</code>, all functionality will work as expected, but Centrifugo will still use SHA-1 in the two cases mentioned above.</li>
+<li>When running with <code>GODEBUG=fips140=only</code>:<!-- -->
+<ul>
+<li>Centrifugo OSS will panic if it attempts to use Redis integrations or the WebSocket transport.</li>
+<li>Centrifugo PRO (starting from v6.5.0) automatically adapts in this mode to maintain full FIPS compliance by:<!-- -->
+<ul>
+<li>offloading SHA-1 digest generation to the Redis server itself (using the return value of the <a href="https://redis.io/docs/latest/commands/script-load/" target="_blank" rel="noopener noreferrer"><code>SCRIPT LOAD</code></a> command).</li>
+<li>disabling WebSocket over HTTP/1.1 in favor of WebSocket over HTTP/2, which does not require SHA-1 during the upgrade process. In this case, only connections that use <a href="/docs/transports/websocket#websocket-over-http2-rfc-8441">RFC 8441 – WebSocket over HTTP/2</a> (must be explicitly enabled) will work. This can be a viable solution if you have a FIPS-approved load balancer with RFC 8441 support in front of Centrifugo PRO.</li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 <p>If you also need a FIPS-compliant Docker image, you can create one using the binary from the Centrifugo releases on GitHub.</p>
 <h3 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="i-have-not-found-an-answer-to-my-question-here">I have not found an answer to my question here<a href="#i-have-not-found-an-answer-to-my-question-here" class="hash-link" aria-label="Direct link to I have not found an answer to my question here" title="Direct link to I have not found an answer to my question here">​</a></h3>

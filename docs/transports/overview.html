@@ -15,9 +15,9 @@
 
 
 <link rel="search" type="application/opensearchdescription+xml" title="Centrifugo" href="/opensearch.xml">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.8ccd4a84.css">
-<script src="/assets/js/runtime~main.71db988a.js" defer="defer"></script>
-<script src="/assets/js/main.6af38268.js" defer="defer"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.2da952e4.css">
+<script src="/assets/js/runtime~main.2645e232.js" defer="defer"></script>
+<script src="/assets/js/main.44c02bca.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;"><defs>
@@ -44,8 +44,8 @@
 <p>Centrifugo server periodically sends pings to clients and expects pong from clients that works over bidirectional transports. Sending ping and receiving pong allows to find broken connections faster. Centrifugo sends pings on the Centrifugo client protocol level, thus it&#x27;s possible for clients to handle ping messages on the client side to make sure connection is not broken (our bidirectional SDKs do this automatically).</p>
 <p>Here is a scheme how ping/pong works in bidirectional and unidirectional client scenarios:</p>
 <p><img decoding="async" loading="lazy" src="/assets/images/ping_pong-4f67ec945077864d9accb516406fb6d0.png" width="2396" height="1435" class="img_ev3q"></p>
-<p>By default, Centrifugo sends pings every 25 seconds. This may be changed using <code>client.ping_interval</code> option (<a href="/docs/server/configuration#setting-time-duration-options">duration</a>, default <code>&quot;25s&quot;</code>).</p>
-<p>Centrifugo expects pong message from bidirectional client SDK after sending ping to it. By default, it waits no more than 8 seconds before closing a connection. This may be changed using <code>client.pong_timeout</code> option (<a href="/docs/server/configuration#setting-time-duration-options">duration</a>, default <code>&quot;8s&quot;</code>).</p>
+<p>By default, Centrifugo sends pings every 25 seconds. This may be changed using <code>client.ping_interval</code> option (<a href="/docs/server/configuration#duration-type">duration</a>, default <code>&quot;25s&quot;</code>).</p>
+<p>Centrifugo expects pong message from bidirectional client SDK after sending ping to it. By default, it waits no more than 8 seconds before closing a connection. This may be changed using <code>client.pong_timeout</code> option (<a href="/docs/server/configuration#duration-type">duration</a>, default <code>&quot;8s&quot;</code>).</p>
 <p>In most cases default ping/pong intervals are fine so you don&#x27;t really need to tweak them. Reducing timeouts may help you find non-gracefully closed connections faster, but will increase network traffic and CPU resource usage since ping/pongs are sent faster.</p>
 <div class="theme-admonition theme-admonition-caution admonition_xJq3 alert alert--warning"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z"></path></svg></span>caution</div><div class="admonitionContent_BuS1"><p>When overriding default values make sure that <code>client.ping_interval</code> is greater than <code>client.pong_timeout</code> – this is required by the current server implementation.</p></div></div>
 <p>Example of configuration:</p>
