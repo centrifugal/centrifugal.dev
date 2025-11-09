@@ -12,6 +12,12 @@ Centrifugo OSS provides JWT based client authentication. It's a very powerful me
 
 Centrifugo PRO can automatically extract and populate connection [meta](../server/authentication.md#meta) object from JWT token claims based on the mapping in the configuration. This allows more convenient work with JWTs which are not under user's control, i.e., issued by third-party identity providers.
 
+:::info
+
+This feature is available since Centrifugo PRO v6.5.0, currently in beta status. Beta status means we can tweak some implementation details based on user feedback before marking it as stable.
+
+:::
+
 This metadata is then available throughout the connection lifecycle and can be used in:
 
 - CEL expressions for authorization
@@ -106,6 +112,12 @@ The connection will have the following `meta` object:
 ## Multiple JWKS Providers
 
 Centrifugo PRO supports configuring multiple JWKS (JSON Web Key Set) providers for client connection authentication with automatic token routing based on the issuer (`iss`) claim. This may be useful for multi-tenant scenarios where tokens may come from different identity providers.
+
+:::info
+
+This feature is available since Centrifugo PRO v6.5.0, currently in beta status. Beta status means we can tweak some implementation details based on user feedback before marking it as stable.
+
+:::
 
 While the standard `client.token.jwks_public_endpoint` configuration allows fetching public keys from a single JWKS endpoint, this feature enables you to configure multiple JWKS endpoints, each associated with a specific token issuer. Centrifugo will automatically route token verification to the correct provider based on the `iss` (issuer) claim in the JWT.
 
