@@ -26,7 +26,7 @@ import ProBanner from '../components/ProBanner';
 import ImageRotator from '../components/ImageRotator';
 import GitHubStarButton from '../components/GitHubStarButton';
 import QuickStart, { QuickStartDescription } from '../components/QuickStart';
-import { ChatIcon, DashboardIcon, GameIcon, CollaborationIcon, FinancialIcon, NotificationIcon, IoTIcon, AIIcon } from './components/UseCaseIcons';
+import { ChatIcon, DashboardIcon, GameIcon, CollaborationIcon, FinancialIcon, NotificationIcon, IoTIcon, AIIcon } from '../components/UseCaseIcons';
 
 function Feature({ imageUrl, title, children }) {
   const imgUrl = useBaseUrl(imageUrl);
