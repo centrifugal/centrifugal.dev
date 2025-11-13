@@ -80,6 +80,18 @@ Note, `trim` is important since message may end on `\n` too: `{}\n{}\n`.
 
 :::
 
+### `uni_websocket.disable_closing_handshake`
+
+Default: `false`. Available since Centrifugo v6.5.1
+
+`disable_closing_handshake` boolean option disables WebSocket closing handshake for unidirectional WebSocket transport. This restores the behavior prior to Centrifugo v6.5.1 where server never sent a close frame on connection close initiated by server. Normally closing handshake is recommended to be performed according to WebSocket protocol RFC, so this option is useful only in some specific cases when you need to restore the previous behavior.
+
+### `uni_websocket.disable_disconnect_push`
+
+Default: `false`. Available since Centrifugo v6.5.1
+
+`disable_disconnect_push` boolean option disables sending disconnect push messages to clients. It's sent by default to make unidirectional transports similar, but since unidirectional WebSocket transport transport also sends close frame to the client with the same code/reason – some users may want to disable disconnect push to avoid ambiguity.
+
 ## WebSocket over HTTP/2 (RFC 8441)
 
 Same as for bidirectional WebSocket transport Centrifugo supports WebSocket over HTTP/2 (RFC 8441) for unidirectional WebSocket too. See [WebSocket over HTTP/2 (RFC 8441)](./websocket.md#websocket-over-http2-rfc-8441) for more details. It's enabled in the same way as for bidirectional WebSocket using `GODEBUG=http2xconnect=1` env var.

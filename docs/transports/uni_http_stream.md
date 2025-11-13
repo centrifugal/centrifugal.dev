@@ -76,14 +76,15 @@ Turn on uni HTTP stream and automatically subscribe users to personal channel up
 ```json title="config.json"
 {
   "client": {
+    "token": {
+      "hmac_secret_key": "secret"
+    },
     "subscribe_to_user_personal_channel": {
       "enabled": true
     }
   },
   "uni_http_stream": {
-    "enabled": {
-      "enabled": true
-    }
+    "enabled": true
   }
 }
 ```
