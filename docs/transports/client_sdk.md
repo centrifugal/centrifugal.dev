@@ -21,6 +21,7 @@ Here is a list of SDKs maintained by Centrifugal Labs:
 * [centrifuge-swift](https://github.com/centrifugal/centrifuge-swift) – for native iOS development
 * [centrifuge-java](https://github.com/centrifugal/centrifuge-java) – for native Android development and general Java
 * [centrifuge-python](https://github.com/centrifugal/centrifuge-python) – real-time SDK for Python on top of asyncio
+* [WIP] [centrifuge-csharp](https://github.com/centrifugal/centrifuge-csharp) - for modern .NET environments (including MAUI, Blazor, Unity)
 
 SDKs driven by the community:
 
@@ -52,23 +53,23 @@ Below you can find an information regarding support of different features in our
 
 <div className="features">
 
-| Client feature                             | js | dart | swift | go | java | python |
-|--------------------------------------------|----|------|-------|----|------|--------|
-| connect to a server                        | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
-| setting client options                     | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
-| automatic reconnect with backoff algorithm | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
-| client state changes                       | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
-| command-reply                              | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
-| command timeouts                           | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
-| async pushes                               | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
-| ping-pong                                  | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
-| connection token refresh                   | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
-| handle disconnect advice from server       | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
-| server-side subscriptions                  | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
-| batching API                               | ✅  |      |       |    |      |        |
-| bidirectional WebSocket emulation          | ✅  |      |       |    |      |        |
-| headers emulation                          | ✅  | ✅    | na    | na | na   | na     |
-| channel compaction (Centrifugo PRO)        | ✅  |      |       |    |      |        |
+| Client feature                             | js | dart | swift | go | java | python | c# [WIP] |
+|--------------------------------------------|----|------|-------|----|------|--------|--------|
+| connect to a server                        | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
+| setting client options                     | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
+| automatic reconnect with backoff algorithm | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
+| client state changes                       | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
+| command-reply                              | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
+| command timeouts                           | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
+| async pushes                               | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
+| ping-pong                                  | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
+| connection token refresh                   | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
+| handle disconnect advice from server       | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
+| server-side subscriptions                  | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
+| batching API                               | ✅  |      |       |    |      |        |        |
+| bidirectional WebSocket emulation          | ✅  |      |       |    |      |        |    ✅    |
+| headers emulation                          | ✅  | ✅    | na    | na | na   | na     | ✅     |
+| channel compaction (Centrifugo PRO)        | ✅  |      |       |    |      |        |        |
 
 </div>
 
@@ -76,19 +77,19 @@ Below you can find an information regarding support of different features in our
 
 <div className="features">
 
-| Client feature                               | js | dart | swift | go | java | python |
-|----------------------------------------------|----|------|-------|----|------|--------|
-| subscribe to a channel                       | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
-| setting subscription options                 | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
-| automatic resubscribe with backoff algorithm | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
-| subscription state changes                   | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
-| subscription command-reply                   | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
-| subscription async pushes                    | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
-| subscription token refresh                   | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
-| handle unsubscribe advice from server        | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
-| manage subscription registry                 | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |
-| optimistic subscriptions                     | ✅  |      |       |    |      |        |
-| delta compression                            | ✅  |  ✅   |  ✅   |  ✅  | ✅    | ✅      |
-| publication tags filter                      | ✅  |      |       |    |      |        |
+| Client feature                               | js | dart | swift | go | java | python | c# [WIP] |
+|----------------------------------------------|----|------|-------|----|------|--------|--------|
+| subscribe to a channel                       | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
+| setting subscription options                 | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
+| automatic resubscribe with backoff algorithm | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
+| subscription state changes                   | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅
+| subscription command-reply                   | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅
+| subscription async pushes                    | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅
+| subscription token refresh                   | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅ |
+| handle unsubscribe advice from server        | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅
+| manage subscription registry                 | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅
+| optimistic subscriptions                     | ✅  |      |       |    |      |        |        |
+| delta compression                            | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |   ✅     |
+| publication tags filter                      | ✅  |      |       |    |      |        |    ✅    |
 
 </div>
