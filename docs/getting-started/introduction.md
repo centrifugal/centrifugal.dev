@@ -60,7 +60,7 @@ By real-time, we refer to a soft real-time system. This means there are no stric
 
 ## Background and motivation
 
-![](/img/bg_cat.png)
+![](/img/bg_cat.jpg)
 
 Centrifugo was born more than a decade ago to help applications whose server-side code was written in a language or framework lacking built-in concurrency support. In such cases, managing persistent connections can be a real headache, usually resolvable only by altering the technology stack and investing time in developing a production-ready solution.
 
