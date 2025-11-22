@@ -1885,7 +1885,7 @@ Analysis: Combining both methods results in a data size of 11.11%. Even more tha
 <h2 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="migration-guide">Migration guide<a href="https://centrifugal.dev/blog/2022/07/19/centrifugo-v4-released#migration-guide" class="hash-link" aria-label="Direct link to Migration guide" title="Direct link to Migration guide">​</a></h2>
 <p>The <a href="https://centrifugal.dev/docs/getting-started/migration_v4">migration guide</a> contains steps to upgrade your Centrifugo from version 3 to version 4. While there are many changes in the v4 release, it should be possible to migrate to Centrifugo v4 without changing the code on the client side at all. And then, after updating the server, gradually update the client-side to the latest version of the stack.</p>
 <h2 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="conclusion">Conclusion<a href="https://centrifugal.dev/blog/2022/07/19/centrifugo-v4-released#conclusion" class="hash-link" aria-label="Direct link to Conclusion" title="Direct link to Conclusion">​</a></h2>
-<p><img decoding="async" loading="lazy" src="https://centrifugal.dev/assets/images/bg_cat-4454fbaae0446c3b1964e06821dd378b.jpg" width="2000" height="1068" class="img_ev3q"></p>
+<p><img decoding="async" loading="lazy" src="https://centrifugal.dev/assets/images/bg_cat-9606322f82479d456c4633d31dba424f.jpg" width="2000" height="1068" class="img_ev3q"></p>
 <p>To sum it up, here are some benefits of Centrifugo v4:</p>
 <ul>
 <li>unified experience thoughout application frontend environments</li>
