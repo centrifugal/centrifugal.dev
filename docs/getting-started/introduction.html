@@ -16,7 +16,7 @@
 
 <link rel="search" type="application/opensearchdescription+xml" title="Centrifugo" href="/opensearch.xml">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.2da952e4.css">
-<script src="/assets/js/runtime~main.5b9ce7b4.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.0ba20948.js" defer="defer"></script>
 <script src="/assets/js/main.44c02bca.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -34,7 +34,7 @@
 <p>Several official SDKs for browser and mobile development wrap the bidirectional client-to-server protocol, offering a straightforward API for real-time subscriptions multiplexed over a single connection. These SDKs handle reconnects, manage ping-pong, timeouts, and deal with other complexities of working with real-time connections. Additionally, Centrifugo supports a unidirectional approach for simple use cases with no SDK dependency.</p>
 <div class="theme-admonition theme-admonition-info admonition_xJq3 alert alert--info"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 14 16"><path fill-rule="evenodd" d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg></span>Real-time?</div><div class="admonitionContent_BuS1"><p>By real-time, we refer to a soft real-time system. This means there are no strict latency timing constraints. Centrifugo does its best to minimize delivery delays, but due to factors like network latencies, garbage collection cycles, and so on, those can&#x27;t be guaranteed.</p></div></div>
 <h2 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="background-and-motivation">Background and motivation<a href="#background-and-motivation" class="hash-link" aria-label="Direct link to Background and motivation" title="Direct link to Background and motivation">​</a></h2>
-<p><img decoding="async" loading="lazy" src="/assets/images/bg_cat-9606322f82479d456c4633d31dba424f.jpg" width="3840" height="2028" class="img_ev3q"></p>
+<p><img decoding="async" loading="lazy" src="/assets/images/bg_cat-975c20ed8cf4a65568bc628c638050f9.jpg" width="3840" height="2028" class="img_ev3q"></p>
 <p>Centrifugo was born more than a decade ago to help applications whose server-side code was written in a language or framework lacking built-in concurrency support. In such cases, managing persistent connections can be a real headache, usually resolvable only by altering the technology stack and investing time in developing a production-ready solution.</p>
 <p>For instance, frameworks like Django, Flask, Yii, Laravel, Ruby on Rails, and others offer limited or suboptimal support for handling numerous persistent connections for real-time messaging tasks.</p>
 <p>Here, Centrifugo provides a straightforward and non-obtrusive way to introduce real-time updates and manage many persistent connections without radical changes in the application backend architecture. Developers can continue to work on the application&#x27;s backend using their preferred language or framework, and keep the existing architecture. Just let Centrifugo deal with persistent connections and be the real-time messaging transport layer.</p>
