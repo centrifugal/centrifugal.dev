@@ -95,13 +95,16 @@ function Pro() {
                 />
                 < Highlight
                     img={
-                        <iframe
-                        width="560"
-                        height="315"
-                        src="/img/snapshots_demo.mp4"
-                        title="Messenger tutorial"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        allowFullScreen
+                        <video
+                            width="560"
+                            height="315"
+                            src="/img/snapshots_demo.mp4"
+                            title="Snapshots demo"
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            style={{ width: '100%', height: 'auto', display: 'block' }}
                         />
                     }
                     reversed

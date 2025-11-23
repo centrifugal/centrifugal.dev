@@ -310,13 +310,16 @@ function Home() {
         />
         < Highlight
           img={
-            <iframe
+            <video
               width="560"
               height="315"
               src="/img/grand-chat-tutorial-demo.mp4"
               title="Messenger tutorial"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
+              autoPlay
+              loop
+              muted
+              playsInline
+              style={{ width: '100%', height: 'auto', display: 'block' }}
             />
           }
           isDark
