@@ -155,6 +155,60 @@ While the standard `client.token.jwks_public_endpoint` configuration allows fetc
 The `client.token.jwks.enabled` field must be set to `true` to enable multiple JWKS providers feature. Without it, the providers configuration will be ignored.
 :::
 
+### Same issuer with different audiences
+
+Starting from Centrifugo PRO v6.5.1, you can configure multiple providers with the same issuer but different audiences. This is useful when:
+
+- A single identity provider issues tokens for multiple applications (web, mobile, API) with different audience claims
+- You want to apply different configurations (e.g., different `meta_from_claim` mappings) for tokens from the same issuer but intended for different audiences
+- You need to segregate or route tokens based on both issuer and audience
+
+```json
+{
+    "client": {
+        "token": {
+            "jwks": {
+                "enabled": true,
+                "providers": [
+                    {
+                        "name": "auth0_web",
+                        "enabled": true,
+                        "endpoint": "https://tenant.auth0.com/.well-known/jwks.json",
+                        "issuer": "https://tenant.auth0.com/",
+                        "audience": "web-app"
+                    },
+                    {
+                        "name": "auth0_mobile",
+                        "enabled": true,
+                        "endpoint": "https://tenant.auth0.com/.well-known/jwks.json",
+                        "issuer": "https://tenant.auth0.com/",
+                        "audience": "mobile-app"
+                    },
+                    {
+                        "name": "auth0_api",
+                        "enabled": true,
+                        "endpoint": "https://tenant.auth0.com/.well-known/jwks.json",
+                        "issuer": "https://tenant.auth0.com/",
+                        "audience": "api-service"
+                    }
+                ]
+            }
+        }
+    }
+}
+```
+
+In this configuration:
+- Tokens with `iss=https://tenant.auth0.com/` and `aud=web-app` will be matched to the `auth0_web` provider
+- Tokens with `iss=https://tenant.auth0.com/` and `aud=mobile-app` will be matched to the `auth0_mobile` provider
+- Tokens with `iss=https://tenant.auth0.com/` and `aud=api-service` will be matched to the `auth0_api` provider
+- Tokens with the same issuer but an unrecognized audience will be rejected
+
+**Validation rules:**
+- If the same issuer appears in multiple enabled providers, each provider MUST have a different `audience` set
+- Duplicate issuer+audience pairs are not allowed
+- Providers with the same issuer cannot have empty audiences
+
 ### JWKS configuration
 
 | Field    | Type    | Required | Description                                                               |
@@ -170,20 +224,22 @@ The `client.token.jwks.enabled` field must be set to `true` to enable multiple J
 | enabled  | `boolean` | No      | Whether this provider is active (default `false`)                                       |
 | endpoint | `string`  | Yes*     | JWKS endpoint URL (*required if enabled)                                  |
 | issuer   | `string`  | Yes*     | Expected issuer claim value (*required if enabled)                        |
-| audience | `string`  | No       | Expected audience claim value (optional)                                  |
+| audience | `string`  | No       | Expected audience claim value. While optional, it's highly recommended to be used to prevent client tokens related to other audiences issued by the same issuer from being accepted by Centrifugo. When the same issuer is used by multiple providers, each must have a different audience set to enable issuer+audience matching                                  |
 | tls      | [`TLS`](../server/configuration.md#tls-config-object) object  | No       | Custom TLS configuration for the JWKS endpoint HTTP client                            |
 | meta_from_claim      | [StringKeyValues](../server/configuration.md#stringkeyvalues-type)  | No       | Config to transform JWT claims to connection meta object. Must be explicitly set for each provider, not inherited from upper config level.                              |
 
-How It Works
+### How It Works
 
-1. Token Received: When a client connects with a JWT token, Centrifugo parses it
-2. Issuer Extraction: The `iss` claim is extracted from the token
-3. Provider Matching: Centrifugo finds the JWKS provider with matching issuer
-4. Key Retrieval: Public keys are fetched from the provider's endpoint
-5. Signature Verification: The token signature is verified using the retrieved keys
-6. Audience Validation: If audience is configured for the provider, it's validated against the token's aud claim
+1. **Token Received**: When a client connects with a JWT token, Centrifugo parses it
+2. **Issuer Extraction**: The `iss` claim is extracted from the token
+3. **Provider Matching**: Centrifugo finds the JWKS provider based on issuer and audience:
+   - If a provider has an `audience` configured, both issuer AND audience must match (exact match prioritized)
+   - If a provider has no `audience` configured, only the issuer needs to match (fallback match)
+   - This enables routing tokens from the same issuer to different providers based on audience
+4. **Key Retrieval**: Public keys are fetched from the matched provider's endpoint
+5. **Signature Verification**: The token signature is verified using the retrieved keys
 
-If no provider matches the token's issuer, the connection is rejected.
+If no provider matches the token's issuer (and audience when applicable), the connection is rejected.
 
 ### Subscription token
 
@@ -219,4 +275,6 @@ JWKS providers work for both connection tokens and subscription tokens. [As usua
 }
 ```
 
-Note, `meta_from_claim` is not supported for subscription tokens as subscription tokens do not support `meta` claim at this moment. This is validated on Centrifugo start.
+**Notes:**
+- `meta_from_claim` is not supported for subscription tokens as subscription tokens do not support `meta` claim at this moment. This is validated on Centrifugo start.
+- Issuer+audience matching works the same way for subscription tokens as it does for connection tokens - you can configure multiple providers with the same issuer but different audiences.
