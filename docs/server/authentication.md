@@ -100,6 +100,14 @@ This is a unique identifier for the token. Refer to the [definition in RFC 7519]
 
 By default, Centrifugo does not check JWT audience ([rfc7519 aud](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.3) claim).
 
+:::tip
+
+While optional, it's highly recommended to configure audience validation to prevent tokens intended for other services from being accepted by Centrifugo. This adds an important layer of security by ensuring that only tokens explicitly issued for Centrifugo can be used to establish connections.
+
+When using external Identity Providers (such as Auth0, Keycloak, or other third-party IdPs), configuring audience validation is not just recommended but a necessary security requirement. External IdPs typically issue tokens for multiple services and applications, making audience validation critical to ensure that tokens intended for other services cannot be misused to authenticate with Centrifugo.
+
+:::
+
 But you can force this check by setting `client.token.audience` string option:
 
 ```json title="config.json"
