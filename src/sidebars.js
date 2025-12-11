@@ -88,7 +88,6 @@ module.exports = {
         "pro/capabilities",
         "pro/channel_patterns",
         "pro/cel_expressions",
-        "pro/schema",
         "pro/performance",
         "pro/scalability",
         "pro/bandwidth_optimizations",

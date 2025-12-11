@@ -103,7 +103,8 @@ For example, this means that to automatically use delta calculation for all publ
 
 Again – subscribers which support delta compression and do not support it can co-exist in one channel.
 
-### Further reading
+### Example and further reading
 
+* [Delta compression example](https://github.com/centrifugal/examples/tree/master/v6/delta_compression) - just `docker compose up` and then open https://localhost:8080
 * [Delta compression in Centrifugo PRO](../pro/bandwidth_optimizations.md#delta-compression-for-at-most-once) – allows using delta compression in at most once scenario.
 * Blog post [Experimenting with real-time data compression by simulating a football match events](/blog/2024/05/30/real-time-data-compression-experiments) showcases benefits which could be achieved with delta compression.

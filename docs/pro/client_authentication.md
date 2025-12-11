@@ -157,7 +157,7 @@ The `client.token.jwks.enabled` field must be set to `true` to enable multiple J
 
 ### Same issuer with different audiences
 
-Starting from Centrifugo PRO v6.5.1, you can configure multiple providers with the same issuer but different audiences. This is useful when:
+Starting from Centrifugo PRO v6.5.2, you can configure multiple providers with the same issuer but different audiences. This is useful when:
 
 - A single identity provider issues tokens for multiple applications (web, mobile, API) with different audience claims
 - You want to apply different configurations (e.g., different `meta_from_claim` mappings) for tokens from the same issuer but intended for different audiences

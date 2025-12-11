@@ -78,16 +78,9 @@ This is usually not recommended, since every new user in your IDP will get acces
 }
 ```
 
-### Server-side vs Client-side OIDC flow
+### Configuring server-side OIDC
 
-Centrifugo PRO supports two OIDC authentication flows for admin UI:
-
-1. **PKCE flow (client-side)** - default when `client_secret` is not provided
-2. **Authorization Code flow (server-side)** - when `client_secret` is configured
-
-The PKCE flow is suitable for most deployments where the admin UI is accessed directly by users. However, in some enterprise environments with stricter security requirements, the server-side flow may be preferred.
-
-#### Configuring server-side OIDC
+Starting from Centrifugo PRO v6.5.2 a server-side OIDC flow is supported. In that case token exchange happens on the backend side using `client_secret`, and Centrifugo uses HTTP-only cookie for the established authenticated session. In case of using server-side flow using `https` for Centrifugo admin UI is required because cookie is set with a secure flag.
 
 To enable server-side OIDC flow, add the `client_secret` option to your OIDC configuration:
 
@@ -98,13 +91,13 @@ To enable server-side OIDC flow, add the `client_secret` option to your OIDC con
     "secret": "long-secret-here-at-least-32-characters",
     "oidc": {
       "enabled": true,
-      "display_name": "Okta",
+      "display_name": "OKTA",
       "issuer": "https://your-domain.okta.com",
       "client_id": "myclient",
       "client_secret": "your-client-secret-here",
       "audience": "myclient",
-      "redirect_uri": "http://localhost:8000",
-      "extra_scopes": [],
+      "redirect_uri": "https://centrifugo.example.com/admin/oidc/callback",
+      "extra_scopes": ["groups"],
       "access_cel": "'centrifugo_admins' in claims.groups"
     }
   }
@@ -113,13 +106,13 @@ To enable server-side OIDC flow, add the `client_secret` option to your OIDC con
 
 * `admin.oidc.client_secret` - optional string, when provided enables server-side OAuth2 flow. The client secret is registered in your Identity Provider for the Centrifugo client application.
 
+The `redirect_uri` must point to `/admin/oidc/callback` path of Centrifugo admin UI.
+
 :::caution
 
 When using server-side OIDC (`client_secret` is configured), you **must** also set `admin.secret` with at least 32 characters. This secret is used to encrypt ID tokens stored in HTTP-only cookies, providing additional security for the authentication flow.
 
 :::
-
-#### How server-side flow works
 
 When `client_secret` is configured:
 
@@ -129,14 +122,6 @@ When `client_secret` is configured:
 4. Centrifugo validates the ID token and checks permissions using the `access_cel` expression
 5. The ID token is encrypted using `admin.secret` and stored in a secure HTTP-only cookie
 6. All subsequent admin UI requests are authenticated by decrypting and validating the cookie
-
-#### Benefits of server-side flow
-
-* **Enhanced security**: Client secret is never exposed to the browser
-* **Encrypted cookies**: ID tokens are encrypted using AES before being stored in cookies, adding an extra layer of protection
-* **HTTP-only cookies**: Tokens are stored in secure HTTP-only cookies, protecting against XSS attacks
-* **Simpler client**: The admin UI doesn't need to handle token refresh logic
-* **Corporate compliance**: Some organizations require server-side token handling for compliance reasons
 
 The choice between PKCE and server-side flow depends on your security requirements and infrastructure. For most cases, PKCE flow (without `client_secret`) is sufficient and easier to set up.
 

@@ -1,5 +1,5 @@
 ---
-id: rate_limiting
+id: draft_rate_limiting
 title: Operation rate limits
 ---
 
@@ -41,10 +41,6 @@ In addition, Centrifugo allows defining two special buckets containers:
             {
               "interval": "1s",
               "rate": 20
-            },
-            {
-              "interval": "60s",
-              "rate": 50
             }
           ]
         },
@@ -74,17 +70,18 @@ In addition, Centrifugo allows defining two special buckets containers:
               "rate": 10
             }
           ],
-          "method_override": {
-            "update_user_status": {
+          "method_overrides": [
+            {
+              "method": "update_user_status",
               "enabled": true,
               "buckets": [
                 {
                   "interval": "20s",
                   "rate": 1
                 }
-              ]                
+              ]
             }
-          }
+          ]
         }
       }
     }
@@ -152,8 +149,9 @@ The configuration is very similar:
               "rate": 10
             }
           ],
-          "method_override": {
-            "update_user_status": {
+          "method_overrides": [
+            {
+              "method": "update_user_status",
               "enabled": true,
               "buckets": [
                 {
@@ -162,7 +160,7 @@ The configuration is very similar:
                 }
               ]
             }
-          }
+          ]
         }
       }
     }
@@ -223,8 +221,9 @@ The configuration is very similar:
               "rate": 10
             }
           ],
-          "method_override": {
-            "update_user_status": {
+          "method_overrides": [
+            {
+              "method": "update_user_status",
               "enabled": true,
               "buckets": [
                 {
@@ -233,7 +232,7 @@ The configuration is very similar:
                 }
               ]
             }
-          }
+          ]
         }
       }
     }
@@ -267,6 +266,90 @@ It's also possible to reuse Centrifugo Redis engine by setting `use_redis_from_e
 ```
 
 In this case rate limit will simply connect to Redis instances configured for an Engine.
+
+## Channel namespace overrides
+
+Centrifugo PRO allows defining rate limit overrides on a per-namespace basis for channel operations. **Namespace overrides take priority over base rate limits** – when a namespace override is configured and enabled, it replaces the base configuration for operations on channels within that namespace.
+
+This allows you to have different rate limiting policies for different parts of your application. For example, you might want to allow higher publish rates for public chat channels but stricter limits for private notifications.
+
+### Using namespace_overrides
+
+Channel namespace overrides are configured using the `namespace_overrides` array, similar to how RPC `method_overrides` work. This keeps all rate limiting configuration in one place at the client level while allowing namespace-specific customization.
+
+Available channel operations that support namespace overrides:
+
+* `subscribe`
+* `publish`
+* `history`
+* `presence`
+* `presence_stats`
+* `sub_refresh`
+
+**Note:** `connect`, `refresh`, and `rpc` operations don't support namespace overrides as they are not channel namespace-specific.
+
+Example configuration for per-connection rate limits with namespace overrides:
+
+```json title="config.json"
+{
+  "client": {
+    "rate_limit": {
+      "client_command": {
+        "enabled": true,
+        "default": {
+          "enabled": true,
+          "buckets": [{"interval": "1s", "rate": 10}]
+        },
+        "publish": {
+          "enabled": true,
+          "buckets": [{"interval": "1s", "rate": 5}],
+          "namespace_overrides": [
+            {
+              "namespace_name": "chat",
+              "enabled": true,
+              "buckets": [{"interval": "1s", "rate": 20}]
+            },
+            {
+              "namespace_name": "notifications",
+              "enabled": true,
+              "buckets": [{"interval": "10s", "rate": 1}]
+            }
+          ]
+        },
+        "subscribe": {
+          "enabled": true,
+          "buckets": [{"interval": "1s", "rate": 3}],
+          "namespace_overrides": [
+            {
+              "namespace_name": "chat",
+              "enabled": true,
+              "buckets": [{"interval": "1s", "rate": 10}]
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+In this example:
+- Default publish rate is 5 per second
+- For `chat:*` channels, publish rate is increased to 20 per second
+- For `notifications:*` channels, publish rate is reduced to 1 per 10 seconds
+- Default subscribe rate is 3 per second
+- For `chat:*` channels, subscribe rate is increased to 10 per second
+
+Similar for `user_command` and `redis_user_command` limiter types.
+
+When a channel operation is performed, Centrifugo:
+
+1. Extracts the namespace from the channel name (e.g., `chat` from `chat:room123`)
+2. Checks if a namespace override exists for that operation and namespace
+3. If found and enabled, uses the namespace override buckets
+4. Otherwise, falls back to the base operation buckets
+
+This means you can selectively override only specific operations for specific namespaces, while other operations use the base configuration. You don't need to duplicate your entire rate limiting configuration – just override what's different.
 
 ## Disconnecting abusive or misbehaving connections
 
@@ -306,3 +389,69 @@ The configuration on error limits per connection may look like this:
 ```
 
 If a client will have more than 20 protocol errors per 5 second – it will be disconnected.
+
+## RPC method overrides format change
+
+Starting from Centrifugo v6.5.2, the format for RPC method-specific rate limit overrides has been updated to use an array format (`method_overrides`) instead of the previous map format (`method_override`).
+
+The new format uses `method_overrides` as an array of objects:
+
+```json title="config.json"
+{
+  "client": {
+    "rate_limit": {
+      "client_command": {
+        "enabled": true,
+        "rpc": {
+          "enabled": true,
+          "buckets": [{"interval": "1s", "rate": 10}],
+          "method_overrides": [
+            {
+              "method": "update_user_status",
+              "enabled": true,
+              "buckets": [{"interval": "20s", "rate": 1}]
+            },
+            {
+              "method": "get_user_data",
+              "enabled": true,
+              "buckets": [{"interval": "5s", "rate": 5}]
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+Before v6.5.2, the old format used `method_override` as a map/object:
+
+```json title="config.json"
+{
+  "client": {
+    "rate_limit": {
+      "client_command": {
+        "enabled": true,
+        "rpc": {
+          "enabled": true,
+          "buckets": [{"interval": "1s", "rate": 10}],
+          "method_override": {
+            "update_user_status": {
+              "enabled": true,
+              "buckets": [{"interval": "20s", "rate": 1}]
+            },
+            "get_user_data": {
+              "enabled": true,
+              "buckets": [{"interval": "5s", "rate": 5}]
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+The old `method_override` map format is still supported for backward compatibility. If you have existing configurations using `method_override`, they will continue to work in v6.5.2 and later versions until Centrifugo v7. However, you cannot use both `method_override` and `method_overrides` at the same time – if both are present, Centrifugo will return a validation error on startup.
+
+We recommend migrating to the new `method_overrides` array format when possible, as it provides better tooling support and is more consistent with other array-based configurations in Centrifugo.

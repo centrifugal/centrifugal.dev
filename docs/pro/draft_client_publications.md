@@ -1,17 +1,16 @@
 ---
-id: schema
-title: Publications with schema
-sidebar_label: Publications with schema
+id: client_publications
+title: Ephemeral client publications
+sidebar_label: Ephemeral publications
 ---
 
-Centrifugo PRO provides schema validation for client publications, allowing you to enforce data contracts and ensure message integrity at the transport layer. This feature helps validate ephemeral messages published directly from clients before they are broadcast to subscribers.
+Centrifugo PRO provides schema validation for client publications, enabling ephemeral messaging: client publications can pass through Centrifugo directly without involving backend proxy logic, reducing backend load and delivery latency. Normally the backend is required because it may validate and store messages in the main database, but for certain types of messages—such as typing notifications in a chat room—backend involvement adds unnecessary overhead. Centrifugo PRO offers an efficient way to address that.
 
 ## Overview
 
-Schema validation provides several benefits:
+The feature consists of three parts which together provide a ground for ephemeral client publications:
 
-* **Data validation layer** - validate client publications before they reach your backend or other clients
-* **Ephemeral messaging** - publish short-lived messages directly from clients without backend involvement
+* **Validation layer** - validate client publications based on JSON schema
 * **Bandwidth optimization** - optionally exclude client info from publications to reduce message size
 * **Server-side tagging** - attach custom tags to publications that cannot be spoofed by clients
 
@@ -354,5 +353,4 @@ Here's a comprehensive example combining all features:
 ## See also
 
 * [Channel patterns](./channel_patterns.md) - Use pattern variables in publication tags
-* [CEL expressions](./cel_expressions.md) - Advanced permission control
-* [Bandwidth optimizations](./bandwidth_optimizations.md) - Additional ways to reduce bandwidth
+* [Operation rate limiting](./rate_limiting.md) - To rate limit ephemeral publications from client
