@@ -433,6 +433,79 @@ Centrifugo uses Go language [regexp](https://pkg.go.dev/regexp) package for regu
 
 `allowed_delta_types` (array of strings, the only allowed value now is `fossil`) - provide an array of allowed delta compression types in the namespace. If not specified – client won't be able to negotiate delta compression in channels.
 
+### publication_data_format
+
+Available since Centrifugo v6.5.2
+
+`publication_data_format` (string, default `""`) – enforces validation rules for publication data in channels. Possible values:
+
+* `""` (empty, default) – keeps the default behavior of Centrifugo v6 where empty data is rejected and no data validation checks are made on publish stage (leaving this to developer to control). 
+* `"json"` – validates that all published data is valid JSON, rejecting invalid JSON with a bad request error
+* `"binary"` – tells Centrifugo that the format of data is arbitrary binary, this allows publishing empty payloads to channels.
+
+When set to `"json"`, Centrifugo validates publication data on both server API and client publish operations, ensuring data integrity across all publish sources. This is useful when you want to guarantee that only valid JSON messages flow through specific channels.
+
+When set to `"binary"`, Centrifugo allows empty data to be published, which can be useful for channels where you need to send signals or work with arbitrary binary payloads.
+
+This option can be set globally for all channels at the top level of channel configuration, and can be overridden per namespace if needed.
+
+Example configuration with global format that applies to all channels:
+
+```json
+{
+  "channel": {
+    "publication_data_format": "json",
+    "without_namespace": {
+      "history_size": 10,
+      "history_ttl": "60s"
+    }
+  }
+}
+```
+
+Example configuration with namespace-specific format:
+
+```json
+{
+  "channel": {
+    "namespaces": [
+      {
+        "name": "json_only",
+        "publication_data_format": "json",
+        "history_size": 10,
+        "history_ttl": "60s"
+      }
+    ]
+  }
+}
+```
+
+Example configuration with global format and namespace override:
+
+```json
+{
+  "channel": {
+    "publication_data_format": "json",
+    "namespaces": [
+      {
+        "name": "binary_data",
+        "publication_data_format": "binary"
+      },
+      {
+        "name": "json_data"
+        // Inherits global "json" format
+      }
+    ]
+  }
+}
+```
+
+:::tip
+
+Use `"json"` format when you want to ensure data consistency and prevent invalid data from being published to channels. Use `"binary"` format when working with channels that need to support empty payloads or arbitrary binary data. Set it globally if you want the same behavior for all channels, and override in specific namespaces when needed.
+
+:::
+
 ### allow_tags_filter
 
 Available since Centrifugo v6.4.0.
