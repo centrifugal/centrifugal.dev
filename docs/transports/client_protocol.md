@@ -195,7 +195,7 @@ Errors during rpc-like operations can be just returned to caller - i.e. user jav
 Client SDK should provide a way for users to configure two additional options: `name` and `version`:
 
 * `name` is used to identify the place from where the client is connected. Generally, it's a name of application. Our official SDKs use default names like `js`, `dart`, `swift`, etc. But it's possible to redefine according to application needs. This name is then used by Centrifugo PRO in observability and analitycs stacks – you can see various insights about connections from specific application. The name must not exceed 16 symbols in length.
-* `version` – client SDK also provides a way to configure application version. Note, it's not a version of Centrifugo client SDK, but a version of application which uses Centrifugo client SDK – becuase it makes more sense for users at the end. Version is also used for observability and analitycs stacks by Centrifugo PRO. The version must not exceed 16 symbols in length.
+* `version` – client SDK also provides a way to configure application version. Note, it's not a version of Centrifugo client SDK, but a version of application which uses Centrifugo client SDK – because it makes more sense for users at the end. Version is also used for observability and analitycs stacks by Centrifugo PRO. The version must not exceed 64 symbols in length.
 
 ## Additional notes
 

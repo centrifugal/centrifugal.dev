@@ -528,6 +528,14 @@ Env: `CENTRIFUGO_CONSUMERS_<NAME>_NATS_JETSTREAM_METHOD_HEADER`
 `method_header` is the NATS message header used to extract the method name for dispatching commands.
 If provided in message, then payload must be just a serialized API request object.
 
+### `consumers[].nats_jetstream.use_existing_consumer`
+
+Type: `bool`. Default: `false`
+
+New in Centrifugo v6.5.2
+
+`use_existing_consumer` when enabled tells Centrifugo to use an existing consumer with durable_consumer_name instead of creating a new one. When on, these fields are ignored: deliver_policy, subjects, max_ack_pending, and all other consumer-creation-related options which may be added later (like ack wait, etc.). The existing consumer's configuration defines all behavior, and Centrifugo will fail to start if the consumer does not already exist.
+
 ### `consumers[].nats_jetstream.publication_data_mode`
 
 Type: `NatsJetStreamPublicationDataModeConfig` object
