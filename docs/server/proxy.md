@@ -141,6 +141,7 @@ This object is used to configure outgoing GRPC-specific options.
 | `credentials_key`   | `string`                                           | no       | Add custom key to per-RPC credentials.                                |
 | `credentials_value` | `string`                                           | no       | A custom value for `credentials_key`.                                 |
 | `compression`       | `bool`                                             | no       | If `true` then gzip compression will be used for each GRPC proxy call |
+| `static_metadata` | `map[string]string` | no       | Static set of metadata to add to GRPC proxy requests. |
 
 ## Proxy HTTP headers
 
