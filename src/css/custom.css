@@ -64,8 +64,10 @@ html[data-theme="light"] .button--secondary:hover {
 
 @media screen and (min-width: 996px) {
   .menu__link {
-    line-height: 0.89;
-    font-size: 0.89em;
+    line-height: 1.1em;
+    font-size: 0.83em;
+    padding-top: 5px;
+    padding-bottom: 5px;
   }
 }
 
@@ -342,9 +344,8 @@ article {
   margin-bottom: 30px;
 }
 
-
 .menu__list-item:not(:first-child) {
-  margin-top: 0.15rem !important;
+  margin-top: 0.1rem !important;
 }
 
 .logo-video {
