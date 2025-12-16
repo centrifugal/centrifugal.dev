@@ -22,7 +22,7 @@ To deliver push notifications to devices Centrifugo PRO integrates with the foll
 * [Huawei Messaging Service (HMS) Push Kit](https://developer.huawei.com/consumer/en/hms/huawei-pushkit/) <i className="bi bi-android2" style={{'color': 'yellowgreen'}}></i> <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i> <i className="bi bi-globe" style={{color: 'orange'}}></i>
 * [Apple Push Notification service (APNs) ](https://developer.apple.com/documentation/usernotifications) <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i>
 
-FCM, HMS, APNs handle the frontend and transport aspects of notification delivery. Device token storage, management and efficient push notification broadcasting is managed by Centrifugo PRO. Tokens are stored in a PostgreSQL database. To facilitate efficient push notification broadcasting towards devices, Centrifugo PRO includes worker queues based on Redis streams (and also provides and option to use PostgreSQL-based queue).
+FCM, HMS, APNs handle the frontend and transport aspects of notification delivery. Device token storage, management and efficient push notification broadcasting is managed by Centrifugo PRO. Tokens are stored in a PostgreSQL database. To facilitate efficient push notification broadcasting towards devices, Centrifugo PRO includes worker queues based on Redis streams (and also provides an option to use PostgreSQL-based queue).
 
 Integration with FCM means that you can use existing Firebase messaging SDKs to extract push notification token for a device on different platforms (iOS, Android, Flutter, web browser) and setting up push notification listeners. The same for HMS and APNs - just use existing native SDKs and best practices on the frontend. Only a couple of additional steps required to integrate frontend with Centrifugo PRO device token and device topic storage. After doing that you will be able to send push notification towards single device, or towards group of devices subscribed to a topic. For example, with a simple Centrifugo API call like this:
 
@@ -82,7 +82,7 @@ In some cases you may have real-time channels and device subscription topics wit
 
 Centrifugo PRO device topic subscriptions also add a way to introduce the missing topic semantics for APNs.
 
-Centrifugo PRO additionally provides an API to create persistent bindings of user to notification topics. Then – as soon as user registers a device – it will be automatically subscribed to its own topics. As soon as user logs out from the app and you update user ID of the device - user topics binded to the device automatically removed/switched. This design solves one of the issues with FCM – if two different users use the same device it's becoming problematic to unsubscribe the device from large number of topics upon logout. Also, as soon as user to topic binding added (using `user_topic_update` API) – it will be synchronized across all user active devices. You can still manage such persistent subscriptions on the application backend side if you prefer and provide the full list inside `device_register` call.
+Centrifugo PRO additionally provides an API to create persistent bindings of user to notification topics. Then – as soon as user registers a device – it will be automatically subscribed to its own topics. As soon as user logs out from the app and you update user ID of the device - user topics bound to the device automatically removed/switched. This design solves one of the issues with FCM – if two different users use the same device it's becoming problematic to unsubscribe the device from large number of topics upon logout. Also, as soon as user to topic binding added (using `user_topic_update` API) – it will be synchronized across all user active devices. You can still manage such persistent subscriptions on the application backend side if you prefer and provide the full list inside `device_register` call.
 
 ### Push personalization
 
@@ -110,7 +110,7 @@ Furthermore, Centrifugo PRO offers the ability to inspect sent push notification
 1. Add provider SDK on the frontend side, follow provider instructions for your platform to obtain a push token for a device. For example, for FCM see instructions for [iOS](https://firebase.google.com/docs/cloud-messaging/ios/client), [Android](https://firebase.google.com/docs/cloud-messaging/android/client), [Flutter](https://firebase.google.com/docs/cloud-messaging/flutter/client), [Web Browser](https://firebase.google.com/docs/cloud-messaging/js/client)). The same for HMS or APNs – frontend part should be handled by their native SDKs.
 2. Call Centrifugo PRO backend API with the obtained token. From the application backend call Centrifugo `device_register` API to register the device in Centrifugo PRO storage. Optionally provide list of topics to subscribe device to.
 3. Centrifugo returns a registered device object. Pass a generated device ID to the frontend and save it on the frontend together with a token received from FCM.
-5. Call Centrifugo `send_push_notification` API whenever it's time to deliver a push notification.
+4. Call Centrifugo `send_push_notification` API whenever it's time to deliver a push notification.
 
 At any moment you can inspect device storage by calling `device_list` API.
 
@@ -120,9 +120,13 @@ Once user logs out from the app, you can detach user ID from device by using `de
 
 In Centrifugo PRO you can configure one push provider or use all of them – this choice is up to you.
 
+### Enabling push notifications
+
+To enable push notifications, set `push_notifications.enabled` to `true` and specify which providers to use in `push_notifications.enabled_providers` list.
+
 ### FCM
 
-As mentioned above, Centrifugo uses PostgreSQL for token storage. To enable push notifications make sure `database` section defined in the configration and `fcm` is in the `push_notifications.enabled_providers` list. Centrifugo PRO uses Redis for queuing push notification requests, so Redis address should be configured also. Finally, to integrate with FCM a path to the credentials file must be provided (see how to create one [in this instruction](https://github.com/Catapush/catapush-docs/blob/master/AndroidSDK/DOCUMENTATION_PLATFORM_GMS_FCM.md)). So the full configuration to start sending push notifications over FCM may look like this:
+As mentioned above, Centrifugo uses PostgreSQL for token storage. To enable push notifications make sure `database` section defined in the configuration and `fcm` is in the `push_notifications.enabled_providers` list. Centrifugo PRO uses Redis Streams (default) or PostgreSQL for queuing push notification requests. Finally, to integrate with FCM a path to the credentials file must be provided (see how to create one [in this instruction](https://github.com/Catapush/catapush-docs/blob/master/AndroidSDK/DOCUMENTATION_PLATFORM_GMS_FCM.md)). So the full configuration to start sending push notifications over FCM may look like this:
 
 ```json title="config.json"
 {
@@ -133,6 +137,7 @@ As mentioned above, Centrifugo uses PostgreSQL for token storage. To enable push
     }
   },
   "push_notifications": {
+    "enabled": true,
     "queue": {
       "redis": {
         "address": "localhost:6379"
@@ -165,6 +170,7 @@ Actually, PostgreSQL database configuration is optional here – you can use pus
     }
   },
   "push_notifications": {
+    "enabled": true,
     "queue": {
       "redis": {
         "address": "localhost:6379"
@@ -198,6 +204,7 @@ See example how to get app id and app secret [here](https://github.com/Catapush/
     }
   },
   "push_notifications": {
+    "enabled": true,
     "queue": {
       "redis": {
         "address": "localhost:6379"
@@ -209,6 +216,7 @@ See example how to get app id and app secret [here](https://github.com/Catapush/
     "apns": {
       "endpoint": "development",
       "bundle_id": "com.example.your_app",
+      "auth_type": "token",
       "token_key_file": "/path/to/auth/key/file.p8",
       "token_key_id": "<your_key_id>",
       "token_team_id": "your_team_id"
@@ -217,52 +225,27 @@ See example how to get app id and app secret [here](https://github.com/Catapush/
 }
 ```
 
-We also support auth over p12 certificates with the following options:
+Instead of `token_key_file`, you can provide the key content inline using `token_key_pem`:
 
-* `push_notifications.apns.cert_p12_file`
-* `push_notifications.apns.cert_p12_b64`
-* `push_notifications.apns.cert_p12_password`
-
-### Other options
-
-#### push_notifications.max_inactive_device_interval
-
-This duration option configures the max time interval to keep device without updates. By default, Centrifugo does not remove inactive devices.
-
-#### push_notifications.dry_run
-
-Boolean option, when `true` Centrifugo PRO does not send push notifications to FCM, APNs, HMS providers but instead just print logs. Useful for development.
-
-#### push_notifications.dry_run_latency
-
-Duration. When set together with `push_notifications.dry_run` every dry-run request will cause some delay in workers emulating real-world latency. Useful for development.
-
-#### push_notifications.read_from_replica
-
-Boolean option, when true Centrifugo will use configured PostgreSQL replicas for push notifications read API where possible. Also, replicas will also be used during brodcasting push notifications. This configuration enables efficient scaling of read operations.
-
-Adding `push_notifications.read_from_replica` option requires setting `database.replica_dsn` option – which is an array of strings containing PostgreSQL replica DSNs. So config may look like this:
-
-```json title="config.json"
+```json
 {
-  "database": {
-    "enabled": true,
-    "postgresql": {
-      "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres",
-      "replica_dsn": [
-        "postgresql://postgres:pass@127.0.0.1:5433/postgres"
-      ]
-    }
-  },
   "push_notifications": {
-    "read_from_replica": true
+    "apns": {
+      "token_key_pem": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
+    }
   }
 }
 ```
 
+We also support auth over p12 certificates (set `auth_type` to `"cert"`) with the following options:
+
+* `push_notifications.apns.cert_p12_file` - path to .p12 certificate file
+* `push_notifications.apns.cert_p12_b64` - base64-encoded .p12 certificate content
+* `push_notifications.apns.cert_p12_password` - password for .p12 certificate
+
 ### Use PostgreSQL as queue
 
-Centrifugo PRO utilizes Redis Streams as the default queue engine for push notifications. However, it also offers the option to employ PostgreSQL for queuing. It's as simple as:
+Centrifugo PRO utilizes Redis Streams as the default queue engine for push notifications. However, it also offers the option to employ PostgreSQL for queuing. Set `push_notifications.queue.type` to `"postgresql"`:
 
 ```json title="config.json"
 {
@@ -273,6 +256,7 @@ Centrifugo PRO utilizes Redis Streams as the default queue engine for push notif
     "enabled": true
   },
   "push_notifications": {
+    "enabled": true,
     "queue": {
       "type": "postgresql",
       "postgresql": {
@@ -295,11 +279,195 @@ You can also use separate PostgreSQL instance for push notification queue, which
 {
   ...
   "push_notifications": {
+    "enabled": true,
     "queue": {
       "type": "postgresql",
       "postgresql": {
         "dsn": "postgresql://postgres:pass@127.0.0.1:5432/push_queue"
       }
+    }
+  }
+}
+```
+
+## Configuration reference
+
+This section provides a comprehensive reference for all push notification configuration options.
+
+### push_notifications.enabled
+
+Master switch to enable or disable the push notifications feature.
+
+- **Type:** `bool`
+- **Default:** `false`
+
+### push_notifications.enabled_providers
+
+List of push notification providers to enable.
+
+- **Type:** `array[string]`
+- **Valid values:** `"fcm"`, `"hms"`, `"apns"`
+
+### push_notifications.dry_run
+
+When `true`, Centrifugo PRO does not send push notifications to providers but prints logs instead. Useful for development.
+
+- **Type:** `bool`
+- **Default:** `false`
+
+### push_notifications.dry_run_latency
+
+When set together with `dry_run`, adds artificial delay to workers emulating real-world latency.
+
+- **Type:** `duration`
+- **Default:** `0s`
+- **Example:** `"100ms"`, `"1s"`
+
+### push_notifications.max_inactive_device_interval
+
+Maximum time interval to keep a device without updates. Devices inactive longer than this will be automatically removed. Set to `0s` (default) to keep devices indefinitely.
+
+- **Type:** `duration`
+- **Default:** `0s`
+- **Example:** `"720h"` (30 days)
+
+### push_notifications.read_from_replica
+
+When true, Centrifugo will use PostgreSQL replicas for read operations where possible. Requires `database.postgresql.replica_dsn` to be configured.
+
+- **Type:** `bool`
+- **Default:** `false`
+
+### push_notifications.queue
+
+Queue configuration object. Centrifugo PRO supports Redis Streams (default) or PostgreSQL for push notification queuing.
+
+### push_notifications.queue.type
+
+Specifies the queue backend type.
+
+- **Type:** `string`
+- **Valid values:** `"redis"`, `"postgresql"`
+- **Default:** `"redis"`
+
+### push_notifications.queue.redis
+
+Redis queue configuration object. Supports all standard Redis configuration options (address, Sentinel, Cluster, TLS, etc.). See [Redis Engine](../server/engines.md#redis-engine) for common Redis options.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `address` | string | | Redis server address, e.g. `"localhost:6379"` |
+| `reuse_from_engine` | bool | `false` | Reuse Redis connection from the engine configuration |
+| `consumer_concurrency` | int | `64` | Number of concurrent consumer workers processing push notification jobs |
+| `max_stream_length` | int64 | `100000` | Maximum length of the Redis Stream. Older entries may be trimmed when limit is reached |
+
+### push_notifications.queue.postgresql
+
+PostgreSQL queue configuration object. Supports DSN, replica DSN, and TLS configuration.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `dsn` | string | | PostgreSQL connection string, e.g. `"postgresql://user:pass@localhost:5432/dbname"` |
+| `reuse_from_database` | bool | `false` | Reuse PostgreSQL connection from the database configuration |
+| `consumer_concurrency` | int | `16` | Number of concurrent consumer workers |
+| `scheduler_consumer_concurrency` | int | `16` | Number of concurrent scheduler consumer workers for delayed pushes |
+| `prefix` | string | `""` | Table name prefix for queue-related tables |
+
+### push_notifications.fcm
+
+FCM (Firebase Cloud Messaging) provider configuration object.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `credentials_file` | string | | **Required.** Path to Firebase service account credentials JSON file |
+| `tokens_batch_size` | int | `500` | Maximum number of tokens in a single batch request to FCM |
+
+### push_notifications.hms
+
+HMS (Huawei Messaging Service) provider configuration object.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `app_id` | string | | **Required.** Your HMS application ID |
+| `app_secret` | string | | **Required.** Your HMS application secret |
+| `auth_endpoint` | string | | Custom HMS authentication endpoint. Uses HMS default if not set |
+| `push_endpoint` | string | | Custom HMS push endpoint. Uses HMS default if not set |
+| `tokens_batch_size` | int | `1000` | Maximum number of tokens in a single batch request to HMS |
+
+### push_notifications.apns
+
+APNs (Apple Push Notification service) provider configuration object.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `endpoint` | string | `"development"` | APNs endpoint: `"development"`, `"production"`, or custom `https://` URL |
+| `bundle_id` | string | | **Required.** iOS application bundle identifier |
+| `auth_type` | string | | **Required.** Authentication method: `"token"` or `"cert"` |
+| `tokens_batch_size` | int | `100` | Maximum number of tokens to process in parallel |
+
+**Token-based authentication (`auth_type: "token"`, recommended):**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `token_key_file` | string | Path to .p8 authentication key file from Apple Developer portal. Mutually exclusive with `token_key_pem` |
+| `token_key_pem` | string | PEM-encoded authentication key content (inline). Mutually exclusive with `token_key_file` |
+| `token_key_id` | string | **Required.** 10-character Key ID from Apple Developer account |
+| `token_team_id` | string | **Required.** 10-character Team ID from Apple Developer account |
+
+**Certificate-based authentication (`auth_type: "cert"`):**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `cert_p12_file` | string | Path to .p12 certificate file. Mutually exclusive with `cert_p12_b64` |
+| `cert_p12_b64` | string | Base64-encoded .p12 certificate content. Mutually exclusive with `cert_p12_file` |
+| `cert_p12_password` | string | Password for .p12 certificate (if encrypted) |
+
+### Complete configuration example
+
+Here's a comprehensive example showing all providers configured together:
+
+```json title="config.json"
+{
+  "database": {
+    "enabled": true,
+    "postgresql": {
+      "dsn": "postgresql://postgres:pass@127.0.0.1:5432/postgres",
+      "replica_dsn": [
+        "postgresql://postgres:pass@replica-host:5432/postgres"
+      ]
+    }
+  },
+  "push_notifications": {
+    "enabled": true,
+    "enabled_providers": ["fcm", "hms", "apns"],
+    "dry_run": false,
+    "max_inactive_device_interval": "720h",
+    "read_from_replica": true,
+    "queue": {
+      "type": "redis",
+      "redis": {
+        "address": "localhost:6379",
+        "consumer_concurrency": 64,
+        "max_stream_length": 100000
+      }
+    },
+    "fcm": {
+      "credentials_file": "/path/to/fcm-credentials.json",
+      "tokens_batch_size": 500
+    },
+    "hms": {
+      "app_id": "your_app_id",
+      "app_secret": "your_app_secret",
+      "tokens_batch_size": 500
+    },
+    "apns": {
+      "endpoint": "production",
+      "bundle_id": "com.example.app",
+      "auth_type": "token",
+      "token_key_file": "/path/to/AuthKey.p8",
+      "token_key_id": "ABCDE12345",
+      "token_team_id": "TEAM123456",
+      "tokens_batch_size": 100
     }
   }
 }
@@ -324,7 +492,7 @@ Registers or updates device information.
 | `user`     | `string`            | No       | User associated with the device.                                                                                                                                                                     |
 | `timezone` | `string`            | No       | Timezone of device user ([IANA time zone identifier](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones), ex. `Europe/Nicosia`). See [Timezone aware push](#timezone-aware-push)           |
 | `locale`   | `string`            | No       | Locale of device user. Must be IETF BCP 47 language tag - ex. `en-US`, `fr-CA`. See [Localizations](#localizations)                                                                                  |
-| `topics`   | `array[string]`     | No       | Device topic subscriptions. This should be a full list which replaces all the topics previously accociated with the device. User topics managed by `UserTopic` model will be automatically attached. |
+| `topics`   | `array[string]`     | No       | Device topic subscriptions. This should be a full list which replaces all the topics previously associated with the device. User topics managed by `UserTopic` model will be automatically attached. |
 | `meta`     | `map[string]string` | No       | Additional custom metadata for the device                                                                                                                                                            |
 
 #### device_register result
@@ -373,7 +541,7 @@ Call this method to update device. For example, when user logs out the app and y
 
 | Field  | Type                 | Required | Description |
 |--------|----------------------|----------|-------------|
-| `meta` | `map[string]string>` | Yes      | Meta to set |
+| `meta` | `map[string]string` | Yes      | Meta to set |
 
 `DeviceTopicsUpdate`:
 
@@ -431,7 +599,7 @@ Returns a paginated list of registered devices according to request filter condi
 | Field Name    | Type            | Required | Description                                                                       |
 |---------------|-----------------|----------|-----------------------------------------------------------------------------------|
 | `items`       | `array[Device]` | Yes      | A list of devices                                                                 |
-| `next_cursor` | `string`        | No       | Cursor string for retreiving the next page, if not set - then no next page exists |
+| `next_cursor` | `string`        | No       | Cursor string for retrieving the next page, if not set - then no next page exists |
 | `total_count` | `integer`       | No       | Total count value (if `include_total_count` used)                                 |
 
 `Device`:
@@ -492,7 +660,7 @@ List device to topic mapping.
 | Field Name    | Type                 | Required | Description                                                                       |
 |---------------|----------------------|----------|-----------------------------------------------------------------------------------|
 | `items`       | `array[DeviceTopic]` | Yes      | A list of DeviceChannel objects                                                   |
-| `next_cursor` | `string`             | No       | Cursor string for retreiving the next page, if not set - then no next page exists |
+| `next_cursor` | `string`             | No       | Cursor string for retrieving the next page, if not set - then no next page exists |
 | `total_count` | `integer`            | No       | Total count value (if `include_total_count` used)                                 |
 
 `DeviceTopic`:
@@ -505,7 +673,7 @@ List device to topic mapping.
 
 ### user_topic_update
 
-Manage mapping of topics with users. These user topics will be automatically attached to user devices upon registering. And removed from device upon deattaching user.
+Manage mapping of topics with users. These user topics will be automatically attached to user devices upon registering. And removed from device upon detaching user.
 
 #### user_topic_update request
 
@@ -527,7 +695,7 @@ List user to topic mapping.
 
 | Field                 | Type              | Required | Description                                                              |
 |-----------------------|-------------------|----------|--------------------------------------------------------------------------|
-| `flter`               | `UserTopicFilter` | No       | Filter object.                                                           |
+| `filter`              | `UserTopicFilter` | No       | Filter object.                                                           |
 | `cursor`              | `string`          | No       | Cursor for pagination (last id in previous batch, empty for first page). |
 | `limit`               | `int32`           | No       | Maximum number of `UserTopic` objects to retrieve.                       |
 | `include_total_count` | `bool`            | No       | Flag indicating whether to include total count info to response.         |
@@ -545,7 +713,7 @@ List user to topic mapping.
 | Field Name    | Type               | Required | Description                                                                       |
 |---------------|--------------------|----------|-----------------------------------------------------------------------------------|
 | `items`       | `array[UserTopic]` | Yes      | A list of UserTopic objects                                                       |
-| `next_cursor` | `string`           | No       | Cursor string for retreiving the next page, if not set - then no next page exists |
+| `next_cursor` | `string`           | No       | Cursor string for retrieving the next page, if not set - then no next page exists |
 | `total_count` | `integer`          | No       | Total count value (if `include_total_count` used)                                 |
 
 `UserTopic`:
@@ -568,8 +736,8 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 | `notification`             | `PushNotification`            | Yes      | Push notification to send                                                                                                                                                  |
 | `uid`                      | `string`                      | No       | Unique identifier for each push notification request, can be used to cancel push. We recommend using UUID v4 for it. Two different requests must have different `uid`      |
 | `send_at`                  | `int64`                       | No       | Optional Unix time in the future (in seconds) when to send push notification, push will be queued until that time.                                                         |
-| `optimize_for_reliability` | `bool`                        | No       | Makes processing heavier, but tolerates edge cases, like not loosing inflight pushes due to temporary queue unavailability.                                                |
-| `limit_strategy`           | `PushLimitStrategy`           | No       | Can be used to set push time constraints (based on device timezone) adnd rate limits. Note, when it's used Centrifugo processes pushes one by one instead of batch sending |
+| `optimize_for_reliability` | `bool`                        | No       | Makes processing heavier, but tolerates edge cases, like not losing inflight pushes due to temporary queue unavailability.                                                |
+| `limit_strategy`           | `PushLimitStrategy`           | No       | Can be used to set push time constraints (based on device timezone) and rate limits. Note, when it's used Centrifugo processes pushes one by one instead of batch sending |
 | `analytics_uid`            | `string`                      | No       | Identifier for push notification analytics, if not set - Centrifugo will use `uid` field.                                                                                  |
 | `localizations`            | `map[string]PushLocalization` | No       | Optional per language localizations for push notification.                                                                                                                 |
 | `use_templating`           | `bool`                        | No       | If set - Centrifugo will use templating for push notification. Note that setting localizations enables templating automatically.                                           |
@@ -633,8 +801,8 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 
 | Field                  | Type                     | Required | Description                                                                             |
 |------------------------|--------------------------|----------|-----------------------------------------------------------------------------------------|
-| `key`                  | `string`                 | No       | Optional key for rate limit policy, supports variables (`devide.id` and `device.user`). |
-| `policies`             | `array[RateLimitPolicy]` | No       | Set time limit policy                                                                   |
+| `key`                  | `string`                 | No       | Optional key for rate limit policy, supports variables (`device.id` and `device.user`). |
+| `policies`             | `array[RateLimitPolicy]` | No       | Array of rate limit policies to apply                                                   |
 | `drop_if_rate_limited` | `bool`                   | No       | Drop push if rate limited, otherwise queue for later                                    |
 
 `RateLimitPolicy`:
@@ -650,7 +818,7 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 |--------------------|----------|----------|--------------------------------------------------------------------------------------|
 | `send_after_time`  | `string` | Yes      | Local time in format `HH:MM:SS` after which push must be sent                        |
 | `send_before_time` | `string` | Yes      | Local time in format `HH:MM:SS` before which push must be sent                       |
-| `no_tz_send_now`   | `bool`   | No       | If device does not have timezone send push immediately, be default - will be dropped |
+| `no_tz_send_now`   | `bool`   | No       | If device does not have timezone send push immediately, by default - will be dropped |
 
 #### send_push_notification result
 
@@ -689,7 +857,7 @@ This is a part of server API at the moment, so you need to proxy requests to thi
 | `analytics_uid` | `string` | Yes      | `analytics_uid` from `send_push_notification`                    |
 | `status`        | `string` | Yes      | Status of push notification - `delivered` or `interacted`        |
 | `device_id`     | `string` | Yes      | Device ID                                                        |
-| `msg_id`        | `string` | No       | Optional Message ID of push notification issued by used provider |
+| `msg_id`        | `string` | No       | Optional Message ID of push notification issued by the provider |
 
 #### update_push_status result
 
@@ -721,7 +889,7 @@ To access device meta content in push template (as shown above) additionally set
 
 :::tip
 
-Given Centrifugo takes timezone from devices table into account timezone aware pushes only work with requests where `DeviceFilter` is used for sending – i.e. when Centrifugo iterates over devices in the database.
+Templating only works with requests where `DeviceFilter` is used for sending – i.e. when Centrifugo iterates over devices in the database.
 
 :::
 
@@ -740,7 +908,7 @@ When sending push notification use `localizations` field of [send_push_notificat
             "greeting": "Olá",
             "question": "Como tá indo"
         }
-    }
+    },
     "fr": {
         "translations": {
             "greeting": "Bonjour",
