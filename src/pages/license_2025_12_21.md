@@ -17,7 +17,7 @@ This Agreement currently covers Centrifugo PRO. Additional products released by 
 
 Posted Date: [December 21, 2025](https://centrifugal.dev/license_2025_12_21)
 
-This Agreement may be updated from time to time by Centrifugal Labs. Each version of this Agreement is effective as of its posted effective date indicated above. This Agreement does not apply retroactively. The version of the Agreement in effect at the time an agreement incorporating this Agreement is formed governs that agreement for its entire term, unless the parties expressly agree otherwise in writing. Prior versions of this Agreement are listed below for reference and remain applicable to the License Terms of agreements formed during their respective effective periods:
+This Agreement may be updated from time to time by Centrifugal Labs. Each version of this Agreement is effective as of its posted effective date indicated above. This Agreement does not apply retroactively. The version of the Agreement in effect at the time an agreement incorporating this Agreement is formed governs that agreement for its entire License Term, unless the parties expressly agree otherwise in writing. Prior versions of this Agreement are listed below for reference and remain applicable to the License Terms of agreements formed during their respective effective periods:
 - [November 06, 2025](https://centrifugal.dev/license_2025_11_06) (applicable to agreements formed on or after Nov 6, 2025 and before Dec 21, 2025)
 
 --------
