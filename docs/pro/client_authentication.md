@@ -136,13 +136,15 @@ While the standard `client.token.jwks_public_endpoint` configuration allows fetc
                         "name": "auth0",
                         "enabled": true,
                         "endpoint": "https://tenant.auth0.com/.well-known/jwks.json",
-                        "issuer": "https://tenant.auth0.com/"
+                        "issuer": "https://tenant.auth0.com/",
+                        "audience": "centrifugo"
                     },
                     {
                         "name": "keycloak",
                         "enabled": true,
                         "endpoint": "https://keycloak.example.com/realms/myrealm/protocol/openid-connect/certs",
-                        "issuer": "https://keycloak.example.com/realms/myrealm"
+                        "issuer": "https://keycloak.example.com/realms/myrealm",
+                        "audience": "centrifugo"
                     }
                 ]
             }
@@ -224,7 +226,7 @@ In this configuration:
 | enabled  | `boolean` | No      | Whether this provider is active (default `false`)                                       |
 | endpoint | `string`  | Yes*     | JWKS endpoint URL (*required if enabled)                                  |
 | issuer   | `string`  | Yes*     | Expected issuer claim value (*required if enabled)                        |
-| audience | `string`  | No       | Expected audience claim value. While optional, it's highly recommended to be used to prevent client tokens related to other audiences issued by the same issuer from being accepted by Centrifugo. When the same issuer is used by multiple providers, each must have a different audience set to enable issuer+audience matching                                  |
+| audience | `string`  | No       | Expected audience claim value. **While optional, it's highly recommended to set this in most cases** to prevent client tokens related to other audiences issued by the same issuer from being accepted by Centrifugo. When the same issuer is used by multiple providers, each must have a different audience set to enable issuer+audience matching                                  |
 | tls      | [`TLS`](../server/configuration.md#tls-config-object) object  | No       | Custom TLS configuration for the JWKS endpoint HTTP client                            |
 | meta_from_claim      | [StringKeyValues](../server/configuration.md#stringkeyvalues-type)  | No       | Config to transform JWT claims to connection meta object. Must be explicitly set for each provider, not inherited from upper config level.                              |
 
@@ -255,7 +257,8 @@ JWKS providers work for both connection tokens and subscription tokens. [As usua
                     "name": "auth0_connection",
                     "enabled": true,
                     "endpoint": "https://tenant.auth0.com/.well-known/jwks.json",
-                    "issuer": "https://tenant.auth0.com/"
+                    "issuer": "https://tenant.auth0.com/",
+                    "audience": "centrifugo"
                 }]
             }
         },
@@ -267,7 +270,8 @@ JWKS providers work for both connection tokens and subscription tokens. [As usua
                     "name": "subscription_identity",
                     "enabled": true,
                     "endpoint": "https://tenant.example.com/.well-known/jwks.json",
-                    "issuer": "https://tenant.example.com"
+                    "issuer": "https://tenant.example.com",
+                    "audience": "centrifugo"
                 }]
             }
         }
