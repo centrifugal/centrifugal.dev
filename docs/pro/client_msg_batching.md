@@ -36,6 +36,40 @@ Example:
 }
 ```
 
+### `client.write_with_timer`
+
+The `client.write_with_timer` is a boolean option that enables using timer-based flush for writing messages to the client. This option only applies when `client.write_delay` is set. By default, `false`.
+
+When enabled, Centrifugo uses a timer-based approach to trigger message writes, which can potentially reduce memory and CPU usage in certain scenarios. In this mode there is no dedicated writer goroutine so many setups can expect reduced memory usage.
+
+Example:
+
+```json title="config.json"
+{
+  "client": {
+    "write_delay": "100ms",
+    "write_with_timer": true
+  }
+}
+```
+
+### `client.queue_shrink_delay`
+
+The `client.queue_shrink_delay` is a duration option that sets the delay for queue shrinking after a message batch is sent to the client. This option only works when `client.write_delay` is set.
+
+By default, Centrifugo may shrink the client's message queue immediately after sending a batch to reclaim memory. Setting `queue_shrink_delay` adds a delay before shrinking, which can help reduce memory allocation/deallocation overhead in scenarios where message rates fluctuate.
+
+Example:
+
+```json title="config.json"
+{
+  "client": {
+    "write_delay": "100ms",
+    "queue_shrink_delay": "100ms"
+  }
+}
+```
+
 ### `client.max_messages_in_frame`
 
 The `client.max_messages_in_frame` is an integer option which controls the maximum number of messages which may be joined by Centrifugo into one transport frame. By default, 16. Use -1 for unlimited number.
