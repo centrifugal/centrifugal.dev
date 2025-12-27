@@ -18,23 +18,27 @@ The feature consists of three parts which together provide a ground for ephemera
 
 ### Defining schemas
 
-Schemas are defined at the top level of Centrifugo configuration using JSON Schema format.
+Schemas are defined at the top level of Centrifugo configuration. Centrifugo supports two types of schemas:
+
+* **JSON Schema** (`jsonschema_draft_2020_12`) - Validates publication data against JSON Schema Draft 2020-12
+* **Empty Binary** (`empty_binary`) - Only allows empty binary data (useful for presence-like signals)
 
 :::info Security Default
 
-For security, Centrifugo automatically sets `"additionalProperties": false` on object-type schemas unless explicitly specified otherwise. This prevents clients from injecting unexpected fields into validated data.
+For JSON schemas, Centrifugo automatically sets `"additionalProperties": false` on object-type schemas unless explicitly specified otherwise. This prevents clients from injecting unexpected fields into validated data.
 
 :::
 
-#### Inline schema definition
+#### JSON Schema (default)
 
-You can define schemas directly in your configuration file:
+The `type` field is optional and defaults to `jsonschema_draft_2020_12`. You can define schemas directly in your configuration file:
 
 ```json title="config.json"
 {
   "schemas": [
     {
       "name": "chat_message",
+      "type": "jsonschema_draft_2020_12",
       "definition": "{\"type\":\"object\",\"properties\":{\"text\":{\"type\":\"string\",\"maxLength\":500}},\"required\":[\"text\"]}"
     }
   ]
@@ -46,6 +50,7 @@ For better readability in YAML, use multiline strings:
 ```yaml title="config.yaml"
 schemas:
   - name: chat_message
+    type: jsonschema_draft_2020_12  # Optional, this is the default
     definition: |
       {
         "type": "object",
@@ -56,6 +61,33 @@ schemas:
         "required": ["text"]
       }
 ```
+
+#### Empty Binary Schema
+
+The `empty_binary` schema type validates that publication data is empty. This is useful for presence-like signals where the fact of publication itself carries meaning (e.g., "user is typing"):
+
+```json title="config.json"
+{
+  "schemas": [
+    {
+      "name": "typing_indicator",
+      "type": "empty_binary"
+    }
+  ]
+}
+```
+
+```yaml title="config.yaml"
+schemas:
+  - name: typing_indicator
+    type: empty_binary
+```
+
+:::note
+
+Empty binary schemas don't require a `definition` field since they only validate that data is empty (0 bytes).
+
+:::
 
 #### Schema from file
 
@@ -147,6 +179,7 @@ Use `client_publication_data_schemas` in channel or namespace configuration to a
     "namespaces": [
       {
         "name": "typings",
+        "publication_data_format": "json",
         "client_publication_data_schemas": ["typing"],
         "allow_publish_for_subscriber": true
       }
@@ -155,16 +188,38 @@ Use `client_publication_data_schemas` in channel or namespace configuration to a
 }
 ```
 
+:::important Schema Type Compatibility
+
+Schemas must be compatible with the channel's `publication_data_format` setting:
+
+* **JSON schemas** (`jsonschema_draft_2020_12`) require `publication_data_format: "json"`
+* **Empty binary schemas** (`empty_binary`) require `publication_data_format: "binary"`
+
+Centrifugo validates this configuration at startup and will reject incompatible combinations.
+
+:::
+
 ### Multiple schemas
 
 When multiple schemas are configured, the publication data must match **at least one** of them. This allows supporting different message types in the same channel:
 
 ```json
 {
+  "schemas": [
+    {
+      "name": "typing",
+      "definition": "{\"type\":\"object\",\"properties\":{\"is_typing\":{\"type\":\"boolean\"}},\"required\":[\"is_typing\"]}"
+    },
+    {
+      "name": "reaction",
+      "definition": "{\"type\":\"object\",\"properties\":{\"emoji\":{\"type\":\"string\"}},\"required\":[\"emoji\"]}"
+    }
+  ],
   "channel": {
     "namespaces": [
       {
         "name": "ephemeral",
+        "publication_data_format": "json",
         "client_publication_data_schemas": ["typing", "reaction"],
         "allow_publish_for_subscriber": true
       }
@@ -172,6 +227,12 @@ When multiple schemas are configured, the publication data must match **at least
   }
 }
 ```
+
+:::note
+
+All schemas referenced in `client_publication_data_schemas` must have the same type (either all `jsonschema_draft_2020_12` or all `empty_binary`) since they share the same `publication_data_format` setting.
+
+:::
 
 ## Client publication tags
 
@@ -319,6 +380,7 @@ Here's a comprehensive example combining all features:
   "schemas": [
     {
       "name": "reaction",
+      "type": "jsonschema_draft_2020_12",
       "definition": "{\"type\":\"object\",\"properties\":{\"emoji\":{\"type\":\"string\"},\"message_id\":{\"type\":\"string\"}},\"required\":[\"emoji\",\"message_id\"],\"additionalProperties\":false}"
     }
   ],
@@ -328,7 +390,40 @@ Here's a comprehensive example combining all features:
       {
         "name": "room_chat_reactions",
         "pattern": "/rooms/:room_id/reactions",
+        "publication_data_format": "json",
         "client_publication_data_schemas": ["reaction"],
+        "client_publication_tags": [
+          {"key": "user_id", "value": "${user}"},
+          {"key": "room_id", "value": "${vars.room_id}"}
+        ],
+        "client_publication_exclude_client_info": true,
+        "allow_publish_for_subscriber": true
+      }
+    ]
+  }
+}
+```
+
+### Example with Empty Binary Schema
+
+Here's an example using `empty_binary` schema for a typing indicator:
+
+```json title="config.json"
+{
+  "schemas": [
+    {
+      "name": "typing",
+      "type": "empty_binary"
+    }
+  ],
+  "channel": {
+    "patterns": true,
+    "namespaces": [
+      {
+        "name": "room_typing",
+        "pattern": "/rooms/:room_id/typing",
+        "publication_data_format": "binary",
+        "client_publication_data_schemas": ["typing"],
         "client_publication_tags": [
           {"key": "user_id", "value": "${user}"},
           {"key": "room_id", "value": "${vars.room_id}"}
@@ -349,6 +444,18 @@ Here's a comprehensive example combining all features:
 * If validation fails, the client receives an error and the publication is rejected
 * Multiple schemas act as an OR condition - data must match at least one schema
 * Schema names must reference schemas defined in the top-level `schemas` array
+
+### Configuration validation
+
+Centrifugo validates schema configurations at startup:
+
+* Schema `type` defaults to `jsonschema_draft_2020_12` if not specified
+* JSON schemas (`jsonschema_draft_2020_12`) must have a `definition` field
+* Empty binary schemas (`empty_binary`) must not have a `definition` field
+* Schema type must be compatible with channel's `publication_data_format`:
+  * `jsonschema_draft_2020_12` requires `publication_data_format: "json"`
+  * `empty_binary` requires `publication_data_format: "binary"`
+* All schemas referenced in `client_publication_data_schemas` must exist
 
 ## See also
 
