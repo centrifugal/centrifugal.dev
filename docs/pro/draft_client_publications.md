@@ -193,7 +193,7 @@ Use `client_publication_data_schemas` in channel or namespace configuration to a
 Schemas must be compatible with the channel's `publication_data_format` setting:
 
 * **JSON schemas** (`jsonschema_draft_2020_12`) require `publication_data_format: "json"`
-* **Empty binary schemas** (`empty_binary`) require `publication_data_format: "binary"`
+* **Empty binary schemas** (`empty_binary`) require `publication_data_format: "binary"` to be set
 
 Centrifugo validates this configuration at startup and will reject incompatible combinations.
 
@@ -212,7 +212,7 @@ When multiple schemas are configured, the publication data must match **at least
     },
     {
       "name": "reaction",
-      "definition": "{\"type\":\"object\",\"properties\":{\"emoji\":{\"type\":\"string\"}},\"required\":[\"emoji\"]}"
+      "definition": "{\"type\":\"object\",\"properties\":{\"emoji\":{\"type\":\"string\",\"enum\":[\"👍\",\"👎\",\"❤️\",\"😂\",\"😮\",\"😢\",\"😡\"]}},\"required\":[\"emoji\"],\"additionalProperties\":false}"
     }
   ],
   "channel": {
@@ -270,6 +270,7 @@ CEL expressions in client publication tags have access to the following variable
 * `timestamp_ms` (int) - Current server timestamp in milliseconds (Unix epoch)
 * `meta` (map) - Connection metadata (access nested fields like `meta.tenant_id` or `meta.user.role`)
 * `vars` (map) - Channel pattern variables (requires [channel patterns](./channel_patterns.md))
+* `schema_name` (string) - Name of the schema that matched the publication data (empty string if no schemas configured)
 
 All CEL expressions must return a **string type** and are validated at configuration load time.
 
@@ -313,6 +314,17 @@ All CEL expressions must return a **string type** and are validated at configura
 {
   "client_publication_tags": [
     {"key": "access", "value": "${meta.role == 'admin' || meta.role == 'moderator' ? 'full' : 'limited'}"}
+  ]
+}
+```
+
+**Using matched schema name:**
+
+```json
+{
+  "client_publication_tags": [
+    {"key": "msg_type", "value": "${schema_name}"},
+    {"key": "priority", "value": "${schema_name == 'urgent_message' ? 'high' : 'normal'}"}
   ]
 }
 ```
@@ -457,7 +469,11 @@ Centrifugo validates schema configurations at startup:
   * `empty_binary` requires `publication_data_format: "binary"`
 * All schemas referenced in `client_publication_data_schemas` must exist
 
+### Bottom line
+
+Generally speaking all the existing namespace options like recovery/positioning, delta compression, channel batching controls will apply to namespaces with ephemeral client publications also. Then it depends on the specific use case whether you would like to apply those or not.
+
 ## See also
 
-* [Channel patterns](./channel_patterns.md) - Use pattern variables in publication tags
-* [Operation rate limiting](./rate_limiting.md) - To rate limit ephemeral publications from client
+* [Channel patterns](./channel_patterns.md) - use pattern variables in publication tags
+* [Operation rate limiting](./rate_limiting.md) - rate limit ephemeral publications from client
