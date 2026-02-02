@@ -5,7 +5,7 @@ title: Join community
 
 If you find Centrifugo interesting, you are welcome to join our community rooms on Telegram (the most active) and Discord.
 
-* Join [Telegram community](https://t.me/en_centrifugalabs)
+* Join [Telegram community](https://t.me/+U57MI8Lam9mhpuhd)
 * Join [Discord community](https://discord.gg/tYgADKx)
 
 We strive to create a respectful and curious community. In these rooms, you may find answers to questions not fully covered by the documentation, share your thoughts and ideas on real-time messaging topics and Centrifugo in particular.
