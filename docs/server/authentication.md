@@ -468,6 +468,38 @@ Centrifugo supports the following key types (`kty`) for JWKs tokens:
 
 Once enabled JWKS used for both connection and channel subscription tokens.
 
+## HMAC key rotation
+
+When you need to rotate the HMAC secret key, Centrifugo supports a smooth transition using a previous secret key. This avoids mass disconnects when the primary key changes – tokens signed with the old key will continue to be accepted during the rotation period.
+
+Configure `client.token.hmac_previous_secret_key` to specify the old secret key, and optionally `client.token.hmac_previous_secret_key_valid_until` to set a Unix timestamp after which the previous key will no longer be accepted:
+
+```json title="config.json"
+{
+  ...
+  "client": {
+    "token": {
+      "hmac_secret_key": "<NEW-SECRET-KEY>",
+      "hmac_previous_secret_key": "<OLD-SECRET-KEY>",
+      "hmac_previous_secret_key_valid_until": 1735689600
+    }
+  }
+}
+```
+
+The rotation workflow:
+
+1. Set your new secret as `hmac_secret_key` and move the old secret to `hmac_previous_secret_key`
+2. Update your backend to issue tokens with the new secret
+3. Optionally set `hmac_previous_secret_key_valid_until` to a Unix timestamp – after this time, tokens signed with the old key will be rejected
+4. Once all old tokens have expired or the `valid_until` timestamp has passed, remove `hmac_previous_secret_key` from the configuration
+
+:::tip
+
+The same `hmac_previous_secret_key` and `hmac_previous_secret_key_valid_until` options are available for subscription tokens when using a separate subscription token configuration.
+
+:::
+
 ## Dynamic JWKs endpoint
 
 It's possible to extract variables from `iss` and `aud` JWT claims using [Go regexp](https://pkg.go.dev/regexp) named groups, then use variables extracted during `iss` or `aud` matching to construct a JWKS endpoint dynamically upon token validation. In this case JWKS endpoint may be set in config as template.

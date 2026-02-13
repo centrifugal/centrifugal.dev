@@ -441,9 +441,10 @@ Available since Centrifugo v6.5.2
 
 * `""` (empty, default) – keeps the default behavior of Centrifugo v6 where empty data is rejected and no data validation checks are made on publish stage (leaving this to developer to control). 
 * `"json"` – validates that all published data is valid JSON, rejecting invalid JSON with a bad request error
+* `"json_object"` - stricter JSON format that only allows JSON objects to be presented in channels
 * `"binary"` – tells Centrifugo that the format of data is arbitrary binary, this allows publishing empty payloads to channels.
 
-When set to `"json"`, Centrifugo validates publication data on both server API and client publish operations, ensuring data integrity across all publish sources. This is useful when you want to guarantee that only valid JSON messages flow through specific channels.
+When set to `"json"` or `"json_object"`, Centrifugo validates publication data on both server API and client publish operations, ensuring data integrity across all publish sources. This is useful when you want to guarantee that only valid JSON messages flow through specific channels.
 
 When set to `"binary"`, Centrifugo allows empty data to be published, which can be useful for channels where you need to send signals or work with arbitrary binary payloads.
 
