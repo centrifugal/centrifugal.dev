@@ -470,6 +470,8 @@ Once enabled JWKS used for both connection and channel subscription tokens.
 
 ## HMAC key rotation
 
+Available since v6.6.1
+
 When you need to rotate the HMAC secret key, Centrifugo supports a smooth transition using a previous secret key. This avoids mass disconnects when the primary key changes – tokens signed with the old key will continue to be accepted during the rotation period.
 
 Configure `client.token.hmac_previous_secret_key` to specify the old secret key, and optionally `client.token.hmac_previous_secret_key_valid_until` to set a Unix timestamp after which the previous key will no longer be accepted:
