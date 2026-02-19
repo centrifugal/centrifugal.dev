@@ -16,7 +16,7 @@
 
 <link rel="search" type="application/opensearchdescription+xml" title="Centrifugo" href="/opensearch.xml">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.c6c57835.css">
-<script src="/assets/js/runtime~main.e2723c66.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.ed314432.js" defer="defer"></script>
 <script src="/assets/js/main.5426a191.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -176,9 +176,10 @@
 <ul>
 <li class=""><code>&quot;&quot;</code> (empty, default) – keeps the default behavior of Centrifugo v6 where empty data is rejected and no data validation checks are made on publish stage (leaving this to developer to control).</li>
 <li class=""><code>&quot;json&quot;</code> – validates that all published data is valid JSON, rejecting invalid JSON with a bad request error</li>
+<li class=""><code>&quot;json_object&quot;</code> - stricter JSON format that only allows JSON objects to be presented in channels</li>
 <li class=""><code>&quot;binary&quot;</code> – tells Centrifugo that the format of data is arbitrary binary, this allows publishing empty payloads to channels.</li>
 </ul>
-<p>When set to <code>&quot;json&quot;</code>, Centrifugo validates publication data on both server API and client publish operations, ensuring data integrity across all publish sources. This is useful when you want to guarantee that only valid JSON messages flow through specific channels.</p>
+<p>When set to <code>&quot;json&quot;</code> or <code>&quot;json_object&quot;</code>, Centrifugo validates publication data on both server API and client publish operations, ensuring data integrity across all publish sources. This is useful when you want to guarantee that only valid JSON messages flow through specific channels.</p>
 <p>When set to <code>&quot;binary&quot;</code>, Centrifugo allows empty data to be published, which can be useful for channels where you need to send signals or work with arbitrary binary payloads.</p>
 <p>This option can be set globally for all channels at the top level of channel configuration, and can be overridden per namespace if needed.</p>
 <p>Example configuration with global format that applies to all channels:</p>
