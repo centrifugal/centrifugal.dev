@@ -159,10 +159,13 @@ To enable Snapshots feature you need to turn on admin web UI, enable `snapshots`
   "clickhouse_analytics": {
     "enabled": true,
     "clickhouse_dsn": [
-      "tcp://default:default@127.0.0.1:9000",
+      "tcp://default:default@127.0.0.1:9000"
     ],
     "clickhouse_database": "centrifugo",
     "clickhouse_cluster": "centrifugo_cluster",
+    "tls": {
+      "enabled": false
+    },
     "snapshots": {
       "enabled": true
     }

@@ -73,6 +73,8 @@ You also need to set a ClickHouse cluster name (`clickhouse_analytics.clickhouse
 
 `clickhouse_analytics.skip_ping_on_start` - boolean, default `false`. Centrifugo pings Clickhouse servers by default on start, if any of servers is unavailable – Centrifugo fails to start. This option allow skipping this check thus Centrifugo is able to start even if Clickhouse cluster not working correctly.
 
+`clickhouse_analytics.tls` - [TLS object](../server/configuration.md#tls-config-object) (available since v6.6.4). By default, no TLS is used. When enabled, TLS is applied to both data export and query connections to ClickHouse.
+
 The `export` section allows configuring which data to export to ClickHouse:
 
 * `clickhouse_analytics.export.connections.enabled` – enables exporting connection information.
