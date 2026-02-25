@@ -92,6 +92,46 @@ Additionally:
 * `clickhouse_analytics.export.operations.export_users` - list of strings. Option `export_users` is a list of users for which Centrifugo will export operations data to ClickHouse. If not set, all users will be exported. Allows enabling ClickHouse analytics for a subset of users which is generally simpler/safer/more effective than enabling operations analytics for all users.
 * `clickhouse_analytics.export.publications.export_channels` - list of strings. Option `export_channels` is a list of channels for which Centrifugo will export publications data to ClickHouse. If not set, all channels will be exported. Allows enabling ClickHouse analytics for a subset of channels which is generally simpler/safer/more effective than enabling publications analytics for all channels.
 
+### DSN format
+
+The `clickhouse_dsn` values use the following format:
+
+```
+tcp://user:password@host:port
+```
+
+Examples:
+
+* `tcp://127.0.0.1:9000` – connect with defaults
+* `tcp://user:pass@127.0.0.1:9000` – connect with credentials
+
+### Per-export tuning options
+
+Each export type (connections, subscriptions, operations, publications, notifications) supports the following tuning options:
+
+* `max_buffer_size` – maximum number of events to buffer in memory, default `1000000`. Events are dropped when the buffer is full.
+* `flush_interval` – interval between flush attempts, default `"10s"`.
+* `flush_size` – maximum batch size per flush, default `100000`.
+* `ttl` – ClickHouse table TTL for the `time` column, default `"7 DAY"`.
+
+Example:
+
+```json
+"export": {
+  "connections": {
+    "enabled": true,
+    "max_buffer_size": 500000,
+    "flush_interval": "5s",
+    "flush_size": 50000,
+    "ttl": "30 DAY"
+  }
+}
+```
+
+### Snapshots TTL
+
+When snapshots are enabled (`clickhouse_analytics.snapshots.enabled`), snapshot data in ClickHouse expires after a configurable period. Use `clickhouse_analytics.snapshots.ttl` to control this, default is `"14 DAY"`.
+
 ## Connections table
 
 ```sql
@@ -112,7 +152,7 @@ SHOW CREATE TABLE centrifugo.connections;
 ENGINE = ReplicatedMergeTree('/clickhouse/tables/{cluster}/{shard}/connections', '{replica}')
 PARTITION BY toYYYYMMDD(time)
 ORDER BY time
-TTL time + toIntervalDay(1)
+TTL time + toIntervalDay(7)
 SETTINGS index_granularity = 8192 │
 └─────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -154,7 +194,7 @@ SHOW CREATE TABLE centrifugo.subscriptions
 ENGINE = MergeTree
 PARTITION BY toYYYYMMDD(time)
 ORDER BY time
-TTL time + toIntervalDay(1)
+TTL time + toIntervalDay(7)
 SETTINGS index_granularity = 8192 │
 └────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -197,7 +237,7 @@ SHOW CREATE TABLE centrifugo.operations;
 ENGINE = ReplicatedMergeTree('/clickhouse/tables/{cluster}/{shard}/operations', '{replica}')
 PARTITION BY toYYYYMMDD(time)
 ORDER BY time
-TTL time + toIntervalDay(1)
+TTL time + toIntervalDay(7)
 SETTINGS index_granularity = 8192 │
 └────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -232,6 +272,7 @@ SHOW CREATE TABLE centrifugo.publications
 ┌─statement──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │ CREATE TABLE centrifugo.publications
 (
+    `uid` String,
     `channel` String,
     `source` String,
     `size` UInt64,
@@ -242,7 +283,7 @@ SHOW CREATE TABLE centrifugo.publications
 ENGINE = MergeTree
 PARTITION BY toYYYYMMDD(time)
 ORDER BY time
-TTL time + toIntervalDay(1)
+TTL time + toIntervalDay(7)
 SETTINGS index_granularity = 8192 │
 └────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -253,8 +294,9 @@ And distributed one:
 SHOW CREATE TABLE centrifugo.publications_distributed;
 
 ┌─statement──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ CREATE TABLE centrifugo.operations_distributed
+│ CREATE TABLE centrifugo.publications_distributed
 (
+    `uid` String,
     `channel` String,
     `source` String,
     `size` UInt64,
@@ -290,7 +332,7 @@ SHOW CREATE TABLE centrifugo.notifications
 ENGINE = MergeTree
 PARTITION BY toYYYYMMDD(time)
 ORDER BY time
-TTL time + toIntervalDay(1)
+TTL time + toIntervalDay(7)
 SETTINGS index_granularity = 8192 │
 └────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -301,7 +343,7 @@ And distributed one:
 SHOW CREATE TABLE centrifugo.notifications_distributed;
 
 ┌─statement──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ CREATE TABLE centrifugo.operations_distributed
+│ CREATE TABLE centrifugo.notifications_distributed
 (
     `uid` String,
     `provider` String,
@@ -364,7 +406,7 @@ WHERE (error = 111) AND (op = 'publish') AND (user = 'user_200');
 Show number of unique users subscribed to a specific channel in last 5 minutes (this is approximate since subscriptions table contain periodic snapshot entries, clients could unsubscribe in between snapshots – this is reflected in operations table):
 
 ```sql
-SELECT COUNT(Distinct(user))
+SELECT uniqExact(user)
 FROM centrifugo.subscriptions_distributed
 WHERE arrayExists(x -> (x = 'chat:index'), channels) AND (time >= (now() - toIntervalMinute(5)));
 
@@ -428,15 +470,24 @@ To do this set only one ClickHouse dsn and do not set cluster name:
             "tcp://127.0.0.1:9000"
         ],
         "clickhouse_database": "centrifugo",
-        "clickhouse_cluster": "",
-        "export_connections": true,
-        "export_subscriptions": true,
-        "export_publications": true,
-        "export_operations": true,
-        "export_http_headers": [
-            "Origin",
-            "User-Agent"
-        ]
+        "export": {
+            "connections": {
+                "enabled": true,
+                "http_headers": [
+                    "Origin",
+                    "User-Agent"
+                ]
+            },
+            "subscriptions": {
+                "enabled": true
+            },
+            "operations": {
+                "enabled": true
+            },
+            "publications": {
+                "enabled": true
+            }
+        }
     }
 }
 ```

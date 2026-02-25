@@ -135,7 +135,7 @@ This feature allows using admin web UI to inspect current connections and channe
 * Disconnect/Reconnect a specific connection
 * Integrates with Centrifugo PRO [Tracing](./tracing.md) to trace particular channel or particular connection in real-time.
 
-Centrifugo PRO saves snapshot metadata to PostgreSQL database. The connections and channels raw data is effectively inserted to ClickHouse from each node during collection, so there is no expensive inter-node communication. Snapshot raw data in ClickHouse expires in 14 days by default.
+Centrifugo PRO saves snapshot metadata to PostgreSQL database. The connections and channels raw data is effectively inserted to ClickHouse from each node during collection, so there is no expensive inter-node communication. Snapshot raw data in ClickHouse expires in 14 days by default, configurable via `clickhouse_analytics.snapshots.ttl` (e.g. `"14 DAY"`).
 
 <video width="100%" loop={true} autoPlay="autoplay" muted controls src="/img/snapshots_demo.mp4"></video>
 
