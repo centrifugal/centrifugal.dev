@@ -361,7 +361,7 @@ Map subscriptions can automatically track client and user presence in separate n
     },
     {
       "name": "clients",
-      "subscription_types": ["map"],
+      "subscription_types": ["map_clients"],
       "map_sync_mode": "ephemeral",
       "map_retention_mode": "expiring",
       "map_key_ttl": "60s",
@@ -369,7 +369,7 @@ Map subscriptions can automatically track client and user presence in separate n
     },
     {
       "name": "users",
-      "subscription_types": ["map"],
+      "subscription_types": ["map_users"],
       "map_sync_mode": "ephemeral",
       "map_retention_mode": "expiring",
       "map_key_ttl": "60s",
