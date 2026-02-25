@@ -55,6 +55,12 @@ To enable integration with ClickHouse add the following section to a configurati
 }
 ```
 
+:::caution
+
+Centrifugo PRO supports data export only over ClickHouse native TCP protocol these days.
+
+:::
+
 All ClickHouse analytics options scoped to `clickhouse_analytics` section of configuration.
 
 Toggle this feature using `clickhouse_analytics.enabled` boolean option.

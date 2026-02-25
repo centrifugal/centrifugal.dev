@@ -176,6 +176,12 @@ To enable Snapshots feature you need to turn on admin web UI, enable `snapshots`
 }
 ```
 
+:::caution
+
+Centrifugo PRO supports snapshot export only over ClickHouse native TCP protocol these days.
+
+:::
+
 ## More data in admin UI
 
 * an ability to show: CPU and RSS memory usage of each node, updated in near real-time
