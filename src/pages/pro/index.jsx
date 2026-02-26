@@ -11,6 +11,7 @@ import Highlight from '../components/Highlight'
 import TitleWithCatPro from '../components/TitleWithCatPro'
 import ImageRotator from '../../components/ImageRotator';
 import Pricing from '../components/Pricing';
+import ComparisonTable from '../components/ComparisonTable';
 
 function Feature({ imageUrl, title, children }) {
     const imgUrl = useBaseUrl(imageUrl);
@@ -153,6 +154,7 @@ function Pro() {
                         </div>
                     </div>
                 </section>
+                <ComparisonTable />
             </main >
             <Pricing />
         </Layout >
