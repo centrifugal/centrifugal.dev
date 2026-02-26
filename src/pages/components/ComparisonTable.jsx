@@ -8,13 +8,13 @@ const data = [
         features: [
             { name: 'PUB/SUB, channels, namespaces', oss: true, pro: true },
             { name: 'WebSocket, SSE, HTTP-streaming, WebTransport, GRPC transports', oss: true, pro: true },
+            { name: 'WebSocket bidirectional emulation', oss: true, pro: true },
             { name: 'Stream subscriptions with history, recovery, cache mode', oss: true, pro: true },
             { name: 'Map subscriptions for state sync', oss: 'soon', pro: 'soon' },
             { name: 'Presence & join/leave events', oss: true, pro: true },
-            { name: 'Delta compression', oss: true, pro: true },
-            { name: 'Publication filtering by tags', oss: true, pro: true },
+            { name: 'Delta compression, publication filtering by tags', oss: true, pro: true },
             { name: 'Proxy events (connect, subscribe, publish, RPC)', oss: true, pro: true },
-            { name: 'SDKs for popular languages and frameworks', oss: true, pro: true },
+            { name: 'Official real-time SDKs for popular languages', oss: true, pro: true },
         ],
     },
     {
@@ -53,7 +53,7 @@ const data = [
         ],
     },
     {
-        category: 'Scalability',
+        category: 'Scalability and performance',
         comment: 'Lower costs and handle more with fewer resources',
         features: [
             { name: 'Scale with Redis, Redis Cluster and NATS', oss: true, pro: true },
@@ -74,7 +74,7 @@ const data = [
                 description: 'Enable delta compression for at-most-once delivery by keeping the latest publication in node memory. Reduces outgoing bandwidth without requiring history or recovery to be enabled.',
             },
             {
-                name: 'Message batching control', pro: true, link: '/docs/pro/client_message_batching',
+                name: 'Advanced message write and batching', pro: true, link: '/docs/pro/client_message_batching',
                 description: 'Configure write_delay to collect messages before sending, trading delivery latency for reduced CPU. Can cut overall cluster CPU usage by half for high message rate scenarios.',
             },
         ],
@@ -121,8 +121,8 @@ const data = [
         ],
     },
     {
-        category: 'Channel Events',
-        comment: 'React to what is happening in your channels instantly',
+        category: 'Additional APIs and events',
+        comment: 'Extended server-side APIs and channel events for deeper integration',
         features: [
             {
                 name: 'Channel state events (occupied/vacated)', pro: true, link: '/docs/pro/channel_state_events', preview: true,
@@ -132,12 +132,6 @@ const data = [
                 name: 'Cache empty events', pro: true, link: '/docs/pro/channel_cache_empty',
                 description: 'Proxy notification when a client in cache recovery mode finds no publication in the channel history stream, allowing your backend to populate the cache on demand.',
             },
-        ],
-    },
-    {
-        category: 'Additional APIs',
-        comment: 'Extended server-side APIs for deeper integration',
-        features: [
             {
                 name: 'User status API', pro: true, link: '/docs/pro/user_status',
                 description: 'Clients call update_user_status RPC on meaningful actions, storing last active time in Redis. Query status for multiple users at once — useful for showing online indicators in chat apps.',
