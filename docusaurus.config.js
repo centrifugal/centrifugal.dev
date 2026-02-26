@@ -24,7 +24,7 @@ module.exports = {
     },
     image: "img/centrifugo_soc.png",
     metadata: [
-      { name: 'keywords', content: 'centrifugo, real-time messaging, websocket server, pub/sub, push notifications, server-sent events, real-time API, scalable messaging, self-hosted, open source' },
+      { name: 'keywords', content: 'centrifugo, real-time messaging, websocket server, pub/sub, push notifications, server-sent events, real-time API, scalable messaging, self-hosted, open source, AI streaming, LLM response streaming, stream GPT responses, real-time AI chat, AI websocket' },
       { name: 'twitter:card', content: 'summary_large_image' },
       { name: 'twitter:site', content: '@centrifugalabs' },
       { property: 'og:type', content: 'website' },

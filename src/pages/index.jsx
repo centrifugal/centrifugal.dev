@@ -108,7 +108,7 @@ function Home() {
                 "url": "https://centrifugal.dev",
                 "applicationCategory": "DeveloperApplication",
                 "operatingSystem": "Linux, macOS, Windows, Docker, Kubernetes",
-                "description": "Self-hosted real-time messaging server that blasts messages to online users instantly via WebSocket, HTTP-streaming, SSE, WebTransport, or gRPC. Channel-based PUB/SUB with stream recovery, presence, delta compression, flexible auth, JSON or binary Protobuf protocol, and great observability. Scales out-of-the-box to millions of connections.",
+                "description": "Self-hosted real-time messaging server that blasts messages to online users instantly via WebSocket, HTTP-streaming, SSE, WebTransport, or gRPC. Perfect for chats, live updates, streaming AI/LLM responses, multiplayer games, and dashboards. Channel-based PUB/SUB with stream recovery, presence, delta compression, flexible auth, and great observability. Scales to millions of connections.",
                 "offers": {
                   "@type": "Offer",
                   "price": "0",
