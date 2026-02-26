@@ -1,6 +1,7 @@
 import React from "react";
 import clsx from "clsx";
 import Layout from "@theme/Layout";
+import Head from "@docusaurus/Head";
 import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import useBaseUrl from "@docusaurus/useBaseUrl";
@@ -68,6 +69,30 @@ function Pro() {
             title={tagline}
             description="Centrifugo PRO - the full power of self-hosted real-time messaging. An enhanced version of Centrifugo that includes a set of unique features, additional APIs, faster performance and more flexible scalability."
         >
+            <Head>
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "SoftwareApplication",
+                        "name": "Centrifugo PRO",
+                        "url": "https://centrifugal.dev/pro",
+                        "applicationCategory": "DeveloperApplication",
+                        "operatingSystem": "Linux, macOS, Windows, Docker, Kubernetes",
+                        "description": "Enhanced version of Centrifugo — a self-hosted real-time messaging server. PRO unlocks push notifications, ClickHouse analytics, real-time tracing, rate limiting, SSO, channel state events, and performance optimizations for production workloads at scale.",
+                        "featureList": "Channel capabilities & CEL expressions, Channel patterns, Operation rate limiting, User blocking API, Token revocation & invalidation, Multiple JWKS providers, Server API JWKS authentication, Per-namespace engines, Singleflight & shared position sync, Performance optimizations, Bandwidth optimizations, Advanced message write and batching, ClickHouse analytics, Real-time channel & user tracing, Connection & channel snapshots, SSO/OIDC for admin UI, Enhanced metrics, Push notifications (FCM, APNs, HMS), Device token management & topics, Channel state events, Cache empty events, User status API, Connections API, Prioritized support",
+                        "offers": {
+                            "@type": "Offer",
+                            "priceCurrency": "EUR",
+                            "availability": "https://schema.org/InStock"
+                        },
+                        "author": {
+                            "@type": "Organization",
+                            "name": "Centrifugal Labs LTD",
+                            "url": "https://centrifugal.dev"
+                        }
+                    })}
+                </script>
+            </Head>
             <Header />
             <main>
                 < Highlight

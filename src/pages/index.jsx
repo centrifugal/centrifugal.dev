@@ -1,6 +1,7 @@
 import React from "react";
 import clsx from "clsx";
 import Layout from "@theme/Layout";
+import Head from "@docusaurus/Head";
 import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import useBaseUrl from "@docusaurus/useBaseUrl";
@@ -84,6 +85,44 @@ function Home() {
       title={tagline}
       description="Centrifugo is an open source server designed to help building interactive real-time messaging applications. Think chats, live comments, multiplayer games, streaming metrics etc. Centrifugo provides a variety of real-time transports, scales well and integrates with any application."
     >
+      <Head>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "Organization",
+                "name": "Centrifugal Labs LTD",
+                "url": "https://centrifugal.dev",
+                "logo": "https://centrifugal.dev/img/logo.svg",
+                "description": "Centrifugal Labs powers real-time magic. The flagship product is Centrifugo — a self-hosted real-time messaging server, stack-agnostic and integrates with any frontend or backend technology.",
+                "sameAs": [
+                  "https://github.com/centrifugal",
+                  "https://twitter.com/centrifugalabs",
+                  "https://discord.gg/tYgADKx"
+                ]
+              },
+              {
+                "@type": "SoftwareApplication",
+                "name": "Centrifugo",
+                "url": "https://centrifugal.dev",
+                "applicationCategory": "DeveloperApplication",
+                "operatingSystem": "Linux, macOS, Windows, Docker, Kubernetes",
+                "description": "Self-hosted real-time messaging server that blasts messages to online users instantly via WebSocket, HTTP-streaming, SSE, WebTransport, or gRPC. Channel-based PUB/SUB with stream recovery, presence, delta compression, flexible auth, JSON or binary Protobuf protocol, and great observability. Scales out-of-the-box to millions of connections.",
+                "offers": {
+                  "@type": "Offer",
+                  "price": "0",
+                  "priceCurrency": "EUR"
+                },
+                "author": {
+                  "@type": "Organization",
+                  "name": "Centrifugal Labs LTD"
+                }
+              }
+            ]
+          })}
+        </script>
+      </Head>
       <Header />
       <ProBanner />
       <main>
