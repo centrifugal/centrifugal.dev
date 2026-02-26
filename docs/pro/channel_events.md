@@ -17,6 +17,12 @@ This feature is **in the preview state now**. We still need some time before it 
 
 To enable the feature you must use `redis` engine. Also, only channels with `presence` enabled may deliver channel state notifications. When enabling channel state proxy Centrifugo PRO starts using another approach to create Redis keys for presence for namespaces where channel state events enabled, this is an important implementation detail.
 
+:::caution
+
+When using client-side Redis sharding (multiple Redis shard addresses), changing the number of shards while the system has active state will result in temporary event loss. Some partitions will be routed to different shards after the change, but their data (presence entries, pending vacated events, event streams) remains on the old shards. This leads to missed `vacated` events and orphaned state. The system will recover as clients reconnect and re-establish presence, but channels where all clients have already disconnected will never receive a `vacated` event. If this is acceptable, the change can be made while the system operates. Otherwise, consider using Redis Cluster instead — it handles slot migration transparently and is fully compatible with this feature.
+
+:::
+
 So the minimal config can look like this (`occupied` and `vacated` events for channels in `chat` namespace will be sent to `channel.proxy.state.endpoint`):
 
 ```json title=config.json
@@ -41,7 +47,7 @@ So the minimal config can look like this (`occupied` and `vacated` events for ch
 }
 ```
 
-The proxy endpoint is an extension of [Centrifugo OSS proxy](../server/proxy.md) and proto definitions may be found in the same [proxy.proto](https://github.com/centrifugal/centrifugo/blob/master/internal/proxyproto/proxy.proto) file - see `NotifyChannelState` rpc. Example of the payload your backend request handler will receive:
+The proxy endpoint is an extension of [Centrifugo OSS proxy](../server/proxy.md) and supports both HTTP and GRPC transports. For GRPC, use the `grpc://` prefix in the endpoint URL. Proto definitions may be found in the [proxy.proto](https://github.com/centrifugal/centrifugo/blob/master/internal/proxyproto/proxy.proto) file - see `NotifyChannelState` rpc. Example of the payload your backend HTTP request handler will receive:
 
 ```json
 {
@@ -53,8 +59,91 @@ The proxy endpoint is an extension of [Centrifugo OSS proxy](../server/proxy.md)
 
 Payload may contain a batch of events, that's why `events` is an array – this is important for achieving a high event throughput. Your backend must be fast enough to keep up with the events rate and volume, otherwise event queues will grow and eventually new events will be dropped by Centrifugo PRO.
 
-Respond with empty object without `error` set to let Centrifugo PRO know that events were processed successfully.
+Respond with empty result object, without `error` object set to let Centrifugo PRO know that events were processed successfully. If the request to the backend fails or the response contains an `error` object, Centrifugo PRO will retry sending events with exponential backoff (from 100ms up to 20s).
 
-If last channel client resubscribes to a channel fast (during 5 secs) – then Centrifugo PRO won't send `vacated` events. If client does not resubscribe during 5 secs - event will be sent. So `vacated` events always delivered with a delay. This is implemented in such way to avoid unnecessary webhooks for quick reconnect scenarios.
+Here is an example of an HTTP handler for processing channel state events using Flask:
 
-Centrifugo PRO does the best effort delivering channel state events, making retries when the backend endpoint is unavailable (with exponential backoff), also survives cases when Centrifugo node dies unexpectedly. But there are rare scenarios, when notifications may be lost – like when data lost in Redis. For such cases we recommend syncing the state periodically looking at channel presence information using server API – this depends on the use case though.
+```python
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+@app.route('/centrifugo/channel_events', methods=['POST'])
+def channel_events():
+    body = request.get_json()
+    for event in body.get('events', []):
+        channel = event['channel']
+        event_type = event['type']
+        time_ms = event['time_ms']
+        if event_type == 'occupied':
+            print(f'Channel {channel} occupied at {time_ms}')
+            # First subscriber joined the channel - allocate resources, etc.
+        elif event_type == 'vacated':
+            print(f'Channel {channel} vacated at {time_ms}')
+            # Last subscriber left the channel - clean up resources, etc.
+    return jsonify({'result': {}})
+
+if __name__ == '__main__':
+    app.run(port=3000)
+```
+
+When the last subscriber leaves a channel, Centrifugo PRO delays the `vacated` event by a configurable interval (default `5s`) before sending it. If a client resubscribes during this interval, the `vacated` event is cancelled. This avoids unnecessary webhooks for quick reconnect scenarios. These are configurable via `channel_state` options. `num_partitions` (default `128`) sets the number of isolated partitions used to serialize channel state events in the system.
+
+:::caution
+
+`num_partitions` must not be changed after the system is already operating with active channels. Changing it alters the channel-to-partition mapping, which means existing state in Redis (presence data, pending vacated events, event streams) becomes orphaned on old partitions. This will result in missed `vacated` events for currently occupied channels and possible spurious `occupied`/`vacated` pairs as clients reconnect. The system will recover as clients reconnect and rebuild presence state, but channels where all clients have already disconnected will never receive a `vacated` event. If this is acceptable, the change can be made while the system operates. Otherwise, plan the value before going to production and keep it fixed.
+
+:::
+
+```json title="config.json"
+{
+  "engine": {
+    "type": "redis",
+    "redis": {
+      "channel_state": {
+        "vacated_event_delay": "10s",
+        "num_partitions": 128
+      }
+    }
+  }
+}
+```
+
+:::caution
+
+Redis used for channel state events should be configured with `maxmemory-policy noeviction` (or a `volatile-*` policy). The feature relies on several Redis keys without TTL (event streams, pending vacated queues, expiration tracking sets). If Redis evicts these keys under memory pressure, events will be permanently lost — occupied channels may never receive `vacated` events. Consider using a [separate presence manager](../server/engines.md#presence_manager) with a dedicated Redis instance for namespaces with channel state events enabled — this isolates memory usage from the main engine Redis and gives you full control over eviction policy.
+
+:::
+
+For example, to use a dedicated Redis instance for presence with channel state events:
+
+```json title="config.json"
+{
+  "engine": {
+    "type": "redis"
+  },
+  "presence_manager": {
+    "enabled": true,
+    "type": "redis",
+    "redis": {
+      "address": "localhost:6380"
+    }
+  },
+  "channel": {
+    "proxy": {
+      "state": {
+        "endpoint": "http://localhost:3000/centrifugo/channel_events"
+      }
+    },
+    "namespaces": [
+      {
+        "name": "chat",
+        "presence": true,
+        "state_proxy_enabled": true
+      }
+    ]
+  }
+}
+```
+
+Centrifugo PRO does the best effort delivering channel state events, making retries when the backend endpoint is unavailable (with exponential backoff), also survives cases when Centrifugo node dies unexpectedly. But there are scenarios when events may be lost — some of them are described above (Redis eviction, configuration changes). Even as best-effort notifications, channel state events can be very useful for applications — for example, to lazily clean up resources or update external state when channels become empty. For cases where stronger consistency is required, we recommend periodically syncing state by querying channel presence information using the server API.

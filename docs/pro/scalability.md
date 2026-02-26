@@ -74,7 +74,7 @@ This extends scalability options and may be very handy to stay on lower resource
 
 ### Subscribe on replica
 
-It's supported in by Redis Engine and Redis Broker (only for Redis Sentinel and Redis Cluster setups).
+It's supported by Redis Engine and Redis Broker (only for Redis Sentinel and Redis Cluster setups).
 
 You need to enable `replica_client` in Redis configuration and set `subscribe_on_replica` boolean option:
 
@@ -122,7 +122,7 @@ The same may be used when configuring a separate Redis Presence Manager.
 
 ## Redis Cluster sharded PUB/SUB
 
-Sharded PUB/SUB [was introduced in Redis 7.0](https://redis.io/docs/latest/develop/interact/pubsub/#sharded-pubsub) as an attempt to fix the problem with PUB/SUB scalability in Redis Cluster. With normal PUB/SUB all publications are spread towards all nodes of cluster. This makes Cluster PUB/SUB throughput less with adding more nodes to the cluster. The utilization of Redis shards is usually unequal when using PUB/SUB in Redis Cluster as subscriptions land to one of the shards. In sharded PUB/SUB case channel keyspace is devided to slots in the same way as normal keys, and PUB/SUB is splitted over Redis Cluster nodes based on channel name.
+Sharded PUB/SUB [was introduced in Redis 7.0](https://redis.io/docs/latest/develop/interact/pubsub/#sharded-pubsub) as an attempt to fix the problem with PUB/SUB scalability in Redis Cluster. With normal PUB/SUB all publications are spread towards all nodes of cluster. This makes Cluster PUB/SUB throughput less with adding more nodes to the cluster. The utilization of Redis shards is usually unequal when using PUB/SUB in Redis Cluster as subscriptions land to one of the shards. In sharded PUB/SUB case channel keyspace is divided to slots in the same way as normal keys, and PUB/SUB is split over Redis Cluster nodes based on channel name.
 
 ![](/img/redis_cluster_sharded_pub_sub.png)
 

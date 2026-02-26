@@ -33,7 +33,7 @@ Meta claims extraction is configured using the `meta_from_claim` [StringKeyValue
 
 Let's say we have the following configuration:
 
-```yaml
+```json
 {
     "client": {
         "token": {

@@ -53,7 +53,7 @@ Centrifugo processes caps objects till it finds a match to a channel. At this po
 }
 ```
 
-Here we have two entries for channel `news`, but when client subscribes on `news` only the first entry will be taken into considiration by Centrifugo – so Subscription attempt will be rejected (since first cap object does not have `sub` capability). In real life you don't really want to have cap objects with identical channels – but below we will introduce wildcard matching where understanding how caps processed becomes important.
+Here we have two entries for channel `news`, but when client subscribes on `news` only the first entry will be taken into consideration by Centrifugo – so Subscription attempt will be rejected (since first cap object does not have `sub` capability). In real life you don't really want to have cap objects with identical channels – but below we will introduce wildcard matching where understanding how caps processed becomes important.
 
 Another example:
 
@@ -91,7 +91,7 @@ One could expect that client will have `["sub", "pub", "hst", "prs"]` capabiliti
 
 The processing behaves like this to avoid potential problems with possibly conflicting matches (mostly when using wildcard and regex matching – see below) and still allow overriding capabilities for specific channels.
 
-### Expiration considirations
+### Expiration considerations
 
 * In JWT auth case – capabilities in JWT will work till token expiration, that's why it's important to keep reasonably small token expiration times. We can recommend using sth like 5-10 mins as a good expiration value, but of course this is application specific.
 * In connect proxy case – capabilities will work until client connection close (disconnect) or connection refresh triggered (with refresh proxy you can provide an updated set of capabilities).
@@ -155,7 +155,7 @@ Of course it's possible to combine different types of match inside one `caps` ar
             "channels": ["^posts_[\d]+$"],
             "match": "regex",
             "allow": ["sub"]
-        }
+        },
         {
             "channels": ["user_42"],
             "allow": ["sub"]
@@ -203,7 +203,7 @@ Subscription token already belongs to a channel (it has a `channel` claim). So u
 
 Putting `sub` permission to the Subscription token does not make much sense – Centrifugo only expects valid token for a subscription permission check.
 
-### Expiration considirations
+### Expiration considerations
 
 * In JWT auth case – capabilities in subscription JWT will work till token expiration, that's why it's important to keep reasonably small token expiration times. We can recommend using sth like 5-10 mins as a good expiration value, but of course this is application specific.
 * In subscribe proxy case – capabilities will work until client unsubscribe (or connection close).

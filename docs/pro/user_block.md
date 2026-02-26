@@ -41,7 +41,7 @@ Blocking data can be kept in Redis. To enable this configuration should be:
 
 :::danger
 
-Unlike many other Redis features in Centrifugo consistent sharding is not supported for blocking data. The reason is that we don't want to loose blocking information when additional Redis node added. So only one Redis shard can be provided for `user_block` feature. This should be fine given that working set of blocked users should be reasonably small and old entries expire. If you try to set several Redis shards here Centrifugo will exit with an error on start.
+Unlike many other Redis features in Centrifugo consistent sharding is not supported for blocking data. The reason is that we don't want to lose blocking information when additional Redis node added. So only one Redis shard can be provided for `user_block` feature. This should be fine given that working set of blocked users should be reasonably small and old entries expire. If you try to set several Redis shards here Centrifugo will exit with an error on start.
 
 :::
 

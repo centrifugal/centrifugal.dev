@@ -52,7 +52,7 @@ Revocation data can be kept in Redis. To enable this configuration should be:
 
 :::danger
 
-Unlike many other Redis features in Centrifugo consistent sharding is not supported for revocation data. The reason is that we don't want to loose revocation information when additional Redis node added. So only one Redis shard can be provided for `token_revoke` and `user_tokens_invalidate` features. This should be fine given that working set of revoked entities should be reasonably small and old entries expire. If you try to set several Redis shards here Centrifugo will exit with an error on start.
+Unlike many other Redis features in Centrifugo consistent sharding is not supported for revocation data. The reason is that we don't want to lose revocation information when additional Redis node added. So only one Redis shard can be provided for `token_revoke` and `user_tokens_invalidate` features. This should be fine given that working set of revoked entities should be reasonably small and old entries expire. If you try to set several Redis shards here Centrifugo will exit with an error on start.
 
 :::
 
@@ -89,7 +89,7 @@ To enable this configuration should be like:
 
 ### revoke_token
 
-Allows revoking individual tokens. For example, this may be useful when token leakage has been detected and you want to revoke access for a particular tokens. BTW Centrifugo PRO provides `user_connections` API which has an information about tokens for active users connections (if set in JWT). 
+Allows revoking individual tokens. For example, this may be useful when token leakage has been detected and you want to revoke access for a particular token. BTW Centrifugo PRO provides `user_connections` API which has an information about tokens for active users connections (if set in JWT). 
 
 :::caution
 

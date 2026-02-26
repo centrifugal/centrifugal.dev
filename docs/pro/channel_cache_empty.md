@@ -60,7 +60,7 @@ Or if you want to use it in the namespace `example`:
     },
     "namespaces": [{
       "name": "example",
-      "cache_empty_proxy_enabled": "unified"
+      "cache_empty_proxy_enabled": true
     }]
   }
 }

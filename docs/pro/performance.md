@@ -5,7 +5,7 @@ title: Faster performance
 
 <img src="/img/logo_animated_fast.svg" width="100px" height="100px" align="left" style={{'marginRight': '10px', 'float': 'left'}} />
 
-Centrifugo PRO has performance improvements for several server parts. These improvements can help to reduce tail end-to-end latencies in the application, increase server throughput and/or reduce CPU usage on server machines. Our open-source version has a decent performance by itself, with PRO improvements Cenrifugo steps even further.
+Centrifugo PRO has performance improvements for several server parts. These improvements can help to reduce tail end-to-end latencies in the application, increase server throughput and/or reduce CPU usage on server machines. Our open-source version has a decent performance by itself, with PRO improvements Centrifugo steps even further.
 
 ## Faster connections runtime
 
@@ -111,7 +111,7 @@ Centrifugo PRO provides an integer option `websocket.compression_prepared_messag
 }
 ```
 
-This can significantly improve CPU and memory Centrifufo resource usage when using [WebSocket compression feature](../transports/websocket.md#websocketcompression).
+This can significantly improve CPU and memory Centrifugo resource usage when using [WebSocket compression feature](../transports/websocket.md#websocketcompression).
 
 Check out blog post [Performance optimizations of WebSocket compression in Go application](/blog/2024/08/19/optimizing-websocket-compression) which describes the possible effect of this optimization.
 

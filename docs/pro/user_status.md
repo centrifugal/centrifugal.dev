@@ -133,7 +133,7 @@ curl --header "Content-Type: application/json" \
   http://localhost:8000/api/delete_user_status
 ```
 
-#### DeleteUserStatusResult
+#### DeleteUserStatusRequest
 
 | Parameter name | Parameter type  | Required | Description                        |
 |----------------|-----------------|----------|------------------------------------|
@@ -160,7 +160,7 @@ To enable Redis user status feature:
 
 Redis configuration for user status feature matches Centrifugo Redis engine configuration. So Centrifugo supports client-side consistent sharding to scale Redis, Redis Sentinel, Redis Cluster for user status feature too.
 
-It's also possible to reuse Centrifugo Redis engine by setting `use_redis_from_engine` option instead of custom throttling Redis address declaration, like this:
+It's also possible to reuse Centrifugo Redis engine by setting `reuse_from_engine` option instead of custom Redis address declaration, like this:
 
 ```json title="config.json"
 {
@@ -170,7 +170,7 @@ It's also possible to reuse Centrifugo Redis engine by setting `use_redis_from_e
   "user_status": {
     "enabled": true,
     "redis": {
-      "use_from_engine": true
+      "reuse_from_engine": true
     }
   }
 }
@@ -178,7 +178,7 @@ It's also possible to reuse Centrifugo Redis engine by setting `use_redis_from_e
 
 In this case Redis active status will simply connect to Redis instances configured for Centrifugo Redis engine.
 
-`expire_interval` is a [duration](../server/configuration.md#duration-type) for how long Redis keys will be kept for each user. Expiration time extended on every update. By default expiration time is 31 day. To set it to 1 day:
+`expire_interval` is a [duration](../server/configuration.md#duration-type) for how long Redis keys will be kept for each user. Expiration time extended on every update. By default expiration time is 30 days. To set it to 1 day:
 
 ```json title="config.json"
 {

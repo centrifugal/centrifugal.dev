@@ -522,7 +522,7 @@ Issue queries:
 
 ## How export works
 
-When ClickHouse analytics enabled Centrifugo nodes start exporting events to ClickHouse. Each node issues insert with events once in 10 seconds (flushing collected events in batches thus making insertion in ClickHouse efficient). Maximum batch size is 100k for each table at the momemt. If insert to ClickHouse failed Centrifugo retries it once and then buffers events in memory (up to 1 million entries). If ClickHouse still unavailable after collecting 1 million events then new events will be dropped until buffer has space. These limits are configurable. Centrifugo PRO uses very efficient code for writing data to ClickHouse, so analytics feature should only add a little overhead for Centrifugo node.
+When ClickHouse analytics enabled Centrifugo nodes start exporting events to ClickHouse. Each node issues insert with events once in 10 seconds (flushing collected events in batches thus making insertion in ClickHouse efficient). Maximum batch size is 100k for each table at the moment. If insert to ClickHouse failed Centrifugo retries it once and then buffers events in memory (up to 1 million entries). If ClickHouse still unavailable after collecting 1 million events then new events will be dropped until buffer has space. These limits are configurable. Centrifugo PRO uses very efficient code for writing data to ClickHouse, so analytics feature should only add a little overhead for Centrifugo node.
 
 ## Exposed metrics
 
