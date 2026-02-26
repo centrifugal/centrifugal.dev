@@ -1,4 +1,5 @@
 ---
+description: "How Centrifugo compares to Socket.IO, Pusher, Ably, PubNub, Redis, Kafka, and Nats. Key differences and unique advantages of Centrifugo explained."
 id: comparisons
 title: Comparing with others
 ---

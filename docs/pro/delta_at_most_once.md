@@ -1,4 +1,5 @@
 ---
+description: "Enable delta compression for at most once delivery in Centrifugo PRO using the keep_latest_publication option to reduce channel bandwidth."
 id: delta_at_most_once
 sidebar_label: Delta for at most once
 title: Delta compression for at most once scenario

@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo PRO scalability features: singleflight, shared position sync, Redis replica offloading, sharded PUB/SUB, per-namespace engines, and custom controllers."
 id: scalability
 title: Scalability optimizations
 ---

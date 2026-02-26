@@ -1,4 +1,5 @@
 ---
+description: "Trace real-time messages by channel or user ID in Centrifugo PRO. Debug and inspect client protocol frames live via admin UI or terminal."
 id: tracing
 title: User and channel tracing
 ---

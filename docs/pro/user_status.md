@@ -1,4 +1,5 @@
 ---
+description: "Track user online and activity status in Centrifugo PRO with the Redis-backed User Status API. Query bulk statuses for chat presence indicators."
 id: user_status
 title: User status API
 ---

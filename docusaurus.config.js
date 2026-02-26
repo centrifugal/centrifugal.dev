@@ -23,6 +23,12 @@ module.exports = {
       defaultMode: "dark"
     },
     image: "img/centrifugo_soc.png",
+    metadata: [
+      { name: 'keywords', content: 'centrifugo, real-time messaging, websocket server, pub/sub, push notifications, server-sent events, real-time API, scalable messaging, self-hosted, open source' },
+      { name: 'twitter:card', content: 'summary_large_image' },
+      { name: 'twitter:site', content: '@centrifugalabs' },
+      { property: 'og:type', content: 'website' },
+    ],
     navbar: {
       hideOnScroll: true,
       title: "Centrifugo",

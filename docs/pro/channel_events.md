@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo PRO channel state events send occupied and vacated webhooks when subscribers join or leave channels. Requires Redis engine."
 id: channel_state_events
 sidebar_label: Channel state events
 title: Channel state events

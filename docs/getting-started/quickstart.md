@@ -1,4 +1,5 @@
 ---
+description: "Build your first real-time app with Centrifugo. Step-by-step tutorial covering WebSocket connections, channel subscriptions, and publishing messages."
 id: quickstart
 sidebar_label: Quickstart tutorial
 title: Quickstart tutorial ⏱️

@@ -1,4 +1,5 @@
 ---
+description: "Guide to migrating from Centrifugo v5 to v6. Includes configuration file converter, environment variable converter, and SockJS removal notes."
 id: migration_v6
 title: Migrating to v6
 ---

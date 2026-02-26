@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo PRO observability enhancements: client name metrics, channel namespace resolution, transport protocol labels, and Sentry integration."
 id: observability_enhancements
 title: Observability enhancements
 ---

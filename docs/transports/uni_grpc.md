@@ -1,4 +1,5 @@
 ---
+description: "Connect to Centrifugo via unidirectional gRPC streaming for real-time messages. Setup, Protobuf definitions, TLS config, and usage examples."
 id: uni_grpc
 title: Unidirectional GRPC
 sidebar_label: GRPC

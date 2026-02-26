@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo JWT authentication for client connections. Supports HMAC, RSA, ECDSA algorithms, JWK/JWKS, token expiration, and key rotation mechanisms."
 id: authentication
 title: Client JWT authentication
 ---

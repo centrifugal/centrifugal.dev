@@ -1,4 +1,5 @@
 ---
+description: "Implement transactional outbox and CDC with Kafka Connect for reliable real-time event delivery from PostgreSQL to Centrifugo without message loss."
 id: outbox_cdc
 sidebar_label: "Broadcast: outbox and CDC"
 title: "Broadcast using transactional outbox and CDC"

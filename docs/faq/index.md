@@ -1,4 +1,5 @@
 ---
+description: "Frequently asked questions about Centrifugo: connection limits, scaling with Redis, memory usage, channel best practices, message delivery, and troubleshooting."
 id: faq_index
 title: Frequently Asked Questions
 ---

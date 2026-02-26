@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo PRO distributed rate limit API provides a Redis-based token bucket with millisecond precision for custom quota management tasks."
 id: distributed_rate_limit
 title: Distributed rate limit API
 ---

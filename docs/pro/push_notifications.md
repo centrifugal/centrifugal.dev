@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo PRO push notification API manages device tokens and sends notifications via FCM, APNs, and HMS to Android, iOS, and web platforms."
 id: push_notifications
 sidebar_label: Push notification API
 title: Push notification API

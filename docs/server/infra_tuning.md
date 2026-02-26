@@ -1,4 +1,5 @@
 ---
+description: "Tune your server infrastructure for Centrifugo. Covers open file limits, ephemeral port exhaustion, TIME_WAIT sockets, proxy settings, and DDoS protection."
 id: infra_tuning
 title: Infrastructure tuning
 ---

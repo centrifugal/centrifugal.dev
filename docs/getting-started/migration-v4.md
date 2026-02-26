@@ -1,4 +1,5 @@
 ---
+description: "Guide to migrating from Centrifugo v3 to v4. Covers client SDK updates, new protocol adoption, namespace security changes, and subscription tokens."
 id: migration_v4
 title: Migrating to v4
 ---

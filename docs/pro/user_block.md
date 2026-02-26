@@ -1,4 +1,5 @@
 ---
+description: "Block and unblock abusive users instantly with the Centrifugo PRO user blocking API. Supports Redis and PostgreSQL persistence engines."
 id: user_block
 title: User blocking API
 ---

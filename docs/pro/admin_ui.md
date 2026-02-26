@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo PRO admin UI features: SSO via OpenID Connect, real-time channel and connection snapshots, and enhanced system state monitoring."
 id: admin_ui
 sidebar_label: "Admin UI: SSO, Snapshots"
 title: "Admin UI: SSO, State Snapshots, and more"

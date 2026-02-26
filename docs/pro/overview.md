@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo PRO is the enhanced commercial version with push notifications, real-time analytics, rate limiting, SSO, tracing, and enterprise features."
 id: overview
 title: Centrifugo PRO ♻️
 sidebar_label: Centrifugo PRO

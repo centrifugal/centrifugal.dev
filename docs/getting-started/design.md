@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo architecture and design overview. Covers idiomatic usage patterns, message delivery model, history considerations, and scalability guidelines."
 id: design
 title: Design overview
 ---

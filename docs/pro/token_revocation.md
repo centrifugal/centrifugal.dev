@@ -1,4 +1,5 @@
 ---
+description: "Revoke individual JWT tokens or invalidate all user tokens by issue time using the Centrifugo PRO token revocation API with Redis or PostgreSQL persistence."
 id: token_revocation
 title: Token revocation API
 ---

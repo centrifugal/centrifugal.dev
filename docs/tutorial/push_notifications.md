@@ -1,4 +1,5 @@
 ---
+description: "Add web push notifications to a Centrifugo chat app using Centrifugo PRO push API and Firebase Cloud Messaging (FCM) with service workers."
 id: push_notifications
 sidebar_label: "Appx #4: Adding push notifications"
 title: "Appendix #4: Adding push notifications"

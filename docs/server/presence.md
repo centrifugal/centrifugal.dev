@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo online presence feature for tracking active channel subscribers in real-time. Includes join/leave events, custom info, and client-side retrieval."
 id: presence
 title: Online presence
 ---

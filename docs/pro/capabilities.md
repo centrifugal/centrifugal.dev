@@ -1,4 +1,5 @@
 ---
+description: "Control channel permissions per connection or subscription in Centrifugo PRO using capabilities with wildcard and regex matching support."
 id: capabilities
 title: Channel capabilities
 ---

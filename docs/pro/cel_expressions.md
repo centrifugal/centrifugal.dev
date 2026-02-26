@@ -1,4 +1,5 @@
 ---
+description: "Use CEL expressions in Centrifugo PRO for efficient channel permission checks on subscribe, publish, history, and presence operations."
 id: cel_expressions
 sidebar_label: Channel CEL expressions
 title: Channel CEL expressions

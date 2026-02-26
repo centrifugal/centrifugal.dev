@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo publication filtering by tags. Reduce bandwidth by delivering only matching messages to subscribers using server-side filter expressions."
 id: publication_filtering
 sidebar_label: Publication filtering
 title: Channel publication filtering

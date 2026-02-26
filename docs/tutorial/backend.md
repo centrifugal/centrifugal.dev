@@ -1,4 +1,5 @@
 ---
+description: "Set up a Django backend with PostgreSQL, REST API endpoints, and Docker Compose for the Centrifugo real-time chat tutorial application."
 id: backend
 sidebar_label: "Setting up backend and database"
 title: "Setting up backend and database"

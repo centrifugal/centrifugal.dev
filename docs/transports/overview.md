@@ -1,4 +1,5 @@
 ---
+description: "Overview of Centrifugo real-time transports: bidirectional and unidirectional options, including WebSocket, SSE, HTTP streaming, and ping/pong configuration."
 id: overview
 title: Real-time transports 
 ---

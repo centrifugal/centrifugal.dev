@@ -1,4 +1,5 @@
 ---
+description: "Configure per-namespace brokers and presence managers in Centrifugo PRO. Use Redis, Nats, or mix engines across different channel namespaces."
 id: namespace_engines
 title: Per-namespace engines
 ---

@@ -1,4 +1,5 @@
 ---
+description: "Build a React SPA frontend with TypeScript and Vite for the Centrifugo chat tutorial, including state management, routing, and chat UI components."
 id: frontend
 sidebar_label: "Creating SPA frontend"
 title: "Creating SPA frontend with React"

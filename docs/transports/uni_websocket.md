@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo unidirectional WebSocket transport: simple real-time message consumption without SDK dependency. Configuration, ping, and usage examples."
 id: uni_websocket
 title: Unidirectional WebSocket
 sidebar_label: WebSocket

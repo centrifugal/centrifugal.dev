@@ -1,4 +1,5 @@
 ---
+description: "Configure SSO for Centrifugo PRO admin UI using OpenID Connect (OIDC) with identity providers like Okta, Keycloak, and Azure."
 id: admin_idp_auth
 sidebar_label: SSO for admin UI (OIDC)
 title: SSO for admin UI using OpenID connect (OIDC)

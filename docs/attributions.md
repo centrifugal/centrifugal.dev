@@ -1,4 +1,5 @@
 ---
+description: "Attributions for images and resources used on the Centrifugo documentation website, including landing page icons and their creators."
 id: attributions
 title: Attributions
 hide_table_of_contents: true

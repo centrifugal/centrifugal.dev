@@ -1,4 +1,5 @@
 ---
+description: "Define channel configuration using URL-like patterns with variables in Centrifugo PRO, similar to HTTP route matching in web frameworks."
 id: channel_patterns
 sidebar_label: Channel patterns
 title: Channel patterns

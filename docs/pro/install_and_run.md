@@ -1,4 +1,5 @@
 ---
+description: "Install and run Centrifugo PRO via binary release, Docker, Kubernetes Helm chart, or DEB/RPM packages. Set your license key to unlock all features."
 id: install_and_run
 title: Install and run PRO version
 ---

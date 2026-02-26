@@ -1,4 +1,5 @@
 ---
+description: "Protect your Centrifugo PRO server with operation rate limits per connection or user using in-memory or Redis-based token bucket algorithms."
 id: rate_limiting
 title: Operation rate limits
 ---

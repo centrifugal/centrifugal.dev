@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo client SDK specification: connection states, subscriptions, token auth, presence, history, RPC, and real-time event handling across all SDKs."
 id: client_api
 title: Client SDK specification
 ---

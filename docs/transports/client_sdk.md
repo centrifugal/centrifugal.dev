@@ -1,4 +1,5 @@
 ---
+description: "List of official Centrifugo real-time client SDKs for JavaScript, Go, Dart, Swift, Java, Python, and C# with feature comparison matrix."
 id: client_sdk
 title: Client real-time SDKs
 ---

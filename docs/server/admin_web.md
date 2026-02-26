@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo built-in admin web UI for managing server nodes, publishing messages, viewing stats, and executing API commands. Configuration and setup guide."
 id: admin_web
 title: Admin web UI
 ---

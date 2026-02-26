@@ -1,4 +1,5 @@
 ---
+description: "Summary of Centrifugo concepts covered in the tutorial: JWT auth, channel namespaces, message recovery, broadcasting, and PostgreSQL/Kafka consumers."
 id: outro
 sidebar_label: "Wrapping up – things learnt"
 title: "Wrapping up – things learnt"

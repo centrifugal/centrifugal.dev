@@ -1,4 +1,5 @@
 ---
+description: "Helpful tips for running the Centrifugo GrandChat tutorial: connecting to host Centrifugo from Docker, inspecting Kafka, and managing services."
 id: tips_and_tricks
 sidebar_label: "Appx #2: Tips and tricks"
 title: "Appendix #2: Tips and tricks"

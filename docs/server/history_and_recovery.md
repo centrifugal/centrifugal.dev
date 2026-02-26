@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo channel history and automatic message recovery after disconnects. Covers history iteration API, stream offsets, epochs, and recovery mechanism."
 id: history_and_recovery
 title: History and stream recovery
 ---

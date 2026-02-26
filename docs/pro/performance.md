@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo PRO delivers faster HTTP/GRPC API, optimized proxy, faster JWT decoding, and WebSocket compression improvements to reduce CPU and latency."
 id: performance
 title: Faster performance
 ---

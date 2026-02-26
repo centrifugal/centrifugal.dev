@@ -1,4 +1,5 @@
 ---
+description: "Guide to migrating from Centrifugo v4 to v5. Covers client SDK token behavior changes, new HTTP API format, and removed configuration options."
 id: migration_v5
 title: Migrating to v5
 ---

@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo channel permission model for subscribe, publish, history, and presence operations. Configure access via JWT tokens, proxies, and namespace options."
 id: channel_permissions
 title: Channel permission model
 ---

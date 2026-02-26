@@ -1,4 +1,5 @@
 ---
+description: "Ideas to improve the GrandChat tutorial app: pagination, typing indicators, push notifications, markdown support, AI chatbots, and more."
 id: improvements
 sidebar_label: "Appx #1: Possible improvements"
 title: "Appendix #1: Possible Improvements"

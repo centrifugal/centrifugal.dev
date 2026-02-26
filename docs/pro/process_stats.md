@@ -1,4 +1,5 @@
 ---
+description: "Monitor CPU and RSS memory usage of each Centrifugo PRO node in real time directly from the admin web UI and the info API."
 id: process_stats
 title: CPU and RSS stats
 ---

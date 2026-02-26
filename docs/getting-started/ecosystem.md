@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo ecosystem overview. Centrifuge Go library for custom servers and framework integrations for Laravel, Symfony, Django, and more."
 id: ecosystem
 title: Ecosystem notes
 ---

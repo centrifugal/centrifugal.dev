@@ -1,4 +1,5 @@
 ---
+description: "Enable HTTP streaming in Centrifugo as a bidirectional WebSocket fallback using chunked transfer encoding with the JavaScript SDK."
 id: http_stream
 title: HTTP streaming, with bidirectional emulation
 sidebar_label: HTTP streaming

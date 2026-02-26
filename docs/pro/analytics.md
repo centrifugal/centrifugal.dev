@@ -1,4 +1,5 @@
 ---
+description: "Export real-time analytics to ClickHouse with Centrifugo PRO. Track connections, subscriptions, operations, and publications for observability."
 id: analytics
 title: Analytics with ClickHouse
 ---

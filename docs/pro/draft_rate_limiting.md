@@ -1,4 +1,5 @@
 ---
+description: "Configure operation rate limits in Centrifugo PRO per connection, user, or via Redis. Includes namespace overrides and abusive client disconnection."
 id: draft_rate_limiting
 title: Operation rate limits
 ---

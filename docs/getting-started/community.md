@@ -1,4 +1,5 @@
 ---
+description: "Join the Centrifugo community on Telegram and Discord. Find help, share ideas, and stay updated via Twitter/X, YouTube, and announcement channels."
 id: community
 title: Join community
 ---

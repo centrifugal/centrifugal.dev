@@ -1,4 +1,5 @@
 ---
+description: "Overview of the GrandChat tutorial app layout and screens: login, room list, room search, and chat detail with real-time updates via Centrifugo."
 id: layout
 sidebar_label: "App layout and behavior"
 title: "App layout and behavior"
