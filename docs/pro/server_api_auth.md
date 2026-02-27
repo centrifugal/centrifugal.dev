@@ -1,4 +1,5 @@
 ---
+description: "Secure Centrifugo PRO HTTP and GRPC server APIs with JWKS-based JWT authentication from identity providers like Keycloak and Auth0."
 id: server_api_auth
 sidebar_label: Server API JWKS auth
 title: Server API JWKS auth

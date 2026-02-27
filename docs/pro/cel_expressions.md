@@ -1,4 +1,5 @@
 ---
+description: "Use CEL expressions in Centrifugo PRO for efficient channel permission checks on subscribe, publish, history, and presence operations."
 id: cel_expressions
 sidebar_label: Channel CEL expressions
 title: Channel CEL expressions
@@ -69,8 +70,8 @@ Say client with user ID `123` subscribes to a channel `/users/4` which matched t
 | Variable   | Type                | Example                | Description                                                                                                   |
 |------------|---------------------|------------------------|---------------------------------------------------------------------------------------------------------------|
 | subscribed | `bool`              | `false`                | Whether client is subscribed to channel, always `false` for `subscribe` operation                             |
-| user       | `string`            | `"123"`                | Current authenticated user ID (known from from JWT or connect proxy result)                                   |
-| meta       | `map[string]any`    | `{"roles": ["admin"]}` | Meta information attached to the connection by the apllication backend (in JWT or over connect proxy result)  |
+| user       | `string`            | `"123"`                | Current authenticated user ID (known from JWT or connect proxy result)                                        |
+| meta       | `map[string]any`    | `{"roles": ["admin"]}` | Meta information attached to the connection by the application backend (in JWT or over connect proxy result)  |
 | channel    | `string`            | `"/users/4"`           | Channel client tries to subscribe                                                                             |
 | vars       | `map[string]string` | `{"user": "4"}`        | Extracted variables from the matched channel pattern. It's empty in case of using channels without variables. |
 

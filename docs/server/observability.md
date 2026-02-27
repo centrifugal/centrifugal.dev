@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo observability: Prometheus and Graphite metrics, OpenTelemetry tracing for API requests, Grafana dashboard, logging configuration, and all exposed metrics."
 id: observability
 title: Server observability
 ---

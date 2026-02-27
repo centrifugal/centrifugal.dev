@@ -1,4 +1,5 @@
 ---
+description: "Proxy client events from Centrifugo to your backend. Supports connect, subscribe, publish, RPC, and refresh webhooks over HTTP and GRPC protocols."
 id: proxy
 title: Proxy events to the backend
 ---

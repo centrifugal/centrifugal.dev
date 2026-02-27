@@ -1,4 +1,5 @@
 ---
+description: "Benchmark Centrifugo real-time delivery latency for chat rooms with 100 to 100k members. Learn scaling strategies with Redis sharding and partitioning."
 id: scale
 sidebar_label: "Scale to 100k room members"
 title: "Scale to 100k cats in room"

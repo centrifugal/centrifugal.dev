@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo unidirectional HTTP streaming transport: enable chunked transfer encoding for real-time push messages with curl and browser examples."
 id: uni_http_stream
 title: Unidirectional HTTP streaming
 sidebar_label: HTTP streaming

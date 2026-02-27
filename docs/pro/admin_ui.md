@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo PRO admin UI features: SSO via OpenID Connect, real-time channel and connection snapshots, and enhanced system state monitoring."
 id: admin_ui
 sidebar_label: "Admin UI: SSO, Snapshots"
 title: "Admin UI: SSO, State Snapshots, and more"
@@ -135,7 +136,7 @@ This feature allows using admin web UI to inspect current connections and channe
 * Disconnect/Reconnect a specific connection
 * Integrates with Centrifugo PRO [Tracing](./tracing.md) to trace particular channel or particular connection in real-time.
 
-Centrifugo PRO saves snapshot metadata to PostgreSQL database. The connections and channels raw data is effectively inserted to ClickHouse from each node during collection, so there is no expensive inter-node communication. Snapshot raw data in ClickHouse expires in 14 days by default.
+Centrifugo PRO saves snapshot metadata to PostgreSQL database. The connections and channels raw data is effectively inserted to ClickHouse from each node during collection, so there is no expensive inter-node communication. Snapshot raw data in ClickHouse expires in 14 days by default, configurable via `clickhouse_analytics.snapshots.ttl` (e.g. `"14 DAY"`).
 
 <video width="100%" loop={true} autoPlay="autoplay" muted controls src="/img/snapshots_demo.mp4"></video>
 
@@ -159,10 +160,13 @@ To enable Snapshots feature you need to turn on admin web UI, enable `snapshots`
   "clickhouse_analytics": {
     "enabled": true,
     "clickhouse_dsn": [
-      "tcp://default:default@127.0.0.1:9000",
+      "tcp://default:default@127.0.0.1:9000"
     ],
     "clickhouse_database": "centrifugo",
     "clickhouse_cluster": "centrifugo_cluster",
+    "tls": {
+      "enabled": false
+    },
     "snapshots": {
       "enabled": true
     }
@@ -175,6 +179,12 @@ To enable Snapshots feature you need to turn on admin web UI, enable `snapshots`
   }
 }
 ```
+
+:::caution
+
+Centrifugo PRO supports snapshot export only over ClickHouse native TCP protocol these days.
+
+:::
 
 ## More data in admin UI
 

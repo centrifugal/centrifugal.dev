@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo CLI helper commands reference: genconfig, checkconfig, defaultconfig, defaultenv, configdoc, gentoken, gensubtoken, and token validation tools."
 id: console_commands
 title: Helper CLI commands
 ---

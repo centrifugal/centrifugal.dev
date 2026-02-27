@@ -1,4 +1,5 @@
 ---
+description: "Integrate Centrifugo into a chat app with WebSocket connections, JWT authentication, channel subscriptions, and real-time message broadcasting."
 id: centrifugo
 sidebar_label: "Integrating Centrifugo"
 title: "Integrating Centrifugo for real-time event delivery"

@@ -1,4 +1,5 @@
 ---
+description: "Configure Nginx as a reverse proxy to serve frontend, Django backend, and Centrifugo WebSocket endpoints from a single domain using Docker Compose."
 id: reverse_proxy
 sidebar_label: "Adding reverse proxy"
 title: "Adding Nginx as a reverse proxy"

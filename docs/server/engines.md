@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo engines for scalability: Memory and Redis engines, Redis Sentinel, Redis Cluster, sharding, Nats broker, and separate broker/presence configuration."
 id: engines
 title: Engines and scalability
 ---

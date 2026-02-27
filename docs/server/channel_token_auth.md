@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo channel subscription JWT authorization. Learn how to create and use subscription tokens with custom claims for secure channel access."
 id: channel_token_auth
 title: Channel JWT authorization
 ---

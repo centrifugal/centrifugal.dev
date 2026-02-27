@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo is an open-source real-time messaging server for chats, live updates, multiplayer games, streaming AI responses, and more. WebSocket, SSE, HTTP-streaming."
 id: introduction
 title: Centrifugo introduction
 ---

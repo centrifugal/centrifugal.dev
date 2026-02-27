@@ -1,4 +1,5 @@
 ---
+description: "Load balancing Centrifugo with Nginx. Sample configurations for WebSocket proxy on a separate domain or embedded location with connection upgrades."
 id: load_balancing
 title: Load balancing
 ---

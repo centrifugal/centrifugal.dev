@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo unidirectional Server-Sent Events (SSE) transport: receive real-time messages via EventSource API with simple browser integration."
 id: uni_sse
 title: Unidirectional Server-Sent Events (SSE)
 sidebar_label: Server-Sent Events (SSE)

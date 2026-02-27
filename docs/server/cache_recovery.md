@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo cache recovery mode delivers the latest publication on subscribe, enabling real-time key-value cache behavior and reducing backend load."
 id: cache_recovery
 sidebar_label: Cache recovery mode
 title: Cache recovery mode

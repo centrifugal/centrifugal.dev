@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo bidirectional client protocol internals: Protobuf schema, command-reply pattern, async pushes, batching, ping-pong, and error handling."
 id: client_protocol
 title: Client protocol
 ---

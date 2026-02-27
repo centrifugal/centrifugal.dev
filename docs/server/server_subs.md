@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo server-side subscriptions: automatically subscribe connections to channels via JWT, connect proxy, or API. Includes personal channel features."
 id: server_subs
 title: Server-side subscriptions
 ---

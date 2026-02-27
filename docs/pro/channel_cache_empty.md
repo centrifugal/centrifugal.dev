@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo PRO cache empty events notify your backend on cache misses in channels with cache recovery mode, enabling lazy state population."
 id: channel_cache_empty
 sidebar_label: Cache empty events
 title: Channel cache empty events
@@ -60,7 +61,7 @@ Or if you want to use it in the namespace `example`:
     },
     "namespaces": [{
       "name": "example",
-      "cache_empty_proxy_enabled": "unified"
+      "cache_empty_proxy_enabled": true
     }]
   }
 }

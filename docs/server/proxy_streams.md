@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo proxy subscription streams: push data to clients via GRPC streams from your backend. Supports unidirectional and bidirectional streaming."
 id: proxy_streams
 sidebar_label: Proxy subscription streams
 title: Proxy subscription streams

@@ -1,4 +1,5 @@
 ---
+description: "Complete reference for Centrifugo client protocol codes including error codes, unsubscribe codes, and disconnect codes with descriptions and meanings."
 id: codes
 title: Client protocol codes
 ---

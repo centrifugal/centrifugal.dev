@@ -1,4 +1,5 @@
 ---
+description: "Tune Centrifugo PRO message write batching to reduce CPU usage by controlling write delay, queue shrinking, and per-channel batch settings."
 id: client_message_batching
 sidebar_label: Message batching control
 title: Message batching control

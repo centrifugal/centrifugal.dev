@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo PRO client authentication enhancements: extract JWT claims to connection meta and configure multiple JWKS providers for multi-tenant setups."
 id: client_authentication
 title: Client Authentication Enhancements
 sidebar_label: Client authentication
@@ -33,7 +34,7 @@ Meta claims extraction is configured using the `meta_from_claim` [StringKeyValue
 
 Let's say we have the following configuration:
 
-```yaml
+```json
 {
     "client": {
         "token": {

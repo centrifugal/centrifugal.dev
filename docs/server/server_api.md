@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo server API reference for HTTP and GRPC. Publish messages, manage channels, disconnect users, query presence and history from your backend."
 id: server_api
 title: Server API walkthrough
 ---

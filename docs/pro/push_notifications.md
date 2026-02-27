@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo PRO push notification API manages device tokens and sends notifications via FCM, APNs, and HMS to Android, iOS, and web platforms."
 id: push_notifications
 sidebar_label: Push notification API
 title: Push notification API
@@ -659,7 +660,7 @@ List device to topic mapping.
 
 | Field Name    | Type                 | Required | Description                                                                       |
 |---------------|----------------------|----------|-----------------------------------------------------------------------------------|
-| `items`       | `array[DeviceTopic]` | Yes      | A list of DeviceChannel objects                                                   |
+| `items`       | `array[DeviceTopic]` | Yes      | A list of DeviceTopic objects                                                   |
 | `next_cursor` | `string`             | No       | Cursor string for retrieving the next page, if not set - then no next page exists |
 | `total_count` | `integer`            | No       | Total count value (if `include_total_count` used)                                 |
 
@@ -706,7 +707,7 @@ List user to topic mapping.
 |----------------|-----------------|----------|-----------------------------------|
 | `users`        | `array[string]` | No       | List of users to filter results.  |
 | `topics`       | `array[string]` | No       | List of topics to filter results. |
-| `topic_prefix` | `string`        | No       | Channel prefix to filter results. |
+| `topic_prefix` | `string`        | No       | Topic prefix to filter results.   |
 
 #### user_topic_list result
 

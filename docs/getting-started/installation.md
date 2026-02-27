@@ -1,4 +1,5 @@
 ---
+description: "Install Centrifugo server via binary release, Docker, Kubernetes Helm chart, RPM/DEB packages, Homebrew, or build from source. Multi-platform support."
 id: installation
 title: Install Centrifugo
 ---

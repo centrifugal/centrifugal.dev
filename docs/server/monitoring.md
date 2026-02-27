@@ -1,4 +1,5 @@
 ---
+description: "Monitor Centrifugo with Prometheus and Graphite metrics. Includes official Grafana dashboard for visualizing connections, messages, and performance data."
 id: monitoring
 title: Metrics monitoring
 ---

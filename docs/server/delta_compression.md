@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo delta compression reduces bandwidth by sending only differences between successive channel messages using the Fossil delta algorithm."
 id: delta_compression
 sidebar_label: Delta compression
 title: Delta compression in channels

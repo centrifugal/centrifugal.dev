@@ -1,4 +1,5 @@
 ---
+description: "Build a real-time WebSocket chat app from scratch with Centrifugo, Django, React, and PostgreSQL. A comprehensive messenger tutorial beyond the basics."
 id: intro
 sidebar_label: "Real-time app from scratch"
 title: "Building WebSocket chat (messenger) app from scratch"

@@ -1,4 +1,5 @@
 ---
+description: "Add Prometheus and Grafana monitoring to your Centrifugo-powered app using Docker Compose with the official Centrifugo Grafana dashboard."
 id: monitoring
 sidebar_label: "Appx #3: Prometheus and Grafana"
 title: "Appendix #3: Adding Prometheus and Grafana"

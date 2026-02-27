@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo channels and namespaces configuration. Define channel behavior with options for presence, history, recovery, permissions, and more."
 id: channels
 title: Channels and namespaces
 ---

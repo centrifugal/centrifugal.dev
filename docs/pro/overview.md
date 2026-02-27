@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo PRO is the enhanced commercial version with push notifications, real-time analytics, rate limiting, SSO, tracing, and enterprise features."
 id: overview
 title: Centrifugo PRO ♻️
 sidebar_label: Centrifugo PRO
@@ -17,7 +18,7 @@ Centrifugo PRO is packed with the following features:
 * 🛡️ [Operation rate limits](./rate_limiting.md) to protect server from the real-time API misusing and frontend bugs.
 * 🔐 [SSO for admin UI](./admin_ui.md) using OpenID Connect (OIDC) protocol. Also, more data about the system state.
 * 📸 [Channels and connections snapshots](./admin_ui.md#channels-and-connections-snapshots) to drill down into the system state right from admin UI.
-* 🪪 [Extracting meta from JWT claims](./client_authentication#extracting-meta-from-jwt-claims). And [Multiple JWKS providers](./client_authentication#multiple-jwks-providers) for client authentication.
+* 🪪 [Extracting meta from JWT claims](./client_authentication.md#extracting-meta-from-jwt-claims). And [Multiple JWKS providers](./client_authentication.md#multiple-jwks-providers) for client authentication.
 * 🔑 [Server API JWKS auth](./server_api_auth.md) to protect HTTP API with JWT tokens validated against JWKS endpoint.
 * 🟢 [User status API](./user_status.md) feature allows understanding activity state for a list of users.
 * 🔌 [Connections API](./connections.md) to query, filter and inspect active connections.
@@ -48,7 +49,7 @@ We would be happy to learn more about your real-time challenges and how Centrifu
 
 ## Try for free in sandbox mode
 
-You can try out Centrifugo PRO for free. When you start Centrifugo PRO without license key then it's running in a sandbox mode. Sandbox mode limits the usage of Centrifigo PRO in several ways. For example:
+You can try out Centrifugo PRO for free. When you start Centrifugo PRO without license key then it's running in a sandbox mode. Sandbox mode limits the usage of Centrifugo PRO in several ways. For example:
 
 * Centrifugo handles up to 20 concurrent connections
 * up to 2 server nodes supported

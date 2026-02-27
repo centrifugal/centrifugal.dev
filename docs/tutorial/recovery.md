@@ -1,4 +1,5 @@
 ---
+description: "Enable automatic missed message recovery in Centrifugo using history cache to handle disconnections and mass reconnect scenarios reliably."
 id: recovery
 sidebar_label: "Missed messages recovery"
 title: "Missed messages recovery"

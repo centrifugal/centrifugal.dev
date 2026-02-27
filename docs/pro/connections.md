@@ -1,4 +1,5 @@
 ---
+description: "Query and inspect active real-time connections with the Centrifugo PRO Connections API. Filter by user ID or CEL expression with session details."
 id: connections
 title: Connections API
 ---

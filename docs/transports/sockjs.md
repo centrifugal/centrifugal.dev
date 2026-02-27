@@ -1,4 +1,5 @@
 ---
+description: "SockJS transport in Centrifugo: HTTP-based WebSocket fallback with sticky sessions support. Removed in Centrifugo v6 — use modern alternatives."
 id: sockjs
 title: SockJS
 ---

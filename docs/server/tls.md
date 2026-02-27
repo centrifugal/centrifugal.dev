@@ -1,4 +1,5 @@
 ---
+description: "Configure TLS for Centrifugo using certificate files or automatic Let's Encrypt certificates. Includes unified TLS config for GRPC and all endpoints."
 id: tls
 title: Configure TLS
 ---

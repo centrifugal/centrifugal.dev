@@ -1,4 +1,5 @@
 ---
+description: "Experimental WebTransport support in Centrifugo for low-latency bidirectional messaging over HTTP/3 and QUIC. Configuration and usage guide."
 id: webtransport
 title: WebTransport
 ---

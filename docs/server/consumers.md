@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo built-in async consumers for reliable API command delivery from PostgreSQL, Kafka, Nats JetStream, Redis Streams, SQS, and more."
 id: consumers
 sidebar_label: Async consumers
 title: Built-in API command async consumers

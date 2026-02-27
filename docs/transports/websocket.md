@@ -1,4 +1,5 @@
 ---
+description: "Configure Centrifugo WebSocket transport: endpoints, message size limits, buffer settings, permessage-deflate compression, Protobuf protocol, and HTTP/2 support."
 id: websocket
 title: WebSocket
 ---

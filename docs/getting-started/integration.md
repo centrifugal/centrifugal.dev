@@ -1,4 +1,5 @@
 ---
+description: "Step-by-step guide to integrating Centrifugo with your application backend. Covers configuration, JWT auth, channel subscriptions, and deployment."
 id: integration
 title: Integration guide
 ---

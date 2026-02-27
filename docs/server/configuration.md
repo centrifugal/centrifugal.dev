@@ -1,4 +1,5 @@
 ---
+description: "Complete Centrifugo configuration guide. Covers config file formats, environment variables, client settings, endpoint management, and all available options."
 id: configuration
 title: Configure Centrifugo
 ---

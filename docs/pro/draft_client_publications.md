@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo PRO ephemeral client publications enable schema-validated messaging with jq/JS transformations, bypassing backend proxy for lower latency."
 id: client_publications
 title: Ephemeral client publications
 sidebar_label: Ephemeral publications

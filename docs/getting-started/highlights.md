@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo key features: scalable real-time messaging, WebSocket and SSE transports, JWT authentication, channel history, presence, delta compression, and more."
 id: highlights
 title: Main highlights
 ---

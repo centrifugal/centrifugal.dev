@@ -1,4 +1,5 @@
 ---
+description: "Configure Server-Sent Events (SSE) in Centrifugo as a bidirectional WebSocket fallback using the EventSource API and JavaScript SDK."
 id: sse
 title: Server-Sent Events (SSE), with bidirectional emulation 
 sidebar_label: Server-Sent Events (SSE)

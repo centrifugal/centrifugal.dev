@@ -1,4 +1,5 @@
 ---
+description: "Reduce network traffic costs with Centrifugo PRO bandwidth optimizations including delta compression for at most once delivery and channel compaction."
 id: bandwidth_optimizations
 title: Bandwidth optimizations
 ---

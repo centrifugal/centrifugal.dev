@@ -1,4 +1,5 @@
 ---
+description: "Define channel configuration using URL-like patterns with variables in Centrifugo PRO, similar to HTTP route matching in web frameworks."
 id: channel_patterns
 sidebar_label: Channel patterns
 title: Channel patterns
@@ -41,7 +42,7 @@ Given the configuration example above:
 * if channel is `/events/42`, then no namespace will match and the `unknown channel` error will be returned.
 
 ```javascript title="Basic example demonstrating use of pattern channels in JS"
-const client := new Centrifuge("ws://...", {});
+const client = new Centrifuge("ws://...", {});
 const sub = client.newSubscription('/users/mario');
 sub.subscribe();
 client.connect();
@@ -92,6 +93,6 @@ Channel pattern "/personal/user_:user":
 /personal/user_         ❌ no match
 ```
 
-### Using varibles
+### Using variables
 
 Additional benefits of using channel patterns may be achieved together with Centrifugo PRO [CEL expressions](./cel_expressions.md). Channel pattern variables are available inside CEL expressions for evaluation in a custom way.

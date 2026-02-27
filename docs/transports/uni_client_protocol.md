@@ -1,4 +1,5 @@
 ---
+description: "Centrifugo unidirectional protocol guide: connect requests, push message types, and handling real-time data without bidirectional SDKs."
 id: uni_client_protocol
 title: Unidirectional client protocol
 sidebar_label: Unidirectional protocol
