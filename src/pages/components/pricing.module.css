@@ -60,10 +60,147 @@ html[data-theme="light"] .title {
     line-height: 1.6;
 }
 
-.buttons {
-    text-align: center;
+.emailLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 1.5rem;
+    padding: 12px 28px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    font-family: "Nunito", sans-serif;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.25s ease;
+    cursor: pointer;
 }
 
-.button {
-    margin-top: 1.5rem;
+html[data-theme="dark"] .emailLink {
+    color: #fff;
+    background: rgba(254, 94, 94, 0.15);
+    border: 1px solid rgba(254, 94, 94, 0.4);
+}
+
+html[data-theme="dark"] .emailLink:hover {
+    background: rgba(254, 94, 94, 0.25);
+    border-color: rgba(254, 94, 94, 0.7);
+    box-shadow: 0 0 20px rgba(254, 94, 94, 0.2);
+    color: #fff;
+    text-decoration: none;
+}
+
+html[data-theme="light"] .emailLink {
+    color: #E84C3B;
+    background: rgba(232, 76, 59, 0.08);
+    border: 1px solid rgba(232, 76, 59, 0.3);
+}
+
+html[data-theme="light"] .emailLink:hover {
+    background: rgba(232, 76, 59, 0.15);
+    border-color: rgba(232, 76, 59, 0.6);
+    box-shadow: 0 0 20px rgba(232, 76, 59, 0.15);
+    color: #E84C3B;
+    text-decoration: none;
+}
+
+.emailIcon {
+    flex-shrink: 0;
+}
+
+.emailWrap {
+    display: inline-flex;
+    align-items: stretch;
+    gap: 0;
+    margin-top: 0.5rem;
+}
+
+.emailWrap .emailLink {
+    margin-top: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: none;
+}
+
+.copyButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    border: none;
+    border-radius: 0 8px 8px 0;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    flex-shrink: 0;
+}
+
+html[data-theme="dark"] .copyButton {
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(254, 94, 94, 0.1);
+    border: 1px solid rgba(254, 94, 94, 0.4);
+    border-left: 1px solid rgba(254, 94, 94, 0.2);
+}
+
+html[data-theme="dark"] .copyButton:hover {
+    color: #fff;
+    background: rgba(254, 94, 94, 0.25);
+}
+
+html[data-theme="light"] .copyButton {
+    color: rgba(232, 76, 59, 0.6);
+    background: rgba(232, 76, 59, 0.05);
+    border: 1px solid rgba(232, 76, 59, 0.3);
+    border-left: 1px solid rgba(232, 76, 59, 0.15);
+}
+
+html[data-theme="light"] .copyButton:hover {
+    color: #E84C3B;
+    background: rgba(232, 76, 59, 0.12);
+}
+
+.copyButton {
+    position: relative;
+}
+
+.copyButtonCopied {
+    color: #fe5e5e !important;
+    background: rgba(254, 94, 94, 0.25) !important;
+    border-color: rgba(254, 94, 94, 0.7) !important;
+}
+
+.copiedTooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    border-radius: 4px;
+    color: #fff;
+    background: #fe5e5e;
+    animation: tooltipFadeIn 0.2s ease;
+    pointer-events: none;
+}
+
+.copiedTooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #fe5e5e;
+}
+
+@keyframes tooltipFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
 }

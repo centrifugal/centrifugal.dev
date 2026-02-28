@@ -55,6 +55,15 @@ function Header() {
                     >
                         PRO DOCS
                     </Link>
+                    <a
+                        className={clsx(
+                            "button button--outline button--secondary button--lg"
+                        )}
+                        href="#pricing"
+                        style={{ pointerEvents: "auto" }}
+                    >
+                        PRICING
+                    </a>
                 </div>
             </div>
         </header >
