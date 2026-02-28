@@ -254,19 +254,21 @@ All subscribers to the same channel must use the same subscription type. A singl
     "enabled": true,
     "type": "memory"
   },
-  "namespaces": [
-    {
-      "name": "cursors",
-      "subscription_types": ["map"],
-      "map_sync_mode": "ephemeral",
-      "map_retention_mode": "expiring",
-      "map_key_ttl": "60s",
-      "publication_data_format": "json_object",
-      "allow_subscribe_for_client": true,
-      "allow_map_publish_for_subscriber": true,
-      "map_client_key": "client_id"
-    }
-  ]
+  "channel": {
+    "namespaces": [
+      {
+        "name": "cursors",
+        "subscription_types": ["map"],
+        "map_sync_mode": "ephemeral",
+        "map_retention_mode": "expiring",
+        "map_key_ttl": "60s",
+        "publication_data_format": "json_object",
+        "allow_subscribe_for_client": true,
+        "allow_map_publish_for_subscriber": true,
+        "map_client_key": "client_id"
+      }
+    ]
+  }
 }
 ```
 
@@ -348,34 +350,36 @@ Map subscriptions can automatically track client and user presence in separate n
 
 ```json title="config.json"
 {
-  "namespaces": [
-    {
-      "name": "game",
-      "subscription_types": ["map"],
-      "map_sync_mode": "ephemeral",
-      "map_retention_mode": "expiring",
-      "map_key_ttl": "60s",
-      "map_client_presence_namespace": "clients",
-      "map_user_presence_namespace": "users",
-      "allow_subscribe_for_client": true
-    },
-    {
-      "name": "clients",
-      "subscription_types": ["map_clients"],
-      "map_sync_mode": "ephemeral",
-      "map_retention_mode": "expiring",
-      "map_key_ttl": "60s",
-      "allow_subscribe_for_client": true
-    },
-    {
-      "name": "users",
-      "subscription_types": ["map_users"],
-      "map_sync_mode": "ephemeral",
-      "map_retention_mode": "expiring",
-      "map_key_ttl": "60s",
-      "allow_subscribe_for_client": true
-    }
-  ]
+  "channel": {
+    "namespaces": [
+      {
+        "name": "game",
+        "subscription_types": ["map"],
+        "map_sync_mode": "ephemeral",
+        "map_retention_mode": "expiring",
+        "map_key_ttl": "60s",
+        "map_client_presence_namespace": "clients",
+        "map_user_presence_namespace": "users",
+        "allow_subscribe_for_client": true
+      },
+      {
+        "name": "clients",
+        "subscription_types": ["map_clients"],
+        "map_sync_mode": "ephemeral",
+        "map_retention_mode": "expiring",
+        "map_key_ttl": "60s",
+        "allow_subscribe_for_client": true
+      },
+      {
+        "name": "users",
+        "subscription_types": ["map_users"],
+        "map_sync_mode": "ephemeral",
+        "map_retention_mode": "expiring",
+        "map_key_ttl": "60s",
+        "allow_subscribe_for_client": true
+      }
+    ]
+  }
 }
 ```
 
@@ -403,17 +407,19 @@ When `map_publish_proxy_enabled` or `map_remove_proxy_enabled` is set, the opera
       "timeout": "3s"
     }
   ],
-  "namespaces": [
-    {
-      "name": "game",
-      "subscription_types": ["map"],
-      "map_sync_mode": "converging",
-      "map_retention_mode": "permanent",
-      "allow_subscribe_for_client": true,
-      "map_publish_proxy_enabled": true,
-      "map_publish_proxy_name": "backend"
-    }
-  ]
+  "channel": {
+    "namespaces": [
+      {
+        "name": "game",
+        "subscription_types": ["map"],
+        "map_sync_mode": "converging",
+        "map_retention_mode": "permanent",
+        "allow_subscribe_for_client": true,
+        "map_publish_proxy_enabled": true,
+        "map_publish_proxy_name": "backend"
+      }
+    ]
+  }
 }
 ```
 
@@ -432,11 +438,9 @@ Several options in the `client` configuration section control map subscription b
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `map_state_to_live_enabled` | `false` | Allow direct State-to-Live transition, skipping Stream phase |
-| `map_min_stream_pagination_limit` | `0` | Minimum page size for stream pagination |
-| `map_max_pagination_limit` | `0` | Maximum page size for state/stream pagination |
-| `map_max_immediate_join_state_size` | `0` | Max state entries for immediate join mode (0 = no limit) |
-| `map_recovery_max_publication_limit` | `300` | Max stream publications to recover during live transition |
+| `map_pagination_min_limit` | `100` | Minimum entries per page for state/stream pagination |
+| `map_pagination_max_limit` | `1000` | Maximum entries per page for state/stream pagination |
+| `map_live_transition_max_publication_limit` | `300` | Max stream publications to recover during live transition (0 = no limit) |
 | `map_subscribe_catch_up_timeout` | `"5s"` | Max time for state/stream catch-up before disconnecting |
 
 ## Server API
@@ -533,7 +537,6 @@ Use `newMapSubscription` instead of `newSubscription`:
 ```javascript
 const sub = client.newMapSubscription('cursors:room1', {
   limit: 100,             // Page size for state/stream pagination
-  immediateJoin: false,   // Set to true for small state channels
 });
 ```
 
@@ -582,8 +585,6 @@ await sub.mapRemove('mykey');
 | Option | Default | Description |
 |--------|---------|-------------|
 | `limit` | `100` | Page size for state/stream pagination |
-| `immediateJoin` | `false` | Get full state in one request (for small states) |
-| `stateTooLargeFallback` | `"fatal"` | `"fatal"` or `"paginate"` — what to do when immediate join fails |
 | `unrecoverableStrategy` | `"from_scratch"` | `"from_scratch"` or `"fatal"` — handle unrecoverable position errors |
 | `delta` | | Set to `"fossil"` to enable delta compression (applied per-key — deltas are computed between successive values of the same key, not across the entire map) |
 
@@ -601,20 +602,22 @@ Server configuration:
     "enabled": true,
     "type": "memory"
   },
-  "namespaces": [
-    {
-      "name": "cursors",
-      "subscription_types": ["map"],
-      "map_sync_mode": "ephemeral",
-      "map_retention_mode": "expiring",
-      "map_key_ttl": "60s",
-      "publication_data_format": "json_object",
-      "map_remove_on_unsubscribe": true,
-      "allow_subscribe_for_client": true,
-      "allow_map_publish_for_subscriber": true,
-      "map_client_key": "client_id"
-    }
-  ]
+  "channel": {
+    "namespaces": [
+      {
+        "name": "cursors",
+        "subscription_types": ["map"],
+        "map_sync_mode": "ephemeral",
+        "map_retention_mode": "expiring",
+        "map_key_ttl": "60s",
+        "publication_data_format": "json_object",
+        "map_remove_on_unsubscribe": true,
+        "allow_subscribe_for_client": true,
+        "allow_map_publish_for_subscriber": true,
+        "map_client_key": "client_id"
+      }
+    ]
+  }
 }
 ```
 
@@ -665,16 +668,18 @@ Server configuration:
       "dsn": "postgres://user:pass@localhost:5432/app?sslmode=disable"
     }
   },
-  "namespaces": [
-    {
-      "name": "scoreboard",
-      "subscription_types": ["map"],
-      "map_sync_mode": "converging",
-      "map_retention_mode": "permanent",
-      "map_ordered": true,
-      "allow_subscribe_for_client": true
-    }
-  ]
+  "channel": {
+    "namespaces": [
+      {
+        "name": "scoreboard",
+        "subscription_types": ["map"],
+        "map_sync_mode": "converging",
+        "map_retention_mode": "permanent",
+        "map_ordered": true,
+        "allow_subscribe_for_client": true
+      }
+    ]
+  }
 }
 ```
 
