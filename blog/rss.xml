@@ -14,7 +14,7 @@
             <link>https://centrifugal.dev/blog/2026/03/01/scaling-ai-token-streams-with-centrifugo</link>
             <guid>https://centrifugal.dev/blog/2026/03/01/scaling-ai-token-streams-with-centrifugo</guid>
             <pubDate>Sun, 01 Mar 2026 00:00:00 GMT</pubDate>
-            <description><![CDATA[An interactive playground demonstrating what Centrifugo brings to AI token streaming — aggregation, recovery, multi-tab sync, transport fallbacks, and horizontal scaling with Redis.]]></description>
+            <description><![CDATA[An interactive demo playground demonstrating what Centrifugo brings to AI token streaming — channel multiplexing, recovery, multi-tab sync, transport fallbacks, and horizontal scaling with Redis.]]></description>
             <content:encoded><![CDATA[<img src="https://centrifugal.dev/img/scale_ai.jpg">
 <p>In a <a class="" href="https://centrifugal.dev/blog/2025/06/17/streaming-ai-gpt-responses-with-centrifugo">previous post</a> we showed how to stream LLM responses through Centrifugo — backend receives tokens from an LLM API, publishes them to a channel, browser subscribes and renders text as it arrives.</p>
 <p>That post covered the basics. This one looks at what Centrifugo adds beyond just delivering tokens from point A to point B — automatic recovery after disconnects, horizontal scaling, transport flexibility, and multi-tab synchronization backed by a database. We built an interactive playground demo that demonstrates the concepts – you can run it locally and see every feature in action.</p>
