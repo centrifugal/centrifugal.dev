@@ -1,7 +1,7 @@
 ---
 title: Scaling AI token streams with Centrifugo
 tags: [centrifugo, ai, streaming, tutorial, websocket, sse]
-description: An interactive playground demonstrating what Centrifugo brings to AI token streaming — aggregation, recovery, multi-tab sync, transport fallbacks, and horizontal scaling with Redis.
+description: An interactive demo playground demonstrating what Centrifugo brings to AI token streaming — channel multiplexing, recovery, multi-tab sync, transport fallbacks, and horizontal scaling with Redis.
 author: Alexander Emelin
 authorTitle: Founder of Centrifugal Labs
 authorImageURL: /img/alexander_emelin.jpeg
