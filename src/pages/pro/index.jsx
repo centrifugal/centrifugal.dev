@@ -55,6 +55,19 @@ function Header() {
                     >
                         PRO DOCS
                     </Link>
+                    <a
+                        className={clsx(
+                            "button button--outline button--secondary button--lg"
+                        )}
+                        href="#pricing"
+                        style={{ pointerEvents: "auto" }}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" });
+                        }}
+                    >
+                        PRICING
+                    </a>
                 </div>
             </div>
         </header >

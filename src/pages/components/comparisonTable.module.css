@@ -121,6 +121,10 @@ html[data-theme="dark"] .categoryName {
     line-height: 1.4;
 }
 
+html[data-theme="dark"] .categoryComment {
+    color: var(--ifm-color-emphasis-400);
+}
+
 /* ── Feature rows ── */
 
 .featureRow td {
