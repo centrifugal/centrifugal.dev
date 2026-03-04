@@ -61,6 +61,10 @@ function Header() {
                         )}
                         href="#pricing"
                         style={{ pointerEvents: "auto" }}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" });
+                        }}
                     >
                         PRICING
                     </a>
