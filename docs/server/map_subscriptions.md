@@ -14,46 +14,17 @@ Map subscriptions enable real-time **data synchronization** of keyed state over 
 Typical use cases:
 
 - **Cursor positions** — each user publishes their cursor; key = client/user ID, value = coordinates
-- **Live scoreboards** — each player has a row; updates replace previous state
 - **Collaborative state** — shared documents, whiteboards, inventories with per-object entries
 - **Presence-like features** — who's online, with typed structured data per participant
 - **Persistent state sync** — sync your persistent state with tight PostgreSQL integration, using transactional publishing within your application's database transactions
 
+A standout capability of map subscriptions is the **PostgreSQL map broker** with **transactional publishing**. It lets you update real-time state and execute business logic in a single database transaction — eliminating the [dual-write problem](https://thorben-janssen.com/dual-writes/) entirely. Your application calls Centrifugo's SQL functions inside its own `BEGIN`/`COMMIT` block, so the real-time state pushed to client UIs and your database state are always atomically consistent. If the transaction rolls back, the real-time update never happened. This is a unique property for a real-time messaging system — see [PostgreSQL map broker](#postgresql) and [Transactional publishing](#transactional-publishing) sections below for details.
+
+Map subscriptions also introduce a **built-in presence** mechanism (`map_clients` and `map_users` subscription types) that improves on the traditional Centrifugo presence — it uses the same converging sync model with paginated state, so clients reliably recover presence after reconnects even in channels with many participants.
+
 ## Design overview
 
 Traditional Centrifugo channels deliver an ordered stream of publications. Map channels add a **data synchronization layer**: a set of key-value entries that clients can query, paginate, and receive incremental updates for.
-
-### Subscription types
-
-When a client subscribes to a channel, it can now specify a subscription type:
-
-| Type | Description |
-|------|-------------|
-| `stream` | Traditional PUB/SUB with optional history stream (default type, Centrifugo always had it) |
-| `map` | Map subscription — keyed state with real-time updates |
-| `map_clients` | Presence subscription — one entry per client connection |
-| `map_users` | Presence subscription — one entry per user ID |
-
-The `map_clients` and `map_users` types are automatically managed by the server for presence tracking. The `map` type is the general-purpose map subscription where the application controls keys and values. It's like real-time map which is synchronized to clients.
-
-### Sync and retention modes
-
-Each map namespace requires two mode settings: **sync mode** (how clients recover after reconnect) and **retention mode** (how long entries live).
-
-| | **Expiring** retention | **Permanent** retention |
-|---|---|---|
-| **Ephemeral** sync | Entries auto-expire after TTL. On reconnect — full state snapshot. No stream history kept. | Entries persist until removed. On reconnect — full state snapshot. No stream history kept. |
-| **Converging** sync | Entries auto-expire after TTL. On reconnect — catch up from change stream (falls back to snapshot if too far behind). | Entries persist until removed. On reconnect — catch up from change stream (falls back to snapshot if too far behind). |
-
-**Which combination to pick:**
-
-| Use case | Sync mode | Retention mode | Why |
-|----------|-----------|----------------|-----|
-| Cursors, typing indicators | ephemeral | expiring | Positions are short-lived, no need for stream history |
-| Presence, heartbeats | ephemeral | expiring | Entries should auto-disappear when stale |
-| Scoreboards, leaderboards | converging | permanent | Data persists, clients recover missed updates efficiently |
-| Inventories, collaborative docs | converging | permanent | Need durable state with efficient reconnect recovery |
-| Time-limited polls, sessions | converging | expiring | Entries auto-expire, but clients still recover from stream |
 
 ### Client subscription protocol
 
@@ -93,6 +64,38 @@ When a client subscribes to a map channel, it goes through phases to build consi
 3. **Live phase** — client receives real-time updates via PUB/SUB
 
 The SDK handles all phases transparently — the application receives `sync` (full state ready) and `update` (incremental change) events.
+
+### Subscription types
+
+When a client subscribes to a channel, it can now specify a subscription type:
+
+| Type | Description |
+|------|-------------|
+| `stream` | Traditional PUB/SUB with optional history stream, automatic recovery from stream, and cache recovery mode (default type, Centrifugo always had it) |
+| `map` | Map subscription — keyed state with real-time updates, optional converging sync, per-key TTL support, and paginated state sync protocol |
+| `map_clients` | A special type of map subscription for presence — one entry per client connection, automatically managed by the server. Both joins and leaves are delivered immediately. The system is eventually consistent: if a remove operation to the broker fails (e.g. due to a transient network error), the stale entry will expire after `map_key_ttl` (60s by default) rather than lingering indefinitely |
+| `map_users` | A special type of map subscription for presence — one entry per user ID, automatically managed by the server. New users appear immediately, but removals are driven by key TTL — so a disconnected user's entry remains in the state for up to `map_key_ttl` (60s by default) |
+
+The `map_clients` and `map_users` types are automatically managed by the server for presence tracking. The `map` type is the general-purpose map subscription where the application controls keys and values. It's like real-time map which is synchronized to clients.
+
+### Sync and retention modes
+
+Each map namespace requires two mode settings: **sync mode** (how clients recover after reconnect) and **retention mode** (how long entries live).
+
+| | **Expiring** retention | **Permanent** retention |
+|---|---|---|
+| **Ephemeral** sync | Entries auto-expire after TTL. On reconnect — full state snapshot. No stream history kept. | Entries persist until removed. On reconnect — full state snapshot. No stream history kept. |
+| **Converging** sync | Entries auto-expire after TTL. On reconnect — catch up from change stream (falls back to snapshot if too far behind). | Entries persist until removed. On reconnect — catch up from change stream (falls back to snapshot if too far behind). |
+
+**Which combination to pick:**
+
+| Use case | Sync mode | Retention mode | Why |
+|----------|-----------|----------------|-----|
+| Cursors, typing indicators | ephemeral | expiring | Positions are short-lived, no need for stream history |
+| Presence, heartbeats | ephemeral | expiring | Entries should auto-disappear when stale |
+| Scoreboards, leaderboards | converging | permanent | Data persists, clients recover missed updates efficiently |
+| Inventories, collaborative docs | converging | permanent | Need durable state with efficient reconnect recovery |
+| Time-limited polls, sessions | converging | expiring | Entries auto-expire, but clients still recover from stream |
 
 ## Map brokers
 
