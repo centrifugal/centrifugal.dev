@@ -99,7 +99,7 @@ Each map namespace requires two mode settings: **sync mode** (how clients recove
 
 ## Map brokers
 
-Map subscriptions require a **map broker** — a backend that stores the keyed state and coordinates updates. Centrifugo supports three map broker types.
+Map subscriptions require a **map broker** — a backend that stores the keyed state and coordinates updates. By default Centrifugo uses an in-memory map broker. Centrifugo supports three map broker types.
 
 ### Memory
 
@@ -108,13 +108,12 @@ In-memory storage. Single-node only. State is lost on restart.
 ```json title="config.json"
 {
   "map_broker": {
-    "enabled": true,
     "type": "memory"
   }
 }
 ```
 
-Good for development and single-node setups.
+Good for development and single-node setups. Memory is the default map broker type, so you don't need to configure it explicitly.
 
 ### Redis
 
@@ -125,7 +124,6 @@ Redis Cluster is supported only with sharded PUB/SUB enabled, which is a [Centri
 ```json title="config.json"
 {
   "map_broker": {
-    "enabled": true,
     "type": "redis",
     "redis": {
       "address": "localhost:6379"
@@ -157,7 +155,6 @@ PostgreSQL-backed storage for durable, persistent state. Centrifugo creates the 
 ```json title="config.json"
 {
   "map_broker": {
-    "enabled": true,
     "type": "postgres",
     "postgres": {
       "dsn": "postgres://user:pass@localhost:5432/dbname?sslmode=disable"
@@ -254,7 +251,6 @@ All subscribers to the same channel must use the same subscription type. A singl
 ```json title="config.json"
 {
   "map_broker": {
-    "enabled": true,
     "type": "memory"
   },
   "channel": {
@@ -602,7 +598,6 @@ Server configuration:
 ```json title="config.json"
 {
   "map_broker": {
-    "enabled": true,
     "type": "memory"
   },
   "channel": {
@@ -665,7 +660,6 @@ Server configuration:
 ```json title="config.json"
 {
   "map_broker": {
-    "enabled": true,
     "type": "postgres",
     "postgres": {
       "dsn": "postgres://user:pass@localhost:5432/app?sslmode=disable"

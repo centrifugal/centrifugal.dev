@@ -151,7 +151,9 @@ Old partitions are dropped entirely (instant) instead of deleting individual row
 
 ## Redis enhancements
 
-### Node-grouped PUB/SUB
+Centrifugo PRO enables **Redis Cluster support** for the Redis map broker via sharded PUB/SUB. The open-source version only works with a single Redis instance (or client-side consistent sharding across standalone nodes). With PRO, you can use Redis Cluster as the map broker backend, and the enhancements below further optimize that setup.
+
+### Node-grouped sharded PUB/SUB
 
 When using Redis Cluster with sharded PUB/SUB, Centrifugo creates one PUB/SUB connection per partition by default. With node-grouped PUB/SUB, subscriptions are grouped by Redis Cluster node — reducing the total number of connections from `num_partitions` to `num_redis_nodes`.
 
