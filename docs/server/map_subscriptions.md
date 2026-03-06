@@ -1,6 +1,7 @@
 ---
 id: map_subscriptions
-title: Map subscriptions ✨
+title: Map subscriptions
+sidebar_label: Map subscriptions ✨
 ---
 
 :::caution Experimental
@@ -15,12 +16,11 @@ Typical use cases:
 
 - **Cursor positions** — each user publishes their cursor; key = client/user ID, value = coordinates
 - **Collaborative state** — shared documents, whiteboards, inventories with per-object entries
-- **Presence-like features** — who's online, with typed structured data per participant
 - **Persistent state sync** — sync your persistent state with tight PostgreSQL integration, using transactional publishing within your application's database transactions
 
 A standout capability of map subscriptions is the **PostgreSQL map broker** with **transactional publishing**. It lets you update real-time state and execute business logic in a single database transaction — eliminating the [dual-write problem](https://thorben-janssen.com/dual-writes/) entirely. Your application calls Centrifugo's SQL functions inside its own `BEGIN`/`COMMIT` block, so the real-time state pushed to client UIs and your database state are always atomically consistent. If the transaction rolls back, the real-time update never happened. This is a unique property for a real-time messaging system — see [PostgreSQL map broker](#postgresql) and [Transactional publishing](#transactional-publishing) sections below for details.
 
-Map subscriptions also introduce a **built-in presence** mechanism (`map_clients` and `map_users` subscription types) that improves on the traditional Centrifugo presence — it uses the same converging sync model with paginated state, so clients reliably recover presence after reconnects even in channels with many participants.
+Map subscriptions also introduce a **built-in map presence** mechanism (`map_clients` and `map_users` subscription types) that improves on the traditional Centrifugo presence — it uses the same converging sync model with paginated state, so clients reliably recover presence after reconnects even in channels with many participants.
 
 ## Design overview
 
@@ -103,7 +103,7 @@ Map subscriptions require a **map broker** — a backend that stores the keyed s
 
 ### Memory
 
-In-memory storage. Single-node only. State is lost on restart.
+In-memory storage. Single-node only. State is lost on restart (even when "permanent" sync mode is used).
 
 ```json title="config.json"
 {
@@ -541,7 +541,7 @@ const sub = client.newMapSubscription('cursors:room1', {
 
 ### Events
 
-Map subscriptions emit two high-level events for state management:
+Unlike regular stream subscriptions, where the application must handle `publication` events and deal with recovery flags and stream positions, map subscriptions expose dedicated `sync` and `update` events. These events completely hide the recovery protocol inside the SDK — the application never needs to think about pagination, catch-up, or reconnect logic. It simply reacts to state snapshots and incremental changes.
 
 **`sync`** — emitted when the complete state is available (initial subscribe or full resync):
 
@@ -565,7 +565,7 @@ sub.on('update', (ctx) => {
 });
 ```
 
-The `sync`/`update` pair provides a simplified state management model — there is no need to handle recovery flags or stream positions manually. Under the hood, the SDK manages state automatically: on initial subscribe it builds state from paginated reads, and on reconnect it attempts to catch up from the change stream (converging mode). If catch-up is not possible (e.g. too many changes accumulated), the SDK transparently falls back to a full state re-sync from the broker — the application simply receives another `sync` event with the complete state.
+Under the hood, the SDK manages state automatically: on initial subscribe it builds state from paginated reads, and on reconnect it attempts to catch up from the change stream (converging mode). If catch-up is not possible (e.g. too many changes accumulated), the SDK transparently falls back to a full state re-sync from the broker — the application simply receives another `sync` event with the complete state.
 
 Standard subscription events (`publication`, `subscribing`, `subscribed`, `unsubscribed`, `error`) also work on map subscriptions.
 

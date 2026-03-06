@@ -44,7 +44,6 @@ The cache layer keeps channel state in memory on each Centrifugo node, reducing 
 ```json title="config.json"
 {
   "map_broker": {
-    "enabled": true,
     "type": "postgres",
     "postgres": {
       "dsn": "postgres://user:pass@localhost:5432/app?sslmode=disable"
@@ -83,7 +82,6 @@ Distribute read load across PostgreSQL replicas:
 ```json title="config.json"
 {
   "map_broker": {
-    "enabled": true,
     "type": "postgres",
     "postgres": {
       "dsn": "postgres://user:pass@primary:5432/app?sslmode=disable",
@@ -108,7 +106,6 @@ By default, every Centrifugo node polls the PostgreSQL outbox independently. Wit
 ```json title="config.json"
 {
   "map_broker": {
-    "enabled": true,
     "type": "postgres",
     "postgres": {
       "dsn": "postgres://user:pass@localhost:5432/app?sslmode=disable",
@@ -133,7 +130,6 @@ Automatic daily partitioning of the stream table for large-scale deployments:
 ```json title="config.json"
 {
   "map_broker": {
-    "enabled": true,
     "type": "postgres",
     "postgres": {
       "dsn": "postgres://user:pass@localhost:5432/app?sslmode=disable",
@@ -160,10 +156,9 @@ When using Redis Cluster with sharded PUB/SUB, Centrifugo creates one PUB/SUB co
 ```json title="config.json"
 {
   "map_broker": {
-    "enabled": true,
     "type": "redis",
     "redis": {
-      "cluster_addresses": ["localhost:7001", "localhost:7002", "localhost:7003"],
+      "address": "localhost:7001",
       "group_pub_sub_by_node": true,
       "sharded_pub_sub_partitions": 128
     }
@@ -180,7 +175,6 @@ Offload PUB/SUB subscriptions to Redis replica nodes, freeing the primary for wr
 ```json title="config.json"
 {
   "map_broker": {
-    "enabled": true,
     "type": "redis",
     "redis": {
       "address": "localhost:6379",
@@ -195,3 +189,61 @@ Offload PUB/SUB subscriptions to Redis replica nodes, freeing the primary for wr
 ```
 
 Works with both standalone Redis (with a replica) and Redis Cluster setups.
+
+## Per-namespace map brokers
+
+By default, all map channels use the single map broker configured in `map_broker`. Centrifugo PRO allows defining **named map broker instances** so that different namespaces can use different backends — for example, ephemeral cursor data in Redis and persistent scoreboard state in PostgreSQL.
+
+Named map brokers are defined in the top-level `map_brokers` array. Each entry must have a unique `name`, an `enabled` flag, and a `type` with its backend-specific configuration. Then, a namespace references a named broker via the `map_broker_name` option.
+
+```json title="config.json"
+{
+  "map_broker": {
+    "type": "memory"
+  },
+  "map_brokers": [
+    {
+      "name": "redis_cursors",
+      "enabled": true,
+      "type": "redis",
+      "redis": {
+        "address": "localhost:6379"
+      }
+    },
+    {
+      "name": "pg_scores",
+      "enabled": true,
+      "type": "postgres",
+      "postgres": {
+        "dsn": "postgres://user:pass@localhost:5432/app?sslmode=disable"
+      }
+    }
+  ],
+  "channel": {
+    "namespaces": [
+      {
+        "name": "cursors",
+        "subscription_types": ["map"],
+        "map_sync_mode": "ephemeral",
+        "map_retention_mode": "expiring",
+        "map_key_ttl": "60s",
+        "map_broker_name": "redis_cursors",
+        "allow_subscribe_for_client": true,
+        "allow_map_publish_for_subscriber": true,
+        "map_client_key": "client_id"
+      },
+      {
+        "name": "scoreboard",
+        "subscription_types": ["map"],
+        "map_sync_mode": "converging",
+        "map_retention_mode": "permanent",
+        "map_ordered": true,
+        "map_broker_name": "pg_scores",
+        "allow_subscribe_for_client": true
+      }
+    ]
+  }
+}
+```
+
+When `map_broker_name` is not set (or empty), the namespace uses the default `map_broker`. If a namespace references a name that is not found or not enabled in `map_brokers`, Centrifugo returns a validation error on startup.
