@@ -159,7 +159,7 @@ When using Redis Cluster with sharded PUB/SUB, Centrifugo creates one PUB/SUB co
     "type": "redis",
     "redis": {
       "address": "localhost:7001",
-      "group_pub_sub_by_node": true,
+      "group_sharded_pub_sub_by_node": true,
       "sharded_pub_sub_partitions": 128
     }
   }
