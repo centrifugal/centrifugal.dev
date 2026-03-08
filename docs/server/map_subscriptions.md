@@ -30,34 +30,9 @@ Traditional Centrifugo channels deliver an ordered stream of publications. Map c
 
 When a client subscribes to a map channel, it goes through phases to build consistent state:
 
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│                    Map Subscription Lifecycle                        │
-├──────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│        ┌─────────────┐     ┌─────────────┐     ┌─────────────┐       │
-│        │    STATE    │────▶│    STREAM   │────▶│     LIVE    │       │
-│        │    phase    │     │    phase    │     │    phase    │       │
-│        └─────────────┘     └─────────────┘     └─────────────┘       │
-│                                                                      │
-│        STATE:   Paginate full key-value state from broker            │
-│        STREAM:  Catch up on changes during state pagination          │
-│                 (converging only)                                    │
-│        LIVE:    Real-time PUB/SUB updates                            │
-│                                                                      │
-│        ────────────────────────────────────────────────────────      │
-│                                                                      │
-│        Ephemeral mode:   STATE ───────────────────────────▶ LIVE     │
-│        Converging mode:  STATE ─────────▶ STREAM ─────────▶ LIVE     │
-│                                                                      │
-│        ────────────────────────────────────────────────────────      │
-│                                                                      │
-│        SDK events:                                                   │
-│            ◀── sync (full state)                                     │
-│            ◀── update (incremental)                                  │
-│                                                                      │
-└──────────────────────────────────────────────────────────────────────┘
-```
+import MapSubscriptionDiagram from '@site/src/components/MapSubscriptionDiagram';
+
+<MapSubscriptionDiagram />
 
 1. **State phase** — client paginates through the current key-value state from the broker
 2. **Stream phase** — client catches up on changes that occurred during state pagination (converging mode only)
