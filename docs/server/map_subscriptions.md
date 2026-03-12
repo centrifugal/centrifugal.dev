@@ -20,11 +20,32 @@ Typical use cases:
 
 A standout capability of map subscriptions is the **PostgreSQL map broker** with **transactional publishing**. It lets you update real-time state and execute business logic in a single database transaction — eliminating the [dual-write problem](https://thorben-janssen.com/dual-writes/) entirely. Your application calls Centrifugo's SQL functions inside its own `BEGIN`/`COMMIT` block, so the real-time state pushed to client UIs and your database state are always atomically consistent. If the transaction rolls back, the real-time update never happened. This is a unique property for a real-time messaging system — see [PostgreSQL map broker](#postgresql) and [Transactional publishing](#transactional-publishing) sections below for details.
 
+import PgTransactionalDiagram from '@site/src/components/PgTransactionalDiagram';
+
+<PgTransactionalDiagram />
+
 Map subscriptions also introduce a **built-in map presence** mechanism (`map_clients` and `map_users` subscription types) that improves on the traditional Centrifugo presence — it uses the same converging sync model with paginated state, so clients reliably recover presence after reconnects even in channels with many participants.
+
+## When to use map vs stream subscriptions
+
+The core difference: a **stream subscription** gives each client an ordered sequence of events on a channel, while a **map subscription** gives each client a synchronized **collection of keyed entries** — a live key-value state that Centrifugo keeps converged across all subscribers.
+
+| You need… | Use |
+|---|---|
+| Ordered events (chat, notifications, activity feeds) | Stream subscription |
+| Latest value of a single thing (e.g. with [cache recovery](/docs/server/cache_recovery)) | Stream subscription + cache recovery |
+| A keyed collection of entries synced to clients (cursors, polls, presence) | Map subscription (in-memory or Redis) |
+| Database-consistent state pushed to UIs | Map subscription + PostgreSQL (or Redis for softer durability) |
+
+Without map subscriptions, synchronizing a keyed collection typically means fetching initial state via REST, applying stream updates, and handling race conditions between the two — map subscriptions handle all of this internally.
+
+- **Transient shared state** — cursor positions, typing indicators, live poll results. Centrifugo holds the state for you (in memory or Redis) with automatic expiration. Your backend doesn't need to store or serve it.
+
+- **Persistent state** — scoreboards, inventories, collaborative documents. With the PostgreSQL map broker you update the real-time map and your business data in a single database transaction, eliminating the [dual-write problem](https://thorben-janssen.com/dual-writes/). Redis can also be used when you want durability without transactional guarantees.
 
 ## Design overview
 
-Traditional Centrifugo channels deliver an ordered stream of publications. Map channels add a **data synchronization layer**: a set of key-value entries that clients can query, paginate, and receive incremental updates for.
+Map channels add a **data synchronization layer** on top of regular channels: a set of key-value entries that clients can query, paginate, and receive incremental updates for.
 
 ### Client subscription protocol
 
@@ -42,7 +63,7 @@ The SDK handles all phases transparently — the application receives `sync` (fu
 
 ### Subscription types
 
-When a client subscribes to a channel, it can now specify a subscription type:
+Each namespace must declare which subscription type it supports. The client specifies the matching type when subscribing:
 
 | Type | Description |
 |------|-------------|
@@ -75,6 +96,8 @@ Each map namespace requires two mode settings: **sync mode** (how clients recove
 ## Map brokers
 
 Map subscriptions require a **map broker** — a backend that stores the keyed state and coordinates updates. By default Centrifugo uses an in-memory map broker. Centrifugo supports three map broker types.
+
+[Centrifugo PRO](../pro/overview.md) allows configuring [different map brokers for different channel namespaces](../pro/map_subscriptions.md#per-namespace-map-brokers) — for example, ephemeral cursor data in Redis and persistent scoreboard state in PostgreSQL.
 
 ### Memory
 
@@ -109,11 +132,11 @@ Redis Cluster is supported only with sharded PUB/SUB enabled, which is a [Centri
 
 Key options:
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `cleanup_interval` | `"1s"` | How often to remove expired entries. Set to `"-1"` to disable |
-| `cleanup_batch_size` | `100` | Max entries processed per channel per cleanup cycle |
-| `idempotent_result_ttl` | `"5m"` | TTL for idempotent operation result cache |
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `cleanup_interval` | [duration](./configuration.md#duration-type) | `"1s"` | How often to remove expired entries. Set to `"-1"` to disable |
+| `cleanup_batch_size` | integer | `100` | Max entries processed per channel per cleanup cycle |
+| `idempotent_result_ttl` | [duration](./configuration.md#duration-type) | `"5m"` | TTL for idempotent operation result cache |
 
 Redis map broker supports the same connection options as the Redis engine (address, cluster addresses, Sentinel, TLS, etc.).
 
@@ -140,24 +163,36 @@ PostgreSQL-backed storage for durable, persistent state. Centrifugo creates the 
 
 Key options:
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `dsn` | | PostgreSQL connection string (required) |
-| `pool_size` | `32` | Maximum connection pool size |
-| `num_shards` | `16` | Number of delivery worker shards. Use the default for now — more guidance will be provided later |
-| `ttl_check_interval` | `"1s"` | How often to check for expired keys |
-| `cleanup_interval` | `"1m"` | How often to clean up expired stream/meta entries |
-| `idempotent_result_ttl` | `"5m"` | TTL for idempotency results |
-| `binary_data` | `false` | Use BYTEA instead of JSONB for data columns |
-| `stream_retention` | `"24h"` | How long stream entries are kept |
-| `use_notify` | `false` | Enable LISTEN/NOTIFY for low-latency delivery |
-| `skip_schema_init` | `false` | Skip automatic table creation on startup |
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `dsn` | string | | PostgreSQL connection string (required) |
+| `pool_size` | integer | `32` | Maximum connection pool size |
+| `num_shards` | integer | `16` | Number of delivery worker shards. Use the default for now — more guidance will be provided later |
+| `ttl_check_interval` | [duration](./configuration.md#duration-type) | `"1s"` | How often to check for expired keys |
+| `cleanup_interval` | [duration](./configuration.md#duration-type) | `"1m"` | How often to clean up expired stream/meta entries |
+| `idempotent_result_ttl` | [duration](./configuration.md#duration-type) | `"5m"` | TTL for idempotency results |
+| `binary_data` | boolean | `false` | Use BYTEA instead of JSONB for data columns |
+| `stream_retention` | [duration](./configuration.md#duration-type) | `"24h"` | How long stream entries are kept |
+| `use_notify` | boolean | `false` | Enable LISTEN/NOTIFY for low-latency delivery |
+| `skip_schema_init` | boolean | `false` | Skip automatic table creation on startup |
 
-[Centrifugo PRO](../pro/overview.md) extends the PostgreSQL map broker with read replica support for distributing read load, and broker fan-out — the ability to delegate PUB/SUB delivery to Redis or NATS instead of having every node poll PostgreSQL independently. Broker fan-out is important for improving performance in large Centrifugo clusters. See [Map subscriptions enhancements](../pro/map_subscriptions.md) for details.
+[Centrifugo PRO](../pro/overview.md) extends the PostgreSQL map broker with:
+
+- [**In-memory cache layer**](../pro/map_subscriptions.md#in-memory-cache-layer) — keeps channel state in memory on each node, reducing backend reads and improving subscribe latency
+- [**Read replicas**](../pro/map_subscriptions.md#read-replicas) — distributes read load across PostgreSQL replicas
+- [**Broker fan-out**](../pro/map_subscriptions.md#broker-fan-out) — only one node per shard polls PostgreSQL, then publishes updates through Redis or NATS. Reduces PostgreSQL load proportionally to cluster size — essential for running many Centrifugo nodes
 
 #### Transactional publishing
 
 A unique advantage of the PostgreSQL map broker is that your application can call Centrifugo's SQL functions directly within your own database transactions. This guarantees atomicity — the map state update and your business logic commit or rollback together.
+
+The architecture uses an **outbox pattern** — all writes go into PostgreSQL tables atomically, and Centrifugo's outbox workers pick up new entries and deliver them to clients:
+
+import PgOutboxDiagram from '@site/src/components/PgOutboxDiagram';
+
+<PgOutboxDiagram />
+
+When your transaction commits, the state table (`cf_map_state`) and the stream/outbox table (`cf_map_stream`) are updated atomically. Centrifugo runs a pool of outbox workers (one per shard) that poll the stream table for new entries and deliver them to subscribed clients via WebSocket. When `use_notify` is enabled, PostgreSQL's `LISTEN/NOTIFY` wakes the workers immediately — otherwise they poll every 50ms. This eliminates the [dual-write problem](https://thorben-janssen.com/dual-writes/): if the transaction rolls back, no real-time update is ever sent.
 
 Centrifugo automatically creates these SQL functions when the PostgreSQL map broker initializes the schema:
 
@@ -232,7 +267,7 @@ All subscribers to the same channel must use the same subscription type. A singl
     "namespaces": [
       {
         "name": "cursors",
-        "subscription_types": ["map"],
+        "subscription_type": "map",
         "map_sync_mode": "ephemeral",
         "map_retention_mode": "expiring",
         "map_key_ttl": "60s",
@@ -252,49 +287,45 @@ When allowing direct client publishing, use [`publication_data_format`](channels
 
 ### Namespace options
 
-#### Subscription types
+#### Subscription type
 
 ```json
-"subscription_types": ["map"]
+"subscription_type": "map"
 ```
 
-Declares that the namespace supports map subscriptions. A namespace can support multiple types simultaneously:
-
-```json
-"subscription_types": ["map", "map_clients", "map_users"]
-```
+Declares the subscription type for the namespace — one of the [supported types](#subscription-types). Each namespace supports exactly one type — use separate namespaces for presence tracking (see [Presence namespaces](#presence-namespaces)).
 
 #### Sync and retention
 
-| Option | Values | Description |
-|--------|--------|-------------|
-| `map_sync_mode` | `"ephemeral"`, `"converging"` | Required when using map types |
-| `map_retention_mode` | `"expiring"`, `"permanent"` | Required when using map types |
-| `map_key_ttl` | duration string | Required for `"expiring"` retention |
-| `map_ordered` | `true`/`false` | Enable score-based ordering of entries |
-| `map_stream_size` | integer | Max stream entries (auto-derived for converging: 100) |
-| `map_stream_ttl` | duration string | Stream entry retention (auto-derived for converging: "1m") |
-| `map_meta_ttl` | duration string | Metadata retention (auto-derived) |
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `map_sync_mode` | string | | `"ephemeral"` or `"converging"`. Required when using map types |
+| `map_retention_mode` | string | | `"expiring"` or `"permanent"`. Required when using map types |
+| `map_key_ttl` | [duration](./configuration.md#duration-type) | | Required for `"expiring"` retention |
+| `map_ordered` | boolean | `false` | Enable score-based ordering of entries |
+| `map_stream_size` | integer | | Max stream entries (auto-derived for converging: 100) |
+| `map_stream_ttl` | [duration](./configuration.md#duration-type) | | Stream entry retention (auto-derived for converging: "1m") |
+| `map_meta_ttl` | [duration](./configuration.md#duration-type) | | Metadata retention (auto-derived) |
 
 #### Map publish permissions
 
-| Option | Description |
-|--------|-------------|
-| `allow_map_publish_for_client` | Authenticated clients can map-publish to channels in this namespace |
-| `allow_map_publish_for_subscriber` | Clients subscribed to the channel can map-publish |
-| `allow_map_publish_for_anonymous` | Anonymous clients can map-publish (requires one of the above) |
-| `map_publish_proxy_enabled` | Route map publish through a proxy |
-| `map_publish_proxy_name` | Name of the proxy to use (default: `"default"`) |
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `allow_map_publish_for_client` | boolean | `false` | Authenticated clients can map-publish to channels in this namespace |
+| `allow_map_publish_for_subscriber` | boolean | `false` | Clients subscribed to the channel can map-publish |
+| `allow_map_publish_for_anonymous` | boolean | `false` | Anonymous clients can map-publish (requires one of the above) |
+| `map_publish_proxy_enabled` | boolean | `false` | Route map publish through a proxy |
+| `map_publish_proxy_name` | string | `"default"` | Name of the proxy to use |
 
 #### Map remove permissions
 
-| Option | Description |
-|--------|-------------|
-| `allow_map_remove_for_client` | Authenticated clients can map-remove from channels in this namespace |
-| `allow_map_remove_for_subscriber` | Clients subscribed to the channel can map-remove |
-| `allow_map_remove_for_anonymous` | Anonymous clients can map-remove (requires one of the above) |
-| `map_remove_proxy_enabled` | Route map remove through a proxy |
-| `map_remove_proxy_name` | Name of the proxy to use (default: `"default"`) |
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `allow_map_remove_for_client` | boolean | `false` | Authenticated clients can map-remove from channels in this namespace |
+| `allow_map_remove_for_subscriber` | boolean | `false` | Clients subscribed to the channel can map-remove |
+| `allow_map_remove_for_anonymous` | boolean | `false` | Anonymous clients can map-remove (requires one of the above) |
+| `map_remove_proxy_enabled` | boolean | `false` | Route map remove through a proxy |
+| `map_remove_proxy_name` | string | `"default"` | Name of the proxy to use |
 
 #### Server-driven key assignment
 
@@ -304,7 +335,7 @@ Declares that the namespace supports map subscriptions. A namespace can support 
 
 | Value | Behavior |
 |-------|----------|
-| `""` (empty/default) | Client-provided key is used as-is |
+| `""` (empty/default) | Client-provided key is used as-is. In most cases you should validate it — enable `map_publish_proxy_enabled` to route through a [map publish proxy](#map-publish-permissions) |
 | `"client_id"` | Key is overridden with the client's connection ID |
 | `"user_id"` | Key is overridden with the client's user ID |
 
@@ -320,7 +351,7 @@ When a client unsubscribes or disconnects, the entry with key = client ID is aut
 
 #### Presence namespaces
 
-Map subscriptions can automatically track client and user presence in separate namespaces. Each subscription type (`map`, `map_clients`, `map_users`) lives in its own namespace — you need to define all three:
+Map subscriptions can automatically track client and user presence in separate namespaces. Each namespace has exactly one subscription type — you define a separate namespace for each:
 
 ```json title="config.json"
 {
@@ -328,7 +359,7 @@ Map subscriptions can automatically track client and user presence in separate n
     "namespaces": [
       {
         "name": "game",
-        "subscription_types": ["map"],
+        "subscription_type": "map",
         "map_sync_mode": "ephemeral",
         "map_retention_mode": "expiring",
         "map_key_ttl": "60s",
@@ -338,7 +369,7 @@ Map subscriptions can automatically track client and user presence in separate n
       },
       {
         "name": "clients",
-        "subscription_types": ["map_clients"],
+        "subscription_type": "map_clients",
         "map_sync_mode": "ephemeral",
         "map_retention_mode": "expiring",
         "map_key_ttl": "60s",
@@ -346,7 +377,7 @@ Map subscriptions can automatically track client and user presence in separate n
       },
       {
         "name": "users",
-        "subscription_types": ["map_users"],
+        "subscription_type": "map_users",
         "map_sync_mode": "ephemeral",
         "map_retention_mode": "expiring",
         "map_key_ttl": "60s",
@@ -358,10 +389,10 @@ Map subscriptions can automatically track client and user presence in separate n
 ```
 
 When a client subscribes to `game:abc`:
-- An entry with key = client ID is automatically published to `clients:abc` (client presence)
-- An entry with key = user ID is automatically published to `users:abc` (user presence)
+- An entry with key = client ID is automatically published to `clients:game:abc` (client presence)
+- An entry with key = user ID is automatically published to `users:game:abc` (user presence)
 
-The client can then separately subscribe to `clients:abc` or `users:abc` to track presence for that game channel.
+The client can then separately subscribe to `clients:game:abc` or `users:game:abc` to track presence for that game channel.
 
 ### Map publish/remove proxy
 
@@ -385,7 +416,7 @@ When `map_publish_proxy_enabled` or `map_remove_proxy_enabled` is set, the opera
     "namespaces": [
       {
         "name": "game",
-        "subscription_types": ["map"],
+        "subscription_type": "map",
         "map_sync_mode": "converging",
         "map_retention_mode": "permanent",
         "allow_subscribe_for_client": true,
@@ -410,12 +441,12 @@ When the proxy returns a successful result, Centrifugo executes the map publish 
 
 Several options in the `client` configuration section control map subscription behavior:
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `map_pagination_min_limit` | `100` | Minimum entries per page for state/stream pagination |
-| `map_pagination_max_limit` | `1000` | Maximum entries per page for state/stream pagination |
-| `map_live_transition_max_publication_limit` | `300` | Max stream publications to recover during live transition (0 = no limit) |
-| `map_subscribe_catch_up_timeout` | `"5s"` | Max time for state/stream catch-up before disconnecting |
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `map_pagination_min_limit` | integer | `100` | Minimum entries per page for state/stream pagination |
+| `map_pagination_max_limit` | integer | `1000` | Maximum entries per page for state/stream pagination |
+| `map_live_transition_max_publication_limit` | integer | `300` | Max stream publications to recover during live transition (0 = no limit) |
+| `map_subscribe_catch_up_timeout` | [duration](./configuration.md#duration-type) | `"5s"` | Max time for state/stream catch-up before disconnecting |
 
 ## Server API
 
@@ -579,7 +610,7 @@ Server configuration:
     "namespaces": [
       {
         "name": "cursors",
-        "subscription_types": ["map"],
+        "subscription_type": "map",
         "map_sync_mode": "ephemeral",
         "map_retention_mode": "expiring",
         "map_key_ttl": "60s",
@@ -644,7 +675,7 @@ Server configuration:
     "namespaces": [
       {
         "name": "scoreboard",
-        "subscription_types": ["map"],
+        "subscription_type": "map",
         "map_sync_mode": "converging",
         "map_retention_mode": "permanent",
         "map_ordered": true,
@@ -686,3 +717,21 @@ sub.on('update', (ctx) => {
 
 sub.subscribe();
 ```
+
+## Demos
+
+A collection of interactive demos showcasing map subscriptions is available in the [map_demo](https://github.com/centrifugal/examples/tree/master/v6/map_demo) example. It includes 9 scenarios covering different map subscription features:
+
+![map demo](/img/map_demo.jpg)
+
+- **Sync Protocol Visualizer** — step through the STATE → STREAM → LIVE sync phases with interactive sequence diagrams and frame inspection
+- **Ephemeral Cursors** — real-time cursor positions using ephemeral sync with auto-cleanup on disconnect
+- **Game Lobby** — 2-player lobby with slot claiming, live updates, and automatic game start using converging sync
+- **Inventory (CAS)** — compare-and-swap for safe concurrent updates with conflict handling
+- **Stock Tickers** — real-time price feed with sector filtering using tags filter
+- **Live Scoreboard (Delta)** — 6 concurrent football matches with fossil delta compression and live bandwidth stats
+- **Sprint Board (PostgreSQL)** — Kanban board with drag-and-drop using native PostgreSQL `cf_map_*` functions for transactional publishing
+- **Live Polls (PostgreSQL)** — server-driven polls with real-time voting, bot participants, and auto-rotation using `cf_map_*` functions
+- **Leaderboard (PostgreSQL)** — persistent ordered leaderboard using `cf_map_*` functions
+
+The demo runs with Docker Compose (PostgreSQL + Python backend + Nginx) and requires Centrifugo v6.7+ with `centrifuge-js`.

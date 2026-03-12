@@ -70,7 +70,7 @@ Below you can find an information regarding support of different features in our
 | batching API                               | ✅  |      |       |    |      |        |        |
 | bidirectional WebSocket emulation          | ✅  |      |       |    |      |        |    ✅    |
 | headers emulation                          | ✅  | ✅    | na    | na | na   | na     | ✅     |
-| channel compaction (Centrifugo PRO)        | ✅  |      |       |    |      |        |        |
+| [channel compaction](../pro/bandwidth_optimizations.md#channel-compaction) (Centrifugo PRO) | ✅  |      |       |    |      |        |        |
 
 </div>
 
@@ -90,7 +90,8 @@ Below you can find an information regarding support of different features in our
 | handle unsubscribe advice from server        | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅
 | manage subscription registry                 | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅
 | optimistic subscriptions                     | ✅  |      |       |    |      |        |        |
-| delta compression                            | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |   ✅     |
-| publication tags filter                      | ✅  |      |       |    |      |        |    ✅    |
+| [delta compression](../server/delta_compression.md) | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |   ✅     |
+| [publication tags filter](../server/publication_filtering.md) | ✅  |      |       |    |      |        |    ✅    |
+| [map subscriptions](../server/map_subscriptions.md) | ✅  |      |       |    |      |        |        |
 
 </div>

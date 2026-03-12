@@ -16,7 +16,7 @@ Configure per namespace:
   "namespaces": [
     {
       "name": "cursors",
-      "subscription_types": ["map"],
+      "subscription_type": "map",
       "map_sync_mode": "ephemeral",
       "map_retention_mode": "expiring",
       "map_key_ttl": "60s",
@@ -223,7 +223,7 @@ Named map brokers are defined in the top-level `map_brokers` array. Each entry m
     "namespaces": [
       {
         "name": "cursors",
-        "subscription_types": ["map"],
+        "subscription_type": "map",
         "map_sync_mode": "ephemeral",
         "map_retention_mode": "expiring",
         "map_key_ttl": "60s",
@@ -234,7 +234,7 @@ Named map brokers are defined in the top-level `map_brokers` array. Each entry m
       },
       {
         "name": "scoreboard",
-        "subscription_types": ["map"],
+        "subscription_type": "map",
         "map_sync_mode": "converging",
         "map_retention_mode": "permanent",
         "map_ordered": true,
