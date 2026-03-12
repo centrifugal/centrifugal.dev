@@ -505,6 +505,12 @@ The same `hmac_previous_secret_key` and `hmac_previous_secret_key_valid_until` o
 
 ## Dynamic JWKs endpoint
 
+:::note Breaking change in v6.7.0
+
+The configuration of Dynamic JWKs endpoint and its validation have been changed in Centrifugo v6.7.0 to address critical security issue. See [release notes](https://github.com/centrifugal/centrifugo/releases/tag/v6.7.0).
+
+:::
+
 It's possible to extract variables from `iss` and `aud` JWT claims using [Go regexp](https://pkg.go.dev/regexp) named groups, then use variables extracted during `iss` or `aud` matching to construct a JWKS endpoint dynamically upon token validation. In this case JWKS endpoint may be set in config as template.
 
 To achieve this Centrifugo provides two additional options:
@@ -520,7 +526,7 @@ Let's look at the example:
     "token": {
       ...
       "jwks_public_endpoint": "https://keycloak:443/{{realm}}/protocol/openid-connect/certs",
-      "issuer_regex": "https://example.com/auth/realms/(?P<realm>[A-z]+)"
+      "issuer_regex": "https://example.com/auth/realms/(?P<realm>master|production)"
     }
   }
 }
@@ -528,11 +534,68 @@ Let's look at the example:
 
 To use variable in `client.token.jwks_public_endpoint` it must be wrapped in `{{` `}}`.
 
-When using `client.token.issuer_regex` and `client.token.audience_regex` make sure `client.token.issuer` and `client.token.audience` not used in the config - otherwise and error will be returned on Centrifugo start.
+To construct the JWKS URL, Centrifugo must parse `iss` and `aud` claims **before** verifying the token signature — the JWKS URL is needed to fetch the key for verification. This means template variable values come from unverified input. To prevent security issues, Centrifugo only allows regex named group used as a template placeholder in `jwks_public_endpoint` to be an **explicit alternation of fixed strings**. This applies regardless of where the placeholder appears in the URL — host, subdomain, or path.
+
+Examples of **valid** configurations:
+
+```json title="Realm in path"
+{
+  "client": {
+    "token": {
+      "jwks_public_endpoint": "https://keycloak:443/{{realm}}/protocol/openid-connect/certs",
+      "issuer_regex": "https://example.com/auth/realms/(?P<realm>master|staging|production)"
+    }
+  }
+}
+```
+
+```json title="Tenant as subdomain"
+{
+  "client": {
+    "token": {
+      "jwks_public_endpoint": "https://{{tenant}}.example.com/.well-known/jwks.json",
+      "issuer_regex": "https://(?P<tenant>acme|globex|initech).example.com"
+    }
+  }
+}
+```
+
+```json title="Values with dots (e.g., domain-like identifiers)"
+{
+  "client": {
+    "token": {
+      "jwks_public_endpoint": "https://{{host}}/protocol/openid-connect/certs",
+      "issuer_regex": "https://(?P<host>auth\\.us\\.example\\.com|auth\\.eu\\.example\\.com)"
+    }
+  }
+}
+```
+
+Examples of **invalid** configurations (will cause a startup error):
+
+Using patterns like `(?P<host>.+)`, `(?P<host>[a-z]+)`, or `(?P<realm>[a-zA-Z0-9-]+)` will cause a configuration error at startup because they allow arbitrary input.
+
+:::tip
+
+If you see a startup error related to JWKS endpoint template safety, review the named groups in your `issuer_regex` or `audience_regex`. Make sure they use an explicit list of allowed values (e.g., `value1|value2|value3`) for every placeholder used in `jwks_public_endpoint`.
+
+:::
+
+:::tip
+
+If you need to temporarily bypass this check during migration from Centrifugo < 6.7.0, you can set `client.token.insecure_skip_jwks_endpoint_safety_check` to `true`. This will allow Centrifugo to start but will log a warning. This escape hatch is insecure and will be removed in a future release. Also, we will rework this feature in Centrifugo v7.
+
+:::
 
 :::caution
 
 Setting `client.token.issuer_regex` and `client.token.audience_regex` will also affect subscription tokens (used for [channel token authorization](channel_token_auth.md)). If you need to separate connection token configuration and subscription token configuration check out [separate subscription token config](./channel_token_auth.md#separate-subscription-token-config) feature.
+
+:::
+
+:::info
+
+When using `client.token.issuer_regex` and `client.token.audience_regex` make sure `client.token.issuer` and `client.token.audience` not used in the config - otherwise and error will be returned on Centrifugo start.
 
 :::
 
