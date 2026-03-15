@@ -45,8 +45,8 @@ image:
 DEB package [available in release assets](https://github.com/centrifugal/centrifugo-pro/releases).
 
 ```
-wget https://github.com/centrifugal/centrifugo-pro/releases/download/v6.7.0/centrifugo-pro_6.6.4-0_amd64.deb
-sudo dpkg -i centrifugo-pro_6.6.4-0_amd64.deb
+wget https://github.com/centrifugal/centrifugo-pro/releases/download/v6.7.0/centrifugo-pro_6.7.0-0_amd64.deb
+sudo dpkg -i centrifugo-pro_6.7.0-0_amd64.deb
 ```
 
 ### Centos
@@ -54,8 +54,8 @@ sudo dpkg -i centrifugo-pro_6.6.4-0_amd64.deb
 RPM package [available in release assets](https://github.com/centrifugal/centrifugo-pro/releases).
 
 ```
-wget https://github.com/centrifugal/centrifugo-pro/releases/download/v6.7.0/centrifugo-pro-6.6.4-0.x86_64.rpm
-sudo yum install centrifugo-pro-6.6.4-0.x86_64.rpm
+wget https://github.com/centrifugal/centrifugo-pro/releases/download/v6.7.0/centrifugo-pro-6.7.0-0.x86_64.rpm
+sudo yum install centrifugo-pro-6.7.0-0.x86_64.rpm
 ```
 
 ## Setting PRO license key
