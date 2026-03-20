@@ -4,6 +4,8 @@ title: Shared poll subscriptions
 sidebar_label: Shared poll subscriptions ✨
 ---
 
+import SharedPollDiagram from '@site/src/components/SharedPollDiagram';
+
 :::caution Experimental
 
 Shared poll subscriptions is an experimental feature. Configuration options, client SDK API, and proxy protocol may change in future releases. At this point only `centrifuge-js` SDK supports shared poll subscriptions on the client side.
@@ -31,6 +33,8 @@ Shared poll subscriptions use a keyed channel mode where clients explicitly trac
 The trade-off is latency: updates arrive within the polling interval (configurable, default 10s) rather than instantly on write. This is acceptable for use cases like vote counts, view counts, prices, and scores where near-real-time (seconds) is sufficient and the simplicity of not integrating publish calls into every write path is valuable. For instant delivery, use regular pub/sub channels with application-driven publish.
 
 ### How it works
+
+<SharedPollDiagram />
 
 1. Clients subscribe to a shared poll channel and **track** specific items by key
 2. Centrifugo collects all tracked keys across all connections
