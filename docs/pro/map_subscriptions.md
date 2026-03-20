@@ -17,13 +17,15 @@ Configure per namespace:
     {
       "name": "cursors",
       "subscription_type": "map",
-      "map_sync_mode": "ephemeral",
-      "map_retention_mode": "expiring",
-      "map_key_ttl": "60s",
+      "map": {
+        "sync_mode": "ephemeral",
+        "retention_mode": "expiring",
+        "key_ttl": "60s",
+        "allow_publish_for_subscriber": true,
+        "client_key": "client_id"
+      },
       "debounce_interval": "50ms",
-      "allow_subscribe_for_client": true,
-      "allow_map_publish_for_subscriber": true,
-      "map_client_key": "client_id"
+      "allow_subscribe_for_client": true
     }
   ]
 }
@@ -194,7 +196,7 @@ Works with both standalone Redis (with a replica) and Redis Cluster setups.
 
 By default, all map channels use the single map broker configured in `map_broker`. Centrifugo PRO allows defining **named map broker instances** so that different namespaces can use different backends — for example, ephemeral cursor data in Redis and persistent scoreboard state in PostgreSQL.
 
-Named map brokers are defined in the top-level `map_brokers` array. Each entry must have a unique `name`, an `enabled` flag, and a `type` with its backend-specific configuration. Then, a namespace references a named broker via the `map_broker_name` option.
+Named map brokers are defined in the top-level `map_brokers` array. Each entry must have a unique `name`, an `enabled` flag, and a `type` with its backend-specific configuration. Then, a namespace references a named broker via the `map.broker_name` option.
 
 ```json title="config.json"
 {
@@ -224,21 +226,25 @@ Named map brokers are defined in the top-level `map_brokers` array. Each entry m
       {
         "name": "cursors",
         "subscription_type": "map",
-        "map_sync_mode": "ephemeral",
-        "map_retention_mode": "expiring",
-        "map_key_ttl": "60s",
-        "map_broker_name": "redis_cursors",
-        "allow_subscribe_for_client": true,
-        "allow_map_publish_for_subscriber": true,
-        "map_client_key": "client_id"
+        "map": {
+          "sync_mode": "ephemeral",
+          "retention_mode": "expiring",
+          "key_ttl": "60s",
+          "broker_name": "redis_cursors",
+          "allow_publish_for_subscriber": true,
+          "client_key": "client_id"
+        },
+        "allow_subscribe_for_client": true
       },
       {
         "name": "scoreboard",
         "subscription_type": "map",
-        "map_sync_mode": "converging",
-        "map_retention_mode": "permanent",
-        "map_ordered": true,
-        "map_broker_name": "pg_scores",
+        "map": {
+          "sync_mode": "converging",
+          "retention_mode": "permanent",
+          "ordered": true,
+          "broker_name": "pg_scores"
+        },
         "allow_subscribe_for_client": true
       }
     ]
@@ -246,4 +252,4 @@ Named map brokers are defined in the top-level `map_brokers` array. Each entry m
 }
 ```
 
-When `map_broker_name` is not set (or empty), the namespace uses the default `map_broker`. If a namespace references a name that is not found or not enabled in `map_brokers`, Centrifugo returns a validation error on startup.
+When `map.broker_name` is not set (or empty), the namespace uses the default `map_broker`. If a namespace references a name that is not found or not enabled in `map_brokers`, Centrifugo returns a validation error on startup.

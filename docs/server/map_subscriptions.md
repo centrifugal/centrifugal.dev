@@ -69,8 +69,8 @@ Each namespace must declare which subscription type it supports. The client spec
 |------|-------------|
 | `stream` | Traditional PUB/SUB with optional history stream, automatic recovery from stream, and cache recovery mode (default type, Centrifugo always had it) |
 | `map` | Map subscription — keyed state with real-time updates, optional converging sync, per-key TTL support, and paginated state sync protocol |
-| `map_clients` | A special type of map subscription for presence — one entry per client connection, automatically managed by the server. Both joins and leaves are delivered immediately. The system is eventually consistent: if a remove operation to the broker fails (e.g. due to a transient network error), the stale entry will expire after `map_key_ttl` (60s by default) rather than lingering indefinitely |
-| `map_users` | A special type of map subscription for presence — one entry per user ID, automatically managed by the server. New users appear immediately, but removals are driven by key TTL — so a disconnected user's entry remains in the state for up to `map_key_ttl` (60s by default) |
+| `map_clients` | A special type of map subscription for presence — one entry per client connection, automatically managed by the server. Both joins and leaves are delivered immediately. The system is eventually consistent: if a remove operation to the broker fails (e.g. due to a transient network error), the stale entry will expire after `map.key_ttl` (60s by default) rather than lingering indefinitely |
+| `map_users` | A special type of map subscription for presence — one entry per user ID, automatically managed by the server. New users appear immediately, but removals are driven by key TTL — so a disconnected user's entry remains in the state for up to `map.key_ttl` (60s by default) |
 
 The `map_clients` and `map_users` types are automatically managed by the server for presence tracking. The `map` type is the general-purpose map subscription where the application controls keys and values. It's like real-time map which is synchronized to clients.
 
@@ -268,13 +268,15 @@ All subscribers to the same channel must use the same subscription type. A singl
       {
         "name": "cursors",
         "subscription_type": "map",
-        "map_sync_mode": "ephemeral",
-        "map_retention_mode": "expiring",
-        "map_key_ttl": "60s",
+        "map": {
+          "sync_mode": "ephemeral",
+          "retention_mode": "expiring",
+          "key_ttl": "60s",
+          "allow_publish_for_subscriber": true,
+          "client_key": "client_id"
+        },
         "publication_data_format": "json_object",
-        "allow_subscribe_for_client": true,
-        "allow_map_publish_for_subscriber": true,
-        "map_client_key": "client_id"
+        "allow_subscribe_for_client": true
       }
     ]
   }
@@ -299,43 +301,45 @@ Declares the subscription type for the namespace — one of the [supported types
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `map_sync_mode` | string | | `"ephemeral"` or `"converging"`. Required when using map types |
-| `map_retention_mode` | string | | `"expiring"` or `"permanent"`. Required when using map types |
-| `map_key_ttl` | [duration](./configuration.md#duration-type) | | Required for `"expiring"` retention |
-| `map_ordered` | boolean | `false` | Enable score-based ordering of entries |
-| `map_stream_size` | integer | | Max stream entries (auto-derived for converging: 100) |
-| `map_stream_ttl` | [duration](./configuration.md#duration-type) | | Stream entry retention (auto-derived for converging: "1m") |
-| `map_meta_ttl` | [duration](./configuration.md#duration-type) | | Metadata retention (auto-derived) |
+| `map.sync_mode` | string | | `"ephemeral"` or `"converging"`. Required when using map types |
+| `map.retention_mode` | string | | `"expiring"` or `"permanent"`. Required when using map types |
+| `map.key_ttl` | [duration](./configuration.md#duration-type) | | Required for `"expiring"` retention |
+| `map.ordered` | boolean | `false` | Enable score-based ordering of entries |
+| `map.stream_size` | integer | | Max stream entries (auto-derived for converging: 100) |
+| `map.stream_ttl` | [duration](./configuration.md#duration-type) | | Stream entry retention (auto-derived for converging: "1m") |
+| `map.meta_ttl` | [duration](./configuration.md#duration-type) | | Metadata retention (auto-derived) |
 
 #### Map publish permissions
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `allow_map_publish_for_client` | boolean | `false` | Authenticated clients can map-publish to channels in this namespace |
-| `allow_map_publish_for_subscriber` | boolean | `false` | Clients subscribed to the channel can map-publish |
-| `allow_map_publish_for_anonymous` | boolean | `false` | Anonymous clients can map-publish (requires one of the above) |
-| `map_publish_proxy_enabled` | boolean | `false` | Route map publish through a proxy |
-| `map_publish_proxy_name` | string | `"default"` | Name of the proxy to use |
+| `map.allow_publish_for_client` | boolean | `false` | Authenticated clients can map-publish to channels in this namespace |
+| `map.allow_publish_for_subscriber` | boolean | `false` | Clients subscribed to the channel can map-publish |
+| `map.allow_publish_for_anonymous` | boolean | `false` | Anonymous clients can map-publish (requires one of the above) |
+| `map.publish_proxy_enabled` | boolean | `false` | Route map publish through a proxy |
+| `map.publish_proxy_name` | string | `"default"` | Name of the proxy to use |
 
 #### Map remove permissions
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `allow_map_remove_for_client` | boolean | `false` | Authenticated clients can map-remove from channels in this namespace |
-| `allow_map_remove_for_subscriber` | boolean | `false` | Clients subscribed to the channel can map-remove |
-| `allow_map_remove_for_anonymous` | boolean | `false` | Anonymous clients can map-remove (requires one of the above) |
-| `map_remove_proxy_enabled` | boolean | `false` | Route map remove through a proxy |
-| `map_remove_proxy_name` | string | `"default"` | Name of the proxy to use |
+| `map.allow_remove_for_client` | boolean | `false` | Authenticated clients can map-remove from channels in this namespace |
+| `map.allow_remove_for_subscriber` | boolean | `false` | Clients subscribed to the channel can map-remove |
+| `map.allow_remove_for_anonymous` | boolean | `false` | Anonymous clients can map-remove (requires one of the above) |
+| `map.remove_proxy_enabled` | boolean | `false` | Route map remove through a proxy |
+| `map.remove_proxy_name` | string | `"default"` | Name of the proxy to use |
 
 #### Server-driven key assignment
 
 ```json
-"map_client_key": "client_id"
+"map": {
+  "client_key": "client_id"
+}
 ```
 
 | Value | Behavior |
 |-------|----------|
-| `""` (empty/default) | Client-provided key is used as-is. In most cases you should validate it — enable `map_publish_proxy_enabled` to route through a [map publish proxy](#map-publish-permissions) |
+| `""` (empty/default) | Client-provided key is used as-is. In most cases you should validate it — enable `map.publish_proxy_enabled` to route through a [map publish proxy](#map-publish-permissions) |
 | `"client_id"` | Key is overridden with the client's connection ID |
 | `"user_id"` | Key is overridden with the client's user ID |
 
@@ -344,14 +348,16 @@ This applies to both map publish and map remove operations. When set, the client
 #### Automatic cleanup on unsubscribe
 
 ```json
-"map_remove_on_unsubscribe": true
+"map": {
+  "remove_client_on_unsubscribe": true
+}
 ```
 
 When a client unsubscribes or disconnects, the entry with key = client ID is automatically removed. Useful for cursor-like scenarios.
 
-#### Presence namespaces
+#### Presence channels
 
-Map subscriptions can automatically track client and user presence in separate namespaces. Each namespace has exactly one subscription type — you define a separate namespace for each:
+Map subscriptions can automatically track client and user presence in separate channels. The presence channel is constructed as `prefix + channel` — you configure a channel prefix that determines which namespace (or pattern) the presence data is published to:
 
 ```json title="config.json"
 {
@@ -360,27 +366,33 @@ Map subscriptions can automatically track client and user presence in separate n
       {
         "name": "game",
         "subscription_type": "map",
-        "map_sync_mode": "ephemeral",
-        "map_retention_mode": "expiring",
-        "map_key_ttl": "60s",
-        "map_client_presence_namespace": "clients",
-        "map_user_presence_namespace": "users",
+        "map": {
+          "sync_mode": "ephemeral",
+          "retention_mode": "expiring",
+          "key_ttl": "60s",
+          "client_presence_channel_prefix": "clients:",
+          "user_presence_channel_prefix": "users:"
+        },
         "allow_subscribe_for_client": true
       },
       {
         "name": "clients",
         "subscription_type": "map_clients",
-        "map_sync_mode": "ephemeral",
-        "map_retention_mode": "expiring",
-        "map_key_ttl": "60s",
+        "map": {
+          "sync_mode": "ephemeral",
+          "retention_mode": "expiring",
+          "key_ttl": "60s"
+        },
         "allow_subscribe_for_client": true
       },
       {
         "name": "users",
         "subscription_type": "map_users",
-        "map_sync_mode": "ephemeral",
-        "map_retention_mode": "expiring",
-        "map_key_ttl": "60s",
+        "map": {
+          "sync_mode": "ephemeral",
+          "retention_mode": "expiring",
+          "key_ttl": "60s"
+        },
         "allow_subscribe_for_client": true
       }
     ]
@@ -394,9 +406,11 @@ When a client subscribes to `game:abc`:
 
 The client can then separately subscribe to `clients:game:abc` or `users:game:abc` to track presence for that game channel.
 
+This also works with Centrifugo PRO channel patterns. For example, with prefix `"/clients"` and a pattern channel `/games/abc`, presence is published to `/clients/games/abc`.
+
 ### Map publish/remove proxy
 
-When `map_publish_proxy_enabled` or `map_remove_proxy_enabled` is set, the operation is forwarded to your application backend before execution. The proxy can:
+When `map.publish_proxy_enabled` or `map.remove_proxy_enabled` is set, the operation is forwarded to your application backend before execution. The proxy can:
 
 - Allow or deny the operation
 - Validate that the client has permission to publish/remove for the specific key
@@ -417,11 +431,13 @@ When `map_publish_proxy_enabled` or `map_remove_proxy_enabled` is set, the opera
       {
         "name": "game",
         "subscription_type": "map",
-        "map_sync_mode": "converging",
-        "map_retention_mode": "permanent",
-        "allow_subscribe_for_client": true,
-        "map_publish_proxy_enabled": true,
-        "map_publish_proxy_name": "backend"
+        "map": {
+          "sync_mode": "converging",
+          "retention_mode": "permanent",
+          "publish_proxy_enabled": true,
+          "publish_proxy_name": "backend"
+        },
+        "allow_subscribe_for_client": true
       }
     ]
   }
@@ -435,7 +451,7 @@ The proxy receives a request with `user`, `channel`, `key`, and `data` fields. I
 - `result.key` — override the key
 - `result.data` — override the data
 
-When the proxy returns a successful result, Centrifugo executes the map publish on the broker and returns the result to the client. If the proxy is configured, the permission flags (`allow_map_publish_for_*`) are not checked — the proxy is fully responsible for authorization.
+When the proxy returns a successful result, Centrifugo executes the map publish on the broker and returns the result to the client. If the proxy is configured, the permission flags (`map.allow_publish_for_*`) are not checked — the proxy is fully responsible for authorization.
 
 ## Client tuning
 
@@ -443,6 +459,7 @@ Several options in the `client` configuration section control map subscription b
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
+| `map_pagination_default_limit` | integer | `100` | Default entries per page when the client does not specify a limit |
 | `map_pagination_min_limit` | integer | `100` | Minimum entries per page for state/stream pagination |
 | `map_pagination_max_limit` | integer | `1000` | Maximum entries per page for state/stream pagination |
 | `map_live_transition_max_publication_limit` | integer | `300` | Max stream publications to recover during live transition (0 = no limit) |
@@ -578,7 +595,7 @@ Standard subscription events (`publication`, `subscribing`, `subscribed`, `unsub
 ### Publishing
 
 ```javascript
-// Publish to a key (key may be empty if server assigns it via map_client_key)
+// Publish to a key (key may be empty if server assigns it via map.client_key)
 await sub.mapPublish('mykey', { x: 100, y: 200 });
 
 // Remove a key
@@ -611,14 +628,16 @@ Server configuration:
       {
         "name": "cursors",
         "subscription_type": "map",
-        "map_sync_mode": "ephemeral",
-        "map_retention_mode": "expiring",
-        "map_key_ttl": "60s",
+        "map": {
+          "sync_mode": "ephemeral",
+          "retention_mode": "expiring",
+          "key_ttl": "60s",
+          "remove_client_on_unsubscribe": true,
+          "allow_publish_for_subscriber": true,
+          "client_key": "client_id"
+        },
         "publication_data_format": "json_object",
-        "map_remove_on_unsubscribe": true,
-        "allow_subscribe_for_client": true,
-        "allow_map_publish_for_subscriber": true,
-        "map_client_key": "client_id"
+        "allow_subscribe_for_client": true
       }
     ]
   }
@@ -676,9 +695,11 @@ Server configuration:
       {
         "name": "scoreboard",
         "subscription_type": "map",
-        "map_sync_mode": "converging",
-        "map_retention_mode": "permanent",
-        "map_ordered": true,
+        "map": {
+          "sync_mode": "converging",
+          "retention_mode": "permanent",
+          "ordered": true
+        },
         "allow_subscribe_for_client": true
       }
     ]
