@@ -48,7 +48,7 @@ const data = [
                 description: 'Block users at the Centrifugo level — blocked users are immediately disconnected and cannot reconnect. Supports optional persistence to Redis or database so blocks survive restarts.',
             },
             {
-                name: 'Token revocation & invalidation', pro: true, link: '/docs/pro/token_revocation',
+                name: 'Token revocation & invalidation', pro: true, link: '/docs/pro/access_revoke#token-revocation',
                 description: 'Revoke individual tokens by JTI claim or invalidate all tokens issued before a specific time using IAT claim. Revocation info is kept in-memory with periodic sync, making checks fast.',
             },
             {

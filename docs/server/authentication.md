@@ -91,11 +91,11 @@ Further details on connection expiration can be found [below](#connection-expira
 
 ### iat
 
-This represents the UNIX time when the token was issued (in seconds). Refer to the [definition in RFC 7519](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.6). This claim is optional but can be advantageous in conjunction with [Centrifugo PRO's token revocation features](../pro/token_revocation.md).
+This represents the UNIX time when the token was issued (in seconds). Refer to the [definition in RFC 7519](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.6). This claim is optional but can be advantageous in conjunction with [Centrifugo PRO's token revocation features](../pro/access_revoke.md#token-revocation).
 
 ### jti
 
-This is a unique identifier for the token. Refer to the [definition in RFC 7519](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.7). This claim is optional but can be beneficial in conjunction with [Centrifugo PRO's token revocation features](../pro/token_revocation.md).
+This is a unique identifier for the token. Refer to the [definition in RFC 7519](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.7). This claim is optional but can be beneficial in conjunction with [Centrifugo PRO's token revocation features](../pro/access_revoke.md#token-revocation).
 
 ### aud
 

@@ -2,7 +2,7 @@
 description: "Centrifugo PRO is the enhanced commercial version with push notifications, real-time analytics, rate limiting, SSO, tracing, and enterprise features."
 id: overview
 title: Centrifugo PRO ♻️
-sidebar_label: Centrifugo PRO
+sidebar_label: ♻️ Centrifugo PRO overview
 ---
 
 Centrifugo PRO is the enhanced version of Centrifugo offered by Centrifugal Labs LTD under a commercial license. It's packed with a unique set of features designed to fit requirements of corporate and enterprise environments, decrease costs at scale, and benefit from additional features such as push notifications support, real-time analytics, and so on. We have leveraged our extensive experience to build Centrifugo PRO, ensuring its extra powers are practical and ready for production workloads. See information about [pricing](#pricing) and [try for free](#try-for-free-in-sandbox-mode) in sandbox mode.
@@ -22,8 +22,7 @@ Centrifugo PRO is packed with the following features:
 * 🔑 [Server API JWKS auth](./server_api_auth.md) to protect HTTP API with JWT tokens validated against JWKS endpoint.
 * 🟢 [User status API](./user_status.md) feature allows understanding activity state for a list of users.
 * 🔌 [Connections API](./connections.md) to query, filter and inspect active connections.
-* ✋ [User blocking API](./user_block.md) to block/unblock abusive users by ID.
-* 🛑 [JWT revoking and invalidation API](./token_revocation.md) to revoke tokens by ID and invalidate user's tokens based on issue time.
+* ✋ [User blocking and token revocation API](./access_revoke.md) to block/unblock abusive users and revoke tokens by ID or invalidate user's tokens based on issue time.
 * 🔔 [Channel state events](channel_events.md) to be notified on the backend about channel `occupied` and `vacated` events.
 * 🥣 [Channel cache empty events](channel_cache_empty.md) to react on cache misses in channels with cache recovery mode.
 * 💪 [Channel capabilities](./capabilities.md) for controlling channel permissions per connection or per subscription.
