@@ -27,7 +27,7 @@ import ProBanner from '../components/ProBanner';
 import ImageRotator from '../components/ImageRotator';
 import GitHubStarButton from '../components/GitHubStarButton';
 import QuickStart, { QuickStartDescription } from '../components/QuickStart';
-import { ChatIcon, DashboardIcon, GameIcon, CollaborationIcon, FinancialIcon, NotificationIcon, IoTIcon, AIIcon } from '../components/UseCaseIcons';
+import { ChatIcon, DashboardIcon, GameIcon, DataSyncIcon, FinancialIcon, LiveFeedIcon, IoTIcon, AIIcon } from '../components/UseCaseIcons';
 
 function Feature({ imageUrl, title, children }) {
   const imgUrl = useBaseUrl(imageUrl);
@@ -59,7 +59,7 @@ function Header() {
           Wash away WebSocket scalability issues
         </div>
         <div className={styles.subSubTitle}>
-          Reliable real-time messaging for any stack. Spin up once and forever.
+          Real-time messaging and data sync for any stack. Spin up once and forever.
         </div>
         <div className={styles.buttons}>
           <Link
@@ -83,7 +83,7 @@ function Home() {
   return (
     <Layout
       title={tagline}
-      description="Centrifugo is an open source server designed to help building interactive real-time messaging applications. Think chats, live comments, multiplayer games, streaming metrics etc. Centrifugo provides a variety of real-time transports, scales well and integrates with any application."
+      description="Centrifugo is an open source real-time messaging and data sync platform. Build chats, live dashboards, multiplayer games, collaborative tools, and more. Provides WebSocket, SSE, HTTP-streaming, WebTransport transports, scales well and integrates with any application."
     >
       <Head>
         <script type="application/ld+json">
@@ -95,7 +95,7 @@ function Home() {
                 "name": "Centrifugal Labs LTD",
                 "url": "https://centrifugal.dev",
                 "logo": "https://centrifugal.dev/img/logo.svg",
-                "description": "Centrifugal Labs powers real-time magic. The flagship product is Centrifugo — a self-hosted real-time messaging server, stack-agnostic and integrates with any frontend or backend technology.",
+                "description": "Centrifugal Labs powers real-time magic. The flagship product is Centrifugo — a self-hosted real-time messaging and data sync platform, stack-agnostic and integrates with any frontend or backend technology.",
                 "sameAs": [
                   "https://github.com/centrifugal",
                   "https://twitter.com/centrifugalabs",
@@ -108,7 +108,7 @@ function Home() {
                 "url": "https://centrifugal.dev",
                 "applicationCategory": "DeveloperApplication",
                 "operatingSystem": "Linux, macOS, Windows, Docker, Kubernetes",
-                "description": "Self-hosted real-time messaging server that blasts messages to online users instantly via WebSocket, HTTP-streaming, SSE, WebTransport, or gRPC. Perfect for chats, live updates, streaming AI/LLM responses, multiplayer games, and dashboards. Channel-based PUB/SUB with stream recovery, presence, delta compression, flexible auth, and great observability. Scales to millions of connections.",
+                "description": "Self-hosted real-time messaging and data sync platform. Delivers messages instantly via WebSocket, HTTP-streaming, SSE, WebTransport, or gRPC. Synchronizes key-value state across clients with transactional consistency. Perfect for chats, live updates, AI streaming, multiplayer games, dashboards, and collaborative tools. Scales to millions of connections.",
                 "offers": {
                   "@type": "Offer",
                   "price": "0",
@@ -224,18 +224,17 @@ function Home() {
           }
           reversed
           isDark
-          title="What is real-time messaging?"
+          title="Real-time messaging & data sync"
           text={
             <>
               <p>
-                Real-time messaging is used to create interactive applications where events
-                are delivered to online users with minimal delay.
+                Real-time messaging delivers events to online users with minimal delay. Chats, live comments, multiplayer games, AI streaming responses &mdash; all built on top of a real-time messaging layer.
               </p>
               <p>
-                Chats apps, live comments, multiplayer games, real-time data visualizations, collaborative tools, AI streaming responses, etc. can all be built on top of a real-time messaging system.
+                Data sync goes further &mdash; keeping structured state synchronized across clients with automatic recovery on reconnect and transactional consistency with your database.
               </p>
               <p>
-                Centrifugo is a user facing <b>PUB/SUB</b> server that handles persistent connections over various real-time transports &mdash; <b>WebSocket</b>, HTTP-streaming, SSE (Server-Sent Events), WebTransport, GRPC.
+                Centrifugo handles persistent connections over <b>WebSocket</b>, HTTP-streaming, SSE, WebTransport, and gRPC &mdash; providing both <b>PUB/SUB messaging</b> and <b>key-value state synchronization</b>.
               </p>
             </>
           }
@@ -259,9 +258,9 @@ function Home() {
                 <p>Synchronize game state and player actions in real-time gaming experiences</p>
               </div>
               <div className={styles.useCaseItem}>
-                <div className={styles.useCaseIcon}><CollaborationIcon /></div>
-                <h3>Collaboration Tools</h3>
-                <p>Enable co-editing, shared workspaces, and team coordination features</p>
+                <div className={styles.useCaseIcon}><DataSyncIcon /></div>
+                <h3>Data Sync</h3>
+                <p>Synchronize key-value state across clients with transactional consistency</p>
               </div>
               <div className={styles.useCaseItem}>
                 <div className={styles.useCaseIcon}><FinancialIcon /></div>
@@ -269,9 +268,9 @@ function Home() {
                 <p>Deliver real-time stock prices, trading updates, and market information</p>
               </div>
               <div className={styles.useCaseItem}>
-                <div className={styles.useCaseIcon}><NotificationIcon /></div>
-                <h3>Notifications</h3>
-                <p>Push instant alerts, updates, and event notifications to connected users</p>
+                <div className={styles.useCaseIcon}><LiveFeedIcon /></div>
+                <h3>Live Data Feeds</h3>
+                <p>Poll backend once, fan out changes to thousands of clients automatically</p>
               </div>
               <div className={styles.useCaseItem}>
                 <div className={styles.useCaseIcon}><IoTIcon /></div>
