@@ -10,7 +10,16 @@ const data = [
             { name: 'WebSocket, SSE, HTTP-streaming, WebTransport, GRPC transports', oss: true, pro: true },
             { name: 'WebSocket bidirectional emulation', oss: true, pro: true },
             { name: 'Stream subscriptions with history, recovery, cache mode', oss: true, pro: true },
-            { name: 'Map subscriptions for state sync', oss: 'soon', pro: 'soon' },
+            { name: 'Map subscriptions for state sync', oss: true, pro: true },
+            {
+                name: 'Map subscriptions enhancements', pro: true, link: '/docs/pro/map_subscriptions',
+                description: 'In-memory cache layer, PostgreSQL read replicas and broker fan-out, Redis Cluster support with sharded PUB/SUB, and per-namespace map brokers for using different backends per channel namespace.',
+            },
+            { name: 'Shared poll subscriptions', oss: true, pro: true },
+            {
+                name: 'Shared poll enhancements', pro: true, link: '/docs/pro/shared_poll',
+                description: 'Instant initial data via cached items, delta compression, notification fast path for near-instant updates, adaptive backpressure, and a standalone relay server to centralize backend polling.',
+            },
             { name: 'Presence & join/leave events', oss: true, pro: true },
             { name: 'Delta compression, publication filtering by tags', oss: true, pro: true },
             { name: 'Proxy events (connect, subscribe, publish, RPC)', oss: true, pro: true },
@@ -70,8 +79,12 @@ const data = [
                 description: 'Batch periodic client events (ping, presence updates) to reduce CPU usage and system calls. Reported over 2x CPU reduction for idle connections in benchmarks.',
             },
             {
+                name: 'Node-grouped sharded PUB/SUB', pro: true, link: '/docs/pro/scalability#node-grouped-sharded-pubsub',
+                description: 'Group sharded PUB/SUB subscriptions by Redis Cluster node instead of by partition — reducing connection count from num_partitions to num_redis_nodes. Works for both Engine and Map Broker.',
+            },
+            {
                 name: 'Bandwidth optimizations', pro: true, link: '/docs/pro/bandwidth_optimizations',
-                description: 'Enable delta compression for at-most-once delivery by keeping the latest publication in node memory. Reduces outgoing bandwidth without requiring history or recovery to be enabled.',
+                description: 'Delta compression for at-most-once delivery, channel compaction, and publish debouncing to coalesce rapid updates. Reduces outgoing bandwidth and broker load.',
             },
             {
                 name: 'Advanced message write and batching', pro: true, link: '/docs/pro/client_message_batching',

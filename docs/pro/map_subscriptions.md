@@ -5,40 +5,6 @@ title: Map subscriptions enhancements
 
 Centrifugo PRO extends the [map subscriptions](../server/map_subscriptions.md) feature with several enhancements for production deployments.
 
-## Debouncing
-
-Debouncing coalesces rapid updates to the same (channel, key) pair, sending only the latest value after a configured interval. This reduces broker load when clients publish high-frequency updates (e.g. cursor positions, sensor readings).
-
-Configure per namespace:
-
-```json title="config.json"
-{
-  "namespaces": [
-    {
-      "name": "cursors",
-      "subscription_type": "map",
-      "map": {
-        "sync_mode": "ephemeral",
-        "retention_mode": "expiring",
-        "key_ttl": "60s",
-        "allow_publish_for_subscriber": true,
-        "client_key": "client_id"
-      },
-      "debounce_interval": "50ms",
-      "allow_subscribe_for_client": true
-    }
-  ]
-}
-```
-
-When debouncing is active:
-
-- The first publish for a (channel, key) starts a timer
-- Subsequent publishes within the interval replace the pending value without resetting the timer
-- When the timer fires, only the latest value is sent to the broker
-- Remove operations cancel any pending debounced publish for the same key
-- Debounced publishes return an empty result immediately — CAS (compare-and-swap) operations are not compatible with debouncing
-
 ## In-memory cache layer
 
 The cache layer keeps channel state in memory on each Centrifugo node, reducing backend reads and improving latency for subscribe operations.
@@ -149,48 +115,9 @@ Old partitions are dropped entirely (instant) instead of deleting individual row
 
 ## Redis enhancements
 
-Centrifugo PRO enables **Redis Cluster support** for the Redis map broker via sharded PUB/SUB. The open-source version only works with a single Redis instance (or client-side consistent sharding across standalone nodes). With PRO, you can use Redis Cluster as the map broker backend, and the enhancements below further optimize that setup.
+Centrifugo PRO enables **Redis Cluster support** for the Redis map broker via sharded PUB/SUB. The open-source version only works with a single Redis instance (or client-side consistent sharding across standalone nodes). With PRO, you can use Redis Cluster as the map broker backend.
 
-### Node-grouped sharded PUB/SUB
-
-When using Redis Cluster with sharded PUB/SUB, Centrifugo creates one PUB/SUB connection per partition by default. With node-grouped PUB/SUB, subscriptions are grouped by Redis Cluster node — reducing the total number of connections from `num_partitions` to `num_redis_nodes`.
-
-```json title="config.json"
-{
-  "map_broker": {
-    "type": "redis",
-    "redis": {
-      "address": "localhost:7001",
-      "group_sharded_pub_sub_by_node": true,
-      "sharded_pub_sub_partitions": 128
-    }
-  }
-}
-```
-
-The coordinator automatically tracks Redis Cluster topology changes. When nodes are added, removed, or slots migrate, the PUB/SUB subscription map is rebuilt transparently.
-
-### Subscribe on replica for Redis Map Broker
-
-Offload PUB/SUB subscriptions to Redis replica nodes, freeing the primary for write operations:
-
-```json title="config.json"
-{
-  "map_broker": {
-    "type": "redis",
-    "redis": {
-      "address": "localhost:6379",
-      "replica": {
-        "enabled": true,
-        "address": "localhost:6380"
-      },
-      "subscribe_on_replica": true
-    }
-  }
-}
-```
-
-Works with both standalone Redis (with a replica) and Redis Cluster setups.
+Redis Map Broker also supports [node-grouped sharded PUB/SUB](./scalability.md#node-grouped-sharded-pubsub) and [subscribe on replica](./scalability.md#subscribe-on-replica) — see [Scalability optimizations](./scalability.md) for details.
 
 ## Per-namespace map brokers
 
@@ -227,8 +154,7 @@ Named map brokers are defined in the top-level `map_brokers` array. Each entry m
         "name": "cursors",
         "subscription_type": "map",
         "map": {
-          "sync_mode": "ephemeral",
-          "retention_mode": "expiring",
+          "mode": "ephemeral",
           "key_ttl": "60s",
           "broker_name": "redis_cursors",
           "allow_publish_for_subscriber": true,
@@ -240,8 +166,7 @@ Named map brokers are defined in the top-level `map_brokers` array. Each entry m
         "name": "scoreboard",
         "subscription_type": "map",
         "map": {
-          "sync_mode": "converging",
-          "retention_mode": "permanent",
+          "mode": "persistent",
           "ordered": true,
           "broker_name": "pg_scores"
         },

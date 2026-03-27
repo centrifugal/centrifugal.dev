@@ -58,6 +58,38 @@ After that client SDKs which support channel compaction will automatically negot
 
 At this moment only JavaScript SDK (`centrifuge-js`) supports this feature (since v5.5.0). Centrifugo PRO supports this since v6.5.0.
 
+## Publish debouncing
+
+Available since Centrifugo v6.8.0.
+
+Debouncing coalesces rapid publishes to the same (channel, key) pair, sending only the latest value after a configured interval. This reduces broker load when clients or the backend publish high-frequency updates (e.g. cursor positions, sensor readings).
+
+The `debounce_interval` namespace option applies to both regular broker and map broker publish operations. When a publish arrives, a timer starts. Subsequent publishes within the interval replace the pending value without resetting the timer. When the timer fires, only the latest value is forwarded to the broker.
+
+Configure per namespace:
+
+```json title="config.json"
+{
+  "channel": {
+    "namespaces": [
+      {
+        "name": "cursors",
+        "debounce_interval": "50ms"
+      }
+    ]
+  }
+}
+```
+
+Behavior:
+
+- The first publish for a (channel, key) starts a timer
+- Subsequent publishes within the interval replace the pending value without resetting the timer
+- When the timer fires, only the latest value is sent to the broker
+- Remove operations cancel any pending debounced publish for the same key and pass through immediately
+- Debounced publishes return an empty result immediately — CAS (compare-and-swap) operations are not compatible with debouncing
+- For publishes without a key (regular channels), debouncing coalesces per channel
+
 ## Drop intermediary publications
 
 Another optimization related to bandwidth is the ability to drop intermediary publications in channels using [Message batching control](./client_msg_batching.md) features of Centrifugo PRO. Specifically, see [batch_flush_latest](./client_msg_batching.md#batch_flush_latest) option.

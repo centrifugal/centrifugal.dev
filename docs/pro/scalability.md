@@ -75,7 +75,7 @@ This extends scalability options and may be very handy to stay on lower resource
 
 ### Subscribe on replica
 
-It's supported by Redis Engine and Redis Broker (only for Redis Sentinel and Redis Cluster setups).
+It's supported by Redis Engine, Redis Broker, and Redis Map Broker (only for Redis Sentinel and Redis Cluster setups).
 
 You need to enable `replica_client` in Redis configuration and set `subscribe_on_replica` boolean option:
 
@@ -97,6 +97,26 @@ You need to enable `replica_client` in Redis configuration and set `subscribe_on
 Centrifugo PRO will automatically move channel subscriptions to discovered replica.
 
 The same may be used when configuring a separate Redis Broker.
+
+For Redis Map Broker, the same option offloads PUB/SUB subscriptions to replica nodes, freeing the primary for write operations:
+
+```json title="config.json"
+{
+  "map_broker": {
+    "type": "redis",
+    "redis": {
+      "address": "localhost:6379",
+      "replica": {
+        "enabled": true,
+        "address": "localhost:6380"
+      },
+      "subscribe_on_replica": true
+    }
+  }
+}
+```
+
+Works with both standalone Redis (with a replica) and Redis Cluster setups.
 
 ### Read presence from replica
 
@@ -144,6 +164,40 @@ Here is how to enable sharded PUB/SUB in Centrifugo PRO:
     "redis": {
       "address": "redis+cluster://localhost:7000",
       "sharded_pub_sub_partitions": 64
+    }
+  }
+}
+```
+
+### Node-grouped sharded PUB/SUB
+
+By default, Centrifugo creates one PUB/SUB connection per partition. With node-grouped PUB/SUB, subscriptions are grouped by Redis Cluster node — reducing the total number of connections from `num_partitions` to `num_redis_nodes`.
+
+```json title="config.json"
+{
+  "engine": {
+    "type": "redis",
+    "redis": {
+      "address": "redis+cluster://localhost:7000",
+      "group_sharded_pub_sub_by_node": true,
+      "sharded_pub_sub_partitions": 128
+    }
+  }
+}
+```
+
+The coordinator automatically tracks Redis Cluster topology changes. When nodes are added, removed, or slots migrate, the PUB/SUB subscription map is rebuilt transparently.
+
+This optimization also applies to Redis Map Broker:
+
+```json title="config.json"
+{
+  "map_broker": {
+    "type": "redis",
+    "redis": {
+      "address": "localhost:7001",
+      "group_sharded_pub_sub_by_node": true,
+      "sharded_pub_sub_partitions": 128
     }
   }
 }

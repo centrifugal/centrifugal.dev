@@ -1,7 +1,7 @@
 ---
 id: map_subscriptions
 title: Map subscriptions
-sidebar_label: Map subscriptions ✨
+sidebar_label: Map subscriptions 🔥
 ---
 
 :::caution Experimental
@@ -74,24 +74,25 @@ Each namespace must declare which subscription type it supports. The client spec
 
 The `map_clients` and `map_users` types are automatically managed by the server for presence tracking. The `map` type is the general-purpose map subscription where the application controls keys and values. It's like real-time map which is synchronized to clients.
 
-### Sync and retention modes
+### Map modes
 
-Each map namespace requires two mode settings: **sync mode** (how clients recover after reconnect) and **retention mode** (how long entries live).
+Each map namespace requires a **mode** setting that determines the synchronization and retention behavior:
 
-| | **Expiring** retention | **Permanent** retention |
-|---|---|---|
-| **Ephemeral** sync | Entries auto-expire after TTL. On reconnect — full state snapshot. No stream history kept. | Entries persist until removed. On reconnect — full state snapshot. No stream history kept. |
-| **Converging** sync | Entries auto-expire after TTL. On reconnect — catch up from change stream (falls back to snapshot if too far behind). | Entries persist until removed. On reconnect — catch up from change stream (falls back to snapshot if too far behind). |
+| Mode | Sync | Retention | Description |
+|------|------|-----------|-------------|
+| `ephemeral` | Snapshot on reconnect | Entries auto-expire after `key_ttl` | No stream history is kept. On reconnect the client receives a full state snapshot. Best for high-frequency, short-lived data. |
+| `durable` | Converging (stream-based catch-up) | Entries auto-expire after `key_ttl` | A change stream is maintained. On reconnect the client catches up from the stream (falls back to snapshot if too far behind). Best for data that auto-expires but needs efficient recovery. |
+| `persistent` | Converging (stream-based catch-up) | Entries persist until explicitly removed | Same converging sync as `durable`, but entries live forever until removed. Best for permanent state. |
 
-**Which combination to pick:**
+**Which mode to pick:**
 
-| Use case | Sync mode | Retention mode | Why |
-|----------|-----------|----------------|-----|
-| Cursors, typing indicators | ephemeral | expiring | Positions are short-lived, no need for stream history |
-| Presence, heartbeats | ephemeral | expiring | Entries should auto-disappear when stale |
-| Scoreboards, leaderboards | converging | permanent | Data persists, clients recover missed updates efficiently |
-| Inventories, collaborative docs | converging | permanent | Need durable state with efficient reconnect recovery |
-| Time-limited polls, sessions | converging | expiring | Entries auto-expire, but clients still recover from stream |
+| Use case | Mode | Why |
+|----------|------|-----|
+| Cursors, typing indicators | `ephemeral` | Positions are short-lived, no need for stream history |
+| Presence, heartbeats | `ephemeral` | Entries should auto-disappear when stale |
+| Time-limited polls, sessions | `durable` | Entries auto-expire, but clients still recover from stream |
+| Scoreboards, leaderboards | `persistent` | Data persists, clients recover missed updates efficiently |
+| Inventories, collaborative docs | `persistent` | Need permanent state with efficient reconnect recovery |
 
 ## Map brokers
 
@@ -101,7 +102,7 @@ Map subscriptions require a **map broker** — a backend that stores the keyed s
 
 ### Memory
 
-In-memory storage. Single-node only. State is lost on restart (even when "permanent" sync mode is used).
+In-memory storage. Single-node only. State is lost on restart (even when `persistent` mode is used).
 
 ```json title="config.json"
 {
@@ -140,9 +141,9 @@ Key options:
 
 Redis map broker supports the same connection options as the Redis engine (address, cluster addresses, Sentinel, TLS, etc.).
 
-:::caution Avoid Redis eviction policies with converging mode
+:::caution Avoid Redis eviction policies with durable/persistent modes
 
-When using converging sync mode, Redis must retain all stream data for recovery to work. If Redis evicts keys due to memory pressure, clients will be unable to catch up from the stream — making state convergence impossible. Configure Redis with `maxmemory-policy noeviction`, carefully monitor memory usage, and plan capacity accordingly.
+When using `durable` or `persistent` mode, Redis must retain all stream data for recovery to work. If Redis evicts keys due to memory pressure, clients will be unable to catch up from the stream — making state convergence impossible. Configure Redis with `maxmemory-policy noeviction`, carefully monitor memory usage, and plan capacity accordingly.
 
 :::
 
@@ -269,8 +270,7 @@ All subscribers to the same channel must use the same subscription type. A singl
         "name": "cursors",
         "subscription_type": "map",
         "map": {
-          "sync_mode": "ephemeral",
-          "retention_mode": "expiring",
+          "mode": "ephemeral",
           "key_ttl": "60s",
           "allow_publish_for_subscriber": true,
           "client_key": "client_id"
@@ -297,13 +297,12 @@ When allowing direct client publishing, use [`publication_data_format`](channels
 
 Declares the subscription type for the namespace — one of the [supported types](#subscription-types). Each namespace supports exactly one type — use separate namespaces for presence tracking (see [Presence namespaces](#presence-namespaces)).
 
-#### Sync and retention
+#### Mode
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `map.sync_mode` | string | | `"ephemeral"` or `"converging"`. Required when using map types |
-| `map.retention_mode` | string | | `"expiring"` or `"permanent"`. Required when using map types |
-| `map.key_ttl` | [duration](./configuration.md#duration-type) | | Required for `"expiring"` retention |
+| `map.mode` | string | | `"ephemeral"`, `"durable"`, or `"persistent"`. Required when using map types |
+| `map.key_ttl` | [duration](./configuration.md#duration-type) | | Required for `"ephemeral"` and `"durable"` modes |
 | `map.ordered` | boolean | `false` | Enable score-based ordering of entries |
 | `map.stream_size` | integer | | Max stream entries (auto-derived for converging: 100) |
 | `map.stream_ttl` | [duration](./configuration.md#duration-type) | | Stream entry retention (auto-derived for converging: "1m") |
@@ -357,7 +356,7 @@ When a client unsubscribes or disconnects, the entry with key = client ID is aut
 
 #### Presence channels
 
-Map subscriptions can automatically track client and user presence in separate channels. The presence channel is constructed as `prefix + channel` — you configure a channel prefix that determines which namespace (or pattern) the presence data is published to:
+Subscriptions can automatically track client and user presence in separate map channels. The presence channel is constructed as `prefix + channel` — you configure a channel prefix that determines which namespace (or pattern) the presence data is published to. This works with any subscription type (stream, map, shared_poll):
 
 ```json title="config.json"
 {
@@ -366,12 +365,11 @@ Map subscriptions can automatically track client and user presence in separate c
       {
         "name": "game",
         "subscription_type": "map",
+        "map_clients_presence_channel_prefix": "clients:",
+        "map_users_presence_channel_prefix": "users:",
         "map": {
-          "sync_mode": "ephemeral",
-          "retention_mode": "expiring",
-          "key_ttl": "60s",
-          "client_presence_channel_prefix": "clients:",
-          "user_presence_channel_prefix": "users:"
+          "mode": "ephemeral",
+          "key_ttl": "60s"
         },
         "allow_subscribe_for_client": true
       },
@@ -379,8 +377,7 @@ Map subscriptions can automatically track client and user presence in separate c
         "name": "clients",
         "subscription_type": "map_clients",
         "map": {
-          "sync_mode": "ephemeral",
-          "retention_mode": "expiring",
+          "mode": "ephemeral",
           "key_ttl": "60s"
         },
         "allow_subscribe_for_client": true
@@ -389,8 +386,7 @@ Map subscriptions can automatically track client and user presence in separate c
         "name": "users",
         "subscription_type": "map_users",
         "map": {
-          "sync_mode": "ephemeral",
-          "retention_mode": "expiring",
+          "mode": "ephemeral",
           "key_ttl": "60s"
         },
         "allow_subscribe_for_client": true
@@ -432,8 +428,7 @@ When `map.publish_proxy_enabled` or `map.remove_proxy_enabled` is set, the opera
         "name": "game",
         "subscription_type": "map",
         "map": {
-          "sync_mode": "converging",
-          "retention_mode": "permanent",
+          "mode": "persistent",
           "publish_proxy_enabled": true,
           "publish_proxy_name": "backend"
         },
@@ -509,6 +504,12 @@ curl -X POST http://localhost:8000/api/map_read_state \
 ```
 
 Options: `cursor` (pagination), `limit`, `key` (filter to single key), `asc` (ascending sort for ordered state).
+
+:::note Pagination page sizes with Redis
+
+When using the Redis map broker with **unordered** state (the default), pagination uses Redis `HSCAN` with `COUNT` as a hint. Redis may return more entries than the requested `limit` on some pages, especially for small hashes stored in listpack encoding. Do not rely on exact page sizes for unordered state reads. **Ordered** state (`ordered: true`) uses `ZRANGEBYSCORE` with `LIMIT` and returns exact page sizes.
+
+:::
 
 ### map_read_stream
 
@@ -629,8 +630,7 @@ Server configuration:
         "name": "cursors",
         "subscription_type": "map",
         "map": {
-          "sync_mode": "ephemeral",
-          "retention_mode": "expiring",
+          "mode": "ephemeral",
           "key_ttl": "60s",
           "remove_client_on_unsubscribe": true,
           "allow_publish_for_subscriber": true,
@@ -678,7 +678,7 @@ document.addEventListener('mousemove', throttle((e) => {
 
 ### Persistent scoreboard
 
-A scoreboard with ordered entries, server-side publishing, and converging sync mode for recovery support.
+A scoreboard with ordered entries, server-side publishing, and persistent mode for recovery support.
 
 Server configuration:
 
@@ -696,8 +696,7 @@ Server configuration:
         "name": "scoreboard",
         "subscription_type": "map",
         "map": {
-          "sync_mode": "converging",
-          "retention_mode": "permanent",
+          "mode": "persistent",
           "ordered": true
         },
         "allow_subscribe_for_client": true

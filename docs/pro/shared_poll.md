@@ -3,11 +3,15 @@ id: shared_poll
 title: Shared poll enhancements
 ---
 
-Centrifugo PRO extends the [shared poll subscriptions](../server/shared_poll.md) feature with delta compression support, adaptive backpressure, a [notification fast path](#notification-fast-path) for near-instant updates, and a standalone [relay server](#shared-poll-relay) for reducing backend load.
+Centrifugo PRO extends the [shared poll subscriptions](../server/shared_poll.md) feature with the [`keep_latest_data`](#keep_latest_data) option for instant initial data and delta compression, [adaptive backpressure](#adaptive-backpressure), a [notification fast path](#notification-fast-path) for near-instant updates, and a standalone [relay server](#shared-poll-relay) for reducing backend load.
 
-## Delta compression
+## `keep_latest_data`
 
-Shared poll subscriptions support [fossil delta compression](../server/delta_compression.md) to minimize bandwidth when item data changes by small amounts. Enable it by adding `keep_latest_data` in `shared_poll` namespace object and add `"fossil"` to `allowed_delta_types` in the namespace:
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `keep_latest_data` | boolean | `false` | When `true`, Centrifugo caches the latest data and version for each tracked item in memory. Enables [instant initial data](#instant-initial-data) and [delta compression](#delta-compression) |
+
+When enabled, this unlocks two capabilities: instant initial data for new clients and delta compression for bandwidth savings.
 
 ```json title="config.json"
 {
@@ -28,7 +32,33 @@ Shared poll subscriptions support [fossil delta compression](../server/delta_com
 }
 ```
 
-When `keep_latest_data` is enabled, Centrifugo stores the latest data for each item and computes fossil deltas between the previous and current versions. Clients that negotiated delta compression receive a compact patch instead of the full data payload.
+### Instant initial data
+
+:::note
+Instant initial data via `keep_latest_data` requires `versioned` refresh mode. In `versionless` mode, `keep_latest_data` enables delta compression but not cached initial data.
+:::
+
+When a client tracks keys with version `0` ("I have no data yet"), Centrifugo returns cached data directly in the track response — the client receives data without any backend call and without waiting for the next poll cycle.
+
+1. The track response includes cached items where the server has a newer version than the client
+2. The client receives these items immediately as `update` events
+3. Per-connection versions are updated to prevent duplicate delivery via subsequent broadcasts
+
+This is particularly valuable for:
+
+- **Config sync** — a single key with a long refresh interval (30s+). New clients get the current configuration instantly on connect, while admin changes propagate immediately via `shared_poll_publish`. A simpler alternative to Kafka compacted topics or similar infrastructure for distributing configuration to application instances
+- **Reconnect and page navigation** — a user navigates away and returns, or reconnects after a network drop. Tracked items are served from cache immediately, then the polling safety net catches any changes that happened in between
+- **Low-frequency polling channels** — when `refresh_interval` is long to minimize backend load, cached data bridges the gap for new clients
+
+:::tip
+Without `keep_latest_data`, the open-source version still reduces cold-start delay via [**cold key auto-poll**](../server/shared_poll.md#quick-initial-data): when a key is tracked for the first time across all connections, an immediate backend poll is triggered. But with `keep_latest_data`, data for already-cached keys is served directly from memory — no backend call needed.
+:::
+
+### Delta compression
+
+Shared poll subscriptions support [fossil delta compression](../server/delta_compression.md) to minimize bandwidth when item data changes by small amounts. Add `"fossil"` to `allowed_delta_types` in the namespace (in addition to `keep_latest_data`).
+
+When enabled, Centrifugo computes fossil deltas between the previous and current versions. Clients that negotiated delta compression receive a compact patch instead of the full data payload.
 
 ## Notification fast path
 
@@ -286,6 +316,8 @@ Benefits:
 - **Provides `prev_data` for delta compression** — the relay maintains version history and returns the previous data for each item, enabling fossil deltas without backend changes
 - **Same protocol** — the relay speaks the standard `SharedPollRefresh` proxy protocol
 
+The relay works with all refresh modes. In `versionless` mode, the relay detects changes via content hash (same as nodes do without relay) and provides centralized polling and cold key read-through. In `versioned` mode, the relay passes backend versions through.
+
 ### Configuration
 
 The relay uses the same config file as regular Centrifugo nodes. All shared poll relay settings are in the `shared_poll_relay` section:
@@ -371,6 +403,7 @@ When `shared_poll_relay.enabled` is `true`, normal nodes automatically redirect 
 5. It caches item data with a version history ring buffer (`history_size` entries)
 6. When nodes request a refresh, the relay returns cached data with `prev_data` from the version history
 7. Items not requested by any node for `item_ttl` are cleaned up
+8. For newly tracked keys not yet in the relay cache, the relay fetches data from the backend synchronously — nodes receive data on their first request rather than waiting for the next poll cycle
 
 When [notification fast path](#notification-fast-path) is enabled on the relay, the relay also subscribes to the notification channel and triggers immediate backend polls for notified keys — bypassing the timer interval. After polling, it publishes a ready signal so normal nodes know fresh data is available.
 
