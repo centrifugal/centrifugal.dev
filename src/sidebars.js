@@ -28,14 +28,14 @@ module.exports = {
     "server/presence",
     "server/proxy",
     "server/proxy_streams",
-    "server/map_subscriptions",
-    "server/shared_poll",
     "server/admin_web",
     "server/observability",
     "server/infra_tuning",
     "server/load_balancing",
     "server/codes",
     "server/console_commands",
+    "server/map_subscriptions",
+    "server/shared_poll",
   ],
   Transports: [
     "transports/overview",
@@ -89,9 +89,9 @@ module.exports = {
     "pro/scalability",
     "pro/bandwidth_optimizations",
     "pro/client_message_batching",
-    "pro/map_subscriptions",
-    "pro/shared_poll",
     "pro/observability_enhancements",
+    "pro/map_subscriptions",
+    "pro/shared_poll"
   ],
   Tutorial: [
     "tutorial/intro",

@@ -1,7 +1,7 @@
 ---
 id: shared_poll
-title: Shared poll subscriptions
-sidebar_label: Shared poll subscriptions 🔥
+title: "Data sync: Shared poll 🔮"
+sidebar_label: "Data sync: Shared poll 🔮"
 ---
 
 import SharedPollDiagram from '@site/src/components/SharedPollDiagram';

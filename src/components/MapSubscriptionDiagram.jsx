@@ -3,7 +3,7 @@ import React from 'react';
 export default function MapSubscriptionDiagram() {
   return (
     <svg
-      viewBox="0 0 800 520"
+      viewBox="0 0 800 610"
       xmlns="http://www.w3.org/2000/svg"
       style={{ width: '100%', height: 'auto', borderRadius: '10px', backgroundColor: '#17171b' }}
     >
@@ -58,9 +58,9 @@ export default function MapSubscriptionDiagram() {
       </defs>
 
       {/* ===== MAIN BOUNDARY ===== */}
-      <rect x="20" y="15" width="760" height="490" rx="12"
+      <rect x="20" y="15" width="760" height="580" rx="12"
         fill="none" stroke="#444" strokeWidth="1" strokeDasharray="8,4" />
-      <rect x="20" y="15" width="760" height="490" rx="12"
+      <rect x="20" y="15" width="760" height="580" rx="12"
         fill="url(#map-hatch)" opacity="0.2" />
 
       {/* ===== THREE PHASES ===== */}
@@ -98,7 +98,7 @@ export default function MapSubscriptionDiagram() {
         </text>
         <text x="85" y="65" fontSize="10" fill="#888"
           textAnchor="middle" fontFamily="system-ui, sans-serif">
-          (converging only)
+          (durable / persistent)
         </text>
       </g>
 
@@ -122,30 +122,30 @@ export default function MapSubscriptionDiagram() {
         </text>
       </g>
 
-      {/* ===== SYNC MODES SECTION ===== */}
+      {/* ===== MODES SECTION ===== */}
       <g transform="translate(400, 155)">
-        <rect x="-60" y="-10" width="120" height="20" rx="4" fill="#17171b" />
+        <rect x="-40" y="-10" width="80" height="20" rx="4" fill="#17171b" />
         <text x="0" y="5" fontSize="10" fontWeight="bold" fill="#5b8def"
           textAnchor="middle" letterSpacing="1px" fontFamily="system-ui, sans-serif">
-          SYNC MODES
+          MODES
         </text>
       </g>
 
       {/* Ephemeral mode */}
       <g transform="translate(60, 175)">
-        <rect width="680" height="95" rx="8" fill="url(#map-grad-mode)" stroke="#5b8def" strokeWidth="1" />
+        <rect width="680" height="85" rx="8" fill="url(#map-grad-mode)" stroke="#5b8def" strokeWidth="1" />
 
-        <text x="340" y="22" fontSize="12" fontWeight="bold" fill="#5b8def"
+        <text x="340" y="20" fontSize="12" fontWeight="bold" fill="#5b8def"
           textAnchor="middle" fontFamily="system-ui, sans-serif">
           Ephemeral
         </text>
-        <text x="340" y="40" fontSize="10" fill="#888"
+        <text x="340" y="36" fontSize="10" fill="#888"
           textAnchor="middle" fontFamily="system-ui, sans-serif">
-          No stream history kept. On reconnect — full state snapshot.
+          Entries auto-expire. No stream history. On reconnect — full state snapshot.
         </text>
 
         {/* Flow: STATE ──────────────────────────────────► LIVE */}
-        <g transform="translate(20, 55)">
+        <g transform="translate(20, 48)">
           <rect x="0" y="0" width="200" height="28" rx="5" fill="url(#map-grad-phase)" stroke="#fe5e5e" strokeWidth="1" />
           <text x="100" y="18" fontSize="10" fontWeight="600" fill="#fe5e5e"
             textAnchor="middle" fontFamily="system-ui, sans-serif">STATE</text>
@@ -164,21 +164,54 @@ export default function MapSubscriptionDiagram() {
         </g>
       </g>
 
-      {/* Converging mode */}
-      <g transform="translate(60, 280)">
-        <rect width="680" height="95" rx="8" fill="url(#map-grad-mode)" stroke="#5b8def" strokeWidth="1" />
+      {/* Durable mode */}
+      <g transform="translate(60, 270)">
+        <rect width="680" height="85" rx="8" fill="url(#map-grad-mode)" stroke="#5b8def" strokeWidth="1" />
 
-        <text x="340" y="22" fontSize="12" fontWeight="bold" fill="#5b8def"
+        <text x="340" y="20" fontSize="12" fontWeight="bold" fill="#5b8def"
           textAnchor="middle" fontFamily="system-ui, sans-serif">
-          Converging
+          Durable
         </text>
-        <text x="340" y="40" fontSize="10" fill="#888"
+        <text x="340" y="36" fontSize="10" fill="#888"
           textAnchor="middle" fontFamily="system-ui, sans-serif">
-          Catch up from change stream. Falls back to snapshot if too far behind.
+          Entries auto-expire. Stream-based catch-up on reconnect. Falls back to snapshot if too far behind.
         </text>
 
         {/* Flow: STATE ───► STREAM ───► LIVE */}
-        <g transform="translate(20, 55)">
+        <g transform="translate(20, 48)">
+          <rect x="0" y="0" width="185" height="28" rx="5" fill="url(#map-grad-phase)" stroke="#fe5e5e" strokeWidth="1" />
+          <text x="92" y="18" fontSize="10" fontWeight="600" fill="#fe5e5e"
+            textAnchor="middle" fontFamily="system-ui, sans-serif">STATE</text>
+
+          <line x1="185" y1="14" x2="222" y2="14" stroke="#fe5e5e" strokeWidth="1.5" markerEnd="url(#map-arrow)" />
+
+          <rect x="227" y="0" width="185" height="28" rx="5" fill="url(#map-grad-phase)" stroke="#fe5e5e" strokeWidth="1" />
+          <text x="320" y="18" fontSize="10" fontWeight="600" fill="#fe5e5e"
+            textAnchor="middle" fontFamily="system-ui, sans-serif">STREAM</text>
+
+          <line x1="412" y1="14" x2="449" y2="14" stroke="#fe5e5e" strokeWidth="1.5" markerEnd="url(#map-arrow)" />
+
+          <rect x="454" y="0" width="186" height="28" rx="5" fill="url(#map-grad-phase)" stroke="#fe5e5e" strokeWidth="1" />
+          <text x="547" y="18" fontSize="10" fontWeight="600" fill="#fe5e5e"
+            textAnchor="middle" fontFamily="system-ui, sans-serif">LIVE</text>
+        </g>
+      </g>
+
+      {/* Persistent mode */}
+      <g transform="translate(60, 365)">
+        <rect width="680" height="85" rx="8" fill="url(#map-grad-mode)" stroke="#5b8def" strokeWidth="1" />
+
+        <text x="340" y="20" fontSize="12" fontWeight="bold" fill="#5b8def"
+          textAnchor="middle" fontFamily="system-ui, sans-serif">
+          Persistent
+        </text>
+        <text x="340" y="36" fontSize="10" fill="#888"
+          textAnchor="middle" fontFamily="system-ui, sans-serif">
+          Entries persist until removed. Stream-based catch-up on reconnect. Falls back to snapshot if too far behind.
+        </text>
+
+        {/* Flow: STATE ───► STREAM ───► LIVE */}
+        <g transform="translate(20, 48)">
           <rect x="0" y="0" width="185" height="28" rx="5" fill="url(#map-grad-phase)" stroke="#fe5e5e" strokeWidth="1" />
           <text x="92" y="18" fontSize="10" fontWeight="600" fill="#fe5e5e"
             textAnchor="middle" fontFamily="system-ui, sans-serif">STATE</text>
@@ -198,7 +231,7 @@ export default function MapSubscriptionDiagram() {
       </g>
 
       {/* ===== SDK EVENTS SECTION ===== */}
-      <g transform="translate(400, 405)">
+      <g transform="translate(400, 480)">
         <rect x="-60" y="-10" width="120" height="20" rx="4" fill="#17171b" />
         <text x="0" y="5" fontSize="10" fontWeight="bold" fill="#5bef7b"
           textAnchor="middle" letterSpacing="1px" fontFamily="system-ui, sans-serif">
@@ -206,7 +239,7 @@ export default function MapSubscriptionDiagram() {
         </text>
       </g>
 
-      <g transform="translate(60, 425)">
+      <g transform="translate(60, 500)">
         <rect width="330" height="65" rx="8" fill="url(#map-grad-mode)" stroke="#444" strokeWidth="1" />
 
         {/* sync event */}
@@ -233,7 +266,7 @@ export default function MapSubscriptionDiagram() {
       </g>
 
       {/* SDK handles everything */}
-      <g transform="translate(410, 425)">
+      <g transform="translate(410, 500)">
         <rect width="330" height="65" rx="8" fill="url(#map-grad-mode)" stroke="#444" strokeWidth="1" />
         <text x="165" y="25" fontSize="10" fill="#aaa"
           textAnchor="middle" fontFamily="system-ui, sans-serif">

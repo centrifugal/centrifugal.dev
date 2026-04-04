@@ -231,10 +231,10 @@ function Home() {
                 Real-time messaging delivers events to online users with minimal delay. Chats, live comments, multiplayer games, AI streaming responses &mdash; all built on top of a real-time messaging layer.
               </p>
               <p>
-                Data sync goes further &mdash; keeping structured state synchronized across clients with automatic recovery on reconnect and transactional consistency with your database.
+                Data sync allows keeping state synchronized across clients in real-time providing eventual consistency with your database.
               </p>
               <p>
-                Centrifugo handles persistent connections over <b>WebSocket</b>, HTTP-streaming, SSE, WebTransport, and gRPC &mdash; providing both <b>PUB/SUB messaging</b> and <b>key-value state synchronization</b>.
+                Centrifugo handles persistent connections over <b>WebSocket</b>, HTTP-streaming, SSE, WebTransport, and gRPC &mdash; providing both <b>PUB/SUB messaging</b> and <b>state synchronization</b> primitives.
               </p>
             </>
           }

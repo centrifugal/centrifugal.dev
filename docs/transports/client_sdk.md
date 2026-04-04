@@ -93,5 +93,6 @@ Below you can find an information regarding support of different features in our
 | [delta compression](../server/delta_compression.md) | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |   ✅     |
 | [publication tags filter](../server/publication_filtering.md) | ✅  |      |       |    |      |        |    ✅    |
 | [map subscriptions](../server/map_subscriptions.md) | ✅  |      |       |    |      |        |        |
+| [shared poll subscriptions](../server/shared_poll.md) | ✅  |      |       |    |      |        |        |
 
 </div>
