@@ -410,6 +410,38 @@ html[data-theme="dark"] .feature-media:before {
 
 .footer--dark {
   background-color: #000;
+  position: relative;
+  border-top: none;
+}
+
+.footer--dark::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(213, 100, 100, 0.4), transparent);
+}
+
+.footer__title {
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.footer__link-item {
+  transition: color 0.2s ease;
+}
+
+.footer__link-item:hover {
+  color: var(--ifm-color-primary) !important;
+}
+
+.footer__copyright {
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 0.85em;
 }
 
 .quotes code {

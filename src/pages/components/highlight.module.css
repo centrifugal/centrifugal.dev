@@ -2,6 +2,23 @@
     font-size: 36px;
     font-weight: 600;
     text-align: center;
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.featureTitle::after {
+    content: '';
+    display: block;
+    width: 200px;
+    height: 3px;
+    margin: 12px auto 0;
+    background: linear-gradient(90deg, transparent, #d56464, #c04a4a, #d56464, transparent);
+    background-size: 300% 100%;
+    animation: shimmer 4s ease-in-out infinite;
+    border-radius: 2px;
+    height: 2px;
+    box-shadow: 0 0 8px rgba(213, 100, 100, 0.3), 0 0 20px rgba(213, 100, 100, 0.1);
 }
 
 .featureContent {
@@ -49,4 +66,10 @@
         padding: 30px 30px 30px 30px !important;
         /* padding: var(--cf-spacing-vertical) var(--ifm-spacing-horizontal) calc(var(--cf-spacing-vertical) * 4)!important; */
     }
+}
+
+@keyframes shimmer {
+    0% { background-position: 100% 0; }
+    50% { background-position: 0% 0; }
+    100% { background-position: 100% 0; }
 }
