@@ -1,7 +1,7 @@
 ---
 id: shared_poll
-title: "Data sync: Shared poll 🔮"
-sidebar_label: "Data sync: Shared poll 🔮"
+title: "Shared poll 🔮"
+sidebar_label: "Shared poll 🔮"
 ---
 
 import SharedPollDiagram from '@site/src/components/SharedPollDiagram';
@@ -42,7 +42,7 @@ The trade-off is latency: updates arrive within the polling interval (configurab
 3. On a configurable interval, Centrifugo calls your backend proxy with the list of tracked keys
 4. Your backend returns current data for each key (and optionally a version)
 5. Centrifugo detects changes and pushes only updated items
-6. Items not returned for several consecutive cycles are marked **removed**
+6. Items returned with `removed: true` are removed from tracking and clients are notified
 
 When items are split into multiple batches, dispatches are spread evenly over the refresh interval to reduce burst load.
 
@@ -319,8 +319,7 @@ Shared poll subscriptions are configured per channel namespace using `subscripti
         "subscription_type": "shared_poll",
         "shared_poll": {
           "refresh_interval": "1s",
-          "max_keys_per_connection": 5000,
-          "max_consecutive_absences": 2
+          "max_keys_per_connection": 5000
         },
         "allow_subscribe_for_client": true
       }
@@ -393,8 +392,7 @@ Top-level `shared_poll` configuration section:
 | `refresh_interval` | [duration](./configuration.md#duration-type) | `"10s"` | How often to poll the backend for updates |
 | `refresh_batch_size` | integer | `1000` | Maximum number of items per proxy call |
 | `max_keys_per_connection` | integer | `5000` | Maximum items a single connection can track |
-| `mode` | string | `"versionless"` | Refresh request format. `"versionless"` (default): backend returns `{key, data}` without versions, Centrifugo detects changes by content hash. `"versioned"`: backend returns `{key, data, version}`, versions are included in requests allowing the backend to skip unchanged items. Enables direct publish and cached initial data |
-| `max_consecutive_absences` | integer | `2` | Number of consecutive refresh cycles an item can be absent before it's marked removed |
+| `mode` | string | `"versionless"` | `"versionless"` or `"versioned"`. See [Refresh modes](#refresh-modes) for details |
 | `channel_shutdown_delay` | [duration](./configuration.md#duration-type) | `"0s"` | Delay before cleaning up a channel after the last item is untracked. Useful to prevent teardown/rebuild churn when items are briefly untracked then re-tracked (e.g., during scroll jitter or page navigation). A value like `"30s"` keeps the refresh worker and cached state alive through brief gaps |
 | `track_expired_extra_delay` | [duration](./configuration.md#duration-type) | `"25s"` | Extra time given to client to refresh track signature after it expires. Keys not refreshed within this delay are silently removed from server state |
 | `publish_enabled` | boolean | `false` | Enable cross-node distribution for [direct publish](#direct-publish). When `true`, Centrifugo subscribes to the Broker for this channel, allowing `shared_poll_publish` API to distribute publications to all nodes |
@@ -522,7 +520,7 @@ Here `post_456` hasn't changed since version 5, so the backend omits `data`.
 
 Centrifugo uses versions for change detection instead of content hashing, and exposes them to clients — unlocking [direct publish](#direct-publish), cached initial data, and efficient reconnect.
 
-**Important:** the backend must still include every requested item in the response (at minimum `{key, version}`). Items completely omitted from the response are counted toward `max_consecutive_absences` and will eventually trigger removal events.
+In versioned mode, the backend can omit unchanged items from the response — they are treated as unchanged. To remove an item, return it with `removed: true`.
 
 ### Response
 
@@ -554,9 +552,7 @@ Each item in the response:
 | `key` | string | Item key |
 | `data` | JSON | Current item data |
 | `version` | uint64 | Item version — **required** in versioned mode, **optional** in versionless mode. Must increase monotonically on changes |
-| `removed` | boolean | If `true`, item is explicitly removed |
-
-Items not included in the response are counted toward the `max_consecutive_absences` threshold. After reaching the threshold, Centrifugo sends a removal event to tracking clients.
+| `removed` | boolean | If `true`, item is removed — Centrifugo sends a removal event to tracking clients and stops tracking the key. Items omitted from the response are treated as unchanged |
 
 ### Error response
 
@@ -828,66 +824,28 @@ When using the simplified `track(keys)` API or on signature refresh, the `getSig
 
 This lets your backend revoke access to specific items in real time — for example, when a user's permissions change or content is deleted. The revocation takes effect on the next signature refresh cycle (controlled by the signature TTL) without requiring an explicit unsubscribe.
 
-## Example
+## Example: live vote results
 
-### Live vote results
+This example ties together the pieces described above — [configuration](#minimal-example), a backend proxy handler, and client code with viewport-driven tracking.
 
-Server configuration:
-
-```json title="config.json"
-{
-  "shared_poll": {
-    "hmac_secret_key": "demo-poll-secret"
-  },
-  "channel": {
-    "proxy": {
-      "shared_poll_refresh": {
-        "endpoint": "http://localhost:3001/centrifugo/refresh",
-        "timeout": "5s"
-      }
-    },
-    "namespaces": [
-      {
-        "name": "post_votes",
-        "subscription_type": "shared_poll",
-        "shared_poll": {
-          "refresh_interval": "1s",
-          "refresh_batch_size": 1000,
-          "max_keys_per_connection": 5000,
-          "max_consecutive_absences": 2
-        },
-        "allow_subscribe_for_client": true
-      }
-    ]
-  }
-}
-```
-
-Backend proxy handler (returns current vote counts). In the default versionless mode, just return `key` and `data` — no version needed:
+Backend proxy handler (returns current vote counts in versionless mode):
 
 ```python
 @app.post("/centrifugo/refresh")
 async def shared_poll_refresh(request):
     data = await request.json()
-    channel = data["channel"]
     items = data.get("items", [])
 
     results = []
     for item in items:
-        key = item["key"]
-        # Fetch current vote data from your database
-        vote_data = await db.get_votes(key)
+        vote_data = await db.get_votes(item["key"])
         if vote_data:
-            results.append({
-                "key": key,
-                "data": vote_data,
-                # Add "version": vote_data["version"] if using versioned mode.
-            })
+            results.append({"key": item["key"], "data": vote_data})
 
     return {"result": {"items": results}}
 ```
 
-Client code:
+Client — subscribe, handle updates, and track/untrack posts as user scrolls:
 
 ```javascript
 const sub = client.newSharedPollSubscription('post_votes:feed1', {
@@ -901,34 +859,28 @@ const sub = client.newSharedPollSubscription('post_votes:feed1', {
 });
 
 sub.on('update', (ctx) => {
-  if (ctx.removed) {
-    hideVoteWidget(ctx.key);
-  } else {
-    updateVoteWidget(ctx.key, ctx.data);
-  }
+  ctx.removed ? hideVoteWidget(ctx.key) : updateVoteWidget(ctx.key, ctx.data);
 });
 
 sub.subscribe();
-
-// Track posts visible on screen — SDK auto-manages signatures
 sub.track(getVisiblePostIds());
 
-// On scroll, track/untrack as posts enter/leave viewport
 window.addEventListener('scroll', throttle(() => {
   const visible = getVisiblePostIds();
   const current = sub.trackedKeys();
   const toTrack = visible.filter(k => !current.has(k));
   const toUntrack = [...current].filter(k => !visible.includes(k));
-
-  if (toTrack.length > 0) {
-    sub.track(toTrack);
-  }
-  if (toUntrack.length > 0) {
-    sub.untrack(toUntrack);
-  }
+  if (toTrack.length) sub.track(toTrack);
+  if (toUntrack.length) sub.untrack(toUntrack);
 }, 200));
 ```
 
 ## Demos
 
-An interactive demo showcasing shared poll subscriptions is available in the [shared_poll_demo](https://github.com/centrifugal/examples/tree/master/v6/shared_poll_demo) example. It demonstrates live vote results with a Go backend, fossil delta compression, and dynamic item tracking as posts scroll into view.
+An interactive demo showcasing shared poll subscriptions is available in the [shared_poll_demo/votes](https://github.com/centrifugal/examples/tree/master/v6/shared_poll_demo/votes) example. It demonstrates live vote results with a Go backend, fossil delta compression, and dynamic item tracking as posts scroll into view.
+
+<video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/demo_votes.mp4"></video>
+
+Another demo – [shared_poll_demo/drones](https://github.com/centrifugal/examples/tree/master/v6/shared_poll_demo/drones) – demonstrates real-time geospatial tracking of 500 simulated drones over a San Francisco map. It uses versioned shared poll with cell-based spatial partitioning, where each map grid cell (~550m) is a tracked key. As users pan the map, the client dynamically tracks/untracks cells within a search radius, receiving only relevant drone position updates.
+
+<video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/demo_drones.mp4"></video>

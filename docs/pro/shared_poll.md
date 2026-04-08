@@ -338,7 +338,6 @@ The relay uses the same config file as regular Centrifugo nodes. All shared poll
         "shared_poll": {
           "refresh_interval": "1s",
           "refresh_batch_size": 1000,
-          "max_consecutive_absences": 2,
           "keep_latest_data": true
         },
         "allowed_delta_types": ["fossil"],

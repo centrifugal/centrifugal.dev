@@ -1,7 +1,7 @@
 ---
 id: map_subscriptions
-title: "Data sync: Map subscriptions 🔮"
-sidebar_label: "Data sync: Map subscriptions 🔮"
+title: "Map subscriptions 🔮"
+sidebar_label: "Map subscriptions 🔮"
 ---
 
 :::caution Experimental
@@ -10,13 +10,13 @@ Map subscriptions is an experimental feature. All its parts - configuration opti
 
 :::
 
-Map subscriptions enable real-time **data synchronization** of keyed state over channels. Instead of a traditional append-only publication stream, channels with map subscriptions maintain a **key-value state** where each entry can be independently published, updated, or removed — and all changes are automatically synchronized to subscribed clients.
+Map subscriptions enable real-time **state synchronization** of keyed collections over channels. Instead of a traditional append-only publication stream, channels with map subscriptions maintain a **key-value state** where each entry can be independently published, updated, or removed — and all changes are automatically synchronized to subscribed clients.
 
 Typical use cases:
 
 - **Cursor positions** — each user publishes their cursor; key = client/user ID, value = coordinates
 - **Collaborative state** — shared documents, whiteboards, inventories with per-object entries
-- **Persistent state sync** — sync your persistent state with tight PostgreSQL integration, using transactional publishing within your application's database transactions
+- **Persistent state** — sync your database state with tight PostgreSQL integration, using transactional publishing within your application's database transactions
 
 A standout capability of map subscriptions is the **PostgreSQL map broker** with **transactional publishing**. It lets you update real-time state and execute business logic in a single database transaction — eliminating the [dual-write problem](https://thorben-janssen.com/dual-writes/) entirely. Your application calls Centrifugo's SQL functions inside its own `BEGIN`/`COMMIT` block, so the real-time state pushed to client UIs and your database state are always atomically consistent. If the transaction rolls back, the real-time update never happened. This is a unique property for a real-time messaging system — see [PostgreSQL map broker](#postgresql) and [Transactional publishing](#transactional-publishing) sections below for details.
 
@@ -45,7 +45,7 @@ Without map subscriptions, synchronizing a keyed collection typically means fetc
 
 ## Design overview
 
-Map channels add a **data synchronization layer** on top of regular channels: a set of key-value entries that clients can query, paginate, and receive incremental updates for.
+Map channels add a **state synchronization layer** on top of regular channels: a set of key-value entries that clients can query, paginate, and receive incremental updates for.
 
 ### Client subscription protocol
 
@@ -70,7 +70,7 @@ Each namespace must declare which subscription type it supports. The client spec
 | `stream` | Traditional PUB/SUB with optional history stream, automatic recovery from stream, and cache recovery mode (default type, Centrifugo always had it) |
 | `map` | Map subscription — keyed state with real-time updates, configurable sync and retention via mode (ephemeral/durable/persistent) with stream-based catch-up in durable/persistent modes, per-key TTL support, and paginated state sync protocol |
 | `map_clients` | A special type of map subscription for presence — one entry per client connection, automatically managed by the server. Both joins and leaves are delivered immediately. The system is eventually consistent: if a remove operation to the broker fails (e.g. due to a transient network error), the stale entry will expire after `map.key_ttl` (60s by default) rather than lingering indefinitely |
-| `map_users` | A special type of map subscription for presence — one entry per user ID, automatically managed by the server. New users appear immediately, but removals are driven by key TTL — so a disconnected user's entry remains in the state for up to `map.key_ttl` (60s by default) |
+| `map_users` | A special type of map subscription for presence — one entry per user ID, automatically managed by the server. New users appear immediately, but removals are driven by key TTL — since a single user may have multiple connections, the entry can't be removed when one connection disconnects. Instead, it expires after `map.key_ttl` (60s by default) once the last connection for that user leaves the channel |
 
 The `map_clients` and `map_users` types are automatically managed by the server for presence tracking. The `map` type is the general-purpose map subscription where the application controls keys and values. It's like real-time map which is synchronized to clients.
 
@@ -489,7 +489,7 @@ Subscriptions can automatically track client and user presence in separate map c
         "name": "clients",
         "subscription_type": "map_clients",
         "map": {
-          "mode": "ephemeral",
+          "mode": "durable",
           "key_ttl": "60s"
         },
         "allow_subscribe_for_client": true
@@ -498,7 +498,7 @@ Subscriptions can automatically track client and user presence in separate map c
         "name": "users",
         "subscription_type": "map_users",
         "map": {
-          "mode": "ephemeral",
+          "mode": "durable",
           "key_ttl": "60s"
         },
         "allow_subscribe_for_client": true
@@ -507,6 +507,12 @@ Subscriptions can automatically track client and user presence in separate map c
   }
 }
 ```
+
+:::tip Use durable mode for presence channels
+
+The `durable` mode is recommended for `map_clients` and `map_users` namespaces. It enables stream-based catch-up on reconnect — clients receive only the join/leave changes they missed, rather than re-fetching the full participant list. With `ephemeral` mode, every reconnect triggers a full state snapshot, which is the same behavior as Centrifugo's traditional [presence](/docs/server/presence) — you lose the convergence advantage that map-based presence provides.
+
+:::
 
 When a client subscribes to `game:abc`:
 - An entry with key = client ID is automatically published to `clients:game:abc` (client presence)
@@ -617,9 +623,13 @@ curl -X POST http://localhost:8000/api/map_read_state \
 
 Options: `cursor` (pagination), `limit`, `key` (filter to single key), `asc` (ascending sort for ordered state).
 
-:::note Pagination page sizes with Redis
+:::note Redis map broker: pagination and data structures
 
-When using the Redis map broker with **unordered** state (the default), pagination uses Redis `HSCAN` with `COUNT` as a hint. Redis may return more entries than the requested `limit` on some pages, especially for small hashes stored in listpack encoding. Do not rely on exact page sizes for unordered state reads. **Ordered** state (`ordered: true`) uses `ZRANGEBYSCORE` with `LIMIT` and returns exact page sizes.
+**Page sizes may vary for unordered state.** Unordered state (the default) is stored in a Redis `HASH` and paginated with `HSCAN`, where `COUNT` is a hint, not a guarantee. Redis may return more entries than the requested `limit` on some pages, especially for small hashes stored in listpack encoding. Do not rely on exact page sizes for unordered state reads.
+
+**Ordered state uses different Redis data structures.** When `ordered: true` is set, state is stored in a `ZSET` (sorted set) in addition to the `HASH`, and pagination uses `ZRANGEBYSCORE` with `LIMIT` — which returns exact page sizes.
+
+**Switching between ordered and unordered is not a live migration.** Because the two modes use different underlying data structures (`HASH` only vs `HASH` + `ZSET`), changing the `ordered` setting on an existing namespace does not retroactively populate or remove the sorted set. Existing entries written before the change will be missing from the `ZSET` (if switching to ordered) or leave orphaned `ZSET` entries (if switching to unordered). To switch modes cleanly, clear the channel state first with `map_clear`, or start with a fresh namespace.
 
 :::
 
