@@ -110,7 +110,7 @@ html[data-theme="light"] .button--secondary:hover {
 
 @media screen and (max-width: 996px) {
   article header h1 {
-    font-size: 2rem !important;
+    font-size: 1.9rem !important;
   }
 
   .markdown>h2 {
@@ -132,7 +132,7 @@ html[data-theme="light"] .button--secondary:hover {
 
 @media screen and (min-width: 997px) {
   article header h1 {
-    font-size: 2rem !important;
+    font-size: 1.9rem !important;
   }
 
   .markdown>h2 {
