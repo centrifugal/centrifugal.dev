@@ -490,6 +490,40 @@ article {
   border-radius: 0.375rem;
 }
 
+/* Gradient text utility */
+.text-gradient {
+  display: inline;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-coral {
+  background-image: linear-gradient(135deg, #fe5e5e, #d56464);
+}
+
+.text-gradient-blue-purple {
+  background-image: linear-gradient(135deg, #60a5fa, #a78bfa);
+}
+
+.text-gradient-warm {
+  background-image: linear-gradient(135deg, #fe5e5e, #f59e0b);
+}
+
+.text-gradient-cool {
+  background-image: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
+}
+
+.text-gradient-hero {
+  background-image: none;
+  -webkit-text-fill-color: inherit;
+}
+
+html[data-theme="dark"] .text-gradient-hero {
+  background-image: linear-gradient(135deg, #fe5e5e, #c084fc, #38bdf8);
+  -webkit-text-fill-color: transparent;
+}
+
 /* Page fade-in */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px) scale(0.995); filter: blur(2px); }

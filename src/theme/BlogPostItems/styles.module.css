@@ -1,31 +1,197 @@
-.container {
+/* Blog list layout */
+.list {
     display: grid;
-    grid-template-columns: 180px 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
 }
 
-.leftColumn {
+.list > *:first-child {
+    grid-column: 1 / -1;
+}
+
+/* Featured (first) post */
+.featuredCard {
     position: relative;
-    padding-right: 15px;
-    padding-top: 8px;
+    display: block;
+    text-decoration: none !important;
+    color: inherit !important;
+    border-radius: 16px;
+    overflow: hidden;
+    transition: transform 0.25s ease-out, box-shadow 0.25s ease-out;
 }
 
-.leftColumn img {
+.featuredCard:hover {
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+}
+
+.featuredImage {
     width: 100%;
-    height: 90px;
-    object-fit: cover;
-    object-position: center;
-    border: 2px solid #a04444;
-    /* border-image: linear-gradient(45deg, #800080, #a04444) 1; */
+    aspect-ratio: 21 / 9;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #f0f0f0;
 }
 
-@media (max-width: 960px) {
+html[data-theme="dark"] .featuredImage {
+    background: #2a2a2e;
+}
 
-    .leftColumn {
-        display: none;
+.featuredImage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease-out;
+}
+
+.featuredCard:hover .featuredImage img {
+    transform: scale(1.03);
+}
+
+.featuredOverlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 32px 28px 24px;
+    background: rgba(0, 0, 0, 0.82);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.featuredTitle {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.3;
+    font-family: "Nunito";
+    color: #fff;
+}
+
+.featuredDesc {
+    font-size: 0.92rem;
+    line-height: 1.5;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.7);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Regular post cards */
+.card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    text-decoration: none !important;
+    color: inherit !important;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: box-shadow 0.25s ease-out;
+}
+
+.card:hover {
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+}
+
+.cardImageWrap {
+    position: relative;
+    flex-shrink: 0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.cardImage {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f0f0f0;
+}
+
+html[data-theme="dark"] .cardImage {
+    background: #2a2a2e;
+}
+
+.cardImage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease-out;
+}
+
+.card:hover .cardImage img {
+    transform: scale(1.03);
+}
+
+.cardOverlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    padding: 0 16px;
+    background: rgba(0, 0, 0, 0.82);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.cardTitle {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.35;
+    font-family: "Nunito";
+    color: #fff;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.cardDesc {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    margin: 0;
+    padding: 12px 8px;
+    color: rgba(0, 0, 0, 0.6);
+    flex: 1;
+}
+
+html[data-theme="dark"] .cardDesc {
+    color: rgba(255, 255, 255, 0.55);
+}
+
+/* Meta tag - top of card */
+.metaTag {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 2;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    padding: 4px 10px;
+    border-radius: 6px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .list {
+        grid-template-columns: 1fr;
+        gap: 20px;
     }
 
-    .container {
-        grid-template-columns: 1fr;
+    .featuredImage {
+        aspect-ratio: 16 / 9;
+    }
+
+    .featuredTitle {
+        font-size: 1.3rem;
     }
 }
 

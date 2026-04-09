@@ -1,88 +1,99 @@
-.banner {
-    background-color: #0C0D0E;
+.strip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 18px;
+    font-size: 0.9rem;
+    font-family: "Nunito";
+    background: #0C0D0E;
     color: #9b9b9b;
-    padding: 2rem;
-    text-align: center;
     animation: fadeIn 0.7s linear forwards;
+}
+
+html[data-theme="light"] .strip {
+    background: #f0f0f0;
+    color: #666;
+}
+
+.badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(213, 100, 100, 0.15);
+    color: #fe5e5e;
+    flex-shrink: 0;
     position: relative;
     overflow: hidden;
 }
 
-.bannerTitle {
-    font-size: 1.8rem;
-    margin-bottom: 0.5rem;
-    animation: fadeIn 1.5s ease-in;
+.badge::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(254, 94, 94, 0.4), transparent);
+    animation: shimmerBadge 1.5s ease-out 0.5s forwards;
 }
 
-.bannerLink {
-    color: #fe5e5e;
+@keyframes shimmerBadge {
+    0% { left: -100%; }
+    100% { left: 100%; }
 }
 
-.bannerLink:hover {
-    color: #fa7171;
+html[data-theme="light"] .badge {
+    background: rgba(213, 100, 100, 0.1);
+    color: #d56464;
+}
+
+.link {
+    color: #fff;
+    font-weight: 600;
     text-decoration: none;
 }
 
-.bannerText {
-    font-size: 1.2rem;
-    animation: fadeIn 1.5s ease-in;
-    margin-bottom: 0;
+.link:hover {
+    color: #fe5e5e;
+    text-decoration: none;
 }
 
-@keyframes slideInDark {
-    from {
-        color: #17171B;
-        background-color: #17171B;
-        transform: translateY(100%);
-    }
-
-    to {
-        transform: translateY(0);
-    }
+html[data-theme="light"] .link {
+    color: #1c1e21;
 }
 
-@keyframes slideInLight {
-    from {
-        color: white;
-        background-color: white;
-        transform: translateY(100%);
-    }
+html[data-theme="light"] .link:hover {
+    color: #d56464;
+}
 
-    to {
-        transform: translateY(0);
+.dash {
+    color: #555;
+}
+
+html[data-theme="light"] .dash {
+    color: #bbb;
+}
+
+.desc {
+    color: #888;
+}
+
+html[data-theme="light"] .desc {
+    color: #888;
+}
+
+@media screen and (max-width: 600px) {
+    .desc,
+    .dash {
+        display: none;
     }
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
-}
-
-html[data-theme="light"] .banner {
-    background-color: #e7e7e7;
-    color: #737373;
-    animation: fadeIn 0.7s linear forwards;
-}
-
-html[data-theme="light"] .bannerLink {
-    color: #ff6757;
-}
-
-html[data-theme="light"] .bannerLink:hover {
-    color: #cc4c3e;
-}
-
-@media screen and (max-width: 996px) {
-    .bannerTitle {
-        font-size: 0.9rem;
-    }
-
-    .bannerText {
-        font-size: 0.8rem;
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
 }

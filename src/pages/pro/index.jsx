@@ -7,6 +7,7 @@ import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import styles from "../styles.module.css";
 import Logo from "../components/logo";
+import Ray from "../components/Ray";
 import { useColorMode } from '@docusaurus/theme-common';
 import Highlight from '../components/Highlight'
 import TitleWithCatPro from '../components/TitleWithCatPro'
@@ -35,6 +36,7 @@ function Header() {
     const isDarkTheme = useColorMode().colorMode == 'dark';
     return (
         <header id="hero" className={clsx("hero hero--primary", styles.heroBanner)}>
+            <Ray />
             <Logo isDarkTheme={isDarkTheme} />
             <div className="container" style={{ "zIndex": 1, pointerEvents: "none" }}>
                 <div className={styles.mainTitle}>

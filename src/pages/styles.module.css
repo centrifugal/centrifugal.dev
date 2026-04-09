@@ -45,10 +45,14 @@
 
 .subTitle {
     margin: 0 0 0 0;
-    font-size: 2.1rem;
+    font-size: 2rem;
     font-weight: 600;
     font-family: "Nunito";
     pointer-events: none;
+    background-image: linear-gradient(135deg, #fe5e5e, #d56464);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .subSubTitle {
@@ -64,11 +68,11 @@ html[data-theme="light"] .mainTitle {
 }
 
 html[data-theme="light"] .subTitle {
-    color: #E84C3B;
+    background-image: linear-gradient(135deg, #E84C3B, #c04a4a);
 }
 
 html[data-theme="dark"] .subTitle {
-    color: #fe5e5e;
+    background-image: linear-gradient(135deg, #fe5e5e, #d56464);
 }
 
 html[data-theme="light"] .subSubTitle {
@@ -175,6 +179,7 @@ html[data-theme="dark"] .logos svg * {
     padding: 2rem 0;
     width: 100%;
 }
+
 
 @media screen and (max-width: 996px) {
     .features {
@@ -337,6 +342,41 @@ html[data-theme="dark"] .logos svg * {
     padding-bottom: 30px;
     padding-top: 0px;
     background-color: var(--palette-background-alt);
+    position: relative;
+    overflow: hidden;
+}
+
+.useCases::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+        linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.useCases::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at center, transparent 0%, var(--palette-background-alt) 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+html[data-theme="dark"] .useCases::before {
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
 }
 
 .useCasesTitle {
@@ -353,6 +393,8 @@ html[data-theme="dark"] .logos svg * {
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 30px;
     margin: 0 auto;
+    position: relative;
+    z-index: 1;
 }
 
 .useCaseItem {

@@ -31,6 +31,6 @@
 
 @media (min-width: 997px) {
   .cat {
-    display: block;
+    display: none;
   }
 }

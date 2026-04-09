@@ -25,7 +25,9 @@ import Altamira from "./components/logos/Altamira";
 import TestimonialsCarousel from '../components/TestimonialsCarousel';
 import ProBanner from '../components/ProBanner';
 import ImageRotator from '../components/ImageRotator';
+import ProCtaBanner from '../components/ProCtaBanner';
 import GitHubStarButton from '../components/GitHubStarButton';
+import Ray from './components/Ray';
 import QuickStart, { QuickStartDescription } from '../components/QuickStart';
 import { ChatIcon, DashboardIcon, GameIcon, DataSyncIcon, FinancialIcon, LiveFeedIcon, IoTIcon, AIIcon } from '../components/UseCaseIcons';
 
@@ -50,6 +52,7 @@ function Header() {
   const isDarkTheme = useColorMode().colorMode == 'dark';
   return (
     <header id="hero" className={clsx("hero hero--primary", styles.heroBanner)}>
+      <Ray />
       <Logo isDarkTheme={isDarkTheme} />
       <div className="container" style={{ "zIndex": 1, pointerEvents: "none" }}>
         <div className={styles.mainTitle}>
@@ -59,7 +62,7 @@ function Header() {
           Wash away WebSocket scalability issues
         </div>
         <div className={styles.subSubTitle}>
-          Real-time messaging and data sync for any stack. Spin up once and forever.
+          <span className="text-gradient text-gradient-hero">Real-time messaging</span> and <span className="text-gradient text-gradient-hero">data sync</span> for any stack. Spin up once and forever.
         </div>
         <div className={styles.buttons}>
           <Link
@@ -382,31 +385,7 @@ function Home() {
             </>
           }
         />        
-        < Highlight
-          img={
-            <ImageRotator />
-          }
-          title="Are you Enterprise?"
-          reversed
-          text={
-            <>
-              <p>
-                Centrifugal Labs offers a PRO version of Centrifugo that includes a set of unique features, additional APIs, and enhanced performance. Ever dreamed about a self-hosted real-time messaging system combined with a push notification system? Want to benefit from analytics of real-time connections and subscriptions? Centrifugo PRO makes this all possible.
-              </p>
-              <div className={styles.buttons}>
-                <Link
-                  className={clsx(
-                    "button button--outline button--secondary button--lg",
-                    styles.getStarted
-                  )}
-                  to={useBaseUrl("/pro")}
-                >
-                  More about Centrifugo PRO
-                </Link>
-              </div>
-            </>
-          }
-        />
+        <ProCtaBanner />
       </main >
     </Layout >
   );

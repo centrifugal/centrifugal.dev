@@ -1,0 +1,92 @@
+@keyframes rayAnimation {
+    from {
+        background-position: 50% 50%, 50% 50%;
+    }
+    to {
+        background-position: 350% 50%, 350% 50%;
+    }
+}
+
+.rayContainer {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    z-index: 0;
+    width: 100%;
+    max-width: 100%;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    overflow: hidden;
+    top: 0;
+    left: 0;
+    height: 100%;
+    pointer-events: none;
+}
+
+.ray {
+    --stripes: repeating-linear-gradient(
+        100deg,
+        #fff 0%,
+        #fff 7%,
+        transparent 10%,
+        transparent 12%,
+        #fff 16%
+    );
+    --stripesDark: repeating-linear-gradient(
+        100deg,
+        #000 0%,
+        #000 7%,
+        transparent 10%,
+        transparent 12%,
+        #000 16%
+    );
+    --rainbow: repeating-linear-gradient(
+        100deg,
+        #d5b0a0 10%,
+        #c8a8a8 18%,
+        #d5b0a0 30%
+    );
+    --rainbowDark: repeating-linear-gradient(
+        100deg,
+        #78350f 10%,
+        #5c1a0a 18%,
+        #78350f 30%
+    );
+
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    display: none;
+}
+
+.ray::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: var(--stripes), var(--rainbow);
+    background-size: 200%, 100%;
+    mix-blend-mode: difference;
+    animation: rayAnimation 90s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ray::after {
+        animation: none;
+    }
+}
+
+:global(html[data-theme="dark"]) .ray {
+    display: block;
+    background-image: var(--stripesDark), var(--rainbowDark);
+    background-size: 300%, 200%;
+    background-position: 50% 50%, 50% 50%;
+    filter: opacity(50%) saturate(200%);
+    mask-image: radial-gradient(ellipse at 100% 0%, black 40%, transparent 70%);
+    opacity: 0.5;
+}
+
+:global(html[data-theme="dark"]) .ray::after {
+    background-image: var(--stripesDark), var(--rainbowDark);
+}
