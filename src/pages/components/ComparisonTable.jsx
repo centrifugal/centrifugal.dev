@@ -21,7 +21,11 @@ const data = [
                 description: 'Instant initial data via cached items, delta compression, notification fast path for near-instant updates, adaptive backpressure, and a standalone relay server to centralize backend polling.',
             },
             { name: 'Presence & join/leave events', oss: true, pro: true },
-            { name: 'Delta compression, publication filtering by tags', oss: true, pro: true },
+            { name: 'Delta compression, client-side publication filtering by tags', oss: true, pro: true },
+            {
+                name: 'Server-side publication tags filter', pro: true, link: '/docs/pro/server_tags_filter',
+                description: 'Server-controlled per-subscriber publication filtering via tags. Set by your backend through subscribe proxy or JWT — the client cannot override it. Works for stream and map subscriptions, enabling fine-grained access control within channels.',
+            },
             { name: 'Proxy events (connect, subscribe, publish, RPC)', oss: true, pro: true },
             { name: 'Official real-time SDKs for popular languages', oss: true, pro: true },
         ],
@@ -84,7 +88,7 @@ const data = [
             },
             {
                 name: 'Bandwidth optimizations', pro: true, link: '/docs/pro/bandwidth_optimizations',
-                description: 'Delta compression for at-most-once delivery, channel compaction, and publish debouncing to coalesce rapid updates. Reduces outgoing bandwidth and broker load.',
+                description: 'Delta compression for at-most-once delivery, channel compaction, and client publish debouncing to coalesce rapid updates. Reduces bandwidth and broker load.',
             },
             {
                 name: 'Advanced message write and batching', pro: true, link: '/docs/pro/client_message_batching',
@@ -138,12 +142,8 @@ const data = [
         comment: 'Extended server-side APIs and channel events for deeper integration',
         features: [
             {
-                name: 'Channel state events (occupied/vacated)', pro: true, link: '/docs/pro/channel_state_events', preview: true,
-                description: 'Webhook notifications when a channel becomes occupied (first subscriber) or vacated (last subscriber leaves). Requires Redis engine with presence enabled on channels.',
-            },
-            {
-                name: 'Cache empty events', pro: true, link: '/docs/pro/channel_cache_empty',
-                description: 'Proxy notification when a client in cache recovery mode finds no publication in the channel history stream, allowing your backend to populate the cache on demand.',
+                name: 'Additional event hooks', pro: true, link: '/docs/pro/event_hooks',
+                description: 'Channel state events (occupied/vacated webhooks when subscribers join or leave) and cache empty events (notify backend on cache misses for lazy state population).',
             },
             {
                 name: 'User status API', pro: true, link: '/docs/pro/user_status',

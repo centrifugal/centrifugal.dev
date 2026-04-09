@@ -3,15 +3,11 @@ id: shared_poll
 title: Shared poll enhancements
 ---
 
-Centrifugo PRO extends the [shared poll subscriptions](../server/shared_poll.md) feature with the [`keep_latest_data`](#keep_latest_data) option for instant initial data and delta compression, [adaptive backpressure](#adaptive-backpressure), a [notification fast path](#notification-fast-path) for near-instant updates, and a standalone [relay server](#shared-poll-relay) for reducing backend load.
+Centrifugo PRO extends the [shared poll subscriptions](../server/shared_poll.md) feature with [cached latest data](#cached-latest-data) and [delta compression](#delta-compression), [adaptive backpressure](#adaptive-backpressure), a [notification fast path](#notification-fast-path) for near-instant updates, and a standalone [relay server](#shared-poll-relay) for reducing backend load.
 
-## `keep_latest_data`
+## Cached latest data
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `keep_latest_data` | boolean | `false` | When `true`, Centrifugo caches the latest data and version for each tracked item in memory. Enables [instant initial data](#instant-initial-data) and [delta compression](#delta-compression) |
-
-When enabled, this unlocks two capabilities: instant initial data for new clients and delta compression for bandwidth savings.
+When `keep_latest_data` is enabled in the namespace's `shared_poll` config, Centrifugo caches the latest data and version for each tracked item in memory. This unlocks two capabilities: instant data for new clients without waiting for the next poll cycle, and delta compression for bandwidth savings.
 
 ```json title="config.json"
 {
@@ -32,10 +28,10 @@ When enabled, this unlocks two capabilities: instant initial data for new client
 }
 ```
 
-### Instant initial data
+### Instant data for new clients
 
 :::note
-Instant initial data via `keep_latest_data` requires `versioned` refresh mode. In `versionless` mode, `keep_latest_data` enables delta compression but not cached initial data.
+Instant data via `keep_latest_data` requires `versioned` refresh mode. In `versionless` mode, `keep_latest_data` enables delta compression but not cached latest data.
 :::
 
 When a client tracks keys with version `0` ("I have no data yet"), Centrifugo returns cached data directly in the track response — the client receives data without any backend call and without waiting for the next poll cycle.

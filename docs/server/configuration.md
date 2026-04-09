@@ -891,13 +891,13 @@ The configuration object for proxy to use for channel subscribe stream. See how 
 
 Object.
 
-The configuration object for proxy to use for channel state events. Centrifugo PRO only – see [docs](../pro/channel_events.md).
+The configuration object for proxy to use for channel state events. Centrifugo PRO only – see [docs](../pro/event_hooks.md#channel-state-events).
 
 ### `chanel.proxy.cache_empty`
 
 Object.
 
-The configuration object for proxy to use for cache empty events. Centrifugo PRO only – see [docs](../pro/channel_cache_empty.md).
+The configuration object for proxy to use for cache empty events. Centrifugo PRO only – see [docs](../pro/event_hooks.md#cache-empty-events).
 
 ### `channel.max_length`
 

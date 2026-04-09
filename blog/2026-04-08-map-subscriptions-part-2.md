@@ -45,9 +45,9 @@ If the transaction rolls back, the real-time update never happened. No outbox ta
 
 <PgTransactionalDiagram />
 
-Here's a sprint board demo where cards are moved between columns — each drag-and-drop is a PostgreSQL transaction that updates the board state and publishes to Centrifugo atomically:
+Here is a polls demo, one of [many](https://github.com/centrifugal/examples/tree/master/v6/map_demo) we prepared for map subscriptions release — each vote is a PostgreSQL transaction that updates the result and publishes to Centrifugo atomically:
 
-<video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/demo_taskboard.mp4"></video>
+<video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/demo_polls.mp4"></video>
 
 ## Why outbox, not WAL
 
@@ -68,10 +68,6 @@ When your transaction calls `cf_map_publish`, the function does three things in 
 The ordering challenge is subtle: if two transactions concurrently publish to the same channel, their stream entries must be ordered consistently — the outbox worker must never see entry N+1 before entry N commits. The function handles this by acquiring a lock on the channel's meta row before assigning the stream offset. This ensures that even with concurrent writers, offsets are assigned and committed in a consistent order. Without this lock, concurrent transactions could receive offsets 5 and 6, but commit in reverse order — the worker would see offset 6 appear while offset 5 is still uncommitted, creating a gap it can't safely skip.
 
 <PgOutboxDiagram />
-
-The polls demo below shows this in practice — votes are written to PostgreSQL and delivered to all clients through the outbox pipeline:
-
-<video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/demo_polls.mp4"></video>
 
 Centrifugo runs a pool of outbox workers — one per shard (`num_shards`, default 16). Each channel is assigned to a shard by hash, and each worker independently polls its portion of the stream table using a cursor that tracks the last delivered offset. On restart, workers resume from their last known position — no entries are missed.
 

@@ -71,6 +71,7 @@ Below you can find an information regarding support of different features in our
 | bidirectional WebSocket emulation          | ✅  |      |       |    |      |        |    ✅    |
 | headers emulation                          | ✅  | ✅    | na    | na | na   | na     | ✅     |
 | [channel compaction](../pro/bandwidth_optimizations.md#channel-compaction) (Centrifugo PRO) | ✅  |      |       |    |      |        |        |
+| [client publish debouncing](../pro/bandwidth_optimizations.md#client-publish-debouncing) (Centrifugo PRO) | ✅  |      |       |    |      |        |        |
 
 </div>
 

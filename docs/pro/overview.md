@@ -2,7 +2,7 @@
 description: "Centrifugo PRO is the enhanced commercial version with push notifications, real-time analytics, rate limiting, SSO, tracing, and enterprise features."
 id: overview
 title: Centrifugo PRO
-sidebar_label: ♻️ Centrifugo PRO overview
+sidebar_label: Centrifugo PRO overview
 ---
 
 Centrifugo PRO is the enhanced version of Centrifugo offered by Centrifugal Labs under a commercial license. It's packed with a unique set of features designed to fit requirements of corporate and enterprise environments, decrease costs at scale, and benefit from additional features such as push notifications support, real-time analytics, and so on. We have leveraged our extensive experience to build Centrifugo PRO, ensuring its extra powers are practical and ready for production workloads. See information about [pricing](#pricing) and [try for free](#try-for-free-in-sandbox-mode) in sandbox mode.
@@ -23,8 +23,7 @@ Centrifugo PRO is packed with the following features:
 * 🟢 [User status API](./user_status.md) feature allows understanding activity state for a list of users.
 * 🔌 [Connections API](./connections.md) to query, filter and inspect active connections.
 * ✋ [User blocking and token revocation API](./access_revoke.md) to block/unblock abusive users and revoke tokens by ID or invalidate user's tokens based on issue time.
-* 🔔 [Channel state events](channel_events.md) to be notified on the backend about channel `occupied` and `vacated` events.
-* 🥣 [Channel cache empty events](channel_cache_empty.md) to react on cache misses in channels with cache recovery mode.
+* 🔔 [Additional event hooks](event_hooks.md) — channel state events (`occupied`/`vacated`) and cache empty events for lazy state population.
 * 💪 [Channel capabilities](./capabilities.md) for controlling channel permissions per connection or per subscription.
 * 📜 [Channel patterns](./channel_patterns.md) allow defining channel configuration like HTTP routes with parameters.
 * ✍️ [Channel CEL expressions](./cel_expressions.md) to write custom efficient permission rules for channel operations.
@@ -34,6 +33,7 @@ Centrifugo PRO is packed with the following features:
 * 🕹️ [Setting custom Controller](./scalability.md#setting-custom-controller) to isolate controller load from channel load (i.e. from Broker)
 * 🗜️ [Bandwidth optimizations](./bandwidth_optimizations.md) to reduce network costs. [Delta compression for at most once](./bandwidth_optimizations.md#delta-compression-for-at-most-once), [channel compaction](./bandwidth_optimizations.md#channel-compaction), [publish debouncing](./bandwidth_optimizations.md#publish-debouncing).
 * 🍔 [Message batching control](./client_msg_batching.md) for advanced tuning of client connection write behaviour.
+* 🏷️ [Server-side publication tags filter](./server_tags_filter.md) for per-subscriber access control via publication tags — works for stream and map subscriptions.
 * 🗺️ [Map subscriptions enhancements](./map_subscriptions.md) with in-memory cache layer, PostgreSQL enhancements, Redis Cluster support, and per-namespace map brokers.
 * 🔄 [Shared poll enhancements](./shared_poll.md) with instant initial data, delta compression, notification fast path, adaptive backpressure, and shared poll relay.
 * 🧐 [Observability enhancements](./observability_enhancements.md) for additional more granular system state insights.

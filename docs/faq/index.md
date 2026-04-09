@@ -180,7 +180,7 @@ Centrifugo does not support unsubscribe/disconnect hooks – see the reasoning b
 
 :::tip UPDATE
 
-Centrifugo PRO now solves the pitfalls mentioned here with its [Channel State Events](../pro/channel_events.md) feature.
+Centrifugo PRO now solves the pitfalls mentioned here with its [Channel State Events](../pro/event_hooks.md#channel-state-events) feature.
 
 :::
 

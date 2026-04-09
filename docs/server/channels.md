@@ -552,7 +552,7 @@ Available since Centrifugo v6.4.0.
 
 ### cache_empty_proxy_enabled
 
-`cache_empty_proxy_enabled` (boolean, default `false`, Centrifugo PRO only) – turns on [cache empty proxy](../pro/channel_cache_empty.md).
+`cache_empty_proxy_enabled` (boolean, default `false`, Centrifugo PRO only) – turns on [cache empty proxy](../pro/event_hooks.md#cache-empty-events).
 
 ### cache_empty_proxy_name
 
@@ -560,11 +560,11 @@ Available since Centrifugo v6.4.0.
 
 ### state_proxy_enabled
 
-`state_proxy_enabled` (boolean, default `false`, Centrifugo PRO only) - allows enabling [channel state proxy](../pro/channel_events.md)
+`state_proxy_enabled` (boolean, default `false`, Centrifugo PRO only) - allows enabling [channel state proxy](../pro/event_hooks.md#channel-state-events)
 
 ### state_events
 
-`state_events` (array of strings, empty by default, Centrifugo PRO only) - can help configuring notifications about channel's `occupied` and `vacated` state. See [more details](../pro/channel_events.md) in Centrifugo PRO docs.
+`state_events` (array of strings, empty by default, Centrifugo PRO only) - can help configuring notifications about channel's `occupied` and `vacated` state. See [more details](../pro/event_hooks.md#channel-state-events) in Centrifugo PRO docs.
 
 ### shared_position_sync
 

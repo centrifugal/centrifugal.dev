@@ -15,6 +15,12 @@ Publication filtering is designed purely for **bandwidth and performance optimiz
 
 :::
 
+:::tip Server-side publication filter (PRO)
+
+For access control scenarios where the server must control which publications a subscriber can see, [Centrifugo PRO](/docs/pro/server_tags_filter) offers a **server-side publication tags filter**. Unlike the client-side filter described on this page, the server-side filter is set by your backend via subscribe proxy or JWT and cannot be overridden by the client. Both filters use the same expression language and can be applied independently on the same subscription.
+
+:::
+
 When combined with channels that publish messages with data tags, publication filtering enables fine-grained content delivery based on subscriber interests and requirements.
 
 ## Implementation notes

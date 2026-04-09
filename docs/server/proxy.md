@@ -23,8 +23,8 @@ Channel-wide proxy events:
 * `publish` - called when a client tries to publish into a channel, so it's possible to check permissions and optionally modify publication data. Works for bidirectional transports only.
 * `sub_refresh` - called when a client subscription is going to expire, so it's possible to prolong it or just let it expire. Can also be used just as a periodical subscription liveness callback from Centrifugo to app backend. Works for bidirectional and unidirectional transports.
 * `subscribe_stream` – this is an experimental proxy for simple integration of Centrifugo with third-party streams. It works only for bidirectional transports, and it's a bit special, so we describe this proxy type in a dedicated chapter [Proxy subscription streams](./proxy_streams.md).
-* `cache_empty` – a hook available in Centrifugo PRO to be notified about data missing in channels with cache recovery mode. See a [dedicated description](../pro/channel_cache_empty.md).
-* `state` – a hook available in Centrifugo PRO to be notified about channel `occupied` or `vacated` states. See a [dedicated description](../pro/channel_events.md).
+* `cache_empty` – a hook available in Centrifugo PRO to be notified about data missing in channels with cache recovery mode. See a [dedicated description](../pro/event_hooks.md#cache-empty-events).
+* `state` – a hook available in Centrifugo PRO to be notified about channel `occupied` or `vacated` states. See a [dedicated description](../pro/event_hooks.md#channel-state-events).
 
 Finally, Centrifugo can proxy client RPC calls to the backend:
 
@@ -926,11 +926,11 @@ An experimental proxy for simple integration of Centrifugo with third-party stre
 
 ### Cache empty proxy
 
-A hook available in Centrifugo PRO to be notified about data missing in channels with cache recovery mode. See a [dedicated description](../pro/channel_cache_empty.md).
+A hook available in Centrifugo PRO to be notified about data missing in channels with cache recovery mode. See a [dedicated description](../pro/event_hooks.md#cache-empty-events).
 
 ### State proxy
 
-A hook available in Centrifugo PRO to be notified about channel `occupied` or `vacated` states. See a [dedicated description](../pro/channel_events.md).
+A hook available in Centrifugo PRO to be notified about channel `occupied` or `vacated` states. See a [dedicated description](../pro/event_hooks.md#channel-state-events).
 
 ## Client RPC proxy
 

@@ -80,8 +80,7 @@ module.exports = {
     "pro/user_status",
     "pro/connections",
     "pro/access_revoke",
-    "pro/channel_state_events",
-    "pro/channel_cache_empty",
+    "pro/event_hooks",
     "pro/capabilities",
     "pro/channel_patterns",
     "pro/cel_expressions",
@@ -90,6 +89,7 @@ module.exports = {
     "pro/bandwidth_optimizations",
     "pro/client_message_batching",
     "pro/observability_enhancements",
+    "pro/server_tags_filter",
     "pro/map_subscriptions",
     "pro/shared_poll"
   ],

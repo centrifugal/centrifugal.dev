@@ -63,7 +63,7 @@ The rest works very similar to stream recovery described in [history and recover
 
 Note, that history has retention TTL set over `history_ttl` channel option. So in case of retention expired, or maybe in case of restart of Centrifugo node with Memory Engine – the history is cleaned up, so your application should tolerate the missing value in case of insuccessful recovery.
 
-Centrifugo PRO provide a feature to configure channel [cache empty event proxy](../pro/channel_cache_empty.md) to notify your backend about missing publication scenario. So that you can re-populate the channel history with an actual value.
+Centrifugo PRO provide a feature to configure channel [cache empty event proxy](../pro/event_hooks.md#cache-empty-events) to notify your backend about missing publication scenario. So that you can re-populate the channel history with an actual value.
 
 ## Conclusion
 
