@@ -360,7 +360,8 @@ function Orb(ctx, canvasWidth, canvasHeight, isDarkTheme) {
     this.radius = Math.max(6, Math.min(canvasWidth, canvasHeight) / 80);
     this.speed = 380; // px/sec
     this.target = null;
-    this.cooldown = Math.random() * 1.5; // stagger initial spawns
+    // Initial delay so bubbles get a chance to fade in before orbs start firing
+    this.cooldown = 2.5 + Math.random() * 1.5;
     this.spawnAtCenter();
     // Trail of past positions for motion blur
     this.trail = [];
@@ -383,7 +384,7 @@ Orb.prototype.spawnAtCenter = function() {
 };
 
 Orb.prototype.pickTarget = function(bubbles, claimed) {
-    // Prefer user-requested priority targets first
+    // Prefer user-requested priority targets first (any visibility)
     for (let i = 0; i < bubbles.length; i++) {
         const b = bubbles[i];
         if (b.priorityTargeted && !b.bursting && !claimed.has(b)) {
@@ -391,11 +392,12 @@ Orb.prototype.pickTarget = function(bubbles, claimed) {
             return b;
         }
     }
-    // Otherwise pick a random unclaimed bubble
+    // Otherwise pick a random unclaimed bubble that's mostly visible
     const candidates = [];
     for (let i = 0; i < bubbles.length; i++) {
-        if (!bubbles[i].bursting && !claimed.has(bubbles[i])) {
-            candidates.push(bubbles[i]);
+        const b = bubbles[i];
+        if (!b.bursting && !claimed.has(b) && b.appearProgress > 0.5) {
+            candidates.push(b);
         }
     }
     if (candidates.length === 0) return null;
@@ -567,9 +569,19 @@ Orb.prototype.render = function(elapsedTime, bubbles, claimed, onBurst) {
     this.draw();
 };
 
-function draw(canvas, X, Y, isDarkTheme) {
+function draw(canvas, _X, _Y, isDarkTheme) {
     let orbsActive = orbsEnabled();
     if (orbsActive) setupSimSync();
+    // Discard any stale state so follower orbs don't snap to old positions
+    simReceivedState = null;
+    // Always read current canvas dimensions; React state can be stale right
+    // after a theme switch (the browser may have re-laid out the canvas before
+    // setScale propagated). Reading directly avoids the "orbs flying in from
+    // outside the canvas" glitch.
+    canvas.width = canvas.clientWidth || _X || 1;
+    canvas.height = canvas.clientHeight || _Y || 1;
+    const X = canvas.width;
+    const Y = canvas.height;
     const ctx = canvas.getContext("2d");
 
     const centerX = X / 2;
@@ -659,6 +671,21 @@ function draw(canvas, X, Y, isDarkTheme) {
     const deactivateHandler = () => deactivateOrbs();
     window.addEventListener('cf-orbs-deactivated', deactivateHandler);
 
+    // Helper: burst a bubble in-place with normal splash particles
+    function burstBubble(bubble) {
+        if (bubble.bursting) return;
+        bubble.bursting = true;
+        bubble.burstProgress = 0;
+        const numSplashes = Math.floor(Math.random() * 6) + 10;
+        bubble.splashParticles = [];
+        for (let i = 0; i < numSplashes; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 50 + 50;
+            const length = Math.random() * 10 + 5;
+            bubble.splashParticles.push({ angle, speed, length });
+        }
+    }
+
     // Click handler: bursts bubbles AND tracks bubble-clicks for activation
     let activationClicks = [];
     const clickHandler = (event) => {
@@ -666,43 +693,44 @@ function draw(canvas, X, Y, isDarkTheme) {
         const clickX = event.clientX - rect.left;
         const clickY = event.clientY - rect.top;
 
-        // Find clicked bubble
-        let clickedBubble = null;
+        // Collect all bubbles at click position (overlapping bubbles all qualify)
+        const clickedBubbles = [];
         for (const bubble of bubbles) {
             const dx = clickX - bubble.x;
             const dy = clickY - bubble.y;
             if (Math.sqrt(dx * dx + dy * dy) <= bubble.radius && !bubble.bursting) {
-                clickedBubble = bubble;
-                break;
+                clickedBubbles.push(bubble);
             }
         }
-        if (!clickedBubble) return;
+        if (clickedBubbles.length === 0) return;
 
-        if (!orbsActive) {
-            // Solo mode: click bursts the bubble immediately
-            clickedBubble.bursting = true;
-            clickedBubble.burstProgress = 0;
-            let numSplashes = Math.floor(Math.random() * 6) + 10;
-            clickedBubble.splashParticles = [];
-            for (let i = 0; i < numSplashes; i++) {
-                let angle = Math.random() * Math.PI * 2;
-                let speed = Math.random() * 50 + 50;
-                let length = Math.random() * 10 + 5;
-                clickedBubble.splashParticles.push({ angle, speed, length });
+        if (!orbsActive || !isDarkTheme) {
+            // Solo mode or light theme: burst every bubble at the click position
+            for (const b of clickedBubbles) {
+                burstBubble(b);
+                if (orbsActive && !simIsLeader) {
+                    const idx = bubbles.indexOf(b);
+                    if (idx >= 0 && simEventsChannel) {
+                        try {
+                            simEventsChannel.postMessage({ type: 'burst', bubbleIndex: idx });
+                        } catch (e) {}
+                    }
+                }
             }
         } else if (simIsLeader) {
-            // Orb mode (leader): mark as a priority target for the next free orb
-            clickedBubble.priorityTargeted = true;
-            clickedBubble.targetingProgress = 1;
+            // Dark theme + leader: mark only the topmost bubble as a target
+            const b = clickedBubbles[0];
+            b.priorityTargeted = true;
+            b.targetingProgress = 1;
         } else {
-            // Orb mode (follower): forward the click to the leader
-            const idx = bubbles.indexOf(clickedBubble);
+            // Dark theme + follower: forward only one click to the leader
+            const b = clickedBubbles[0];
+            const idx = bubbles.indexOf(b);
             if (idx >= 0 && simEventsChannel) {
                 try {
                     simEventsChannel.postMessage({ type: 'click', bubbleIndex: idx });
                 } catch (e) {}
-                // Optimistic UI: show targeting reticle locally right away
-                clickedBubble.targetingProgress = 1;
+                b.targetingProgress = 1;
             }
         }
 
@@ -779,13 +807,18 @@ function draw(canvas, X, Y, isDarkTheme) {
                     bubbles[i].render(secondsSinceLastRender);
                 }
             } else if (simIsLeader) {
-                // Drain pending click events from follower tabs
+                // Drain pending click events (target requests) from follower tabs
                 while (pendingClickEvents.length > 0) {
                     const idx = pendingClickEvents.shift();
                     if (bubbles[idx] && !bubbles[idx].bursting) {
                         bubbles[idx].priorityTargeted = true;
                         bubbles[idx].targetingProgress = 1;
                     }
+                }
+                // Drain pending burst events (immediate burst from light-theme followers)
+                while (pendingBurstEvents.length > 0) {
+                    const idx = pendingBurstEvents.shift();
+                    if (bubbles[idx]) burstBubble(bubbles[idx]);
                 }
 
                 // Leader: run physics + broadcast state
@@ -861,6 +894,7 @@ let simIsLeader = true; // default true if no lock API
 let simReceivedState = null;
 let simSetupDone = false;
 const pendingClickEvents = [];
+const pendingBurstEvents = [];
 
 function setupSimSync() {
     if (simSetupDone) return;
@@ -880,6 +914,8 @@ function setupSimSync() {
                 const data = event.data;
                 if (data && data.type === 'click' && typeof data.bubbleIndex === 'number') {
                     pendingClickEvents.push(data.bubbleIndex);
+                } else if (data && data.type === 'burst' && typeof data.bubbleIndex === 'number') {
+                    pendingBurstEvents.push(data.bubbleIndex);
                 }
             };
         } catch (e) {}
@@ -998,9 +1034,11 @@ const Logo = (props) => {
         if (canvas.current === null) {
             return;
         }
-        canvas.current.width = canvas.current.clientWidth;
-        canvas.current.height = canvas.current.clientHeight;
-        setScale({ x: calculateScaleX(), y: calculateScaleY() });
+        const newW = canvas.current.clientWidth;
+        const newH = canvas.current.clientHeight;
+        canvas.current.width = newW;
+        canvas.current.height = newH;
+        setScale(prev => (prev.x === newW && prev.y === newH) ? prev : { x: newW, y: newH });
     };
 
     React.useEffect(() => resized(), []);
@@ -1019,7 +1057,7 @@ const Logo = (props) => {
     React.useEffect(() => {
         const cleanup = draw(canvas.current, scale.x, scale.y, props.isDarkTheme);
         return cleanup;
-    }, [scale, props.isDarkTheme]);
+    }, [scale.x, scale.y, props.isDarkTheme]);
 
     return <canvas ref={canvas} style={{ width: "100%", height: "100%" }} />;
 }
