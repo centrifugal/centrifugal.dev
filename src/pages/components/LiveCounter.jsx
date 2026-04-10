@@ -23,9 +23,9 @@ export default function LiveCounter() {
   useEffect(() => {
     if (!isFeatureSupported()) return;
 
-    // Initial state from localStorage
+    // Initial state from localStorage: default ON unless explicitly 'false'
     try {
-      if (localStorage.getItem(ENABLED_KEY) === 'true') {
+      if (localStorage.getItem(ENABLED_KEY) !== 'false') {
         setEnabled(true);
       }
     } catch (e) {}
@@ -40,10 +40,11 @@ export default function LiveCounter() {
 
     const storageHandler = (e) => {
       if (e.key === ENABLED_KEY) {
-        if (e.newValue === 'true') setEnabled(true);
-        else {
+        if (e.newValue === 'false') {
           setEnabled(false);
           setCount(0);
+        } else {
+          setEnabled(true);
         }
       }
       if (e.key === STORAGE_KEY && e.newValue === null) {
@@ -113,7 +114,7 @@ export default function LiveCounter() {
 
   const handleStop = () => {
     try {
-      localStorage.removeItem(ENABLED_KEY);
+      localStorage.setItem(ENABLED_KEY, 'false');
       localStorage.removeItem(STORAGE_KEY);
     } catch (e) {}
     setEnabled(false);
@@ -188,7 +189,7 @@ export default function LiveCounter() {
   return (
     <div className={styles.counter}>
       <span className={styles.dot} />
-      <span className={styles.label}>Live messages delivered</span>
+      <span className={styles.label}>Live deliveries</span>
       <span className={styles.value}>{count.toLocaleString('en-US')}</span>
       {peerCount > 0 && (
         <span

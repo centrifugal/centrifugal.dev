@@ -172,6 +172,10 @@ function Bubble(ctx, canvasWidth, canvasHeight, isDarkTheme) {
     this.appearProgress = 0; // start completely invisible.
     // Splash particles will be generated on burst.
     this.splashParticles = null;
+    // Targeting "lock on" effect from orbs
+    this.targetingProgress = 0;
+    // User-requested priority target (clicked in orb mode)
+    this.priorityTargeted = false;
 }
 
 Bubble.prototype.reset = function() {
@@ -193,6 +197,11 @@ Bubble.prototype.reset = function() {
 };
 
 Bubble.prototype.update = function(elapsedTime) {
+    // Decay targeting lock-on effect
+    if (this.targetingProgress > 0) {
+        this.targetingProgress = Math.max(0, this.targetingProgress - elapsedTime * 1.6);
+    }
+
     // Always update movement.
     this.x += this.vx * elapsedTime;
     this.y += this.vy * elapsedTime;
@@ -299,6 +308,42 @@ Bubble.prototype.draw = function() {
             }
         }
     }
+
+    // Targeting "lock on" crosshair (drawn after the bubble itself)
+    if (this.targetingProgress > 0 && !this.bursting) {
+        const p = this.targetingProgress;
+        // Bracket distance: starts wider, settles toward bubble as it locks in
+        const r = this.radius * (2.4 - p * 0.8);
+        const len = this.radius * 0.55;
+        const alpha = Math.min(1, p * 1.3);
+
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = this.isDarkTheme ? '#fe5e5e' : '#d56464';
+        ctx.lineWidth = 1.5;
+        ctx.lineCap = 'round';
+        ctx.shadowBlur = 4;
+        ctx.shadowColor = this.isDarkTheme ? 'rgba(254,94,94,0.6)' : 'rgba(213,100,100,0.5)';
+
+        ctx.beginPath();
+        // Top-left bracket
+        ctx.moveTo(this.x - r, this.y - r + len);
+        ctx.lineTo(this.x - r, this.y - r);
+        ctx.lineTo(this.x - r + len, this.y - r);
+        // Top-right bracket
+        ctx.moveTo(this.x + r - len, this.y - r);
+        ctx.lineTo(this.x + r, this.y - r);
+        ctx.lineTo(this.x + r, this.y - r + len);
+        // Bottom-right bracket
+        ctx.moveTo(this.x + r, this.y + r - len);
+        ctx.lineTo(this.x + r, this.y + r);
+        ctx.lineTo(this.x + r - len, this.y + r);
+        // Bottom-left bracket
+        ctx.moveTo(this.x - r + len, this.y + r);
+        ctx.lineTo(this.x - r, this.y + r);
+        ctx.lineTo(this.x - r, this.y + r - len);
+        ctx.stroke();
+    }
+
     ctx.restore();
 };
 
@@ -315,6 +360,7 @@ function Orb(ctx, canvasWidth, canvasHeight, isDarkTheme) {
     this.radius = Math.max(6, Math.min(canvasWidth, canvasHeight) / 80);
     this.speed = 380; // px/sec
     this.target = null;
+    this.cooldown = Math.random() * 1.5; // stagger initial spawns
     this.spawnAtCenter();
     // Trail of past positions for motion blur
     this.trail = [];
@@ -337,6 +383,15 @@ Orb.prototype.spawnAtCenter = function() {
 };
 
 Orb.prototype.pickTarget = function(bubbles, claimed) {
+    // Prefer user-requested priority targets first
+    for (let i = 0; i < bubbles.length; i++) {
+        const b = bubbles[i];
+        if (b.priorityTargeted && !b.bursting && !claimed.has(b)) {
+            b.priorityTargeted = false; // claim
+            return b;
+        }
+    }
+    // Otherwise pick a random unclaimed bubble
     const candidates = [];
     for (let i = 0; i < bubbles.length; i++) {
         if (!bubbles[i].bursting && !claimed.has(bubbles[i])) {
@@ -354,12 +409,21 @@ Orb.prototype.update = function(elapsedTime, bubbles, claimed, onBurst) {
         claimed.delete(this.target);
         this.target = null;
         this.spawnAtCenter();
+        this.cooldown = 0.4 + Math.random() * 1.0;
     }
 
-    // Pick a new target if we don't have one
-    if (!this.target) {
+    // Cooldown ticking between deliveries
+    if (this.cooldown > 0) {
+        this.cooldown = Math.max(0, this.cooldown - elapsedTime);
+    }
+
+    // Pick a new target if we don't have one (after cooldown)
+    if (!this.target && this.cooldown <= 0) {
         this.target = this.pickTarget(bubbles, claimed);
-        if (this.target) claimed.add(this.target);
+        if (this.target) {
+            claimed.add(this.target);
+            this.target.targetingProgress = 1;
+        }
     }
 
     if (this.target) {
@@ -400,6 +464,7 @@ Orb.prototype.update = function(elapsedTime, bubbles, claimed, onBurst) {
             claimed.delete(this.target);
             this.target = null;
             this.spawnAtCenter();
+            this.cooldown = 0.4 + Math.random() * 1.0;
         } else {
             // Move at constant speed toward target
             const nx = dx / dist;
@@ -578,12 +643,12 @@ function draw(canvas, X, Y, isDarkTheme) {
     // Listen for activation/deactivation from another tab
     const storageHandler = (e) => {
         if (e.key === ORBS_ENABLED_KEY) {
-            if (e.newValue === 'true' && !orbsActive) {
+            if (e.newValue !== 'false' && !orbsActive) {
                 orbsActive = true;
                 setupSimSync();
                 createOrbs();
                 try { window.dispatchEvent(new CustomEvent('cf-orbs-activated')); } catch (e2) {}
-            } else if (e.newValue === null && orbsActive) {
+            } else if (e.newValue === 'false' && orbsActive) {
                 deactivateOrbs();
             }
         }
@@ -613,9 +678,8 @@ function draw(canvas, X, Y, isDarkTheme) {
         }
         if (!clickedBubble) return;
 
-        // Burst the bubble (only if we own the simulation: solo mode or leader)
-        const canBurst = !orbsActive || simIsLeader;
-        if (canBurst) {
+        if (!orbsActive) {
+            // Solo mode: click bursts the bubble immediately
             clickedBubble.bursting = true;
             clickedBubble.burstProgress = 0;
             let numSplashes = Math.floor(Math.random() * 6) + 10;
@@ -626,7 +690,20 @@ function draw(canvas, X, Y, isDarkTheme) {
                 let length = Math.random() * 10 + 5;
                 clickedBubble.splashParticles.push({ angle, speed, length });
             }
-            if (orbsActive) onBurst();
+        } else if (simIsLeader) {
+            // Orb mode (leader): mark as a priority target for the next free orb
+            clickedBubble.priorityTargeted = true;
+            clickedBubble.targetingProgress = 1;
+        } else {
+            // Orb mode (follower): forward the click to the leader
+            const idx = bubbles.indexOf(clickedBubble);
+            if (idx >= 0 && simEventsChannel) {
+                try {
+                    simEventsChannel.postMessage({ type: 'click', bubbleIndex: idx });
+                } catch (e) {}
+                // Optimistic UI: show targeting reticle locally right away
+                clickedBubble.targetingProgress = 1;
+            }
         }
 
         // Track for activation: 3 bubble clicks within 3 seconds enables orbs
@@ -702,6 +779,15 @@ function draw(canvas, X, Y, isDarkTheme) {
                     bubbles[i].render(secondsSinceLastRender);
                 }
             } else if (simIsLeader) {
+                // Drain pending click events from follower tabs
+                while (pendingClickEvents.length > 0) {
+                    const idx = pendingClickEvents.shift();
+                    if (bubbles[idx] && !bubbles[idx].bursting) {
+                        bubbles[idx].priorityTargeted = true;
+                        bubbles[idx].targetingProgress = 1;
+                    }
+                }
+
                 // Leader: run physics + broadcast state
                 for (let i = 0; i < bubbles.length; i++) {
                     bubbles[i].render(secondsSinceLastRender);
@@ -762,16 +848,19 @@ function orbsFeatureSupported() {
 function orbsEnabled() {
     if (!orbsFeatureSupported()) return false;
     try {
-        return localStorage.getItem(ORBS_ENABLED_KEY) === 'true';
+        // Default to enabled unless the user explicitly stopped it
+        return localStorage.getItem(ORBS_ENABLED_KEY) !== 'false';
     } catch (e) {
         return false;
     }
 }
 
 let simChannel = null;
+let simEventsChannel = null;
 let simIsLeader = true; // default true if no lock API
 let simReceivedState = null;
 let simSetupDone = false;
+const pendingClickEvents = [];
 
 function setupSimSync() {
     if (simSetupDone) return;
@@ -783,6 +872,15 @@ function setupSimSync() {
             simChannel = new BroadcastChannel('cf-sim-state');
             simChannel.onmessage = (event) => {
                 simReceivedState = event.data;
+            };
+        } catch (e) {}
+        try {
+            simEventsChannel = new BroadcastChannel('cf-sim-events');
+            simEventsChannel.onmessage = (event) => {
+                const data = event.data;
+                if (data && data.type === 'click' && typeof data.bubbleIndex === 'number') {
+                    pendingClickEvents.push(data.bubbleIndex);
+                }
             };
         } catch (e) {}
     }
@@ -811,6 +909,7 @@ function serializeSimState(bubbles, orbs, w, h) {
             bursting: b.bursting,
             burstProgress: b.burstProgress,
             splashParticles: b.bursting ? b.splashParticles : null,
+            targetingProgress: b.targetingProgress,
         })),
         orbs: orbs.map(o => ({
             x: o.x / w,
@@ -843,6 +942,7 @@ function applySimState(bubbles, orbs, state, w, h) {
             if (s.bursting && s.splashParticles) {
                 b.splashParticles = s.splashParticles;
             }
+            b.targetingProgress = s.targetingProgress || 0;
         }
     }
     if (state.orbs && state.orbs.length === orbs.length) {
