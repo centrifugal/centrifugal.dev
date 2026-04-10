@@ -6,11 +6,8 @@ import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import styles from "../styles.module.css";
-import Logo from "../components/logo";
-import Ray from "../components/Ray";
-import { useColorMode } from '@docusaurus/theme-common';
+import Hero from "../components/Hero";
 import Highlight from '../components/Highlight'
-import TitleWithCatPro from '../components/TitleWithCatPro'
 import ImageRotator from '../../components/ImageRotator';
 import Pricing from '../components/Pricing';
 import ComparisonTable from '../components/ComparisonTable';
@@ -33,46 +30,41 @@ function Feature({ imageUrl, title, children }) {
 }
 
 function Header() {
-    const isDarkTheme = useColorMode().colorMode == 'dark';
     return (
-        <header id="hero" className={clsx("hero hero--primary", styles.heroBanner)}>
-            <Ray />
-            <Logo isDarkTheme={isDarkTheme} />
-            <div className="container" style={{ "zIndex": 1, pointerEvents: "none" }}>
-                <div className={styles.mainTitle}>
-                  <TitleWithCatPro isDarkTheme={isDarkTheme} />
-                </div>
-                <div className={styles.subTitle}>
-                    Unlock the full power of Centrifugo
-                </div>
-                <div className={styles.subSubTitle}>
-                    Next-level real-time messaging for your organization
-                </div>
-                <div className={styles.buttons}>
-                    <Link
-                        className={clsx(
-                            "button button--outline button--secondary button--lg"
-                        )}
-                        to={useBaseUrl("docs/pro/overview")}
-                    >
-                        PRO DOCS
-                    </Link>
-                    <a
-                        className={clsx(
-                            "button button--outline button--secondary button--lg"
-                        )}
-                        href="#pricing"
-                        style={{ pointerEvents: "auto" }}
-                        onClick={(e) => {
-                            e.preventDefault();
-                            document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" });
-                        }}
-                    >
-                        PRICING
-                    </a>
-                </div>
+        <Hero>
+            <div className={styles.mainTitle}>
+                CENTRIFUGO<span className={styles.proSuffix}>PRO</span>
             </div>
-        </header >
+            <div className={styles.subTitle}>
+                Unlock the full power of Centrifugo
+            </div>
+            <div className={styles.subSubTitle}>
+                Next-level <span className="text-gradient text-gradient-hero">real-time messaging</span> and <span className="text-gradient text-gradient-hero">data sync</span> for your organization
+            </div>
+            <div className={styles.buttons}>
+                <Link
+                    className={clsx(
+                        "button button--outline button--secondary button--lg"
+                    )}
+                    to={useBaseUrl("docs/pro/overview")}
+                >
+                    PRO DOCS
+                </Link>
+                <a
+                    className={clsx(
+                        "button button--outline button--secondary button--lg"
+                    )}
+                    href="#pricing"
+                    style={{ pointerEvents: "auto" }}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" });
+                    }}
+                >
+                    PRICING
+                </a>
+            </div>
+        </Hero>
     );
 }
 

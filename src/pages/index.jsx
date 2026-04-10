@@ -6,10 +6,8 @@ import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import styles from "./styles.module.css";
-import Logo from "./components/logo";
-import { useColorMode } from '@docusaurus/theme-common';
+import Hero from './components/Hero';
 import Highlight from './components/Highlight';
-import TitleWithCat from './components/TitleWithCat';
 import Badoo from "./components/logos/Badoo";
 import Grafana from "./components/logos/Grafana";
 import ManyChat from "./components/logos/ManyChat";
@@ -27,8 +25,6 @@ import ProBanner from '../components/ProBanner';
 import ImageRotator from '../components/ImageRotator';
 import ProCtaBanner from '../components/ProCtaBanner';
 import GitHubStarButton from '../components/GitHubStarButton';
-import Ray from './components/Ray';
-import LiveCounter from './components/LiveCounter';
 import QuickStart, { QuickStartDescription } from '../components/QuickStart';
 import { ChatIcon, DashboardIcon, GameIcon, DataSyncIcon, FinancialIcon, LiveFeedIcon, IoTIcon, AIIcon } from '../components/UseCaseIcons';
 
@@ -50,35 +46,27 @@ function Feature({ imageUrl, title, children }) {
 }
 
 function Header() {
-  const isDarkTheme = useColorMode().colorMode == 'dark';
   return (
-    <header id="hero" className={clsx("hero hero--primary", styles.heroBanner)}>
-      <Ray />
-      <Logo isDarkTheme={isDarkTheme} />
-      <div className="container" style={{ "zIndex": 1, pointerEvents: "none" }}>
-        <div className={styles.mainTitle}>
-          <TitleWithCat isDarkTheme={isDarkTheme} />
-        </div>
-        <div className={styles.subTitle}>
-          Wash away WebSocket scalability issues
-        </div>
-        <div className={styles.subSubTitle}>
-          <span className="text-gradient text-gradient-hero">Real-time messaging</span> and <span className="text-gradient text-gradient-hero">data sync</span> for any stack. Spin up once and forever.
-        </div>
-        <div className={styles.buttons}>
-          <Link
-            className={clsx(
-              "button button--outline button--secondary button--lg"
-            )}
-            to={useBaseUrl("docs/getting-started/introduction")}
-          >
-            GET STARTED
-          </Link>
-          <GitHubStarButton />
-        </div>
+    <Hero>
+      <div className={styles.mainTitle}>CENTRIFUGO</div>
+      <div className={styles.subTitle}>
+        Wash away WebSocket scalability issues
       </div>
-      <LiveCounter />
-    </header>
+      <div className={styles.subSubTitle}>
+        <span className="text-gradient text-gradient-hero">Real-time messaging</span> and <span className="text-gradient text-gradient-hero">data sync</span> for any stack. Spin up once and forever.
+      </div>
+      <div className={styles.buttons}>
+        <Link
+          className={clsx(
+            "button button--outline button--secondary button--lg"
+          )}
+          to={useBaseUrl("docs/getting-started/introduction")}
+        >
+          GET STARTED
+        </Link>
+        <GitHubStarButton />
+      </div>
+    </Hero>
   );
 }
 

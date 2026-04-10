@@ -284,6 +284,9 @@ html[data-theme="dark"] .logos svg * {
 .proSuffix {
   display: inline-block;
   opacity: 0;
+  margin-left: 0.4em;
+  font-size: 0.5em;
+  vertical-align: 0.7em;
   color: #fe5e5e;
   transform: scale(0.8);
   animation: fadeScaleIn 0.8s ease-out forwards;
