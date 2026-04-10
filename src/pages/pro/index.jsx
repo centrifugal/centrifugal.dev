@@ -39,7 +39,8 @@ function Header() {
                 Unlock the full power of Centrifugo
             </div>
             <div className={styles.subSubTitle}>
-                Next-level <span className="text-gradient text-gradient-hero">real-time messaging</span> and <span className="text-gradient text-gradient-hero">data sync</span> for your organization
+                Next-level <span className="text-gradient text-gradient-hero">real-time messaging</span> and <span className="text-gradient text-gradient-hero">data sync</span><br />
+                for your organization
             </div>
             <div className={styles.buttons}>
                 <Link

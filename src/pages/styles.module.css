@@ -6,18 +6,12 @@
  */
 
 .heroBanner {
-    padding: 3.4rem 0;
+    padding: clamp(2rem, 5vw, 3.4rem) 1rem;
     text-align: center;
     position: relative;
     overflow: hidden;
     background-color: var(--palette-background-alt);
     color: var(--ifm-font-color-base);
-}
-
-@media screen and (max-width: 996px) {
-    .heroBanner {
-        padding: 2rem 0;
-    }
 }
 
 .heroBanner canvas {
@@ -36,18 +30,21 @@
 }
 
 .mainTitle {
-    margin: 3% 0 0 0;
-    font-size: 3.2rem;
+    margin: 0 auto 0.4em;
+    font-size: clamp(2rem, 6vw, 3.2rem);
     font-weight: 600;
     font-family: "Nunito";
+    line-height: 1.1;
     pointer-events: none;
+    word-wrap: break-word;
 }
 
 .subTitle {
-    margin: 0 0 0 0;
-    font-size: 2rem;
+    margin: 0 auto 0.5em;
+    font-size: clamp(1.25rem, 3.6vw, 2rem);
     font-weight: 600;
     font-family: "Nunito";
+    line-height: 1.25;
     pointer-events: none;
     background-image: linear-gradient(135deg, #fe5e5e, #d56464);
     background-clip: text;
@@ -56,10 +53,12 @@
 }
 
 .subSubTitle {
-    margin: 0 0 5% 0;
-    font-size: 1.3rem;
+    margin: 0 auto 1.5em;
+    max-width: 38ch;
+    font-size: clamp(0.95rem, 2vw, 1.3rem);
     font-weight: 400;
     font-family: "Nunito";
+    line-height: 1.45;
     pointer-events: none;
 }
 
@@ -95,12 +94,28 @@ html[data-theme="light"] .subSubTitle {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 16px;
+    gap: 14px;
     flex-wrap: wrap;
+    margin: 0 auto;
+    max-width: 100%;
 }
 
 .buttons a {
     pointer-events: all;
+}
+
+@media screen and (max-width: 480px) {
+    .buttons {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        max-width: 280px;
+    }
+
+    .buttons a {
+        width: 100%;
+        text-align: center;
+    }
 }
 
 .logos {
@@ -247,21 +262,6 @@ html[data-theme="dark"] .logos svg * {
 }
 
 @media screen and (max-width: 600px) {
-    .mainTitle {
-        width: 100%;
-        font-size: 2rem;
-    }
-
-    .subTitle {
-        width: 100%;
-        font-size: 0.9rem;
-    }
-
-    .subSubTitle {
-        width: 100%;
-        font-size: 0.7rem;
-    }
-
     .featureImage {
         float: none;
         margin: 2.25em 0;
