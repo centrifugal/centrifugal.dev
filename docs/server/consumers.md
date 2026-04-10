@@ -339,7 +339,7 @@ If set to `true`, the consumer will read uncommitted messages from Kafka. By def
 
 String. Default: `""`.
 
-SASL mechanism to use: `"plain"`, `"scram-sha-256"`, `"scram-sha-512"`, `"aws-msk-iam"` are supported. Note, in case of `"aws-msk-iam"` Centrifugo uses `sasl_user` and `sasl_password` options as `access key` and `secret key` when configuring AWS auth.
+SASL mechanism to use: `"plain"`, `"scram-sha-256"`, `"scram-sha-512"`, `"aws-msk-iam"` are supported. In case of `"aws-msk-iam"`, by default Centrifugo uses `sasl_user` and `sasl_password` options as `access key` and `secret key` when configuring AWS auth. Alternatively, set [`assume_role_arn`](#consumerskafkaassume_role_arn) to authenticate via the AWS SDK default credential chain combined with STS AssumeRole — useful for cross-account MSK access or when running Centrifugo on EC2/EKS/ECS with an instance profile.
 
 ### `consumers[].kafka.sasl_user`
 
@@ -352,6 +352,16 @@ User for plain SASL auth. To override `sasl_user` over environment variables use
 String. Default: `""`.
 
 Password for plain SASL auth. To override `sasl_password` over environment variables use `CENTRIFUGO_CONSUMERS_<CONSUMER_NAME>_KAFKA_SASL_PASSWORD`.
+
+### `consumers[].kafka.assume_role_arn`
+
+String. Default: `""`. New in Centrifugo v6.7.1
+
+When set together with `sasl_mechanism: "aws-msk-iam"`, Centrifugo uses AWS STS AssumeRole to obtain temporary credentials for MSK IAM authentication. Base credentials and region are loaded via the default AWS SDK credential chain (`AWS_REGION`, environment variables, EC2/EKS/ECS instance metadata, shared profile, etc.), then used to assume the specified IAM role. The resulting session token is automatically refreshed by the Kafka client.
+
+This is useful for cross-account MSK access, or when running Centrifugo with an instance profile and you want it to assume a role that has MSK permissions.
+
+When `assume_role_arn` is empty, Centrifugo falls back to the static `sasl_user` / `sasl_password` keys. When `assume_role_arn` is set, `sasl_user` and `sasl_password` are ignored. Setting `assume_role_arn` with any SASL mechanism other than `aws-msk-iam` is a configuration error.
 
 ### `consumers[].kafka.tls`
 
