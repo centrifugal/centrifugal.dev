@@ -307,65 +307,204 @@ Bubble.prototype.render = function(elapsedTime) {
     this.draw();
 };
 
-function drawBranch(ctx, startX, startY, endX, endY, thickness) {
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    ctx.lineTo(endX, endY);
-    ctx.lineWidth = thickness;
-    ctx.strokeStyle = '#F6CFC7';
-    ctx.stroke();
-
-    // Create a gradient for the glow effect.
-    const gradient = ctx.createLinearGradient(startX, startY, endX, endY);
-    gradient.addColorStop(0, '#F60809');
-    gradient.addColorStop(1, '#F6B9BD');
-    
-    // Draw the glow.
-    ctx.strokeStyle = gradient;
-    ctx.lineWidth = thickness;
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = 'red';
-    ctx.stroke();
+function Orb(ctx, canvasWidth, canvasHeight, isDarkTheme) {
+    this.ctx = ctx;
+    this.canvasWidth = canvasWidth;
+    this.canvasHeight = canvasHeight;
+    this.isDarkTheme = isDarkTheme;
+    this.radius = Math.max(6, Math.min(canvasWidth, canvasHeight) / 80);
+    this.speed = 380; // px/sec
+    this.target = null;
+    this.spawnAtCenter();
+    // Trail of past positions for motion blur
+    this.trail = [];
+    this.maxTrail = 12;
+    // Pulse for glow breathing
+    this.pulse = Math.random() * Math.PI * 2;
+    // Sparkle state for collision flash
+    this.sparkleProgress = 0;
+    this.sparkleDuration = 0.6;
+    this.sparkles = [];
+    this.sparkleX = 0;
+    this.sparkleY = 0;
+    this.remoteVisible = false;
 }
 
-function drawLightning(ctx, X, Y) {
-    const startX = X / 2 + (0.5 - Math.random()) * 30;
-    const startY = Y / 2 + (0.5 - Math.random()) * 30;
-    const numSegments = Math.floor(Math.random() * 10) + 2;
-    let currentX = startX;
-    let currentY = startY;
+Orb.prototype.spawnAtCenter = function() {
+    this.x = this.canvasWidth / 2;
+    this.y = this.canvasHeight / 2;
+    this.trail = [];
+};
 
-    const initialAngle = Math.random() * Math.PI * 2;  // Random initial angle
-
-    ctx.globalCompositeOperation = 'lighter';
-
-    for (let i = 0; i < numSegments; i++) {
-        const segmentLength = Math.random() * 10;
-        const angle = initialAngle + (Math.random() - 0.5) * Math.PI / 3;
-        const endX = currentX + Math.cos(angle) * segmentLength;
-        const endY = currentY + Math.sin(angle) * segmentLength;
-
-        drawBranch(ctx, currentX, currentY, endX, endY, 3);
-
-        // Branching.
-        if (Math.random() > 0.7) {
-            drawBranch(ctx, currentX, currentY, currentX + Math.cos(angle + Math.PI / 4) * segmentLength, currentY + Math.sin(angle + Math.PI / 4) * segmentLength, 3);
+Orb.prototype.pickTarget = function(bubbles, claimed) {
+    const candidates = [];
+    for (let i = 0; i < bubbles.length; i++) {
+        if (!bubbles[i].bursting && !claimed.has(bubbles[i])) {
+            candidates.push(bubbles[i]);
         }
-        if (Math.random() > 0.7) {
-            drawBranch(ctx, currentX, currentY, currentX + Math.cos(angle - Math.PI / 4) * segmentLength, currentY + Math.sin(angle - Math.PI / 4) * segmentLength, 3);
-        }
-        if (Math.random() > 0.7) {
-            drawBranch(ctx, currentX, currentY, currentX + Math.cos(angle - Math.PI / 4) * segmentLength, currentY + Math.sin(angle - Math.PI / 4) * segmentLength, 3);
-        }
+    }
+    if (candidates.length === 0) return null;
+    return candidates[Math.floor(Math.random() * candidates.length)];
+};
 
-        currentX = endX;
-        currentY = endY;
+Orb.prototype.update = function(elapsedTime, bubbles, claimed, onBurst) {
+    // If our target burst before we could reach it, the "subscriber went offline"
+    // — the in-flight message is lost. Vanish (respawn at center, no target).
+    if (this.target && this.target.bursting) {
+        claimed.delete(this.target);
+        this.target = null;
+        this.spawnAtCenter();
     }
 
-    ctx.globalCompositeOperation = 'source-over';
-}
+    // Pick a new target if we don't have one
+    if (!this.target) {
+        this.target = this.pickTarget(bubbles, claimed);
+        if (this.target) claimed.add(this.target);
+    }
+
+    if (this.target) {
+        const dx = this.target.x - this.x;
+        const dy = this.target.y - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist <= this.target.radius + this.radius) {
+            // Hit! Trigger dramatic burst
+            const t = this.target;
+            t.bursting = true;
+            t.burstProgress = 0;
+            const numSplashes = Math.floor(Math.random() * 8) + 14;
+            t.splashParticles = [];
+            for (let j = 0; j < numSplashes; j++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 120 + 80;
+                const length = Math.random() * 15 + 8;
+                t.splashParticles.push({ angle, speed, length });
+            }
+
+            // Sparkle flash on orb (anchor at impact point, not future positions)
+            this.sparkleX = this.x;
+            this.sparkleY = this.y;
+            this.sparkleProgress = 1;
+            this.sparkles = [];
+            const numSparkles = Math.floor(Math.random() * 5) + 6;
+            for (let k = 0; k < numSparkles; k++) {
+                const sa = Math.random() * Math.PI * 2;
+                const ss = Math.random() * 80 + 60;
+                this.sparkles.push({ angle: sa, speed: ss, size: Math.random() * 2 + 1 });
+            }
+
+            // Notify listeners
+            if (onBurst) onBurst();
+
+            // Release target and respawn at center for next message
+            claimed.delete(this.target);
+            this.target = null;
+            this.spawnAtCenter();
+        } else {
+            // Move at constant speed toward target
+            const nx = dx / dist;
+            const ny = dy / dist;
+            this.x += nx * this.speed * elapsedTime;
+            this.y += ny * this.speed * elapsedTime;
+        }
+    }
+
+    // Pulse
+    this.pulse += elapsedTime * 4;
+
+    // Update sparkle decay
+    if (this.sparkleProgress > 0) {
+        this.sparkleProgress = Math.max(0, this.sparkleProgress - elapsedTime / this.sparkleDuration);
+    }
+
+    // Trail
+    this.trail.push({ x: this.x, y: this.y });
+    if (this.trail.length > this.maxTrail) this.trail.shift();
+};
+
+Orb.prototype.draw = function() {
+    // The orb is "active" (has a delivery in flight) if either we own its
+    // simulation locally (`target` set) or the leader told us so (`remoteVisible`).
+    const active = !!this.target || this.remoteVisible === true;
+    if (!active && this.sparkleProgress <= 0) return;
+    const ctx = this.ctx;
+    ctx.save();
+    const drawBody = active;
+
+    if (drawBody) {
+        // Trail
+        for (let i = 0; i < this.trail.length; i++) {
+            const t = this.trail[i];
+            const alpha = (i / this.trail.length) * 0.35;
+            const r = this.radius * (i / this.trail.length);
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = this.isDarkTheme ? '#fe5e5e' : '#d56464';
+            ctx.beginPath();
+            ctx.arc(t.x, t.y, r, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Outer glow (boosted while sparkling)
+        const sparkleBoost = this.sparkleProgress;
+        const glowRadius = this.radius * (4 + Math.sin(this.pulse) * 0.5 + sparkleBoost * 4);
+        const glowAlphaBoost = 1 + sparkleBoost * 1.5;
+        const glowGradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, glowRadius);
+        if (this.isDarkTheme) {
+            glowGradient.addColorStop(0, `rgba(254, 94, 94, ${Math.min(1, 0.35 * glowAlphaBoost)})`);
+            glowGradient.addColorStop(0.5, `rgba(254, 94, 94, ${Math.min(1, 0.08 * glowAlphaBoost)})`);
+            glowGradient.addColorStop(1, 'rgba(254, 94, 94, 0)');
+        } else {
+            glowGradient.addColorStop(0, `rgba(213, 100, 100, ${Math.min(1, 0.32 * glowAlphaBoost)})`);
+            glowGradient.addColorStop(0.5, `rgba(213, 100, 100, ${Math.min(1, 0.07 * glowAlphaBoost)})`);
+            glowGradient.addColorStop(1, 'rgba(213, 100, 100, 0)');
+        }
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = glowGradient;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, glowRadius, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Sparkles flying out from orb during collision flash (anchored at impact point)
+    if (this.sparkleProgress > 0 && this.sparkles.length) {
+        const elapsed = (1 - this.sparkleProgress) * this.sparkleDuration;
+        ctx.globalAlpha = this.sparkleProgress;
+        for (let i = 0; i < this.sparkles.length; i++) {
+            const s = this.sparkles[i];
+            const sx = this.sparkleX + Math.cos(s.angle) * s.speed * elapsed;
+            const sy = this.sparkleY + Math.sin(s.angle) * s.speed * elapsed;
+            const sr = s.size * this.sparkleProgress;
+            ctx.fillStyle = this.isDarkTheme ? '#fe5e5e' : '#d56464';
+            ctx.beginPath();
+            ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+    }
+
+    if (drawBody) {
+        // Core orb with subtle highlight
+        const coreGradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+        coreGradient.addColorStop(0, '#fe9090');
+        coreGradient.addColorStop(0.5, '#d56464');
+        coreGradient.addColorStop(1, '#5a1010');
+        ctx.fillStyle = coreGradient;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    ctx.restore();
+};
+
+Orb.prototype.render = function(elapsedTime, bubbles, claimed, onBurst) {
+    this.update(elapsedTime, bubbles, claimed, onBurst);
+    this.draw();
+};
 
 function draw(canvas, X, Y, isDarkTheme) {
+    let orbsActive = orbsEnabled();
+    if (orbsActive) setupSimSync();
     const ctx = canvas.getContext("2d");
 
     const centerX = X / 2;
@@ -399,34 +538,108 @@ function draw(canvas, X, Y, isDarkTheme) {
         // Use the same color as your original line color.
         bubbles.push(new Bubble(ctx, X, Y, isDarkTheme));
     }
-    
-    // --- New: Burst only the bubble clicked ---
-    canvas.addEventListener('click', (event) => {
-        // Get the click coordinates relative to the canvas.
+
+    let orbs = null;
+    let claimed = null;
+    const onBurst = () => {
+        try { window.dispatchEvent(new CustomEvent('cf-burst')); } catch (e) {}
+    };
+
+    function createOrbs() {
+        if (orbs) return;
+        orbs = [
+            new Orb(ctx, X, Y, isDarkTheme),
+            new Orb(ctx, X, Y, isDarkTheme),
+            new Orb(ctx, X, Y, isDarkTheme),
+        ];
+        claimed = new Set();
+    }
+
+    function activateOrbs() {
+        if (orbsActive) return;
+        if (!orbsFeatureSupported()) return;
+        orbsActive = true;
+        try { localStorage.setItem(ORBS_ENABLED_KEY, 'true'); } catch (e) {}
+        setupSimSync();
+        createOrbs();
+        try { window.dispatchEvent(new CustomEvent('cf-orbs-activated')); } catch (e) {}
+    }
+
+    if (orbsActive) createOrbs();
+
+    function deactivateOrbs() {
+        if (!orbsActive) return;
+        orbsActive = false;
+        orbs = null;
+        claimed = null;
+        activationClicks = [];
+    }
+
+    // Listen for activation/deactivation from another tab
+    const storageHandler = (e) => {
+        if (e.key === ORBS_ENABLED_KEY) {
+            if (e.newValue === 'true' && !orbsActive) {
+                orbsActive = true;
+                setupSimSync();
+                createOrbs();
+                try { window.dispatchEvent(new CustomEvent('cf-orbs-activated')); } catch (e2) {}
+            } else if (e.newValue === null && orbsActive) {
+                deactivateOrbs();
+            }
+        }
+    };
+    window.addEventListener('storage', storageHandler);
+
+    // Listen for local deactivation event from the LiveCounter stop button
+    const deactivateHandler = () => deactivateOrbs();
+    window.addEventListener('cf-orbs-deactivated', deactivateHandler);
+
+    // Click handler: bursts bubbles AND tracks bubble-clicks for activation
+    let activationClicks = [];
+    const clickHandler = (event) => {
         const rect = canvas.getBoundingClientRect();
         const clickX = event.clientX - rect.left;
         const clickY = event.clientY - rect.top;
-        bubbles.forEach(bubble => {
-            // Check if the click is inside the bubble.
+
+        // Find clicked bubble
+        let clickedBubble = null;
+        for (const bubble of bubbles) {
             const dx = clickX - bubble.x;
             const dy = clickY - bubble.y;
-            if (Math.sqrt(dx * dx + dy * dy) <= bubble.radius) {
-                if (!bubble.bursting) {
-                    bubble.bursting = true;
-                    bubble.burstProgress = 0;
-                    let numSplashes = Math.floor(Math.random() * 6) + 10;
-                    bubble.splashParticles = [];
-                    for (let i = 0; i < numSplashes; i++) {
-                        let angle = Math.random() * Math.PI * 2;
-                        let speed = Math.random() * 50 + 50;
-                        let length = Math.random() * 10 + 5;
-                        bubble.splashParticles.push({ angle, speed, length });
-                    }
-                }
+            if (Math.sqrt(dx * dx + dy * dy) <= bubble.radius && !bubble.bursting) {
+                clickedBubble = bubble;
+                break;
             }
-        });
-    });
-    // --- End new code ---
+        }
+        if (!clickedBubble) return;
+
+        // Burst the bubble (only if we own the simulation: solo mode or leader)
+        const canBurst = !orbsActive || simIsLeader;
+        if (canBurst) {
+            clickedBubble.bursting = true;
+            clickedBubble.burstProgress = 0;
+            let numSplashes = Math.floor(Math.random() * 6) + 10;
+            clickedBubble.splashParticles = [];
+            for (let i = 0; i < numSplashes; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let speed = Math.random() * 50 + 50;
+                let length = Math.random() * 10 + 5;
+                clickedBubble.splashParticles.push({ angle, speed, length });
+            }
+            if (orbsActive) onBurst();
+        }
+
+        // Track for activation: 3 bubble clicks within 3 seconds enables orbs
+        if (!orbsActive && orbsFeatureSupported()) {
+            const now = Date.now();
+            activationClicks.push(now);
+            activationClicks = activationClicks.filter(t => now - t <= 3000);
+            if (activationClicks.length >= 3) {
+                activateOrbs();
+            }
+        }
+    };
+    canvas.addEventListener('click', clickHandler);
 
     for (let i = 0; i < linesNum; i += 1) {
         const line = new Line(ctx, X, Y, rand(0, X), rand(0, Y), lineColor);
@@ -456,14 +669,15 @@ function draw(canvas, X, Y, isDarkTheme) {
     ));
 
     let lastRenderTime = 0;
-    const useLightnings = localStorage.getItem("lights") == "up";
+    let cancelled = false;
+    let rafId = null;
 
     function isCanvasVisible() {
         return !(canvas.offsetParent === null);
     }
 
     function render(currentTime) {
-        if (X <= 1) {
+        if (cancelled || X <= 1) {
             return;
         }
 
@@ -477,30 +691,184 @@ function draw(canvas, X, Y, isDarkTheme) {
             //     lines[i].render(secondsSinceLastRender);
             // }
 
+            // Segments are decorative, run independently per tab.
             for (let i = 0; i < segments.length; i += 1) {
                 segments[i].render(secondsSinceLastRender);
             }
 
-            // Render bubbles.
-            for (let i = 0; i < bubbles.length; i++) {
-                bubbles[i].render(secondsSinceLastRender);
+            if (!orbsActive) {
+                // Solo mode: just bubbles, no sync, no orbs
+                for (let i = 0; i < bubbles.length; i++) {
+                    bubbles[i].render(secondsSinceLastRender);
+                }
+            } else if (simIsLeader) {
+                // Leader: run physics + broadcast state
+                for (let i = 0; i < bubbles.length; i++) {
+                    bubbles[i].render(secondsSinceLastRender);
+                }
+                if (isDarkTheme && orbs) {
+                    for (let i = 0; i < orbs.length; i++) {
+                        orbs[i].render(secondsSinceLastRender, bubbles, claimed, onBurst);
+                    }
+                }
+                if (simChannel) {
+                    try {
+                        simChannel.postMessage(serializeSimState(bubbles, orbs || [], X, Y));
+                    } catch (e) {}
+                }
+            } else {
+                // Follower: apply received state, render only
+                applySimState(bubbles, orbs || [], simReceivedState, X, Y);
+                for (let i = 0; i < bubbles.length; i++) {
+                    bubbles[i].draw();
+                }
+                if (isDarkTheme && orbs) {
+                    for (let i = 0; i < orbs.length; i++) {
+                        orbs[i].draw();
+                    }
+                }
             }
 
-            if (isDarkTheme && useLightnings && X > 1280) {
-                if (Math.random() > 0.95) {
-                    drawLightning(ctx, X, Y);
-                }
-                ctx.shadowBlur = 100;
-            } else {
-                ctx.shadowBlur = 0;
-            }
+            ctx.shadowBlur = 0;
         }
 
         lastRenderTime = currentTime;
-        requestAnimationFrame(render);
+        rafId = requestAnimationFrame(render);
     }
 
-    requestAnimationFrame(render);
+    rafId = requestAnimationFrame(render);
+
+    return () => {
+        cancelled = true;
+        if (rafId !== null && typeof cancelAnimationFrame !== 'undefined') {
+            cancelAnimationFrame(rafId);
+        }
+        canvas.removeEventListener('click', clickHandler);
+        window.removeEventListener('storage', storageHandler);
+        window.removeEventListener('cf-orbs-deactivated', deactivateHandler);
+    };
+}
+
+// --- Cross-tab simulation sync ---
+const ORBS_ENABLED_KEY = 'cf-orbs-enabled';
+
+function orbsFeatureSupported() {
+    if (typeof window === 'undefined') return false;
+    if (typeof BroadcastChannel === 'undefined') return false;
+    if (typeof navigator === 'undefined' || !navigator.locks) return false;
+    return true;
+}
+
+function orbsEnabled() {
+    if (!orbsFeatureSupported()) return false;
+    try {
+        return localStorage.getItem(ORBS_ENABLED_KEY) === 'true';
+    } catch (e) {
+        return false;
+    }
+}
+
+let simChannel = null;
+let simIsLeader = true; // default true if no lock API
+let simReceivedState = null;
+let simSetupDone = false;
+
+function setupSimSync() {
+    if (simSetupDone) return;
+    simSetupDone = true;
+    if (typeof window === 'undefined') return;
+
+    if (typeof BroadcastChannel !== 'undefined') {
+        try {
+            simChannel = new BroadcastChannel('cf-sim-state');
+            simChannel.onmessage = (event) => {
+                simReceivedState = event.data;
+            };
+        } catch (e) {}
+    }
+
+    if (typeof navigator !== 'undefined' && navigator.locks) {
+        simIsLeader = false;
+        navigator.locks.request('cf-sim-leader', () => {
+            simIsLeader = true;
+            // Hold lock until tab closes
+            return new Promise(() => {});
+        }).catch(() => {
+            simIsLeader = true;
+        });
+    }
+}
+
+function serializeSimState(bubbles, orbs, w, h) {
+    return {
+        bubbles: bubbles.map(b => ({
+            x: b.x / w,
+            y: b.y / h,
+            radius: b.radius / w,
+            alpha: b.alpha,
+            pulse: b.pulse,
+            appearProgress: b.appearProgress,
+            bursting: b.bursting,
+            burstProgress: b.burstProgress,
+            splashParticles: b.bursting ? b.splashParticles : null,
+        })),
+        orbs: orbs.map(o => ({
+            x: o.x / w,
+            y: o.y / h,
+            radius: o.radius / w,
+            pulse: o.pulse,
+            visible: !!o.target,
+            sparkleProgress: o.sparkleProgress,
+            sparkles: o.sparkleProgress > 0 ? o.sparkles : null,
+            sparkleX: o.sparkleX / w,
+            sparkleY: o.sparkleY / h,
+        })),
+    };
+}
+
+function applySimState(bubbles, orbs, state, w, h) {
+    if (!state) return;
+    if (state.bubbles && state.bubbles.length === bubbles.length) {
+        for (let i = 0; i < bubbles.length; i++) {
+            const s = state.bubbles[i];
+            const b = bubbles[i];
+            b.x = s.x * w;
+            b.y = s.y * h;
+            b.radius = s.radius * w;
+            b.alpha = s.alpha;
+            b.pulse = s.pulse;
+            b.appearProgress = s.appearProgress;
+            b.bursting = s.bursting;
+            b.burstProgress = s.burstProgress;
+            if (s.bursting && s.splashParticles) {
+                b.splashParticles = s.splashParticles;
+            }
+        }
+    }
+    if (state.orbs && state.orbs.length === orbs.length) {
+        for (let i = 0; i < orbs.length; i++) {
+            const s = state.orbs[i];
+            const o = orbs[i];
+            o.x = s.x * w;
+            o.y = s.y * h;
+            o.radius = s.radius * w;
+            o.pulse = s.pulse;
+            o.remoteVisible = !!s.visible;
+            o.sparkleProgress = s.sparkleProgress;
+            if (s.sparkleProgress > 0 && s.sparkles) {
+                o.sparkles = s.sparkles;
+            }
+            o.sparkleX = (s.sparkleX || 0) * w;
+            o.sparkleY = (s.sparkleY || 0) * h;
+            // Trail computed locally only when orb is visible
+            if (o.remoteVisible) {
+                o.trail.push({ x: o.x, y: o.y });
+                if (o.trail.length > o.maxTrail) o.trail.shift();
+            } else {
+                o.trail = [];
+            }
+        }
+    }
 }
 
 let observer;
@@ -549,8 +917,9 @@ const Logo = (props) => {
     }
 
     React.useEffect(() => {
-        draw(canvas.current, scale.x, scale.y, props.isDarkTheme);
-    }, [scale]);
+        const cleanup = draw(canvas.current, scale.x, scale.y, props.isDarkTheme);
+        return cleanup;
+    }, [scale, props.isDarkTheme]);
 
     return <canvas ref={canvas} style={{ width: "100%", height: "100%" }} />;
 }

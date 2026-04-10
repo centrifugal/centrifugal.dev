@@ -28,6 +28,7 @@ import ImageRotator from '../components/ImageRotator';
 import ProCtaBanner from '../components/ProCtaBanner';
 import GitHubStarButton from '../components/GitHubStarButton';
 import Ray from './components/Ray';
+import LiveCounter from './components/LiveCounter';
 import QuickStart, { QuickStartDescription } from '../components/QuickStart';
 import { ChatIcon, DashboardIcon, GameIcon, DataSyncIcon, FinancialIcon, LiveFeedIcon, IoTIcon, AIIcon } from '../components/UseCaseIcons';
 
@@ -76,6 +77,7 @@ function Header() {
           <GitHubStarButton />
         </div>
       </div>
+      <LiveCounter />
     </header>
   );
 }
