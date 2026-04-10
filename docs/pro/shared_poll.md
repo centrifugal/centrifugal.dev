@@ -3,6 +3,12 @@ id: shared_poll
 title: Shared poll enhancements
 ---
 
+:::caution Experimental
+
+Shared poll subscriptions is an experimental feature. Configuration options, client SDK API, and proxy protocol may change in future releases. At this point only `centrifuge-js` SDK supports shared poll subscriptions on the client side.
+
+:::
+
 Centrifugo PRO extends the [shared poll subscriptions](../server/shared_poll.md) feature with [cached latest data](#cached-latest-data) and [delta compression](#delta-compression), [adaptive backpressure](#adaptive-backpressure), a [notification fast path](#notification-fast-path) for near-instant updates, and a standalone [relay server](#shared-poll-relay) for reducing backend load.
 
 ## Cached latest data

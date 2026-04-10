@@ -6,7 +6,7 @@ import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import styles from "../styles.module.css";
-import Hero from "../components/Hero";
+import Hero from "../../components/Hero";
 import Highlight from '../components/Highlight'
 import ImageRotator from '../../components/ImageRotator';
 import Pricing from '../components/Pricing';
@@ -33,7 +33,9 @@ function Header() {
     return (
         <Hero>
             <div className={styles.mainTitle}>
-                CENTRIFUGO<span className={styles.proSuffix}>PRO</span>
+                <span className={styles.titleWrap}>
+                    CENTRIFUGO<span className={styles.proSuffix}>PRO</span>
+                </span>
             </div>
             <div className={styles.subTitle}>
                 Unlock the full power of Centrifugo

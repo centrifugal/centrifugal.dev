@@ -66,13 +66,64 @@ Segment.prototype.drawSegment = function drawSegment(fromAngle, toAngle, rotateA
     this.ctx.stroke();
 };
 
+function getSegmentSprite(r, w, color, fromAngle, toAngle) {
+    const key = `seg:${r | 0}:${w | 0}:${color}:${fromAngle}:${toAngle}`;
+    if (sprites[key]) return sprites[key];
+    if (typeof document === 'undefined') return null;
+
+    const padding = 6; // room for stroke + antialiasing
+    const size = Math.ceil(r * 2 + padding * 2);
+    const c = document.createElement('canvas');
+    c.width = size;
+    c.height = size;
+    const sctx = c.getContext('2d');
+
+    const cx = size / 2;
+    const cy = size / 2;
+
+    // Replicate the original segment shape construction
+    const fromRad = (fromAngle * Math.PI) / 180;
+    const toRad = (toAngle * Math.PI) / 180;
+    const startX = cx + r * Math.cos(fromRad);
+    const startY = cy + r * Math.sin(fromRad);
+    const endX = cx + r * Math.cos(toRad);
+    const endY = cy + r * Math.sin(toRad);
+    const anotherX = startX - w;
+    const anotherY = endY - w;
+    const innerAngleStart = Math.atan2(startY - cy, anotherX - cx);
+    const innerAngleEnd = Math.atan2(anotherY - cy, endX - cx);
+
+    sctx.beginPath();
+    sctx.arc(cx, cy, r, toRad, fromRad, true);
+    sctx.arc(cx, cy, r - w, innerAngleStart, innerAngleEnd, false);
+    sctx.closePath();
+    sctx.fillStyle = color;
+    sctx.strokeStyle = color;
+    sctx.lineWidth = 3;
+    sctx.fill();
+    sctx.stroke();
+
+    sprites[key] = c;
+    return c;
+}
+
 Segment.prototype.draw = function draw() {
-    this.ctx.save();
-    this.ctx.lineWidth = 3;
-    this.ctx.strokeStyle = this.c;
-    this.ctx.shadowColor = this.c;
-    this.drawSegment(4 + this.angleDiff, 86 - this.angleDiff, this.rotate + this.a);
-    this.ctx.restore();
+    const ctx = this.ctx;
+    const sprite = getSegmentSprite(
+        this.r,
+        this.w,
+        this.c,
+        4 + this.angleDiff,
+        86 - this.angleDiff,
+    );
+    if (!sprite) return;
+
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(((this.rotate + this.a) * Math.PI) / 180);
+    const half = sprite.width / 2;
+    ctx.drawImage(sprite, -half, -half);
+    ctx.restore();
 };
 
 Segment.prototype.resize = function resize() {
@@ -140,6 +191,98 @@ Line.prototype.render = function render(elapsedTime) {
     this.wrapPosition();
     this.draw();
 };
+
+// Pre-rendered sprite caches. Creating radial gradients per frame is the most
+// expensive operation in software-rendered canvas (no GPU). Pre-render once,
+// then drawImage() at the desired size — drawImage is fast even on CPU.
+const SPRITE_SIZE = 200; // canonical pre-render dimension
+const sprites = {};
+
+function getSprite(key, painter) {
+    if (sprites[key]) return sprites[key];
+    if (typeof document === 'undefined') return null;
+    const c = document.createElement('canvas');
+    c.width = SPRITE_SIZE;
+    c.height = SPRITE_SIZE;
+    const sctx = c.getContext('2d');
+    painter(sctx, SPRITE_SIZE);
+    sprites[key] = c;
+    return c;
+}
+
+function getBubbleSprite(isDarkTheme) {
+    return getSprite(isDarkTheme ? 'bubble-dark' : 'bubble-light', (sctx, size) => {
+        const r = size / 2;
+        const g = sctx.createRadialGradient(r, r, 0, r, r, r);
+        if (isDarkTheme) {
+            g.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
+            g.addColorStop(0.95, 'rgba(98, 86, 86, 0.04)');
+            g.addColorStop(1, 'rgba(255, 255, 255, 0.33)');
+        } else {
+            g.addColorStop(0, 'rgba(255, 255, 255, 0.68)');
+            g.addColorStop(0.95, 'rgba(139, 131, 148, 0.17)');
+            g.addColorStop(1, 'rgba(6, 5, 81, 0.23)');
+        }
+        sctx.fillStyle = g;
+        sctx.beginPath();
+        sctx.arc(r, r, r, 0, Math.PI * 2);
+        sctx.fill();
+    });
+}
+
+function getBurstSprite(isDarkTheme) {
+    return getSprite(isDarkTheme ? 'burst-dark' : 'burst-light', (sctx, size) => {
+        const r = size / 2;
+        const g = sctx.createRadialGradient(r, r, 0, r, r, r);
+        if (isDarkTheme) {
+            g.addColorStop(0, 'rgba(0, 0, 0, 0.9)');
+            g.addColorStop(0.6, 'rgba(100, 82, 82, 0.29)');
+            g.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        } else {
+            g.addColorStop(0, 'rgba(217, 217, 217, 0.9)');
+            g.addColorStop(0.6, 'rgba(177,246,255,0.29)');
+            g.addColorStop(1, 'rgba(204, 204, 204, 0)');
+        }
+        sctx.fillStyle = g;
+        sctx.beginPath();
+        sctx.arc(r, r, r, 0, Math.PI * 2);
+        sctx.fill();
+    });
+}
+
+function getOrbGlowSprite(isDarkTheme) {
+    return getSprite(isDarkTheme ? 'orbglow-dark' : 'orbglow-light', (sctx, size) => {
+        const r = size / 2;
+        const g = sctx.createRadialGradient(r, r, 0, r, r, r);
+        if (isDarkTheme) {
+            g.addColorStop(0, 'rgba(254, 94, 94, 0.35)');
+            g.addColorStop(0.5, 'rgba(254, 94, 94, 0.08)');
+            g.addColorStop(1, 'rgba(254, 94, 94, 0)');
+        } else {
+            g.addColorStop(0, 'rgba(213, 100, 100, 0.32)');
+            g.addColorStop(0.5, 'rgba(213, 100, 100, 0.07)');
+            g.addColorStop(1, 'rgba(213, 100, 100, 0)');
+        }
+        sctx.fillStyle = g;
+        sctx.beginPath();
+        sctx.arc(r, r, r, 0, Math.PI * 2);
+        sctx.fill();
+    });
+}
+
+function getOrbCoreSprite() {
+    return getSprite('orb-core', (sctx, size) => {
+        const r = size / 2;
+        const g = sctx.createRadialGradient(r, r, 0, r, r, r);
+        g.addColorStop(0, '#fe9090');
+        g.addColorStop(0.5, '#d56464');
+        g.addColorStop(1, '#5a1010');
+        sctx.fillStyle = g;
+        sctx.beginPath();
+        sctx.arc(r, r, r, 0, Math.PI * 2);
+        sctx.fill();
+    });
+}
 
 function Bubble(ctx, canvasWidth, canvasHeight, isDarkTheme) {
     this.ctx = ctx;
@@ -224,11 +367,14 @@ Bubble.prototype.update = function(elapsedTime) {
             this.splashParticles = [];
             for (let i = 0; i < numSplashes; i++) {
                 let angle = Math.random() * Math.PI * 2;
-                // Speed controls how fast the splash particle moves outward.
                 let speed = Math.random() * 50 + 50;
-                // Each particle's "length" defines its initial size.
                 let length = Math.random() * 10 + 5;
-                this.splashParticles.push({angle: angle, speed: speed, length: length});
+                // Pre-compute the unit vector so draw() doesn't call cos/sin per frame.
+                this.splashParticles.push({
+                    dx: Math.cos(angle) * speed,
+                    dy: Math.sin(angle) * speed,
+                    length: length,
+                });
             }
         }
     } else {
@@ -243,86 +389,62 @@ Bubble.prototype.update = function(elapsedTime) {
 
 Bubble.prototype.draw = function() {
     const ctx = this.ctx;
-    ctx.save();
 
     if (!this.bursting) {
         // Normal bubble drawing with pulsating and fade-in effect.
         const dynamicAlpha = (this.alpha + 0.3 * Math.sin(this.pulse)) * this.appearProgress;
-        ctx.globalAlpha = Math.max(0, Math.min(0.7, dynamicAlpha));
-
-        // Create a radial gradient with a white center highlight,
-        // transitioning to a colored rim and then fading out.
-        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
-        if (this.isDarkTheme) {
-            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
-            gradient.addColorStop(0.95, 'rgba(98, 86, 86, 0.04)');
-            gradient.addColorStop(1, 'rgba(255, 255, 255, 0.33)');
+        const a = Math.max(0, Math.min(0.7, dynamicAlpha));
+        // Skip near-invisible bubbles entirely (early in fade-in or final frames)
+        if (a < 0.01) {
+            // Still draw the crosshair below if applicable
         } else {
-            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.68)');
-            gradient.addColorStop(0.95, 'rgba(139, 131, 148, 0.17)');
-            gradient.addColorStop(1, 'rgba(6, 5, 81, 0.23)');
+            const sprite = getBubbleSprite(this.isDarkTheme);
+            if (sprite) {
+                ctx.globalAlpha = a;
+                const d = this.radius * 2;
+                ctx.drawImage(sprite, this.x - this.radius, this.y - this.radius, d, d);
+            }
         }
-        
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fill();
     } else {
         // Bursting animation: bubble expands and fades out.
-        const burstRadius = this.radius * (1 + 0.1*this.burstProgress);
-        ctx.globalAlpha = Math.max(0, 1 - this.burstProgress);
-        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, burstRadius);
-        if (this.isDarkTheme) {
-            gradient.addColorStop(0, 'rgba(0, 0, 0, 0.9)');
-            gradient.addColorStop(0.6, 'rgba(100, 82, 82, 0.29)');
-            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        } else {
-            gradient.addColorStop(0, 'rgba(217, 217, 217, 0.9)');
-            gradient.addColorStop(0.6, 'rgba(177,246,255,0.29)');
-            gradient.addColorStop(1, 'rgba(204, 204, 204, 0)');
+        const burstRadius = this.radius * (1 + 0.1 * this.burstProgress);
+        const burstAlpha = Math.max(0, 1 - this.burstProgress);
+        const sprite = getBurstSprite(this.isDarkTheme);
+        if (sprite) {
+            ctx.globalAlpha = burstAlpha;
+            const d = burstRadius * 2;
+            ctx.drawImage(sprite, this.x - burstRadius, this.y - burstRadius, d, d);
         }
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, burstRadius, 0, Math.PI * 2);
-        ctx.fill();
 
-        // Draw splash particles to simulate droplets flying outward.
-        if (this.splashParticles) {
+        // Draw splash particles batched into a single path for one fill call.
+        if (this.splashParticles && burstAlpha > 0.01) {
+            ctx.fillStyle = this.isDarkTheme ? 'rgba(255, 255, 255, 0.71)' : 'rgb(174,174,174)';
+            ctx.globalAlpha = burstAlpha;
+            ctx.beginPath();
+            const inv = 1 - this.burstProgress;
             for (let i = 0; i < this.splashParticles.length; i++) {
-                let p = this.splashParticles[i];
-                // Calculate outward displacement based on burst progress.
-                let offset = p.speed * this.burstProgress;
-                let splashX = this.x + Math.cos(p.angle) * offset;
-                let splashY = this.y + Math.sin(p.angle) * offset;
-                // Gradually decrease the size of the splash particle.
-                let splashRadius = p.length * (1 - this.burstProgress);
-                ctx.globalAlpha = Math.max(0, 1 - this.burstProgress);
-                if (this.isDarkTheme) {
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.71)';
-                } else {
-                    ctx.fillStyle = 'rgb(174,174,174)';
-                }
-                ctx.beginPath();
-                ctx.arc(splashX, splashY, 0.1*splashRadius, 0, Math.PI * 2);
-                ctx.fill();
+                const p = this.splashParticles[i];
+                const splashX = this.x + p.dx * this.burstProgress;
+                const splashY = this.y + p.dy * this.burstProgress;
+                const splashRadius = 0.1 * p.length * inv;
+                ctx.moveTo(splashX + splashRadius, splashY);
+                ctx.arc(splashX, splashY, splashRadius, 0, Math.PI * 2);
             }
+            ctx.fill();
         }
     }
 
     // Targeting "lock on" crosshair (drawn after the bubble itself)
     if (this.targetingProgress > 0 && !this.bursting) {
         const p = this.targetingProgress;
-        // Bracket distance: starts wider, settles toward bubble as it locks in
         const r = this.radius * (2.4 - p * 0.8);
         const len = this.radius * 0.55;
         const alpha = Math.min(1, p * 1.3);
 
         ctx.globalAlpha = alpha;
         ctx.strokeStyle = this.isDarkTheme ? '#fe5e5e' : '#d56464';
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 2;
         ctx.lineCap = 'round';
-        ctx.shadowBlur = 4;
-        ctx.shadowColor = this.isDarkTheme ? 'rgba(254,94,94,0.6)' : 'rgba(213,100,100,0.5)';
 
         ctx.beginPath();
         // Top-left bracket
@@ -343,8 +465,6 @@ Bubble.prototype.draw = function() {
         ctx.lineTo(this.x - r, this.y + r - len);
         ctx.stroke();
     }
-
-    ctx.restore();
 };
 
 Bubble.prototype.render = function(elapsedTime) {
@@ -444,7 +564,11 @@ Orb.prototype.update = function(elapsedTime, bubbles, claimed, onBurst) {
                 const angle = Math.random() * Math.PI * 2;
                 const speed = Math.random() * 120 + 80;
                 const length = Math.random() * 15 + 8;
-                t.splashParticles.push({ angle, speed, length });
+                t.splashParticles.push({
+                    dx: Math.cos(angle) * speed,
+                    dy: Math.sin(angle) * speed,
+                    length,
+                });
             }
 
             // Sparkle flash on orb (anchor at impact point, not future positions)
@@ -456,7 +580,11 @@ Orb.prototype.update = function(elapsedTime, bubbles, claimed, onBurst) {
             for (let k = 0; k < numSparkles; k++) {
                 const sa = Math.random() * Math.PI * 2;
                 const ss = Math.random() * 80 + 60;
-                this.sparkles.push({ angle: sa, speed: ss, size: Math.random() * 2 + 1 });
+                this.sparkles.push({
+                    dx: Math.cos(sa) * ss,
+                    dy: Math.sin(sa) * ss,
+                    size: Math.random() * 2 + 1,
+                });
             }
 
             // Notify listeners
@@ -495,73 +623,68 @@ Orb.prototype.draw = function() {
     const active = !!this.target || this.remoteVisible === true;
     if (!active && this.sparkleProgress <= 0) return;
     const ctx = this.ctx;
-    ctx.save();
     const drawBody = active;
+    const orbColor = this.isDarkTheme ? '#fe5e5e' : '#d56464';
 
     if (drawBody) {
-        // Trail
-        for (let i = 0; i < this.trail.length; i++) {
-            const t = this.trail[i];
-            const alpha = (i / this.trail.length) * 0.35;
-            const r = this.radius * (i / this.trail.length);
-            ctx.globalAlpha = alpha;
-            ctx.fillStyle = this.isDarkTheme ? '#fe5e5e' : '#d56464';
+        // Trail: batch into one path. Different alphas would normally need
+        // separate fills, but since the trail color is solid we can fade by
+        // shrinking the dot radius (already proportional to index) and use
+        // a single mid-alpha to approximate the gradient feel cheaply.
+        const tlen = this.trail.length;
+        if (tlen > 0) {
+            ctx.fillStyle = orbColor;
+            ctx.globalAlpha = 0.18;
             ctx.beginPath();
-            ctx.arc(t.x, t.y, r, 0, Math.PI * 2);
+            for (let i = 0; i < tlen; i++) {
+                const t = this.trail[i];
+                const r = this.radius * (i / tlen);
+                if (r > 0.1) {
+                    ctx.moveTo(t.x + r, t.y);
+                    ctx.arc(t.x, t.y, r, 0, Math.PI * 2);
+                }
+            }
             ctx.fill();
         }
 
-        // Outer glow (boosted while sparkling)
+        // Outer glow (cached sprite, scaled and alpha-modulated for sparkle)
         const sparkleBoost = this.sparkleProgress;
         const glowRadius = this.radius * (4 + Math.sin(this.pulse) * 0.5 + sparkleBoost * 4);
-        const glowAlphaBoost = 1 + sparkleBoost * 1.5;
-        const glowGradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, glowRadius);
-        if (this.isDarkTheme) {
-            glowGradient.addColorStop(0, `rgba(254, 94, 94, ${Math.min(1, 0.35 * glowAlphaBoost)})`);
-            glowGradient.addColorStop(0.5, `rgba(254, 94, 94, ${Math.min(1, 0.08 * glowAlphaBoost)})`);
-            glowGradient.addColorStop(1, 'rgba(254, 94, 94, 0)');
-        } else {
-            glowGradient.addColorStop(0, `rgba(213, 100, 100, ${Math.min(1, 0.32 * glowAlphaBoost)})`);
-            glowGradient.addColorStop(0.5, `rgba(213, 100, 100, ${Math.min(1, 0.07 * glowAlphaBoost)})`);
-            glowGradient.addColorStop(1, 'rgba(213, 100, 100, 0)');
+        const glowAlpha = Math.min(1, 1 + sparkleBoost * 1.5);
+        const glowSprite = getOrbGlowSprite(this.isDarkTheme);
+        if (glowSprite) {
+            ctx.globalAlpha = glowAlpha;
+            const d = glowRadius * 2;
+            ctx.drawImage(glowSprite, this.x - glowRadius, this.y - glowRadius, d, d);
         }
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = glowGradient;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, glowRadius, 0, Math.PI * 2);
-        ctx.fill();
     }
 
     // Sparkles flying out from orb during collision flash (anchored at impact point)
     if (this.sparkleProgress > 0 && this.sparkles.length) {
         const elapsed = (1 - this.sparkleProgress) * this.sparkleDuration;
+        ctx.fillStyle = orbColor;
         ctx.globalAlpha = this.sparkleProgress;
+        ctx.beginPath();
         for (let i = 0; i < this.sparkles.length; i++) {
             const s = this.sparkles[i];
-            const sx = this.sparkleX + Math.cos(s.angle) * s.speed * elapsed;
-            const sy = this.sparkleY + Math.sin(s.angle) * s.speed * elapsed;
+            const sx = this.sparkleX + s.dx * elapsed;
+            const sy = this.sparkleY + s.dy * elapsed;
             const sr = s.size * this.sparkleProgress;
-            ctx.fillStyle = this.isDarkTheme ? '#fe5e5e' : '#d56464';
-            ctx.beginPath();
+            ctx.moveTo(sx + sr, sy);
             ctx.arc(sx, sy, sr, 0, Math.PI * 2);
-            ctx.fill();
         }
-        ctx.globalAlpha = 1;
-    }
-
-    if (drawBody) {
-        // Core orb with subtle highlight
-        const coreGradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
-        coreGradient.addColorStop(0, '#fe9090');
-        coreGradient.addColorStop(0.5, '#d56464');
-        coreGradient.addColorStop(1, '#5a1010');
-        ctx.fillStyle = coreGradient;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();
     }
 
-    ctx.restore();
+    if (drawBody) {
+        // Core orb (cached sprite)
+        const coreSprite = getOrbCoreSprite();
+        if (coreSprite) {
+            ctx.globalAlpha = 1;
+            const d = this.radius * 2;
+            ctx.drawImage(coreSprite, this.x - this.radius, this.y - this.radius, d, d);
+        }
+    }
 };
 
 Orb.prototype.render = function(elapsedTime, bubbles, claimed, onBurst) {
@@ -655,12 +778,12 @@ function draw(canvas, _X, _Y, isDarkTheme) {
     // Listen for activation/deactivation from another tab
     const storageHandler = (e) => {
         if (e.key === ORBS_ENABLED_KEY) {
-            if (e.newValue !== 'false' && !orbsActive) {
+            if (e.newValue === 'true' && !orbsActive) {
                 orbsActive = true;
                 setupSimSync();
                 createOrbs();
                 try { window.dispatchEvent(new CustomEvent('cf-orbs-activated')); } catch (e2) {}
-            } else if (e.newValue === 'false' && orbsActive) {
+            } else if (e.newValue !== 'true' && orbsActive) {
                 deactivateOrbs();
             }
         }
@@ -682,7 +805,11 @@ function draw(canvas, _X, _Y, isDarkTheme) {
             const angle = Math.random() * Math.PI * 2;
             const speed = Math.random() * 50 + 50;
             const length = Math.random() * 10 + 5;
-            bubble.splashParticles.push({ angle, speed, length });
+            bubble.splashParticles.push({
+                dx: Math.cos(angle) * speed,
+                dy: Math.sin(angle) * speed,
+                length,
+            });
         }
     }
 
@@ -774,11 +901,20 @@ function draw(canvas, _X, _Y, isDarkTheme) {
     ));
 
     let lastRenderTime = 0;
+    let lastBroadcastTime = 0;
     let cancelled = false;
     let rafId = null;
 
-    function isCanvasVisible() {
-        return !(canvas.offsetParent === null);
+    // Track visibility async via IntersectionObserver instead of polling
+    // canvas.offsetParent every frame (which forces a synchronous layout
+    // reflow and was eating ~19% of total CPU time).
+    let canvasVisible = true;
+    let intersectionObserver = null;
+    if (typeof IntersectionObserver !== 'undefined') {
+        intersectionObserver = new IntersectionObserver(([entry]) => {
+            canvasVisible = entry ? entry.isIntersecting : true;
+        }, { threshold: 0 });
+        intersectionObserver.observe(canvas);
     }
 
     function render(currentTime) {
@@ -788,8 +924,10 @@ function draw(canvas, _X, _Y, isDarkTheme) {
 
         const secondsSinceLastRender = (currentTime - lastRenderTime) / 1000;
 
-        if (isCanvasVisible()) {
+        if (canvasVisible) {
             ctx.clearRect(0, 0, X, Y);
+            // Reset state that bubble/orb draws may have left mutated.
+            ctx.globalAlpha = 1;
 
             // Uncomment the following if you wish to render lines when not dark.
             // for (let i = 0; i < lines.length; i += 1) {
@@ -830,7 +968,10 @@ function draw(canvas, _X, _Y, isDarkTheme) {
                         orbs[i].render(secondsSinceLastRender, bubbles, claimed, onBurst);
                     }
                 }
-                if (simChannel) {
+                // Throttle broadcasts to ~30Hz — followers don't need 60Hz
+                // visual updates and serialization is non-trivial.
+                if (simChannel && currentTime - lastBroadcastTime >= 33) {
+                    lastBroadcastTime = currentTime;
                     try {
                         simChannel.postMessage(serializeSimState(bubbles, orbs || [], X, Y));
                     } catch (e) {}
@@ -865,6 +1006,7 @@ function draw(canvas, _X, _Y, isDarkTheme) {
         canvas.removeEventListener('click', clickHandler);
         window.removeEventListener('storage', storageHandler);
         window.removeEventListener('cf-orbs-deactivated', deactivateHandler);
+        if (intersectionObserver) intersectionObserver.disconnect();
     };
 }
 
@@ -881,8 +1023,8 @@ function orbsFeatureSupported() {
 function orbsEnabled() {
     if (!orbsFeatureSupported()) return false;
     try {
-        // Default to enabled unless the user explicitly stopped it
-        return localStorage.getItem(ORBS_ENABLED_KEY) !== 'false';
+        // Off by default — user explicitly enables via 3-click activation
+        return localStorage.getItem(ORBS_ENABLED_KEY) === 'true';
     } catch (e) {
         return false;
     }
@@ -1009,17 +1151,20 @@ function applySimState(bubbles, orbs, state, w, h) {
 
 let observer;
 if (global.window || (process && process.browser)) {
-    // Need to handle theme switch.
+    // Need to handle theme switch only - watch the data-theme attribute,
+    // not every attribute change (which fires far too often).
     observer = new MutationObserver(function (mutations) {
-        mutations.forEach(function (mutation) {
-            if (mutation.type == "attributes") {
+        for (const mutation of mutations) {
+            if (mutation.type === "attributes" && mutation.attributeName === "data-theme") {
                 window.dispatchEvent(new Event('resized'));
+                break;
             }
-        });
+        }
     });
     const element = document.querySelector('html');
     observer.observe(element, {
-        attributes: true
+        attributes: true,
+        attributeFilter: ['data-theme'],
     });
 }
 
@@ -1036,9 +1181,13 @@ const Logo = (props) => {
         }
         const newW = canvas.current.clientWidth;
         const newH = canvas.current.clientHeight;
-        canvas.current.width = newW;
-        canvas.current.height = newH;
-        setScale(prev => (prev.x === newW && prev.y === newH) ? prev : { x: newW, y: newH });
+        // Only touch canvas.width/height when they actually need to change.
+        // Setting them is destructive (clears the canvas, resets GPU state).
+        if (canvas.current.width !== newW || canvas.current.height !== newH) {
+            canvas.current.width = newW;
+            canvas.current.height = newH;
+            setScale({ x: newW, y: newH });
+        }
     };
 
     React.useEffect(() => resized(), []);
@@ -1046,12 +1195,12 @@ const Logo = (props) => {
     if (global.window || (process && process.browser)) {
         React.useEffect(() => {
             window.addEventListener("resize", resized);
-            return () => window.removeEventListener("resize", resized);
-        });
-        React.useEffect(() => {
             window.addEventListener("resized", resized);
-            return () => window.removeEventListener("resized", resized);
-        });
+            return () => {
+                window.removeEventListener("resize", resized);
+                window.removeEventListener("resized", resized);
+            };
+        }, []);
     }
 
     React.useEffect(() => {

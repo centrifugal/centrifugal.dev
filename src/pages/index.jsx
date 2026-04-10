@@ -6,7 +6,7 @@ import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import styles from "./styles.module.css";
-import Hero from './components/Hero';
+import Hero from '../components/Hero';
 import Highlight from './components/Highlight';
 import Badoo from "./components/logos/Badoo";
 import Grafana from "./components/logos/Grafana";

@@ -131,7 +131,7 @@ Centrifugo occupies a different spot — not just because it's self-hosted, but 
 
 Transactional publishing is the clearest example. A cloud real-time service can't participate in your database transactions — it doesn't share your database. Even CDC-based cloud services that react to database changes deliver updates eventually, with no guarantee that the real-time update arrives before the HTTP response reaches the client. Because Centrifugo runs alongside your PostgreSQL instance, it can offer the atomicity [described above](#transactional-publishing) — something architecturally impossible for a remote service.
 
-The same applies to the proxy system. Centrifugo calls your backend over your local network — for subscribe authorization, map publish validation, and [shared poll](/blog/2026/04/07/shared-poll-subscriptions) refresh — with latency measured in low single-digit milliseconds. With a cloud service, every backend call would cross the public internet.
+The same applies to the proxy system. Centrifugo calls your backend over your local network — for subscribe authorization, map publish validation, and [shared poll](/blog/2026/04/06/shared-poll-subscriptions) refresh — with latency measured in low single-digit milliseconds. With a cloud service, every backend call would cross the public internet.
 
 Combined with stream subscriptions for ordered event delivery and shared poll subscriptions for scalable polling, Centrifugo now offers three distinct subscription primitives in one system — each suited to different use cases, all sharing the same connection, SDKs, authentication, and proxy infrastructure.
 
@@ -139,6 +139,6 @@ Combined with stream subscriptions for ordered event delivery and shared poll su
 
 Transactional publishing is currently experimental — we may adjust the SQL function API and outbox architecture based on feedback. We've published several PostgreSQL-backed demos in the [map demo collection](https://github.com/centrifugal/examples/tree/master/v6/map_demo), including a sprint board that demonstrates transactional publishing with Docker Compose.
 
-If you haven't read it yet, start with [Part 1](/blog/2026/04/07/map-subscriptions) for the full map subscriptions design — sync protocol, modes, and broker overview. And check out the companion post on [shared poll subscriptions](/blog/2026/04/07/shared-poll-subscriptions) — the other new subscription type we're introducing alongside map subscriptions.
+If you haven't read it yet, start with [Part 1](/blog/2026/04/07/map-subscriptions) for the full map subscriptions design — sync protocol, modes, and broker overview. And check out the companion post on [shared poll subscriptions](/blog/2026/04/06/shared-poll-subscriptions) — the other new subscription type we're introducing alongside map subscriptions.
 
 Read the full [map subscriptions documentation](/docs/server/map_subscriptions) for configuration reference, PostgreSQL broker setup, and transactional publishing examples.

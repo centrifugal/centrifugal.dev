@@ -281,15 +281,23 @@ html[data-theme="dark"] .logos svg * {
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
-.proSuffix {
+.titleWrap {
+  position: relative;
   display: inline-block;
+}
+
+.proSuffix {
+  position: absolute;
+  top: 0.2em;
+  left: 100%;
+  margin-left: 0.2em;
   opacity: 0;
-  margin-left: 0.4em;
   font-size: 0.5em;
-  vertical-align: 0.7em;
   color: #fe5e5e;
   transform: scale(0.8);
+  transform-origin: left top;
   animation: fadeScaleIn 0.8s ease-out forwards;
+  white-space: nowrap;
 }
 
 @keyframes fadeScaleIn {

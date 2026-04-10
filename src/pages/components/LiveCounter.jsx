@@ -23,9 +23,9 @@ export default function LiveCounter() {
   useEffect(() => {
     if (!isFeatureSupported()) return;
 
-    // Initial state from localStorage: default ON unless explicitly 'false'
+    // Off by default — only enabled when user explicitly activates
     try {
-      if (localStorage.getItem(ENABLED_KEY) !== 'false') {
+      if (localStorage.getItem(ENABLED_KEY) === 'true') {
         setEnabled(true);
       }
     } catch (e) {}
@@ -40,11 +40,11 @@ export default function LiveCounter() {
 
     const storageHandler = (e) => {
       if (e.key === ENABLED_KEY) {
-        if (e.newValue === 'false') {
+        if (e.newValue === 'true') {
+          setEnabled(true);
+        } else {
           setEnabled(false);
           setCount(0);
-        } else {
-          setEnabled(true);
         }
       }
       if (e.key === STORAGE_KEY && e.newValue === null) {
@@ -114,7 +114,7 @@ export default function LiveCounter() {
 
   const handleStop = () => {
     try {
-      localStorage.setItem(ENABLED_KEY, 'false');
+      localStorage.removeItem(ENABLED_KEY);
       localStorage.removeItem(STORAGE_KEY);
     } catch (e) {}
     setEnabled(false);

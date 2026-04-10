@@ -1,10 +1,10 @@
 import React from 'react';
 import clsx from 'clsx';
 import { useColorMode } from '@docusaurus/theme-common';
-import Logo from './logo';
-import Ray from './Ray';
-import LiveCounter from './LiveCounter';
-import styles from '../styles.module.css';
+import Logo from '../pages/components/logo';
+import Ray from '../pages/components/Ray';
+import LiveCounter from '../pages/components/LiveCounter';
+import styles from '../pages/styles.module.css';
 
 export default function Hero({ children }) {
   const isDarkTheme = useColorMode().colorMode === 'dark';

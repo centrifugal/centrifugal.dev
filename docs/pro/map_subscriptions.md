@@ -3,6 +3,12 @@ id: map_subscriptions
 title: Map subscriptions enhancements
 ---
 
+:::caution Experimental
+
+Map subscriptions is an experimental feature. All its parts - configuration options, client SDK API, server API - may change in future releases based on user feedback. At this point only `centrifuge-js` SDK supports map subscriptions on the client side.
+
+:::
+
 Centrifugo PRO extends the [map subscriptions](../server/map_subscriptions.md) feature with several enhancements for production deployments.
 
 ## In-memory cache layer
