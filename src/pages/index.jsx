@@ -6,8 +6,10 @@ import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import styles from "./styles.module.css";
+import { useColorMode } from '@docusaurus/theme-common';
 import Hero from '../components/Hero';
 import Highlight from './components/Highlight';
+import TitleWithCat from './components/TitleWithCat';
 import Badoo from "./components/logos/Badoo";
 import Grafana from "./components/logos/Grafana";
 import ManyChat from "./components/logos/ManyChat";
@@ -46,9 +48,12 @@ function Feature({ imageUrl, title, children }) {
 }
 
 function Header() {
+  const isDarkTheme = useColorMode().colorMode === 'dark';
   return (
     <Hero>
-      <div className={styles.mainTitle}>CENTRIFUGO</div>
+      <div className={styles.mainTitle}>
+        <TitleWithCat isDarkTheme={isDarkTheme} />
+      </div>
       <div className={styles.subTitle}>
         Wash away WebSocket scalability issues
       </div>

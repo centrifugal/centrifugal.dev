@@ -6,8 +6,10 @@ import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import styles from "../styles.module.css";
+import { useColorMode } from '@docusaurus/theme-common';
 import Hero from "../../components/Hero";
 import Highlight from '../components/Highlight'
+import TitleWithCatPro from '../components/TitleWithCatPro';
 import ImageRotator from '../../components/ImageRotator';
 import Pricing from '../components/Pricing';
 import ComparisonTable from '../components/ComparisonTable';
@@ -30,12 +32,11 @@ function Feature({ imageUrl, title, children }) {
 }
 
 function Header() {
+    const isDarkTheme = useColorMode().colorMode === 'dark';
     return (
         <Hero>
             <div className={styles.mainTitle}>
-                <span className={styles.titleWrap}>
-                    CENTRIFUGO<span className={styles.proSuffix}>PRO</span>
-                </span>
+                <TitleWithCatPro isDarkTheme={isDarkTheme} />
             </div>
             <div className={styles.subTitle}>
                 Unlock the full power of Centrifugo

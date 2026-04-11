@@ -389,48 +389,63 @@ Bubble.prototype.update = function(elapsedTime) {
 
 Bubble.prototype.draw = function() {
     const ctx = this.ctx;
+    ctx.save();
 
     if (!this.bursting) {
         // Normal bubble drawing with pulsating and fade-in effect.
         const dynamicAlpha = (this.alpha + 0.3 * Math.sin(this.pulse)) * this.appearProgress;
-        const a = Math.max(0, Math.min(0.7, dynamicAlpha));
-        // Skip near-invisible bubbles entirely (early in fade-in or final frames)
-        if (a < 0.01) {
-            // Still draw the crosshair below if applicable
+        ctx.globalAlpha = Math.max(0, Math.min(0.7, dynamicAlpha));
+
+        // Native radial gradient (preserves visual quality at small radii).
+        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+        if (this.isDarkTheme) {
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
+            gradient.addColorStop(0.95, 'rgba(98, 86, 86, 0.04)');
+            gradient.addColorStop(1, 'rgba(255, 255, 255, 0.33)');
         } else {
-            const sprite = getBubbleSprite(this.isDarkTheme);
-            if (sprite) {
-                ctx.globalAlpha = a;
-                const d = this.radius * 2;
-                ctx.drawImage(sprite, this.x - this.radius, this.y - this.radius, d, d);
-            }
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.68)');
+            gradient.addColorStop(0.95, 'rgba(139, 131, 148, 0.17)');
+            gradient.addColorStop(1, 'rgba(6, 5, 81, 0.23)');
         }
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
     } else {
         // Bursting animation: bubble expands and fades out.
         const burstRadius = this.radius * (1 + 0.1 * this.burstProgress);
-        const burstAlpha = Math.max(0, 1 - this.burstProgress);
-        const sprite = getBurstSprite(this.isDarkTheme);
-        if (sprite) {
-            ctx.globalAlpha = burstAlpha;
-            const d = burstRadius * 2;
-            ctx.drawImage(sprite, this.x - burstRadius, this.y - burstRadius, d, d);
+        ctx.globalAlpha = Math.max(0, 1 - this.burstProgress);
+        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, burstRadius);
+        if (this.isDarkTheme) {
+            gradient.addColorStop(0, 'rgba(0, 0, 0, 0.9)');
+            gradient.addColorStop(0.6, 'rgba(100, 82, 82, 0.29)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        } else {
+            gradient.addColorStop(0, 'rgba(217, 217, 217, 0.9)');
+            gradient.addColorStop(0.6, 'rgba(177,246,255,0.29)');
+            gradient.addColorStop(1, 'rgba(204, 204, 204, 0)');
         }
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, burstRadius, 0, Math.PI * 2);
+        ctx.fill();
 
-        // Draw splash particles batched into a single path for one fill call.
-        if (this.splashParticles && burstAlpha > 0.01) {
+        // Draw splash particles to simulate droplets flying outward.
+        if (this.splashParticles) {
+            const burstAlpha = Math.max(0, 1 - this.burstProgress);
             ctx.fillStyle = this.isDarkTheme ? 'rgba(255, 255, 255, 0.71)' : 'rgb(174,174,174)';
             ctx.globalAlpha = burstAlpha;
-            ctx.beginPath();
             const inv = 1 - this.burstProgress;
             for (let i = 0; i < this.splashParticles.length; i++) {
                 const p = this.splashParticles[i];
                 const splashX = this.x + p.dx * this.burstProgress;
                 const splashY = this.y + p.dy * this.burstProgress;
                 const splashRadius = 0.1 * p.length * inv;
-                ctx.moveTo(splashX + splashRadius, splashY);
+                ctx.beginPath();
                 ctx.arc(splashX, splashY, splashRadius, 0, Math.PI * 2);
+                ctx.fill();
             }
-            ctx.fill();
         }
     }
 
@@ -468,6 +483,8 @@ Bubble.prototype.draw = function() {
         ctx.stroke();
         ctx.shadowBlur = 0;
     }
+
+    ctx.restore();
 };
 
 Bubble.prototype.render = function(elapsedTime) {

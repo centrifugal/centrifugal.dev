@@ -30,13 +30,11 @@
 }
 
 .mainTitle {
-    margin: 0 auto 0.4em;
-    font-size: clamp(2rem, 6vw, 3.2rem);
+    margin: 3% 0 0;
+    font-size: 3.2rem;
     font-weight: 600;
     font-family: "Nunito";
-    line-height: 1.1;
     pointer-events: none;
-    word-wrap: break-word;
 }
 
 .subTitle {
