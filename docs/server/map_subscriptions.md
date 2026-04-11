@@ -273,8 +273,8 @@ Centrifugo automatically creates these SQL functions when the PostgreSQL map bro
 | `cf_map_publish_strict(...)` | Same as `cf_map_publish`, but raises a PostgreSQL exception on suppression (e.g. CAS conflict, key exists) instead of returning a flag |
 | `cf_map_remove(...)` | Remove a key. Returns `suppressed`/`suppress_reason` |
 | `cf_map_remove_strict(...)` | Same as `cf_map_remove`, but raises an exception if the key is not found |
-| `cf_map_publish_stream(...)` | Stream-only publish for [external state](#external-state) mode — writes to the stream and meta tables only, skips the state table entirely |
-| `cf_map_remove_stream(...)` | Stream-only remove for [external state](#external-state) mode — writes a removal entry to the stream, skips the state table |
+| `cf_map_stream_publish(...)` | Stream-only publish for [external state](#external-state) mode — writes to the stream and meta tables only, skips the state table entirely |
+| `cf_map_stream_remove(...)` | Stream-only remove for [external state](#external-state) mode — writes a removal entry to the stream, skips the state table |
 | `cf_map_stream_top_position(channel)` | Returns the current stream position (`top_offset`, `epoch`) for a channel — use in [external state](#external-state) to capture position before reading app state |
 
 :::note
@@ -326,9 +326,9 @@ Centrifugo's outbox worker picks up new stream entries and delivers them to subs
 
 #### Stream-only functions (external state)
 
-When using [external state mode](#external-state), your application manages state in its own database tables and only needs to write to the Centrifugo change stream. Use `cf_map_publish_stream` and `cf_map_remove_stream` instead of the regular `cf_map_publish` / `cf_map_remove` — they skip the `cf_map_state` table entirely and only write to `cf_map_stream` + `cf_map_meta`.
+When using [external state mode](#external-state), your application manages state in its own database tables and only needs to write to the Centrifugo change stream. Use `cf_map_stream_publish` and `cf_map_stream_remove` instead of the regular `cf_map_publish` / `cf_map_remove` — they skip the `cf_map_state` table entirely and only write to `cf_map_stream` + `cf_map_meta`.
 
-`cf_map_publish_stream` accepts the same parameters as `cf_map_publish` except for state-related ones (`p_score`, `p_key_mode`, `p_key_ttl`) which are not applicable. `cf_map_remove_stream` accepts the same parameters as `cf_map_remove`.
+`cf_map_stream_publish` accepts the same parameters as `cf_map_publish` except for state-related ones (`p_score`, `p_key_mode`, `p_key_ttl`) which are not applicable. `cf_map_stream_remove` accepts the same parameters as `cf_map_remove`.
 
 **Capturing the stream position** — use `cf_map_stream_top_position(channel)` to get the current `top_offset` and `epoch` for a channel. Your `getState` endpoint should call this **before** reading app state, within the same transaction:
 
@@ -352,7 +352,7 @@ BEGIN;
   WHERE board_id = 123 AND item_id = 'card_42';
 
   -- 2. Write to Centrifugo stream (no state table interaction).
-  SELECT * FROM cf_map_publish_stream(
+  SELECT * FROM cf_map_stream_publish(
     p_channel := 'boards:123',
     p_key     := 'card_42',
     p_data    := '{"text": "Updated card"}'::jsonb
@@ -524,12 +524,15 @@ This also works with Centrifugo PRO channel patterns. For example, with prefix `
 
 ### Map publish/remove proxy
 
-When `map.publish_proxy_enabled` or `map.remove_proxy_enabled` is set, the operation is forwarded to your application backend before execution. The proxy can:
+When `map.publish_proxy_enabled` or `map.remove_proxy_enabled` is set, the corresponding client-originated operation is forwarded to your application backend before execution. The proxy is the single trust boundary that can:
 
-- Allow or deny the operation
+- Allow or deny the operation, or disconnect the client
 - Validate that the client has permission to publish/remove for the specific key
-- Override the key
-- Override the data (for map publish)
+- Override the key (e.g. force it to a server-derived value)
+- Override the data and provide a separate stream payload
+- Stamp server-controlled metadata on the resulting publication — tags, score, version, key mode, idempotency key, delta hint
+
+This makes the publish proxy the natural place to combine authorization with **RBAC tag enrichment** for client-originated publishes: clients cannot send tags themselves, so the proxy is the only path that can attach tags read by [server-side publication tags filter](../pro/server_tags_filter.md). For ordered map subscriptions (leaderboards), the proxy is also the natural place to compute and set the `score` from the published data.
 
 ```json title="config.json"
 {
@@ -548,7 +551,9 @@ When `map.publish_proxy_enabled` or `map.remove_proxy_enabled` is set, the opera
         "map": {
           "mode": "persistent",
           "publish_proxy_enabled": true,
-          "publish_proxy_name": "backend"
+          "publish_proxy_name": "backend",
+          "remove_proxy_enabled": true,
+          "remove_proxy_name": "backend"
         },
         "allow_subscribe_for_client": true
       }
@@ -557,14 +562,80 @@ When `map.publish_proxy_enabled` or `map.remove_proxy_enabled` is set, the opera
 }
 ```
 
-The proxy receives a request with `user`, `channel`, `key`, and `data` fields. It returns a response that can contain:
+When the proxy is configured for a namespace, the `map.allow_publish_for_*` / `map.allow_remove_for_*` flags are not checked — the proxy is fully responsible for authorization.
 
-- `error` — reject the operation with an error
-- `disconnect` — disconnect the client
-- `result.key` — override the key
-- `result.data` — override the data
+#### Map publish proxy request
 
-When the proxy returns a successful result, Centrifugo executes the map publish on the broker and returns the result to the client. If the proxy is configured, the permission flags (`map.allow_publish_for_*`) are not checked — the proxy is fully responsible for authorization.
+The proxy receives a JSON request with these fields:
+
+| Field       | Type     | Description                                                                                          |
+|-------------|----------|------------------------------------------------------------------------------------------------------|
+| `client`    | `string` | unique client ID generated by Centrifugo for the connection                                          |
+| `transport` | `string` | transport name (e.g. `websocket`)                                                                    |
+| `protocol`  | `string` | protocol type (`json` or `protobuf`)                                                                 |
+| `encoding`  | `string` | protocol encoding (`json` or `binary`)                                                               |
+| `user`      | `string` | the connection's user ID from authentication                                                         |
+| `channel`   | `string` | the map channel the client is publishing to                                                          |
+| `key`       | `string` | the key sent by the client (may be empty when the namespace uses server-driven `client_key`)         |
+| `data`      | `JSON`   | the data sent by the client                                                                          |
+| `b64data`   | `string` | base64-encoded data, used instead of `data` when binary proxy mode is enabled                        |
+| `meta`      | `JSON`   | the connection's attached meta (off by default, enable with `"include_connection_meta": true`)       |
+
+#### Map publish proxy response
+
+| Field        | Type                                            | Description                                                            |
+|--------------|-------------------------------------------------|------------------------------------------------------------------------|
+| `result`     | [`MapPublishResult`](#mappublishresult)         | the result of the operation when allowed                               |
+| `error`      | `Error`                                         | reject the operation with a custom error                               |
+| `disconnect` | `Disconnect`                                    | disconnect the client                                                  |
+
+##### MapPublishResult
+
+All fields are optional. Any field left unset falls back to the value sent by the client (for `key`/`data`) or to the default behaviour.
+
+| Field              | Type                  | Description                                                                                                                                                                                       |
+|--------------------|-----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `key`              | `string`              | Override the key used for the publish. Useful for forcing keys to server-derived values (e.g. user ID, deal ID).                                                                                  |
+| `data`             | `JSON`                | Replace the publication data the client sent.                                                                                                                                                     |
+| `b64data`          | `string`              | Binary data encoded in base64, used instead of `data` in binary proxy mode.                                                                                                                       |
+| `tags`             | `map<string, string>` | Server-stamped publication tags. Clients cannot send tags themselves — the proxy is the only path that can attach tags read by [server-side publication tags filter](../pro/server_tags_filter.md) for per-subscriber RBAC. |
+| `score`            | `int64`               | Sort score for [ordered](#namespace-options) map subscriptions (leaderboards). The proxy is the natural place to compute the score from the data the client sent.                                |
+| `key_mode`         | `string`              | `"if_new"` to publish only when the key does not yet exist, `"if_exists"` to publish only when it already exists. Useful for enforcing insert-only or update-only access patterns.                |
+| `stream_data`      | `JSON`                | Separate payload to publish to the stream/PUB-SUB while keeping `data` in the state. Use when state and stream payloads should differ (e.g. state is the full snapshot, stream carries deltas).   |
+| `b64stream_data`   | `string`              | Binary equivalent of `stream_data` for binary proxy mode.                                                                                                                                         |
+| `idempotency_key`  | `string`              | Idempotency key for safe retries — duplicates within the broker's idempotent result TTL window are suppressed.                                                                                    |
+| `delta`            | `bool`                | Enable delta compression for this publication.                                                                                                                                                    |
+| `version`          | `uint64`              | Per-key version used by Centrifugo to drop non-actual publications.                                                                                                                               |
+| `version_epoch`    | `string`              | Scopes `version` — use when version may be reused.                                                                                                                                                |
+
+#### Map remove proxy request
+
+| Field       | Type     | Description                                                                                          |
+|-------------|----------|------------------------------------------------------------------------------------------------------|
+| `client`    | `string` | unique client ID generated by Centrifugo for the connection                                          |
+| `transport` | `string` | transport name                                                                                       |
+| `protocol`  | `string` | protocol type (`json` or `protobuf`)                                                                 |
+| `encoding`  | `string` | protocol encoding (`json` or `binary`)                                                               |
+| `user`      | `string` | the connection's user ID from authentication                                                         |
+| `channel`   | `string` | the map channel the client is removing from                                                          |
+| `key`       | `string` | the key the client wants to remove                                                                   |
+| `meta`      | `JSON`   | the connection's attached meta (off by default, enable with `"include_connection_meta": true`)       |
+
+#### Map remove proxy response
+
+| Field        | Type                                  | Description                              |
+|--------------|---------------------------------------|------------------------------------------|
+| `result`     | [`MapRemoveResult`](#mapremoveresult) | the result of the operation when allowed |
+| `error`      | `Error`                               | reject the operation with a custom error |
+| `disconnect` | `Disconnect`                          | disconnect the client                    |
+
+##### MapRemoveResult
+
+| Field             | Type                  | Description                                                                                                                                                                                                                            |
+|-------------------|-----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `key`             | `string`              | Override the key being removed.                                                                                                                                                                                                        |
+| `tags`            | `map<string, string>` | Tags attached to the removal publication. Essential for [external state mode](#external-state) where the broker has no state row to read tags from — without these, removal events cannot be filtered by [server-side publication tags filter](../pro/server_tags_filter.md). |
+| `idempotency_key` | `string`              | Idempotency key for safe retries on removal.                                                                                                                                                                                           |
 
 ## Pagination and catch-up tuning
 
@@ -974,7 +1045,7 @@ def update_board_item(board_id, item_id):
             [Json(data), board_id, item_id]
         )
         db.execute(
-            "SELECT * FROM cf_map_publish_stream(p_channel := %s, p_key := %s, p_data := %s)",
+            "SELECT * FROM cf_map_stream_publish(p_channel := %s, p_key := %s, p_data := %s)",
             [f"boards:{board_id}", item_id, Json(data)]
         )
     return {"ok": True}
@@ -1027,6 +1098,6 @@ A collection of interactive demos showcasing map subscriptions is available in t
 - **Sprint Board (PostgreSQL)** — Kanban board with drag-and-drop using native PostgreSQL `cf_map_*` functions for transactional publishing
 - **Live Polls (PostgreSQL)** — server-driven polls with real-time voting, bot participants, and auto-rotation using `cf_map_*` functions
 - **Leaderboard (PostgreSQL)** — persistent ordered leaderboard using `cf_map_*` functions
-- **Kitchen Orders (External State)** — restaurant order board using app-backed state with `getState` callback, `cf_map_publish_stream` / `cf_map_stream_top_position` for transactional publishing
+- **Kitchen Orders (External State)** — restaurant order board using app-backed state with `getState` callback, `cf_map_stream_publish` / `cf_map_stream_top_position` for transactional publishing
 
 The demo runs with Docker Compose (PostgreSQL + Python backend + Nginx) and requires Centrifugo v6.7+ with `centrifuge-js`.

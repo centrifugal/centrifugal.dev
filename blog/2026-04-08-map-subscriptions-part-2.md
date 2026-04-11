@@ -79,7 +79,7 @@ In effect, Centrifugo becomes a real-time view layer for your database — clien
 
 The examples above use `cf_map_publish`, which writes to both the state table and the stream. But if your data already lives in application tables — project boards, order lists, product catalogs — duplicating it into `cf_map_state` is unnecessary. [External state mode](/docs/server/map_subscriptions#external-state) (covered in [Part 1](/blog/2026/04/07/map-subscriptions)) tells the broker to manage only the stream and PUB/SUB, skipping the state table entirely.
 
-For PostgreSQL, this means using separate functions: `cf_map_publish_stream` and `cf_map_remove_stream`. They write only to `cf_map_stream` and `cf_map_meta` — your app database remains the single source of truth.
+For PostgreSQL, this means using separate functions: `cf_map_stream_publish` and `cf_map_stream_remove`. They write only to `cf_map_stream` and `cf_map_meta` — your app database remains the single source of truth.
 
 ```sql
 BEGIN;
@@ -88,7 +88,7 @@ BEGIN;
   WHERE board_id = 123 AND item_id = 'card_42';
 
   -- 2. Write to Centrifugo stream only (no state table).
-  SELECT * FROM cf_map_publish_stream(
+  SELECT * FROM cf_map_stream_publish(
     p_channel := 'boards:123',
     p_key     := 'card_42',
     p_data    := '{"text": "Updated card"}'::jsonb

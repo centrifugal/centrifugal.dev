@@ -443,8 +443,10 @@ Bubble.prototype.draw = function() {
 
         ctx.globalAlpha = alpha;
         ctx.strokeStyle = this.isDarkTheme ? '#fe5e5e' : '#d56464';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1.5;
         ctx.lineCap = 'round';
+        ctx.shadowBlur = 4;
+        ctx.shadowColor = this.isDarkTheme ? 'rgba(254,94,94,0.6)' : 'rgba(213,100,100,0.5)';
 
         ctx.beginPath();
         // Top-left bracket
@@ -464,6 +466,7 @@ Bubble.prototype.draw = function() {
         ctx.lineTo(this.x - r, this.y + r);
         ctx.lineTo(this.x - r, this.y + r - len);
         ctx.stroke();
+        ctx.shadowBlur = 0;
     }
 };
 
@@ -706,6 +709,9 @@ function draw(canvas, _X, _Y, isDarkTheme) {
     const X = canvas.width;
     const Y = canvas.height;
     const ctx = canvas.getContext("2d");
+    // Use high-quality image smoothing for downscaled sprites
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     const centerX = X / 2;
     const centerY = Y / 2;

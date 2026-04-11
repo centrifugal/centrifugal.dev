@@ -792,13 +792,24 @@ The expected response example if a publication is allowed:
 
 #### PublishResult
 
-| Field          | Type     | Optional | Description                                                                                                                                          |
-|----------------|----------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `data`         | `JSON`   | yes      | an optional JSON data to send into a channel **instead of** original data sent by a client                                                           |
-| `b64data`      | `string` | yes      | a binary data encoded in base64 format, the meaning is the same as for data above, will be decoded to raw bytes on Centrifugo side before publishing |
-| `skip_history` | `bool`   | yes      | when set to `true` Centrifugo won't save publication to the channel history                                                                          |
+| Field             | Type                  | Optional | Description                                                                                                                                                                                       |
+|-------------------|-----------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `data`            | `JSON`                | yes      | an optional JSON data to send into a channel **instead of** original data sent by a client                                                                                                        |
+| `b64data`         | `string`              | yes      | a binary data encoded in base64 format, the meaning is the same as for data above, will be decoded to raw bytes on Centrifugo side before publishing                                              |
+| `skip_history`    | `bool`                | yes      | when set to `true` Centrifugo won't save publication to the channel history                                                                                                                       |
+| `tags`            | `map<string, string>` | yes      | Since Centrifugo v6.8.0. Server-controlled publication tags attached to the resulting publication. Useful together with [server-side publication tags filter](../pro/server_tags_filter.md) — the proxy is the natural place to stamp RBAC tags on client-originated publishes since clients cannot send tags themselves |
+| `idempotency_key` | `string`              | yes      | Since Centrifugo v6.8.0. Idempotency key for safe retries — duplicate publishes with the same key within the broker's idempotent result TTL window are suppressed                                  |
+| `delta`           | `bool`                | yes      | Since Centrifugo v6.8.0. Enable delta compression for this publication                                                                                                                            |
+| `version`         | `uint64`              | yes      | Since Centrifugo v6.8.0. Per-publication version used by Centrifugo to drop non-actual publications when publication carries the entire state                                                     |
+| `version_epoch`   | `string`              | yes      | Since Centrifugo v6.8.0. Scopes `version` — use when version may be reused (e.g. comes from a system that can lose state)                                                                         |
 
 See below on how to [return an error](#return-custom-error) in case you don't want to allow publishing.
+
+### Map publish/remove proxy
+
+Map subscriptions ([experimental](./map_subscriptions.md)) have their own publish and remove proxies — they intercept client-originated `mapPublish` and `mapRemove` calls in the same way the regular publish proxy intercepts client publishes. The map proxies share the same authorization model and the same `error` / `disconnect` response semantics as the publish proxy described above, but accept and return additional fields that only make sense for map subscriptions (key overrides, score, conditional `key_mode`, separate stream payload, server-stamped tags on removals, etc.).
+
+The complete request/response reference for the map publish/remove proxy lives in the map subscriptions doc — see [Map publish/remove proxy](./map_subscriptions.md#map-publishremove-proxy).
 
 ### Sub refresh proxy
 
