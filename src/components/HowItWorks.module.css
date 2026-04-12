@@ -1,0 +1,351 @@
+/* ── Section ─────────────────────────────────── */
+.section {
+    position: relative;
+    padding: 50px 0 20px;
+    overflow: hidden;
+}
+
+.bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image:
+        linear-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+}
+
+html[data-theme="dark"] .bg {
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
+.heading {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 600;
+    font-family: "Nunito";
+    margin: 0 0 32px;
+    color: var(--ifm-font-color-base);
+}
+
+/* ── Flow layout ─────────────────────────────── */
+.flow {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    max-width: 920px;
+    margin: 0 auto 32px;
+}
+
+/* ── Nodes ────────────────────────────────────── */
+.node {
+    position: relative;
+    flex: 0 0 auto;
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.section.active .node1 { opacity: 1; transform: none; transition-delay: 0s; }
+.section.active .node2 { opacity: 1; transform: none; transition-delay: 0.4s; }
+.section.active .node3 { opacity: 1; transform: none; transition-delay: 0.8s; }
+
+/* ── Cards ────────────────────────────────────── */
+.card {
+    width: 230px;
+    padding: 24px 20px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.04),
+        0 8px 24px rgba(0, 0, 0, 0.06);
+    text-align: center;
+}
+
+html[data-theme="dark"] .card {
+    background: rgba(40, 40, 46, 0.7);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.2),
+        0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+.card h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 10px 0 6px;
+    font-family: "Nunito";
+}
+
+.card p {
+    font-size: 0.82rem;
+    line-height: 1.45;
+    margin: 0;
+    color: rgba(0, 0, 0, 0.5);
+}
+
+html[data-theme="dark"] .card p {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+/* Card icon */
+.cardIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin: 0 auto;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.04);
+    color: rgba(0, 0, 0, 0.55);
+}
+
+html[data-theme="dark"] .cardIcon {
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Hero card (Centrifugo) */
+.heroCard {
+    width: 230px;
+    padding: 24px 20px;
+    border-color: rgba(213, 100, 100, 0.2);
+    box-shadow:
+        0 1px 2px rgba(213, 100, 100, 0.06),
+        0 8px 32px rgba(213, 100, 100, 0.1);
+}
+
+html[data-theme="dark"] .heroCard {
+    border-color: rgba(254, 94, 94, 0.2);
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.2),
+        0 8px 40px rgba(254, 94, 94, 0.12);
+}
+
+.heroCard h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #c04a4a;
+}
+
+html[data-theme="dark"] .heroCard h3 {
+    color: #fe5e5e;
+}
+
+.heroLogo {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto;
+    display: block;
+    opacity: 0.85;
+}
+
+
+/* ── Step badge ───────────────────────────────── */
+.stepBadge {
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: #d56464;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(213, 100, 100, 0.3);
+}
+
+html[data-theme="dark"] .stepBadge {
+    background: #fe5e5e;
+    box-shadow: 0 2px 8px rgba(254, 94, 94, 0.35);
+}
+
+/* ── Connectors ───────────────────────────────── */
+.connector {
+    position: relative;
+    width: 80px;
+    height: 4px;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.6s ease-out;
+}
+
+.section.active .conn1 { opacity: 1; transition-delay: 0.25s; }
+.section.active .conn2 { opacity: 1; transition-delay: 0.65s; }
+
+.connLine {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    transform: translateY(-50%);
+    background: linear-gradient(90deg,
+        rgba(213, 100, 100, 0.15),
+        rgba(213, 100, 100, 0.35),
+        rgba(213, 100, 100, 0.15));
+    border-radius: 1px;
+}
+
+html[data-theme="dark"] .connLine {
+    background: linear-gradient(90deg,
+        rgba(254, 94, 94, 0.1),
+        rgba(254, 94, 94, 0.3),
+        rgba(254, 94, 94, 0.1));
+}
+
+/* Animated dot on connector */
+.connDot {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 8px;
+    height: 8px;
+    margin-top: -4px;
+    border-radius: 50%;
+    background: #d56464;
+    box-shadow: 0 0 8px rgba(213, 100, 100, 0.5);
+    animation: flowDot 2s ease-in-out infinite;
+    opacity: 0;
+}
+
+html[data-theme="dark"] .connDot {
+    background: #fe5e5e;
+    box-shadow: 0 0 10px rgba(254, 94, 94, 0.6);
+}
+
+.section.active .connDot {
+    opacity: 1;
+    animation-play-state: running;
+}
+
+.connDot2 { animation-delay: 0.6s; }
+.connDot3 { animation-delay: 1.2s; }
+
+@keyframes flowDot {
+    0% { left: 0; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { left: calc(100% - 8px); opacity: 0; }
+}
+
+.connLabel {
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(213, 100, 100, 0.5);
+    white-space: nowrap;
+}
+
+html[data-theme="dark"] .connLabel {
+    color: rgba(254, 94, 94, 0.45);
+}
+
+/* ── Punchline ────────────────────────────────── */
+.punchline {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    font-size: 0.95rem;
+    color: rgba(0, 0, 0, 0.4);
+    margin: 0;
+}
+
+html[data-theme="dark"] .punchline {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+/* ── Responsive ───────────────────────────────── */
+@media (max-width: 800px) {
+    .flow {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .connector {
+        width: 4px;
+        height: 50px;
+    }
+
+    .connLine {
+        top: 0;
+        left: 50%;
+        right: auto;
+        bottom: 0;
+        width: 2px;
+        height: 100%;
+        transform: translateX(-50%);
+        background: linear-gradient(180deg,
+            rgba(213, 100, 100, 0.15),
+            rgba(213, 100, 100, 0.35),
+            rgba(213, 100, 100, 0.15));
+    }
+
+    html[data-theme="dark"] .connLine {
+        background: linear-gradient(180deg,
+            rgba(254, 94, 94, 0.1),
+            rgba(254, 94, 94, 0.3),
+            rgba(254, 94, 94, 0.1));
+    }
+
+    .connDot {
+        left: 50%;
+        top: 0;
+        margin-left: -4px;
+        margin-top: 0;
+        animation: flowDotV 2s ease-in-out infinite;
+    }
+
+    @keyframes flowDotV {
+        0% { top: 0; opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { top: calc(100% - 8px); opacity: 0; }
+    }
+
+    .connLabel {
+        top: 50%;
+        left: auto;
+        right: -40px;
+        transform: translateY(-50%);
+    }
+
+    .card, .heroCard {
+        width: 260px;
+    }
+}
+
+/* ── Reduced motion ───────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    .node, .connector {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+    }
+    .connDot {
+        animation: none !important;
+        opacity: 0.7 !important;
+        left: 50%;
+    }
+}

@@ -259,6 +259,16 @@ html[data-theme="dark"] .logos svg * {
     }
 }
 
+.broadcastImg {
+    border-radius: 10px;
+    background-color: #17171B;
+}
+
+html[data-theme="light"] .broadcastImg {
+    background-color: #f5f6f7;
+    filter: saturate(0.3) brightness(0.95);
+}
+
 @media screen and (max-width: 600px) {
     .featureImage {
         float: none;
@@ -348,8 +358,7 @@ html[data-theme="dark"] .logos svg * {
 }
 
 .useCases {
-    padding-bottom: 30px;
-    padding-top: 0px;
+    padding: 40px 0 40px;
     background-color: var(--palette-background-alt);
     position: relative;
     overflow: hidden;

@@ -26,6 +26,7 @@ import TestimonialsCarousel from '../components/TestimonialsCarousel';
 import ProBanner from '../components/ProBanner';
 import ImageRotator from '../components/ImageRotator';
 import ProCtaBanner from '../components/ProCtaBanner';
+import HowItWorks from '../components/HowItWorks';
 import GitHubStarButton from '../components/GitHubStarButton';
 import QuickStart, { QuickStartDescription } from '../components/QuickStart';
 import { ChatIcon, DashboardIcon, GameIcon, DataSyncIcon, FinancialIcon, LiveFeedIcon, IoTIcon, AIIcon } from '../components/UseCaseIcons';
@@ -237,6 +238,34 @@ function Home() {
             </>
           }
         />
+        <HowItWorks />
+        < Highlight
+          img={
+            <img src="/img/broadcast.svg" alt="Broadcast illustration" className={styles.broadcastImg} />
+          }
+          title="Efficient message broadcast"
+          text={
+            <>
+              <p>
+                Centrifugo excels at broadcasting messages to many subscribers simultaneously. The efficient client protocol (JSON or binary Protobuf) enables high-throughput messaging at scale.
+              </p>
+              <p>
+                The design of Centrifugo is optimized for scenarios where a single message needs to be sent to thousands or even millions of clients, making it ideal for real-time applications that require instant updates to large audiences.
+              </p>
+              <div className={styles.buttons}>
+                <Link
+                    className={clsx(
+                        "button button--outline button--secondary button--lg",
+                        styles.getStarted
+                    )}
+                    to={useBaseUrl("/blog/2020/02/10/million-connections-with-centrifugo")}
+                >
+                  Million connections and 500K msg/s in K8S
+                </Link>
+              </div>
+            </>
+          }
+        />
         <section className={styles.useCases}>
           <div className="container">
             <div className={styles.useCasesGrid}>
@@ -282,34 +311,7 @@ function Home() {
               </div>
             </div>
           </div>
-        </section>        
-        < Highlight
-          img={
-            <img src="/img/broadcast.svg" alt="Broadcast illustration" style={{ backgroundColor: '#17171B', borderRadius: '10px' }} />
-          }
-          title="Efficient message broadcast"
-          text={
-            <>
-              <p>
-                Centrifugo excels at broadcasting messages to many subscribers simultaneously. The efficient client protocol (JSON or binary Protobuf) enables high-throughput messaging at scale.
-              </p>
-              <p>
-                The design of Centrifugo is optimized for scenarios where a single message needs to be sent to thousands or even millions of clients, making it ideal for real-time applications that require instant updates to large audiences.
-              </p>
-              <div className={styles.buttons}>
-                <Link
-                    className={clsx(
-                        "button button--outline button--secondary button--lg",
-                        styles.getStarted
-                    )}
-                    to={useBaseUrl("/blog/2020/02/10/million-connections-with-centrifugo")}
-                >
-                  Million connections and 500K msg/s in K8S
-                </Link>
-              </div>
-            </>
-          }
-        />
+        </section>
         <TestimonialsCarousel />
         < Highlight
           img={
