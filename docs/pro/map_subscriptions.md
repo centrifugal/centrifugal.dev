@@ -49,6 +49,8 @@ The cache provides read-your-own-writes semantics: local writes are reflected im
 
 ## PostgreSQL enhancements
 
+The following PostgreSQL scaling features apply to both the map broker (`map_broker.postgres`) and the [stream broker](../server/engines.md#postgresql-broker) (`broker.postgres`). Configuration examples below use the map broker; substitute `broker` for the stream broker.
+
 ### Read replicas
 
 Distribute read load across PostgreSQL replicas:
@@ -97,27 +99,9 @@ By default, every Centrifugo node polls the PostgreSQL outbox independently. Wit
 
 Shard leadership is coordinated through PostgreSQL advisory locks — only one node per shard holds the lock and processes outbox entries.
 
-### Stream partitioning
-
-Automatic daily partitioning of the stream table for large-scale deployments:
-
-```json title="config.json"
-{
-  "map_broker": {
-    "type": "postgres",
-    "postgres": {
-      "dsn": "postgres://user:pass@localhost:5432/app?sslmode=disable",
-      "stream_partitioning": {
-        "enabled": true,
-        "retention_days": 3,
-        "lookahead_days": 2
-      }
-    }
-  }
-}
-```
-
-Old partitions are dropped entirely (instant) instead of deleting individual rows — this avoids table bloat and expensive vacuum operations at scale.
+:::tip
+Automatic daily partitioning with configurable retention is built into the open-source PostgreSQL broker via the `partition_retention_days` and `partition_lookahead_days` settings — see [PostgreSQL map broker configuration](/docs/server/map_subscriptions#postgresql).
+:::
 
 ## Redis enhancements
 

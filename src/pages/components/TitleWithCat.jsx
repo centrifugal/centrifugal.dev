@@ -20,7 +20,7 @@ function TitleWithCat({ isDarkTheme }) {
       </svg>
       <div className={styles.title}>CENTRIFUGO</div>
       {/* Right part of cat - behind title */}
-      <svg className={`${styles.cat} ${styles.catRight}`} style={{ color: catColor }} version="1.0" xmlns="http://www.w3.org/2000/svg"
+      <svg className={`${styles.cat} ${styles.catRight} ${styles.catRightSleep}`} style={{ color: catColor }} version="1.0" xmlns="http://www.w3.org/2000/svg"
         width="422.000000pt" height="210.000000pt" viewBox="0 0 422.000000 210.000000"
         preserveAspectRatio="xMidYMid meet"
         aria-hidden="true">

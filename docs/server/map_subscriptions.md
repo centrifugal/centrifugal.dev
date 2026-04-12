@@ -219,7 +219,7 @@ When using `durable` or `persistent` mode, Redis must retain all stream data for
 
 ### PostgreSQL
 
-PostgreSQL-backed storage for durable, persistent state. Centrifugo creates the required tables automatically on startup (unless `skip_schema_init` is set).
+PostgreSQL-backed storage for durable, persistent state. Requires **PostgreSQL 16** or later. Centrifugo creates the required tables automatically on startup (unless `skip_schema_init` is set).
 
 ```json title="config.json"
 {
@@ -243,9 +243,14 @@ Key options:
 | `cleanup_interval` | [duration](./configuration.md#duration-type) | `"1m"` | How often to clean up expired stream/meta entries |
 | `idempotent_result_ttl` | [duration](./configuration.md#duration-type) | `"5m"` | TTL for idempotency results |
 | `binary_data` | boolean | `false` | Use BYTEA instead of JSONB for data columns |
+| `table_prefix` | string | `"cf"` | Namespace prefix for table and function names. Default produces `cf_map_*` tables and `cf_map_publish(...)` functions. Use distinct prefixes for multi-tenant deployments sharing one PostgreSQL instance |
 | `stream_retention` | [duration](./configuration.md#duration-type) | `"24h"` | How long stream entries are kept |
 | `use_notify` | boolean | `false` | Enable LISTEN/NOTIFY for low-latency delivery |
 | `skip_schema_init` | boolean | `false` | Skip automatic table creation on startup |
+| `partition_lookahead_days` | integer | `2` | Number of future daily partitions to pre-create |
+| `partition_retention_days` | integer | `7` | Partitions older than this are dropped automatically. Set to `0` for unlimited retention |
+
+The stream table is always partitioned by `created_at` (daily). Old partitions are dropped entirely — this is instant and avoids the table bloat and expensive vacuum operations that row-level `DELETE` produces at scale. The `partition_retention_days` setting controls how many days of partitions to keep; the `partition_lookahead_days` setting controls how many future partitions to pre-create (to avoid write failures at the day boundary).
 
 [Centrifugo PRO](../pro/overview.md) extends the PostgreSQL map broker with:
 
@@ -284,6 +289,8 @@ Centrifugo automatically creates these SQL functions when the PostgreSQL map bro
 :::
 
 When `binary_data` option is enabled, the schema uses BYTEA columns instead of JSONB for data fields, and all tables and functions use the `cf_binary_map_` prefix (e.g. `cf_binary_map_publish`, `cf_binary_map_state`). This is useful when data payloads are not valid JSON (e.g. Protobuf-encoded).
+
+When a custom `table_prefix` is configured (e.g. `"myapp"`), all table and function names use that prefix instead of the default `cf` — for example, `myapp_map_publish(...)`, `myapp_map_state`, etc.
 
 Common parameters for `cf_map_publish`:
 

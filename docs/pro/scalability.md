@@ -1,5 +1,5 @@
 ---
-description: "Centrifugo PRO scalability features: singleflight, shared position sync, Redis replica offloading, sharded PUB/SUB, per-namespace engines, and custom controllers."
+description: "Centrifugo PRO scalability features: singleflight, shared position sync, Redis replica offloading, sharded PUB/SUB, per-namespace engines, and custom controllers (Redis, Nats, PostgreSQL)."
 id: scalability
 title: Scalability optimizations
 ---
@@ -302,7 +302,9 @@ And then enable it for namespace:
 
 Controller in Centrifugo is responsible for cross-node communication in cluster. Centrifugo PRO allows using a custom controller configuration. This may be useful to isolate controller load from channel load (i.e. from Broker), or to use Redis for channel operations and Nats for controller operations, or use Redis for channel operations, but sth like DragonflyDB for controller operations, etc.
 
-To use a custom controller you need to set `controller` configuration option and set `enabled` to `true`. You can use `redis` or `nats` as a controller type. Here is an example of using custom Redis setup as a controller:
+To use a custom controller you need to set `controller` configuration option and set `enabled` to `true`. You can use `redis`, `nats`, or `postgres` as a controller type.
+
+### Redis Controller
 
 ```json title="config.json"
 {
@@ -318,7 +320,7 @@ To use a custom controller you need to set `controller` configuration option and
 
 Redis options are the same as for the Redis Engine configuration (except those which only make sense for Broker or PresenceManager).
 
-Same for Nats:
+### Nats Controller
 
 ```json title="config.json"
 {
@@ -333,3 +335,134 @@ Same for Nats:
 ```
 
 Nats options are the same as for the Nats Broker configuration (except those which only make sense for Broker).
+
+### PostgreSQL Controller
+
+:::caution Experimental
+
+PostgreSQL controller is experimental. We appreciate early feedback but the API may change.
+
+:::
+
+The PostgreSQL controller completes the "Centrifugo + PostgreSQL, no Redis" story for multi-node deployments. When combined with [PostgreSQL stream broker](../server/engines.md#postgresql-broker) and/or [PostgreSQL map broker](../server/map_subscriptions.md#postgresql), you can run a fully functional Centrifugo cluster using only PostgreSQL as the infrastructure dependency — no Redis or Nats required.
+
+The controller uses the same outbox-based approach as the PostgreSQL broker: control messages are INSERT-ed into a partitioned table with daily retention, and each node polls for new rows. LISTEN/NOTIFY provides low-latency wakeup so messages are typically delivered within a few milliseconds.
+
+Requires **PostgreSQL 16** or later.
+
+```json title="config.json"
+{
+  "controller": {
+    "enabled": true,
+    "type": "postgres",
+    "postgres": {
+      "dsn": "postgres://user:password@localhost:5432/centrifugo?sslmode=disable",
+      "use_notify": true
+    }
+  }
+}
+```
+
+Centrifugo automatically manages the required database schema (tables, functions, partitions) on startup.
+
+#### Configuration options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `dsn` | string | — | PostgreSQL connection string (required) |
+| `pool_size` | int | 8 | Maximum connections in the primary pool |
+| `num_shards` | int | 1 | Number of shards for serialized publishing |
+| `table_prefix` | string | `"cf"` | Namespace prefix for table names (e.g. `cf_controller_messages`) |
+| `poll_interval` | duration | `"50ms"` | Idle poll interval for the outbox worker |
+| `use_notify` | bool | false | Enable LISTEN/NOTIFY for low-latency delivery |
+| `partition_retention_days` | int | 1 | Days to keep old partitions before dropping |
+| `partition_lookahead_days` | int | 2 | Future daily partitions to pre-create |
+| `partition_cleanup_interval` | duration | `"1m"` | How often to run partition maintenance |
+| `skip_schema_init` | bool | false | Skip automatic schema creation on startup |
+
+#### Read replica support
+
+The controller supports routing read operations (outbox polling) to a PostgreSQL replica while keeping writes on the primary:
+
+```json title="config.json"
+{
+  "controller": {
+    "enabled": true,
+    "type": "postgres",
+    "postgres": {
+      "dsn": "postgres://user:password@primary:5432/centrifugo?sslmode=disable",
+      "use_notify": true,
+      "replica": {
+        "dsn": ["postgres://user:password@replica:5432/centrifugo?sslmode=disable"],
+        "pool_size": 4
+      }
+    }
+  }
+}
+```
+
+LISTEN/NOTIFY always uses the primary connection (PostgreSQL limitation), but the outbox polling query runs on the replica, reducing primary load.
+
+#### Multi-tenant table prefix
+
+For multi-tenant setups where several Centrifugo clusters share the same PostgreSQL database, use distinct `table_prefix` values:
+
+```json title="config.json"
+{
+  "controller": {
+    "enabled": true,
+    "type": "postgres",
+    "postgres": {
+      "dsn": "postgres://user:password@localhost:5432/shared_db?sslmode=disable",
+      "table_prefix": "prod_us_cf"
+    }
+  }
+}
+```
+
+This produces tables like `prod_us_cf_controller_messages`, `prod_us_cf_controller_shard_lock`, etc.
+
+#### Database objects created
+
+The controller creates and manages the following objects (shown with default `cf` prefix):
+
+| Object | Type | Description |
+|--------|------|-------------|
+| `cf_controller_messages` | partitioned table | Control message outbox, partitioned by `created_at` (daily) |
+| `cf_controller_shard_lock` | table | Per-shard serialization lock rows |
+| `cf_controller_schema_version` | table | Schema version tracking |
+| `cf_controller_publish` | function | Atomic INSERT + NOTIFY with shard lock serialization |
+
+#### PostgreSQL-only multi-node deployment
+
+With the PostgreSQL controller, stream broker, and map broker, you can run a multi-node Centrifugo cluster using PostgreSQL as the only infrastructure dependency:
+
+```json title="config.json"
+{
+  "broker": {
+    "enabled": true,
+    "type": "postgres",
+    "postgres": {
+      "dsn": "postgres://user:password@localhost:5432/centrifugo?sslmode=disable",
+      "use_notify": true
+    }
+  },
+  "map_broker": {
+    "type": "postgres",
+    "postgres": {
+      "dsn": "postgres://user:password@localhost:5432/centrifugo?sslmode=disable",
+      "use_notify": true
+    }
+  },
+  "controller": {
+    "enabled": true,
+    "type": "postgres",
+    "postgres": {
+      "dsn": "postgres://user:password@localhost:5432/centrifugo?sslmode=disable",
+      "use_notify": true
+    }
+  }
+}
+```
+
+All three components can share the same PostgreSQL database — they use separate table namespaces (`cf_stream_*`, `cf_map_*`, `cf_controller_*`). Each manages its own schema, partitions, and cleanup independently.

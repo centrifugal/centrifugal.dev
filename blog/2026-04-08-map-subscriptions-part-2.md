@@ -113,9 +113,13 @@ The kitchen orders demo illustrates this — order state lives in application ta
 
 <video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/demo_kitchen.mp4"></video>
 
+## Partitioning and retention
+
+The stream table is automatically partitioned by day. Old partitions are dropped entirely — instant, no row-by-row deletion, no expensive vacuum operations. This is built into the open-source broker via `partition_retention_days` (default 7) and `partition_lookahead_days` (default 2). No manual maintenance needed — the broker pre-creates future partitions and drops old ones on a regular interval.
+
 ## Scaling with Centrifugo PRO
 
-The open-source PostgreSQL broker works well for single-node and small-cluster deployments. As you scale — more Centrifugo nodes, more channels, higher write throughput — [Centrifugo PRO](/docs/pro/map_subscriptions) adds four optimizations:
+The open-source PostgreSQL broker works well for single-node and small-cluster deployments. As you scale — more Centrifugo nodes, more channels, higher write throughput — [Centrifugo PRO](/docs/pro/map_subscriptions) adds three optimizations:
 
 **Broker fan-out.** By default, every Centrifugo node independently polls the outbox. With broker fan-out, only one node per shard polls PostgreSQL (shard leadership is coordinated via PostgreSQL advisory locks), then publishes updates through Redis or NATS. This reduces database polling load proportionally to cluster size — essential when running many Centrifugo nodes.
 
@@ -123,7 +127,24 @@ The open-source PostgreSQL broker works well for single-node and small-cluster d
 
 **Read replicas.** Distributes read load (state pagination, stream catch-up) across PostgreSQL replicas using consistent hashing on the channel name. Writes still go to the primary.
 
-**Stream partitioning.** Automatic daily partitioning of the stream table. Old partitions are dropped entirely — instant, no row-by-row deletion, no expensive vacuum operations. This avoids table bloat at scale without manual maintenance.
+## Performance
+
+On PostgreSQL 16 (Apple M4, native install — not Docker):
+
+| Operation | Result |
+|---|---|
+| **Map publish** | ~16,000 ops/sec |
+| **Map publish with CAS** | ~11,000 ops/sec |
+| **Idempotent publish** | ~17,500 ops/sec |
+| **Read state (full)** | ~10,800 ops/sec |
+| **Read state (paginated)** | ~50,000 ops/sec |
+| **Read state (ordered)** | ~20,000 ops/sec |
+| **Remove** | ~42,000 ops/sec |
+| **Publish → delivery latency** | ~1.3 ms |
+
+All publish operations go through a single SQL function call (`cf_map_publish`) that atomically updates the state table, appends to the stream, and increments the channel position. ~16,000 publishes per second per broker is plenty for collaborative state workloads — boards, inventories, leaderboards, presence.
+
+For context, the Redis map broker on the same hardware would be faster per-operation, but doesn't offer transactional publishing. The numbers above reflect a single Centrifugo instance with parallel goroutines. In production, multiple Centrifugo nodes and application instances publish concurrently — aggregate throughput scales with the number of writers up to PostgreSQL's own write capacity.
 
 ## Why this requires self-hosting
 

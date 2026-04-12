@@ -1,51 +1,141 @@
 ---
-draft: true
-title: Benefits of a PostgreSQL stream broker for Centrifugo
+title: Transactional publishing for stream subscriptions with PostgreSQL
 tags: [centrifugo, postgresql, streams, outbox]
-description: A draft exploration of why a PostgreSQL-backed broker for stream subscriptions would extend Centrifugo's transactional publishing story from collaborative state to ordered event delivery, and what it would reuse from the existing map broker infrastructure.
+description: The PostgreSQL stream broker brings the same transactional publishing guarantee to stream subscriptions — notifications, activity feeds, audit logs, order updates — that the map broker brought to keyed state. Publish inside your database transaction, no Redis required.
 author: Alexander Emelin
 authorTitle: Founder of Centrifugal Labs
 authorImageURL: /img/alexander_emelin.jpeg
 hide_table_of_contents: false
 ---
 
-## Benefits of a PG stream broker
+In [Part 2 of the map subscriptions series](/blog/2026/04/08/map-subscriptions-part-2), we introduced a PostgreSQL map broker that lets your application publish real-time map updates inside a database transaction — eliminating the dual-write problem. That capability was limited to map subscriptions — keyed state like leaderboards, collaborative boards, and inventories.
 
-**Transactional publishing for stream channels** — the headline win. Your application writes business data and publishes a stream-channel message in the same `BEGIN / COMMIT`, so the real-time update either happens together with the write or not at all. Kills the dual-write problem for the use cases where stream subs are the natural primitive: notifications, audit logs, workflow events, order updates, activity feeds. Today that story only exists for map subs (via `cf_map_publish`); extending it to stream subs covers the much wider "I have a DB row and I want to announce a change" audience.
-
-**One-infrastructure story** — "Centrifugo + PostgreSQL, no Redis" becomes true across every subscription primitive (streams, maps, and eventually controller). Many Centrifugo users already have PostgreSQL as their primary DB and would prefer not to run Redis just for real-time. The map broker starts this story; the stream broker completes it. Operationally: one fewer moving part, one fewer failure domain, one fewer thing to monitor, one fewer dependency to upgrade.
+Today we're extending the same guarantee to **stream subscriptions** — the ordered-event primitive that powers notifications, activity feeds, chat messages, audit logs, and order updates. If you have a database row and you want to announce a change in real time, you can now do it atomically with your write — same `BEGIN / COMMIT`, same outbox architecture, same "no Redis" simplicity.
 
 <!--truncate-->
 
-**External-state mode for event-shaped data** — the pattern we discussed earlier is arguably a better fit for streams than maps. Notifications and chat messages already live in the app's own table with long retention; Centrifugo's stream broker would keep a tiny bridging window in `cf_stream_history` (seconds to minutes) while the app DB remains the single source of truth for past events. Position handoff via `cf_stream_top_position` eliminates the REST + WebSocket race window that every collaborative app reinvents badly. The broker becomes a thin delivery layer over the user's existing data, not a second store.
+## The dual-write problem, revisited
 
-**Durable publish path with survives-a-crash guarantees** — with Redis, a publish issued mid-crash is lost. With the outbox pattern, the publish is in the table and the outbox worker picks it up after the node restarts. Recovery is built in, not bolted on.
+If you've integrated a real-time system with a database, you've hit this: your backend writes to the database, then publishes to the real-time layer. Two separate writes. If the process crashes between them — or if the publish fails — the database and your subscribers diverge. Users see stale data until they refresh.
 
-**Per-publication version ordering inside a transaction** — stream subs already support version-based dropping via `version` / `version_epoch`. With a PG broker, the application can compute the version from its own DB state (e.g. `UPDATE ... RETURNING version`) and pass it into the same transaction's publish call. That's a level of consistency between app state and real-time delivery that's effectively impossible to achieve with an out-of-process broker.
+We [covered this in depth](/blog/2026/04/08/map-subscriptions-part-2#the-dual-write-problem) for map subscriptions. The same problem applies — arguably more broadly — to stream subscriptions. Every notification system, every audit trail, every order-status feed has the same shape: write a row to your database, then announce the change over WebSocket. The PostgreSQL stream broker lets you combine both into one transaction.
 
-**Reuses everything we just built** — pgoutbox's Worker, LockWorker, NotificationListener, and Partitioner are all directly reusable. pgfanout's `CreateFanoutBroker` is reusable in PRO. The runtime-prefix refactor means the stream broker slots in with `TablePrefix: "cf"` defaulting to `cf_stream_*` tables alongside `cf_map_*` with zero collision. Most of the hard structural work is already done; the stream broker adds a schema file and a `processOutboxBatch` implementation.
+## Publishing inside your transaction
 
-**Broker fan-out for multi-node scale** — inherits the advisory-lock + Redis/NATS fan-out pattern already proven for the map broker. Large clusters don't bottleneck on primary Postgres polling because only one node per shard reads.
+Centrifugo creates a `cf_stream_publish` SQL function when the PostgreSQL stream broker initializes. Your application calls it inside its own transaction:
 
-**Read replicas for state catch-up** — inherits the existing replica-routing infrastructure. Reconnecting clients' history catch-up can hit read replicas without touching the write primary.
+```sql
+BEGIN;
+  -- Business logic: update order status
+  UPDATE orders SET status = 'shipped', updated_at = NOW()
+  WHERE id = 42;
 
-**Partitioning for retention at scale** — inherits the `pgoutbox.Partitioner`. Daily partitions of `cf_stream_history`, old partitions dropped by `DROP TABLE` (instant) instead of row-by-row DELETE. Standard trick, free via reuse.
+  -- Publish to real-time channel (same transaction)
+  SELECT * FROM cf_stream_publish(
+    p_channel := 'orders:42',
+    p_data    := '{"status": "shipped"}'::jsonb
+  );
+COMMIT;
+```
 
-**PG-level RBAC via row-level security** — pre-existing Postgres RLS policies on `cf_stream_history` apply automatically to catch-up reads (state-phase equivalent), because Centrifugo queries under the subscriber's identity. Note: doesn't help live-phase delivery (per the earlier thread), but gives a real RBAC story for history retrieval that Redis simply cannot match.
+If the transaction rolls back, the real-time update never happened. No outbox table to manage in your application, no CDC pipeline, no eventual consistency — just a single transaction. The architecture is the same outbox pattern we use for map subscriptions: all writes land in PostgreSQL tables atomically, and Centrifugo's outbox workers pick up new entries and deliver them to subscribers. When `use_notify` is enabled, delivery latency drops to low single-digit milliseconds.
 
-**Operationally familiar for PG-heavy shops** — monitoring, backup, replication, TLS, connection pooling, IAM authentication (AWS RDS IAM, GCP Cloud SQL IAM) are all already wired up for the app's primary PG. The stream broker just inherits all of it. No separate Redis hardening story.
+## One infrastructure for both primitives
 
-**Sets up the PG controller** — once brokers and streams both live in PG, a PG controller (for cluster coordination) becomes a natural third piece that shares the same infra, the same reliability story, the same operational model. The "Centrifugo + Postgres only" pitch lands cleanly.
+The stream broker shares the same infrastructure as the map broker:
 
-## The tradeoffs (not benefits, but worth remembering)
+- **Same outbox pattern** — per-shard workers poll a partitioned stream table, coordinate via shard locks, wake via LISTEN/NOTIFY
+- **Same daily partitioning** — the stream table is `PARTITION BY RANGE (created_at)` with automatic lookahead and retention. Old partitions are dropped whole — vacuum-free cleanup at scale
+- **Same configuration shape** — `dsn`, `num_shards`, `use_notify`, `partition_retention_days`, `partition_lookahead_days`
+- **Same PRO scaling features** — read replicas and broker fan-out work identically for stream channels
 
-- Latency is higher than Redis (low single-digit ms with NOTIFY vs sub-ms Redis PUB/SUB). Fine for notifications/audit, bad for trading tickers.
-- Load lands on the application's primary Postgres — real capacity-planning implication.
-- Target audience is narrower than "everyone who uses stream subs" — specifically users whose stream publications correspond to DB writes. Probably 50-70% of stream use cases, not 100%.
-- Doubles the PG-broker surface area to maintain. Mitigated heavily by pgoutbox reuse.
+If you're already running the PostgreSQL map broker, the stream broker is the same operational model. If you're not — the stream broker is a clean entry point to the "Centrifugo + PostgreSQL" stack without needing to understand map subscriptions first.
 
-## The one-line pitch
+## What's different from the map broker
 
-**Stream subscriptions gain atomic-with-your-database publishing, durable recovery, and full reuse of the map broker's PostgreSQL infrastructure — extending Centrifugo's unique "real-time updates that commit with your transaction" property from collaborative state to ordered event delivery.**
+The stream broker is simpler — it has no state table, no keyed entries, no CAS operations. Streams are append-only. The key differences:
 
-That's the product story. Everything else is technical detail that falls out of the pgoutbox refactor we just landed.
+**Two independent TTLs.** Stream subscriptions have `HistoryTTL` (how long publications are queryable) and `HistoryMetaTTL` (how long the channel's epoch survives). The map broker has a single `MetaTTL`. The two-TTL model lets you keep a channel's identity alive for reconnection (long MetaTTL) while limiting queryable history to a short window (short HistoryTTL).
+
+**Read-time TTL filter.** History queries apply a `WHERE created_at > NOW() - history_ttl` filter at read time, so the result is always correct regardless of when cleanup last ran. Cleanup is purely a storage optimization, not a correctness requirement.
+
+**HistorySize at read time.** The broker doesn't enforce HistorySize at write time (no MAXLEN-style trim). Instead, History() clamps the result window to the most recent N entries. This means a forward recovery query from an old position correctly detects the gap and triggers a fresh subscribe — matching Redis broker semantics.
+
+## External state for streams
+
+The [external state pattern](/blog/2026/04/07/map-subscriptions#ordering-conditional-writes-and-external-state) we introduced for map subscriptions is arguably an even better fit for streams. Notifications and chat messages already live in your application database with their own retention. The stream broker keeps a thin bridging window in `cf_stream_history` (the partition retention window) while your app DB remains the single source of truth for historical data.
+
+The client SDK now supports a `getState` callback for stream subscriptions that automates this pattern. We [previously described](/blog/2024/06/03/real-time-document-state-sync) the challenge of synchronizing a document state loaded from a REST API with a real-time subscription — the race window between the HTTP response and the subscription start, the need to handle `recovered: false` on reconnects, the manual position tracking. The `getState` callback solves all of this natively:
+
+```javascript
+const sub = client.newSubscription('orders:user_42', {
+  getState: async () => {
+    // 1. Capture stream position FIRST
+    const pos = await api.getStreamPosition('orders:user_42');
+    // 2. Then load your data
+    const orders = await api.getOrders(42);
+    renderOrders(orders);
+    // 3. Return the position — SDK recovers from here
+    return { offset: pos.offset, epoch: pos.epoch };
+  },
+});
+
+sub.on('publication', (ctx) => {
+  // Incremental updates — applied after getState on initial load,
+  // and after each reconnect where recovery succeeds.
+  applyOrderUpdate(ctx.data);
+});
+
+sub.subscribe();
+```
+
+The callback is called on initial subscribe and when recovery fails after a reconnect. On normal reconnects where the server successfully recovers missed publications, `getState` is not called — recovered publications simply arrive as `publication` events. When recovery fails (history expired, epoch changed), the SDK calls `getState` again automatically: the app refreshes from its source of truth, and the SDK resubscribes from the fresh position.
+
+The position should come from `cf_stream_top_position`, called inside the same transaction (or before) your data read. Reading position first ensures it's a lower bound — recovered publications may overlap with your loaded data, but you'll never have gaps. This works correctly when updates are idempotent (e.g. "set status to shipped"). For non-idempotent updates, deduplicate by publication offset — the same consideration we described in [Proper real-time document state synchronization](/blog/2024/06/03/real-time-document-state-sync), but now handled by the SDK rather than application code.
+
+On error (network failure, database timeout), the SDK emits an error event and retries with backoff — matching the error handling behavior of `getState` in [map subscriptions](/blog/2026/04/07/map-subscriptions#ordering-conditional-writes-and-external-state).
+
+## Performance
+
+On a local PostgreSQL 16 (Homebrew, Apple M4):
+
+| Operation | Result |
+|---|---|
+| **Publish** | ~17,000 ops/sec |
+| **Publish → delivery latency** | ~2 ms |
+| **Partition drop** (10K rows) | ~1 ms |
+
+These numbers are from a single Centrifugo instance. In production, multiple Centrifugo nodes and application instances call `cf_stream_publish` concurrently — aggregate throughput scales with the number of writers up to PostgreSQL's own write capacity. For notification, audit-log, and order-update workloads this is plenty of headroom. For ultra-high-volume telemetry that doesn't need transactional publishing, the Redis broker remains the right choice.
+
+## The complete PostgreSQL story
+
+With the stream broker, the "Centrifugo + PostgreSQL, no Redis" story is now complete across both subscription primitives:
+
+| Use case | Subscription type | PG broker |
+|---|---|---|
+| Notifications, activity feeds, chat, audit logs, order updates | Stream | `cf_stream_publish` |
+| Collaborative documents, inventory, leaderboards, game lobbies | Map | `cf_map_publish` |
+
+Both share the same outbox architecture, the same partitioned-table cleanup model, and the same operational story. If your application already has PostgreSQL, you already have the infrastructure for real-time — no additional message broker, no new data pipeline.
+
+## Getting started
+
+Configure the PostgreSQL stream broker as your Centrifugo broker:
+
+```json title="config.json"
+{
+  "broker": {
+    "enabled": true,
+    "type": "postgres",
+    "postgres": {
+      "dsn": "postgres://user:pass@localhost:5432/app?sslmode=disable",
+      "use_notify": true,
+      "partition_retention_days": 7
+    }
+  }
+}
+```
+
+The broker automatically creates the schema (`cf_stream_history`, `cf_stream_meta`, `cf_stream_publish`, etc.) on startup. Call `cf_stream_publish` from your application's SQL transactions to publish atomically.
+
+Read the full [stream broker documentation](/docs/server/history_and_recovery) for configuration reference, and see the [map subscriptions Part 2](/blog/2026/04/08/map-subscriptions-part-2) post for the outbox architecture deep-dive that both brokers share.
