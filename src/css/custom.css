@@ -335,6 +335,39 @@ html[data-theme="dark"] .markdown table tr:hover td {
   box-shadow: none !important;
 }
 
+.navbar__items {
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.navbar__link {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+@media (max-width: 1380px) and (min-width: 997px) {
+  .navbar__link {
+    font-size: 0.82rem;
+    padding: 0.25rem 0.4rem;
+  }
+}
+
+@media (max-width: 1200px) and (min-width: 997px) {
+  .navbar__link {
+    max-width: 130px;
+    font-size: 0.78rem;
+    padding: 0.25rem 0.35rem;
+  }
+}
+
+@media (max-width: 1080px) and (min-width: 997px) {
+  .navbar__link {
+    max-width: 100px;
+  }
+}
+
 .blog-wrapper .container {
   margin-top: 1rem !important;
 }
