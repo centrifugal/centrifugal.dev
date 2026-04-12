@@ -1,0 +1,38 @@
+.container {
+    float: right;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 8px 16px;
+}
+
+.label {
+    font-size: 0.8rem;
+    color: var(--ifm-color-emphasis-600);
+    font-weight: 500;
+}
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 6px;
+    border: 1px solid var(--ifm-toc-border-color);
+    background: transparent;
+    color: var(--ifm-color-emphasis-700);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.button:hover {
+    background: var(--ifm-color-emphasis-100);
+    border-color: var(--ifm-color-emphasis-400);
+    text-decoration: none;
+    color: var(--ifm-color-emphasis-800);
+}

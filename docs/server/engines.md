@@ -701,7 +701,7 @@ The PostgreSQL broker for stream subscriptions is experimental. The API, configu
 
 :::
 
-The PostgreSQL broker implements the `Broker` interface for [stream subscriptions](/docs/server/channels#stream-subscriptions) using PostgreSQL as the backing store. It provides **transactional publishing** — your application can publish real-time updates inside the same database transaction as your business writes, eliminating the [dual-write problem](https://thorben-janssen.com/dual-writes/). This is the same transactional-publishing capability that the [PostgreSQL map broker](/docs/server/map_subscriptions#postgresql-broker) provides for map subscriptions, now extended to stream subscriptions.
+The PostgreSQL broker implements the `Broker` interface for [stream subscriptions](/docs/server/channels#stream-subscriptions) using PostgreSQL as the backing store. It provides **transactional publishing** — your application can publish real-time updates inside the same database transaction as your business writes, eliminating the [dual-write problem](https://thorben-janssen.com/dual-writes/). This is the same transactional-publishing capability that the [PostgreSQL map broker](/docs/server/map_subscriptions#postgresql) provides for map subscriptions, now extended to stream subscriptions.
 
 **Key characteristics:**
 
