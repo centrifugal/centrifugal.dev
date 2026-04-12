@@ -83,8 +83,8 @@ const data = [
                 description: 'Batch periodic client events (ping, presence updates) to reduce CPU usage and system calls. Reported over 2x CPU reduction for idle connections in benchmarks.',
             },
             {
-                name: 'Node-grouped sharded PUB/SUB', pro: true, link: '/docs/pro/scalability#node-grouped-sharded-pubsub',
-                description: 'Group sharded PUB/SUB subscriptions by Redis Cluster node instead of by partition — reducing connection count from num_partitions to num_redis_nodes. Works for both Engine and Map Broker.',
+                name: 'Sharded PUB/SUB for Redis Cluster', pro: true, link: '/docs/pro/scalability#redis-cluster-sharded-pubsub',
+                description: 'Use Redis 7.0+ sharded PUB/SUB to distribute channel load across cluster nodes instead of broadcasting to all. Includes node-grouped mode that reduces connection count from num_partitions to num_redis_nodes. Works for both Engine and Map Broker.',
             },
             {
                 name: 'Bandwidth optimizations', pro: true, link: '/docs/pro/bandwidth_optimizations',
@@ -93,6 +93,10 @@ const data = [
             {
                 name: 'Advanced message write and batching', pro: true, link: '/docs/pro/client_message_batching',
                 description: 'Configure write_delay to collect messages before sending, trading delivery latency for reduced CPU. Can cut overall cluster CPU usage by half for high message rate scenarios.',
+            },
+            {
+                name: 'Custom Controller (Redis, Nats, PostgreSQL)', pro: true, link: '/docs/pro/scalability#setting-custom-controller',
+                description: 'Isolate cross-node control traffic from channel data using a dedicated controller. Supports Redis, Nats, and PostgreSQL — the PostgreSQL controller enables fully PostgreSQL-only multi-node clusters with no Redis dependency.',
             },
         ],
     },

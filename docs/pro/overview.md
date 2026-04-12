@@ -30,7 +30,7 @@ Centrifugo PRO is packed with the following features:
 * 🚀 [Faster performance](./performance.md) to reduce resource usage on server side.
 * 🔮 [Scalability optimizations](./scalability.md) with singleflight technique and shared position synchronization.
 * 📚 [Per-namespace engines](./scalability.md#per-namespace-engines) to configure various PUB/SUB brokers and presence managers on namespace level.
-* 🕹️ [Setting custom Controller](./scalability.md#setting-custom-controller) to isolate controller load from channel load (i.e. from Broker)
+* 🕹️ [Setting custom Controller](./scalability.md#setting-custom-controller) to isolate controller load from channel load — supports Redis, Nats, and PostgreSQL (enabling fully PostgreSQL-only multi-node clusters)
 * 🗜️ [Bandwidth optimizations](./bandwidth_optimizations.md) to reduce network costs. [Delta compression for at most once](./bandwidth_optimizations.md#delta-compression-for-at-most-once), [channel compaction](./bandwidth_optimizations.md#channel-compaction), [publish debouncing](./bandwidth_optimizations.md#publish-debouncing).
 * 🍔 [Message batching control](./client_msg_batching.md) for advanced tuning of client connection write behaviour.
 * 🏷️ [Server-side publication tags filter](./server_tags_filter.md) for per-subscriber access control via publication tags — works for stream and map subscriptions.
