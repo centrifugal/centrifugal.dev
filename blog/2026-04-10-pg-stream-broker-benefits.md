@@ -8,7 +8,7 @@ authorImageURL: /img/alexander_emelin.jpeg
 hide_table_of_contents: false
 ---
 
-In [Part 2 of the map subscriptions series](/blog/2026/04/08/map-subscriptions-part-2), we introduced a PostgreSQL map broker that lets your application publish real-time map updates inside a database transaction — eliminating the dual-write problem. That capability was limited to map subscriptions — keyed state like leaderboards, collaborative boards, and inventories.
+In [Part 2 of the map subscriptions series](/blog/2026/04/08/map-subscriptions-part-2), we introduced a PostgreSQL map broker that lets your application publish real-time map updates inside a database transaction — eliminating the dual-write problem. That capability applied only to map subscriptions — keyed state like leaderboards, collaborative boards, and inventories.
 
 Today we're extending the same guarantee to **stream subscriptions** — the ordered-event primitive that powers notifications, activity feeds, chat messages, audit logs, and order updates. If you have a database row and you want to announce a change in real time, you can now do it atomically with your write — same `BEGIN / COMMIT`, same outbox architecture, same "no Redis" simplicity.
 
@@ -53,7 +53,7 @@ If you're already running the PostgreSQL map broker, the stream broker is the sa
 
 ## What's different from the map broker
 
-The stream broker is simpler — it has no state table, no keyed entries, no CAS operations. Streams are append-only. The key differences:
+The stream broker is simpler — it has no state table, no keyed entries, no CAS operations. Streams are append-only. The key differences from the map broker:
 
 **Two independent TTLs.** Stream subscriptions have `HistoryTTL` (how long publications are queryable) and `HistoryMetaTTL` (how long the channel's epoch survives). The map broker has a single `MetaTTL`. The two-TTL model lets you keep a channel's identity alive for reconnection (long MetaTTL) while limiting queryable history to a short window (short HistoryTTL).
 
@@ -109,14 +109,18 @@ These numbers are from a single Centrifugo instance. In production, multiple Cen
 
 ## The complete PostgreSQL story
 
-With the stream broker, the "Centrifugo + PostgreSQL, no Redis" story is now complete across both subscription primitives:
+With the stream broker, both Centrifugo subscription primitives can run entirely on PostgreSQL:
 
 | Use case | Subscription type | PG broker |
 |---|---|---|
 | Notifications, activity feeds, chat, audit logs, order updates | Stream | `cf_stream_publish` |
 | Collaborative documents, inventory, leaderboards, game lobbies | Map | `cf_map_publish` |
 
-Both share the same outbox architecture, the same partitioned-table cleanup model, and the same operational story. If your application already has PostgreSQL, you already have the infrastructure for real-time — no additional message broker, no new data pipeline.
+Both share the same outbox architecture, the same partitioned-table cleanup model, and the same operational story.
+
+For multi-node deployments, [Centrifugo PRO](/docs/pro/overview) completes the picture with a **[PostgreSQL Controller](/docs/pro/scalability#postgresql-controller)** — the component responsible for cross-node coordination (node discovery, subscribe/unsubscribe propagation, disconnect commands). The controller uses the same outbox pattern: control messages go into a partitioned table, each node polls for new entries, and LISTEN/NOTIFY provides low-latency wakeup.
+
+With the stream broker, the map broker, and the PRO controller all on PostgreSQL, you can run a fully functional multi-node Centrifugo cluster using PostgreSQL as the only infrastructure dependency — no Redis, no Nats. If your application already has PostgreSQL, you already have everything you need for real-time.
 
 ## Getting started
 
@@ -138,4 +142,4 @@ Configure the PostgreSQL stream broker as your Centrifugo broker:
 
 The broker automatically creates the schema (`cf_stream_history`, `cf_stream_meta`, `cf_stream_publish`, etc.) on startup. Call `cf_stream_publish` from your application's SQL transactions to publish atomically.
 
-Read the full [stream broker documentation](/docs/server/history_and_recovery) for configuration reference, and see the [map subscriptions Part 2](/blog/2026/04/08/map-subscriptions-part-2) post for the outbox architecture deep-dive that both brokers share.
+Read the full [stream broker documentation](/docs/server/engines#postgresql-broker) for configuration reference, and see the [map subscriptions Part 2](/blog/2026/04/08/map-subscriptions-part-2) post for the outbox architecture deep-dive that both brokers share.
