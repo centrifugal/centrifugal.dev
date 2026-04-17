@@ -5,14 +5,21 @@ description: The PostgreSQL stream broker brings the same transactional publishi
 author: Alexander Emelin
 authorTitle: Founder of Centrifugal Labs
 authorImageURL: /img/alexander_emelin.jpeg
+image: /img/blog_pg_stream.jpg
 hide_table_of_contents: false
 ---
 
-In [Part 2 of the map subscriptions series](/blog/2026/04/08/map-subscriptions-part-2), we introduced a PostgreSQL map broker that lets your application publish real-time map updates inside a database transaction — eliminating the dual-write problem. That capability applied only to map subscriptions — keyed state like leaderboards, collaborative boards, and inventories.
+In [Part 2 of the map subscriptions series](/blog/2026/04/08/map-subscriptions-part-2), we introduced a PostgreSQL map broker that lets your application publish real-time map updates inside a database transaction — removing the dual-write problem for callers that publish via the broker's SQL function from their own transactions. That capability applied only to map subscriptions — keyed state like leaderboards, collaborative boards, and inventories.
 
-Today we're extending the same guarantee to **stream subscriptions** — the ordered-event primitive that powers notifications, activity feeds, chat messages, audit logs, and order updates. If you have a database row and you want to announce a change in real time, you can now do it atomically with your write — same `BEGIN / COMMIT`, same outbox architecture, same "no Redis" simplicity.
+Today we're extending the same shape to **stream subscriptions** — the ordered-event primitive that powers notifications, activity feeds, chat messages, audit logs, and order updates. If you have a database row and you want to announce a change in real time, you can now do it atomically with your write — same `BEGIN / COMMIT`, same outbox architecture, same "no Redis" simplicity.
 
 <!--truncate-->
+
+:::caution Experimental
+
+The PostgreSQL stream broker and the PostgreSQL controller (covered later in this post) are recent additions. The SQL function shapes, configuration keys, and outbox internals may change based on feedback before they're considered stable.
+
+:::
 
 ## The dual-write problem, revisited
 
@@ -40,6 +47,8 @@ COMMIT;
 
 If the transaction rolls back, the real-time update never happened. No outbox table to manage in your application, no CDC pipeline, no eventual consistency — just a single transaction. The architecture is the same outbox pattern we use for map subscriptions: all writes land in PostgreSQL tables atomically, and Centrifugo's outbox workers pick up new entries and deliver them to subscribers. When `use_notify` is enabled, delivery latency drops to low single-digit milliseconds.
 
+The transactional guarantee applies to **callers using the SQL function path** — i.e. your backend code calling `cf_stream_publish` directly inside its own SQL transaction alongside the row write. Publishes that go through Centrifugo's HTTP/GRPC API remain a separate operation from your DB write (the historic dual-write shape) — same as before. The SQL function path is what removes that gap; it's an additional integration option, not a change to existing publish APIs.
+
 ## One infrastructure for both primitives
 
 The stream broker shares the same infrastructure as the map broker:
@@ -61,9 +70,9 @@ The stream broker is simpler — it has no state table, no keyed entries, no CAS
 
 **HistorySize at read time.** The broker doesn't enforce HistorySize at write time (no MAXLEN-style trim). Instead, History() clamps the result window to the most recent N entries. This means a forward recovery query from an old position correctly detects the gap and triggers a fresh subscribe — matching Redis broker semantics.
 
-## External state for streams
+## App-owned state with stream subscriptions
 
-The [external state pattern](/blog/2026/04/07/map-subscriptions#ordering-conditional-writes-and-external-state) we introduced for map subscriptions is arguably an even better fit for streams. Notifications and chat messages already live in your application database with their own retention. The stream broker keeps a thin bridging window in `cf_stream_history` (the partition retention window) while your app DB remains the single source of truth for historical data.
+For applications where the data already lives in your own tables — orders, notifications, activity feeds, chat — the stream broker is enough on its own. No duplicate state table, no broker-managed snapshot. Your app database is the source of truth; Centrifugo streams only the change events. The stream broker keeps a thin bridging window in `cf_stream` (the partition retention window) while your app DB owns historical data.
 
 The client SDK now supports a `getState` callback for stream subscriptions that automates this pattern. We [previously described](/blog/2024/06/03/real-time-document-state-sync) the challenge of synchronizing a document state loaded from a REST API with a real-time subscription — the race window between the HTTP response and the subscription start, the need to handle `recovered: false` on reconnects, the manual position tracking. The `getState` callback solves all of this natively:
 
@@ -93,7 +102,15 @@ The callback is called on initial subscribe and when recovery fails after a reco
 
 The position should come from `cf_stream_top_position`, called inside the same transaction (or before) your data read. Reading position first ensures it's a lower bound — recovered publications may overlap with your loaded data, but you'll never have gaps. This works correctly when updates are idempotent (e.g. "set status to shipped"). For non-idempotent updates, deduplicate by publication offset — the same consideration we described in [Proper real-time document state synchronization](/blog/2024/06/03/real-time-document-state-sync), but now handled by the SDK rather than application code.
 
-On error (network failure, database timeout), the SDK emits an error event and retries with backoff — matching the error handling behavior of `getState` in [map subscriptions](/blog/2026/04/07/map-subscriptions#ordering-conditional-writes-and-external-state).
+On error (network failure, database timeout), the SDK emits an error event and retries with backoff.
+
+### A concrete example: Kafka aggregator + live snapshot
+
+A pattern that came up in user discussions and motivated us to think about this more deeply: a service consumes a Kafka topic and maintains aggregated views in PostgreSQL — say, a price board built from a market-data topic. The browser client needs to fetch the current aggregate and then receive live updates. With Centrifugo as a separate Kafka consumer fanning the same topic out to WebSocket subscribers, you end up bridging two unrelated offset spaces — the snapshot row stores a Kafka offset, the live subscription speaks Centrifugo offsets, and the client has to subscribe with a recent stream position and discard everything older than the snapshot's Kafka offset. It works, but the bridging logic is awkward and easy to get subtly wrong.
+
+The PG stream broker collapses this if you make the aggregator the publisher to Centrifugo (instead of Centrifugo reading Kafka in parallel). For each Kafka batch the aggregator processes, it does — in one PG transaction — both the snapshot UPDATE *and* a `cf_stream_publish(...)` for the new event(s). Snapshot mutation and broker publish commit together; they can never disagree about what's been observed. The snapshot row stays minimal — just the aggregate, no offset bookkeeping. The client's `getState` follows the same recipe shown above: open a `REPEATABLE READ` transaction, read `cf_stream_top_position` first, then read the snapshot, return the captured position. The SDK subscribes from there, and any publications committed after the position read arrive as stream catch-up — no overlap with what's in the snapshot row to reconcile.
+
+This shape — aggregator-as-publisher, single-tx atomicity for the snapshot update + the publish — is the natural fit whenever you have an upstream feed (Kafka, NATS, CDC, anything else) being shaped into stored views. The PG stream broker removes the cross-system offset bridge by making one process responsible for both the stored aggregate and the broker stream that describes its evolution.
 
 ## Performance
 
@@ -105,22 +122,36 @@ On a local PostgreSQL 16 (Homebrew, Apple M4):
 | **Publish → delivery latency** | ~2 ms |
 | **Partition drop** (10K rows) | ~1 ms |
 
-These numbers are from a single Centrifugo instance. In production, multiple Centrifugo nodes and application instances call `cf_stream_publish` concurrently — aggregate throughput scales with the number of writers up to PostgreSQL's own write capacity. For notification, audit-log, and order-update workloads this is plenty of headroom. For ultra-high-volume telemetry that doesn't need transactional publishing, the Redis broker remains the right choice.
+These numbers are from a single Centrifugo instance running the broker's Go integration tests in benchmark mode against the same machine's PostgreSQL — small JSON payloads, default broker configuration, parallel goroutines exercising `cf_stream_publish`. They're rough indicators of order-of-magnitude, not portable production guarantees: real workloads vary with payload size, connection pool, network latency, and your PostgreSQL's own write capacity. In production, multiple Centrifugo nodes and application instances call `cf_stream_publish` concurrently — aggregate throughput scales with the number of writers up to PostgreSQL's own write capacity. For notification, audit-log, and order-update workloads this is plenty of headroom. For ultra-high-volume telemetry that doesn't need transactional publishing, the Redis broker remains the right choice.
 
-## The complete PostgreSQL story
+## Multi-node messaging cluster on PostgreSQL alone (no Redis)
 
-With the stream broker, both Centrifugo subscription primitives can run entirely on PostgreSQL:
+This is the part that changes the deployment story for OSS users. Until recently, running Centrifugo across multiple nodes required Redis for cross-node coordination — propagating control messages between nodes (subscribes/unsubscribes, disconnect commands, node-presence pings). NATS is also possible, but **only as a Centrifugo PRO option**, so the OSS reality was effectively "Redis or nothing". That made Redis a hard dependency for any horizontally scaled OSS deployment, even when the actual real-time workload would have been comfortable on PostgreSQL.
 
-| Use case | Subscription type | PG broker |
-|---|---|---|
-| Notifications, activity feeds, chat, audit logs, order updates | Stream | `cf_stream_publish` |
-| Collaborative documents, inventory, leaderboards, game lobbies | Map | `cf_map_publish` |
+The new **PostgreSQL Controller** in Centrifugo OSS lifts that requirement. It implements the centrifuge `Controller` interface as a PG-backed control-message bus, using the same outbox pattern as the brokers: control messages go into a partitioned table, each node polls for new entries, and `LISTEN/NOTIFY` provides low-latency wakeup. Whatever the centrifuge node abstraction layer needs to broadcast or target between nodes — subscribe propagation, disconnect commands, peer pings — flows through that bus. No new pub/sub infrastructure beyond the PG you already have.
 
-Both share the same outbox architecture, the same partitioned-table cleanup model, and the same operational story.
+With the stream broker, the map broker, and the controller all on PostgreSQL, you can run a **multi-node Centrifugo messaging cluster with PostgreSQL as the only infrastructure dependency for the messaging plane** — no Redis, no NATS. If your application already runs PostgreSQL, you already have what you need for the messaging tier at typical cluster sizes.
 
-For multi-node deployments, [Centrifugo PRO](/docs/pro/overview) completes the picture with a **[PostgreSQL Controller](/docs/pro/scalability#postgresql-controller)** — the component responsible for cross-node coordination (node discovery, subscribe/unsubscribe propagation, disconnect commands). The controller uses the same outbox pattern: control messages go into a partitioned table, each node polls for new entries, and LISTEN/NOTIFY provides low-latency wakeup.
+```json title="config.json — multi-node, PG-only messaging"
+{
+  "broker": {
+    "enabled": true,
+    "type": "postgres",
+    "postgres": { "dsn": "...", "use_notify": true }
+  },
+  "map_broker": {
+    "type": "postgres",
+    "postgres": { "dsn": "...", "use_notify": true }
+  },
+  "controller": {
+    "enabled": true,
+    "type": "postgres",
+    "postgres": { "dsn": "...", "use_notify": true }
+  }
+}
+```
 
-With the stream broker, the map broker, and the PRO controller all on PostgreSQL, you can run a fully functional multi-node Centrifugo cluster using PostgreSQL as the only infrastructure dependency — no Redis, no Nats. If your application already has PostgreSQL, you already have everything you need for real-time.
+For most teams that previously had to bring Redis just to scale Centrifugo, this collapses the messaging-tier footprint to a single existing dependency. For larger fleets, [Centrifugo PRO](/docs/pro/overview) adds optimizations on top — broker fan-out (one node per shard polls PostgreSQL and re-broadcasts via Redis or NATS), in-memory caches, and read-replica support for the data plane — but the cluster works on plain PostgreSQL out of the box.
 
 ## Getting started
 
@@ -140,6 +171,6 @@ Configure the PostgreSQL stream broker as your Centrifugo broker:
 }
 ```
 
-The broker automatically creates the schema (`cf_stream_history`, `cf_stream_meta`, `cf_stream_publish`, etc.) on startup. Call `cf_stream_publish` from your application's SQL transactions to publish atomically.
+The broker automatically creates the required tables and SQL functions on startup. Call `cf_stream_publish` from your application's SQL transactions to publish atomically.
 
 Read the full [stream broker documentation](/docs/server/engines#postgresql-broker) for configuration reference, and see the [map subscriptions Part 2](/blog/2026/04/08/map-subscriptions-part-2) post for the outbox architecture deep-dive that both brokers share.

@@ -72,7 +72,7 @@ const data = [
             { name: 'Scale with Redis, Redis Cluster and NATS', oss: true, pro: true },
             {
                 name: 'Per-namespace engines', pro: true, link: '/docs/pro/scalability#per-namespace-engines',
-                description: 'Use different broker or presence backends per namespace. For example, Redis for most channels but NATS for wildcard subscriptions — within a single Centrifugo setup.',
+                description: 'Assign different broker backends to different namespaces to scale load and match each feature to the right backend — PostgreSQL for transactional channels, Redis for high-throughput channels, separate Redis instances per namespace to distribute load.',
             },
             {
                 name: 'Singleflight & shared position sync', pro: true, link: '/docs/pro/scalability',

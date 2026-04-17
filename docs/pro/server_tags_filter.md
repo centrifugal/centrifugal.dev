@@ -189,18 +189,6 @@ COMMIT;
 
 Subscribers with the old filter see the removal. Subscribers with the new filter see the new entry. No visibility gap.
 
-### External state
-
-For channels with `external_state: true`, the broker has no state table — so it cannot automatically read tags from the deleted entry. The `MapRemove` call must include explicit tags for the filter to work on removal events:
-
-```go
-node.MapRemove(ctx, "board:main", "card_42", centrifuge.MapRemoveOptions{
-    Tags: map[string]string{"team": "engineering"},
-})
-```
-
-Your `getState` endpoint must also apply the same access control as the server publication filter — Centrifugo filters the stream and live phases, but the initial state fetch via HTTP is your application's responsibility.
-
 ## Limitations
 
 - **Delta compression** is incompatible with the server-side publication filter (same constraint as the client-side tags filter).

@@ -58,8 +58,8 @@ function BlogPostItem({ featured }) {
         <Link itemProp="url" to={permalink} className={styles.featuredCard}>
           <div className={styles.featuredImage}>
             {frontMatter.image && <img src={frontMatter.image} alt={title} />}
+            <span className={styles.metaTag}>{formattedDate}{readMin && ` · ${readMin}`}</span>
           </div>
-          <span className={styles.metaTag}>{formattedDate}{readMin && ` · ${readMin}`}</span>
           <div className={styles.featuredOverlay}>
             <h2 className={styles.featuredTitle}>{title}</h2>
             <p className={styles.featuredDesc}>{description}</p>
@@ -77,9 +77,9 @@ function BlogPostItem({ featured }) {
             {frontMatter.image && <img src={frontMatter.image} alt={title} />}
           </div>
           <span className={styles.metaTag}>{formattedDate}{readMin && ` · ${readMin}`}</span>
-          <div className={styles.cardOverlay}>
-            <h3 className={styles.cardTitle}>{title}</h3>
-          </div>
+        </div>
+        <div className={styles.cardOverlay}>
+          <h3 className={styles.cardTitle}>{title}</h3>
         </div>
         <p className={styles.cardDesc}>{description}</p>
       </Link>

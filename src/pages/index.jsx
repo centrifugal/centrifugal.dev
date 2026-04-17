@@ -27,6 +27,8 @@ import ProBanner from '../components/ProBanner';
 import ImageRotator from '../components/ImageRotator';
 import ProCtaBanner from '../components/ProCtaBanner';
 import HowItWorks from '../components/HowItWorks';
+import RecentBlogPosts from '../components/RecentBlogPosts';
+import SubscriptionTypes from '../components/SubscriptionTypes';
 import GitHubStarButton from '../components/GitHubStarButton';
 import QuickStart, { QuickStartDescription } from '../components/QuickStart';
 import { ChatIcon, DashboardIcon, GameIcon, DataSyncIcon, FinancialIcon, LiveFeedIcon, IoTIcon, AIIcon } from '../components/UseCaseIcons';
@@ -381,7 +383,8 @@ function Home() {
               </div>
             </>
           }
-        />        
+        />
+        <RecentBlogPosts />
         <ProCtaBanner />
       </main >
     </Layout >

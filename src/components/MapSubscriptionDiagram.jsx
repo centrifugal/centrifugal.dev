@@ -98,7 +98,7 @@ export default function MapSubscriptionDiagram() {
         </text>
         <text x="85" y="65" fontSize="10" fill="#888"
           textAnchor="middle" fontFamily="system-ui, sans-serif">
-          (durable / persistent)
+          (recoverable / persistent)
         </text>
       </g>
 
@@ -164,13 +164,13 @@ export default function MapSubscriptionDiagram() {
         </g>
       </g>
 
-      {/* Durable mode */}
+      {/* Recoverable mode */}
       <g transform="translate(60, 270)">
         <rect width="680" height="85" rx="8" fill="url(#map-grad-mode)" stroke="#5b8def" strokeWidth="1" />
 
         <text x="340" y="20" fontSize="12" fontWeight="bold" fill="#5b8def"
           textAnchor="middle" fontFamily="system-ui, sans-serif">
-          Durable
+          Recoverable
         </text>
         <text x="340" y="36" fontSize="10" fill="#888"
           textAnchor="middle" fontFamily="system-ui, sans-serif">

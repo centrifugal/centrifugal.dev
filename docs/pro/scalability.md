@@ -209,9 +209,16 @@ Sharded PUB/SUB support is a powerful feature which will push your Redis Cluster
 
 Centrifugo OSS allows [specifying an engine](../server/engines.md). Engine is responsible for PUB/SUB and channel stream/history features (we call this part `Broker`), and for online presence (this part is called `Presence Manager`). Engine in Centrifugo OSS is global for the entire Centrifugo setup – once defined, all channels use it to make operations.
 
-Centrifugo PRO allows redefining brokers and presence managers on a namespace level. This may help with individual scaling based on channel activity, using different properties inside different channel namespaces within a single Centrifugo setup. This feature significantly enhances Centrifugo's adaptability, making it easier to meet diverse and evolving application demands.
+Centrifugo PRO allows redefining brokers and presence managers on a namespace level. This lets you both pick the right backend for each feature and distribute load across separate infrastructure — for example, isolating high-traffic namespaces onto their own Redis instance.
 
-For example, you can configure Centrifugo to use Redis engine by default, but for some specific namespace use Nats for PUB/SUB – this may be handy if you need wildcard subscriptions for one of the features in the app, or maybe you want to consume from raw Nats topics for some app feature, but for other features you still need functionality implemented by Centrifugo Redis Engine - like history in channels, automatic recovery. Or, maybe you want to separate Redis setups used for broker purposes and online presence purposes.
+For example:
+
+- **PostgreSQL** for order-update and notification channels — transactional publishing, atomic with your database writes
+- **Redis** for high-throughput channels like live scores or telemetry — maximum speed, no transaction overhead
+- **Nats** for channels that need wildcard subscriptions or raw topic consumption
+- **Memory** for ephemeral channels that don't need persistence or cross-node delivery
+
+You can also separate Redis setups used for broker purposes and online presence purposes.
 
 ### Defining brokers
 
@@ -374,7 +381,7 @@ Centrifugo automatically manages the required database schema (tables, functions
 | `num_shards` | int | 1 | Number of shards for serialized publishing |
 | `table_prefix` | string | `"cf"` | Namespace prefix for table names (e.g. `cf_controller_messages`) |
 | `poll_interval` | duration | `"50ms"` | Idle poll interval for the outbox worker |
-| `use_notify` | bool | false | Enable LISTEN/NOTIFY for low-latency delivery |
+| `use_notify` | bool | false | Enable LISTEN/NOTIFY for low-latency delivery. See [connection pooler note](../server/engines.md#listennotify-and-connection-poolers) |
 | `partition_retention_days` | int | 1 | Days to keep old partitions before dropping |
 | `partition_lookahead_days` | int | 2 | Future daily partitions to pre-create |
 | `partition_cleanup_interval` | duration | `"1m"` | How often to run partition maintenance |

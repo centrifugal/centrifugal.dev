@@ -81,7 +81,7 @@ export default function HowItWorks() {
                 </svg>
               </div>
               <h3>Your Users</h3>
-              <p>Receive real-time updates on any device using our SDKs</p>
+              <p>Subscribers receive real-time updates on any device using our SDKs</p>
             </div>
             <span className={styles.stepBadge}>3</span>
           </div>

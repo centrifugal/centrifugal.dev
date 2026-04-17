@@ -11,11 +11,13 @@ hide_table_of_contents: false
 
 import MapSubscriptionDiagram from '@site/src/components/MapSubscriptionDiagram';
 
-What if your WebSocket channel was a real-time map — a key-value collection whose state is automatically synchronized across all subscribers? That's what map subscriptions provide.
+A **map subscription** is a real-time key-value collection whose lifecycle is managed by Centrifugo. The broker stores the entries; the SDK keeps a live mirror in every subscribed client. Subscribe and you get the current snapshot delivered automatically, then incremental updates, then continued sync on reconnect — no separate REST endpoint to fetch initial state, no race window between an HTTP read and a WebSocket stream. Centrifugo *is* the store for the collection.
 
-Centrifugo has always been built around channels, publications, and persistent WebSocket connections. You publish a message to a channel, and every connected subscriber receives it in real time. With [history and recovery](/docs/server/history_and_recovery) enabled, clients can catch up on missed publications after a reconnect — Centrifugo keeps an ephemeral history stream and replays what was missed. We'll call this model **stream subscriptions** — the client receives an ordered, recoverable sequence of publications on a channel. Stream subscriptions work well for chat, notifications, activity feeds, and any use case where clients need an ordered sequence of events.
+Centrifugo has always been built around channels, publications, and persistent WebSocket connections. You publish a message to a channel, and every connected subscriber receives it in real time. With [history and recovery](/docs/server/history_and_recovery) enabled, clients can catch up on missed publications after a reconnect. We'll call this model **stream subscriptions** — the client receives an ordered, recoverable sequence of publications. Stream subscriptions work well for chat, notifications, activity feeds, and any use case where clients need an ordered sequence of events.
 
-Stream subscriptions remain the right choice for most real-time features — and nothing about that is changing. But over the years, we kept seeing use cases where the value isn't in the sequence of events, but in the current state. Rather than stretching streams to cover these cases, we're extending Centrifugo with two new subscription types — map subscriptions (this post) and [shared poll subscriptions](/blog/2026/04/06/shared-poll-subscriptions) — each designed for a different relationship between clients and data. In [Part 2](/blog/2026/04/08/map-subscriptions-part-2), we take this further with the PostgreSQL broker — where your database transactions and real-time updates commit or roll back as one.
+Stream subscriptions remain the right choice for most real-time features. For the broad case of "I have data in my own database and want clients to see it live", a stream subscription with a [`getState` callback](/blog/2026/04/10/pg-stream-broker-benefits) reading from your own tables is often the most natural fit — your schema stays the only source of truth. What we kept seeing, though, is a different shape of problem: collections that *don't* have an obvious home in the application's database — cursors that exist for a few seconds at a time, presence sets, IoT device telemetry, lobby members, feature flags, scoreboards. Building a small store + a change feed + a snapshot endpoint for each of these is a lot of bespoke infrastructure for what is, conceptually, just "a key-value collection that should be live in the browser." Map subscriptions are that primitive, baked into Centrifugo.
+
+This post focuses on the cases where Centrifugo owning the collection is exactly what you want. **Map subscriptions can also be used as a real-time mirror for data you already store elsewhere** — accepting some duplication into `cf_map_state` in exchange for getting the synchronized snapshot, paginated state delivery, per-key TTL, and ordered reads on the client without writing your own initial-state endpoint. It's a real trade-off, not a forbidden one — [Part 2](/blog/2026/04/08/map-subscriptions-part-2) discusses both shapes side by side, along with the [PostgreSQL stream broker](/blog/2026/04/10/pg-stream-broker-benefits) alternative.
 
 <!--truncate-->
 
@@ -71,11 +73,11 @@ Stream subscriptions offer fine-grained control over these concerns — `history
 
 - **Ephemeral** — no stream history, entries expire via TTL. On reconnect, the client gets a full state snapshot. This is the most lightweight option — about 35-40% less work per publish compared to modes with a stream. Best for cursors, typing indicators.
 
-- **Durable** — stream history with TTL-expiring entries. On reconnect, the client catches up from the stream instead of re-fetching everything. Best for presence, sessions, polls, game lobbies — data that auto-expires but needs efficient recovery.
+- **Recoverable** — stream history with TTL-expiring entries. On reconnect, the client catches up from the stream instead of re-fetching everything. Best for presence, sessions, polls, game lobbies — data that auto-expires but needs efficient recovery.
 
 - **Persistent** — stream history with permanent entries. Data lives until explicitly removed. Best for scoreboards, inventories, collaborative documents — permanent state with efficient reconnect.
 
-The mode determines which phase of the sync protocol is used on reconnect: ephemeral always re-syncs from state, durable and persistent attempt stream catch-up first.
+The mode determines which phase of the sync protocol is used on reconnect: ephemeral always re-syncs from state, recoverable and persistent attempt stream catch-up first.
 
 <MapSubscriptionDiagram />
 
@@ -83,21 +85,19 @@ Here's the protocol visualizer demo — it shows all three phases in action, inc
 
 <video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/demo_visualizer.mp4"></video>
 
-Durable and persistent modes support Fossil delta compression — deltas are computed per key, between successive values of the same entry, so clients receive compact patches instead of full payloads when only part of the data changes.
+Recoverable and persistent modes support Fossil delta compression — deltas are computed per key, between successive values of the same entry, so clients receive compact patches instead of full payloads when only part of the data changes.
 
 <video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/demo_scoreboard.mp4"></video>
 
-## Ordering, conditional writes, and external state
+## Ordering and conditional writes
 
-Three patterns come up often enough that we built dedicated support for them.
+Two patterns come up often enough that we built dedicated support for them.
 
 **Ordered state.** A leaderboard isn't just a collection of entries — it's a *ranked* collection. Clients need entries in order, and they need to know when rankings shift. Map channels support this with score-based ordering (`ordered: true`), where each entry carries a numeric score and the state is sorted by it. Under the hood, ordered state uses a sorted set (Redis ZSET or PostgreSQL index) in addition to the key-value hash, so pagination returns exact page sizes with score-based cursors.
 
 **Conditional publishing.** Two players claiming the last slot in a game lobby. Two bidders placing an auction bid at the same instant. These patterns need writes that can fail gracefully. Map subscriptions support two forms of conditional writes. Key modes — `if_new` (only insert if key doesn't exist) and `if_exists` (only update if key exists) — cover slot claiming and heartbeat-only updates. For stronger guarantees, compare-and-swap via `ExpectedPosition` checks the channel's stream offset and epoch before writing — if another write happened since the client's last read, the operation is rejected and the client can retry with fresh data.
 
 <video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/demo_inventory.mp4"></video>
-
-**External state.** By default, the broker manages both the key-value state and the change stream. But if your data already lives in an application database — project boards, order lists, product catalogs — duplicating it into the broker is unnecessary. External state mode (`external_state: true`) tells the broker to manage only the stream and PUB/SUB. The SDK loads the initial state from your HTTP API via a `getState` callback, captures the broker's stream position, and then catches up on any changes that happened during the HTTP call. Your app database remains the single source of truth, and the same three-phase protocol ensures clients converge to consistent state.
 
 ## Scalable presence on top of maps
 
@@ -135,12 +135,12 @@ Other clients subscribe to clients:* / users:* to see who's online
       {
         "name": "clients",
         "subscription_type": "map_clients",
-        "map": { "mode": "durable", "key_ttl": "60s" }
+        "map": { "mode": "recoverable", "key_ttl": "60s" }
       },
       {
         "name": "users",
         "subscription_type": "map_users",
-        "map": { "mode": "durable", "key_ttl": "60s" }
+        "map": { "mode": "recoverable", "key_ttl": "60s" }
       }
     ]
   }
@@ -151,7 +151,7 @@ Here's a game lobby demo that shows presence built on top of map subscriptions �
 
 <video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/demo_lobby.mp4"></video>
 
-Note the `durable` mode — this is what makes map-based presence better than Centrifugo's traditional presence. With durable mode, reconnecting clients catch up from the stream rather than re-fetching the full participant list. With ephemeral mode, clients would get a full snapshot on every reconnect — which is the same behavior traditional presence already provides, losing the convergence advantage.
+Note the `recoverable` mode — this is what makes map-based presence better than Centrifugo's traditional presence. With recoverable mode, reconnecting clients catch up from the stream rather than re-fetching the full participant list. With ephemeral mode, clients would get a full snapshot on every reconnect — which is the same behavior traditional presence already provides, losing the convergence advantage.
 
 ## Brokers: memory, Redis, PostgreSQL
 
@@ -159,7 +159,7 @@ Map subscriptions need a backend to store state and coordinate updates. Centrifu
 
 **Memory** is the default — zero dependencies, single-node, state lost on restart. Good for development and ephemeral data on single-node deployments.
 
-**Redis** adds distribution across nodes. We've invested years into making Centrifugo's [Redis engine](/docs/server/engines) efficient — connection pooling, pipelining, client-side consistent sharding, atomic Lua scripts. The Redis map broker builds on that same foundation, reusing the existing connection infrastructure and following the same patterns. State is stored in Redis hashes (or sorted sets for ordered maps), with atomic Lua scripts ensuring that state update, stream append, and PUB/SUB broadcast happen as a single operation — the same atomicity approach we use for stream subscription history. This is the typical choice for ephemeral and durable modes in multi-node setups.
+**Redis** adds distribution across nodes. We've invested years into making Centrifugo's [Redis engine](/docs/server/engines) efficient — connection pooling, pipelining, client-side consistent sharding, atomic Lua scripts. The Redis map broker builds on that same foundation, reusing the existing connection infrastructure and following the same patterns. State is stored in Redis hashes (or sorted sets for ordered maps), with atomic Lua scripts ensuring that state update, stream append, and PUB/SUB broadcast happen as a single operation — the same atomicity approach we use for stream subscription history. This is the typical choice for ephemeral and recoverable modes in multi-node setups.
 
 **PostgreSQL** goes further. In a recent survey, 86% of Centrifugo users reported having PostgreSQL in their production stack, with 76% using it as their primary database. The PostgreSQL broker stores map state in regular SQL tables and enables transactional publishing — real-time updates that commit or roll back inside your database transactions, eliminating the [dual-write problem](https://thorben-janssen.com/dual-writes/) entirely. We cover this in detail in [Part 2](/blog/2026/04/08/map-subscriptions-part-2).
 
@@ -173,7 +173,7 @@ Most real-time messaging systems are built around PUB/SUB — Pusher, Socket.IO,
 
 A natural question is why Centrifugo doesn't go down the CRDT path. The answer is consistency with what Centrifugo has always been: a generic real-time transport that is agnostic to data payloads. Centrifugo delivers JSON or binary payloads without interpreting their contents — it doesn't parse your data, doesn't merge it, doesn't resolve conflicts at the field level. The entire protocol — including map subscriptions — works over both JSON and [Protobuf](/docs/transports/overview#protobuf-protocol), so latency-sensitive or bandwidth-constrained applications can use compact binary encoding end to end. CRDTs require the transport layer to understand the data structure and apply merge semantics, which ties the system to specific data types. Map subscriptions follow the same philosophy as stream subscriptions: Centrifugo synchronizes opaque key-value entries — your application decides what those entries contain and how to interpret them. This keeps the system generic and the development line consistent across all three subscription types.
 
-Centrifugo occupies a different spot because it's self-hosted — it runs in your infrastructure, connects to your databases, and calls your backend directly. That proximity enables features that are architecturally impossible for a cloud service, from [transactional publishing](/blog/2026/04/08/map-subscriptions-part-2) to the low-latency proxy system that powers subscribe authorization and shared poll refresh — we explore this in [Part 2](/blog/2026/04/08/map-subscriptions-part-2).
+Centrifugo occupies a different spot because it's self-hosted — it runs in your infrastructure, connects to your databases, and calls your backend directly. That proximity enables features structurally outside the reach of a cloud service sitting between you and your users — from [transactional publishing](/blog/2026/04/08/map-subscriptions-part-2) (where the publish *is* part of your DB transaction, not an after-the-fact CDC reaction) to the low-latency proxy system that powers subscribe authorization and shared poll refresh — we explore this in [Part 2](/blog/2026/04/08/map-subscriptions-part-2).
 
 For scenarios that need per-item access control within a single map channel, [Centrifugo PRO](/docs/pro/server_tags_filter) adds a server-side publication tags filter — your backend assigns tags to entries and sets a filter per subscriber via the subscribe proxy or JWT. Only matching entries are delivered, across all sync phases. This enables RBAC patterns without splitting data into separate channels per access scope.
 

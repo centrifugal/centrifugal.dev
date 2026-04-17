@@ -27,24 +27,23 @@ export default function AskAI({ title, url }) {
 
     return (
         <div className={styles.container}>
-            <span className={styles.label}>Open in</span>
             <a
                 href={claudeUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={styles.button}
-                title="Ask Claude"
+                title="Ask Claude about this page"
             >
-                <ClaudeIcon /> Claude
+                <ClaudeIcon />
             </a>
             <a
                 href={chatgptUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={styles.button}
-                title="Ask ChatGPT"
+                title="Ask ChatGPT about this page"
             >
-                <ChatGPTIcon /> ChatGPT
+                <ChatGPTIcon />
             </a>
         </div>
     );

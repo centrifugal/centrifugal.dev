@@ -10,15 +10,14 @@ Map subscriptions is an experimental feature. All its parts - configuration opti
 
 :::
 
-Map subscriptions enable real-time **state synchronization** of keyed collections over channels. Instead of a traditional append-only publication stream, channels with map subscriptions maintain a **key-value state** where each entry can be independently published, updated, or removed — and all changes are automatically synchronized to subscribed clients.
+A **map subscription** delivers a **real-time key-value collection whose lifecycle is managed by Centrifugo**. The broker stores the entries, tracks per-key changes, and synchronizes them to every subscribed client — clients receive a complete snapshot on subscribe, catch up after disconnects, and get incremental updates in real time. The application doesn't need to maintain its own snapshot table, write a separate "fetch initial state" endpoint, or reconcile race conditions between an HTTP read and a WebSocket stream. That's the whole point: Centrifugo owns the collection, the SDK keeps a live mirror.
 
-Typical use cases:
+Typical use cases — workloads where Centrifugo *is* the natural store for the data:
 
-- **Cursor positions** — each user publishes their cursor; key = client/user ID, value = coordinates
-- **Collaborative state** — shared documents, whiteboards, inventories with per-object entries
-- **Persistent state** — sync your database state with tight PostgreSQL integration, using transactional publishing within your application's database transactions
-
-A standout capability of map subscriptions is the **PostgreSQL map broker** with **transactional publishing**. It lets you update real-time state and execute business logic in a single database transaction — eliminating the [dual-write problem](https://thorben-janssen.com/dual-writes/) entirely. Your application calls Centrifugo's SQL functions inside its own `BEGIN`/`COMMIT` block, so the real-time state pushed to client UIs and your database state are always atomically consistent. If the transaction rolls back, the real-time update never happened. This is a unique property for a real-time messaging system — see [PostgreSQL map broker](#postgresql) and [Transactional publishing](#transactional-publishing) sections below for details.
+- **Cursor positions, typing indicators** — short-lived per-client entries, no need for an external DB.
+- **Map presence** — `map_clients` (one entry per connection) and `map_users` (one entry per user) are server-managed presence built on this same sync model.
+- **Lobby members, IoT device fleet, feature flags, live polls** — collections that are naturally key-shaped, where having Centrifugo hold the canonical entries (with per-key TTL, optional ordering, optional persistence) avoids building a separate small-store + change-feed yourself.
+- **Scoreboards and ordered leaderboards** — same shape, with score-based ordering on top.
 
 import PgTransactionalDiagram from '@site/src/components/PgTransactionalDiagram';
 
@@ -26,22 +25,24 @@ import PgTransactionalDiagram from '@site/src/components/PgTransactionalDiagram'
 
 Map subscriptions also introduce a **built-in map presence** mechanism (`map_clients` and `map_users` subscription types) that improves on the traditional Centrifugo presence — it uses the same sync model with paginated state, so clients reliably recover presence after reconnects even in channels with many participants.
 
-## When to use map vs stream subscriptions
+## When to use map subscriptions — and when not to
 
-The core difference: a **stream subscription** gives each client an ordered sequence of events on a channel, while a **map subscription** gives each client a synchronized **collection of keyed entries** — a live key-value state that Centrifugo keeps synchronized across all subscribers.
+Map subscriptions are the natural fit when **the broker should be the canonical store** for a keyed collection — your application is comfortable letting Centrifugo own the entries and reads them back through subscriptions (or, for backends that need it, the server `map_read_state` API).
 
-| You need… | Use |
+When your data already lives in your own application database (orders, documents, tickets, notifications), there's an alternative shape worth knowing about: a **stream subscription with a `getState` callback**, backed by the [PostgreSQL stream broker](./engines.md). You write to your own tables and call `cf_stream_publish` in the same SQL transaction — clients render state from your own schema and receive events for incremental changes, with no duplicate state in the broker. See [Transactional publishing for stream subscriptions with PostgreSQL](/blog/2026/04/10/pg-stream-broker-benefits) and the [pg_stream_broker example](https://github.com/centrifugal/examples/tree/master/v6/pg_stream_broker).
+
+That said, **map subscriptions can still be the right answer even when the data has a home elsewhere** — if the convenience matters more to you than the duplication. With map subscriptions you get the synchronized snapshot, paginated state delivery, per-key TTL with auto-removal, and ordered/score-based reads out of the box. With stream + `getState` you have to build the snapshot endpoint yourself and reason about what your subscription consumer rebuilds on the client. Neither is universally better — pick by what you'd rather own.
+
+| You need… | Natural fit |
 |---|---|
 | Ordered events (chat, notifications, activity feeds) | Stream subscription |
-| Latest value of a single thing (e.g. with [cache recovery](/docs/server/cache_recovery)) | Stream subscription + cache recovery |
-| A keyed collection of entries synced to clients (cursors, polls, presence) | Map subscription (in-memory or Redis) |
-| Database-consistent state pushed to UIs | Map subscription + PostgreSQL (or Redis for softer durability) |
+| Latest value of a single thing (with [cache recovery](/docs/server/cache_recovery)) | Stream subscription + cache recovery |
+| Real-time sync of data already in your app DB, app DB stays the only source of truth | Stream subscription + `getState` ([pattern](/blog/2026/04/10/pg-stream-broker-benefits)) |
+| A Centrifugo-managed keyed collection (cursors, presence, IoT fleet, feature flags, lobbies) | **Map subscription** |
+| Centrifugo-managed keyed collection backed by transactional PostgreSQL | **Map subscription + PostgreSQL map broker** |
+| Real-time sync of data in your app DB, where the convenience of map subscriptions outweighs the cost of mirroring entries into `cf_map_state` | **Map subscription + PostgreSQL map broker** (mirror via transactional `cf_map_publish` from your own SQL transactions) |
 
-Without map subscriptions, synchronizing a keyed collection typically means fetching initial state via REST, applying stream updates, and handling race conditions between the two — map subscriptions handle all of this internally.
-
-- **Transient shared state** — cursor positions, typing indicators, live poll results. Centrifugo holds the state for you (in memory or Redis) with automatic expiration. Your backend doesn't need to store or serve it.
-
-- **Persistent state** — scoreboards, inventories, collaborative documents. With the PostgreSQL map broker you update the real-time map and your business data in a single database transaction, eliminating the [dual-write problem](https://thorben-janssen.com/dual-writes/). Redis can also be used when you want durability without transactional guarantees.
+The PostgreSQL map broker is for the last row — it makes the broker-owned collection durable and queryable, and lets your backend update it inside its own SQL transactions when the data lives in `cf_map_state` rather than in your own table.
 
 ## Design overview
 
@@ -56,7 +57,7 @@ import MapSubscriptionDiagram from '@site/src/components/MapSubscriptionDiagram'
 <MapSubscriptionDiagram />
 
 1. **State phase** — client paginates through the current key-value state from the broker
-2. **Stream phase** — client catches up on changes that occurred during state pagination (durable/persistent modes only)
+2. **Stream phase** — client catches up on changes that occurred during state pagination (recoverable/persistent modes only)
 3. **Live phase** — client receives real-time updates via PUB/SUB
 
 The SDK handles all phases transparently — the application receives `sync` (full state ready) and `update` (incremental change) events.
@@ -68,7 +69,7 @@ Each namespace must declare which subscription type it supports. The client spec
 | Type | Description |
 |------|-------------|
 | `stream` | Traditional PUB/SUB with optional history stream, automatic recovery from stream, and cache recovery mode (default type, Centrifugo always had it) |
-| `map` | Map subscription — keyed state with real-time updates, configurable sync and retention via mode (ephemeral/durable/persistent) with stream-based catch-up in durable/persistent modes, per-key TTL support, and paginated state sync protocol |
+| `map` | Map subscription — keyed state with real-time updates, configurable sync and retention via mode (ephemeral/recoverable/persistent) with stream-based catch-up in recoverable/persistent modes, per-key TTL support, and paginated state sync protocol |
 | `map_clients` | A special type of map subscription for presence — one entry per client connection, automatically managed by the server. Both joins and leaves are delivered immediately. The system is eventually consistent: if a remove operation to the broker fails (e.g. due to a transient network error), the stale entry will expire after `map.key_ttl` (60s by default) rather than lingering indefinitely |
 | `map_users` | A special type of map subscription for presence — one entry per user ID, automatically managed by the server. New users appear immediately, but removals are driven by key TTL — since a single user may have multiple connections, the entry can't be removed when one connection disconnects. Instead, it expires after `map.key_ttl` (60s by default) once the last connection for that user leaves the channel |
 
@@ -81,8 +82,8 @@ Each map namespace requires a **mode** setting that determines the synchronizati
 | Mode | Sync | Retention | Description |
 |------|------|-----------|-------------|
 | `ephemeral` | Snapshot on reconnect | Entries auto-expire after `key_ttl` | No stream history is kept. On reconnect the client receives a full state snapshot. Best for high-frequency, short-lived data. |
-| `durable` | Stream-based catch-up | Entries auto-expire after `key_ttl` | A change stream is maintained. On reconnect the client catches up from the stream (falls back to snapshot if too far behind). Best for data that auto-expires but needs efficient recovery. |
-| `persistent` | Stream-based catch-up | Entries persist until explicitly removed | Same stream-based catch-up as `durable`, but entries live forever until removed. Best for permanent state. |
+| `recoverable` | Stream-based catch-up | Entries auto-expire after `key_ttl` | A change stream is maintained. On reconnect the client catches up from the stream (falls back to snapshot if too far behind). Best for data that auto-expires but needs efficient recovery. |
+| `persistent` | Stream-based catch-up | Entries persist until explicitly removed | Same stream-based catch-up as `recoverable`, but entries live forever until removed. Best for permanent state. |
 
 **Which mode to pick:**
 
@@ -90,69 +91,15 @@ Each map namespace requires a **mode** setting that determines the synchronizati
 |----------|------|-----|
 | Cursors, typing indicators | `ephemeral` | Positions are short-lived, no need for stream history |
 | Presence, heartbeats | `ephemeral` | Entries should auto-disappear when stale |
-| Time-limited polls, sessions | `durable` | Entries auto-expire, but clients still recover from stream |
+| Time-limited polls, sessions | `recoverable` | Entries auto-expire, but clients still recover from stream |
 | Scoreboards, leaderboards | `persistent` | Data persists, clients recover missed updates efficiently |
 | Inventories, collaborative docs | `persistent` | Need permanent state with efficient reconnect recovery |
 
-### External state
+:::tip When your app already owns state
 
-By default, the map broker manages both the key-value **state** and the **change stream**. With **external state** mode, the broker manages only the stream and PUB/SUB — your application's database is the single source of truth for state.
+Map subscriptions fit "key-value real-time collection" use cases where the broker *is* the store — presence, cursors, feature flags, IoT device fleet, lobby members. If your data already lives in your own database (orders, documents, tickets) and you want Centrifugo to just deliver change events, use a **stream subscription with a `getState` callback** backed by the [PostgreSQL stream broker](./engines.md) — your writes and publishes commit together in one SQL transaction, and clients render state from your own schema. See [Transactional publishing for stream subscriptions with PostgreSQL](/blog/2026/04/10/pg-stream-broker-benefits) and the [pg_stream_broker example](https://github.com/centrifugal/examples/tree/master/v6/pg_stream_broker).
 
-**When to use it:** your data already lives in an application database (project boards, order lists, product catalogs) and you don't want to duplicate it into a broker-managed state table. Clients load the initial snapshot from your HTTP API, then receive live updates over WebSocket.
-
-**How it works:**
-
-1. The SDK calls a `getState` callback you provide — typically an HTTP fetch to your backend that queries the app DB.
-2. Your backend returns the current entries **plus** the broker's stream position (`offset` and `epoch`). The position must be captured **before** reading state — this ensures the stream covers all mutations during and after the state read.
-3. The SDK opens a WebSocket subscription starting from that position, catches up on any changes that occurred during the HTTP call, and transitions to live mode.
-
-Duplicates (an entry present in both the state snapshot and the stream) are resolved by key — the latest value wins.
-
-**Configuration:**
-
-External state requires `persistent` mode and is enabled per namespace:
-
-```json title="config.json"
-{
-  "channel": {
-    "namespaces": [
-      {
-        "name": "boards",
-        "subscription_type": "map",
-        "map": {
-          "mode": "persistent",
-          "external_state": true
-        },
-        "allow_subscribe_for_client": true
-      }
-    ]
-  }
-}
-```
-
-**Constraints:**
-
-- Requires `mode: "persistent"` — ephemeral and durable modes are not supported
-- No delta compression — the broker does not store previous values, so it cannot compute deltas
-- No CAS (compare-and-swap) — the broker has no state to compare against
-- No key TTL — entry lifecycle is managed by your application
-- No ordered mode — score-based ordering is not supported
-
-**Comparison with regular map mode:**
-
-| | Broker-managed state | External state |
-|---|---|---|
-| State storage | Broker (Redis/PG/memory) | App database |
-| State duplication | Yes — data in both app DB and broker | None — app DB only |
-| Initial state load | SDK paginates from broker via WebSocket | SDK calls `getState` (your HTTP endpoint) |
-| Stream + PUB/SUB | Broker-managed | Broker-managed |
-| Delta compression | Supported | Not supported |
-| CAS / key modes | Supported | Not supported |
-| Key TTL | Supported | Not supported (app manages lifecycle) |
-| Ordered mode | Supported | Not supported |
-| Bootstrap problem | First subscriber may see empty state until populated | None — state comes from app DB directly |
-
-How to capture the stream position and publish mutations depends on which broker you use — see the broker-specific sections below for details ([PostgreSQL](#stream-only-functions-external-state), [Redis / Memory](#redis)).
+:::
 
 ## Map brokers
 
@@ -201,19 +148,9 @@ Key options:
 
 Redis map broker supports the same connection options as the Redis engine (address, cluster addresses, Sentinel, TLS, etc.).
 
-When using [external state](#external-state) with Redis (or Memory) broker, your backend captures the stream position by calling the Centrifugo server API [`map_read_stream`](#map_read_stream) with `limit: 0` — this returns only the current offset and epoch without any stream entries:
+:::caution Avoid Redis eviction policies with recoverable/persistent modes
 
-```bash
-curl -X POST http://localhost:8000/api/map_read_stream \
-  -H "Authorization: apikey YOUR_KEY" \
-  -d '{"channel": "boards:123", "limit": 0}'
-```
-
-Your backend calls this first, captures the returned offset/epoch, then reads the state from your own database.
-
-:::caution Avoid Redis eviction policies with durable/persistent modes
-
-When using `durable` or `persistent` mode, Redis must retain all stream data for recovery to work. If Redis evicts keys due to memory pressure, clients will be unable to catch up from the stream — making stream-based catch-up impossible. Configure Redis with `maxmemory-policy noeviction`, carefully monitor memory usage, and plan capacity accordingly.
+When using `recoverable` or `persistent` mode, Redis must retain all stream data for recovery to work. If Redis evicts keys due to memory pressure, clients will be unable to catch up from the stream — making stream-based catch-up impossible. Configure Redis with `maxmemory-policy noeviction`, carefully monitor memory usage, and plan capacity accordingly.
 
 :::
 
@@ -237,7 +174,7 @@ Key options:
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `dsn` | string | | PostgreSQL connection string (required) |
-| `pool_size` | integer | `32` | Maximum connection pool size |
+| `pool_size` | integer | `16` | Maximum connection pool size |
 | `num_shards` | integer | `16` | Number of delivery worker shards. Use the default for now — more guidance will be provided later |
 | `ttl_check_interval` | [duration](./configuration.md#duration-type) | `"1s"` | How often to check for expired keys |
 | `cleanup_interval` | [duration](./configuration.md#duration-type) | `"1m"` | How often to clean up expired stream/meta entries |
@@ -245,7 +182,7 @@ Key options:
 | `binary_data` | boolean | `false` | Use BYTEA instead of JSONB for data columns |
 | `table_prefix` | string | `"cf"` | Namespace prefix for table and function names. Default produces `cf_map_*` tables and `cf_map_publish(...)` functions. Use distinct prefixes for multi-tenant deployments sharing one PostgreSQL instance |
 | `stream_retention` | [duration](./configuration.md#duration-type) | `"24h"` | How long stream entries are kept |
-| `use_notify` | boolean | `false` | Enable LISTEN/NOTIFY for low-latency delivery |
+| `use_notify` | boolean | `false` | Enable LISTEN/NOTIFY for low-latency delivery. See [connection pooler note](../server/engines.md#listennotify-and-connection-poolers) |
 | `skip_schema_init` | boolean | `false` | Skip automatic table creation on startup |
 | `partition_lookahead_days` | integer | `2` | Number of future daily partitions to pre-create |
 | `partition_retention_days` | integer | `7` | Partitions older than this are dropped automatically. Set to `0` for unlimited retention |
@@ -278,9 +215,6 @@ Centrifugo automatically creates these SQL functions when the PostgreSQL map bro
 | `cf_map_publish_strict(...)` | Same as `cf_map_publish`, but raises a PostgreSQL exception on suppression (e.g. CAS conflict, key exists) instead of returning a flag |
 | `cf_map_remove(...)` | Remove a key. Returns `suppressed`/`suppress_reason` |
 | `cf_map_remove_strict(...)` | Same as `cf_map_remove`, but raises an exception if the key is not found |
-| `cf_map_stream_publish(...)` | Stream-only publish for [external state](#external-state) mode — writes to the stream and meta tables only, skips the state table entirely |
-| `cf_map_stream_remove(...)` | Stream-only remove for [external state](#external-state) mode — writes a removal entry to the stream, skips the state table |
-| `cf_map_stream_top_position(channel)` | Returns the current stream position (`top_offset`, `epoch`) for a channel — use in [external state](#external-state) to capture position before reading app state |
 
 :::note
 
@@ -331,43 +265,13 @@ COMMIT;
 
 Centrifugo's outbox worker picks up new stream entries and delivers them to subscribers. This pattern eliminates the dual-write problem: instead of publishing to Centrifugo and updating your database separately (risking inconsistency), both happen in a single transaction.
 
-#### Stream-only functions (external state)
+:::caution Consistent TTLs across publishes
 
-When using [external state mode](#external-state), your application manages state in its own database tables and only needs to write to the Centrifugo change stream. Use `cf_map_stream_publish` and `cf_map_stream_remove` instead of the regular `cf_map_publish` / `cf_map_remove` — they skip the `cf_map_state` table entirely and only write to `cf_map_stream` + `cf_map_meta`.
+When calling `cf_map_publish` directly, use the same `p_key_ttl` for all publishes on a given channel. Mixing expiring keys with permanent keys (`p_key_ttl = NULL`) on the same channel can lead to metadata being expired while some keys remain — breaking recovery for connected clients.
 
-`cf_map_stream_publish` accepts the same parameters as `cf_map_publish` except for state-related ones (`p_score`, `p_key_mode`, `p_key_ttl`) which are not applicable. `cf_map_stream_remove` accepts the same parameters as `cf_map_remove`.
+Centrifugo's own publish path (via HTTP/GRPC API or the SDK) uses the channel namespace's configured `map.key_ttl` for all publishes, so this is only a concern when calling SQL functions directly. The validation `MetaTTL >= KeyTTL` catches the common case, but can't detect per-channel history when `p_key_ttl = NULL` is mixed with prior expiring keys.
 
-**Capturing the stream position** — use `cf_map_stream_top_position(channel)` to get the current `top_offset` and `epoch` for a channel. Your `getState` endpoint should call this **before** reading app state, within the same transaction:
-
-```sql
-BEGIN;
-  -- 1. Capture stream position FIRST.
-  SELECT * FROM cf_map_stream_top_position('boards:123');
-  -- 2. Then read state from your app tables.
-  SELECT item_id, data FROM board_items WHERE board_id = 123;
-COMMIT;
-```
-
-The function always returns exactly one row — `(0, '')` if the channel has no stream yet.
-
-**Publishing mutations** — update your app state and write to the Centrifugo stream in the same transaction:
-
-```sql
-BEGIN;
-  -- 1. Update your application state.
-  UPDATE board_items SET data = '{"text": "Updated card"}'::jsonb
-  WHERE board_id = 123 AND item_id = 'card_42';
-
-  -- 2. Write to Centrifugo stream (no state table interaction).
-  SELECT * FROM cf_map_stream_publish(
-    p_channel := 'boards:123',
-    p_key     := 'card_42',
-    p_data    := '{"text": "Updated card"}'::jsonb
-  );
-COMMIT;
-```
-
-If the transaction rolls back, neither the app state nor the stream entry is written — preserving atomicity. Centrifugo's outbox worker picks up the stream entry and delivers it to subscribers.
+:::
 
 ## Channel namespace configuration
 
@@ -419,12 +323,11 @@ Declares the subscription type for the namespace — one of the [supported types
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `map.mode` | string | | `"ephemeral"`, `"durable"`, or `"persistent"`. Required when using map types |
-| `map.key_ttl` | [duration](./configuration.md#duration-type) | | Required for `"ephemeral"` and `"durable"` modes |
+| `map.mode` | string | | `"ephemeral"`, `"recoverable"`, or `"persistent"`. Required when using map types |
+| `map.key_ttl` | [duration](./configuration.md#duration-type) | | Required for `"ephemeral"` and `"recoverable"` modes |
 | `map.ordered` | boolean | `false` | Enable score-based ordering of entries |
-| `map.external_state` | boolean | `false` | Enable [external state mode](#external-state) — broker manages only the stream, app DB is the source of truth. Requires `persistent` mode. Incompatible with `ordered`, `key_ttl` |
-| `map.stream_size` | integer | | Max stream entries (auto-derived for durable/persistent: 100) |
-| `map.stream_ttl` | [duration](./configuration.md#duration-type) | | Stream entry retention (auto-derived for durable/persistent: "1m") |
+| `map.stream_size` | integer | | Max stream entries (auto-derived for recoverable/persistent: 100) |
+| `map.stream_ttl` | [duration](./configuration.md#duration-type) | | Stream entry retention (auto-derived for recoverable/persistent: "1m") |
 | `map.meta_ttl` | [duration](./configuration.md#duration-type) | | Metadata retention (auto-derived) |
 
 #### Map publish permissions
@@ -496,7 +399,7 @@ Subscriptions can automatically track client and user presence in separate map c
         "name": "clients",
         "subscription_type": "map_clients",
         "map": {
-          "mode": "durable",
+          "mode": "recoverable",
           "key_ttl": "60s"
         },
         "allow_subscribe_for_client": true
@@ -505,7 +408,7 @@ Subscriptions can automatically track client and user presence in separate map c
         "name": "users",
         "subscription_type": "map_users",
         "map": {
-          "mode": "durable",
+          "mode": "recoverable",
           "key_ttl": "60s"
         },
         "allow_subscribe_for_client": true
@@ -515,9 +418,9 @@ Subscriptions can automatically track client and user presence in separate map c
 }
 ```
 
-:::tip Use durable mode for presence channels
+:::tip Use recoverable mode for presence channels
 
-The `durable` mode is recommended for `map_clients` and `map_users` namespaces. It enables stream-based catch-up on reconnect — clients receive only the join/leave changes they missed, rather than re-fetching the full participant list. With `ephemeral` mode, every reconnect triggers a full state snapshot, which is the same behavior as Centrifugo's traditional [presence](/docs/server/presence) — you lose the convergence advantage that map-based presence provides.
+The `recoverable` mode is recommended for `map_clients` and `map_users` namespaces. It enables stream-based catch-up on reconnect — clients receive only the join/leave changes they missed, rather than re-fetching the full participant list. With `ephemeral` mode, every reconnect triggers a full state snapshot, which is the same behavior as Centrifugo's traditional [presence](/docs/server/presence) — you lose the convergence advantage that map-based presence provides.
 
 :::
 
@@ -641,7 +544,7 @@ All fields are optional. Any field left unset falls back to the value sent by th
 | Field             | Type                  | Description                                                                                                                                                                                                                            |
 |-------------------|-----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `key`             | `string`              | Override the key being removed.                                                                                                                                                                                                        |
-| `tags`            | `map<string, string>` | Tags attached to the removal publication. Essential for [external state mode](#external-state) where the broker has no state row to read tags from — without these, removal events cannot be filtered by [server-side publication tags filter](../pro/server_tags_filter.md). |
+| `tags`            | `map<string, string>` | Tags attached to the removal publication. When unset, the broker reads the removed entry's stored tags automatically. Set explicitly only to override. |
 | `idempotency_key` | `string`              | Idempotency key for safe retries on removal.                                                                                                                                                                                           |
 
 ## Pagination and catch-up tuning
@@ -789,7 +692,7 @@ sub.on('update', (ctx) => {
 });
 ```
 
-Under the hood, the SDK manages state automatically: on initial subscribe it builds state from paginated reads, and on reconnect it attempts to catch up from the change stream (durable/persistent modes). If catch-up is not possible (e.g. too many changes accumulated), the SDK transparently falls back to a full state re-sync from the broker — the application simply receives another `sync` event with the complete state.
+Under the hood, the SDK manages state automatically: on initial subscribe it builds state from paginated reads, and on reconnect it attempts to catch up from the change stream (recoverable/persistent modes). If catch-up is not possible (e.g. too many changes accumulated), the SDK transparently falls back to a full state re-sync from the broker — the application simply receives another `sync` event with the complete state.
 
 Standard subscription events (`publication`, `subscribing`, `subscribed`, `unsubscribed`, `error`) also work on map subscriptions.
 
@@ -810,53 +713,6 @@ await sub.mapRemove('mykey');
 | `limit` | `100` | Page size for state/stream pagination |
 | `unrecoverableStrategy` | `"from_scratch"` | `"from_scratch"` or `"fatal"` — handle unrecoverable position errors |
 | `delta` | | Set to `"fossil"` to enable delta compression (applied per-key — deltas are computed between successive values of the same key, not across the entire map) |
-| `getState` | | Callback for [external state mode](#external-state) — see below |
-
-### External state (`getState` callback)
-
-When the namespace has `external_state: true`, the SDK must load the initial state from your application instead of paginating it from the broker. Provide a `getState` callback that fetches the current entries and the broker's stream position:
-
-```typescript
-const sub = centrifuge.newMapSubscription('boards:123', {
-  getState: async () => {
-    const resp = await fetch('/api/boards/123/state');
-    const data = await resp.json();
-    // entries: array of { key, data } objects
-    // offset, epoch: stream position from the broker
-    return { entries: data.entries, offset: data.offset, epoch: data.epoch };
-  }
-});
-
-sub.on('sync', (ctx) => {
-  renderBoard(ctx.entries);
-});
-
-sub.on('update', (ctx) => {
-  if (ctx.removed) {
-    removeBoardItem(ctx.key);
-  } else {
-    upsertBoardItem(ctx.key, ctx.data);
-  }
-});
-
-sub.subscribe();
-```
-
-The callback must return an object with:
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `entries` | `Array<{ key: string, data: any }>` | Current state entries from your app DB |
-| `offset` | `number` | Stream offset from the broker (captured **before** reading state) |
-| `epoch` | `string` | Stream epoch from the broker |
-
-The SDK calls `getState` on initial subscribe and on reconnect when stream catch-up is not possible. After loading external state, the SDK opens a WebSocket subscription starting from the returned position to catch up on any changes that occurred during the HTTP call, then transitions to live mode. The `sync` and `update` events work the same as with regular map subscriptions.
-
-**Error handling:**
-
-- **`getState` throws or rejects** (network error, HTTP failure, etc.) — the SDK retries the subscribe from the beginning with exponential backoff, same as any other subscribe failure. The subscription stays in `subscribing` state.
-- **Stale or invalid position** (e.g. epoch mismatch, offset too far behind) — the server returns an unrecoverable position error during stream catch-up. The SDK resets the position and calls `getState` again to get a fresh snapshot and position.
-- **Empty position** (`offset: 0`, `epoch: ""`) on a channel with no prior publications — the first stream catch-up may fail with an epoch mismatch (the server creates the stream with a new epoch). The SDK automatically retries `getState`, which now returns the real epoch, and the second attempt succeeds.
 
 ## Examples
 
@@ -985,111 +841,6 @@ sub.on('update', (ctx) => {
 sub.subscribe();
 ```
 
-### Persistent board with app-backed state
-
-A project board where items live in your PostgreSQL database. The app DB is the source of truth — Centrifugo only manages the change stream for real-time delivery.
-
-Server configuration:
-
-```json title="config.json"
-{
-  "map_broker": {
-    "type": "postgres",
-    "postgres": {
-      "dsn": "postgres://user:pass@localhost:5432/app?sslmode=disable"
-    }
-  },
-  "channel": {
-    "namespaces": [
-      {
-        "name": "boards",
-        "subscription_type": "map",
-        "map": {
-          "mode": "persistent",
-          "external_state": true
-        },
-        "allow_subscribe_for_client": true
-      }
-    ]
-  }
-}
-```
-
-Backend endpoint — returns board items + stream position (same transaction):
-
-```python
-@app.get("/api/boards/<board_id>/state")
-def get_board_state(board_id):
-    with db.transaction():
-        # 1. Capture stream position FIRST.
-        pos = db.execute(
-            "SELECT * FROM cf_map_stream_top_position(%s)",
-            [f"boards:{board_id}"]
-        ).fetchone()
-
-        # 2. Read state from app tables.
-        items = db.execute(
-            "SELECT item_id, data FROM board_items WHERE board_id = %s",
-            [board_id]
-        ).fetchall()
-
-    return {
-        "entries": [{"key": r["item_id"], "data": r["data"]} for r in items],
-        "offset": pos["top_offset"],
-        "epoch": pos["epoch"],
-    }
-```
-
-Backend mutation — update app DB + Centrifugo stream atomically:
-
-```python
-@app.post("/api/boards/<board_id>/items/<item_id>")
-def update_board_item(board_id, item_id):
-    data = request.json
-    with db.transaction():
-        db.execute(
-            "UPDATE board_items SET data = %s WHERE board_id = %s AND item_id = %s",
-            [Json(data), board_id, item_id]
-        )
-        db.execute(
-            "SELECT * FROM cf_map_stream_publish(p_channel := %s, p_key := %s, p_data := %s)",
-            [f"boards:{board_id}", item_id, Json(data)]
-        )
-    return {"ok": True}
-```
-
-Client code:
-
-```javascript
-const sub = client.newMapSubscription('boards:project1', {
-  getState: async () => {
-    const resp = await fetch('/api/boards/project1/state');
-    return resp.json();
-  }
-});
-
-const items = new Map();
-
-sub.on('sync', (ctx) => {
-  items.clear();
-  for (const entry of ctx.entries) {
-    items.set(entry.key, entry.data);
-  }
-  renderBoard(items);
-});
-
-sub.on('update', (ctx) => {
-  if (ctx.removed) {
-    items.delete(ctx.key);
-  } else {
-    items.set(ctx.key, ctx.data);
-  }
-  renderBoard(items);
-});
-
-sub.subscribe();
-```
-
 ## Demos
 
 A collection of interactive demos showcasing map subscriptions is available in the [map_demo](https://github.com/centrifugal/examples/tree/master/v6/map_demo) example. It includes 10 scenarios covering different map subscription features:
@@ -1098,13 +849,14 @@ A collection of interactive demos showcasing map subscriptions is available in t
 
 - **Sync Protocol Visualizer** — step through the STATE → STREAM → LIVE sync phases with interactive sequence diagrams and frame inspection
 - **Ephemeral Cursors** — real-time cursor positions using ephemeral sync with auto-cleanup on disconnect
-- **Game Lobby** — 2-player lobby with slot claiming, live updates, and automatic game start using durable sync
+- **Game Lobby** — 2-player lobby with slot claiming, live updates, and automatic game start using recoverable sync
 - **Inventory (CAS)** — compare-and-swap for safe concurrent updates with conflict handling
 - **Stock Tickers** — real-time price feed with sector filtering using tags filter
 - **Live Scoreboard (Delta)** — 6 concurrent football matches with fossil delta compression and live bandwidth stats
 - **Sprint Board (PostgreSQL)** — Kanban board with drag-and-drop using native PostgreSQL `cf_map_*` functions for transactional publishing
 - **Live Polls (PostgreSQL)** — server-driven polls with real-time voting, bot participants, and auto-rotation using `cf_map_*` functions
 - **Leaderboard (PostgreSQL)** — persistent ordered leaderboard using `cf_map_*` functions
-- **Kitchen Orders (External State)** — restaurant order board using app-backed state with `getState` callback, `cf_map_stream_publish` / `cf_map_stream_top_position` for transactional publishing
 
 The demo runs with Docker Compose (PostgreSQL + Python backend + Nginx) and requires Centrifugo v6.7+ with `centrifuge-js`.
+
+For the app-owned state pattern (app DB as source of truth + transactional publishing via the PostgreSQL stream broker + stream subscription `getState`), see the [pg_stream_broker kitchen orders demo](https://github.com/centrifugal/examples/tree/master/v6/pg_stream_broker) and the blog post [Transactional publishing for stream subscriptions with PostgreSQL](/blog/2026/04/10/pg-stream-broker-benefits).

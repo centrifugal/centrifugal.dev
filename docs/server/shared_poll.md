@@ -393,7 +393,7 @@ Top-level `shared_poll` configuration section:
 | `refresh_batch_size` | integer | `1000` | Maximum number of items per proxy call |
 | `max_keys_per_connection` | integer | `5000` | Maximum items a single connection can track |
 | `mode` | string | `"versionless"` | `"versionless"` or `"versioned"`. See [Refresh modes](#refresh-modes) for details |
-| `channel_shutdown_delay` | [duration](./configuration.md#duration-type) | `"0s"` | Delay before cleaning up a channel after the last item is untracked. Useful to prevent teardown/rebuild churn when items are briefly untracked then re-tracked (e.g., during scroll jitter or page navigation). A value like `"30s"` keeps the refresh worker and cached state alive through brief gaps |
+| `channel_shutdown_delay` | [duration](./configuration.md#duration-type) | `"1s"` | Delay before cleaning up a channel after the last item is untracked. Useful to prevent teardown/rebuild churn when items are briefly untracked then re-tracked (e.g., during scroll jitter or page navigation). |
 | `track_expired_extra_delay` | [duration](./configuration.md#duration-type) | `"25s"` | Extra time given to client to refresh track signature after it expires. Keys not refreshed within this delay are silently removed from server state |
 | `publish_enabled` | boolean | `false` | Enable cross-node distribution for [direct publish](#direct-publish). When `true`, Centrifugo subscribes to the Broker for this channel, allowing `shared_poll_publish` API to distribute publications to all nodes |
 
