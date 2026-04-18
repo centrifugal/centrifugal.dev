@@ -189,7 +189,23 @@ COMMIT;
 
 Subscribers with the old filter see the removal. Subscribers with the new filter see the new entry. No visibility gap.
 
+## Updating the filter
+
+The server tags filter can be updated for an active subscription in two ways.
+
+### Via subscription token refresh
+
+When the subscription token refresh handler (proxy or JWT) returns a new `server_tags_filter`, Centrifugo compares it with the current filter:
+
+- **Stream subscriptions** — the filter is hot-swapped. Future publications use the new filter immediately, no interruption.
+- **Map subscriptions** — the client is automatically unsubscribed and re-subscribes to get a full state re-sync matching the new filter. The SDK handles this transparently.
+
+If the refresh handler returns no filter (`nil`), the existing filter is left unchanged.
+
+### Via token revocation
+
+Use the [`invalidate_user_tokens`](/docs/pro/access_revoke#invalidate_user_tokens) or [`revoke_token`](/docs/pro/access_revoke#revoke_token) API to force the client to reconnect with a fresh token carrying the updated filter. This affects the entire connection, not just a single subscription.
+
 ## Limitations
 
 - **Delta compression** is incompatible with the server-side publication filter (same constraint as the client-side tags filter).
-- **Permission changes** take effect on next re-subscribe or token refresh — the filter is set once at subscribe time, matching the behavior of channel-level authorization.

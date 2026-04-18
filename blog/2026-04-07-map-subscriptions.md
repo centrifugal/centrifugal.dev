@@ -1,7 +1,7 @@
 ---
-title: Map subscriptions (Part 1) — synchronized state for real-time applications
+title: Map subscriptions (Part 1) — synchronized key-value state for real-time applications
 tags: [centrifugo, websocket, state-sync]
-description: Map subscriptions add a new subscription type to Centrifugo — synchronized key-value collections with paginated state, stream-based recovery, and three modes for different state lifetimes. This post covers the sync protocol, capabilities, and map broker options.
+description: A new subscription type in Centrifugo — real-time key-value collections with paginated state delivery, guaranteed convergence on reconnect, per-key TTL, conditional writes, and Fossil delta compression. Convergence is guaranteed by the protocol.
 author: Alexander Emelin
 image: /img/blog_map_subs_01.jpg
 authorTitle: Founder of Centrifugal Labs
@@ -11,7 +11,9 @@ hide_table_of_contents: false
 
 import MapSubscriptionDiagram from '@site/src/components/MapSubscriptionDiagram';
 
-A **map subscription** is a real-time key-value collection whose lifecycle is managed by Centrifugo. The broker stores the entries; the SDK keeps a live mirror in every subscribed client. Subscribe and you get the current snapshot delivered automatically, then incremental updates, then continued sync on reconnect — no separate REST endpoint to fetch initial state, no race window between an HTTP read and a WebSocket stream. Centrifugo *is* the store for the collection.
+A **map subscription** is a real-time key-value collection whose lifecycle is managed by Centrifugo. The map broker stores the entries; the SDK keeps a live mirror in every subscribed client. Subscribe and you get the current snapshot delivered automatically, then live updates, then continued sync on reconnect — no separate REST endpoint to fetch initial state, no race window between an HTTP read and a WebSocket stream. Centrifugo *is* the store for the collection. After any disconnect, clients always converge to the correct state — no `recovered: false` flag to handle, no manual reconciliation in your app code. Convergence is guaranteed by the protocol.
+
+With map subscriptions, Centrifugo now offers three distinct subscription primitives — stream, map, and [shared poll](/blog/2026/04/06/shared-poll-subscriptions) — in one self-hosted system, sharing the same connection, SDKs, authentication, and proxy infrastructure. We're not aware of another real-time messaging server that combines all three.
 
 Centrifugo has always been built around channels, publications, and persistent WebSocket connections. You publish a message to a channel, and every connected subscriber receives it in real time. With [history and recovery](/docs/server/history_and_recovery) enabled, clients can catch up on missed publications after a reconnect. We'll call this model **stream subscriptions** — the client receives an ordered, recoverable sequence of publications. Stream subscriptions work well for chat, notifications, activity feeds, and any use case where clients need an ordered sequence of events.
 
@@ -110,7 +112,7 @@ Map subscriptions work well for these larger-scale scenarios. Centrifugo provide
 - **`map_clients`** — one entry per connection (key = client ID). When a client unsubscribes or disconnects, its entry is removed immediately.
 - **`map_users`** — one entry per user (key = user ID). A user may have multiple connections, so entries can't be removed on a single disconnect — they expire via TTL after the last connection for that user leaves the channel.
 
-Because these are regular map channels, clients get paginated state on subscribe and incremental join/leave updates in real time. Recovery works the same way — reconnecting clients catch up from the stream instead of re-fetching everything.
+Because these are regular map channels, clients get paginated state on subscribe and live join/leave updates in real time. Recovery works the same way — reconnecting clients catch up from the stream instead of re-fetching everything.
 
 This is configured through channel prefixes. When a client subscribes to `game:abc`, the server can automatically publish presence entries to `clients:game:abc` (per-connection) and `users:game:abc` (per-user). These are separate map channels that other clients can subscribe to independently:
 

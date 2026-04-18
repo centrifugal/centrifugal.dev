@@ -1,7 +1,7 @@
 ---
 title: Transactional publishing for stream subscriptions with PostgreSQL
 tags: [centrifugo, postgresql, streams, outbox]
-description: The PostgreSQL stream broker brings the same transactional publishing guarantee to stream subscriptions — notifications, activity feeds, audit logs, order updates — that the map broker brought to keyed state. Publish inside your database transaction, no Redis required.
+description: The PostgreSQL stream broker brings transactional publishing to Centrifugo traditional subscription type. Combined with the new PostgreSQL controller, OSS Centrifugo now runs a multi-node messaging cluster on PostgreSQL alone — no Redis, no NATS.
 author: Alexander Emelin
 authorTitle: Founder of Centrifugal Labs
 authorImageURL: /img/alexander_emelin.jpeg
@@ -12,6 +12,8 @@ hide_table_of_contents: false
 In [Part 2 of the map subscriptions series](/blog/2026/04/08/map-subscriptions-part-2), we introduced a PostgreSQL map broker that lets your application publish real-time map updates inside a database transaction — removing the dual-write problem for callers that publish via the broker's SQL function from their own transactions. That capability applied only to map subscriptions — keyed state like leaderboards, collaborative boards, and inventories.
 
 Today we're extending the same shape to **stream subscriptions** — the ordered-event primitive that powers notifications, activity feeds, chat messages, audit logs, and order updates. If you have a database row and you want to announce a change in real time, you can now do it atomically with your write — same `BEGIN / COMMIT`, same outbox architecture, same "no Redis" simplicity.
+
+And there's a bigger shift alongside this: with a new PostgreSQL controller, an OSS Centrifugo cluster can now run with PostgreSQL as the only messaging-plane dependency — no Redis, no NATS. Details below.
 
 <!--truncate-->
 

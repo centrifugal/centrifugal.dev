@@ -646,6 +646,7 @@ There are several common options available when creating Subscription instance.
 * option to set subscription `data` (attached to every subscribe/resubscribe request)
 * options to tweak resubscribe backoff algorithm
 * option to start Subscription `since` known Stream Position (i.e. attempt recovery on first subscribe)
+* option to set `getState` callback for stream subscriptions (see [below more details](#subscription-getstate))
 * option to ask server to make subscription `positioned` (if not forced by a server)
 * option to ask server to make subscription `recoverable` (if not forced by a server)
 * option to ask server to push Join/Leave messages (if not forced by a server)
@@ -711,6 +712,30 @@ sub.subscribe();
 If initial token is not provided, but `getToken` is specified – then SDK should assume that developer wants to use token authorization for a channel subscription. In this case SDK should attempt to get a subscription token before initial subscribe.
 
 :::
+
+## Subscription getState
+
+For stream subscriptions where the application owns the state (e.g., data lives in your database and Centrifugo delivers real-time updates), the `getState` option provides automatic state recovery without manual reconciliation.
+
+When `getState` is set, the SDK calls it before the initial subscribe to load the application's current state and capture the stream position. On reconnect, the SDK first attempts recovery from its saved position. If recovery fails (the stream no longer contains the required publications), the SDK calls `getState` again — the application reloads its state from the database and returns a fresh stream position.
+
+```javascript
+const sub = client.newSubscription('updates', {
+  getState: async () => {
+    // 1. Read the current stream position FIRST.
+    const position = await fetchStreamPosition('updates');
+    // 2. Load and render your application state.
+    const data = await fetchDataFromDB();
+    renderUI(data);
+    // 3. Return the position — SDK subscribes from here.
+    return { offset: position.offset, epoch: position.epoch };
+  },
+});
+```
+
+The order matters: read the stream position **before** loading data. This ensures the position is a lower bound — publications between the captured position and the moment data was loaded may be returned by Centrifugo during recovery. Your application must handle replaying these publications without corrupting its state — the exact approach depends on your data model (e.g., offset-based dedup, last-write-wins, or idempotent updates).
+
+Without `getState`, a failed recovery results in a `subscribed` event with `recovered: false`, and the application must handle the gap manually. With `getState`, the SDK handles it automatically — the application just reloads its state and the SDK re-subscribes from the correct position.
 
 ## Server-side subscriptions
 

@@ -13,7 +13,7 @@ Centrifugo PRO extends the [map subscriptions](../server/map_subscriptions.md) f
 
 ## In-memory cache layer
 
-The cache layer keeps channel state in memory on each Centrifugo node, reducing backend reads and improving latency for subscribe operations.
+The cache layer keeps channel state in memory on each Centrifugo node, reducing backend reads and improving latency for subscribe operations. Since everything is served from memory, read latencies drop from milliseconds to microseconds range. The trade-off is proportionally increased memory usage on each Centrifugo node — memory consumption grows with the size of cached data.
 
 ```json title="config.json"
 {
@@ -45,7 +45,7 @@ Key options:
 | `load_timeout` | `"5s"` | Timeout for loading a channel from backend on first subscribe |
 | `stream_size` | `10000` | Max stream entries to keep in cache |
 
-The cache provides read-your-own-writes semantics: local writes are reflected immediately. Writes from other nodes appear within the `sync_interval`.
+The cache is filled from the backend — both local and remote writes arrive via PUB/SUB, so the cache reflects changes in near real-time. This ensures stream offsets in the cache match the order they were written in the main storage, keeping incremental recovery correct. The `sync_interval` acts as a safety net, periodically polling the backend to catch any publications that may have been missed due to transient PUB/SUB failures.
 
 ## PostgreSQL enhancements
 

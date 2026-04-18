@@ -1,7 +1,7 @@
 ---
-title: Map subscriptions (Part 2) — durable PostgreSQL-backed map collections
+title: Map subscriptions (Part 2) — when your PostgreSQL transaction IS your real-time publish
 tags: [centrifugo, websocket, state-sync, postgresql]
-description: The PostgreSQL map broker stores Centrifugo-owned key-value collections in PostgreSQL and lets your application publish updates inside its own database transactions. Useful when Centrifugo is the canonical store for the collection — when your data already lives in your own tables, the PostgreSQL stream broker with getState is usually a better fit.
+description: In this post we tell about PostgreSQL map broker which brings real persistence to Centrifugo-owned key-value collections and lets application publish updates inside its own database transactions.
 author: Alexander Emelin
 authorTitle: Founder of Centrifugal Labs
 image: /img/blog_map_subs_02.jpg
@@ -15,6 +15,39 @@ import PgOutboxDiagram from '@site/src/components/PgOutboxDiagram';
 In [Part 1](/blog/2026/04/07/map-subscriptions) we introduced map subscriptions — a Centrifugo-managed real-time key-value collection — and covered the sync protocol, the memory and Redis brokers, and capabilities like ordered state, conditional writes, and scalable presence. This post is about the PostgreSQL map broker: when it makes sense, what makes it different, and the transactional publishing it enables.
 
 <!--truncate-->
+
+Here's what that looks like in practice:
+
+```sql
+BEGIN;
+  -- Update application data
+  UPDATE board_items SET data = '{"text": "Updated card"}'::jsonb
+  WHERE board_id = 123 AND item_id = 'card_42';
+
+  -- Publish to real-time channel (same transaction)
+  SELECT * FROM cf_map_publish(
+    p_channel := 'boards:123',
+    p_key     := 'card_42',
+    p_data    := '{"text": "Updated card"}'::jsonb
+  );
+COMMIT;
+```
+
+If the transaction rolls back, the real-time update never happened. No outbox table, no CDC pipeline, no eventual consistency — just one PostgreSQL transaction.
+
+This example uses `persistent` mode — board items live until explicitly removed, with no TTL. The namespace configuration would look like:
+
+```json
+{
+  "name": "boards",
+  "subscription_type": "map",
+  "map": {
+    "mode": "persistent"
+  }
+}
+```
+
+The `stream_size`, `stream_ttl`, and `meta_ttl` settings are auto-derived when not specified (defaults: 100 entries, 1 minute, permanent metadata). See [map modes](/docs/server/map_subscriptions#map-modes) for the full reference.
 
 ## When the PostgreSQL map broker is the right tool — and when it isn't
 
@@ -50,24 +83,7 @@ If the transaction rolls back, neither the audit row nor the real-time map entry
 
 ## How the SQL functions work
 
-Centrifugo creates SQL functions (`cf_map_publish`, `cf_map_remove`) that your application calls inside its own database transactions. The map state update and any other writes you do alongside commit or rollback together — atomically.
-
-```sql
-BEGIN;
-  -- Update application data
-  UPDATE board_items SET data = '{"text": "Updated card"}'::jsonb
-  WHERE board_id = 123 AND item_id = 'card_42';
-
-  -- Publish to real-time channel (same transaction)
-  SELECT * FROM cf_map_publish(
-    p_channel := 'boards:123',
-    p_key     := 'card_42',
-    p_data    := '{"text": "Updated card"}'::jsonb
-  );
-COMMIT;
-```
-
-If the transaction rolls back, the real-time update never happened. No outbox table to manage, no CDC pipeline, no eventual consistency — just a single transaction.
+Centrifugo creates SQL functions (`cf_map_publish`, `cf_map_remove`) that your application calls inside its own database transactions. The map state update and any other writes you do alongside commit or rollback together — atomically (as shown in the opening example).
 
 This guarantee applies to **callers using the SQL function path** — your backend code calling `cf_map_publish` directly inside its own SQL transaction. Publishes that go through Centrifugo's HTTP/GRPC API are still a separate operation from your DB writes (the historic dual-write shape). The SQL function path is what makes them one transaction; it's an additional integration option, not a change to the existing publish APIs.
 

@@ -169,9 +169,21 @@ Here is how to enable sharded PUB/SUB in Centrifugo PRO:
 }
 ```
 
+### Per-partition sharded PUB/SUB
+
+By default, Centrifugo creates one PUB/SUB connection per partition. Each partition maps to a Redis Cluster slot, and the connection is established to the node owning that slot. This means every Centrifugo node maintains `num_partitions` PUB/SUB connections to the Redis Cluster — one for each partition.
+
+This is the simplest setup and requires no extra configuration beyond `sharded_pub_sub_partitions`. It works well when the partition count is moderate (64–128) and the Centrifugo cluster is moderate size (below ~50 nodes), since the total number of PUB/SUB connections to Redis Cluster is `num_centrifugo_nodes × num_partitions`.
+
 ### Node-grouped sharded PUB/SUB
 
-By default, Centrifugo creates one PUB/SUB connection per partition. With node-grouped PUB/SUB, subscriptions are grouped by Redis Cluster node — reducing the total number of connections from `num_partitions` to `num_redis_nodes`.
+:::caution Experimental
+
+This feature is experimental.
+
+:::
+
+With node-grouped PUB/SUB, subscriptions are grouped by Redis Cluster node — reducing the total number of connections from one Centrifugo node from `num_partitions` to `num_redis_nodes`.
 
 ```json title="config.json"
 {

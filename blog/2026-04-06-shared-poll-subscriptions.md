@@ -1,5 +1,5 @@
 ---
-title: Introducing shared poll subscriptions — scalable state delivery without push infrastructure
+title: Shared poll subscriptions — what push can add to poll
 tags: [centrifugo, websocket, state-sync, polling]
 description: Shared poll subscriptions move polling from clients to Centrifugo. Instead of 10,000 clients each hitting your backend, Centrifugo makes one request and fans out the changes. This post explains the design and trade-offs.
 author: Alexander Emelin

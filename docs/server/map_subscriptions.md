@@ -10,7 +10,7 @@ Map subscriptions is an experimental feature. All its parts - configuration opti
 
 :::
 
-A **map subscription** delivers a **real-time key-value collection whose lifecycle is managed by Centrifugo**. The broker stores the entries, tracks per-key changes, and synchronizes them to every subscribed client — clients receive a complete snapshot on subscribe, catch up after disconnects, and get incremental updates in real time. The application doesn't need to maintain its own snapshot table, write a separate "fetch initial state" endpoint, or reconcile race conditions between an HTTP read and a WebSocket stream. That's the whole point: Centrifugo owns the collection, the SDK keeps a live mirror.
+A **map subscription** delivers a **real-time key-value collection whose lifecycle is managed by Centrifugo**. The map broker stores the entries, tracks per-key updates, and synchronizes them to every subscribed client — clients receive a complete snapshot on subscribe, catch up after disconnects, and get live updates in real time. The application doesn't need to maintain its own snapshot table, write a separate "fetch initial state" endpoint, or reconcile race conditions between an HTTP read and a WebSocket stream. That's the whole point: Centrifugo owns the collection, the SDK keeps a live mirror.
 
 Typical use cases — workloads where Centrifugo *is* the natural store for the data:
 
@@ -23,7 +23,7 @@ import PgTransactionalDiagram from '@site/src/components/PgTransactionalDiagram'
 
 <PgTransactionalDiagram />
 
-Map subscriptions also introduce a **built-in map presence** mechanism (`map_clients` and `map_users` subscription types) that improves on the traditional Centrifugo presence — it uses the same sync model with paginated state, so clients reliably recover presence after reconnects even in channels with many participants.
+Map subscriptions also introduce a **built-in map presence** mechanism (`map_clients` and `map_users` subscription types) that translates map subscription properties to presence tracking — paginated state delivery, stream-based catch-up on reconnect, and per-key TTL expiration. This opens a road to larger presence state and convergence after reconnects.
 
 ## When to use map subscriptions — and when not to
 
@@ -77,23 +77,25 @@ The `map_clients` and `map_users` types are automatically managed by the server 
 
 ### Map modes
 
-Each map namespace requires a **mode** setting that determines the synchronization and retention behavior:
+Each map namespace requires a **mode** setting. Modes control two things: whether entries auto-expire and whether a change stream exists for efficient reconnect recovery.
 
-| Mode | Sync | Retention | Description |
-|------|------|-----------|-------------|
-| `ephemeral` | Snapshot on reconnect | Entries auto-expire after `key_ttl` | No stream history is kept. On reconnect the client receives a full state snapshot. Best for high-frequency, short-lived data. |
-| `recoverable` | Stream-based catch-up | Entries auto-expire after `key_ttl` | A change stream is maintained. On reconnect the client catches up from the stream (falls back to snapshot if too far behind). Best for data that auto-expires but needs efficient recovery. |
-| `persistent` | Stream-based catch-up | Entries persist until explicitly removed | Same stream-based catch-up as `recoverable`, but entries live forever until removed. Best for permanent state. |
+| Mode | Entries expire? | Change stream? | On reconnect |
+|------|----------------|----------------|--------------|
+| `ephemeral` | Yes (`key_ttl`) | No | Full state snapshot |
+| `recoverable` | Yes (`key_ttl`) | Yes | Catch up from stream (falls back to snapshot if too far behind) |
+| `persistent` | No (until explicitly removed) | Yes | Catch up from stream (falls back to snapshot if too far behind) |
+
+Each step adds capability: `ephemeral` is the lightest — no stream overhead. `recoverable` adds a change stream so clients recover efficiently on reconnect instead of re-fetching everything. `persistent` is the same as `recoverable` but entries live forever instead of expiring.
 
 **Which mode to pick:**
 
 | Use case | Mode | Why |
 |----------|------|-----|
-| Cursors, typing indicators | `ephemeral` | Positions are short-lived, no need for stream history |
-| Presence, heartbeats | `ephemeral` | Entries should auto-disappear when stale |
-| Time-limited polls, sessions | `recoverable` | Entries auto-expire, but clients still recover from stream |
-| Scoreboards, leaderboards | `persistent` | Data persists, clients recover missed updates efficiently |
-| Inventories, collaborative docs | `persistent` | Need permanent state with efficient reconnect recovery |
+| Cursors, typing indicators | `ephemeral` | Short-lived data, no need for stream overhead |
+| Presence, heartbeats | `recoverable` | Entries auto-expire, but reconnecting clients catch up from stream instead of re-fetching |
+| Time-limited polls, sessions | `recoverable` | Entries auto-expire, efficient reconnect recovery |
+| Scoreboards, leaderboards | `persistent` | Permanent state with efficient reconnect recovery |
+| Inventories, collaborative docs | `persistent` | Permanent state with efficient reconnect recovery |
 
 :::tip When your app already owns state
 
