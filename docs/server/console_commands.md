@@ -68,7 +68,7 @@ centrifugo defaultconfig -c config.json --dry-run --base existing_config.json
 
 ## defaultenv
 
-In addition to `defaultconfig` Centrifugo now has `defaultenv` command ([docs](/docs/server/console_commands#defaultconfig)). The `defaultenv` prints all config options as environment vars with default values to STDOUT. Run:
+In addition to `defaultconfig` Centrifugo now has `defaultenv` command ([docs](/docs/server/console_commands#defaultenv)). The `defaultenv` prints all config options as environment vars with default values to STDOUT. Run:
 
 ```bash
 centrifugo defaultenv

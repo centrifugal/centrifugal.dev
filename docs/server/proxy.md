@@ -8,6 +8,18 @@ Due to its self-hosted nature, Centrifugo can offer an efficient way to proxy cl
 
 For example, you can authenticate connections by responding to requests from Centrifugo to your application backend, subscribe connections to a stable set of channels, refresh client sessions, and handle RPC calls sent by a client over a bidirectional real-time connection. Additionally, you can control subscription and publication permissions using these event proxy hooks.
 
+:::tip Proxy endpoint ≠ main application backend
+
+A common assumption is that proxy endpoints must live in your main application backend. They don't have to. The proxy endpoint is any HTTP or GRPC service that speaks Centrifugo's proxy protocol — so it can be:
+
+- **Your main application backend** — simplest and most common.
+- **A lightweight standalone service** — a small service (often in Go, Rust, or another fast language) that handles only proxy events and consults your database or main backend as needed. Useful when your main backend is slow-starting, written in a language less suited for high-QPS hot paths, or when you want to isolate real-time auth logic from your main app's request surface.
+- **A Centrifugo sidecar** — deployed next to each Centrifugo instance, keeping proxy latency in microseconds. Especially valuable for `subscribe`/`publish` hooks that run on every hot-path operation.
+
+Pick based on latency sensitivity and operational preference — the proxy protocol doesn't care where the endpoint lives.
+
+:::
+
 ## Supported proxy events
 
 Here is the full list of events which can be proxied (we will show the details about how to configure each of those later in this chapter).
