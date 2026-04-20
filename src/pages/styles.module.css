@@ -40,14 +40,16 @@
 .subTitle {
     margin: 0 auto 0.5em;
     font-size: clamp(1.25rem, 3.6vw, 2rem);
-    font-weight: 600;
+    font-weight: 700;
     font-family: "Nunito";
     line-height: 1.25;
+    letter-spacing: -0.015em;
     pointer-events: none;
-    background-image: linear-gradient(135deg, #fe5e5e, #d56464);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 18px rgba(254, 94, 94, 0.18));
+    animation: heroRise 0.8s 0.1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .subSubTitle {
@@ -57,7 +59,28 @@
     font-weight: 400;
     font-family: "Nunito";
     line-height: 1.45;
+    letter-spacing: 0.005em;
     pointer-events: none;
+    animation: heroRise 0.9s 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.subSubTitle :global(.text-gradient),
+.subSubTitle :global(.text-gradient-hero) {
+    font-weight: 600;
+}
+
+@keyframes heroRise {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .subTitle,
+    .subSubTitle,
+    .subSubTitle :global(.text-gradient),
+    .subSubTitle :global(.text-gradient-hero) {
+        animation: none;
+    }
 }
 
 html[data-theme="light"] .mainTitle {

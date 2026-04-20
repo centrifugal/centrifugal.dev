@@ -260,7 +260,6 @@ Named map brokers are defined in the top-level `map_brokers` array. Each entry m
         "subscription_type": "map",
         "map": {
           "mode": "persistent",
-          "ordered": true,
           "broker_name": "pg_scores"
         },
         "allow_subscribe_for_client": true

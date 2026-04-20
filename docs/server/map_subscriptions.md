@@ -16,8 +16,8 @@ Typical use cases — workloads where Centrifugo *is* the natural store for the 
 
 - **Cursor positions, typing indicators** — short-lived per-client entries, no need for an external DB.
 - **Map presence** — `map_clients` (one entry per connection) and `map_users` (one entry per user) are server-managed presence built on this same sync model.
-- **Lobby members, IoT device fleet, feature flags, live polls** — collections that are naturally key-shaped, where having Centrifugo hold the canonical entries (with per-key TTL, optional ordering, optional persistence) avoids building a separate small-store + change-feed yourself.
-- **Scoreboards and ordered leaderboards** — same shape, with score-based ordering on top.
+- **Lobby members, IoT device fleet, feature flags, live polls** — collections that are naturally key-shaped, where having Centrifugo hold the canonical entries (with per-key TTL, optional persistence) avoids building a separate small-store + change-feed yourself.
+- **Scoreboards, inventories** — persistent keyed state with efficient reconnect recovery.
 
 import PgTransactionalDiagram from '@site/src/components/PgTransactionalDiagram';
 
@@ -31,7 +31,7 @@ Map subscriptions are the natural fit when **the broker should be the canonical 
 
 When your data already lives in your own application database (orders, documents, tickets, notifications), there's an alternative shape worth knowing about: a **stream subscription with a `getState` callback**, backed by the [PostgreSQL stream broker](./engines.md). You write to your own tables and call `cf_stream_publish` in the same SQL transaction — clients render state from your own schema and receive events for incremental changes, with no duplicate state in the broker. See [Transactional publishing for stream subscriptions with PostgreSQL](/blog/2026/04/10/pg-stream-broker-benefits) and the [pg_stream_broker example](https://github.com/centrifugal/examples/tree/master/v6/pg_stream_broker).
 
-That said, **map subscriptions can still be the right answer even when the data has a home elsewhere** — if the convenience matters more to you than the duplication. With map subscriptions you get the synchronized snapshot, paginated state delivery, per-key TTL with auto-removal, and ordered/score-based reads out of the box. With stream + `getState` you have to build the snapshot endpoint yourself and reason about what your subscription consumer rebuilds on the client. Neither is universally better — pick by what you'd rather own.
+That said, **map subscriptions can still be the right answer even when the data has a home elsewhere** — if the convenience matters more to you than the duplication. With map subscriptions you get the synchronized snapshot, paginated state delivery, and per-key TTL with auto-removal out of the box. With stream + `getState` you have to build the snapshot endpoint yourself and reason about what your subscription consumer rebuilds on the client. Neither is universally better — pick by what you'd rather own.
 
 | You need… | Natural fit |
 |---|---|
@@ -94,7 +94,7 @@ Each step adds capability: `ephemeral` is the lightest — no stream overhead. `
 | Cursors, typing indicators | `ephemeral` | Short-lived data, no need for stream overhead |
 | Presence, heartbeats | `recoverable` | Entries auto-expire, but reconnecting clients catch up from stream instead of re-fetching |
 | Time-limited polls, sessions | `recoverable` | Entries auto-expire, efficient reconnect recovery |
-| Scoreboards, leaderboards | `persistent` | Permanent state with efficient reconnect recovery |
+| Scoreboards, inventories | `persistent` | Permanent state with efficient reconnect recovery |
 | Inventories, collaborative docs | `persistent` | Permanent state with efficient reconnect recovery |
 
 :::tip When your app already owns state
@@ -235,14 +235,13 @@ Common parameters for `cf_map_publish`:
 | `p_channel` | `TEXT` | Channel name (required) |
 | `p_key` | `TEXT` | Entry key (required) |
 | `p_data` | `JSONB` | Entry data (required) |
-| `p_score` | `BIGINT` | Sort score for ordered maps |
 | `p_key_mode` | `TEXT` | `'if_new'` (insert only) or `'if_exists'` (update only) |
 | `p_key_ttl` | `INTERVAL` | Per-key TTL |
 | `p_meta_ttl` | `INTERVAL` | Channel metadata TTL |
 
 The function returns a row with `channel_offset`, `epoch`, `suppressed`, and `suppress_reason` fields.
 
-**Example** — recording a vote atomically (dedup + score increment in one transaction):
+**Example** — recording a vote atomically (dedup + data update in one transaction):
 
 ```sql
 BEGIN;
@@ -255,12 +254,11 @@ BEGIN;
   );
   -- Check suppressed = true → user already voted, ROLLBACK.
 
-  -- 2. Increment option score (read current, then publish updated).
+  -- 2. Publish updated vote count.
   SELECT * FROM cf_map_publish(
     p_channel := 'poll:results',
     p_key     := 'poll1_opt_0',
-    p_data    := (SELECT data FROM cf_map_state WHERE channel = 'poll:results' AND key = 'poll1_opt_0'),
-    p_score   := (SELECT score + 1 FROM cf_map_state WHERE channel = 'poll:results' AND key = 'poll1_opt_0')
+    p_data    := '{"optionId": "poll1_opt_0", "label": "Option A", "votes": 42}'::jsonb
   );
 COMMIT;
 ```
@@ -327,7 +325,6 @@ Declares the subscription type for the namespace — one of the [supported types
 |--------|------|---------|-------------|
 | `map.mode` | string | | `"ephemeral"`, `"recoverable"`, or `"persistent"`. Required when using map types |
 | `map.key_ttl` | [duration](./configuration.md#duration-type) | | Required for `"ephemeral"` and `"recoverable"` modes |
-| `map.ordered` | boolean | `false` | Enable score-based ordering of entries |
 | `map.stream_size` | integer | | Max stream entries (auto-derived for recoverable/persistent: 100) |
 | `map.stream_ttl` | [duration](./configuration.md#duration-type) | | Stream entry retention (auto-derived for recoverable/persistent: "1m") |
 | `map.meta_ttl` | [duration](./configuration.md#duration-type) | | Metadata retention (auto-derived) |
@@ -442,9 +439,9 @@ When `map.publish_proxy_enabled` or `map.remove_proxy_enabled` is set, the corre
 - Validate that the client has permission to publish/remove for the specific key
 - Override the key (e.g. force it to a server-derived value)
 - Override the data and provide a separate stream payload
-- Stamp server-controlled metadata on the resulting publication — tags, score, version, key mode, idempotency key, delta hint
+- Stamp server-controlled metadata on the resulting publication — tags, version, key mode, idempotency key, delta hint
 
-This makes the publish proxy the natural place to combine authorization with **RBAC tag enrichment** for client-originated publishes: clients cannot send tags themselves, so the proxy is the only path that can attach tags read by [server-side publication tags filter](../pro/server_tags_filter.md). For ordered map subscriptions (leaderboards), the proxy is also the natural place to compute and set the `score` from the published data.
+This makes the publish proxy the natural place to combine authorization with **RBAC tag enrichment** for client-originated publishes: clients cannot send tags themselves, so the proxy is the only path that can attach tags read by [server-side publication tags filter](../pro/server_tags_filter.md).
 
 ```json title="config.json"
 {
@@ -511,7 +508,6 @@ All fields are optional. Any field left unset falls back to the value sent by th
 | `data`             | `JSON`                | Replace the publication data the client sent.                                                                                                                                                     |
 | `b64data`          | `string`              | Binary data encoded in base64, used instead of `data` in binary proxy mode.                                                                                                                       |
 | `tags`             | `map<string, string>` | Server-stamped publication tags. Clients cannot send tags themselves — the proxy is the only path that can attach tags read by [server-side publication tags filter](../pro/server_tags_filter.md) for per-subscriber RBAC. |
-| `score`            | `int64`               | Sort score for [ordered](#namespace-options) map subscriptions (leaderboards). The proxy is the natural place to compute the score from the data the client sent.                                |
 | `key_mode`         | `string`              | `"if_new"` to publish only when the key does not yet exist, `"if_exists"` to publish only when it already exists. Useful for enforcing insert-only or update-only access patterns.                |
 | `stream_data`      | `JSON`                | Separate payload to publish to the stream/PUB-SUB while keeping `data` in the state. Use when state and stream payloads should differ (e.g. state is the full snapshot, stream carries deltas).   |
 | `b64stream_data`   | `string`              | Binary equivalent of `stream_data` for binary proxy mode.                                                                                                                                         |
@@ -580,7 +576,6 @@ Options:
 - `idempotency_key` — duplicate detection key
 - `tags` — key-value metadata for filtering
 - `version` / `version_epoch` — per-key version for ordering
-- `score` — sort value for ordered state
 - `delta` — enable delta compression
 - `stream_data` — separate data for the stream (when state and stream payloads differ)
 
@@ -604,15 +599,11 @@ curl -X POST http://localhost:8000/api/map_read_state \
   -d '{"channel": "scoreboard:main", "limit": 100}'
 ```
 
-Options: `cursor` (pagination), `limit`, `key` (filter to single key), `asc` (ascending sort for ordered state).
+Options: `cursor` (pagination), `limit`, `key` (filter to single key).
 
-:::note Redis map broker: pagination and data structures
+:::note Redis map broker: page sizes may vary
 
-**Page sizes may vary for unordered state.** Unordered state (the default) is stored in a Redis `HASH` and paginated with `HSCAN`, where `COUNT` is a hint, not a guarantee. Redis may return more entries than the requested `limit` on some pages, especially for small hashes stored in listpack encoding. Do not rely on exact page sizes for unordered state reads.
-
-**Ordered state uses different Redis data structures.** When `ordered: true` is set, state is stored in a `ZSET` (sorted set) in addition to the `HASH`, and pagination uses `ZRANGEBYSCORE` with `LIMIT` — which returns exact page sizes.
-
-**Switching between ordered and unordered is not a live migration.** Because the two modes use different underlying data structures (`HASH` only vs `HASH` + `ZSET`), changing the `ordered` setting on an existing namespace does not retroactively populate or remove the sorted set. Existing entries written before the change will be missing from the `ZSET` (if switching to ordered) or leave orphaned `ZSET` entries (if switching to unordered). To switch modes cleanly, clear the channel state first with `map_clear`, or start with a fresh namespace.
+State is stored in a Redis `HASH` and paginated with `HSCAN`, where `COUNT` is a hint, not a guarantee. Redis may return more entries than the requested `limit` on some pages, especially for small hashes stored in listpack encoding. Do not rely on exact page sizes for state reads.
 
 :::
 
@@ -676,7 +667,7 @@ Unlike regular stream subscriptions, where the application must handle `publicat
 
 ```javascript
 sub.on('sync', (ctx) => {
-  // ctx.entries is the full state (array of { key, data, removed, score })
+  // ctx.entries is the full state (array of { key, data, removed })
   renderFullState(ctx.entries);
 });
 ```
@@ -685,7 +676,7 @@ sub.on('sync', (ctx) => {
 
 ```javascript
 sub.on('update', (ctx) => {
-  // ctx.key, ctx.data, ctx.removed, ctx.score
+  // ctx.key, ctx.data, ctx.removed
   if (ctx.removed) {
     removeEntry(ctx.key);
   } else {
@@ -783,7 +774,7 @@ document.addEventListener('mousemove', throttle((e) => {
 
 ### Persistent scoreboard
 
-A scoreboard with ordered entries, server-side publishing, and persistent mode for recovery support.
+A scoreboard with persistent entries, server-side publishing, and efficient recovery on reconnect.
 
 Server configuration:
 
@@ -801,8 +792,7 @@ Server configuration:
         "name": "scoreboard",
         "subscription_type": "map",
         "map": {
-          "mode": "persistent",
-          "ordered": true
+          "mode": "persistent"
         },
         "allow_subscribe_for_client": true
       }
@@ -819,8 +809,7 @@ curl -X POST http://localhost:8000/api/map_publish \
   -d '{
     "channel": "scoreboard:main",
     "key": "player1",
-    "data": {"name": "Alice", "score": 1500},
-    "score": 1500
+    "data": {"name": "Alice", "score": 1500}
   }'
 ```
 
@@ -832,12 +821,15 @@ const sub = client.newMapSubscription('scoreboard:main', {
 });
 
 sub.on('sync', (ctx) => {
-  // entries are ordered by score (descending by default)
-  renderLeaderboard(ctx.entries);
+  renderScoreboard(ctx.entries);
 });
 
 sub.on('update', (ctx) => {
-  updateLeaderboardEntry(ctx.key, ctx.data, ctx.score, ctx.removed);
+  if (ctx.removed) {
+    removeEntry(ctx.key);
+  } else {
+    upsertEntry(ctx.key, ctx.data);
+  }
 });
 
 sub.subscribe();
@@ -845,7 +837,7 @@ sub.subscribe();
 
 ## Demos
 
-A collection of interactive demos showcasing map subscriptions is available in the [map_demo](https://github.com/centrifugal/examples/tree/master/v6/map_demo) example. It includes 10 scenarios covering different map subscription features:
+A collection of interactive demos showcasing map subscriptions is available in the [map_demo](https://github.com/centrifugal/examples/tree/master/v6/map_demo) example. It includes 9 scenarios covering different map subscription features:
 
 ![map demo](/img/map_demo.jpg)
 
@@ -857,7 +849,6 @@ A collection of interactive demos showcasing map subscriptions is available in t
 - **Live Scoreboard (Delta)** — 6 concurrent football matches with fossil delta compression and live bandwidth stats
 - **Sprint Board (PostgreSQL)** — Kanban board with drag-and-drop using native PostgreSQL `cf_map_*` functions for transactional publishing
 - **Live Polls (PostgreSQL)** — server-driven polls with real-time voting, bot participants, and auto-rotation using `cf_map_*` functions
-- **Leaderboard (PostgreSQL)** — persistent ordered leaderboard using `cf_map_*` functions
 
 The demo runs with Docker Compose (PostgreSQL + Python backend + Nginx) and requires Centrifugo v6.7+ with `centrifuge-js`.
 

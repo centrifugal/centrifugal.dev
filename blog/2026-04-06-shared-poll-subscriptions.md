@@ -24,11 +24,11 @@ Centrifugo's core model is push-based: your backend publishes a message to a cha
 
 Consider a social feed where each post displays a live vote count. The data already exists in your database. The question is how to keep it fresh on every client's screen.
 
-You can use stream subscriptions here — publish to Centrifugo on every vote, and subscribers see the update in real time. This works, and for many features it's the best approach. But it does mean that every write path touching vote counts — every API endpoint, every background job, every migration script — needs to call the publish API. For a single feature, this coupling is fine. As the number of live-updating fields grows (view counts, comment counts, stock levels, configuration flags), the integration surface grows with it.
+You can use stream subscriptions here — publish to Centrifugo on every vote, and subscribers see the update in real time. This works, and for many features it's the best approach. But it does mean that every write path touching vote counts — every API endpoint, every background job, every migration script — needs to call the publish API. For a single feature, this coupling is fine. As the number of live-updating fields grows (view counts, comment counts, stock levels, configuration flags), the integration surface expands accordingly.
 
 It also assumes you control the write path. With third-party APIs, legacy systems, or databases shared across services, you can't always hook into writes to trigger a publish.
 
-In these cases, teams often choose polling instead. Each client hits an API endpoint every few seconds to check for updates. Polling is simple, decoupled from the write path, and works with any data source. The trade-off is scale: if 10,000 clients each poll every second, that's 10,000 requests per second — and most responses contain unchanged data. This overhead is a common criticism of polling, and it's often what drives teams to adopt push-based real-time systems in the first place.
+In these cases, teams often choose polling instead. Each client hits an API endpoint every few seconds to check for updates. Polling is simple, decoupled from the write path, and works with any data source. The trade-off is scale: if 10,000 clients each poll every second, that's 10,000 requests per second — and most responses contain unchanged data. This overhead is a common criticism of polling, and it's often what drives teams to adopt push-based real-time systems.
 
 ## The inversion: server-side polling
 
@@ -40,7 +40,7 @@ Each client sees a different subset of items — different pages, different sear
 
 Your backend just needs one endpoint that answers: "here is the current data for these keys." This endpoint is a standard Centrifugo [proxy](/docs/server/proxy) — if you're already using subscribe or publish proxies, the refresh proxy works the same way. You don't need publish calls or event hooks — there's no coupling to the write path. If you can read the data, you can serve it through shared poll.
 
-Centrifugo already has the hard parts — persistent connections, reconnection, authentication, client SDKs, proxy infrastructure. The connections and fan-out machinery were already there — we just needed to add the server-side polling loop and per-key tracking on top.
+Centrifugo already provides the essential infrastructure — persistent connections, reconnection, authentication, client SDKs, proxy infrastructure. The connections and fan-out machinery were already there — we just needed to add the server-side polling loop and per-key tracking on top.
 
 ## Per-item tracking without per-item channels
 
@@ -104,7 +104,7 @@ This is enough for most use cases. But if your data already has versions (a data
 
 The polling model accepts a latency trade-off: updates arrive within the polling interval rather than instantly. For vote counts and view counts, seconds of latency are fine. But sometimes your backend already has the data right after a database write and wants instant delivery.
 
-The `shared_poll_publish` server API lets your backend push data directly to tracking clients — bypassing the poll cycle entirely. Centrifugo delivers the data immediately and marks the key as "fresh" so the next poll cycle skips it, avoiding a redundant backend call.
+The `shared_poll_publish` server API enables your backend to deliver data directly to tracking clients, bypassing the poll cycle entirely. Centrifugo delivers the data immediately and marks the key as "fresh" so the next poll cycle skips it, avoiding a redundant backend call.
 
 This gives shared poll two delivery speeds: timer-based polling (seconds of latency, zero integration effort) and direct publish (instant, requires a publish call on the write path). The two complement each other — direct publish for speed, polling as the safety net. If a direct publish is missed (process crash, network issue), the next poll cycle picks it up.
 
@@ -181,7 +181,7 @@ The self-hosted model also enabled the per-key HMAC authorization design. Becaus
 
 There's another practical benefit worth noting: shared poll channels don't use PUB/SUB between Centrifugo nodes. Each node polls the backend independently and delivers updates to its own connected clients. This means you can scale Centrifugo to multiple nodes without setting up Redis or NATS as a broker — if your application only uses shared poll subscriptions, no inter-node messaging infrastructure is needed at all.
 
-Together with stream subscriptions and [map subscriptions](/blog/2026/04/07/map-subscriptions), Centrifugo now provides three subscription primitives in one self-hosted system. We're not aware of another real-time messaging server that combines all three.
+Shared poll extends what Centrifugo can serve to data outside the write path — legacy systems, third-party APIs, databases owned by other teams — use cases that were previously outside the scope of a WebSocket server.
 
 ## What's next
 
