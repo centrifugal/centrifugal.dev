@@ -304,8 +304,9 @@ function Bubble(ctx, canvasWidth, canvasHeight, isDarkTheme) {
     // Variables for a pulsating (breathing) effect.
     this.pulse = 0;//Math.random() * Math.PI * 2;
     this.pulseSpeed = 0;// Math.random() * 2 + 1;
-    // Burst parameters.
-    this.burstInterval = Math.random() * 50 + 3; // seconds until burst.
+    // Burst parameters. Minimum interval must exceed the max appearDuration
+    // (~6s) so bubbles finish fading in before they can auto-burst.
+    this.burstInterval = Math.random() * 50 + 8;
     this.timeSinceLastBurst = 0;
     this.bursting = false;
     this.burstProgress = 0;
@@ -331,7 +332,7 @@ Bubble.prototype.reset = function() {
     this.alpha = Math.random() * 0.3 + 0.7;
     this.pulse = Math.random() * Math.PI * 2;
     this.pulseSpeed = Math.random() * 2 + 1;
-    this.burstInterval = Math.random() * 50 + 3;
+    this.burstInterval = Math.random() * 50 + 8;
     this.timeSinceLastBurst = 0;
     this.bursting = false;
     this.burstProgress = 0;
@@ -945,7 +946,19 @@ function draw(canvas, _X, _Y, isDarkTheme) {
             return;
         }
 
-        const secondsSinceLastRender = (currentTime - lastRenderTime) / 1000;
+        // First frame: establish the clock, skip physics. rAF's currentTime is
+        // ms-since-page-load, not ms-since-mount, so initializing lastRenderTime
+        // to 0 produces a huge first-frame elapsedTime on every re-mount (grows
+        // with time-on-site), which teleports bubbles to the canvas edges and
+        // fires their auto-burst timers all at once.
+        if (lastRenderTime === 0) {
+            lastRenderTime = currentTime;
+            rafId = requestAnimationFrame(render);
+            return;
+        }
+
+        // Cap elapsedTime defensively — also covers long background tabs etc.
+        const secondsSinceLastRender = Math.min(0.1, (currentTime - lastRenderTime) / 1000);
 
         if (canvasVisible) {
             ctx.clearRect(0, 0, X, Y);
