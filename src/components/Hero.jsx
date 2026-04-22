@@ -3,7 +3,6 @@ import clsx from 'clsx';
 import { useColorMode } from '@docusaurus/theme-common';
 import Logo from '../pages/components/logo';
 import Ray from '../pages/components/Ray';
-import LiveCounter from '../pages/components/LiveCounter';
 import styles from '../pages/styles.module.css';
 
 export default function Hero({ children }) {
@@ -15,7 +14,6 @@ export default function Hero({ children }) {
       <div className="container" style={{ zIndex: 1, pointerEvents: "none" }}>
         {children}
       </div>
-      <LiveCounter />
     </header>
   );
 }
