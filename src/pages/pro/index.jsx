@@ -42,7 +42,7 @@ function Header() {
                 Unlock the full power of Centrifugo
             </div>
             <div className={styles.subSubTitle}>
-                Next-level <span className="text-gradient text-gradient-hero">real-time messaging</span> and <span className="text-gradient text-gradient-hero">data sync</span><br />
+                Next-level <span className="text-gradient text-gradient-hero">realtime messaging</span> and <span className="text-gradient text-gradient-hero">data sync</span><br />
                 for your organization
             </div>
             <div className={styles.buttons}>
@@ -78,7 +78,7 @@ function Pro() {
     return (
         <Layout
             title={tagline}
-            description="Centrifugo PRO - the full power of self-hosted real-time messaging. An enhanced version of Centrifugo that includes a set of unique features, additional APIs, faster performance and more flexible scalability."
+            description="Centrifugo PRO - the full power of self-hosted realtime messaging. An enhanced version of Centrifugo that includes a set of unique features, additional APIs, faster performance and more flexible scalability."
         >
             <Head>
                 <script type="application/ld+json">
@@ -89,8 +89,8 @@ function Pro() {
                         "url": "https://centrifugal.dev/pro",
                         "applicationCategory": "DeveloperApplication",
                         "operatingSystem": "Linux, macOS, Windows, Docker, Kubernetes",
-                        "description": "Enhanced version of Centrifugo — a self-hosted real-time messaging server for chats, AI/LLM response streaming, live updates, and more. PRO unlocks push notifications, ClickHouse analytics, real-time tracing, rate limiting, SSO, channel state events, and performance optimizations for production workloads at scale.",
-                        "featureList": "Channel capabilities & CEL expressions, Channel patterns, Operation rate limiting, User blocking API, Token revocation & invalidation, Multiple JWKS providers, Server API JWKS authentication, Per-namespace engines, Singleflight & shared position sync, Performance optimizations, Bandwidth optimizations, Advanced message write and batching, ClickHouse analytics, Real-time channel & user tracing, Connection & channel snapshots, SSO/OIDC for admin UI, Enhanced metrics, Push notifications (FCM, APNs, HMS), Device token management & topics, Channel state events, Cache empty events, User status API, Connections API, Prioritized support",
+                        "description": "Enhanced version of Centrifugo — a self-hosted realtime messaging server for chats, AI/LLM response streaming, live updates, and more. PRO unlocks push notifications, ClickHouse analytics, realtime tracing, rate limiting, SSO, channel state events, and performance optimizations for production workloads at scale.",
+                        "featureList": "Channel capabilities & CEL expressions, Channel patterns, Operation rate limiting, User blocking API, Token revocation & invalidation, Multiple JWKS providers, Server API JWKS authentication, Per-namespace engines, Singleflight & shared position sync, Performance optimizations, Bandwidth optimizations, Advanced message write and batching, ClickHouse analytics, Realtime channel & user tracing, Connection & channel snapshots, SSO/OIDC for admin UI, Enhanced metrics, Push notifications (FCM, APNs, HMS), Device token management & topics, Channel state events, Cache empty events, User status API, Connections API, Prioritized support",
                         "offers": {
                             "@type": "Offer",
                             "priceCurrency": "EUR",
@@ -150,7 +150,7 @@ function Pro() {
                     text={
                         <>
                         <p>
-                            Centrifugo PRO allows you to monitor activity down to individual channels or connections. Scalability and performance improvements can dramatically increase throughput and optimize resource usage of the real-time application. You also get support for sending push notifications making the client-facing real-time messaging system complete.
+                            Centrifugo PRO allows you to monitor activity down to individual channels or connections. Scalability and performance improvements can dramatically increase throughput and optimize resource usage of the realtime application. You also get support for sending push notifications making the client-facing realtime messaging system complete.
                         </p>
                         <div className={styles.buttons}>
                             <Link
@@ -176,16 +176,16 @@ function Pro() {
                                 Support for sending <a href={"/docs/pro/push_notifications"}>push notifications</a> with secure topics and flexible API. Integrates with FCM, APNs and HMS push providers.
                             </Feature>
                             <Feature title="Enhanced Admin UI" imageUrl="img/feature_thumbs.png">
-                                Built-in <a href={"/docs/pro/admin_ui"}>SSO integration over OIDC</a> protocol, user or channel real-time tracing, analytical widgets, push notification devices, more state data and more.
+                                Built-in <a href={"/docs/pro/admin_ui"}>SSO integration over OIDC</a> protocol, user or channel realtime tracing, analytical widgets, push notification devices, more state data and more.
                             </Feature>
                             <Feature title="Flexible scalability" imageUrl="img/feature_cloud.png">
                                 More options to layout your architecture: <a href={"/docs/pro/scalability#subscribe-on-replica"}>Redis replicas</a>, Redis <a href={"/docs/pro/scalability#redis-cluster-sharded-pubsub"}>sharded PUB/SUB</a>, <a href={"/docs/pro/namespace_engines"}>per-namespace Broker</a> configurations.
                             </Feature>
                             <Feature title="Better observability" imageUrl="img/feature_pro.png">
-                                A <a href={"/docs/pro/observability_enhancements"}>better observability</a> of your Centrifugo cluster: additional metric insights, real-time tracing and <a href={"/docs/pro/analytics"}>ClickHouse integration</a>, state <a href="/docs/pro/admin_ui#channels-and-connections-snapshots">snapshots</a>.
+                                A <a href={"/docs/pro/observability_enhancements"}>better observability</a> of your Centrifugo cluster: additional metric insights, realtime tracing and <a href={"/docs/pro/analytics"}>ClickHouse integration</a>, state <a href="/docs/pro/admin_ui#channels-and-connections-snapshots">snapshots</a>.
                             </Feature>
                             <Feature title="Protocol rate limits" imageUrl="img/feature_protection.png">
-                                <a href={"/docs/pro/rate_limiting"}>Protect your real-time APIs</a> from misusing and client-side bugs. Detect and disconnect clients generating lots of errors.
+                                <a href={"/docs/pro/rate_limiting"}>Protect your realtime APIs</a> from misusing and client-side bugs. Detect and disconnect clients generating lots of errors.
                             </Feature>
                         </div>
                     </div>

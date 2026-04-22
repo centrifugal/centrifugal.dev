@@ -885,12 +885,12 @@ function draw(canvas, _X, _Y, isDarkTheme) {
             }
         }
 
-        // Track for activation: 3 bubble clicks within 3 seconds enables orbs
+        // Track for activation: 5 bubble clicks within 3 seconds enables orbs
         if (!orbsActive && orbsFeatureSupported()) {
             const now = Date.now();
             activationClicks.push(now);
             activationClicks = activationClicks.filter(t => now - t <= 3000);
-            if (activationClicks.length >= 3) {
+            if (activationClicks.length >= 5) {
                 activateOrbs();
             }
         }

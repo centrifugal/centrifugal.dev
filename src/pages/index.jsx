@@ -58,10 +58,10 @@ function Header() {
         <TitleWithCat isDarkTheme={isDarkTheme} />
       </div>
       <div className={styles.subTitle}>
-        Wash away WebSocket scalability issues
+        Wash away realtime complexity
       </div>
       <div className={styles.subSubTitle}>
-        <span className="text-gradient text-gradient-hero">Real-time messaging</span> and <span className="text-gradient text-gradient-hero">data sync</span> for any stack. Spin up once and forever.
+        Scalable <span className="text-gradient text-gradient-hero">realtime messaging</span> and <span className="text-gradient text-gradient-hero">data sync</span> for any stack. Spin up once and forever.
       </div>
       <div className={styles.buttons}>
         <Link
@@ -84,7 +84,7 @@ function Home() {
   return (
     <Layout
       title={tagline}
-      description="Centrifugo is an open source real-time messaging and data sync platform. Build chats, live dashboards, multiplayer games, collaborative tools, and more. Provides WebSocket, SSE, HTTP-streaming, WebTransport transports, scales well and integrates with any application."
+      description="Centrifugo is an open source realtime messaging and data sync platform. Build chats, live dashboards, multiplayer games, collaborative tools, and more. Provides WebSocket, SSE, HTTP-streaming, WebTransport transports, scales well and integrates with any application."
     >
       <Head>
         <script type="application/ld+json">
@@ -96,7 +96,7 @@ function Home() {
                 "name": "Centrifugal Labs LTD",
                 "url": "https://centrifugal.dev",
                 "logo": "https://centrifugal.dev/img/logo.svg",
-                "description": "Centrifugal Labs powers real-time magic. The flagship product is Centrifugo — a self-hosted real-time messaging and data sync platform, stack-agnostic and integrates with any frontend or backend technology.",
+                "description": "Centrifugal Labs powers realtime magic. The flagship product is Centrifugo — a self-hosted realtime messaging and data sync platform, stack-agnostic and integrates with any frontend or backend technology.",
                 "sameAs": [
                   "https://github.com/centrifugal",
                   "https://twitter.com/centrifugalabs",
@@ -109,7 +109,7 @@ function Home() {
                 "url": "https://centrifugal.dev",
                 "applicationCategory": "DeveloperApplication",
                 "operatingSystem": "Linux, macOS, Windows, Docker, Kubernetes",
-                "description": "Self-hosted real-time messaging and data sync platform. Delivers messages instantly via WebSocket, HTTP-streaming, SSE, WebTransport, or gRPC. Synchronizes key-value state across clients with transactional consistency. Perfect for chats, live updates, AI streaming, multiplayer games, dashboards, and collaborative tools. Scales to millions of connections.",
+                "description": "Self-hosted realtime messaging and data sync platform. Delivers messages instantly via WebSocket, HTTP-streaming, SSE, WebTransport, or gRPC. Synchronizes key-value state across clients with transactional consistency. Perfect for chats, live updates, AI streaming, multiplayer games, dashboards, and collaborative tools. Scales to millions of connections.",
                 "offers": {
                   "@type": "Offer",
                   "price": "0",
@@ -124,9 +124,11 @@ function Home() {
           })}
         </script>
       </Head>
-      <Header />
-      <ProBanner />
-      <main>
+      <div className={styles.landingTop}>
+        <div className={styles.landingBackdrop} aria-hidden="true" />
+        <Header />
+        <ProBanner />
+        <main>
         <section className={clsx("logos-wrapper", styles.logos)}>
           <div className="container">
             <div className={styles.logosHeader}>
@@ -192,7 +194,7 @@ function Home() {
               <Feature title="Seamless Integration" imageUrl="img/feature_integration.png">
                 Centrifugo is a self-hosted service which handles connections over various <a href="/docs/transports/overview">transports</a> and provides a simple <a href="/docs/server/server_api">publishing API</a>.
                 Centrifugo nicely integrates with any application &mdash; no changes in
-                the existing app architecture required to introduce real-time updates.
+                the existing app architecture required to introduce realtime updates.
               </Feature>
               <Feature title="Great Performance" imageUrl="img/feature_performance.png">
                 Centrifugo is written in Go language and includes some smart optimizations.
@@ -214,7 +216,7 @@ function Home() {
               </Feature>
               <Feature title="Centrifugo PRO" imageUrl="img/feature_pro.png">
                 <a href="/pro">Centrifugo PRO</a> offers great benefits for corporate and enterprise environments by providing unique features on top of the OSS version: analytics
-                with ClickHouse, real-time tracing, performance optimizations, push notification API, SSO integrations for web UI, etc.
+                with ClickHouse, realtime tracing, performance optimizations, push notification API, SSO integrations for web UI, etc.
               </Feature>
             </div>
           </div>
@@ -225,14 +227,14 @@ function Home() {
           }
           reversed
           isDark
-          title="Real-time messaging & data sync"
+          title="Realtime messaging & data sync"
           text={
             <>
               <p>
-                Real-time messaging delivers events to online users with minimal delay. Chats, live comments, multiplayer games, AI streaming responses &mdash; all built on top of a real-time messaging layer.
+                Realtime messaging delivers events to online users with minimal delay. Chats, live comments, multiplayer games, AI streaming responses &mdash; all built on top of a realtime messaging layer.
               </p>
               <p>
-                Data sync allows keeping state synchronized across clients in real-time providing eventual consistency with your database.
+                Data sync allows keeping state synchronized across clients in realtime providing eventual consistency with your database.
               </p>
               <p>
                 Centrifugo handles persistent connections over <b>WebSocket</b>, HTTP-streaming, SSE, WebTransport, and gRPC &mdash; providing both <b>PUB/SUB messaging</b> and <b>state synchronization</b> primitives.
@@ -252,7 +254,7 @@ function Home() {
                 Centrifugo excels at broadcasting messages to many subscribers simultaneously. The efficient client protocol (JSON or binary Protobuf) enables high-throughput messaging at scale.
               </p>
               <p>
-                The design of Centrifugo is optimized for scenarios where a single message needs to be sent to thousands or even millions of clients, making it ideal for real-time applications that require instant updates to large audiences.
+                The design of Centrifugo is optimized for scenarios where a single message needs to be sent to thousands or even millions of clients, making it ideal for realtime applications that require instant updates to large audiences.
               </p>
               <div className={styles.buttons}>
                 <Link
@@ -274,17 +276,17 @@ function Home() {
               <div className={styles.useCaseItem}>
                 <div className={styles.useCaseIcon}><ChatIcon /></div>
                 <h3>Chat & Messaging</h3>
-                <p>Build real-time chat applications, live comments, and instant messaging systems</p>
+                <p>Build realtime chat applications, live comments, and instant messaging systems</p>
               </div>
               <div className={styles.useCaseItem}>
                 <div className={styles.useCaseIcon}><DashboardIcon /></div>
                 <h3>Live Dashboards</h3>
-                <p>Stream metrics, analytics, and telemetry data for real-time visualization</p>
+                <p>Stream metrics, analytics, and telemetry data for realtime visualization</p>
               </div>
               <div className={styles.useCaseItem}>
                 <div className={styles.useCaseIcon}><GameIcon /></div>
                 <h3>Multiplayer Games</h3>
-                <p>Synchronize game state and player actions in real-time gaming experiences</p>
+                <p>Synchronize game state and player actions in realtime gaming experiences</p>
               </div>
               <div className={styles.useCaseItem}>
                 <div className={styles.useCaseIcon}><DataSyncIcon /></div>
@@ -294,7 +296,7 @@ function Home() {
               <div className={styles.useCaseItem}>
                 <div className={styles.useCaseIcon}><FinancialIcon /></div>
                 <h3>Financial Data</h3>
-                <p>Deliver real-time stock prices, trading updates, and market information</p>
+                <p>Deliver realtime stock prices, trading updates, and market information</p>
               </div>
               <div className={styles.useCaseItem}>
                 <div className={styles.useCaseIcon}><LiveFeedIcon /></div>
@@ -331,7 +333,7 @@ function Home() {
           text={
             <>
               <p>
-                Here is the real-time telemetry streamed from the Assetto Corsa racing simulator to the Grafana dashboard with a help of our WebSocket technologies.
+                Here is the realtime telemetry streamed from the Assetto Corsa racing simulator to the Grafana dashboard with a help of our WebSocket technologies.
               </p>
               <p>This demonstrates that you can stream <b>60Hz</b> data towards client connections and thus provide instant visual feedback on the state of the system.</p>
               <div className={styles.buttons}>
@@ -369,7 +371,7 @@ function Home() {
               <p>
                 Straightforward with Centrifugo! Even though your backend does not support concurrency. See the tutorial where we build a beautiful messenger app and go beyond usually shown basics.
               </p>
-              <p>Centrifugo is a versatile real-time component – it can be used to build various types of real-time applications, not just messengers.</p>
+              <p>Centrifugo is a versatile realtime component – it can be used to build various types of realtime applications, not just messengers.</p>
               <div className={styles.buttons}>
                 <Link
                   className={clsx(
@@ -386,7 +388,8 @@ function Home() {
         />
         <RecentBlogPosts />
         <ProCtaBanner />
-      </main >
+        </main >
+      </div>
     </Layout >
   );
 }

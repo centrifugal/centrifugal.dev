@@ -1,5 +1,5 @@
 ---
-description: "Protect your Centrifugo PRO server with operation rate limits per connection or user using in-memory or Redis-based token bucket algorithms."
+description: "Configure operation rate limits in Centrifugo PRO per connection, user, or via Redis. Includes namespace overrides and abusive client disconnection."
 id: rate_limiting
 title: Operation rate limits
 ---
@@ -10,6 +10,67 @@ With rate limit properly configured you can protect your Centrifugo installation
 
 ![Throttling](/img/throttling.png)
 
+## Simple configuration
+
+If you just want to protect the server from abusive clients without fine-tuning per-command limits, configure a `default` bucket under `client_command`. The `default` bucket applies to every command that does not have its own explicit bucket — which means it covers everything:
+
+```json title="config.json"
+{
+  "client": {
+    "rate_limit": {
+      "client_command": {
+        "enabled": true,
+        "default": {
+          "enabled": true,
+          "buckets": [
+            {
+              "interval": "1s",
+              "rate": 100
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+This single setting caps every connection to 100 commands per second across all command types — a reasonable starting point that allows normal interactive usage while cutting off clients that loop or misbehave.
+
+Add a `total` bucket alongside `default` if you want a hard cap on the combined rate regardless of which commands are called:
+
+```json title="config.json"
+{
+  "client": {
+    "rate_limit": {
+      "client_command": {
+        "enabled": true,
+        "total": {
+          "enabled": true,
+          "buckets": [
+            {
+              "interval": "1s",
+              "rate": 100
+            }
+          ]
+        },
+        "default": {
+          "enabled": true,
+          "buckets": [
+            {
+              "interval": "1s",
+              "rate": 100
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+From this baseline you can tighten specific commands by adding explicit buckets — for example, lowering `publish` or `history` limits — without touching the rest. The sections below describe the full per-command configuration.
+
 ## In-memory per connection rate limit
 
 In-memory rate limit is an efficient way to limit number of operations allowed on a per-connection basis – i.e. inside each individual real-time connection. Our rate limit implementation uses [token bucket](https://en.wikipedia.org/wiki/Token_bucket) algorithm internally.
@@ -17,6 +78,7 @@ In-memory rate limit is an efficient way to limit number of operations allowed o
 The list of operations which can be rate limited on a per-connection level is:
 
 * `subscribe`
+* `unsubscribe`
 * `publish`
 * `history`
 * `presence`
@@ -24,10 +86,14 @@ The list of operations which can be rate limited on a per-connection level is:
 * `refresh`
 * `sub_refresh`
 * `rpc` (with optional method resolution)
+* `map_publish`
+* `map_remove`
+* `track`
+* `untrack`
 
 In addition, Centrifugo allows defining two special buckets containers:
 
-* `total` – define it to limit the total number of commands per interval (all commands sent from client count), these buckets will always be checked if defined, every command from the client always consumes token from `total` buckets
+* `total` – define it to cap the combined rate of all commands from a connection. Total buckets are checked after the per-command (or `default`) check passes — only allowed commands consume a token from `total`. Rejected commands do not count against `total`. Note: `connect` is not subject to `total` in `client_command` (connect is not throttled at the per-connection level at all).
 * `default` - define it if you don't want to configure some command buckets explicitly, default buckets will be used in case command buckets is not configured explicitly.
 
 ```json title="config.json"
@@ -42,10 +108,6 @@ In addition, Centrifugo allows defining two special buckets containers:
             {
               "interval": "1s",
               "rate": 20
-            },
-            {
-              "interval": "60s",
-              "rate": 50
             }
           ]
         },
@@ -75,17 +137,18 @@ In addition, Centrifugo allows defining two special buckets containers:
               "rate": 10
             }
           ],
-          "method_override": {
-            "update_user_status": {
+          "method_overrides": [
+            {
+              "method": "update_user_status",
               "enabled": true,
               "buckets": [
                 {
                   "interval": "20s",
                   "rate": 1
                 }
-              ]                
+              ]
             }
-          }
+          ]
         }
       }
     }
@@ -111,6 +174,7 @@ The list of operations which can be rate limited is similar to the in-memory rat
 * `default`
 * `connect`
 * `subscribe`
+* `unsubscribe`
 * `publish`
 * `history`
 * `presence`
@@ -118,6 +182,10 @@ The list of operations which can be rate limited is similar to the in-memory rat
 * `refresh`
 * `sub_refresh`
 * `rpc` (with optional method resolution)
+* `map_publish`
+* `map_remove`
+* `track`
+* `untrack`
 
 The configuration is very similar:
 
@@ -153,8 +221,9 @@ The configuration is very similar:
               "rate": 10
             }
           ],
-          "method_override": {
-            "update_user_status": {
+          "method_overrides": [
+            {
+              "method": "update_user_status",
               "enabled": true,
               "buckets": [
                 {
@@ -163,7 +232,7 @@ The configuration is very similar:
                 }
               ]
             }
-          }
+          ]
         }
       }
     }
@@ -182,6 +251,7 @@ The list of operations which can be rate limited is similar to the in-memory use
 * `default`
 * `connect`
 * `subscribe`
+* `unsubscribe`
 * `publish`
 * `history`
 * `presence`
@@ -189,6 +259,10 @@ The list of operations which can be rate limited is similar to the in-memory use
 * `refresh`
 * `sub_refresh`
 * `rpc` (with optional method resolution)
+* `map_publish`
+* `map_remove`
+* `track`
+* `untrack`
 
 The configuration is very similar:
 
@@ -224,8 +298,9 @@ The configuration is very similar:
               "rate": 10
             }
           ],
-          "method_override": {
-            "update_user_status": {
+          "method_overrides": [
+            {
+              "method": "update_user_status",
               "enabled": true,
               "buckets": [
                 {
@@ -234,7 +309,7 @@ The configuration is very similar:
                 }
               ]
             }
-          }
+          ]
         }
       }
     }
@@ -244,7 +319,7 @@ The configuration is very similar:
 
 Redis configuration for rate limit feature matches Centrifugo Redis engine configuration. So Centrifugo supports client-side consistent sharding to scale Redis, Redis Sentinel, Redis Cluster for rate limit feature too.
 
-It's also possible to reuse Centrifugo Redis engine by setting `use_redis_from_engine` option instead of custom rate limit Redis configuration declaration, like this:
+It's also possible to reuse Centrifugo Redis engine by setting `reuse_from_engine` option instead of custom rate limit Redis configuration declaration, like this:
 
 ```json title="config.json"
 {
@@ -268,6 +343,115 @@ It's also possible to reuse Centrifugo Redis engine by setting `use_redis_from_e
 ```
 
 In this case rate limit will simply connect to Redis instances configured for an Engine.
+
+## Performance
+
+**In-memory throttlers** (`client_command` and `user_command`) check token buckets entirely in memory with zero allocations per check. A single bucket check costs around **50 ns** on modern hardware; stacking multiple buckets or adding `total` adds only a few nanoseconds each. The overhead is negligible compared to normal command processing.
+
+**Redis throttler** (`redis_user_command`) executes one Lua script call to Redis per command. In production there is always parallelism from many concurrent connections, so the relevant figure is aggregate throughput: benchmarks against a local Redis instance with 64 concurrent goroutines show **~260k checks/s** (~4 µs/op). A single Redis node can comfortably handle this load, and Centrifugo supports the same Redis scaling options as the engine (Sentinel, Cluster, client-side sharding) to go further.
+
+:::tip
+
+Use a dedicated Redis instance for rate limiting rather than reusing the engine Redis via `reuse_from_engine`. The rate limit workload (frequent small Lua script calls) competes with the engine's pub/sub and presence traffic on the same connection pool. A separate Redis instance isolates the two workloads and keeps latency predictable for both.
+
+:::
+
+When all three throttler layers are active they run in sequence, short-circuiting on the first denial. The two in-memory layers contribute under 200 ns combined; the Redis layer contributes one Redis round-trip. Use the in-memory throttlers alone when per-node limits are sufficient, and add the Redis throttler when limits must be consistent across the Centrifugo cluster.
+
+:::tip
+
+Use `user_command` as a cheap front-end filter for `redis_user_command`. Because in-memory checks run first and short-circuit on denial, configuring the same (or slightly looser) limits in `user_command` means that over-limit requests are caught in memory before they ever reach Redis. Only requests that pass the in-memory gate incur a Redis round-trip. This can significantly reduce Redis load from abusive or misbehaving clients hammering a single node.
+
+:::
+
+## Channel namespace overrides
+
+Centrifugo PRO allows defining rate limit overrides on a per-namespace basis for channel operations. A namespace override **completely replaces** the base command bucket for channels in that namespace — the base bucket is not checked alongside the override, only the override buckets are used. This means overrides can both relax and tighten limits relative to the base.
+
+Available channel operations that support namespace overrides:
+
+* `subscribe`
+* `unsubscribe`
+* `publish`
+* `history`
+* `presence`
+* `presence_stats`
+* `sub_refresh`
+* `map_publish`
+* `map_remove`
+* `track`
+* `untrack`
+
+`connect`, `refresh`, and `rpc` are not channel-scoped so they don't support namespace overrides.
+
+Example configuration for per-connection rate limits with namespace overrides:
+
+```json title="config.json"
+{
+  "client": {
+    "rate_limit": {
+      "client_command": {
+        "enabled": true,
+        "default": {
+          "enabled": true,
+          "buckets": [{"interval": "1s", "rate": 10}]
+        },
+        "publish": {
+          "enabled": true,
+          "buckets": [{"interval": "1s", "rate": 5}],
+          "namespace_overrides": [
+            {
+              "namespace_name": "chat",
+              "enabled": true,
+              "buckets": [{"interval": "1s", "rate": 20}]
+            },
+            {
+              "namespace_name": "notifications",
+              "enabled": true,
+              "buckets": [{"interval": "10s", "rate": 1}]
+            }
+          ]
+        },
+        "subscribe": {
+          "enabled": true,
+          "buckets": [{"interval": "1s", "rate": 3}],
+          "namespace_overrides": [
+            {
+              "namespace_name": "chat",
+              "enabled": true,
+              "buckets": [{"interval": "1s", "rate": 10}]
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+In this example:
+- Default publish rate is 5 per second for all channels
+- For `chat:*` channels, publish rate is **replaced** with 20 per second (higher — the 5/s base no longer applies)
+- For `notifications:*` channels, publish rate is **replaced** with 1 per 10 seconds (lower — the 5/s base no longer applies)
+- Default subscribe rate is 3 per second
+- For `chat:*` channels, subscribe rate is **replaced** with 10 per second
+
+The same override support applies to `user_command` and `redis_user_command` limiter types.
+
+When a channel operation is performed, Centrifugo:
+
+1. Extracts the namespace from the channel name (e.g., `chat` from `chat:room123`)
+2. Checks if a namespace override exists for that operation and namespace
+3. If found and enabled, uses **only** the namespace override buckets (base command buckets are not checked)
+4. Otherwise, falls back to the base operation buckets (or `default` if no base is configured)
+
+:::note
+A namespace override with `enabled: true` but no `buckets` array specified is treated the same as no override — Centrifugo falls back to `default` buckets if configured.
+:::
+
+:::note
+The `total` bucket is always checked regardless of whether a base or namespace override bucket is active — it is appended after the per-command check and only consumes a token when the per-command check passes.
+:::
 
 ## Disconnecting abusive or misbehaving connections
 
@@ -307,3 +491,69 @@ The configuration on error limits per connection may look like this:
 ```
 
 If a client will have more than 20 protocol errors per 5 second – it will be disconnected.
+
+## RPC method overrides format change
+
+Starting from Centrifugo v6.8.0, the format for RPC method-specific rate limit overrides has been updated to use an array format (`method_overrides`) instead of the previous map format (`method_override`).
+
+The new format uses `method_overrides` as an array of objects:
+
+```json title="config.json"
+{
+  "client": {
+    "rate_limit": {
+      "client_command": {
+        "enabled": true,
+        "rpc": {
+          "enabled": true,
+          "buckets": [{"interval": "1s", "rate": 10}],
+          "method_overrides": [
+            {
+              "method": "update_user_status",
+              "enabled": true,
+              "buckets": [{"interval": "20s", "rate": 1}]
+            },
+            {
+              "method": "get_user_data",
+              "enabled": true,
+              "buckets": [{"interval": "5s", "rate": 5}]
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+Before v6.5.2, the old format used `method_override` as a map/object:
+
+```json title="config.json"
+{
+  "client": {
+    "rate_limit": {
+      "client_command": {
+        "enabled": true,
+        "rpc": {
+          "enabled": true,
+          "buckets": [{"interval": "1s", "rate": 10}],
+          "method_override": {
+            "update_user_status": {
+              "enabled": true,
+              "buckets": [{"interval": "20s", "rate": 1}]
+            },
+            "get_user_data": {
+              "enabled": true,
+              "buckets": [{"interval": "5s", "rate": 5}]
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+The old `method_override` map format is still supported for backward compatibility. If you have existing configurations using `method_override`, they will continue to work in v6.5.2 and later versions until Centrifugo v7. However, you cannot use both `method_override` and `method_overrides` at the same time – if both are present, Centrifugo will return a validation error on startup.
+
+We recommend migrating to the new `method_overrides` array format when possible, as it provides better tooling support and is more consistent with other array-based configurations in Centrifugo.

@@ -9,6 +9,7 @@ module.exports = {
     "getting-started/design",
     "getting-started/ecosystem",
     "getting-started/comparisons",
+    "getting-started/ai_apps",
     "getting-started/migration_v6",
   ],
   Guides: [
