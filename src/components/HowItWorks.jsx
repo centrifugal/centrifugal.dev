@@ -86,10 +86,6 @@ export default function HowItWorks() {
             <span className={styles.stepBadge}>3</span>
           </div>
         </div>
-
-        <p className={styles.punchline}>
-          No changes to your existing architecture. Spin up and go.
-        </p>
       </div>
     </section>
   );

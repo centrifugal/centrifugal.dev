@@ -185,6 +185,7 @@ Key options:
 | `table_prefix` | string | `"cf"` | Namespace prefix for table and function names. Default produces `cf_map_*` tables and `cf_map_publish(...)` functions. Use distinct prefixes for multi-tenant deployments sharing one PostgreSQL instance |
 | `stream_retention` | [duration](./configuration.md#duration-type) | `"24h"` | How long stream entries are kept |
 | `use_notify` | boolean | `false` | Enable LISTEN/NOTIFY for low-latency delivery. See [connection pooler note](../server/engines.md#listennotify-and-connection-poolers) |
+| `notify_dsn` | string | `""` | Separate DSN for the LISTEN connection. Use a direct PostgreSQL URL when `dsn` points at PGBouncer or another pooler incompatible with LISTEN/NOTIFY |
 | `skip_schema_init` | boolean | `false` | Skip automatic table creation on startup |
 | `partition_lookahead_days` | integer | `2` | Number of future daily partitions to pre-create |
 | `partition_retention_days` | integer | `7` | Partitions older than this are dropped automatically. Set to `0` for unlimited retention |

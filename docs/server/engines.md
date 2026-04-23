@@ -801,11 +801,15 @@ Boolean, default `false`. Enable PostgreSQL `LISTEN/NOTIFY` for low-latency outb
 
 :::note LISTEN/NOTIFY and connection poolers
 
-`LISTEN/NOTIFY` requires a persistent connection to PostgreSQL. Some connection poolers don't support it in transaction mode — notably **RDS Proxy** (not supported at all), **PgCat**, and **PgBouncer < 1.21**. Supavisor and PgBouncer 1.21+ (with experimental `listen_notify` option) do support it.
+`LISTEN/NOTIFY` requires a persistent, dedicated connection to PostgreSQL. PGBouncer in **transaction pooling mode** (the most common setup) is incompatible with it — the pooler may route the `LISTEN` command and subsequent notifications to different backend connections. Other poolers with similar limitations: **RDS Proxy** (not supported at all), **PgCat**. Supavisor and PgBouncer 1.21+ (with experimental `listen_notify` option) do support it.
 
-If your pooler doesn't support LISTEN/NOTIFY, either route the Centrifugo DSN directly to PostgreSQL (bypassing the pooler — the notification listener only holds one persistent connection) or set `use_notify: false` and rely on polling. If there's demand, we can add a separate DSN option for the notification listener in the future, allowing the main connection pool to go through the pooler while the listener connects directly.
+When `dsn` points at an incompatible pooler, set `notify_dsn` to a direct PostgreSQL URL. Centrifugo will use that DSN exclusively for the single LISTEN connection while the main pool continues to go through the pooler. Alternatively, set `use_notify: false` and rely on polling.
 
 :::
+
+#### `broker.postgres.notify_dsn`
+
+String, default `""`. Optional separate DSN used exclusively for the `LISTEN` connection when `use_notify` is `true`. Set this to a **direct PostgreSQL URL** (bypassing PGBouncer or other poolers) when `dsn` points at a connection pooler that is incompatible with LISTEN/NOTIFY. If empty, the primary DSN pool is used.
 
 #### `broker.postgres.skip_schema_init`
 

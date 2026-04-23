@@ -394,6 +394,7 @@ Centrifugo automatically manages the required database schema (tables, functions
 | `table_prefix` | string | `"cf"` | Namespace prefix for table names (e.g. `cf_controller_messages`) |
 | `poll_interval` | duration | `"50ms"` | Idle poll interval for the outbox worker |
 | `use_notify` | bool | false | Enable LISTEN/NOTIFY for low-latency delivery. See [connection pooler note](../server/engines.md#listennotify-and-connection-poolers) |
+| `notify_dsn` | string | `""` | Separate DSN for the LISTEN connection. Use a direct PostgreSQL URL when `dsn` points at PGBouncer or another pooler incompatible with LISTEN/NOTIFY |
 | `partition_retention_days` | int | 1 | Days to keep old partitions before dropping |
 | `partition_lookahead_days` | int | 2 | Future daily partitions to pre-create |
 | `partition_cleanup_interval` | duration | `"1m"` | How often to run partition maintenance |

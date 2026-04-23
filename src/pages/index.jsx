@@ -26,7 +26,6 @@ import TestimonialsCarousel from '../components/TestimonialsCarousel';
 import ProBanner from '../components/ProBanner';
 import ImageRotator from '../components/ImageRotator';
 import ProCtaBanner from '../components/ProCtaBanner';
-import HowItWorks from '../components/HowItWorks';
 import RecentBlogPosts from '../components/RecentBlogPosts';
 import SubscriptionTypes from '../components/SubscriptionTypes';
 import GitHubStarButton from '../components/GitHubStarButton';
@@ -242,7 +241,6 @@ function Home() {
             </>
           }
         />
-        <HowItWorks />
         < Highlight
           img={
             <img src="/img/broadcast.svg" alt="Broadcast illustration" className={styles.broadcastImg} />

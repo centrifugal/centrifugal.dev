@@ -526,7 +526,7 @@ The new format uses `method_overrides` as an array of objects:
 }
 ```
 
-Before v6.5.2, the old format used `method_override` as a map/object:
+Before v6.8.0, the old format used `method_override` as a map/object:
 
 ```json title="config.json"
 {
@@ -554,6 +554,6 @@ Before v6.5.2, the old format used `method_override` as a map/object:
 }
 ```
 
-The old `method_override` map format is still supported for backward compatibility. If you have existing configurations using `method_override`, they will continue to work in v6.5.2 and later versions until Centrifugo v7. However, you cannot use both `method_override` and `method_overrides` at the same time – if both are present, Centrifugo will return a validation error on startup.
+The old `method_override` map format is still supported for backward compatibility. If you have existing configurations using `method_override`, they will continue to work in v6.8.0 and later versions until Centrifugo v7. However, you cannot use both `method_override` and `method_overrides` at the same time – if both are present, Centrifugo will return a validation error on startup.
 
 We recommend migrating to the new `method_overrides` array format when possible, as it provides better tooling support and is more consistent with other array-based configurations in Centrifugo.
