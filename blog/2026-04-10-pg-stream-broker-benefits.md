@@ -110,9 +110,90 @@ On error (network failure, database timeout), the SDK emits an error event and r
 
 One concrete integration pattern this design handles particularly well: a service that consumes a Kafka topic and maintains aggregated views in PostgreSQL — say, a price board built from a market-data topic. The browser client needs to fetch the current aggregate and then receive live updates. With Centrifugo as a separate Kafka consumer fanning the same topic out to WebSocket subscribers, you end up bridging two unrelated offset spaces — the snapshot row stores a Kafka offset, the live subscription speaks Centrifugo offsets, and the client has to subscribe with a recent stream position and discard everything older than the snapshot's Kafka offset. It works, but the bridging logic is awkward and easy to get subtly wrong.
 
-The PG stream broker collapses this if you make the aggregator the publisher to Centrifugo (instead of Centrifugo reading Kafka in parallel). For each Kafka batch the aggregator processes, it does — in one PG transaction — both the snapshot UPDATE *and* a `cf_stream_publish(...)` for the new event(s). Snapshot mutation and broker publish commit together; they can never disagree about what's been observed. The snapshot row stays minimal — just the aggregate, no offset bookkeeping. The client's `getState` follows the same recipe shown above: open a `REPEATABLE READ` transaction, read `cf_stream_top_position` first, then read the snapshot, return the captured position. The SDK subscribes from there, and any publications committed after the position read arrive as stream catch-up — no overlap with what's in the snapshot row to reconcile.
+```
+─── Write path (single PG txn ties snapshot + publish) ───────────
+
+   Kafka topic
+       │ batch
+       ▼
+  ┌────────────┐
+  │ Aggregator │
+  └─────┬──────┘
+        │   BEGIN
+        │     UPDATE snapshot SET aggregate = ...
+        │     cf_stream_publish(channel, event)
+        │   COMMIT              ← both land atomically
+        ▼
+  ┌──────────────────────────────┐
+  │          PostgreSQL          │
+  │   ┌──────────┐ ┌──────────┐  │
+  │   │ snapshot │ │cf_stream │  │
+  │   │   row    │ │  outbox  │  │
+  │   └──────────┘ └────┬─────┘  │
+  └────────────────────┬┴────────┘
+                       │ LISTEN/NOTIFY + poll
+                       ▼
+                 ┌──────────────┐
+                 │  Centrifugo  │
+                 │ (PG broker)  │
+                 └──────────────┘
+
+
+─── Read path (position first; catch-up applied idempotently) ────
+
+  Browser ──1. GET /state──► App server
+                                 │ pos  = cf_stream_top_position(ch)
+                                 │ snap = SELECT aggregate FROM ...
+  Browser ◄──── (snap, pos) ─────┘
+
+  Browser ──2. subscribe(ch, since=pos)──► Centrifugo
+  Browser ◄─── catch-up from pos → live ──┘
+             (events committed between the two reads
+              arrive here; idempotent apply reconciles)
+```
+
+The PG stream broker collapses this if you make the aggregator the publisher to Centrifugo (instead of Centrifugo reading Kafka in parallel). For each Kafka batch the aggregator processes, it does — in one PG transaction — both the snapshot UPDATE *and* a `cf_stream_publish(...)` for the new event(s). Snapshot mutation and broker publish commit together; they can never disagree about what's been observed. The snapshot row stays minimal — just the aggregate, no offset bookkeeping.
+
+The client's `getState` follows the same recipe shown earlier: read `cf_stream_top_position` first, then read the snapshot, return the captured position. Position first makes it a lower bound — events committed between the two reads arrive as stream catch-up on top of the snapshot, and the application applies them idempotently (the same assumption `getState` requires in general). For a price-board aggregate this is natural: each event is an absolute price, not a delta.
+
+If you'd rather eliminate that replay window entirely — for example, when events are non-idempotent deltas and you don't want to add offset-based dedup — wrap both reads in a single `REPEATABLE READ` transaction. Both reads then see the same MVCC snapshot: the returned position is the exact watermark baked into the snapshot, and catch-up delivers only events committed strictly after it — no overlap to reconcile at all.
 
 This shape — aggregator-as-publisher, single-tx atomicity for the snapshot update + the publish — is the natural fit whenever you have an upstream feed (Kafka, NATS, CDC, anything else) being shaped into stored views. The PG stream broker removes the cross-system offset bridge by making one process responsible for both the stored aggregate and the broker stream that describes its evolution.
+
+## A second shape: per-tenant channels
+
+The Kafka example is one flavor — an upstream feed shaped into a single aggregate. A second, very common flavor is internal writes partitioned by tenant: one shared table, many independent consumers. A kitchen-orders system is a clean example — a single `orders` table across all restaurants, but each restaurant's kitchen display only cares about its own channel. The demo below is runnable from the [pg_stream_broker example](https://github.com/centrifugal/examples/tree/master/v6/pg_stream_broker) on GitHub:
+
+<video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/demo_kitchen.mp4"></video>
+
+The channel shape is `kitchen:{restaurant_id}`. Every write to a restaurant's orders commits atomically with a publish on that restaurant's channel:
+
+```sql
+BEGIN;
+  INSERT INTO orders (id, restaurant_id, status, items, updated_at)
+  VALUES (7001, 42, 'received', $1, NOW());
+
+  SELECT cf_stream_publish(
+    p_channel := 'kitchen:42',
+    p_data    := '{"order_id":7001,"status":"received",...}'::jsonb
+  );
+COMMIT;
+```
+
+Status transitions (`received` → `preparing` → `ready` → `served`) do the same — `UPDATE orders` + `cf_stream_publish('kitchen:42', …)` in one transaction. The invariant the application must preserve is: every code path that mutates a row for restaurant X emits the publish for `kitchen:X` in the same transaction.
+
+The read path is the position-first recipe from earlier, with the snapshot filtered by restaurant:
+
+```sql
+SELECT * FROM cf_stream_top_position('kitchen:42');
+
+SELECT id, status, items, updated_at
+FROM orders
+WHERE restaurant_id = 42
+  AND status IN ('received','preparing','ready');
+```
+
+Each channel has its own meta row and its own `top_offset`; writes on `kitchen:99` never block or interfere with `kitchen:42`. This scales naturally to thousands of tenants on a single PostgreSQL — each channel is an independent append-only stream, and the shared `cf_stream` partitioned table just absorbs the union. For the kitchen scenario, events carry `order_id` plus `updated_at`, so the client applies them as upserts with last-write-wins — any catch-up replay between the two reads is reconciled automatically.
 
 ## Performance
 
