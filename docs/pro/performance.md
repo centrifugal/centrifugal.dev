@@ -22,7 +22,7 @@ EXPERIMENTAL option on `client` level is `client.batch_periodic_events` (boolean
 }
 ```
 
-Once enabled Centrifugo will batch client connection periodic events such as ping and presence updates together instead of having them to work in isolated way. This may result into noticeable CPU savings when working with many mostly idle connections.
+Once enabled, Centrifugo will batch client connection periodic events such as ping and presence updates together instead of having them work in an isolated way. This may result in noticeable CPU savings when working with many mostly idle connections.
 
 In our local experiments we observed more than 2x CPU reduction for 10k mostly idle connections setup (only PING/PONG messages are being sent). First image is OSS CPU utilization, second one is PRO with periodic events batching enabled:
 
@@ -44,7 +44,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
   />
 </div>
 
-Of course the ratio is highly dependent on the Centrifugo specific setup load profile and usage scenarios.
+Of course the ratio is highly dependent on the Centrifugo-specific setup load profile and usage scenarios.
 
 ## Faster HTTP API
 
@@ -62,7 +62,7 @@ Centrifugo PRO has an optimized JSON serialization/deserialization for HTTP prox
 
 ### Faster HTTP proxy client
 
-Centrifugo PRO adds a boolean option `use_fast_client` which enables using fast optimized HTTP client for proxy requests. In the benchmarks we did, the effect was up to 2x more request throughput for HTTP proxy and 10 times fewer allocations for each request. This will result into significant CPU and latency reductions under load.
+Centrifugo PRO adds a boolean option `use_fast_client` which enables using a fast optimized HTTP client for proxy requests. In the benchmarks we did, the effect was up to 2x more request throughput for HTTP proxy and 10 times fewer allocations for each request. This will result in significant CPU and latency reductions under load.
 
 The option may be defined inside `http` section of proxy object. For example, to enable it for a connect proxy:
 
@@ -90,7 +90,7 @@ Centrifugo PRO has an optimized Protobuf serialization/deserialization for GRPC 
 
 ## Faster async consumers
 
-When asynchronous consumers are used and payload represents encoded request type Centrifugo PRO leverages optimized JSON decoder.
+When asynchronous consumers are used and the payload represents an encoded request type, Centrifugo PRO leverages an optimized JSON decoder.
 
 ## Faster JWT decoding
 

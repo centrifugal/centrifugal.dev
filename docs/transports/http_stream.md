@@ -79,4 +79,4 @@ When enabling `http_stream` you can connect to `/connection/http_stream` from `c
 
 Default: 65536 (64KB)
 
-Maximum allowed size of a initial HTTP POST request in bytes.
+Maximum allowed size of an initial HTTP POST request in bytes.

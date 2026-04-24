@@ -41,7 +41,7 @@ To add an HMAC secret key to Centrifugo, insert `client.token.hmac_secret_key` i
 }
 ```
 
-To add RSA public key (must be PEM encoded string) add `client.token.rsa_public_key` option, ex:
+To add an RSA public key (must be a PEM encoded string) add the `client.token.rsa_public_key` option, ex:
 
 ```json title="config.json"
 {
@@ -54,7 +54,7 @@ To add RSA public key (must be PEM encoded string) add `client.token.rsa_public_
 }
 ```
 
-To add ECDSA public key (must be PEM encoded string) add `client.token.ecdsa_public_key` option, ex:
+To add an ECDSA public key (must be a PEM encoded string) add the `client.token.ecdsa_public_key` option, ex:
 
 ```json title="config.json"
 {
@@ -263,7 +263,7 @@ Assuming the `exp` claim is set to expire in 10 minutes, the client connects to 
 
 Upon initial connection, the client receives a `ttl` value in the connect response, indicating the seconds remaining before it must initiate a refresh command with new credentials. Centrifugo SDKs handle this `ttl` internally and automatically begin the refresh process.
 
-SDKs provide mechanisms to hook into this process and provide a function to get new token. It's up to developer to decide how to load new token from the backend – in web browser this is usually a simple `fetch` request and response may look like this:
+SDKs provide mechanisms to hook into this process and provide a function to get a new token. It's up to the developer to decide how to load the new token from the backend – in a web browser this is usually a simple `fetch` request and the response may look like this:
 
 ```python
 {
@@ -273,7 +273,7 @@ SDKs provide mechanisms to hook into this process and provide a function to get 
 
 You should provide the same connection JWT you issued when the page was initially rendered, but with an updated and valid `exp`. Our SDKs will then send this token to the Centrifugo server, and the connection will be extended for the period set in the new `exp`.
 
-When you load new token from your app backend user authentication must be facilitated by your app's session mechanism. So you know for whom you are are going to generate an updated token.
+When you load a new token from your app backend, user authentication must be facilitated by your app's session mechanism. So you know for whom you are going to generate an updated token.
 
 ## Examples: create connection JWT
 
@@ -325,7 +325,7 @@ const jose = require('jose');
 </Tabs>
 ````
 
-Note that we use the value of `token_hmac_secret_key` from Centrifugo config here (in this case `token_hmac_secret_key` value is just `secret`). The only two who must know the HMAC secret key is your application backend which generates JWT and Centrifugo. You should never reveal the HMAC secret key to your users.
+Note that we use the value of `token_hmac_secret_key` from Centrifugo config here (in this case `token_hmac_secret_key` value is just `secret`). The only two parties who must know the HMAC secret key are your application backend, which generates JWTs, and Centrifugo. You should never reveal the HMAC secret key to your users.
 
 Then you can pass this token to your client side and use it when connecting to Centrifugo:
 
@@ -449,7 +449,7 @@ Centrifugo supports JSON Web Key (JWK) [spec](https://tools.ietf.org/html/rfc751
 
 A mechanism can be enabled by providing `client.token.jwks_public_endpoint` string option to Centrifugo (HTTP address).
 
-As soon as `client.token.jwks_public_endpoint` set all tokens will be verified using JSON Web Key Set loaded from JWKS endpoint. This makes it impossible to use non-JWK based tokens to connect and subscribe to private channels.
+As soon as `client.token.jwks_public_endpoint` is set, all tokens will be verified using the JSON Web Key Set loaded from the JWKS endpoint. This makes it impossible to use non-JWK based tokens to connect and subscribe to private channels.
 
 :::tip
 
@@ -467,7 +467,7 @@ Centrifugo supports the following key types (`kty`) for JWKs tokens:
 * `EC`
 * `OKP` based on Ed25519
 
-Once enabled JWKS used for both connection and channel subscription tokens.
+Once enabled, JWKS is used for both connection and channel subscription tokens.
 
 ## HMAC key rotation
 
@@ -528,7 +528,7 @@ Let's look at the example:
 
 To use variable in `client.token.jwks_public_endpoint` it must be wrapped in `{{` `}}`.
 
-When using `client.token.issuer_regex` and `client.token.audience_regex` make sure `client.token.issuer` and `client.token.audience` not used in the config - otherwise and error will be returned on Centrifugo start.
+When using `client.token.issuer_regex` and `client.token.audience_regex` make sure `client.token.issuer` and `client.token.audience` are not used in the config - otherwise an error will be returned on Centrifugo start.
 
 :::caution
 
@@ -538,7 +538,7 @@ Setting `client.token.issuer_regex` and `client.token.audience_regex` will also 
 
 ## Custom token user id claim
 
-It's possible to use alternative claim in token to pass user ID: with `client.token.user_id_claim` option (string, by default `""` – i.e. not used).
+It's possible to use an alternative claim in the token to pass the user ID, with the `client.token.user_id_claim` option (string, by default `""` – i.e. not used).
 
 ```json title=config.json
 {

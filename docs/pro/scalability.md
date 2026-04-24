@@ -8,7 +8,7 @@ Centrifugo PRO comes with several options to reduce load on Engine – specifica
 
 ## Singleflight
 
-Centrifugo PRO provides an additional boolean option `use_singleflight` (default `false`). When this option enabled Centrifugo will automatically try to merge identical requests to history, online presence or presence stats issued at the same time into one real network request. It will do this by using in-memory component called `singleflight`.
+Centrifugo PRO provides an additional boolean option `use_singleflight` (default `false`). When this option is enabled, Centrifugo will automatically try to merge identical requests to history, online presence, or presence stats issued at the same time into one real network request. It will do this by using an in-memory component called `singleflight`.
 
 ![Singleflight](/img/singleflight.png)
 
@@ -18,7 +18,7 @@ While it can seem similar, singleflight is not a cache. It only combines identic
 
 :::
 
-This option can radically reduce a load on a broker in the following situations:
+This option can radically reduce the load on a broker in the following situations:
 
 * Many clients subscribed to the same channel and in case of massive reconnect scenario try to access history simultaneously to restore a state (whether manually using history API or over automatic recovery feature)
 * Many clients subscribed to the same channel and positioning feature is on so Centrifugo tracks client position
@@ -44,7 +44,7 @@ Shared position synchronization feature allows reducing the load on the broker f
 
 Centrifugo uses periodic position synchronization requests to make sure there was no message loss between Engine PUB/SUB and Centrifugo. These requests create additional load on broker.
 
-When `shared_position_sync` is enabled subscribers use an intermediary cache to only send position requests to the broker if another channel subscriber have not done it recently. So the benefit here is proportional to the number of channel subscribers on Centrifugo node.
+When `shared_position_sync` is enabled, subscribers use an intermediary cache to only send position requests to the broker if another channel subscriber has not done so recently. The benefit here is proportional to the number of channel subscribers on a Centrifugo node.
 
 To enable in the specific channel namespace use boolean channel option `shared_position_sync`:
 
@@ -64,7 +64,7 @@ To enable in the specific channel namespace use boolean channel option `shared_p
 
 ## Leverage Redis replicas
 
-Centrifugo users have Redis setups with replication configured. Replication is usually used in Redis Sentinel based primary-replica setup, or Redis Cluster where each cluster shard may consist of primary and several replicas.
+Centrifugo users have Redis setups with replication configured. Replication is usually used in a Redis Sentinel based primary-replica setup, or in Redis Cluster where each cluster shard may consist of a primary and several replicas.
 
 Centrifugo PRO allows utilizing existing replicas for certain operations:
 
@@ -147,13 +147,13 @@ Sharded PUB/SUB [was introduced in Redis 7.0](https://redis.io/docs/latest/devel
 
 ![](/img/redis_cluster_sharded_pub_sub.png)
 
-When using Centrifugo PRO with the sharded PUB/SUB feature, there are important considerations to keep in mind. This feature changes how Centrifugo constructs keys and channel names in Redis compared to the standard non-sharded setup. Specifically, Centrifugo divides the channel space into a configurable number of `sharded_pub_sub_partitions`, typically 64 to 128 (but this is up to developer to decide on the number depending on the load and cluster size).  This partitioning is essential to ensure compatibility with Redis Cluster's slot system while keeping the number of connections from Centrifugo to Redis at a manageable level. Each partition uses a dedicated connection for PUB/SUB communication with the Redis Cluster.
+When using Centrifugo PRO with the sharded PUB/SUB feature, there are important considerations to keep in mind. This feature changes how Centrifugo constructs keys and channel names in Redis compared to the standard non-sharded setup. Specifically, Centrifugo divides the channel space into a configurable number of `sharded_pub_sub_partitions`, typically 64 to 128 (but this is up to the developer to decide on the number depending on the load and cluster size). This partitioning is essential to ensure compatibility with Redis Cluster's slot system while keeping the number of connections from Centrifugo to Redis at a manageable level. Each partition uses a dedicated connection for PUB/SUB communication with the Redis Cluster.
 
-Without this partitioning, each Centrifugo node could potentially create up to 16384 connections to the Redis Cluster—one for each cluster slot—a number that is impractically large. The partitioning strategy avoids this issue, maintaining efficient and scalable communication between Centrifugo and Redis.
+Without this partitioning, each Centrifugo node could potentially create up to 16,384 connections to the Redis Cluster — one for each cluster slot — a number that is impractically large. The partitioning strategy avoids this issue, maintaining efficient and scalable communication between Centrifugo and Redis.
 
 We generally recommend using Redis sharded PUB/SUB only if you are already using a Redis Cluster and are nearing its scalability limits. In such cases, switching to sharded PUB/SUB mode, despite the different keys/channel names in Redis, can significantly enhance the application's ability to handle larger workloads.
 
-Once the scalability limit of a single cluster with sharded PUB/SUB is reached, you can further scale by adding an additional, isolated Redis Cluster. Centrifugo can then be configured to use multiple clusters instead of one, enabling scaling similar to its consistent sharding mechanism over isolated single Redis instances. However, in this setup, the sharding occurs across multiple Redis Clusters.
+Once the scalability limit of a single cluster with sharded PUB/SUB is reached, you can further scale by adding an additional isolated Redis Cluster. Centrifugo can then be configured to use multiple clusters instead of one, enabling scaling similar to its consistent sharding mechanism over isolated single Redis instances. However, in this setup, the sharding occurs across multiple Redis Clusters.
 
 Here is how to enable sharded PUB/SUB in Centrifugo PRO:
 
@@ -221,7 +221,7 @@ Sharded PUB/SUB support is a powerful feature which will push your Redis Cluster
 
 Centrifugo OSS allows [specifying an engine](../server/engines.md). Engine is responsible for PUB/SUB and channel stream/history features (we call this part `Broker`), and for online presence (this part is called `Presence Manager`). Engine in Centrifugo OSS is global for the entire Centrifugo setup – once defined, all channels use it to make operations.
 
-Centrifugo PRO allows redefining brokers and presence managers on a namespace level. This lets you both pick the right backend for each feature and distribute load across separate infrastructure — for example, isolating high-traffic namespaces onto their own Redis instance.
+Centrifugo PRO allows redefining brokers and presence managers at the namespace level. This lets you both pick the right backend for each feature and distribute load across separate infrastructure — for example, isolating high-traffic namespaces onto their own Redis instance.
 
 For example:
 
@@ -234,7 +234,7 @@ You can also separate Redis setups used for broker purposes and online presence 
 
 ### Defining brokers
 
-First, you need create configuration for additional brokers:
+First, you need to create configuration for additional brokers:
 
 ```json title="config.json"
 {
@@ -265,7 +265,7 @@ At this point Centrifugo PRO supports two broker types:
 * `redis` - inherits all the possibilities of Centrifugo [built-in Redis Engine](../server/engines.md#redis-engine)
 * `nats` –  inherits all the possibilities of Centrifugo [integration with Nats broker](../server/engines.md#nats-broker).
 
-These brokers inherit all options described in [Engines and scalability](../server/engines.md) chapter. The only difference that it's possible to specify which custom broker to use inside a channel namespace:
+These brokers inherit all options described in the [Engines and scalability](../server/engines.md) chapter. The only difference is that it's possible to specify which custom broker to use inside a channel namespace:
 
 ```json title="config.json"
 {
@@ -319,7 +319,7 @@ And then enable it for namespace:
 
 ## Setting custom Controller
 
-Controller in Centrifugo is responsible for cross-node communication in cluster. Centrifugo PRO allows using a custom controller configuration. This may be useful to isolate controller load from channel load (i.e. from Broker), or to use Redis for channel operations and Nats for controller operations, or use Redis for channel operations, but sth like DragonflyDB for controller operations, etc.
+The Controller in Centrifugo is responsible for cross-node communication in the cluster. Centrifugo PRO allows using a custom controller configuration. This may be useful to isolate controller load from channel load (i.e. from the Broker), or to use Redis for channel operations and Nats for controller operations, or to use Redis for channel operations but something like DragonflyDB for controller operations, etc.
 
 To use a custom controller you need to set `controller` configuration option and set `enabled` to `true`. You can use `redis`, `nats`, or `postgres` as a controller type.
 

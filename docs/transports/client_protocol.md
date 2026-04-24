@@ -37,7 +37,7 @@ At the moment Protobuf schema contains some fields which are only used in client
 
 In bidirectional case client sends `Command` to a server and server sends `Reply` to a client. I.e. all communication between client and server is a bidirectional exchange of `Command` and `Reply` messages.
 
-Each `Command` has `id` field. This is an incremental `uint32` field. This field will be echoed in a server replies to commands so client could match a certain `Reply` to `Command` sent before. This is important since Websocket is an asynchronous transport where server and client both send messages at any moment and there is no builtin request-response matching. Having `id` allows matching a reply with a command send before on SDK level.
+Each `Command` has an `id` field. This is an incremental `uint32` field. This field will be echoed in server replies to commands so the client can match a certain `Reply` to a `Command` sent before. This is important since WebSocket is an asynchronous transport where server and client both send messages at any moment and there is no built-in request-response matching. Having `id` allows matching a reply with a command sent before on the SDK level.
 
 In JSON case client can send command like this:
 
@@ -53,7 +53,7 @@ And client can expect something like this in response:
 
 `Reply` for different commands has corresponding field with command result (`"subscribe"` in example above).
 
-`Reply` can also contain `error` if `Command` processing resulted into an error on a server. `error` is optional and if `Reply` does not have `error` then it means that `Command` processed successfully and client can handle result object appropriately.
+`Reply` can also contain `error` if `Command` processing resulted in an error on a server. `error` is optional and if `Reply` does not have `error` then it means that `Command` was processed successfully and the client can handle the result object appropriately.
 
 `error` looks like this in JSON case:
 
@@ -77,7 +77,7 @@ Centrifuge library defines several command types client can issue. A well-writte
 
 Current commands:
 
-* `connect` – sent to authenticate connection, sth like hello from a client which can carry authentication token and arbitrary data.
+* `connect` – sent to authenticate connection, something like hello from a client which can carry authentication token and arbitrary data.
 * `subscribe` – sent to subscribe to a channel
 * `unsubscribe` - sent to unsubscribe from a channel
 * `publish` - sent to publish data into a channel
@@ -85,7 +85,7 @@ Current commands:
 * `presence_stats` - sent to request presence stats information from a channel
 * `history` - sent to request history information for a channel
 * `send` - sent to send async message to a server (this command is a bit special since it must not contain `id` - as we don't wait for any response from a server in this case).
-* `rpc` - sent to send RPC to a channel (execute arbitrary logic and wait for response)
+* `rpc` - sent to send RPC (execute arbitrary logic and wait for response)
 * `refresh` - sent to refresh connection token
 * `sub_refresh` - sent to refresh channel subscription token
 
@@ -96,20 +96,20 @@ The special type of `Reply` is **asynchronous** `Reply`. Such replies have no `i
 There are several types of asynchronous messages that can come from a server to a client.
 
 * `pub` is a message published into channel
-* `join` messages sent when someone joined (subscribed on) channel.
-* `leave` messages sent when someone left (unsubscribed from) channel.
+* `join` messages sent when someone joined (subscribed to) a channel.
+* `leave` messages sent when someone left (unsubscribed from) a channel.
 * `unsubscribe` message sent when a server unsubscribed current client from a channel:
 * `subscribe` may be sent when a server subscribes client to a channel.
-* `disconnect` may be sent be a server before closing connection and contains disconnect code/reason
+* `disconnect` may be sent by a server before closing connection and contains disconnect code/reason
 * `message` may be sent when server sends asynchronous message to a client
 * `connect` push can be sent in unidirectional transport case
 * `refresh` may be sent when a server refreshes client credentials (useful in unidirectional transports)
 
 ## Top level batching
 
-To reduce number of system calls one request from a client to a server and one response from a server to a client can have more than one `Command` or `Reply`. This allows reducing number of system calls for writing and reading data.
+To reduce the number of system calls, one request from a client to a server and one response from a server to a client can have more than one `Command` or `Reply`. This allows reducing the number of system calls for writing and reading data.
 
-When JSON format used then many `Command` can be sent from client to server in JSON streaming line-delimited format. I.e. each individual `Command` encoded to JSON and then commands joined together using new line symbol `\n`:
+When JSON format is used, many `Command` objects can be sent from client to server in JSON streaming line-delimited format. I.e. each individual `Command` is encoded to JSON and then commands are joined together using the new line symbol `\n`:
 
 ```json
 {"id": 1, "subscribe": {"channel": "ch1"}}
@@ -136,7 +136,7 @@ This doc uses JSON format for examples because it's human-readable. Everything s
 
 :::
 
-When Protobuf format used then many `Command` can be sent from a client to a server in a length-delimited format where each individual `Command` marshaled to bytes prepended by `varint` length. See existing client implementations for encoding example.
+When Protobuf format is used, many `Command` objects can be sent from a client to a server in a length-delimited format where each individual `Command` is marshaled to bytes prepended by `varint` length. See existing client implementations for an encoding example.
 
 The same rules relate to many `Reply` in one response from server to client. Line-delimited JSON and varint-length prefixed Protobuf also used there.
 
@@ -146,7 +146,7 @@ Server can even send reply to a command and asynchronous message batched togethe
 
 :::
 
-For example here is how we read server response and extracting individual replies in Javascript client when JSON format used:
+For example here is how we read server response and extract individual replies in the Javascript client when JSON format is used:
 
 ```javascript
 function decodeReplies(data) {
@@ -169,34 +169,34 @@ For Protobuf case see existing client implementations for decoding example.
 
 ## Ping Pong
 
-To maintain connection alive and detect broken connections server periodically sends empty commands to clients and expects empty replies from them.
+To maintain the connection alive and detect broken connections, the server periodically sends empty commands to clients and expects empty replies from them.
 
 When client does not receive ping from a server for some time it can consider connection broken and try to reconnect. Usually a server sends pings every 25 seconds.
 
 ## Handle disconnects
 
-Client should handle disconnect advices from server. In websocket case disconnect advice is sent in CLOSE Websocket frame. Disconnect advice contains `uint32` `code` and human-readable `string` `reason`.
+Client should handle disconnect advices from server. In the WebSocket case disconnect advice is sent in a CLOSE WebSocket frame. Disconnect advice contains `uint32` `code` and human-readable `string` `reason`.
 
 ## Handle errors
 
-This section contains advices to error handling in client implementations.
+This section contains advice on error handling in client implementations.
 
-Errors can happen during various operations and can be handled in special way in context of some commands to tolerate network and server problems.
+Errors can happen during various operations and can be handled in a special way in the context of some commands to tolerate network and server problems.
 
-Errors during `connect` must result in full client reconnect with exponential backoff strategy. The special case is error with code `110` which signals that connection token already expired. As we said above client should update its connection JWT before connecting to server again.  
+Errors during `connect` must result in a full client reconnect with exponential backoff strategy. The special case is an error with code `110` which signals that the connection token has already expired. As we said above, the client should update its connection JWT before connecting to the server again.
 
-Errors during `subscribe` must result in full client reconnect in case of internal error (code `100`). And be sent to subscribe error event handler of subscription if received error is persistent. Persistent errors are errors like `permission denied`, `bad request`, `namespace not found` etc. Persistent errors in most situation mean a mistake from developers side.
+Errors during `subscribe` must result in a full client reconnect in case of internal error (code `100`). They should be sent to the subscribe error event handler of the subscription if the received error is persistent. Persistent errors are errors like `permission denied`, `bad request`, `namespace not found`, etc. Persistent errors in most situations mean a mistake on the developer's side.
 
-The special corner case is client-side timeout during `subscribe` operation. As protocol is asynchronous it's possible in this case that server will eventually subscribe client on channel but client will think that it's not subscribed. It's possible to retry subscription request and tolerate `already subscribed` (code `105`) error as expected. But the simplest solution is to reconnect entirely as this is simpler and gives client a chance to connect to working server instance.
+The special corner case is a client-side timeout during the `subscribe` operation. As the protocol is asynchronous it's possible in this case that the server will eventually subscribe the client to the channel but the client will think that it's not subscribed. It's possible to retry the subscription request and tolerate the `already subscribed` (code `105`) error as expected. But the simplest solution is to reconnect entirely as this is simpler and gives the client a chance to connect to a working server instance.
 
-Errors during rpc-like operations can be just returned to caller - i.e. user javascript code. Calls like `history` and `presence` are idempotent. You should be accurate with non-idempotent operations like `publish` - in case of client timeout it's possible to send the same message into channel twice if retry publish after timeout - so users of libraries must care about this case – making sure they have some protection from displaying message twice on client side (maybe some sort of unique key in payload).
+Errors during RPC-like operations can be just returned to the caller - i.e. user JavaScript code. Calls like `history` and `presence` are idempotent. You should be careful with non-idempotent operations like `publish` - in case of client timeout it's possible to send the same message into a channel twice if you retry publish after timeout - so users of libraries must handle this case – making sure they have some protection from displaying a message twice on the client side (perhaps some sort of unique key in the payload).
 
 ## Client name and version
 
 Client SDK should provide a way for users to configure two additional options: `name` and `version`:
 
-* `name` is used to identify the place from where the client is connected. Generally, it's a name of application. Our official SDKs use default names like `js`, `dart`, `swift`, etc. But it's possible to redefine according to application needs. This name is then used by Centrifugo PRO in observability and analitycs stacks – you can see various insights about connections from specific application. The name must not exceed 16 symbols in length.
-* `version` – client SDK also provides a way to configure application version. Note, it's not a version of Centrifugo client SDK, but a version of application which uses Centrifugo client SDK – because it makes more sense for users at the end. Version is also used for observability and analitycs stacks by Centrifugo PRO. The version must not exceed 64 symbols in length.
+* `name` is used to identify the place from where the client is connected. Generally, it's a name of the application. Our official SDKs use default names like `js`, `dart`, `swift`, etc. But it's possible to redefine according to application needs. This name is then used by Centrifugo PRO in observability and analytics stacks – you can see various insights about connections from a specific application. The name must not exceed 16 symbols in length.
+* `version` – client SDK also provides a way to configure application version. Note, it's not a version of Centrifugo client SDK, but a version of the application which uses Centrifugo client SDK – because it makes more sense for users in the end. Version is also used for observability and analytics stacks by Centrifugo PRO. The version must not exceed 64 symbols in length.
 
 ## Additional notes
 

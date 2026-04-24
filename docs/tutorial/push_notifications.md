@@ -9,11 +9,11 @@ title: "Appendix #4: Adding push notifications"
 
 This chapter is under construction.
 
-The tutorial source code already has working implementation for push notifications, but may have some polishing. To enable push notifications some adjustments to the tutorial source code should be made. These adjustments are mentioned in this tutorial and listed in the tutorial source code in comment for PUSH_NOTIFICATIONS_ENABLED option in backend/app/settings.py. 
+The tutorial source code already has a working implementation for push notifications, but may have some rough edges. To enable push notifications some adjustments to the tutorial source code should be made. These adjustments are mentioned in this tutorial and listed in the tutorial source code in the comment for the PUSH_NOTIFICATIONS_ENABLED option in backend/app/settings.py.
 
 :::
 
-At this point our messenger app effectively works in real-time – new messages are delivered to online users over WebSocket, initial data is loaded from the main application database, and sometimes Centrifugo publication history helps to recover after temporary disconnections. But there is one more feature we can add to the app more engaging - push notifications. 
+At this point our messenger app effectively works in real-time – new messages are delivered to online users over WebSocket, initial data is loaded from the main application database, and sometimes Centrifugo publication history helps to recover after temporary disconnections. But there is one more feature we can add to make the app more engaging - push notifications.
 
 In this appendix, we’ll demonstrate how to integrate Web Push Notifications into the Grand Chat application. Push notifications allow users to receive alerts about new messages even when the application is not open in their browser. This feature helps keep users engaged and informed about important updates.
 
@@ -265,9 +265,9 @@ payload = {
 CDC.objects.create(method='send_push_notification', payload=payload, partition=partition)
 ```
 
-Note, here we send push to all subscribers of `chat:messages:{room_id}` topic – and Centrifugo PRO will do the rest iterating over all registered devices which have users subscribed to the topic and send push to them.
+Note, here we send a push to all subscribers of the `chat:messages:{room_id}` topic – and Centrifugo PRO will do the rest, iterating over all registered devices which have users subscribed to the topic and sending pushes to them.
 
-But we don't have any devices saved yet – to do this we need to update frontend to request permission for push notifications and register device token in Centrifugo PRO device storage. Let's do that.
+But we don't have any devices saved yet – to do this we need to update the frontend to request permission for push notifications and register the device token in Centrifugo PRO device storage. Let's do that.
 
 ### Frontend integration
 
@@ -378,9 +378,9 @@ Once user logs into app – we ask for push notification permission and extract 
 }, [authenticated, userInfo, csrf]);
 ```
 
-We register this token in Centrifugo PRO using Centrifugo API. To do this we call new Django endpoint `/api/device/register` and call Centrifugo `device_register` method from it. On every app load we are updating token registration in Centrifugo PRO.
+We register this token in Centrifugo PRO using Centrifugo API. To do this we call the new Django endpoint `/api/device/register` and call the Centrifugo `device_register` method from it. On every app load we update the token registration in Centrifugo PRO.
 
-Once user logs out we unregister device token from Centrifugo PRO and remove token from FCM:
+Once the user logs out we unregister the device token from Centrifugo PRO and remove the token from FCM:
 
 And on frontend:
 
@@ -431,7 +431,7 @@ if (!self.firebaseConfig) {
 }
 ```
 
-Basically, we are initializing Firebase messaging in the Service Worker and then listen to background messages from Firebase. Once we receive a message we show a notification.
+Basically, we are initializing Firebase messaging in the Service Worker and then listening to background messages from Firebase. Once we receive a message we show a notification.
 
 ### Conclusion
 

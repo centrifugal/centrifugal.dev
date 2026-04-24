@@ -280,7 +280,7 @@ Code:   3011
 Reason: "force reconnect"
 ```
 
-DisconnectForceReconnect issued when server disconnects connection for some reason and whants it to reconnect.
+DisconnectForceReconnect issued when server disconnects connection for some reason and wants it to reconnect.
 
 #### DisconnectNoPong
 

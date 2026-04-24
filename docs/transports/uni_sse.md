@@ -98,7 +98,7 @@ Enables unidirectional SSE (EventSource) endpoint.
 
 Default: 65536 (64KB)
 
-Maximum allowed size of a initial HTTP POST request in bytes when using HTTP POST requests to connect (browsers are using GET so it's not applied).
+Maximum allowed size of an initial HTTP POST request in bytes when using HTTP POST requests to connect (browsers are using GET so it's not applied).
 
 ## Browser example
 

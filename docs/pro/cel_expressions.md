@@ -7,7 +7,7 @@ title: Channel CEL expressions
 
 Centrifugo PRO supports [CEL expressions](https://opensource.google/projects/cel) (Common Expression Language) for checking channel operation permissions.
 
-CEL expressions provide a developer-friendly, fast and secure way to evaluate some conditions predefined in the configuration. They are used in some Google services (ex. Firebase), in Envoy RBAC configuration, etc.
+CEL expressions provide a developer-friendly, fast, and secure way to evaluate conditions predefined in the configuration. They are used in some Google services (e.g. Firebase), in Envoy RBAC configuration, etc.
 
 For Centrifugo this is a flexible mechanism which can help to avoid using subscription tokens or using subscribe proxy in some cases. This means you can avoid sending an additional HTTP request to the backend for a channel subscription attempt. As the result less resources may be used and smaller latencies may be achieved in the system. This is a way to introduce efficient channel permission mechanics when Centrifugo built-in rules are not enough.
 
@@ -38,12 +38,12 @@ It's possible to configure `subscribe_cel` for a channel namespace (`subscribe_c
 }
 ```
 
-In the example we are using custom `meta` information (must be an object) attached to the connection. As mentioned before in the doc this meta may be attached to the connection:
+In the example we are using custom `meta` information (must be an object) attached to the connection. As mentioned before in the docs, this meta may be attached to the connection:
 
 * when set in the [connect proxy](../server/proxy.md#connect-proxy) result
 * or provided in JWT as [meta](../server/authentication.md#meta) claim
 
-An expression is evaluated for every subscription attempt to a channel in a namespace. So if `meta` attached to the connection is sth like this:
+An expression is evaluated for every subscription attempt to a channel in a namespace. So if `meta` attached to the connection is something like this:
 
 ```json
 {
@@ -61,7 +61,7 @@ An expression is evaluated for every subscription attempt to a channel in a name
 
 ### Expression variables
 
-Inside the expression developers can use some variables which are injected by Centrifugo to the CEL runtime. 
+Inside the expression, developers can use some variables which are injected by Centrifugo into the CEL runtime.
 
 Information about current `user` ID, `meta` information attached to the connection, all the variables defined in matched [channel pattern](./channel_patterns.md) will be available for CEL expression evaluation.
 
@@ -87,7 +87,7 @@ In this case, to allow admin to subscribe on any user's channel or allow non-adm
 }
 ```
 
-Let's look at one more example. Say client with user ID `123` subscribes to a channel `/example.com/users/4` which matched the [channel pattern](./channel_patterns.md) `/:tenant/users/:user`. The permission check may be transformed into sth like this (assuming `meta` information has information about current connection tenant):
+Let's look at one more example. Say a client with user ID `123` subscribes to a channel `/example.com/users/4` which matched the [channel pattern](./channel_patterns.md) `/:tenant/users/:user`. The permission check may be transformed into something like this (assuming `meta` information has information about the current connection tenant):
 
 ```json
 {

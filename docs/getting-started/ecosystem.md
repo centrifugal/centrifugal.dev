@@ -28,7 +28,7 @@ There are some community-driven projects that provide integration with framework
 
 :::tip
 
-In general, integrating Centrifugo can be done in several steps even without third-party libraries – see our [integration guide](integration.md). Integrating directly may allow using all Centrifugo features without limitations which can be introduced by third-party wrapper.
+In general, integrating Centrifugo can be done in several steps even without third-party libraries – see our [integration guide](integration.md). Integrating directly may allow using all Centrifugo features without limitations which can be introduced by a third-party wrapper.
 
 :::
 

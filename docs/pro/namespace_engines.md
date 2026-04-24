@@ -8,11 +8,11 @@ Centrifugo OSS allows [specifying an engine](../server/engines.md). Engine is re
 
 Centrifugo PRO allows redefining brokers and presence managers on a namespace level. This may help with individual scaling based on channel activity, using different properties inside different channel namespaces within a single Centrifugo setup. This feature significantly enhances Centrifugo's adaptability, making it easier to meet diverse and evolving application demands.
 
-For example, you can configure Centrifugo to use Redis engine by default, but for some specific namespace use Nats for PUB/SUB – this may be handy if you need wildcard subscriptions for one of the features in the app, or maybe you want to consume from raw Nats topics for some app feature, but for other features you still need functionality implemented by Centrifugo Redis Engine - like history in channels, automatic recovery. Or, maybe you want to separate Redis setups used for broker purposes and online presence purposes.
+For example, you can configure Centrifugo to use the Redis engine by default, but for some specific namespace use Nats for PUB/SUB – this may be handy if you need wildcard subscriptions for one of the features in the app, or maybe you want to consume from raw Nats topics for some app feature, but for other features you still need functionality implemented by the Centrifugo Redis Engine - like history in channels and automatic recovery. Or, maybe you want to separate Redis setups used for broker purposes and online presence purposes.
 
 ## Defining brokers
 
-First, you need create configuration for additional brokers:
+First, you need to create configuration for additional brokers:
 
 ```json title="config.json"
 {
@@ -43,7 +43,7 @@ At this point Centrifugo PRO supports two broker types:
 * `redis` - inherits all the possibilities of Centrifugo [built-in Redis Engine](../server/engines.md#redis-engine)
 * `nats` –  inherits all the possibilities of Centrifugo [integration with Nats broker](../server/engines.md#nats-broker).
 
-These brokers inherit all options described in [Engines and scalability](../server/engines.md) chapter. The only difference that it's possible to specify which custom broker to use inside a channel namespace:
+These brokers inherit all options described in the [Engines and scalability](../server/engines.md) chapter. The only difference is that it's possible to specify which custom broker to use inside a channel namespace:
 
 ```json title="config.json"
 {

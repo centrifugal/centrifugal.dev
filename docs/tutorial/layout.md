@@ -5,7 +5,7 @@ sidebar_label: "App layout and behavior"
 title: "App layout and behavior"
 ---
 
-Before we start, we would like the reader to be more familiar with the layout and behavior of the application we are creating here. Let's look at it screen by screen, describe the behavior, and explain which parts will be endowed with real-time superpowers.
+Before we start, we would like the reader to become more familiar with the layout and behavior of the application we are creating here. Let's look at it screen by screen, describe the behavior, and explain which parts will be endowed with real-time superpowers.
 
 ## App screens
 
@@ -13,7 +13,7 @@ We tried to find a good balance which screens to include into the app. The goal 
 
 ### Login Screen
 
-One of the goals for the tutorial is showing the app with user authentication. To show how to tell Centrifugo which user connects and build permissions for channels around the particular user.
+One of the goals for the tutorial is showing the app with user authentication. To show how to tell Centrifugo which user is connecting and build permissions for channels around that particular user.
 
 Nothing too special here – we will use native Django user/password authentication. Django already has built-in User model and functions to support user login/logout workflow. So we just use this.
 ![](/img/grand-chat-login.png)
@@ -21,7 +21,7 @@ This screen does not include any real-time features. As soon as user logs into t
 
 ### Chat Room List Screen
 
-This one shows rooms current user joined. So user can click on any to go to Chat Room Detail Screen.
+This one shows rooms the current user has joined. The user can click on any of them to go to the Chat Room Detail Screen.
 ![](/img/grand-chat-room-list.png)
 This screen includes a couple of elements to emphasize. First one is a green circle on top right. This is a Centrifugo real-time subscription status. As soon as user connected to Centrifugo and subscribed to the personal message stream (personal channel) - the indicator is green 🟢. Otherwise - it's red 🔴.
 
@@ -31,7 +31,7 @@ For every room we show the beginning of the last message sent to the room. Upon 
 
 ### Chat Room Search Screen
 
-This screen allows the user to discover new rooms to join. In our app we decided to not provide a functionality for the user to create chat rooms. Rooms must be pre-created by admin – it's actually possible to do using Django built-in admin web UI - so to keep tutorial shorter (not the ideal justification for this tutorial which is freaking large) we decided to skip it for now.
+This screen allows the user to discover new rooms to join. In our app we decided not to provide functionality for the user to create chat rooms. Rooms must be pre-created by an admin – it's actually possible to do using the Django built-in admin web UI - so to keep the tutorial shorter (not the ideal justification for this tutorial which is already quite large) we decided to skip it for now.
 ![](/img/grand-chat-search.png)
 We distinguish rooms current user joined or not joined by using color scheme. The information about current user membership is synchronized between browser tabs and different devices. After user joins the room – it appears on Chat Room List Screen on every user's device.
 
@@ -49,4 +49,4 @@ Often in messenger apps you can see the layout where a list of chats is the left
 
 While we use a slightly simplified layout in the app with a separate chat room list and chat detail screens (more often seen on mobile devices), we keep in mind the possibility to switch to the 2-column layout if needed - just with a change of React component arrangement and some CSS. With our implementation user may be theoretically a member of hundreds or thousands of rooms and receive updates from all of them on one screen. Like in Telegram, Discord or Slack messengers.
 
-This predetermined the fact we are using individual user channels in the app to receive real-time updates from all the rooms, instead of subscribing to each individual chat room channel. We will talk about this decision later, for now let's say simply: using individual real-time channels drastically simplifies frontend implementation, leaving the complexity for the backend side.
+This predetermined the fact that we are using individual user channels in the app to receive real-time updates from all the rooms, instead of subscribing to each individual chat room channel. We will talk about this decision later; for now let's simply say: using individual real-time channels drastically simplifies frontend implementation, leaving the complexity for the backend side.

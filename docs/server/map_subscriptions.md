@@ -105,7 +105,7 @@ Map subscriptions fit "key-value real-time collection" use cases where the broke
 
 ## Map brokers
 
-Map subscriptions require a **map broker** — a backend that stores the keyed state and coordinates updates. By default Centrifugo uses an in-memory map broker. Centrifugo supports three map broker types.
+Map subscriptions require a **map broker** — a backend that stores the keyed state and coordinates updates. By default, Centrifugo uses an in-memory map broker. Centrifugo supports three map broker types.
 
 [Centrifugo PRO](../pro/overview.md) allows configuring [different map brokers for different channel namespaces](../pro/map_subscriptions.md#per-namespace-map-brokers) — for example, ephemeral cursor data in Redis and persistent scoreboard state in PostgreSQL.
 

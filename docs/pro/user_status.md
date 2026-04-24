@@ -6,13 +6,13 @@ title: User status API
 
 Centrifugo OSS provides a presence feature for channels. It works well (for channels with reasonably small number of active subscribers though), but sometimes you may need a bit different functionality.
 
-What if you want to get a specific user status based on its recent activity in application? You can create a personal channel with a presence enabled for each user. It will show that user has an active connection with a server. But this won't show whether user did some actions in an application recently or just left it open while not actually using it.
+What if you want to get a specific user's status based on their recent activity in the application? You can create a personal channel with presence enabled for each user. It will show that the user has an active connection with a server. But this won't show whether the user performed some actions in the application recently or just left it open while not actually using it.
 
 ![user status](/img/user_status.png)
 
-User status feature of Centrifugo PRO allows calling a special RPC method from a client side when a user makes a useful action in an application (clicks on buttons, uses a mouse – whatever means that user really uses application at the moment). This call sets a time of last user activity in Redis, and this information can then be queried over Centrifugo PRO server API.
+The user status feature of Centrifugo PRO allows calling a special RPC method from the client side when a user performs a useful action in the application (clicks on buttons, uses a mouse – whatever indicates that the user is really using the application at the moment). This call sets the time of last user activity in Redis, and this information can then be queried via the Centrifugo PRO server API.
 
-The feature can be useful for chat applications when you need to get online/activity status for a list of buddies (Centrifugo supports batch requests to user status information – i.e. ask for many users in one call).
+The feature can be useful for chat applications when you need to get online/activity status for a list of buddies (Centrifugo supports batch requests for user status information – i.e. asking for many users in one call).
 
 ### Client-side status update RPC
 
@@ -24,17 +24,17 @@ await centrifuge.rpc('update_user_status', {});
 
 :::note
 
-Don't forget to debounce this method calls on a client side to avoid exposing RPC on every mouse move event for example.
+Don't forget to debounce these method calls on the client side to avoid triggering the RPC on every mouse move event, for example.
 
 :::
 
-This RPC call sets user's last active time value in Redis (with sharding and Cluster support). Information about active status will be kept in Redis for a configured time interval, then expire.
+This RPC call sets the user's last active time value in Redis (with sharding and Cluster support). Information about active status will be kept in Redis for a configured time interval, then expire.
 
 ## Server API methods
 
 ### update_user_status
 
-It's also possible to call `update_user_status` using Centrifugo server API (for example if you want to force status during application development or you want to proxy status updates over your app backend when using unidirectional transports):
+It's also possible to call `update_user_status` using the Centrifugo server API (for example if you want to force a status during application development or you want to proxy status updates via your app backend when using unidirectional transports):
 
 ```bash
 curl --header "Content-Type: application/json" \
@@ -98,9 +98,9 @@ In case information about last status update time not available the response wil
 }
 ```
 
-I.e. status object will present in a response but `active` field won't be set for status object.
+I.e. the status object will be present in the response but the `active` field won't be set for the status object.
 
-Note that Centrifugo also maintains `online` field inside user status object. This field updated periodically by Centrifugo itself while user has active connection with a server. So you can draw `away` statuses in your application: i.e. when user connected (`online` time) but not using application for a long time (`active` time).
+Note that Centrifugo also maintains the `online` field inside the user status object. This field is updated periodically by Centrifugo itself while the user has an active connection with a server. So you can draw `away` statuses in your application: i.e. when a user is connected (`online` time) but has not been using the application for a long time (`active` time).
 
 #### GetUserStatusRequest
 
@@ -177,9 +177,9 @@ It's also possible to reuse Centrifugo Redis engine by setting `reuse_from_engin
 }
 ```
 
-In this case Redis active status will simply connect to Redis instances configured for Centrifugo Redis engine.
+In this case the Redis active status will simply connect to Redis instances configured for the Centrifugo Redis engine.
 
-`expire_interval` is a [duration](../server/configuration.md#duration-type) for how long Redis keys will be kept for each user. Expiration time extended on every update. By default expiration time is 30 days. To set it to 1 day:
+`expire_interval` is a [duration](../server/configuration.md#duration-type) for how long Redis keys will be kept for each user. The expiration time is extended on every update. By default the expiration time is 30 days. To set it to 1 day:
 
 ```json title="config.json"
 {

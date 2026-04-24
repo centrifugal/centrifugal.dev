@@ -75,7 +75,7 @@ centrifuge.connect()
 
 Note, that we are using secure schemes here – `https://` and `wss://`. While in WebSocket case you could opt for non-TLS communication, in WebTransport case non-TLS `http://` scheme is simply not supported by the specification.
 
-Also, Chrome may not automatically close WebTransport sessions upon browser window reload, so consider adding:
+Also, Chrome may not automatically close WebTransport sessions upon browser window reload, so consider adding the following:
 
 ```javascript
 addEventListener("beforeunload", (event) => { centrifuge.disconnect() });
@@ -87,6 +87,6 @@ Make sure you run Centrifugo without load balancer or reverse proxy in front, or
 
 :::
 
-In Centrifugo case, we utilize a single bidirectional stream of WebTransport to pass our protocol between client and server. Both JSON and Protobuf communication are supported. There are some issues with the proper passing of the disconnect advice in some cases, otherwise it's fully functional.
+In the Centrifugo case, we utilize a single bidirectional stream of WebTransport to pass our protocol between client and server. Both JSON and Protobuf communication are supported. There are some issues with the proper passing of the disconnect advice in some cases; otherwise it's fully functional.
 
 Obviously, due to the limited WebTransport support in browsers at the moment, possible breaking changes in the WebTransport specification it's an **experimental** feature. And it's not recommended for production usage for now. At some point in the future, it may become a reasonable alternative to WebSocket.

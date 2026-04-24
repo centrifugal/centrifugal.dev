@@ -19,7 +19,7 @@ By default, Centrifugo uses a `memory` engine – where all the data is kept in 
 
 With default `memory` engine you can start only one node of Centrifugo, while Redis engine allows running several nodes on different machines for high availability and to scale client connections. In distributed case all Centrifugo nodes will be connected via broker PUB/SUB, will discover each other and deliver publications to the node where active channel subscribers exist – so it's possible to publish message to a channel on any node and it will be automatically delivered to subscriber which can be connected to another Centrifugo node.
 
-Memory engine keeps history and presence data in process memory, so the data is lost upon server restart. Given the ephemeral nature of Centrifugo data – the loss may be totally acceptable. When using Redis Engine the data is kept in Redis (where you can configure the desired persistence properties) instead of Centrifugo node process memory, so channel channel history data won't be lost upon Centrifugo server restart.
+Memory engine keeps history and presence data in process memory, so the data is lost upon server restart. Given the ephemeral nature of Centrifugo data – the loss may be totally acceptable. When using Redis Engine the data is kept in Redis (where you can configure the desired persistence properties) instead of Centrifugo node process memory, so channel history data won't be lost upon Centrifugo server restart.
 
 ## `engine`
 
@@ -367,7 +367,7 @@ This resolves the situation when Redis becoming a bottleneck on a large Centrifu
 
 ![](/img/redis_app_level_sharding.png)
 
-At moment Centrifugo supports a simple comma-based approach to configuring Redis shards. Let's just look at examples.
+At the moment Centrifugo supports a simple comma-based approach to configuring Redis shards. Let's just look at examples.
 
 To start Centrifugo with 2 Redis shards use config like this:
 
@@ -393,7 +393,7 @@ Due to how Redis PUB/SUB works you must not (and it's pretty useless anyway) to 
 
 :::
 
-When sharding enabled Centrifugo will spread channels and history/presence keys over configured Redis instances using a consistent hashing algorithm. At moment we use Jump consistent hash algorithm (see [paper](https://arxiv.org/pdf/1406.2294.pdf) and [implementation](https://github.com/dgryski/go-jump)).
+When sharding enabled Centrifugo will spread channels and history/presence keys over configured Redis instances using a consistent hashing algorithm. At the moment we use Jump consistent hash algorithm (see [paper](https://arxiv.org/pdf/1406.2294.pdf) and [implementation](https://github.com/dgryski/go-jump)).
 
 ### Redis Cluster support
 
@@ -665,7 +665,7 @@ Here is how raw mode may be enabled:
 }
 ```
 
-`channel_replacements` is a `map[string]string` option which allows transforming Centrifugo channel to Nats channel before subscribing and back when consuming a message from Nats. For example, in the example above we can see `channel_replacements` set in a way to transform `chat:index` Centrifugo channel to `chat.index` Nats topic upon subscription. Centrifugo simply replaces all occurences of symbols in `channel_replacements` map to corresponding values.
+`channel_replacements` is a `map[string]string` option which allows transforming Centrifugo channel to Nats channel before subscribing and back when consuming a message from Nats. For example, in the example above we can see `channel_replacements` set in a way to transform `chat:index` Centrifugo channel to `chat.index` Nats topic upon subscription. Centrifugo simply replaces all occurrences of symbols in `channel_replacements` map to corresponding values.
 
 If you publish to Centrifugo API with raw mode enabled – publication payloads will be simply published to Nats subject without any Centrifugo-specific wrapping too.
 

@@ -54,7 +54,7 @@ To enable channel compaction, set the `allow_channel_compaction` option to `true
 }
 ```
 
-After that client SDKs which support channel compaction will automatically negotiate it during the subscription, no additional steps required.
+After that, client SDKs which support channel compaction will automatically negotiate it during the subscription; no additional steps are required.
 
 At this moment only JavaScript SDK (`centrifuge-js`) supports this feature (since v5.5.0). Centrifugo PRO supports this since v6.5.0.
 

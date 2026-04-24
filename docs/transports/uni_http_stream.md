@@ -37,7 +37,7 @@ JSON
 
 ## Ping
 
-Centrifugo will send different message types to a connection. Every message is JSON encoded. A special JSON value `null` used as a PING message. You can simply ignore it on a client side upon receiving. You can ignore such messages or use them to detect broken connections (nothing received from a server for a long time).
+Centrifugo will send different message types to a connection. Every message is JSON encoded. A special JSON value `null` is used as a PING message. You can simply ignore it on the client side upon receiving. You can ignore such messages or use them to detect broken connections (nothing received from a server for a long time).
 
 ## `uni_http_stream`
 
@@ -60,7 +60,7 @@ Enables unidirectional HTTP streaming endpoint.
 
 Default: 65536 (64KB)
 
-Maximum allowed size of a initial HTTP POST request in bytes.
+Maximum allowed size of an initial HTTP POST request in bytes.
 
 ## Example connect with CURL
 
@@ -119,7 +119,7 @@ curl -X POST http://localhost:8000/api/publish \
     -H "Authorization: apikey 9230f514-34d2-4971-ace2-851c656e81dc"
 ```
 
-You should see this messages coming from server.
+You should see these messages coming from server.
 
 `{}` messages are pings from a server.
 

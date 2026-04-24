@@ -32,7 +32,7 @@ SDKs driven by the community:
 * [s00d/tauri-plugin-centrifugo](https://github.com/s00d/tauri-plugin-centrifugo) – Tauri plugin for real-time communication with Centrifugo server using the tokio-centrifuge library
 
 
-See a description of [client protocol](./client_protocol.md) if you want to write a custom bidirectional connector or eager to learn how Centrifugo protocol internals are structured. In case of any question how protocol works take a look at existing SDK source code or reach out in the community rooms.
+See a description of [client protocol](./client_protocol.md) if you want to write a custom bidirectional connector or are eager to learn how Centrifugo protocol internals are structured. If you have any questions about how the protocol works, take a look at existing SDK source code or reach out in the community rooms.
 
 ## Protobuf and JSON formats in SDKs
 
@@ -48,7 +48,7 @@ There are some important notes about [JSON and Protobuf interoperability](../faq
 
 ## SDK feature matrix
 
-Below you can find an information regarding support of different features in our official client SDKs
+Below you can find information regarding support of different features in our official client SDKs
 
 ### Connection related features
 

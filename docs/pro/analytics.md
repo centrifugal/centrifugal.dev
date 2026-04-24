@@ -4,13 +4,13 @@ id: analytics
 title: Analytics with ClickHouse
 ---
 
-This feature allows exporting information about channel publications, client connections, channel subscriptions,  client operations and push notifications to [ClickHouse](https://clickhouse.com/) thus providing an integration with a real-time (with seconds delay) analytics storage. ClickHouse is super fast for analytical queries, simple to operate with and it allows effective data keeping for a window of time. Also, it's relatively simple to create a high performance ClickHouse cluster.
+This feature allows exporting information about channel publications, client connections, channel subscriptions, client operations and push notifications to [ClickHouse](https://clickhouse.com/), providing an integration with a real-time (with seconds delay) analytics storage. ClickHouse is super fast for analytical queries, simple to operate with, and it allows effective data keeping for a window of time. Also, it's relatively simple to create a high-performance ClickHouse cluster.
 
 ![clickhouse](/img/clickhouse.png)
 
 This unlocks a great observability and a way to perform various analytics queries for better connection behavior understanding, check application correctness, building trends, reports, and so on.
 
-As soon as you start using integration with ClickHouse some of mentioned possibilities may be easily accessed with Centrifugo PRO web UI and it's analytics page:
+As soon as you start using the integration with ClickHouse, some of the mentioned possibilities may be easily accessed with the Centrifugo PRO web UI and its analytics page:
 
 ![Admin analytics](/img/pro_analytics.png)
 
@@ -62,7 +62,7 @@ Centrifugo PRO supports data export only over ClickHouse native TCP protocol the
 
 :::
 
-All ClickHouse analytics options scoped to `clickhouse_analytics` section of configuration.
+All ClickHouse analytics options are scoped to the `clickhouse_analytics` section of the configuration.
 
 Toggle this feature using `clickhouse_analytics.enabled` boolean option.
 
@@ -72,7 +72,7 @@ You also need to set a ClickHouse cluster name (`clickhouse_analytics.clickhouse
 
 `clickhouse_analytics.skip_schema_initialization` - boolean, default `false`. By default Centrifugo tries to initialize table schema on start (if not exists). This flag allows skipping initialization process.
 
-`clickhouse_analytics.skip_ping_on_start` - boolean, default `false`. Centrifugo pings Clickhouse servers by default on start, if any of servers is unavailable – Centrifugo fails to start. This option allow skipping this check thus Centrifugo is able to start even if Clickhouse cluster not working correctly.
+`clickhouse_analytics.skip_ping_on_start` - boolean, default `false`. Centrifugo pings ClickHouse servers by default on start; if any server is unavailable – Centrifugo fails to start. This option allows skipping this check, so Centrifugo is able to start even if the ClickHouse cluster is not working correctly.
 
 `clickhouse_analytics.tls` - [TLS object](../server/configuration.md#tls-config-object) (available since v6.6.4). By default, no TLS is used. When enabled, TLS is applied to both data export and query connections to ClickHouse.
 
@@ -404,7 +404,7 @@ WHERE (error = 111) AND (op = 'publish') AND (user = 'user_200');
 └─────────┘
 ```
 
-Show number of unique users subscribed to a specific channel in last 5 minutes (this is approximate since subscriptions table contain periodic snapshot entries, clients could unsubscribe in between snapshots – this is reflected in operations table):
+Show the number of unique users subscribed to a specific channel in the last 5 minutes (this is approximate since the subscriptions table contains periodic snapshot entries; clients could unsubscribe between snapshots – this is reflected in the operations table):
 
 ```sql
 SELECT uniqExact(user)
@@ -458,9 +458,9 @@ WHERE (time > (now() - toIntervalHour(24))) AND (platform = 'ios')
 
 The recommended way to run ClickHouse in production is with cluster. See [an example of such cluster configuration](https://github.com/centrifugal/centrifugo/tree/master/misc/clickhouse_cluster) made with Docker Compose.
 
-But during development you may want to run Centrifugo with single instance ClickHouse.
+But during development you may want to run Centrifugo with a single ClickHouse instance.
 
-To do this set only one ClickHouse dsn and do not set cluster name:
+To do this, set only one ClickHouse DSN and do not set a cluster name:
 
 ```json title="config.json"
 {
@@ -523,7 +523,7 @@ Issue queries:
 
 ## How export works
 
-When ClickHouse analytics enabled Centrifugo nodes start exporting events to ClickHouse. Each node issues insert with events once in 10 seconds (flushing collected events in batches thus making insertion in ClickHouse efficient). Maximum batch size is 100k for each table at the moment. If insert to ClickHouse failed Centrifugo retries it once and then buffers events in memory (up to 1 million entries). If ClickHouse still unavailable after collecting 1 million events then new events will be dropped until buffer has space. These limits are configurable. Centrifugo PRO uses very efficient code for writing data to ClickHouse, so analytics feature should only add a little overhead for Centrifugo node.
+When ClickHouse analytics is enabled, Centrifugo nodes start exporting events to ClickHouse. Each node issues an insert with events once every 10 seconds (flushing collected events in batches, thus making insertion into ClickHouse efficient). The maximum batch size is 100k for each table at the moment. If an insert to ClickHouse fails, Centrifugo retries it once and then buffers events in memory (up to 1 million entries). If ClickHouse is still unavailable after collecting 1 million events, new events will be dropped until the buffer has space. These limits are configurable. Centrifugo PRO uses very efficient code for writing data to ClickHouse, so the analytics feature should only add a little overhead for a Centrifugo node.
 
 ## Exposed metrics
 

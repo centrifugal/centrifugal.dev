@@ -4,7 +4,7 @@ id: server_api
 title: Server API walkthrough
 ---
 
-Server API provides various methods to interact with Centrifugo from your application backend. Specifically, in most cases server API this is an entrypoint for publications into channels (see [publish](#publish) method). It also allows getting information about Centrifugo cluster, disconnect users, extract channel online presence information, channel history, and so on.
+Server API provides various methods to interact with Centrifugo from your application backend. Specifically, in most cases the server API is the entry point for publications into channels (see [publish](#publish) method). It also allows getting information about the Centrifugo cluster, disconnecting users, extracting channel online presence information, channel history, and so on.
 
 There are two kinds of server API available at the moment:
 
@@ -73,7 +73,7 @@ Boolean. Default: `false`.
 
 To disable API key check on Centrifugo side you can use `http_api.insecure` configuration option (boolean, default `false`). Use it in development only or make sure to protect the API endpoint by proxy or firewall rules in production – to prevent anyone with access to the endpoint to send commands over your unprotected Centrifugo API.
 
-We also recommended protecting Centrifugo API with TLS layer.
+We also recommend protecting the Centrifugo API with a TLS layer.
 
 ## API methods
 
@@ -100,7 +100,7 @@ In case of successful publish you will get a response like this:
 }
 ```
 
-As an additional example, let's take a look how to publish to Centrifugo with `requests` library for Python: 
+As an additional example, let's take a look at how to publish to Centrifugo with the `requests` library for Python: 
 
 ```python
 import json
@@ -563,7 +563,7 @@ Empty object at the moment.
 
 ### channels
 
-`channels` return active channels (with one or more active subscribers in it).
+`channels` returns active channels (with one or more active subscribers in them).
 
 ```bash
 curl --header "X-API-Key: <API_KEY>" \
@@ -799,7 +799,7 @@ If set to a value > 0 allows tuning the max size of message GRPC server can rece
 
 ### GRPC example for Python
 
-For example for Python you need to run sth like this according to GRPC docs:
+For example, for Python you need to run something like this according to the GRPC docs:
 
 ```
 pip install grpcio-tools
@@ -983,11 +983,11 @@ For other languages refer to GRPC docs.
 
 ## Transport error mode
 
-By default, Centrifugo server API never returns transport level errors - for example it always returns 200 OK for HTTP API and never returns GRPC transport-level errors. Centrifugo returns its custom errors from API calls inside optional `error` field of response as we showed above in this doc. This means that API call to Centrifigo API may returns 200 OK, but in the `error` field you may find Centrifugo-specific `100: internal error`.
+By default, Centrifugo server API never returns transport-level errors — for example, it always returns 200 OK for HTTP API and never returns GRPC transport-level errors. Centrifugo returns its custom errors from API calls inside the optional `error` field of the response, as we showed above in this doc. This means that an API call to Centrifugo API may return 200 OK, but in the `error` field you may find a Centrifugo-specific `100: internal error`.
 
-Since Centrifugo v5.1.0 Centrifigo has an option to use transport-native error codes instead of Centrifugo `error` field in the response. The main motivation is make API calls friendly to integrate with the network ecosystem - for automatic retries, better logging, etc. In many situations this may be more obvious for humans also.
+Since Centrifugo v5.1.0, Centrifugo has an option to use transport-native error codes instead of the Centrifugo `error` field in the response. The main motivation is to make API calls friendly to integrate with the network ecosystem — for automatic retries, better logging, etc. In many situations this may also be more obvious for humans.
 
-Let's show an example. Without any special options HTTP request to Centrifigo server API which contains error in response looks like this: 
+Let's show an example. Without any special options, an HTTP request to Centrifugo server API that contains an error in the response looks like this: 
 
 ```bash
 ❯ echo '{}' | http POST "http://localhost:8000/api/publish"

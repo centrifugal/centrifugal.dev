@@ -20,7 +20,7 @@ This feature is **in the preview state now**. We still need some time before it 
 
 :::
 
-To enable the feature you must use `redis` engine. Also, only channels with `presence` enabled may deliver channel state notifications. When enabling channel state proxy Centrifugo PRO starts using another approach to create Redis keys for presence for namespaces where channel state events enabled, this is an important implementation detail.
+To enable the feature you must use the `redis` engine. Also, only channels with `presence` enabled may deliver channel state notifications. When enabling the channel state proxy, Centrifugo PRO starts using another approach to create Redis keys for presence for namespaces where channel state events are enabled; this is an important implementation detail.
 
 :::caution
 
@@ -64,9 +64,9 @@ The proxy endpoint is an extension of [Centrifugo OSS proxy](../server/proxy.md)
 }
 ```
 
-Payload may contain a batch of events, that's why `events` is an array – this is important for achieving a high event throughput. Your backend must be fast enough to keep up with the events rate and volume, otherwise event queues will grow and eventually new events will be dropped by Centrifugo PRO.
+The payload may contain a batch of events, that's why `events` is an array – this is important for achieving high event throughput. Your backend must be fast enough to keep up with the events rate and volume, otherwise event queues will grow and eventually new events will be dropped by Centrifugo PRO.
 
-Respond with empty result object, without `error` object set to let Centrifugo PRO know that events were processed successfully. If the request to the backend fails or the response contains an `error` object, Centrifugo PRO will retry sending events with exponential backoff (from 100ms up to 20s).
+Respond with an empty result object, without an `error` object set, to let Centrifugo PRO know that events were processed successfully. If the request to the backend fails or the response contains an `error` object, Centrifugo PRO will retry sending events with exponential backoff (from 100ms up to 20s).
 
 Here is an example of an HTTP handler for processing channel state events using Flask:
 
@@ -180,7 +180,7 @@ Add the following options to the configuration file:
 }
 ```
 
-To enable the proxy for desired channels, use `cache_empty_proxy_enabled` channel namespace option. For example, to enable for channels without namespace:
+To enable the proxy for desired channels, use the `cache_empty_proxy_enabled` channel namespace option. For example, to enable it for channels without namespace:
 
 ```json title="config.json"
 {

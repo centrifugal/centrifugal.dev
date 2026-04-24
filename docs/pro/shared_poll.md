@@ -66,7 +66,7 @@ When enabled, Centrifugo computes fossil deltas between the previous and current
 
 By default, shared poll subscriptions rely on timer-based polling — clients see backend data changes only after the next refresh cycle (up to `refresh_interval` latency). The notification fast path lets your application push lightweight signals when data changes, triggering an immediate backend poll for just the affected keys. This reduces update latency from seconds to milliseconds without abandoning the simplicity of the polling model.
 
-Notifications are **not data** — they are just channel + key hints. The existing backend poll mechanism fetches the actual data, so your publish path stays simple (no need to serialize and send full payloads through the notification channel).
+Notifications are **not data** — they are just channel and key hints. The existing backend poll mechanism fetches the actual data, so your publish path stays simple (no need to serialize and send full payloads through the notification channel).
 
 ### How it works
 

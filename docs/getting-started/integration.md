@@ -34,7 +34,7 @@ Create a basic configuration file with `token_hmac_secret_key` (or `token_rsa_pu
 ./centrifugo genconfig
 ```
 
-– which will generate `config.json` file for you with a minimal set of fields to start from.
+– which will generate a `config.json` file for you with a minimal set of fields to start from.
 
 Properly configure [allowed_origins](../server/configuration.md#clientallowed_origins) option.
 

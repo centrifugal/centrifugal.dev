@@ -1,5 +1,5 @@
 ---
-title: Map subscriptions (Part 2) — when your PostgreSQL transaction IS your real-time publish
+title: Map subscriptions (Part 2) — when your PostgreSQL transaction is your real-time publish
 tags: [centrifugo, websocket, state-sync, postgresql]
 description: In this post we tell about PostgreSQL map broker which brings real persistence to Centrifugo-owned key-value collections and lets application publish updates inside its own database transactions.
 author: Alexander Emelin

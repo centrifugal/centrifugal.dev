@@ -45,7 +45,7 @@ And put `config.json` to local `centrifugo` directory with the following content
 }
 ```
 
-We will be using `personal` [namespace](../server/channels.md#channel-namespaces) here for user channels. Using separate namespaces for every real-time feature is a recommended approach when working with Centrifugo. Namespace allow splitting channel space and configure behavior separately for different real-time features.
+We will be using the `personal` [namespace](../server/channels.md#channel-namespaces) here for user channels. Using separate namespaces for every real-time feature is a recommended approach when working with Centrifugo. Namespaces allow splitting the channel space and configuring behavior separately for different real-time features.
 
 ## Adding Centrifugo connection
 
@@ -99,7 +99,7 @@ useEffect(() => {
 
 When user logs out and `userInfo.id` is not set – the connection to server is closed as we do `centrifuge.disconnect()` in `useEffect` cleanup function.
 
-But if you run the code like this – connection won't be established. That's bad news! But we also have good news - this means that Centrifugo supports secure communication and we need to authenticate connection upon establishing! Let's do this.
+But if you run the code like this – the connection won't be established. That's bad news! But we also have good news - this means that Centrifugo supports secure communication and we need to authenticate the connection upon establishing it! Let's do this.
 
 ## Adding JWT connection authentication
 
@@ -121,7 +121,7 @@ export const getConnectionToken = async () => {
 }
 ```
 
-I.e. it makes request to the backend and receives connection JWT in response. Again – frontend makes request to the backend to get Centrifugo connection token. Of course we should implement the view on the backend which processes such requests and generates tokens for authenticated users.
+I.e. it makes a request to the backend and receives a connection JWT in response. Again – the frontend makes a request to the backend to get the Centrifugo connection token. Of course we should implement the view on the backend which processes such requests and generates tokens for authenticated users.
 
 The token must follow specification described in [Client JWT authentication](../server/authentication.md) chapter. Long story short – it's just a JWT from [rfc7519](https://datatracker.ietf.org/doc/html/rfc7519), we can use any JWT library to generate it.
 
@@ -146,7 +146,7 @@ def get_connection_token(request):
     return JsonResponse({'token': token})
 ```
 
-– where `jwt` import is a PyJWT library (`pip install PyJWT`). We generate JWT where `sub` claim is set to current user ID and token expires in 2 minutes.
+– where `jwt` import is a PyJWT library (`pip install PyJWT`). We generate a JWT where the `sub` claim is set to the current user ID and the token expires in 2 minutes.
 
 Note, we are using `settings.CENTRIFUGO_TOKEN_SECRET` here, we need to include this option to `backend/app/settings.py`:
 
@@ -158,15 +158,15 @@ CENTRIFUGO_TOKEN_SECRET = 'secret'
 
 It must match the value of `"token_hmac_secret_key"` option from Centrifugo configuration.
 
-Don't forget to include this view to `urls.py` configuration, and then you can finally connect to Centrifugo from the frontend: upon page load `centrifuge-js` SDK makes request to the backend to load connection token, establishes WebSocket connection with Centrifugo passing connection token. Centrifugo validates token and since secrets match Centrifugo may be sure the token contains valid information about user.
+Don't forget to include this view in the `urls.py` configuration, and then you can finally connect to Centrifugo from the frontend: upon page load the `centrifuge-js` SDK makes a request to the backend to load the connection token, establishes a WebSocket connection with Centrifugo passing the connection token. Centrifugo validates the token and since the secrets match, Centrifugo can be sure the token contains valid information about the user.
 
 ## Subscribing on personal channel
 
-Awesome! Though simply being connecting is not that useful. We want to receive real-time data from Centrifugo. But how Centrifugo will understand how to route published data? Of course due to channel concept. Client can subscribe to channel to receive all messages published to that channel.
+Awesome! Though simply being connected is not that useful. We want to receive real-time data from Centrifugo. But how will Centrifugo understand how to route published data? Of course, through the channel concept. A client can subscribe to a channel to receive all messages published to that channel.
 
 As mentioned before – for this sort of app using a single individual channel for each user makes a lot of sense.
 
-You can ask – could we simply subscribe to all room channels current user is member of? It may be a good thing if you know that users won't have too many groups, let's say 10-100 max. Going above this number will make UI less efficient. Consider user who is a member of a thousand of groups – it will require a very heavyweight initial subscribe request. What if user is member of 10k groups? So moving all the routing complexity to the backend having a single individual channel on the frontend seems a more reasonable approach for our app. And this will also help us to simpify state recovery later. 
+You can ask – could we simply subscribe to all room channels the current user is a member of? It may be a good thing if you know that users won't have too many groups, let's say 10-100 max. Going above this number will make the UI less efficient. Consider a user who is a member of a thousand groups – it will require a very heavyweight initial subscribe request. What if the user is a member of 10k groups? So moving all the routing complexity to the backend with a single individual channel on the frontend seems a more reasonable approach for our app. And this will also help us to simplify state recovery later.
 
 We already have namespace `personal` configured in Centrifugo – so let's use it to construct individual channel for each user.
 
@@ -174,7 +174,7 @@ We already have namespace `personal` configured in Centrifugo – so let's use i
 const personalChannel = 'personal:' + userInfo.id
 ```
 
-So for user with id `1` we will have channel `personal:1`, for user `2` – `personal:2` – and so on. Of course in messenger app we do not want one user to be able to subscribe on the channel belonging to another user. So we will use [subscription token auth](../server/channel_token_auth.md) for channels here. It's also a JWT loaded from the backend. But this JWT must additionally include `channel` claim. So in React we can create Subscription object this way:
+So for a user with id `1` we will have channel `personal:1`, for user `2` – `personal:2` – and so on. Of course in a messenger app we do not want one user to be able to subscribe to a channel belonging to another user. So we will use [subscription token auth](../server/channel_token_auth.md) for channels here. It's also a JWT loaded from the backend. But this JWT must additionally include `channel` claim. So in React we can create Subscription object this way:
 
 ```javascript
 export const getSubscriptionToken = async (channel: string) => {
@@ -199,7 +199,7 @@ sub.on('publication', (ctx: PublicationContext) => {
 sub.subscribe()
 ```
 
-Note that we additionally attach `channel` URL query param when requesting backend – so the backend understands which channel to generate subscription JWT for.
+Note that we additionally attach a `channel` URL query parameter when requesting the backend – so the backend understands which channel to generate the subscription JWT for.
 
 On the backend side we check permission to subscribe and return subscription token:
 
@@ -238,11 +238,11 @@ sub.on('state', (ctx: SubscriptionStateContext) => {
 
 There are several subscription states in all our SDKs - `unsubscribed`, `subscribing`, `subscribed`. You can also listen for them separately for more granular logic and get more detailed information about the reason of subscription loss. See [client SDK spec](../transports/client_api.md) for more detailed description.
 
-Now we should be able to connect (and authenticate) and subscribe to channel (with authorization). Try to open browser tools network tab and see WebSocket frames exchanged between client and server (we showed how to see this in [quickstart](../getting-started/quickstart.md)).
+Now we should be able to connect (and authenticate) and subscribe to a channel (with authorization). Try to open the browser tools network tab and see WebSocket frames exchanged between client and server (we showed how to see this in [quickstart](../getting-started/quickstart.md)).
 
 ## Publish real-time messages
 
-Now we have real-time WebSocket connection which is subscribed to user individual channel. It's time to start publishing messages upon changes in chat rooms. In out case, we send a real-time message in one of the following scenarios:
+Now we have a real-time WebSocket connection which is subscribed to the user's individual channel. It's time to start publishing messages upon changes in chat rooms. In our case, we send a real-time message in one of the following scenarios:
 
 * someone sends a message to a chat room
 * user joins a room
@@ -324,13 +324,13 @@ class MessageListCreateAPIView(ListCreateAPIView, CentrifugoMixin):
 
 Let's mention some important things.
 
-We do broadcasts only after successful commit, using Django's `transaction.on_commit` hook. Otherwise transaction we could get an error on transaction commit - but send misleading real-time message.
+We do broadcasts only after successful commit, using Django's `transaction.on_commit` hook. Otherwise we could get an error on transaction commit - but have already sent a misleading real-time message.
 
 Here we use `requests` library for making HTTP requests (`pip install requests`) and do some retries which is nice to deal with temporary network issues.
 
 We construct list of channels using `values_list` method of Django queryset to make query more efficient.
 
-We also using `settings.CENTRIFUGO_HTTP_API_KEY` which is set in `settings.py` and matches `api_key` option from Centrifugo configuration file:
+We also use `settings.CENTRIFUGO_HTTP_API_KEY` which is set in `settings.py` and matches the `api_key` option from the Centrifugo configuration file:
 
 ```
 # CENTRIFUGO_HTTP_API_KEY is used for auth in Centrifugo server HTTP API.
@@ -399,7 +399,7 @@ class LeaveRoomView(APIView, CentrifugoMixin):
 
 ```
 
-We also would like to mention the concept of room `version`. Each room has version field in our app, we increment it by one every time we make some room updates. We then attach version to every event we publish. This technique may be useful to avoid processing non-actual real-time messages on the client side. This is especially useful if we use outbox or CDC techniques where delivery latency increases and a chance to get real-time message which is not actual (i.e. app already loaded more "fresh" state from the backend) increases. 
+We would also like to mention the concept of room `version`. Each room has a version field in our app; we increment it by one every time we make some room updates. We then attach the version to every event we publish. This technique may be useful to avoid processing outdated real-time messages on the client side. This is especially useful if we use outbox or CDC techniques where delivery latency increases and the chance to get a real-time message that is no longer current (i.e. the app has already loaded more "fresh" state from the backend) also increases.
 
 ## Handle real-time messages
 
@@ -419,7 +419,7 @@ const onPublication = (publication: any) => {
 };
 ```
 
-In our app example we process the messages using asynchronous queue. To be honest, it's hard to give the universal receipt here – it seems to be a good approach for our example, but probably in your own app you will organise message processing differently.
+In our app example we process the messages using an asynchronous queue. To be honest, it's hard to give a universal recipe here – it seems to be a good approach for our example, but probably in your own app you will organise message processing differently.
 
 ```javascript
 const [chatState, dispatch] = useReducer(reducer, initialChatState);
@@ -511,7 +511,7 @@ const processMessageAdded = async (body: any) => {
 }
 ```
 
-We load the room if it was not loaded yet, load room's messages if it's first time we see a message in the room. 
+We load the room if it was not loaded yet, and load the room's messages if it's the first time we see a message in the room.
 
 ## Handle user joined event
 

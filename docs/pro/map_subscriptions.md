@@ -45,7 +45,7 @@ Key options:
 | `load_timeout` | `"5s"` | Timeout for loading a channel from backend on first subscribe |
 | `stream_size` | `10000` | Max stream entries to keep in cache |
 
-The cache is filled from the backend — both local and remote writes arrive via PUB/SUB, so the cache reflects changes in near real-time. This ensures stream offsets in the cache match the order they were written in the main storage, keeping incremental recovery correct. The `sync_interval` acts as a safety net, periodically polling the backend to catch any publications that may have been missed due to transient PUB/SUB failures.
+The cache is filled from the backend — both local and remote writes arrive via PUB/SUB, so the cache reflects changes in near real-time. This ensures stream offsets in the cache match the order in which they were written in the main storage, keeping incremental recovery correct. The `sync_interval` acts as a safety net, periodically polling the backend to catch any publications that may have been missed due to transient PUB/SUB failures.
 
 ### Full-state delta sync
 
@@ -180,7 +180,7 @@ Reads from subscribers are distributed across replicas using consistent hashing 
 
 ### Broker fan-out
 
-By default, every Centrifugo node polls the PostgreSQL outbox independently. With broker fan-out, only one node per shard polls PostgreSQL and publishes updates through an external broker (Redis or NATS). This reduces PostgreSQL polling load proportionally to cluster size.
+By default, every Centrifugo node polls the PostgreSQL outbox independently. With broker fan-out, only one node per shard polls PostgreSQL and publishes updates through an external broker (Redis or NATS). This reduces the PostgreSQL polling load proportionally to cluster size.
 
 ```json title="config.json"
 {

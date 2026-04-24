@@ -10,7 +10,7 @@ The tracing feature of Centrifugo PRO allows attaching to any channel to see all
 
 It's possible to attach to trace streams using Centrifugo admin UI panel or from terminal using CURL.
 
-This can be super-useful for debugging issues, investigating application behavior, understanding that the application works as expected. 
+This can be super-useful for debugging issues, investigating application behavior, and understanding that the application works as expected.
 
 <video width="100%" controls>
   <source src="/img/tracing_ui.mp4" type="video/mp4" />

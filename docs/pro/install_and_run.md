@@ -13,9 +13,9 @@ Centrifugo PRO is distributed by Centrifugal Labs LTD under [commercial license]
 
 ### Binary release
 
-Centrifugo PRO binary releases [available on Github](https://github.com/centrifugal/centrifugo-pro/releases). Note that we use a separate repo for PRO releases. Download latest release for your operating system, unpack it and run (see how to set license key [below](#setting-pro-license-key)).
+Centrifugo PRO binary releases are [available on Github](https://github.com/centrifugal/centrifugo-pro/releases). Note that we use a separate repo for PRO releases. Download the latest release for your operating system, unpack it and run (see how to set the license key [below](#setting-pro-license-key)).
 
-If you doubt which distribution you need, then on Linux or MacOS you can use the following command to download and unpack `centrifugo` binary to your current working directory:
+If you are unsure which distribution you need, then on Linux or macOS you can use the following command to download and unpack the `centrifugo` binary to your current working directory:
 
 ```shell
 curl -sSLf https://centrifugal.dev/install_pro.sh | sh
@@ -61,9 +61,9 @@ sudo yum install centrifugo-pro-6.6.4-0.x86_64.rpm
 
 ## Setting PRO license key
 
-Centrifugo PRO inherits all features and configuration options from open-source version. The only difference is that it expects a valid license key on start to avoid sandbox mode limits.
+Centrifugo PRO inherits all features and configuration options from the open-source version. The only difference is that it expects a valid license key on start to avoid sandbox mode limits.
 
-Once you have installed a PRO version and have a license key you can set it in configuration over `license` field, or pass over environment variables as `CENTRIFUGO_LICENSE`. Like this:
+Once you have installed a PRO version and have a license key, you can set it in the configuration via the `license` field, or pass it via environment variables as `CENTRIFUGO_LICENSE`. Like this:
 
 ```json title="config.json"
 {
@@ -74,6 +74,6 @@ Once you have installed a PRO version and have a license key you can set it in c
 
 :::tip
 
-If license properly set then on Centrifugo PRO start you should see license information in logs: owner, license type and expiration date. All PRO features should be unlocked at this point. Warning about sandbox mode in logs on server start must disappear.
+If the license is properly set, then on Centrifugo PRO start you should see license information in logs: owner, license type and expiration date. All PRO features should be unlocked at this point. The warning about sandbox mode in logs on server start should disappear.
 
 :::

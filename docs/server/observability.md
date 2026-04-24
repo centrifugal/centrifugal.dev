@@ -4,7 +4,7 @@ id: observability
 title: Server observability
 ---
 
-To provide a better server observability Centrifugo supports reporting metrics in Prometheus format and can automatically export metrics to Graphite.
+To provide better server observability, Centrifugo supports reporting metrics in Prometheus format and can automatically export metrics to Graphite.
 
 ## Metrics
 

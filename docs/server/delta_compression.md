@@ -13,7 +13,7 @@ Using delta mode can significantly reduce the size of each message when the diff
 
 ![delta frames](/img/delta_abstract.png)
 
-In the scenario we used to evaluate delta compression feature usefullness we were able to achieve x10 reduction of traffic going through the network interface by enabling delta compression in the channel. This heavily depends on the nature of data you publish, but proves that deltas make a perfect sense in some scenarios.
+In the scenario we used to evaluate the usefulness of the delta compression feature, we were able to achieve a 10x reduction of traffic going through the network interface by enabling delta compression in the channel. This heavily depends on the nature of data you publish, but proves that deltas make a perfect sense in some scenarios.
 
 The diff is calculated using [Fossil](https://fossil-scm.org/home/doc/tip/www/delta_format.wiki) delta algorithm. Delta compression via Fossil supports all payloads, whether binary, or JSON-encoded. The delta algorithm processes message payloads as opaque binaries and has no dependency on the structure of the payload.
 
@@ -23,7 +23,7 @@ At this point delta compression is only available for bidirectional client-side 
 
 :::
 
-Deltas apply only to the `data` property of a Publication. Publications retrieved via history calls are not compressed – delta applied only for clent protocol publications travelling to real-time connections.
+Deltas apply only to the `data` property of a Publication. Publications retrieved via history calls are not compressed – deltas are applied only for client protocol publications travelling to real-time connections.
 
 How it may look in practice? Here is a screenshot of WebSocket frames in case of using our JSON protocol format. Note that the connection receives publication push with full payload first, then only deltas are sent which are much smaller in size:
 
@@ -72,7 +72,7 @@ If you want to use delta compression without history, positioning and recovery o
 
 :::
 
-If all conditions met – subscriber will negotiate compression with a server. If SDK does not support delta compression – it can still subscribe to the channel, but will receive publications with full payload. To let Centrifugo know that delta compression must be used for a particular publication some configuration is required for the publisher also. We will describe it shortly.
+If all conditions are met – the subscriber will negotiate compression with the server. If the SDK does not support delta compression – it can still subscribe to the channel, but will receive publications with the full payload. To let Centrifugo know that delta compression must be used for a particular publication, some configuration is required for the publisher as well. We will describe it shortly.
 
 ### Use delta when publishing
 

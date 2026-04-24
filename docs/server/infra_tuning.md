@@ -32,7 +32,7 @@ You may also need to increase max open files for Nginx (or any other proxy befor
 
 ### Ephemeral port exhaustion
 
-Ephemeral ports exhaustion problem can happen between your load balancer and Centrifugo server. If your clients connect directly to Centrifugo without any load balancer or reverse proxy software between then you are most likely won't have this problem. But load balancing is a very common thing.
+The ephemeral port exhaustion problem can happen between your load balancer and the Centrifugo server. If your clients connect directly to Centrifugo without any load balancer or reverse proxy software in between, then you most likely won't have this problem. But load balancing is a very common thing.
 
 The problem arises due to the fact that each TCP connection uniquely identified in the OS by the 4-part-tuple:
 
@@ -53,12 +53,12 @@ See [a post in Pusher blog](https://making.pusher.com/ephemeral-port-exhaustion-
 
 ### Sockets in TIME_WAIT state
 
-On load balancer/server boundary one more problem can arise: sockets in TIME_WAIT state.
+On the load balancer/server boundary, one more problem can arise: sockets in TIME_WAIT state.
 
-Under load when lots of connections and disconnections happen socket descriptors can stay in TIME_WAIT state. Those descriptors can not be reused for a while. So you can get various
-errors when using Centrifugo. For example something like `(99: Cannot assign requested address) while connecting to upstream` in Nginx error log and 502 on client side.
+Under load, when many connections and disconnections happen, socket descriptors can stay in TIME_WAIT state. Those descriptors cannot be reused for a while. So you can get various
+errors when using Centrifugo. For example, something like `(99: Cannot assign requested address) while connecting to upstream` in the Nginx error log and 502 on the client side.
 
-Look how many socket descriptors in TIME_WAIT state.
+Check how many socket descriptors are in TIME_WAIT state.
 
 ```
 netstat -an |grep TIME_WAIT | grep <CENTRIFUGO_PID> | wc -l
@@ -77,7 +77,7 @@ The advices here are similar to ephemeral port exhaustion problem:
 
 Proxies like Nginx and Envoy have default limits on maximum number of connections which can be established.
 
-Make sure you have a reasonable limit for max number of incoming and outgoing connections in your proxy configuration. 
+Make sure you have a reasonable limit for the maximum number of incoming and outgoing connections in your proxy configuration.
 
 ### Conntrack table
 

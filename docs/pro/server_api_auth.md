@@ -13,7 +13,7 @@ Instead of using the traditional API key authentication with `X-API-Key` header 
 
 ![server API JWKS](/img/server_api_jwks.png)
 
-The feature available since Centrifugo PRO v6.3.2
+The feature is available since Centrifugo PRO v6.3.2
 
 ## Configuration
 
@@ -80,7 +80,7 @@ Examples:
 
 #### `http_api.jwks.audience` / `grpc_api.jwks.audience`
 
-String. Optional, when not set audience check is skipped. It's recommended to set it.
+String. Optional; when not set, audience check is skipped. It's recommended to set it.
 
 The expected audience claim (`aud`) in the JWT token. This should match the audience configured in your identity provider for Centrifugo.
 
@@ -88,7 +88,7 @@ Example: `https://centrifugo.test.env`
 
 #### `http_api.jwks.issuer` / `grpc_api.jwks.issuer`
 
-String. Optional, when not set issuer check is skipped. It's recommended to set it.
+String. Optional; when not set, issuer check is skipped. It's recommended to set it.
 
 The expected issuer claim (`iss`) in the JWT token. This should match the issuer of tokens from your identity provider.
 

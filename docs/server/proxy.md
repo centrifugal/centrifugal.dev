@@ -129,7 +129,7 @@ Centrifugo re-uses the same configuration object for all proxy types. This objec
 | `endpoint`                | `string`                                                       | yes      | HTTP or GRPC endpoint in the same format as in default proxy mode. For example, `http://localhost:3000/path` for HTTP or `grpc://localhost:3000` for GRPC.              |
 | `timeout`                 | [`duration`](./configuration.md#duration-type) | no       | Proxy request timeout, default `"1s"`                                                                                                                                   |
 | `http_headers`            | `array[string]`                                                | no       | List of headers from incoming client connection to proxy, by default no headers will be proxied. See [Proxy HTTP headers](#proxy-http-headers) section.                 |
-| `grpc_metadata`           | `array[string]`                                                | no       | List of GRPC metadata keys from incomig GRPC connection to proxy, by default no metadata keys will be proxied. See [Proxy GRPC metadata](#proxy-grpc-metadata) section. |
+| `grpc_metadata`           | `array[string]`                                                | no       | List of GRPC metadata keys from incoming GRPC connection to proxy, by default no metadata keys will be proxied. See [Proxy GRPC metadata](#proxy-grpc-metadata) section. |
 | `include_connection_meta` | `bool`                                                         | no       | Include meta information (attached on connect). This is noop for connect proxy now. See [Include connection meta](#include-connection-meta) section.                    |
 | `http`                    | [`HTTP options`](#http-options-object)                | no       | Allows configuring outgoing HTTP protocol specific options.                                                                                                             |
 | `grpc`                    | [`GRPC options`](#grpc-options-object)                | no       | Allows configuring outgoing GRPC protocol specific options.                                                                                                             |
@@ -358,7 +358,7 @@ This is what sent from Centrifugo to application backend in case of connect prox
 | Field name | Field type | Optional | Description       |
 |------------|------------|----------|-------------------|
 | `code`     | `integer`  | no       | Disconnect code   |
-| `reason`   | `string`   | yes      | Disconenct reason |
+| `reason`   | `string`   | yes      | Disconnect reason |
 
 #### ConnectResult
 
@@ -445,7 +445,7 @@ We also have a tutorial in the blog about [Centrifugo integration with NodeJS](/
 
 #### What if connection is unauthenticated/unauthorized to connect?
 
-In this case return a disconnect object in a response. See [Return custom disconnect](#return-custom-disconnect) section. Depending on whether you want connection to reconnect or not (usually not) you can select the appropriate disconnect code. Sth like this in response:
+In this case return a disconnect object in a response. See [Return custom disconnect](#return-custom-disconnect) section. Depending on whether you want the connection to reconnect or not (usually not) you can select the appropriate disconnect code. Something like this in response:
 
 ```json
 {
@@ -1271,7 +1271,7 @@ For `subscribe`, `publish`, `rpc` proxies the error reaches bidirectional client
 
 For `publish` and `rpc` the error reaches app developer's code and developers can handle it in a custom way.
 
-Errors for `subscribe` are handled by the bidirectional SDKs automatically and my result into automatic re-subscription, or terminal unsubscribe (depending on the `temporary` flag of error object). The error `100: internal server error` used by default in case of non-200 HTTP proxy request status is temporary and leads to a re-subscription.
+Errors for `subscribe` are handled by the bidirectional SDKs automatically and may result in automatic re-subscription, or terminal unsubscribe (depending on the `temporary` flag of error object). The error `100: internal server error` used by default in case of non-200 HTTP proxy request status is temporary and leads to a re-subscription.
 
 If the error happens during `refresh` proxy call – Centrifugo automatically retries the refresh call after some time, so temporary downtime of the app backend does not corrupt established connections.
 

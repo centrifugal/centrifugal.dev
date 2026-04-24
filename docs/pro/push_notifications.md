@@ -5,7 +5,7 @@ sidebar_label: Push notification API
 title: Push notification API
 ---
 
-Centrifugo excels in delivering real-time in-app messages to online users. Sometimes though you need a way to engage offline users to come back to your app. Or trigger some update in the app while it's running in the background. That's where push notifications may be used. Push notifications delivered over battery-efficient platform-dependent transport.
+Centrifugo excels in delivering real-time in-app messages to online users. Sometimes though you need a way to engage offline users to come back to your app, or to trigger some update in the app while it's running in the background. That's where push notifications may be used. Push notifications are delivered over a battery-efficient, platform-dependent transport.
 
 With Centrifugo PRO push notifications may be delivered to all popular application platforms:
 
@@ -13,7 +13,7 @@ With Centrifugo PRO push notifications may be delivered to all popular applicati
 * <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i> iOS devices
 * <i className="bi bi-globe" style={{color: 'orange'}}></i> Web browsers which support Web Push API (Chrome, Firefox, see <a href="https://caniuse.com/push-api">this matrix</a>)
 
-Centrifugo PRO provides API to manage user device tokens, device topic subscriptions and API to send push notifications towards registered devices and group of devices (subscribed to a topic). API also supports timezone-aware push notifications, push localizations, templating and per user device push rate limiting. You can also use your own device token storage and use Centrifugo PRO as a high-performance way to send push notifications to supported providers. 
+Centrifugo PRO provides an API to manage user device tokens and device topic subscriptions, and an API to send push notifications to registered devices and groups of devices (subscribed to a topic). The API also supports timezone-aware push notifications, push localizations, templating, and per-user device push rate limiting. You can also use your own device token storage and use Centrifugo PRO as a high-performance way to send push notifications to supported providers.
 
 ![Push](/img/push_notifications.png)
 
@@ -23,9 +23,9 @@ To deliver push notifications to devices Centrifugo PRO integrates with the foll
 * [Huawei Messaging Service (HMS) Push Kit](https://developer.huawei.com/consumer/en/hms/huawei-pushkit/) <i className="bi bi-android2" style={{'color': 'yellowgreen'}}></i> <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i> <i className="bi bi-globe" style={{color: 'orange'}}></i>
 * [Apple Push Notification service (APNs) ](https://developer.apple.com/documentation/usernotifications) <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i>
 
-FCM, HMS, APNs handle the frontend and transport aspects of notification delivery. Device token storage, management and efficient push notification broadcasting is managed by Centrifugo PRO. Tokens are stored in a PostgreSQL database. To facilitate efficient push notification broadcasting towards devices, Centrifugo PRO includes worker queues based on Redis streams (and also provides an option to use PostgreSQL-based queue).
+FCM, HMS, and APNs handle the frontend and transport aspects of notification delivery. Device token storage, management, and efficient push notification broadcasting are managed by Centrifugo PRO. Tokens are stored in a PostgreSQL database. To facilitate efficient push notification broadcasting to devices, Centrifugo PRO includes worker queues based on Redis streams (and also provides an option to use a PostgreSQL-based queue).
 
-Integration with FCM means that you can use existing Firebase messaging SDKs to extract push notification token for a device on different platforms (iOS, Android, Flutter, web browser) and setting up push notification listeners. The same for HMS and APNs - just use existing native SDKs and best practices on the frontend. Only a couple of additional steps required to integrate frontend with Centrifugo PRO device token and device topic storage. After doing that you will be able to send push notification towards single device, or towards group of devices subscribed to a topic. For example, with a simple Centrifugo API call like this:
+Integration with FCM means that you can use existing Firebase messaging SDKs to extract a push notification token for a device on different platforms (iOS, Android, Flutter, web browser) and set up push notification listeners. The same applies to HMS and APNs - just use existing native SDKs and best practices on the frontend. Only a couple of additional steps are required to integrate the frontend with Centrifugo PRO device token and device topic storage. After doing that you will be able to send push notifications to a single device, or to a group of devices subscribed to a topic. For example, with a simple Centrifugo API call like this:
 
 ```bash
 curl -X POST http://localhost:8000/api/send_push_notification \
@@ -61,19 +61,19 @@ Centrifugo PRO tries to be practical with its Push Notification API, let's look 
 
 To start delivering push notifications in the application, developers usually need to integrate with providers such as FCM, HMS, and APNs. This integration typically requires the storage of device tokens in the application database and the implementation of sending push messages to provider push services.
 
-Centrifugo PRO simplifies the process by providing a backend for device token storage, following best practices in token management. It reacts to errors and periodically removes stale devices/tokens to maintain a working set of device tokens based on provider recommendations.
+Centrifugo PRO simplifies the process by providing a backend for device token storage, following best practices in token management. It reacts to errors and periodically removes stale devices/tokens to maintain a working set of device tokens, based on provider recommendations.
 
 ### Efficient queuing
 
 Additionally, Centrifugo PRO provides an efficient, scalable queuing mechanism for sending push notifications. Developers can send notifications from the app backend to Centrifugo API with minimal latency and let Centrifugo process sending to FCM, HMS, APNs concurrently using built-in workers. In our tests, we achieved several millions pushes per minute.
 
-Centrifugo PRO also supports delayed push notifications feature – to queue push for a later delivery, so for example you can send notification based on user time zone and let Centrifugo PRO send it when needed.
+Centrifugo PRO also supports a delayed push notifications feature – to queue a push for later delivery, so for example you can send a notification based on user time zone and let Centrifugo PRO send it when needed.
 
 ### Unified secure topics
 
 FCM and HMS have a built-in way of sending notification to large groups of devices over [topics](https://firebase.google.com/docs/cloud-messaging/android/topic-messaging) mechanism ([the same for HMS](https://developer.huawei.com/consumer/en/doc/development/HMS-Plugin-Guides-V1/subscribetopic-0000001056797545-V1)). Topics are great since you can create segments and groups of devices and target specific ones with your notifications.
 
-One problem with native FCM or HMS topics though is that client can subscribe to any topic from the frontend side without any permission check. In today's world this is usually not desired. So Centrifugo PRO re-implements FCM, HMS topics by introducing an additional API to manage device subscriptions to topics.
+One problem with native FCM or HMS topics though is that clients can subscribe to any topic from the frontend side without any permission check. In today's world this is usually not desired. So Centrifugo PRO re-implements FCM and HMS topics by introducing an additional API to manage device subscriptions to topics.
 
 :::tip
 
@@ -83,7 +83,7 @@ In some cases you may have real-time channels and device subscription topics wit
 
 Centrifugo PRO device topic subscriptions also add a way to introduce the missing topic semantics for APNs.
 
-Centrifugo PRO additionally provides an API to create persistent bindings of user to notification topics. Then – as soon as user registers a device – it will be automatically subscribed to its own topics. As soon as user logs out from the app and you update user ID of the device - user topics bound to the device automatically removed/switched. This design solves one of the issues with FCM – if two different users use the same device it's becoming problematic to unsubscribe the device from large number of topics upon logout. Also, as soon as user to topic binding added (using `user_topic_update` API) – it will be synchronized across all user active devices. You can still manage such persistent subscriptions on the application backend side if you prefer and provide the full list inside `device_register` call.
+Centrifugo PRO additionally provides an API to create persistent bindings of users to notification topics. Then – as soon as a user registers a device – it will be automatically subscribed to its own topics. As soon as a user logs out from the app and you update the user ID of the device, user topics bound to the device are automatically removed/switched. This design solves one of the issues with FCM – if two different users use the same device it becomes problematic to unsubscribe the device from a large number of topics upon logout. Also, as soon as a user-to-topic binding is added (using the `user_topic_update` API) – it will be synchronized across all of the user's active devices. You can still manage such persistent subscriptions on the application backend side if you prefer, and provide the full list inside the `device_register` call.
 
 ### Push personalization
 
@@ -98,7 +98,7 @@ All these features may be used on individual request basis.
 
 ### Non-obtrusive proxying
 
-Unlike other solutions that combine different provider push sending APIs into a unified API, Centrifugo PRO provides a non-obtrusive proxy for all the mentioned providers. Developers can send notification payloads in a format defined by each provider.
+Unlike other solutions that combine different provider push sending APIs into a unified API, Centrifugo PRO provides a non-obtrusive proxy for all the mentioned providers. Developers can send notification payloads in the format defined by each provider.
 
 It's also possible to send notifications into native FCM, HMS topics or send to raw FCM, HMS, APNs tokens using Centrifugo PRO's push API, allowing them to combine native provider primitives with those added by Centrifugo (i.e., sending to a list of device IDs or to a list of topics).
 
@@ -109,13 +109,13 @@ Furthermore, Centrifugo PRO offers the ability to inspect sent push notification
 ## Steps to integrate
 
 1. Add provider SDK on the frontend side, follow provider instructions for your platform to obtain a push token for a device. For example, for FCM see instructions for [iOS](https://firebase.google.com/docs/cloud-messaging/ios/client), [Android](https://firebase.google.com/docs/cloud-messaging/android/client), [Flutter](https://firebase.google.com/docs/cloud-messaging/flutter/client), [Web Browser](https://firebase.google.com/docs/cloud-messaging/js/client)). The same for HMS or APNs – frontend part should be handled by their native SDKs.
-2. Call Centrifugo PRO backend API with the obtained token. From the application backend call Centrifugo `device_register` API to register the device in Centrifugo PRO storage. Optionally provide list of topics to subscribe device to.
-3. Centrifugo returns a registered device object. Pass a generated device ID to the frontend and save it on the frontend together with a token received from FCM.
-4. Call Centrifugo `send_push_notification` API whenever it's time to deliver a push notification.
+2. Call the Centrifugo PRO backend API with the obtained token. From the application backend, call the Centrifugo `device_register` API to register the device in Centrifugo PRO storage. Optionally provide a list of topics to subscribe the device to.
+3. Centrifugo returns a registered device object. Pass the generated device ID to the frontend and save it on the frontend together with a token received from FCM.
+4. Call the Centrifugo `send_push_notification` API whenever it's time to deliver a push notification.
 
-At any moment you can inspect device storage by calling `device_list` API.
+At any moment you can inspect the device storage by calling the `device_list` API.
 
-Once user logs out from the app, you can detach user ID from device by using `device_update` or remove device with `device_remove` API.
+Once a user logs out from the app, you can detach the user ID from the device by using `device_update` or remove the device with the `device_remove` API.
 
 ## Configuration
 
@@ -504,7 +504,7 @@ Registers or updates device information.
 
 ### device_update
 
-Call this method to update device. For example, when user logs out the app and you need to detach user ID from the device.
+Call this method to update a device. For example, when a user logs out of the app and you need to detach the user ID from the device.
 
 #### device_update request
 
@@ -557,7 +557,7 @@ Empty object.
 
 ### device_remove
 
-Removes device from storage. This may be also called when user logs out the app and you don't need its device token after that.
+Removes a device from storage. This may also be called when a user logs out of the app and you no longer need the device token.
 
 #### device_remove request
 
@@ -674,7 +674,7 @@ List device to topic mapping.
 
 ### user_topic_update
 
-Manage mapping of topics with users. These user topics will be automatically attached to user devices upon registering. And removed from device upon detaching user.
+Manage mapping of topics to users. These user topics will be automatically attached to user devices upon registering, and removed from the device upon detaching a user.
 
 #### user_topic_update request
 
@@ -727,7 +727,7 @@ List user to topic mapping.
 
 ### send_push_notification
 
-Send push notification to specific `device_ids`, or to `topics`, or native provider identifiers like `fcm_tokens`, or to `fcm_topic`. Request will be queued by Centrifugo, consumed by Centrifugo built-in workers and sent to the provider API.
+Send push notification to specific `device_ids`, or to `topics`, or native provider identifiers like `fcm_tokens`, or to `fcm_topic`. The request will be queued by Centrifugo, consumed by Centrifugo built-in workers, and sent to the provider API.
 
 #### send_push_notification request
 
@@ -866,7 +866,7 @@ Empty object.
 
 ## Timezone aware push
 
-Setting `timezone` to a device (see [device_register](#device_register) call) opens a road for timezone-aware push notifications. This is nice because you can send notifications to users in a convenient time of the day. Avoid pushes at night, push at specific time.
+Setting `timezone` on a device (see [device_register](#device_register) call) opens the way for timezone-aware push notifications. This is nice because you can send notifications to users at a convenient time of day — avoid pushes at night, push at a specific time.
 
 To send such push notifications use `time_limit` field of `PushLimitStrategy`. For example, you can send push between `09:00:00` and `09:30:00` – and Centrifugo will send push somewhere during this period of user's local time.
 
@@ -878,7 +878,7 @@ Given Centrifugo takes timezone from devices table into account timezone aware p
 
 ## Templating
 
-It's possible to use templating in the content of your push notifications payloads. By default, Centrifugo does not use templating since this allows broadcasting pushes at max speed. You have to set `use_templating` flag to `true` when sending push to enable template execution. Here is an example of using templating:
+It's possible to use templating in the content of your push notification payloads. By default, Centrifugo does not use templating since this allows broadcasting pushes at maximum speed. You have to set the `use_templating` flag to `true` when sending a push to enable template execution. Here is an example of using templating:
 
 ```json
 {
@@ -886,7 +886,7 @@ It's possible to use templating in the content of your push notifications payloa
   "title": "Hello {{.device.meta.first_name}}"
 ```
 
-To access device meta content in push template (as shown above) additionally set `use_meta` flag to `true` in send push notification request. Without `use_meta` you only have access to `.device.id` and `.device.user` variables.
+To access device meta content in a push template (as shown above), additionally set the `use_meta` flag to `true` in the send push notification request. Without `use_meta` you only have access to `.device.id` and `.device.user` variables.
 
 :::tip
 
@@ -930,13 +930,13 @@ In push payload you can then use templating and `l10n` object will be set to a p
 
 So that a device with `pt-BR` locale will get a push notification with title `Olá! Como tá indo?`.
 
-Note, it's required to set default value here (we used English language in the example) for the cases when no locale found in device, or no translations for the device language provided in the request.
+Note, it's required to set a default value here (we used English in the example) for cases when no locale is found for the device, or no translations for the device language are provided in the request.
 
 ## Push rate limits
 
-A good practice when working with push notifications is to avoid sending too many notifications to your users, especially marketing ones. Centrifugo PRO provides a way to rate limit notifications on user's device level.
+A good practice when working with push notifications is to avoid sending too many notifications to your users, especially marketing ones. Centrifugo PRO provides a way to rate limit notifications at the user's device level.
 
-To do this, use `rate_limit` field of `PushLimitStrategy`. For example, you can configure policies to send push notifications not faster than once per minute and not more pushes than 10 in one hour. I.e. Centrifugo supports several policies for rate limit strategy. If push notification hits provided rate limits then it will be automatically delayed, or dropped if `drop_if_rate_limited` flag set to `true`.
+To do this, use the `rate_limit` field of `PushLimitStrategy`. For example, you can configure policies to send push notifications no faster than once per minute and no more than 10 pushes in one hour. Centrifugo supports several policies for a rate limit strategy. If a push notification hits the provided rate limits, it will be automatically delayed, or dropped if the `drop_if_rate_limited` flag is set to `true`.
 
 :::tip
 

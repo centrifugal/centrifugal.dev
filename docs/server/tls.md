@@ -4,24 +4,24 @@ id: tls
 title: Configure TLS
 ---
 
-TLS/SSL layer is very important not only for securing your connections but also to increase a
-chance to establish Websocket connection.
+The TLS/SSL layer is very important not only for securing your connections but also to increase the
+chance of establishing a WebSocket connection.
 
 :::tip
 
-In most situations you better put TLS termination task on your reverse proxy/load balancing software such as Nginx. This can be a good thing for performance.
+In most situations you should put the TLS termination task on your reverse proxy/load balancing software such as Nginx. This can be beneficial for performance.
 
 :::
 
 There are situations though when you want to serve secure connections by Centrifugo itself.
 
-There are two ways to do this: using TLS certificate `cert` and `key` files that you've got
-from your CA provider or using automatic certificate handling via [ACME](https://datatracker.ietf.org/doc/html/rfc8555) provider (only [Let's Encrypt](https://letsencrypt.org/) at this moment).
+There are two ways to do this: using TLS certificate `cert` and `key` files that you've obtained
+from your CA provider, or using automatic certificate handling via an [ACME](https://datatracker.ietf.org/doc/html/rfc8555) provider (only [Let's Encrypt](https://letsencrypt.org/) at this moment).
 
 ### Using crt and key files
 
-In first way you already have `cert` and `key` files. For development you can create self-signed
-certificate - see [this instruction](https://devcenter.heroku.com/articles/ssl-certificate-self) as
+In the first way you already have `cert` and `key` files. For development you can create a self-signed
+certificate — see [this instruction](https://devcenter.heroku.com/articles/ssl-certificate-self) as an
 example.
 
 ```json title="config.json"
@@ -81,11 +81,11 @@ Also Let's Encrypt certificates will be automatically renewed.
 
 ### TLS for GRPC API
 
-You can configure TLS for GRPC API server. Set `grpc_api.tls` objects which is a [TLSConfig](#unified-tls-config-object).
+You can configure TLS for the GRPC API server. Set `grpc_api.tls` which is a [TLSConfig](#unified-tls-config-object).
 
 ### TLS for GRPC unidirectional stream
 
-You can configure TLS for GRPC unidirectional stream endpoint. Set `uni_grpc.tls` objects which is a [TLSConfig](#unified-tls-config-object).
+You can configure TLS for the GRPC unidirectional stream endpoint. Set `uni_grpc.tls` which is a [TLSConfig](#unified-tls-config-object).
 
 ### Unified TLS config object
 

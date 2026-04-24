@@ -13,7 +13,7 @@ These goals dictate most of backwards compatibility changes in v4.
 
 :::tip
 
-What we would like to emphasize is that even there are many backwards incompatible changes it should be possible to migrate to Centrifugo v4 server without changing your client-side code at all. And then gradually upgrade the client-side. Below we are giving all the tips to achieve this.
+What we would like to emphasize is that even though there are many backwards incompatible changes it should be possible to migrate to Centrifugo v4 server without changing your client-side code at all. And then gradually upgrade the client-side. Below we are giving all the tips to achieve this.
 
 :::
 
@@ -40,7 +40,7 @@ If you are using private channels (starting with `$`) or user-limited channels (
 1. Upgrade Centrifugo and its configuration to adopt changes in v4.
 1. In Centrifugo v4 config turn on `use_client_protocol_v1_by_default`.
 1. Run Centrifugo v4 – all current clients should continue working with it.
-1. Then on the client-side uprade client SDK version to the one which works with Centrifugo v4, adopt changes in SDK API dictated by our new [client SDK API spec](../transports/client_api.md). **Important thing** – add `?cf_protocol_version=v2` URL param to the connection endpoint to tell Centrifugo that modern generation of protocol is being used by the connection (otherwise, it assumes old protocol since we have `use_client_protocol_v1_by_default` option enabled).
+1. Then on the client-side upgrade client SDK version to the one which works with Centrifugo v4, adopt changes in SDK API dictated by our new [client SDK API spec](../transports/client_api.md). **Important thing** – add `?cf_protocol_version=v2` URL param to the connection endpoint to tell Centrifugo that modern generation of protocol is being used by the connection (otherwise, it assumes old protocol since we have `use_client_protocol_v1_by_default` option enabled).
 1. As soon as all your clients migrated to use new protocol generation you can remove `use_client_protocol_v1_by_default` option from the server configuration.
 1. After that you can remove `?cf_protocol_version=v2` from connection endpoint on the client-side.
 
@@ -110,7 +110,7 @@ import ConfigConverter from "@site/src/components/converterv4"
 
 ## Proxy disconnect code changes
 
-`reconnect` flag from custom disconnect code is removed. Reconnect advice is now determined by disconnect code value. This allowed us avoiding using JSON in WebSocket CLOSE frame reason. See [proxy docs](../server/proxy.md#return-custom-disconnect) docs for more details.  
+`reconnect` flag from custom disconnect code is removed. Reconnect advice is now determined by disconnect code value. This allowed us avoiding using JSON in WebSocket CLOSE frame reason. See [proxy docs](../server/proxy.md#return-custom-disconnect) for more details.  
 
 ## Other configuration option changes
 
