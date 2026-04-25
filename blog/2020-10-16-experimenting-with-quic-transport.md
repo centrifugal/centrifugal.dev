@@ -10,8 +10,6 @@ hide_table_of_contents: false
 ---
 
 
-![post-cover](https://i.imgur.com/sH9zfhe.jpg)
-
 **UPDATE: WebTransport spec is still evolving. Most information here is not actual anymore. For example the working group has no plan to implement both QuicTransport and HTTP3-based transports – only HTTP3 based WebTransport is going to be implemented. Maybe we will publish a follow-up of this post at some point.**
 
 <!--truncate-->

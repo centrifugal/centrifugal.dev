@@ -9,8 +9,6 @@ image: /img/keyboard_thumb.jpg
 hide_table_of_contents: false
 ---
 
-![Centrifuge](/img/keyboard.png)
-
 Centrifugo is a scalable real-time messaging server in a language-agnostic way. In this tutorial we will integrate Centrifugo with NodeJS backend using a connect proxy feature of Centrifugo for user authentication and native session middleware of ExpressJS framework.
 
 Why would NodeJS developers want to integrate a project with Centrifugo? This is a good question especially since there are lots of various tools for real-time messaging available in NodeJS ecosystem.

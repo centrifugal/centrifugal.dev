@@ -24,7 +24,7 @@ export default function RecentBlogPosts() {
           </Link>
         </div>
         <div className={styles.grid}>
-          {recentPosts.map((post) => (
+          {recentPosts.slice(0, 4).map((post) => (
             <Link
               key={post.permalink}
               to={post.permalink}

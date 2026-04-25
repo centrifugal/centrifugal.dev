@@ -9,8 +9,6 @@ image: /img/rabbitx_thumb.jpg
 hide_table_of_contents: false
 ---
 
-<img src="/img/rabbitx.png" />
-
 This post introduces a new format in Centrifugal blog – interview with a Centrifugo user! Let's dive into an exciting chat with the engineering team of [RabbitX platform](https://landing.rabbitx.io/), a global permissionless perpetuals exchange powered on Starknet. We will discover how Centrifugo helped RabbitX to build a broker platform with current trading volume of 25 million USD daily! 🚀🎉
 
 <!--truncate-->

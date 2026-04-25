@@ -9,8 +9,6 @@ image: /img/centrifugo_loki.jpg
 hide_table_of_contents: false
 ---
 
-<img src="/img/centrifugo_loki.jpg" />
-
 As of version 5.1.0, Centrifugo introduces an experimental yet powerful extension that promises to simplify the data delivery process to the browser using GRPC streams. We believe it may help you to solve some practical tasks in minutes. Let's dive into how this feature works and how you can leverage it in your applications integrating with [Loki](https://grafana.com/oss/loki/) real-time log streaming capabilities.
 
 <!--truncate-->

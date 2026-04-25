@@ -9,8 +9,6 @@ image: /img/benthos_thumb.jpg
 hide_table_of_contents: false
 ---
 
-<img src="/img/benthos.png" />
-
 Centrifugo provides HTTP and GRPC APIs for publishing messages into channels. Publish server API is very straighforward to use - it's a simple request with a channel and data to be delivered to active WebSocket connections subscribed to a channel.
 
 Sometimes though Centrifugo users want to avoid synchronous calls to Centrifugo API delegating this work to asynchronous tasks. Many companies have convenient infrastructure for messaging processing tasks - like Kafka, Nats Jetstream, Redis, RabbitMQ, etc. Some using transactional outbox pattern to reliably deliver events upon database changes and have a ready infrastructure to push such events to some queue. From which want to re-publish events to Centrifugo.

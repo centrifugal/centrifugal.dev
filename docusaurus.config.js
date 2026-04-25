@@ -272,7 +272,7 @@ module.exports = {
     ],
   ],
   plugins: [
-    [require.resolve('./src/plugins/recent-blog-posts'), { count: 4 }],
+    [require.resolve('./src/plugins/recent-blog-posts'), { count: 5 }],
   ],
   stylesheets: [
     'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css'

@@ -10,8 +10,6 @@ hide_table_of_contents: false
 ---
 
 
-![gopher-broker](https://i.imgur.com/QOJ1M9a.png)
-
 I believe that in 2020 WebSocket is still an entertaining technology which is not so well-known and understood like HTTP. In this blog post I'd like to tell about state of WebSocket in Go language ecosystem, and a way we could write scalable WebSocket servers with Go and beyond Go.
 
 <!--truncate-->

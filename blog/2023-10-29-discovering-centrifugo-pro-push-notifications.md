@@ -9,8 +9,6 @@ image: /img/blog_push_notifications_cover_thumb.jpg
 hide_table_of_contents: false
 ---
 
-<img src="/img/blog_push_notifications_cover.jpg" />
-
 In our [v5 release post](/blog/2023/06/29/centrifugo-v5-released), we announced the upcoming launch of Centrifugo PRO. We are happy to say that it was released soon after that, and at this point, we already have several customers of the PRO version.
 
 I think it's time to look at the current state of the PRO version and finally start talking more about its benefits. In this post, we will talk more about one of the coolest PRO features we have at this point: the push notifications API.

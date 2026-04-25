@@ -9,8 +9,6 @@ image: /img/scale_ai.jpg
 hide_table_of_contents: false
 ---
 
-<img src="/img/scale_ai.jpg" />
-
 In a [previous post](/blog/2025/06/17/streaming-ai-gpt-responses-with-centrifugo) we showed how to stream LLM responses through Centrifugo — backend receives tokens from an LLM API, publishes them to a channel, browser subscribes and renders text as it arrives.
 
 <!--truncate-->

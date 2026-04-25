@@ -1,7 +1,7 @@
 ---
 title: Map subscriptions (Part 2) — when your PostgreSQL transaction is your real-time publish
 tags: [centrifugo, websocket, state-sync, postgresql]
-description: In this post we tell about PostgreSQL map broker which brings real persistence to Centrifugo-owned key-value collections and lets application publish updates inside its own database transactions.
+description: The PostgreSQL map broker brings durable persistence to Centrifugo-owned key-value collections and lets your application publish updates atomically inside its own database transactions — no dual-write, no application-side outbox to maintain.
 author: Alexander Emelin
 authorTitle: Founder of Centrifugal Labs
 image: /img/blog_map_subs_02.jpg
@@ -12,7 +12,7 @@ hide_table_of_contents: false
 import PgTransactionalDiagram from '@site/src/components/PgTransactionalDiagram';
 import PgOutboxDiagram from '@site/src/components/PgOutboxDiagram';
 
-In [Part 1](/blog/2026/04/07/map-subscriptions) we introduced map subscriptions — a Centrifugo-managed real-time key-value collection — and covered the sync protocol, the memory and Redis brokers, and capabilities like conditional writes and scalable presence. This post is about the PostgreSQL map broker: when it makes sense, what makes it different, and the transactional publishing it enables.
+In [Part 1](/blog/2026/04/29/map-subscriptions) we introduced map subscriptions — a Centrifugo-managed real-time key-value collection — and covered the sync protocol, the memory and Redis brokers, and capabilities like conditional writes and scalable presence. This post is about the PostgreSQL map broker: when it makes sense, what makes it different, and the transactional publishing it enables.
 
 <!--truncate-->
 
@@ -55,7 +55,7 @@ The PostgreSQL map broker stores `cf_map_state` and `cf_map_stream` in your Post
 
 This fits when **Centrifugo is the natural store for the data**: a feature-flag set, an IoT device fleet's last telemetry per device, a lobby's player roster, a collaborative cursor map for "who's editing what". The collection has no separate home in your application's schema — it exists *because* clients need to see it live. PostgreSQL just gives that broker-owned collection durability, queryability from `psql`, and the same operational model as the rest of your stack.
 
-When the data already lives in your own application tables (`orders`, `documents`, `tickets`, etc.), there's an alternative shape worth knowing about: a **stream subscription with a `getState` callback** backed by the [PostgreSQL stream broker](/blog/2026/04/10/pg-stream-broker-benefits). Your INSERT/UPDATE and the real-time publish commit together, clients render state from your own schema, the broker holds only the change events. We covered that pattern in detail in the [PG stream broker post](/blog/2026/04/10/pg-stream-broker-benefits).
+When the data already lives in your own application tables (`orders`, `documents`, `tickets`, etc.), there's an alternative shape worth knowing about: a **stream subscription with a `getState` callback** backed by the PostgreSQL stream broker. Your INSERT/UPDATE and the real-time publish commit together, clients render state from your own schema, the broker holds only the change events.
 
 That doesn't make the map broker the wrong choice for app-state cases. Mirroring rows from your own tables into `cf_map_state` (via `cf_map_publish` inside the same transaction as the original write) gives you everything map subscriptions provide on the client — paginated snapshot delivery, per-key TTL with auto-removal, no `getState` endpoint to write — at the cost of carrying a duplicate copy of each row in `cf_map_*`. Some teams will happily pay that cost; others would rather keep their schema as the only source of truth. Both deployments work; the trade is real and worth being deliberate about.
 
@@ -121,7 +121,7 @@ In effect, the broker-owned collection lives durably in PostgreSQL with the same
 
 ## Two PG-backed brokers, two natural shapes
 
-The PostgreSQL map broker is the natural fit when Centrifugo holds the collection. When your data already lives in your own application tables — orders, notifications, documents, activity feeds — there's a complementary tool: the **PostgreSQL stream broker** paired with a `getState` callback on a regular stream subscription. Same transactional-publish guarantee for your INSERT/UPDATE alongside `cf_stream_publish`, no duplicate state in the broker, clients render from your own schema. See [Transactional publishing for stream subscriptions with PostgreSQL](/blog/2026/04/10/pg-stream-broker-benefits) and the [pg_stream_broker example](https://github.com/centrifugal/examples/tree/master/v6/pg_stream_broker).
+The PostgreSQL map broker is the natural fit when Centrifugo holds the collection. When your data already lives in your own application tables — orders, notifications, documents, activity feeds — there's a complementary tool: the **PostgreSQL stream broker** paired with a `getState` callback on a regular stream subscription. Same transactional-publish guarantee for your INSERT/UPDATE alongside `cf_stream_publish`, no duplicate state in the broker, clients render from your own schema. See the [pg_stream_broker example](https://github.com/centrifugal/examples/tree/master/v6/pg_stream_broker) for a runnable demo.
 
 Two natural shapes, two PG-backed brokers, sharing the same operational primitives (outbox + partitioned tables + LISTEN/NOTIFY) — though configured and deployed independently:
 
@@ -138,13 +138,12 @@ The stream table is automatically partitioned by day. Old partitions are dropped
 
 ## Scaling with Centrifugo PRO
 
-The open-source PostgreSQL broker works well for single-node and small-cluster deployments. As you scale — more Centrifugo nodes, more channels, higher write throughput — [Centrifugo PRO](/docs/pro/map_subscriptions) adds three optimizations:
+The OSS broker works well for single-node and small-cluster deployments. Four patterns start to bite as you grow — more Centrifugo nodes, more channels, higher write throughput, or UIs that render the whole collection every frame — and [Centrifugo PRO](/docs/pro/map_subscriptions) addresses each:
 
-**Broker fan-out.** By default, every Centrifugo node independently polls the outbox. With broker fan-out, only one node per shard polls PostgreSQL (shard leadership is coordinated via PostgreSQL advisory locks), then publishes updates through Redis or NATS. This reduces database polling load proportionally to cluster size — essential when running many Centrifugo nodes.
-
-**In-memory cache layer.** Keeps channel state in memory on each node, so subscribe operations don't hit PostgreSQL for every new client. The cache provides read-your-own-writes semantics: local writes are reflected immediately, while writes from other nodes appear within a configurable sync interval.
-
-**Read replicas.** Distributes read load (state pagination, stream catch-up) across PostgreSQL replicas using consistent hashing on the channel name. Writes still go to the primary.
+- **PG read load that grows linearly with cluster size.** By default, every Centrifugo node independently polls the outbox. At a few nodes that's fine; at a dozen, the read traffic on PG starts to matter. PRO's **broker fan-out** elects one node per shard to poll (shard leadership coordinated via PostgreSQL advisory locks) and re-broadcasts to peers via Redis or NATS — PG read load stays constant regardless of how many Centrifugo nodes are behind it.
+- **Subscribe latency hitting PG on every new client.** As channels and connection churn grow, every new subscriber that wants initial state causes a PG read. PRO's **in-memory cache layer** keeps channel state on each Centrifugo node, fed by PUB/SUB so the cache reflects both local and remote writes in near real-time. Subscribes resolve from memory at microsecond latency instead of hitting PG, and a configurable `sync_interval` periodically reconciles with the backend as a safety net for any PUB/SUB messages that may have been missed.
+- **Read load that the primary alone can't carry.** State pagination and stream catch-up reads add up at scale, and on a single primary they compete with writes. PRO's **read-replica routing** distributes those reads across PostgreSQL replicas using consistent hashing on the channel name, while writes still go to the primary — so the primary keeps headroom for the work that actually requires it.
+- **Bandwidth on full-state UIs.** For collections where every client renders the entire map every frame — cursor sets, game positions, IoT fleet dashboards — publishing one update per key change is wasteful when subscribers want the whole picture anyway. PRO's **full-state delta mode** (built on top of the cache layer) exposes a derived stream channel that publishes the entire map as a single Fossil-delta-compressed payload per configurable tick. Bandwidth then scales with the size of the change, not with the number of keys touched or the size of the full state.
 
 ## Performance
 
@@ -170,13 +169,13 @@ Centrifugo runs in your infrastructure, connects to your databases, and calls yo
 
 Transactional publishing is the clearest example. A cloud real-time service can't participate in your database transactions — it doesn't share your database. Cloud services built on CDC (e.g. WAL-tail) can deliver every committed change after the fact, which is a strong consistency story in its own right — but it's not the same as having the publish be part of *your* transaction. With Centrifugo running alongside your PostgreSQL instance, the publish *is* your transaction; the real-time visibility decision is made before commit, not derived from the WAL afterwards. That's the property a remote-by-definition service can't offer.
 
-The same applies to the proxy system. Centrifugo calls your backend over your local network — for subscribe authorization, map publish validation, and [shared poll](/blog/2026/04/06/shared-poll-subscriptions) refresh — with latency measured in low single-digit milliseconds. With a cloud service, every backend call would cross the public internet.
+The same applies to the proxy system. Centrifugo calls your backend over your local network — for subscribe authorization, map publish validation, and [shared poll](/blog/2026/04/28/shared-poll-subscriptions) refresh — with latency measured in low single-digit milliseconds. With a cloud service, every backend call would cross the public internet.
 
 
 ## What's next
 
 Transactional publishing is currently experimental — we may adjust the SQL function API and outbox architecture based on feedback. We've published several PostgreSQL-backed demos in the [map demo collection](https://github.com/centrifugal/examples/tree/master/v6/map_demo), including a sprint board that demonstrates transactional publishing with Docker Compose.
 
-[Part 1](/blog/2026/04/07/map-subscriptions) covers the full map subscriptions design — sync protocol, modes, and broker overview. For the alternative shape — Centrifugo delivering live changes against state your own application database owns — read [Transactional publishing for stream subscriptions with PostgreSQL](/blog/2026/04/10/pg-stream-broker-benefits). And check out the companion post on [shared poll subscriptions](/blog/2026/04/06/shared-poll-subscriptions) — the other new subscription type we're introducing alongside map subscriptions.
+[Part 1](/blog/2026/04/29/map-subscriptions) covers the full map subscriptions design — sync protocol, modes, and broker overview. And check out the companion post on [shared poll subscriptions](/blog/2026/04/28/shared-poll-subscriptions) — the other new subscription type we're introducing alongside map subscriptions.
 
 Read the full [map subscriptions documentation](/docs/server/map_subscriptions) for configuration reference, PostgreSQL broker setup, and transactional publishing examples.

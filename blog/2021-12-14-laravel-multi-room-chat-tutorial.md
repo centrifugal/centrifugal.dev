@@ -9,8 +9,6 @@ image: /img/laravel_centrifugo.jpg
 hide_table_of_contents: false
 ---
 
-![Image](/img/laravel_centrifugo.jpg)
-
 In this tutorial, we will create a multi-room chat server using [Laravel framework](https://laravel.com/) and [Centrifugo](https://centrifugal.dev/) real-time messaging server.
 
 Authenticated users of our chat app will be able to create new chat rooms, join existing rooms and instantly communicate inside rooms with the help of Centrifugo WebSocket real-time transport.

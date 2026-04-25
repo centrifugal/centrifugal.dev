@@ -9,6 +9,7 @@
     background: #0C0D0E;
     color: #9b9b9b;
     animation: fadeIn 0.7s linear forwards;
+    overflow: hidden;
 }
 
 html[data-theme="light"] .strip {
@@ -60,6 +61,56 @@ html[data-theme="light"] .badge {
 .link:hover {
     color: #fe5e5e;
     text-decoration: none;
+}
+
+/* Conveyor-belt rotation — badge + title slide as one unit */
+.viewport {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    height: 1.6em;
+}
+
+.unit {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.placeholder {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.unitAbsolute {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    will-change: transform, opacity;
+}
+
+.exitRight {
+    animation: exitRight 0.7s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+
+.enterFromLeft {
+    animation: enterFromLeft 0.7s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+
+@keyframes exitRight {
+    0%   { transform: translate(-50%, -50%); opacity: 1; }
+    100% { transform: translate(calc(-50% + 70vw), -50%); opacity: 0; }
+}
+
+@keyframes enterFromLeft {
+    0%   { transform: translate(calc(-50% - 70vw), -50%); opacity: 0; }
+    100% { transform: translate(-50%, -50%); opacity: 1; }
 }
 
 html[data-theme="light"] .link {
