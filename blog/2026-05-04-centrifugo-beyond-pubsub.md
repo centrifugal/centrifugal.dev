@@ -95,6 +95,12 @@ The broker is a configuration choice on the server. The protocol on the wire is 
 
 **Presence is a map subscription.** Centrifugo has had presence (who's connected to a channel) for years — historically a parallel API with its own semantics. Map subscriptions express presence as a special case: the broker tracks per-client entries with TTL keyed on connection ID. One protocol primitive, presence scales the same way map subscriptions do.
 
+How far does that go? Two browser tabs subscribed to a single `map_clients` channel with **100,000 connected members**, joining mid-fill, converging to the same state, then surviving page reloads (the demo from [Part 1 of the map subscriptions post](/blog/2026/04/29/map-subscriptions)):
+
+<video width="100%" controls preload="metadata" src="/img/demo_map_presence.mp4"></video>
+
+While we don't expect 100k keys in most map subscription use cases and don't recommend it for production, it's good to see that the protocol is capable.
+
 ## Shared poll subscriptions — inverting the polling model
 
 Shared poll is the answer when the backend doesn't control writes. The client subscribes to a channel and calls `track(keys)` for the items it cares about. Centrifugo aggregates tracked keys across all clients on a node, polls the backend once per cycle (a configurable interval, typically 1–5 seconds) for the union, and pushes only the changed entries back. When the application *does* control the write — and wants instant delivery for that path — it can also publish directly via `shared_poll_publish`, bypassing the cycle. The two paths combine: polling is the baseline, direct publish layers on top.

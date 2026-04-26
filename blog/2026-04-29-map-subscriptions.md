@@ -146,6 +146,12 @@ Here's a game lobby demo that shows presence built on top of map subscriptions �
 
 <video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/demo_lobby.mp4"></video>
 
+A handful of players is the easy case. The same primitive scales much further — here are two browser tabs subscribed to the same `map_clients` channel while the population is being filled to **100,000 connected members**. Each cell in the grid is one connection; green flashes mark joins, red flashes mark leaves. The tabs connect *during* the fill, so they have to reconcile a moving target — paginated initial state plus the joins still happening in real time. Once the population stabilizes both tabs show the same converged 100k. The clip ends with a reconnect: state paginates back at 10k entries per page, the full grid repaints quickly, and the tab is live again:
+
+<video width="100%" controls preload="metadata" src="/img/demo_map_presence.mp4"></video>
+
+To be clear: a hundred thousand members in a single presence channel is **not** a typical production shape and we don't expect most apps to need it. This is a deliberately extreme demo showing what the protocol is capable of — not a recommended pattern. Most real systems work with channels of dozens to a few thousand participants, where the main advantages of map presence are convergence on reconnect and join/leave reliability, rather than raw count. (For the curious: we ran the same setup at **1,000,000 members** and a single browser tab still synchronizes — initial state takes around twenty seconds to paginate, then live updates flow normally. Past that point the bottleneck shifts from the protocol to the cost of streaming the snapshot itself.) Both 100k and 1M variants are runnable from the [`v6/map_presence_demo`](https://github.com/centrifugal/examples/tree/master/v6/map_presence_demo) example.
+
 The `recoverable` mode is what makes map-based presence more capable than Centrifugo's traditional presence. With recoverable mode, reconnecting clients catch up from the stream rather than re-fetching the full participant list. With ephemeral mode, clients would get a full snapshot on every reconnect — which is the same behavior traditional presence already provides, losing the convergence advantage.
 
 ## Brokers: memory, Redis, PostgreSQL
