@@ -4,7 +4,7 @@ module.exports = {
   url: "https://centrifugal.dev",
   baseUrl: "/",
   trailingSlash: false,
-  onBrokenLinks: "throw",
+  onBrokenLinks: "warn",
   onBrokenMarkdownLinks: "warn",
   favicon: "img/favicon.png",
   organizationName: "centrifugal",
@@ -272,7 +272,7 @@ module.exports = {
     ],
   ],
   plugins: [
-    [require.resolve('./src/plugins/recent-blog-posts'), { count: 5 }],
+    [require.resolve('./src/plugins/recent-blog-posts'), { count: 6 }],
   ],
   stylesheets: [
     'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css'

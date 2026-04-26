@@ -7,9 +7,10 @@ authorTitle: Founder of Centrifugal Labs
 authorImageURL: /img/alexander_emelin.jpeg
 image: /img/blog_pg_controller.jpg
 hide_table_of_contents: false
+draft: true
 ---
 
-For most of Centrifugo's history, scaling an OSS deployment past a single node has meant running Redis — even when PostgreSQL was already there for everything else. The new PostgreSQL controller removes that asymmetry. If your application already runs PG, the messaging plane has what it needs.
+[Centrifugo](https://centrifugal.dev) is an open-source real-time messaging server that delivers updates to clients over WebSocket (or SSE / HTTP-streaming). For most of its history, scaling an OSS deployment past a single node has meant running Redis — even when PostgreSQL was already there for everything else. The new PostgreSQL controller removes that asymmetry. If your application already runs PG, the messaging plane has what it needs.
 
 <!--truncate-->
 

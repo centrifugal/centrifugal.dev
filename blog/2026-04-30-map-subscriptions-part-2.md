@@ -7,6 +7,7 @@ authorTitle: Founder of Centrifugal Labs
 image: /img/blog_map_subs_02.jpg
 authorImageURL: /img/alexander_emelin.jpeg
 hide_table_of_contents: false
+draft: true
 ---
 
 import PgTransactionalDiagram from '@site/src/components/PgTransactionalDiagram';

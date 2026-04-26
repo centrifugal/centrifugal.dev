@@ -4,6 +4,7 @@ import styles from './ProBanner.module.css';
 
 const ROTATE_MS = 30000;
 const TRANSITION_MS = 500;
+const POSTS_COUNT = 3;
 
 const ProBanner = () => {
     const [currentIdx, setCurrentIdx] = useState(0);
@@ -12,7 +13,7 @@ const ProBanner = () => {
     let posts = [];
     try {
         const data = usePluginData('recent-blog-posts');
-        posts = data?.recentPosts || [];
+        posts = (data?.recentPosts || []).slice(0, POSTS_COUNT);
     } catch (e) {}
 
     useEffect(() => {
@@ -40,18 +41,23 @@ const ProBanner = () => {
 
     if (posts.length === 0) return null;
 
+    // Single-post case: no rotation needed, render statically without viewport/animation infra.
+    if (posts.length === 1) {
+        return (
+            <div className={styles.strip}>
+                <div className={styles.unit}>
+                    <span className={styles.badge}>New</span>
+                    <a className={styles.link} href={posts[0].permalink}>
+                        {posts[0].title}
+                    </a>
+                </div>
+            </div>
+        );
+    }
+
     const currentPost = posts[currentIdx];
     const nextPost = nextIdx !== null ? posts[nextIdx] : null;
     const transitioning = nextPost !== null;
-
-    const renderUnit = (post, extraClass = '') => (
-        <div className={`${styles.unit} ${extraClass}`}>
-            <span className={styles.badge}>New</span>
-            <a className={styles.link} href={post.permalink}>
-                {post.title}
-            </a>
-        </div>
-    );
 
     return (
         <div className={styles.strip}>

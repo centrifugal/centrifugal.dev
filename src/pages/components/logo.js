@@ -154,6 +154,7 @@ Bubble.prototype.reset = function() {
 Bubble.prototype.startBurst = function() {
     if (this.bursting) return;
     this.bursting = true;
+    this.justStartedBursting = true;
     this.burstProgress = 0;
     const numSplashes = Math.floor(Math.random() * 6) + 10;
     this.splashParticles = [];
@@ -297,6 +298,27 @@ function draw(canvas, _X, _Y, isDarkTheme) {
         bubbles.push(new Bubble(ctx, X, Y, isDarkTheme));
     }
 
+    // Chain-burst: when a bubble bursts, any bubbles whose circles intersect
+    // it ignite too, with a small stagger so the cascade reads as deliberate.
+    const pendingChainTimers = [];
+    const triggerIntersectionBurst = (source) => {
+        for (let i = 0; i < bubbles.length; i++) {
+            const other = bubbles[i];
+            if (other === source || other.bursting) continue;
+            const dx = other.x - source.x;
+            const dy = other.y - source.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < source.radius + other.radius) {
+                const delay = 40 + Math.random() * 80;
+                const timerId = setTimeout(() => {
+                    if (cancelled) return;
+                    if (!other.bursting) other.startBurst();
+                }, delay);
+                pendingChainTimers.push(timerId);
+            }
+        }
+    };
+
     const segments = [];
     segments.push(new Segment(ctx, X, Y, centerX, centerY, radius, radius * 2.65, lw * 9, 0,   -1.5, 0, outerSegmentColor));
     segments.push(new Segment(ctx, X, Y, centerX, centerY, radius, radius * 2.65, lw * 9, 90,  -1.5, 0, outerSegmentColor));
@@ -363,7 +385,12 @@ function draw(canvas, _X, _Y, isDarkTheme) {
             }
 
             for (let i = 0; i < bubbles.length; i++) {
-                bubbles[i].render(secondsSinceLastRender);
+                const b = bubbles[i];
+                if (b.justStartedBursting) {
+                    b.justStartedBursting = false;
+                    triggerIntersectionBurst(b);
+                }
+                b.render(secondsSinceLastRender);
             }
 
             ctx.shadowBlur = 0;
@@ -382,6 +409,9 @@ function draw(canvas, _X, _Y, isDarkTheme) {
         }
         canvas.removeEventListener('click', clickHandler);
         if (intersectionObserver) intersectionObserver.disconnect();
+        for (let i = 0; i < pendingChainTimers.length; i++) {
+            clearTimeout(pendingChainTimers[i]);
+        }
     };
 }
 

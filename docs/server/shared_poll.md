@@ -9,7 +9,7 @@ import SharedPollPublishDiagram from '@site/src/components/SharedPollPublishDiag
 
 :::caution Experimental
 
-Shared poll subscriptions is an experimental feature. Configuration options, client SDK API, and proxy protocol may change in future releases. At this point only `centrifuge-js` SDK supports shared poll subscriptions on the client side.
+Shared poll subscriptions is an experimental feature available since **Centrifugo v6.8.0**. Configuration options, client SDK API, and proxy protocol may change in future releases. At this point only `centrifuge-js` SDK supports shared poll subscriptions on the client side.
 
 :::
 
