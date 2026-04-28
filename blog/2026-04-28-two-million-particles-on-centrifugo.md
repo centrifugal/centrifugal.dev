@@ -1,7 +1,7 @@
 ---
 title: "Two million particles with Centrifugo — the bandwidth we thought we'd lose"
 tags: [centrifugo, websocket, demo, performance]
-description: "Recreating David Gerrells' 2M-particle multiplayer simulation on top of Centrifugo. The naive port balloons each frame from ~129 KB to ~605 KB. But our recent Centrifugo addition allowed reducing the size back to ~135 KB. Here we describe the details."
+description: "Recreating David Gerrells' 2M-particle multiplayer simulation on top of Centrifugo. The naive port balloons each frame from ~129 KB to ~605 KB. But we were able to reduce the size back to comparable ~135 KB with the help of shared poll subscription."
 author: Alexander Emelin
 authorTitle: Founder of Centrifugal Labs
 authorImageURL: /img/alexander_emelin.jpeg
@@ -98,25 +98,29 @@ For our particle demo it maps cleanly:
 - The simulation runs as before, but every tick the publisher packs **all 256 tiles** and sends them in a single Centrifugo `/api/batch` request — 256 `shared_poll_publish` commands, one HTTP round-trip instead of 256.
 - Each viewer tracks the tiles its viewport intersects, plus a 1-tile prefetch margin so freshly-entered tiles already have data when they slide into view.
 
-The publisher side. Each tile carries a per-tile version that bumps every tick (we use Centrifugo's `versioned` mode, even though every tile changes every tick — the version comparison happens to be free here):
+The publisher side. A single monotonic version counter for all tiles, and a per-process epoch generated on startup so that a backend restart triggers Centrifugo to invalidate connected subscribers (they auto-resubscribe and pick up fresh state without a page reload):
 
 ```go
+channelEpoch := uuid.NewString()
+var globalVersion uint64
+
+// On every tick:
+v := atomic.AddUint64(&globalVersion, 1)
 items := make([]SharedPollItem, 0, len(tilePayloads))
 for i, payload := range tilePayloads {
-    v := atomic.AddUint64(&versions[i], 1)
     items = append(items, SharedPollItem{
         Key:     TileKey(i % TilesPerSide, i / TilesPerSide),
         Data:    payload,
         Version: v,
     })
 }
-api.BatchSharedPollPublish(ctx, "tiles:world", items)
+api.BatchSharedPollPublish(ctx, "tiles:world", channelEpoch, items)
 ```
 
 The batch wrapper turns that into one POST `/api/batch` carrying 256 commands:
 
 ```go
-func (c *CentrifugoAPI) BatchSharedPollPublish(ctx context.Context, channel string, items []SharedPollItem) error {
+func (c *CentrifugoAPI) BatchSharedPollPublish(ctx context.Context, channel, epoch string, items []SharedPollItem) error {
     commands := make([]map[string]any, 0, len(items))
     for _, it := range items {
         commands = append(commands, map[string]any{
@@ -125,6 +129,7 @@ func (c *CentrifugoAPI) BatchSharedPollPublish(ctx context.Context, channel stri
                 "key":     it.Key,
                 "b64data": base64.StdEncoding.EncodeToString(it.Data),
                 "version": it.Version,
+                "epoch":   epoch,
             },
         })
     }

@@ -512,6 +512,55 @@ Centrifugo uses versions for change detection instead of content hashing, and ex
 
 In versioned mode, the backend can omit unchanged items from the response — they are treated as unchanged. To remove an item, return it with `removed: true`.
 
+### Epoch (publisher restart resilience)
+
+Versioned mode relies on the publisher keeping per-key versions monotonic forever. If a publisher restart resets in-memory counters, Centrifugo's stored versions stay higher than what the new process emits — version comparison drops the new publishes as stale, and connected clients freeze on their last-seen state.
+
+**Epoch** is the protocol-level fix. The publisher generates a fresh `epoch` string at startup (UUID, `time.Now().UnixNano()`, or any value that's unique per process lifetime) and includes it in every publish and every refresh response. Centrifugo stores it as a per-channel attribute. When an incoming `epoch` differs from the stored one, Centrifugo treats the channel as fully reset:
+
+1. All per-key versions and cached data are wiped.
+2. Every current subscriber is unsubscribed with the **insufficient-state** unsubscribe code.
+3. SDK auto-resubscribe machinery picks up the new epoch in the subscribe reply, drops cached versions to `0`, and replays its track set — server delivers fresh state via the standard cold-start path.
+
+Empty epoch is a valid value and means "no epoch invalidation" — pure version comparison applies. Acceptable when the publisher process never restarts during the lifetime of any subscriber, or when bandwidth-on-restart is more important than freeze-prevention.
+
+**Refresh response** carries `epoch` at the result level (one per response, not per item):
+
+```json
+{
+  "result": {
+    "epoch": "550e8400-e29b-41d4-a716-446655440000",
+    "items": [
+      { "key": "post_123", "data": {"votes": 42}, "version": 6 }
+    ]
+  }
+}
+```
+
+**Direct publish** carries `epoch` per call:
+
+```bash
+curl -X POST http://localhost:8000/api/shared_poll_publish \
+  -H "Authorization: apikey YOUR_KEY" \
+  -d '{
+    "channel": "post_votes:feed1",
+    "key": "post_123",
+    "data": {"votes": 43},
+    "version": 7,
+    "epoch": "550e8400-e29b-41d4-a716-446655440000"
+  }'
+```
+
+**Recommended practice**: generate the epoch once at process startup and use the same value on every publish and every refresh response from that process. Both paths must agree, or Centrifugo will see thrashing and trigger a flip on every alternating call.
+
+**Misuse to avoid**:
+
+- Hardcoding a stable string (e.g., a deployment version) — defeats the protection. Restarts go undetected, picture freezes again.
+- Multiple publisher processes writing to the same channel with *different* epochs — Centrifugo flips on every alternating publish, causing an unsubscribe storm. Either share a single epoch (read from a coordinator/secret), or use separate channels per publisher.
+- Setting `epoch` on direct publishes but not on refresh responses (or vice versa) — same thrashing.
+
+**Cost**: a few dozen bytes per publish/refresh response. Cheap, opt-in, no downside if used correctly.
+
 ### Response
 
 Your backend responds with a `SharedPollRefreshResponse`:
@@ -626,7 +675,8 @@ curl -X POST http://localhost:8000/api/shared_poll_publish \
 | `key` | string | yes | Item key |
 | `data` | JSON | yes | Item data (delivered to clients as-is) |
 | `b64data` | string | | Base64-encoded data (alternative to `data` for binary payloads) |
-| `version` | uint64 | yes | Item version. Must be in the same version space as versions returned by the backend poll handler. Stale versions (≤ current) are ignored |
+| `version` | uint64 | yes | Item version. Must be in the same version space as versions returned by the backend poll handler. Stale versions (≤ current) within the same epoch are ignored |
+| `epoch` | string | | Channel-level publisher epoch — see [Epoch](#epoch-publisher-restart-resilience). A change versus the channel's stored epoch resets per-key versions and unsubscribes current subscribers with insufficient-state code |
 
 **Version semantics**: the version you provide must be comparable to versions returned by your `OnSharedPoll` backend handler. If the published version is less than or equal to the version Centrifugo already has for that key, the publication is silently dropped. This prevents stale data from overwriting newer data.
 
