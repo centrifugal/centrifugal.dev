@@ -99,7 +99,9 @@ The HMAC is computed over the following payload:
 HMAC-SHA256(secret, "iat:exp:user_id:channel:keys_hash")
 ```
 
-Where `keys_hash` is the hex-encoded SHA-256 of sorted keys joined with null bytes (`\x00`), and `secret` is the `hmac_secret_key` from the `shared_poll` configuration. The `user_id` is the authenticated user's ID (empty string for anonymous users).
+Where `keys_hash` is the hex-encoded SHA-256 of keys joined with null bytes (`\x00`), and `secret` is the `hmac_secret_key` from the `shared_poll` configuration. The `user_id` is the authenticated user's ID (empty string for anonymous users).
+
+The keys are hashed in the order they appear in the request — no canonical sort. Your backend must sign over the keys in the same order it returns them to the client; the SDK forwards that order verbatim to the server, which verifies against the keys received in the `track()` call.
 
 Your backend generates this signature when the client requests authorization for a set of keys. Centrifugo verifies the HMAC on every `track()` call and rejects requests with invalid or expired signatures (with a 30-second grace period after expiry).
 
@@ -135,8 +137,7 @@ def make_shared_poll_signature(
     now = int(time.time())
     exp = now + ttl
 
-    sorted_keys = sorted(keys)
-    keys_hash = hashlib.sha256("\x00".join(sorted_keys).encode()).hexdigest()
+    keys_hash = hashlib.sha256("\x00".join(keys).encode()).hexdigest()
 
     payload = f"{now}:{exp}:{user_id}:{channel}:{keys_hash}"
     mac = hmac.new(secret.encode(), payload.encode(), hashlib.sha256).hexdigest()
@@ -154,10 +155,9 @@ function makeSharedPollSignature(secret, userId, channel, keys, ttl) {
   const now = Math.floor(Date.now() / 1000);
   const exp = now + ttl;
 
-  const sortedKeys = [...keys].sort();
   const keysHash = crypto
     .createHash('sha256')
-    .update(sortedKeys.join('\x00'))
+    .update(keys.join('\x00'))
     .digest('hex');
 
   const payload = `${now}:${exp}:${userId}:${channel}:${keysHash}`;
@@ -178,7 +178,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"fmt"
-	"sort"
 	"strings"
 	"time"
 )
@@ -189,10 +188,7 @@ func makeSharedPollSignature(
 	now := time.Now().Unix()
 	exp := now + int64(ttl)
 
-	sorted := make([]string, len(keys))
-	copy(sorted, keys)
-	sort.Strings(sorted)
-	keysHash := sha256.Sum256([]byte(strings.Join(sorted, "\x00")))
+	keysHash := sha256.Sum256([]byte(strings.Join(keys, "\x00")))
 
 	payload := fmt.Sprintf("%d:%d:%s:%s:%x", now, exp, userID, channel, keysHash)
 	mac := hmac.New(sha256.New, []byte(secret))
@@ -210,7 +206,6 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.util.Arrays;
 import java.util.HexFormat;
 
 public static String makeSharedPollSignature(
@@ -219,9 +214,7 @@ public static String makeSharedPollSignature(
     long now = System.currentTimeMillis() / 1000;
     long exp = now + ttl;
 
-    String[] sorted = keys.clone();
-    Arrays.sort(sorted);
-    byte[] keysBytes = String.join("\0", sorted)
+    byte[] keysBytes = String.join("\0", keys)
             .getBytes(StandardCharsets.UTF_8);
     String keysHash = HexFormat.of().formatHex(
             MessageDigest.getInstance("SHA-256").digest(keysBytes));
@@ -249,9 +242,7 @@ function makeSharedPollSignature(
     $now = time();
     $exp = $now + $ttl;
 
-    $sorted = $keys;
-    sort($sorted);
-    $keysHash = hash('sha256', implode("\x00", $sorted));
+    $keysHash = hash('sha256', implode("\x00", $keys));
 
     $payload = "{$now}:{$exp}:{$userId}:{$channel}:{$keysHash}";
     $mac = hash_hmac('sha256', $payload, $secret);
@@ -271,8 +262,7 @@ def make_shared_poll_signature(secret, user_id, channel, keys, ttl)
   now = Time.now.to_i
   exp = now + ttl
 
-  sorted_keys = keys.sort
-  keys_hash = Digest::SHA256.hexdigest(sorted_keys.join("\x00"))
+  keys_hash = Digest::SHA256.hexdigest(keys.join("\x00"))
 
   payload = "#{now}:#{exp}:#{user_id}:#{channel}:#{keys_hash}"
   mac = OpenSSL::HMAC.hexdigest('SHA256', secret, payload)
