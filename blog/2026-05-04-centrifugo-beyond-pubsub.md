@@ -1,5 +1,5 @@
 ---
-title: "Centrifugo, beyond pub/sub: new foundations, and a real-time companion for PostgreSQL"
+title: "Beyond PUB/SUB: new foundations, and a real-time companion for PostgreSQL"
 tags: [centrifugo, postgresql, websocket, real-time, architecture]
 description: v6.8.0 release wrap-up — new subscription primitives for state-sync shapes pub/sub doesn't cover, plus first-class PostgreSQL integration for transactional publishing and Redis-free clustering. From channel pub/sub to a real-time state sync layer.
 author: Alexander Emelin
@@ -214,6 +214,8 @@ For applications already running Postgres for everything else, the messaging pla
 
 ## Where this leaves Centrifugo
 
-For more than a decade Centrifugo was a channel pub/sub server. With the recent release, it's a different thing — a primitives library for real-time data, with three subscription types covering three different client–data relationships. **Stream subscriptions remain the main primitive** for most deployments — chat, notifications, activity feeds, audit logs, anything event-shaped — with or without history and recovery. Map and shared poll sit alongside, picking up the shapes traditional pub/sub alone doesn't carry. The brokers behind all of them run on memory, Redis, or Postgres; for teams already on Postgres, the database itself becomes a first-class option.
+For more than a decade, Centrifugo has been a channel-based pub/sub server. With the recent release, it evolves into a realtime backend with general-purpose primitives. Different subscription types address different shapes of realtime applications.
 
-The transport stays generic. The protocol stays payload-agnostic. Authorization stays in your application, not in database row policies. The data stays yours.
+Stream subscriptions remain the primary primitive for most deployments—chat, notifications, activity feeds, audit logs, and other event-shaped workloads—with or without history and recovery. Map and shared poll sit alongside, covering patterns that traditional pub/sub alone does not handle well. The brokers behind all of them can run on memory, Redis, or Postgres; for teams already using Postgres, the database becomes a first-class option.
+
+While the new subscription types expand the surface area, we’ve reused the existing protocol wherever possible and preserved established channel behavior. The transport remains generic. The protocol stays payload-agnostic. Your data stays yours.

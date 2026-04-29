@@ -40,7 +40,7 @@
 
 .subTitle {
     margin: 0 auto 0.5em;
-    font-size: clamp(1.25rem, 3.6vw, 2rem);
+    font-size: clamp(1.25rem, 3.6vw, 2.1rem);
     font-weight: 700;
     font-family: "Nunito";
     line-height: 1.25;

@@ -10,7 +10,9 @@ hide_table_of_contents: false
 draft: true
 ---
 
-[Centrifugo](https://centrifugal.dev) is an open-source real-time messaging server that delivers updates to clients over WebSocket (or SSE / HTTP-streaming). For most of its history, scaling an OSS deployment past a single node has meant running Redis — even when PostgreSQL was already there for everything else. The new PostgreSQL controller removes that asymmetry. If your application already runs PG, the messaging plane has what it needs.
+For most of [Centrifugo](https://centrifugal.dev)'s history, scaling past one node meant adding Redis — even on stacks running on PostgreSQL alone. One more service to provision, monitor, secure, and back up, just so Centrifugo nodes could coordinate with each other.
+
+The new PostgreSQL controller makes Redis optional. Together with the [stream broker](/blog/2026/05/01/pg-stream-broker-benefits) and [map broker](/blog/2026/04/30/map-subscriptions-part-2) shipped earlier in this release cycle, Centrifugo's full OSS messaging plane now runs on the PostgreSQL you already have. Same database, one operational story.
 
 <!--truncate-->
 

@@ -1,6 +1,6 @@
 ---
-title: Map subscriptions (Part 1) — synchronized key-value state for real-time applications
-tags: [centrifugo, websocket, state-sync]
+title: Map subscriptions (Part 1) — synchronized key-value state and presence
+tags: [centrifugo, websocket, state-sync, presence]
 description: A new subscription type in Centrifugo — real-time key-value collections with paginated state delivery, guaranteed convergence on reconnect, per-key TTL, conditional writes, and Fossil delta compression.
 author: Alexander Emelin
 image: /img/blog_map_subs_01.jpg
@@ -12,13 +12,17 @@ draft: true
 
 import MapSubscriptionDiagram from '@site/src/components/MapSubscriptionDiagram';
 
-A **map subscription** is a real-time key-value collection whose lifecycle is managed by Centrifugo. The map broker stores the entries; the SDK keeps a live mirror in every subscribed client. Subscribe and you get the current snapshot delivered automatically, then live updates, then continued sync on reconnect — no separate REST endpoint to fetch initial state, no race window between an HTTP read and a WebSocket stream. Centrifugo *is* the store for the collection. After any disconnect, clients always converge to the correct state — no `recovered: false` flag to handle, no manual reconciliation in your app code. Convergence is guaranteed by the protocol.
+A **map subscription** is a real-time key-value collection that Centrifugo manages. The map broker stores the entries; the SDK keeps a live/realtime mirror on every subscribed client.
 
-Centrifugo has always been built around channels, publications, and persistent WebSocket connections. You publish a message to a channel, and every connected subscriber receives it in real time. With [history and recovery](/docs/server/history_and_recovery) enabled, clients can catch up on missed publications after a reconnect. This model is called **stream subscriptions** — the client receives an ordered, recoverable sequence of publications. Stream subscriptions work well for chat, notifications, activity feeds, and any use case where clients need an ordered sequence of events.
+Subscribe – and you get the current snapshot, then live updates as keys updated/removed, then automatic re-sync on reconnect. No separate REST endpoint to load initial state, no race window between HTTP and WebSocket. Convergence is part of the protocol — no `recovered: false` flag to handle in app code.
 
-Stream subscriptions remain the right choice for most real-time features. For the broad case of "I have data in my own database and want clients to see it live", a stream subscription with a `getState` callback reading from your own tables is often the most natural fit — your schema stays the only source of truth. A distinct category of use cases has a different shape, however: collections that *don't* have an obvious home in the application's database — cursors that exist for a few seconds at a time, presence sets, IoT device telemetry, lobby members, feature flags, live dashboards. Building a small store + a change feed + a snapshot endpoint for each of these is a lot of bespoke infrastructure for what is, conceptually, just "a key-value collection that should be live in the browser." Map subscriptions are that primitive, baked into Centrifugo.
+Centrifugo's original model is **stream subscriptions** — channel-based pub/sub with optional [history and recovery](/docs/server/history_and_recovery) so reconnecting clients catch up on missed publications. They work well for chat, notifications, activity feeds, and anywhere clients need an ordered sequence of events, and they remain the right choice for most real-time features.
 
-This post focuses on the cases where Centrifugo owning the collection is exactly what you want. **Map subscriptions can also be used as a real-time mirror for data you already store elsewhere** — accepting some duplication into `cf_map_state` in exchange for getting the synchronized snapshot, paginated state delivery, per-key TTL, and consistent reads on the client without writing your own initial-state endpoint. It's a real trade-off, not a forbidden one.
+For the broad case of "I have data in my own database and want clients to see it live", a stream subscription with a `getState` callback reading from your own tables is usually the natural fit — your schema stays the source of truth. Map subscriptions fit a different shape: collections without an obvious home in the application's database — cursors that exist for a few seconds at a time, presence sets, IoT device state, lobby members, feature flags, live dashboards. Each is conceptually just a key-value collection that should be live in the browser. Building a store, a change feed, and a snapshot endpoint for each one is a lot of infrastructure for that. Map subscriptions are that primitive, baked into Centrifugo.
+
+This post introduces map subscriptions and focuses on cases where Centrifugo owning the collection is exactly what you want. **Map subscriptions can also mirror data you already store elsewhere** — accepting some duplication into `cf_map_state` in exchange for the synchronized snapshot, paginated state delivery, per-key TTL, and consistent reads on the client without writing your own initial-state endpoint. A different trade-off, not a forbidden one.
+
+And moreover, Centrifugo now provides an alternative presence implementation as a special case of map subscriptions, inheriting all the benefits of the protocol—automatic synchronization and a convenient API in the SDK.
 
 <!--truncate-->
 

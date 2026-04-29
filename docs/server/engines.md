@@ -773,7 +773,7 @@ Integer, default `16`. Maximum number of connections in the primary pool.
 
 #### `broker.postgres.num_shards`
 
-Integer, default `16`. Number of delivery worker shards. Channels are distributed across shards via consistent hashing.
+Integer, default `8`. Number of delivery worker shards. Channels are distributed across shards via consistent hashing.
 
 #### `broker.postgres.cleanup_interval`
 
@@ -797,7 +797,7 @@ String, default `"cf"`. Namespace prefix for all table and function names. The b
 
 #### `broker.postgres.use_notify`
 
-Boolean, default `false`. Enable PostgreSQL `LISTEN/NOTIFY` for low-latency outbox wakeup. When `false`, the outbox worker polls on `outbox.poll_interval` (default 50ms). When `true`, delivery latency drops to low single-digit milliseconds.
+Boolean, default `false`. Enable PostgreSQL `LISTEN/NOTIFY` for low-latency outbox wakeup. When `false`, the outbox worker polls on `outbox.poll_interval` (default 100ms). When `true`, delivery latency drops to low single-digit milliseconds.
 
 :::note LISTEN/NOTIFY and connection poolers
 
@@ -829,7 +829,7 @@ Boolean, default `false`. Enables an opt-in chunked `DELETE` pass that removes h
 
 #### `broker.postgres.outbox.poll_interval`
 
-[Duration](./configuration.md#duration-type), default `"50ms"`. How often to poll for new history rows when idle.
+[Duration](./configuration.md#duration-type), default `"100ms"`. How often to poll for new history rows when idle.
 
 #### `broker.postgres.outbox.batch_size`
 

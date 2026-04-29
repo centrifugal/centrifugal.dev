@@ -35,7 +35,7 @@ Centrifugo PRO is packed with the following features:
 * 🍔 [Message batching control](./client_msg_batching.md) for advanced tuning of client connection write behaviour.
 * 🏷️ [Server-side publication tags filter](./server_tags_filter.md) for per-subscriber access control via publication tags — works for stream and map subscriptions.
 * 🗺️ [Map subscriptions enhancements](./map_subscriptions.md) with in-memory cache layer, PostgreSQL enhancements, Redis Cluster support, and per-namespace map brokers.
-* 🔄 [Shared poll enhancements](./shared_poll.md) with instant initial data, delta compression, notification fast path, adaptive backpressure, and shared poll relay.
+* 🔄 [Shared poll enhancements](./shared_poll.md) with instant initial data, delta compression, notification fast path, and adaptive backpressure (shared poll relay is in progress).
 * 🧐 [Observability enhancements](./observability_enhancements.md) for additional more granular system state insights.
 
 And more to come!

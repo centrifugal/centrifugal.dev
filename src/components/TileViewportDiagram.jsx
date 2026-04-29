@@ -63,19 +63,29 @@ export default function TileViewportDiagram() {
   const rowStart = Math.floor((viewY - ORIGIN_Y) / TILE);
   const rowEnd = Math.ceil((viewY + VIEW_H_PX - ORIGIN_Y) / TILE);
 
-  const tileCount = (colEnd - colStart) * (rowEnd - rowStart);
+  // 1-tile prefetch margin: tiles tracked but currently outside the viewport.
+  const prefetchColStart = Math.max(0, colStart - 1);
+  const prefetchColEnd = Math.min(GRID, colEnd + 1);
+  const prefetchRowStart = Math.max(0, rowStart - 1);
+  const prefetchRowEnd = Math.min(GRID, rowEnd + 1);
 
-  const touched = [];
-  for (let col = colStart; col < colEnd; col++) {
-    for (let row = rowStart; row < rowEnd; row++) {
-      touched.push(
+  const visibleCount = (colEnd - colStart) * (rowEnd - rowStart);
+  const trackedCount =
+    (prefetchColEnd - prefetchColStart) * (prefetchRowEnd - prefetchRowStart);
+
+  const tiles = [];
+  for (let col = prefetchColStart; col < prefetchColEnd; col++) {
+    for (let row = prefetchRowStart; row < prefetchRowEnd; row++) {
+      const insideViewport =
+        col >= colStart && col < colEnd && row >= rowStart && row < rowEnd;
+      tiles.push(
         <rect
           key={`${col},${row}`}
           x={ORIGIN_X + col * TILE}
           y={ORIGIN_Y + row * TILE}
           width={TILE}
           height={TILE}
-          fill="#bfdbfe"
+          fill={insideViewport ? '#bfdbfe' : '#e0ecfb'}
         />
       );
     }
@@ -132,8 +142,8 @@ export default function TileViewportDiagram() {
         strokeWidth="1"
       />
 
-      {/* Tracked tiles */}
-      {touched}
+      {/* Tracked tiles (viewport + prefetch ring) */}
+      {tiles}
 
       {/* Grid lines */}
       <g stroke="#e2e8f0" strokeWidth="0.5">
@@ -198,7 +208,7 @@ export default function TileViewportDiagram() {
         fill="#374151"
         textAnchor="middle"
       >
-        Drag the viewport. Highlighted tiles tracked by viewer.
+        Drag the viewport. Darker tiles are visible; lighter ring is prefetch margin.
       </text>
       <text
         x="200"
@@ -210,9 +220,9 @@ export default function TileViewportDiagram() {
       >
         Tracking{' '}
         <tspan fontWeight="700" fill="#2563eb">
-          {tileCount}
+          {trackedCount}
         </tspan>{' '}
-        of {GRID * GRID} tiles.
+        of {GRID * GRID} tiles ({visibleCount} visible + {trackedCount - visibleCount} prefetch).
       </text>
     </svg>
   );

@@ -1,5 +1,5 @@
 ---
-title: Shared poll subscriptions — what push can add to poll
+title: "Shared poll subscriptions: O(unique items) polling with low-latency updates"
 tags: [centrifugo, websocket, state-sync, polling]
 description: Shared poll subscriptions move polling from clients to Centrifugo. Instead of 10,000 clients each hitting your backend every second, Centrifugo asks once per cycle for the union of items everyone is watching and fans the changes back out.
 author: Alexander Emelin
@@ -79,7 +79,7 @@ One subscription, arbitrary number of tracked keys; the server only polls items 
 
 ## Authorization with HMAC signatures
 
-Per-item granularity raises an authorization question: how do you control which items a client can track? Centrifugo's existing [connection](/docs/server/authentication) and [channel](/docs/server/channel_token_auth) tokens operate at channel level — but a shared-poll client subscribes to one channel and tracks many keys within it.
+Per-item granularity raises an authorization question: how do you control which items a client can track? Centrifugo's existing [connection](/docs/server/authentication) and [channel](/docs/server/channel_token_auth) tokens operate at channel level — but a shared poll client subscribes to one channel and tracks many keys within it.
 
 Shared poll uses HMAC signatures rather than JWTs. Tracked keys are first-class values in the protocol (not buried in a token payload), and HMAC is an order of magnitude faster to generate and verify — which matters when thousands of clients refresh signatures every poll cycle. When the client calls `track()`, the SDK invokes a `getSignature` callback; your backend decides which of the requested keys the user is allowed to see and signs that subset. Centrifugo verifies the HMAC on every track request.
 

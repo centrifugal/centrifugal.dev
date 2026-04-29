@@ -59,30 +59,9 @@ If the transaction rolls back, the real-time update never happened. No outbox ta
 
 The transactional guarantee applies to **callers using the SQL function path** — i.e. your backend code calling `cf_stream_publish` directly inside its own SQL transaction alongside the row write. Publishes that go through Centrifugo's HTTP/GRPC API remain a separate operation from your DB write (the historic dual-write shape) — same as before. The SQL function path is what removes that gap; it's an additional integration option, not a change to existing publish APIs.
 
-## One infrastructure for both primitives
-
-The stream broker shares the same infrastructure as the map broker:
-
-- **Same outbox pattern** — per-shard workers poll a partitioned stream table, coordinate via shard locks, wake via LISTEN/NOTIFY
-- **Same daily partitioning** — the stream table is `PARTITION BY RANGE (created_at)` with automatic lookahead and retention. Old partitions are dropped whole — vacuum-free cleanup at scale
-- **Same configuration shape** — `dsn`, `num_shards`, `use_notify`, `partition_retention_days`, `partition_lookahead_days`
-- **Same PRO scaling features** — at higher cluster sizes, every Centrifugo node polling PG independently adds visible read load, and history queries on busy channels begin contending with writes on the primary. PRO's broker fan-out and read-replica routing apply identically to stream channels (the in-memory cache layer is map-broker-specific) — see the [PG map broker post](/blog/2026/04/30/map-subscriptions-part-2#scaling-with-centrifugo-pro) for the full breakdown of when each kicks in
-
-If you're already running the PostgreSQL map broker, the stream broker is the same operational model. If you're not — the stream broker is a clean entry point to the "Centrifugo + PostgreSQL" stack without needing to understand map subscriptions first.
-
-## What's different from the map broker
-
-The stream broker is simpler — it has no state table, no keyed entries, no CAS operations. Streams are append-only. The key differences from the map broker:
-
-**Two independent TTLs.** Stream subscriptions have `HistoryTTL` (how long publications are queryable) and `HistoryMetaTTL` (how long the channel's epoch survives). The map broker has a single `MetaTTL`. The two-TTL model lets you keep a channel's identity alive for reconnection (long MetaTTL) while limiting queryable history to a short window (short HistoryTTL).
-
-**Read-time TTL filter.** History queries apply a `WHERE created_at > NOW() - history_ttl` filter at read time, so the result is always correct regardless of when cleanup last ran. Cleanup is purely a storage optimization, not a correctness requirement.
-
-**HistorySize at read time.** The broker doesn't enforce HistorySize at write time (no MAXLEN-style trim). Instead, History() clamps the result window to the most recent N entries. This means a forward recovery query from an old position correctly detects the gap and triggers a fresh subscribe — matching Redis broker semantics.
-
 ## App-owned state with stream subscriptions
 
-The differences above reflect a distinction in data ownership. For applications where the data already lives in your own tables — orders, notifications, activity feeds, chat — the stream broker is enough on its own. No duplicate state table, no broker-managed snapshot. Your app database is the source of truth; Centrifugo streams only the change events. The stream broker keeps a thin bridging window in `cf_stream` (the partition retention window) while your app DB owns historical data.
+For applications where the data already lives in your own tables — orders, notifications, activity feeds, chat — the stream broker is enough on its own. No duplicate state table, no broker-managed snapshot. Your app database is the source of truth; Centrifugo streams only the change events. The stream broker keeps a thin bridging window in `cf_stream` (the partition retention window) while your app DB owns historical data.
 
 The client SDK now supports a `getState` callback for stream subscriptions that automates this pattern. We [previously described](/blog/2024/06/03/real-time-document-state-sync) the challenge of synchronizing a document state loaded from a REST API with a real-time subscription — the race window between the HTTP response and the subscription start, the need to handle `recovered: false` on reconnects, the manual position tracking. The `getState` callback solves all of this natively:
 

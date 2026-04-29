@@ -177,7 +177,7 @@ Key options:
 |--------|------|---------|-------------|
 | `dsn` | string | | PostgreSQL connection string (required) |
 | `pool_size` | integer | `16` | Maximum connection pool size |
-| `num_shards` | integer | `16` | Number of delivery worker shards. Use the default for now — more guidance will be provided later |
+| `num_shards` | integer | `8` | Number of delivery worker shards. Use the default for now — more guidance will be provided later |
 | `ttl_check_interval` | [duration](./configuration.md#duration-type) | `"1s"` | How often to check for expired keys |
 | `cleanup_interval` | [duration](./configuration.md#duration-type) | `"1m"` | How often to clean up expired stream/meta entries |
 | `idempotent_result_ttl` | [duration](./configuration.md#duration-type) | `"5m"` | TTL for idempotency results |
@@ -208,7 +208,7 @@ import PgOutboxDiagram from '@site/src/components/PgOutboxDiagram';
 
 <PgOutboxDiagram />
 
-When your transaction commits, the state table (`cf_map_state`) and the stream/outbox table (`cf_map_stream`) are updated atomically. Centrifugo runs a pool of outbox workers (one per shard) that poll the stream table for new entries and deliver them to subscribed clients via WebSocket. When `use_notify` is enabled, PostgreSQL's `LISTEN/NOTIFY` wakes the workers immediately — otherwise they poll every 50ms. This eliminates the [dual-write problem](https://thorben-janssen.com/dual-writes/): if the transaction rolls back, no real-time update is ever sent.
+When your transaction commits, the state table (`cf_map_state`) and the stream/outbox table (`cf_map_stream`) are updated atomically. Centrifugo runs a pool of outbox workers (one per shard) that poll the stream table for new entries and deliver them to subscribed clients via WebSocket. When `use_notify` is enabled, PostgreSQL's `LISTEN/NOTIFY` wakes the workers immediately — otherwise they poll every 100ms. This eliminates the [dual-write problem](https://thorben-janssen.com/dual-writes/): if the transaction rolls back, no real-time update is ever sent.
 
 Centrifugo automatically creates these SQL functions when the PostgreSQL map broker initializes the schema:
 

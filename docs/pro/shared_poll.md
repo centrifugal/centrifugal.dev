@@ -9,7 +9,7 @@ Shared poll subscriptions is an experimental feature. Configuration options, cli
 
 :::
 
-Centrifugo PRO extends the [shared poll subscriptions](../server/shared_poll.md) feature with [cached latest data](#cached-latest-data) and [delta compression](#delta-compression), [adaptive backpressure](#adaptive-backpressure), a [notification fast path](#notification-fast-path) for near-instant updates, and a standalone [relay server](#shared-poll-relay) for reducing backend load.
+Centrifugo PRO extends the [shared poll subscriptions](../server/shared_poll.md) feature with [cached latest data](#cached-latest-data) and [delta compression](#delta-compression), [adaptive backpressure](#adaptive-backpressure), and a [notification fast path](#notification-fast-path) for near-instant updates. A standalone [relay server](#shared-poll-relay) is also in progress for reducing backend load — see the in-progress note in that section.
 
 ## Cached latest data
 
@@ -287,7 +287,93 @@ async def notify_shared_poll(nc, channel: str, keys: list[str]):
 
 You can batch multiple notifications in a single message to reduce pub/sub overhead.
 
+## Adaptive backpressure
+
+When a refresh cycle takes longer than the configured `refresh_interval`, backpressure automatically extends the interval to prevent overloading your backend. Enable it by setting `backpressure_max_interval` in the namespace's `shared_poll` config:
+
+```json title="config.json"
+{
+  "channel": {
+    "namespaces": [
+      {
+        "name": "post_votes",
+        "subscription_type": "shared_poll",
+        "shared_poll": {
+          "refresh_interval": "1s",
+          "backpressure_max_interval": "10s"
+        },
+        "allow_subscribe_for_client": true
+      }
+    ]
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `backpressure_max_interval` | [duration](../server/configuration.md#duration-type) | `"0s"` | Maximum refresh interval under backpressure. When set to a value greater than `0`, adaptive backpressure is enabled |
+
+When enabled, the refresh interval dynamically adjusts based on the actual work time of the previous cycle. Since Centrifugo [spreads batch dispatches](../server/shared_poll.md#how-it-works) evenly over the refresh interval, backpressure measures only the backend call time (excluding spread delays) to accurately assess backend load.
+
+### How backpressure works
+
+Backpressure computes **utilization** as the ratio of work time to the current effective interval, then adjusts:
+
+- **Utilization < 50%** — healthy. The effective interval recovers toward the configured value (×0.75 per cycle)
+- **Utilization 50–100%** — stretching. The interval increases proportionally to the load
+- **Utilization > 100%** — falling behind. The interval doubles (up to `backpressure_max_interval`)
+
+```
+Example: interval=1s, 10 batches, dispatch delay=100ms between batches
+
+── Healthy backend (10ms/batch) ──────────────────────────────
+
+ t=0    100   200   300   400   500   600   700   800   900
+ ├──────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+ │▓│    │▓│   │▓│   │▓│   │▓│   │▓│   │▓│   │▓│   │▓│   │▓│
+ b0     b1    b2    b3    b4    b5    b6    b7    b8    b9
+
+ wall time ≈ 910ms, spread delay = 900ms
+ work time = 910 - 900 = 10ms
+ utilization = 10ms / 1s = 1%  →  healthy, no adjustment
+
+
+── Slow backend (500ms/batch) ────────────────────────────────
+
+ t=0    100   200   300   400   500   600   700   800   900  1400
+ ├──────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼────┤
+ │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│                                │
+ │      │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│                          │
+ │      │     │  ...concurrent batches...                      │
+ │      │     │     │     │     │     │     │     │▓▓▓▓▓▓▓▓▓▓▓▓│
+
+ wall time ≈ 1400ms, spread delay = 900ms
+ work time = 500ms
+ utilization = 500ms / 1s = 50%  →  borderline, slight increase
+
+
+── Overloaded backend (2s/batch) ─────────────────────────────
+
+ t=0    100        900                                    2900
+ ├──────┼── ... ───┼──────────────────────────────────────┤
+ │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│          │
+ │      │  ...                                             │
+ │      │          │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│
+
+ wall time ≈ 2900ms, spread delay = 900ms
+ work time = 2000ms
+ utilization = 2000ms / 1s = 200%  →  falling behind, interval doubles
+```
+
+When the backend recovers, the effective interval gradually shrinks back to the configured value.
+
 ## Shared poll relay
+
+:::caution In progress
+
+The shared poll relay is currently in progress and not officially supported. The configuration surface, CLI, and protocol may change before stable release. The implementation is shipped in PRO binaries but not yet covered by the support contract — track issues against the unreleased-features list, and don't deploy it in production paths that need long-term stability guarantees.
+
+:::
 
 The shared poll relay is a standalone Centrifugo process that centralizes backend polling. Instead of every Centrifugo node calling your backend independently on each refresh cycle, the relay polls the backend once and serves cached results to all nodes.
 
@@ -407,84 +493,3 @@ When `shared_poll_relay.enabled` is `true`, normal nodes automatically redirect 
 8. For newly tracked keys not yet in the relay cache, the relay fetches data from the backend synchronously — nodes receive data on their first request rather than waiting for the next poll cycle
 
 When [notification fast path](#notification-fast-path) is enabled on the relay, the relay also subscribes to the notification channel and triggers immediate backend polls for notified keys — bypassing the timer interval. After polling, it publishes a ready signal so normal nodes know fresh data is available.
-
-
-## Adaptive backpressure
-
-When a refresh cycle takes longer than the configured `refresh_interval`, backpressure automatically extends the interval to prevent overloading your backend. Enable it by setting `backpressure_max_interval` in the namespace's `shared_poll` config:
-
-```json title="config.json"
-{
-  "channel": {
-    "namespaces": [
-      {
-        "name": "post_votes",
-        "subscription_type": "shared_poll",
-        "shared_poll": {
-          "refresh_interval": "1s",
-          "backpressure_max_interval": "10s"
-        },
-        "allow_subscribe_for_client": true
-      }
-    ]
-  }
-}
-```
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `backpressure_max_interval` | [duration](../server/configuration.md#duration-type) | `"0s"` | Maximum refresh interval under backpressure. When set to a value greater than `0`, adaptive backpressure is enabled |
-
-When enabled, the refresh interval dynamically adjusts based on the actual work time of the previous cycle. Since Centrifugo [spreads batch dispatches](../server/shared_poll.md#how-it-works) evenly over the refresh interval, backpressure measures only the backend call time (excluding spread delays) to accurately assess backend load.
-
-### How backpressure works
-
-Backpressure computes **utilization** as the ratio of work time to the current effective interval, then adjusts:
-
-- **Utilization < 50%** — healthy. The effective interval recovers toward the configured value (×0.75 per cycle)
-- **Utilization 50–100%** — stretching. The interval increases proportionally to the load
-- **Utilization > 100%** — falling behind. The interval doubles (up to `backpressure_max_interval`)
-
-```
-Example: interval=1s, 10 batches, dispatch delay=100ms between batches
-
-── Healthy backend (10ms/batch) ──────────────────────────────
-
- t=0    100   200   300   400   500   600   700   800   900
- ├──────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┤
- │▓│    │▓│   │▓│   │▓│   │▓│   │▓│   │▓│   │▓│   │▓│   │▓│
- b0     b1    b2    b3    b4    b5    b6    b7    b8    b9
-
- wall time ≈ 910ms, spread delay = 900ms
- work time = 910 - 900 = 10ms
- utilization = 10ms / 1s = 1%  →  healthy, no adjustment
-
-
-── Slow backend (500ms/batch) ────────────────────────────────
-
- t=0    100   200   300   400   500   600   700   800   900  1400
- ├──────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼────┤
- │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│                                │
- │      │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│                          │
- │      │     │  ...concurrent batches...                      │
- │      │     │     │     │     │     │     │     │▓▓▓▓▓▓▓▓▓▓▓▓│
-
- wall time ≈ 1400ms, spread delay = 900ms
- work time = 500ms
- utilization = 500ms / 1s = 50%  →  borderline, slight increase
-
-
-── Overloaded backend (2s/batch) ─────────────────────────────
-
- t=0    100        900                                    2900
- ├──────┼── ... ───┼──────────────────────────────────────┤
- │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│          │
- │      │  ...                                             │
- │      │          │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│
-
- wall time ≈ 2900ms, spread delay = 900ms
- work time = 2000ms
- utilization = 2000ms / 1s = 200%  →  falling behind, interval doubles
-```
-
-When the backend recovers, the effective interval gradually shrinks back to the configured value.
