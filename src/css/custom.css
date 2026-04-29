@@ -400,6 +400,10 @@ html[data-theme="dark"] .markdown table tr:hover td {
 
 .navbar__items {
   flex-wrap: nowrap;
+  min-width: 0;
+}
+
+.navbar__items--left {
   overflow: hidden;
 }
 

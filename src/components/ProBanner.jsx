@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { usePluginData } from '@docusaurus/useGlobalData';
 import styles from './ProBanner.module.css';
 
-const ROTATE_MS = 30000;
-const TRANSITION_MS = 500;
+const ROTATE_MS = 60000;
+const TRANSITION_MS = 50;
 const POSTS_COUNT = 3;
 
 const ProBanner = () => {
