@@ -221,7 +221,7 @@ Sharded PUB/SUB support is a powerful feature which will push your Redis Cluster
 
 Centrifugo OSS allows [specifying an engine](../server/engines.md). Engine is responsible for PUB/SUB and channel stream/history features (we call this part `Broker`), and for online presence (this part is called `Presence Manager`). Engine in Centrifugo OSS is global for the entire Centrifugo setup – once defined, all channels use it to make operations.
 
-Centrifugo PRO allows redefining brokers and presence managers at the namespace level. This lets you both pick the right backend for each feature and distribute load across separate infrastructure — for example, isolating high-traffic namespaces onto their own Redis instance.
+Centrifugo PRO allows redefining brokers and presence managers at the namespace level. This lets you both pick the right backend for each feature and distribute load across separate infrastructure — for example, isolating high-traffic namespaces onto their own Redis instance. Use Redis or Nats for one realtime feature and PostgreSQL for another.
 
 For example:
 
@@ -255,15 +255,24 @@ First, you need to create configuration for additional brokers:
       "nats": {
         "url": "nats://localhost:4222"
       }
+    },
+    {
+      "enabled": true,
+      "name": "mycustompg",
+      "type": "postgresql",
+      "postgresql": {
+        "dsn": "postgresql://..."
+      }
     }
   ]
 }
 ```
 
-At this point Centrifugo PRO supports two broker types:
+At this point Centrifugo PRO supports three broker types:
 
-* `redis` - inherits all the possibilities of Centrifugo [built-in Redis Engine](../server/engines.md#redis-engine)
-* `nats` –  inherits all the possibilities of Centrifugo [integration with Nats broker](../server/engines.md#nats-broker).
+* `redis` - inherits all the possibilities of Centrifugo OSS [Redis integration](../server/engines.md#redis-engine)
+* `nats` –  inherits all the possibilities of Centrifugo OSS [integration with Nats](../server/engines.md#nats-broker).
+* `postgresql` –  inherits all the possibilities of Centrifugo OSS [integration with PostgreSQL](../server/engines.md#postgresql-broker).
 
 These brokers inherit all options described in the [Engines and scalability](../server/engines.md) chapter. The only difference is that it's possible to specify which custom broker to use inside a channel namespace:
 
