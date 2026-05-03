@@ -12,13 +12,13 @@ draft: true
 
 For most of [Centrifugo](https://centrifugal.dev)'s history, scaling past one node meant adding Redis — even on stacks running on PostgreSQL alone. One more service to provision, monitor, secure, and back up, just so Centrifugo nodes could coordinate with each other.
 
-The new PostgreSQL controller makes Redis optional. Together with the [stream broker](/blog/2026/05/01/pg-stream-broker-benefits) and [map broker](/blog/2026/04/30/map-subscriptions-part-2) shipped earlier in this release cycle, Centrifugo's full OSS messaging plane now runs on the PostgreSQL you already have. Same database, one operational story.
+The new PostgreSQL controller makes Redis optional. Together with the [stream broker](/blog/2026/05/15/pg-stream-broker-benefits) and [map broker](/blog/2026/05/14/map-subscriptions-part-2) shipped earlier in this release cycle, Centrifugo's full OSS messaging plane now runs on the PostgreSQL you already have. Same database, one operational story.
 
 <!--truncate-->
 
 :::info New and evolving
 
-The PostgreSQL controller is a recent addition — we're eager for production feedback. Configuration keys, schema, and outbox internals may still adjust before they're considered stable.
+Available in Centrifugo v6.8.0+. The PostgreSQL controller is a recent addition — we're eager for production feedback. Configuration keys, schema, and outbox internals may still adjust before they're considered stable.
 
 :::
 
@@ -32,7 +32,7 @@ That asymmetry is what the PostgreSQL controller removes.
 
 ## How the controller works
 
-The controller uses the same outbox pattern that powers the [PG stream broker](/blog/2026/05/01/pg-stream-broker-benefits) and the [PG map broker](/blog/2026/04/30/map-subscriptions-part-2):
+The controller uses the same outbox pattern that powers the [PG stream broker](/blog/2026/05/15/pg-stream-broker-benefits) and the [PG map broker](/blog/2026/05/14/map-subscriptions-part-2):
 
 - Control messages are written to a partitioned PostgreSQL table — one row per message.
 - Each Centrifugo node polls the table for new entries and processes them.
@@ -87,15 +87,6 @@ The PostgreSQL controller doesn't replace Redis or NATS for everyone. A rough de
 
 For OSS deployments where Redis was provisioned solely to support multi-node Centrifugo, the PG controller is the cleaner option going forward. For deployments already running Redis as a cache or session store, the migration off it is optional — there's no functional reason to switch if Redis is already there for other purposes.
 
-## Scaling beyond plain PostgreSQL
-
-The controller's load profile is much lighter than a broker — control messages are typically a small fraction of publication traffic — so plain PostgreSQL carries it for clusters of many nodes. When the primary or the broker side starts to feel limits, [Centrifugo PRO](/docs/pro/overview) layers on:
-
-- **Read-replica routing for outbox polling.** Both the controller and the broker can route their outbox polling reads to a PostgreSQL replica via PRO's **read-replica support**, while writes stay on the primary — useful when the primary becomes the bottleneck and you have replicas available.
-- **Broker-side scaling levers.** At higher cluster sizes, broker traffic dominates messaging-plane load. PRO's **broker fan-out** (one node per shard polls PG and re-broadcasts to peers via Redis or NATS) and the map-broker **in-memory cache layer** apply to the broker plane and are described in the [PG map broker](/blog/2026/04/30/map-subscriptions-part-2#scaling-with-centrifugo-pro) post.
-
-These are layered enhancements, not requirements. The cluster runs on plain PostgreSQL out of the box, and most deployments will not need them.
-
 ## Getting started
 
 Enable the PostgreSQL controller alongside any existing broker configuration:
@@ -116,4 +107,16 @@ Enable the PostgreSQL controller alongside any existing broker configuration:
 
 The controller creates its required tables, partitions, and SQL functions on startup. Bring up two or more Centrifugo nodes pointing at the same PostgreSQL, and they'll coordinate without further setup.
 
-For background on the outbox pattern shared with the brokers, see the [PG stream broker post](/blog/2026/05/01/pg-stream-broker-benefits) and the [PG map broker post](/blog/2026/04/30/map-subscriptions-part-2). The full configuration reference lives in the [engines documentation](/docs/server/engines).
+For background on the outbox pattern shared with the brokers, see the [PG stream broker post](/blog/2026/05/15/pg-stream-broker-benefits) and the [PG map broker post](/blog/2026/05/14/map-subscriptions-part-2). The full configuration reference lives in the [engines documentation](/docs/server/engines).
+
+## A runnable demo
+
+A working three-node example lives in [`examples/v6/pg_cluster_demo`](https://github.com/centrifugal/centrifugo/tree/master/examples/v6/pg_cluster_demo). It boots a single PostgreSQL container, three local Centrifugo nodes pointing at the same DSN, and a static page that exercises all three components at once:
+
+<img src="/img/demo_pg_only.jpg" /><br /><br />
+
+- The **cluster topology** panel polls `/api/info` and lists every node — that list is built from the heartbeats flowing through the **PG controller**.
+- The **online here** panel is a `map_clients` map subscription whose state lives in PostgreSQL via the **PG map broker**, so every tab sees the same presence rows regardless of which node served it. We generally do not recommend using PostgreSQL for presence as it's more like an ephemeral lightweight info that fits Redis better, but for use cases with reasonable number of concurrent clients - why not. 
+- The **chat** panel is a stream subscription on a channel served by the **PG stream broker** — a publish on one node arrives at subscribers on the other two within milliseconds via the `LISTEN/NOTIFY` wakeup.
+
+Each browser tab connects to a specific node via `?n=1|2|3`, which makes the cross-node fan-out visible: type a message in the tab on `node-1` and watch it appear in the tabs on `node-2` and `node-3`.

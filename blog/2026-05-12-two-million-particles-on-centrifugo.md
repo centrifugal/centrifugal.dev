@@ -6,7 +6,7 @@ author: Alexander Emelin
 authorTitle: Founder of Centrifugal Labs
 authorImageURL: /img/alexander_emelin.jpeg
 image: /img/cover_2_million_particles.png
-date: 2026-04-28T18:00:00
+date: 2026-05-12T18:00:00
 hide_table_of_contents: false
 ---
 
@@ -31,7 +31,7 @@ The "two million particles" lives entirely on the server. What goes to clients i
 
 The server runs everything in one Go process: the simulation, the WebSocket connections, and per-client camera state. On every tick it walks the connected clients, reads each one's camera `(x, y, width, height)` shipped up from the browser, crops that rectangle from the world buffer, and writes the bit-packed bytes straight to that client's WebSocket. A typical desktop window of 1410 × 730 pixels packs to 1410 × 730 / 8 ≈ **129 KB per tick** — that's all a viewer ever receives. The client sees about 21% of the world and pans by changing the camera; cursor input flows back up the same WebSocket and pulls particles around in the simulation.
 
-That tight coupling — sim, sockets, and per-client cameras all sharing the same memory — is what makes the original lean per viewer: the server crafts a bespoke message for each connection because it has everything it needs in one process. Now let's see what changes when we put a generic broker in the middle.
+That tight coupling — sim, sockets, and per-client cameras all in the same process — is what keeps the original lean per viewer: the server cuts a custom message for each connection because everything it needs is right there. Now let's see what changes when we put a generic broker in the middle.
 
 ## How it fits with Centrifugo
 
@@ -61,11 +61,11 @@ The publisher's job is constant: pack the whole 2200 × 2200 world at 1 bit per 
 
 <video width="100%" controls preload="metadata" src="/img/demo_particles.mp4"></video>
 
-It works — but at roughly 5× the bytes the original sends to each viewer (~605 KB vs. ~129 KB). The reason is structural: Centrifugo is a standalone broker. It doesn't know about user cameras, viewports, or which slice each viewer cares about, so a single channel has to ship bytes useful for any subscriber, and the simplest "useful" is the whole world.
+It works — but at roughly 5× the bytes the original sends to each viewer (~605 KB vs. ~129 KB). It's by design: Centrifugo is a standalone broker. It doesn't know about user cameras, viewports, or which slice each viewer cares about, so a single channel has to ship bytes useful for any subscriber, and the simplest "useful" is the whole world.
 
 And the gap widens with world size. Bump the world to 10000 × 10000 and the naive port ships ~12.5 MB per viewer per tick, while the original would still send ~129 KB — each viewer only pays for their viewport. The naive approach scales with world size; the original scales with viewport size. So we have a real reason to find a better fit.
 
-We could try one channel per viewer, with the backend tracking each camera and packing an individual crop per tick. That would get us closer to the original's ~129 KB per viewer, but it gives up fan-out — the thing Centrifugo is built for — and turns every viewport change into RPC traffic up plus a per-client publish down. The backend would also need to manage camera state per connection, which is natural in a raw-WebSocket single-process design but a poor fit for Centrifugo's standalone-server model.
+We could try one channel per viewer, with the backend tracking each camera and packing an individual crop per tick. That would get us closer to the original's ~129 KB per viewer, but it gives up fan-out — the thing Centrifugo is built for — and turns every viewport change into RPC traffic up plus a per-client publish down. The backend would also need to track camera state per connection — easy in the original's single-process design, awkward when Centrifugo sits in between.
 
 So we want fewer bytes per viewer and keep fan-out.
 
@@ -87,13 +87,13 @@ The fix is a small **prefetch margin**: pre-track the next ring of tiles around 
 
 **Delivery.** The natural first idea is one channel per tile — `tile:0:0`, ..., `tile:31:31`. Each viewer subscribes to the tile channels its viewport currently covers; the publisher publishes to 1024 channels per tick. This works. The cost shows up every time the viewer pans: crossing a tile boundary means sending a subscribe message for each newly-entered tile and an unsubscribe for each one left behind. Each subscribe also goes through its own authorization check, because the channels are independent — there's no way to share auth across them, even though for our purposes all 1024 tiles are really parts of one thing. So even small viewport movements turn into a lot of subscribe/unsubscribe traffic.
 
-But in Centrifugo v6.8.0 we have a mechanism that seems to fit better here — Shared Poll subsriptions.
+But in Centrifugo v6.8.0 we have a mechanism that seems to fit better here — Shared Poll subscriptions.
 
 ## Enter shared poll
 
 A subscriber on a [Shared Poll](https://centrifugal.dev/docs/server/shared_poll) channel calls `track(keys)` to declare which keys it cares about. A key is just an identifier tied to some application entity — in our case, a single tile.
 
-What makes Shared Poll fit here is its tracking model, not the polling per se: one channel, many keys, with each viewer declaring which keys it cares about. The name comes from its main delivery mode — Centrifugo aggregates tracked keys and asks the backend for updates on a timer — but it also has a direct publish path (`shared_poll_publish`), which is what we will use here to have low latency world updates. Centrifugo only delivers a key's bytes to viewers currently tracking that key. That's the property we need.
+What makes Shared Poll fit here is its tracking model, not the polling itself: one channel, many keys, with each viewer declaring which keys it cares about. The name comes from its main delivery mode — Centrifugo aggregates tracked keys and asks the backend for updates on a timer — but it also has a direct publish path (`shared_poll_publish`), which is what we will use here to have low latency world updates. Centrifugo only delivers a key's bytes to viewers currently tracking that key. That's the property we need.
 
 On pan, the client doesn't subscribe to anything new — it just updates its track set with `untrack(leaving)` and `track(entering)`. Centrifugo handles the rest.
 
@@ -186,7 +186,7 @@ function updateTracking() {
 }
 ```
 
-`applyTile` decodes a single tile's packed bitmap into the client's world buffer at the tile's world position. The buffer is allocated for the full 2200 × 2200 world (`Uint32Array(2200 * 2200)`), but only the regions covered by tracked tiles ever get filled — everywhere else stays zero. A `requestAnimationFrame` loop blits the camera-cropped slice from this buffer into a window-sized display canvas every paint. Pan handlers (right-mouse drag, arrow keys, WASD) update the camera, call `updateTracking()`, and the broker adjusts which tiles flow to this viewer.
+`applyTile` decodes a single tile's packed bitmap into the client's world buffer at the tile's world position. The buffer is allocated for the full 2200 × 2200 world (`Uint32Array(2200 * 2200)`), but only the regions covered by tracked tiles ever get filled — everywhere else stays zero. A `requestAnimationFrame` loop copies the camera-cropped slice from this buffer onto a window-sized display canvas every paint. Pan handlers (right-mouse drag, arrow keys, WASD) update the camera, call `updateTracking()`, and the broker adjusts which tiles flow to this viewer.
 
 ## The result
 
@@ -204,9 +204,7 @@ Same simulation, same MacBook 1410 × 730 viewport. Now let's compare:
 
 Each tile is its own WebSocket message (Centrifugo can batch them into one frame); the **~186 KB** is the average sum across the tile messages a single viewer receives per 30 Hz tick.
 
-The shared-poll variant lands at 1.44× the original's per-tick bytes on a standard MacBook screen, at full resolution, with full panning support, and with fan-out preserved. The 1.44× gap is worth a closer look — it's not random, and it's not really avoidable.
-
-Behind that pan column is a real perceptual difference. The original is stuck at the 30 Hz publish cadence — quick pans visibly stutter. Tile mode paints from a local cache at the browser's frame rate (60+ Hz) and feels noticeably smoother. The architectural reason is below.
+The shared-poll variant lands at 1.44× the original's per-tick bytes on a standard MacBook screen, at full resolution, with full panning support, and with fan-out preserved. Worth unpacking why.
 
 **Where the extra bytes come from.** Three things stack up:
 
@@ -216,38 +214,33 @@ Behind that pan column is a real perceptual difference. The original is stuck at
 | + Tile alignment (21 × 11 tiles, no prefetch) | ~143 KB | 1.11× |
 | **+ 1-tile prefetch margin (23 × 13 tiles tracked)** | **~186 KB** | **1.44×** |
 
-The math: each tile is 69 px (⌈2200/32⌉). A 1410 × 730 viewport touches ⌈1410/69⌉ × ⌈730/69⌉ = **21 × 11 = 231 tiles**; with a one-tile prefetch ring, **23 × 13 = 299 tiles**. At 621 bytes per tile: 231 × 621 ≈ **143 KB** without prefetch, 299 × 621 ≈ **186 KB** with.
+Each tile is 69 px (⌈2200/32⌉). A 1410 × 730 viewport touches ⌈1410/69⌉ × ⌈730/69⌉ = **21 × 11 = 231 tiles**; with a one-tile prefetch ring, **23 × 13 = 299 tiles**. At 621 bytes per tile: 231 × 621 ≈ **143 KB** without prefetch, 299 × 621 ≈ **186 KB** with.
 
-Tile alignment is just bookkeeping — if your window doesn't line up with tile edges, you pay for the partial tiles around the border. Prefetch is the bigger cost, and it's a UX choice. Without it, when you pan, the new strip of tiles entering your view would lag by one tick — visible pop-in on the leading edge. A one-tile margin hides that by keeping the next ring of tiles already loaded.
+Tile alignment is the small overhead: your viewport rarely lines up with tile edges, so the tiles around its border load in full even when only a strip of each is actually visible (that's the 1.11× row). Prefetch is the bigger cost, and it's a UX choice: without it, panning into a fresh tile would render zeros until `track()` lands and the next publish arrives — visible pop-in on the leading edge.
 
-You might think smaller tiles would help. They don't, much. As tiles shrink, the prefetch margin in pixels shrinks too — but the boundary in *tile count* grows. The two effects roughly cancel, so the answer lands near 1.44× regardless of grid size.
+**Why smaller tiles don't help.** Two effects pull in opposite directions as tile size shrinks:
 
-**Why prefetch is even necessary.** The two designs differ in *where the world lives* on the client.
+- **The prefetch ring shrinks in pixels.** A one-tile margin on each side gets smaller as tiles do, so prefetch waste drops linearly with tile size.
+- **Per-tile fixed overhead grows in total.** Each tile is its own `shared_poll_publish` frame with key, version, epoch, and framing bytes — plus byte-alignment loss inside the 1bpp packing (a 35-px row still needs 5 bytes, with most of the last byte wasted). Halving tile size yields 4× more tiles, so those fixed costs scale up 4×.
 
-The original has no client-side world cache. Each frame is the server-packed bitmap of exactly the current viewport — the client owns nothing else. Rendering is simple: display whatever the server last sent. Pan is a server roundtrip: client sends a new camera, server's next tick packs the new viewport, bytes ship back, client renders. Pan latency: one RTT + one tick. No prefetch needed — there's no local cache to go stale.
+The two roughly cancel — the answer lands near 1.44× across a wide range of grid sizes. Going larger makes prefetch waste dominate; going smaller makes per-tile overhead dominate. The 1.44× ceiling is built into the tile model whenever you also want panning to stay smooth — it's not something you can tune away.
 
-The tile model puts the world *on the client* — partially. Each viewer keeps a local buffer of the tiles it currently tracks, and re-crops it from the current camera at every `requestAnimationFrame` (60+ Hz, well above the publish rate). That's why pan feels instant within already-loaded tiles: camera moves, next paint reads a different region of the same buffer. The publisher just keeps pushing tile updates; the client paints from its own cache.
+**Why prefetch exists at all — and why pans feel smoother because of it.** The two designs differ in *where the world lives* on the client.
 
-The catch: this cache has edges. Pan into a tile you weren't subscribed to and you'd render zeros until your `track()` call lands and the next publish delivers the bytes — ~33-66 ms of pop-in on the leading edge. Prefetch keeps the next ring of tiles already subscribed, so the camera never moves into a hole.
+The original has no client-side world cache. Every frame is the server-packed bitmap of exactly the current viewport. Pan is a server roundtrip — new camera up, new viewport down — so pan latency is 1 RTT + 1 tick, and pan smoothness is bounded by the 30 Hz publish rate. Quick pans visibly stutter.
 
-| | Original | Tile mode |
-|---|---|---|
-| Client world cache | None | Partial (tracked tiles) |
-| Render path | Display whatever the server last sent | Crop local buffer at rAF rate |
-| Pan latency | 1 RTT + 1 tick | ~zero within tracked area |
-| Needs prefetch? | No — no cache to go stale | Yes — cache has edges |
+Tile mode puts the world *partially* on the client. Each viewer keeps a local buffer of its tracked tiles and re-crops it on every `requestAnimationFrame` (60+ Hz, well above the publish rate). Pans inside already-loaded tiles paint instantly from this buffer — that's why pan feels smooth, not anything happening on the wire.
 
-The original doesn't need prefetch because there's nothing on the client to prefetch *into*. The client is essentially a dumb display surface; every frame is cooked fresh server-side. Tile mode pushes part of the world model into the client, which is what gives you instant local pan response — but a model with edges needs a buffer beyond the edges to feel seamless.
+The catch: the cache has edges. Pan into a tile you weren't tracking and you'd render zeros until `track()` lands and the next publish delivers the bytes — ~33–66 ms of pop-in. Prefetch fills those edges by keeping the next ring of tiles always subscribed.
 
-This is also the architectural reason for the smoother-pan claim from earlier: tile mode renders at the browser's frame rate from a local cache, and prefetch is exactly what keeps the cache populated ahead of the camera. The original has nothing local to paint from between server frames, so its pan stays bounded by the 30 Hz publish rate.
+So prefetch is the price of having a local cache, and the local cache is what makes pans feel smoother. They come together.
 
-**What the broker model gives you for free.** The 1.44× isn't what you pay for using a broker — the byte overhead is from prefetch and tile alignment, both choices we made within the broker model. What the broker brings doesn't show up in bytes per viewer at all.
+**What the broker model gives you.** The 1.44× isn't what you pay for the broker — it's the cost of prefetch + alignment *within* the broker model. What the broker actually brings doesn't show up in bytes per viewer at all:
 
-Publish work is flat in viewer count. The publisher packs its tiles once per tick and sends them once. Whether one viewer is connected or a thousand, the publisher's job is the same; Centrifugo handles the fan-out from there. Backend → Centrifugo work stays at ~19 MB/s regardless of how many people are connected.
+- **Publish work is flat in viewer count.** The publisher packs tiles once per tick and sends them once. One viewer or a thousand, same job; Centrifugo fans out from there. Backend → Centrifugo stays at ~19 MB/s regardless of who's connected.
+- **Multi-node is just configuration.** Switch the broker to [Redis or NATS](https://centrifugal.dev/docs/server/engines) and the same setup runs across many Centrifugo nodes — tiles published anywhere reach viewers anywhere, viewers connect to whichever node is least busy, and the publisher doesn't know how many nodes exist. Application code unchanged.
 
-Multi-node is just configuration. The demo runs on a single Centrifugo node, but switching the broker to [Redis or NATS](https://centrifugal.dev/docs/server/engines) lets the same setup run across many: a tile published on any node reaches viewers anywhere, viewers can connect to whichever node is least busy, and the publisher doesn't even know how many Centrifugo nodes exist. Application code unchanged.
-
-So the trade is straightforward: 1.44× bytes per viewer, in exchange for fan-out that doesn't grow with viewer count and multi-node by config. The original was built for a different goal — exploring the Go runtime in a single-process design — and it's excellent at that. A project that needed both 1.0× per-viewer bytes *and* multi-node would build something like the broker layer itself: a piece between the simulation and the WebSocket layer that replicates state and routes inputs. Different shape of project.
+The trade: 1.44× bytes per viewer, in exchange for fan-out that doesn't grow with viewer count and multi-node by configuration. The original was built for a different goal — exploring the Go runtime in a single-process design — and it's excellent at that. A project that needed both 1.0× per-viewer bytes *and* multi-node would have to build the broker layer itself.
 
 Both modes are wired into a single docker-compose; pick one with the `MODE` env var:
 
@@ -258,10 +251,10 @@ MODE=shared_poll docker compose up --build         # shared-poll tiles, full-res
 
 ## What this taught us
 
-We re-implemented the demo in Centrifugo. We did not achieve the same WebSocket bytes efficiency as the original. The reasons are justified though and generally bring better publish scalability and UX.
+We re-implemented the demo in Centrifugo. We didn't match the original's WebSocket bytes — but the trade buys better publish scalability and smoother panning.
 
 The tile model costs 1.44× the bytes per viewer, and the breakdown above pins almost all of that on prefetch — drop it and you're at 1.11×, with visible pop-in on the leading edge during fast pans. So the byte overhead is essentially the price of a UX choice we made, not the price of using Centrifugo.
 
-Shared Poll subscriptions are an effective way to track the state of many objects, segments, or entities — track/untrack is a single protocol frame for multiple keys, optimized for fast subscription handling in Centrifugo. Although their primary purpose is to poll records, Shared Poll subscriptions also provide a fast notification path in versioned mode, which we use here to achieve low-latency world updates.
+Shared Poll subscriptions are a clean way to track many objects with a single subscription — `track`/`untrack` is one protocol frame for multiple keys, no per-object subscribe handshake. The name comes from the polling delivery mode, but versioned mode also exposes a fast push path (`shared_poll_publish`), which is what gives us low-latency world updates here.
 
 The full source, both modes selectable via env var, is in [`v6/millions_of_particles`](https://github.com/centrifugal/examples/tree/master/v6/millions_of_particles). Again, see David Gerrells' [original post](https://dgerrells.com/blog/how-fast-is-go-simulating-millions-of-particles-on-a-smart-tv) and [repo](https://github.com/dgerrells/how-fast-is-it).

@@ -755,7 +755,7 @@ BEGIN;
 COMMIT;
 ```
 
-If the transaction rolls back, the real-time update never happened. The outbox architecture is the same as the [PostgreSQL map broker](/blog/2026/04/30/map-subscriptions-part-2#under-the-hood) — per-shard workers poll the stream table, coordinate via shard locks, and wake via `LISTEN/NOTIFY`.
+If the transaction rolls back, the real-time update never happened. The outbox architecture is the same as the [PostgreSQL map broker](/blog/2026/05/14/map-subscriptions-part-2#under-the-hood) — per-shard workers poll the stream table, coordinate via shard locks, and wake via `LISTEN/NOTIFY`.
 
 ### `broker.postgres`
 
@@ -850,7 +850,7 @@ Centrifugo creates these SQL functions when the schema is initialized:
 
 When a custom `table_prefix` is configured, all table and function names use that prefix instead of the default `cf` — for example, `myapp_stream_publish(...)`, `myapp_stream_history`, etc. When `binary_data` is enabled, the `_binary_stream_` variant is used (e.g. `cf_binary_stream_publish`).
 
-The publish function supports version-based suppression (via `p_version` and `p_version_epoch` parameters) and idempotency (via `p_idempotency_key`). See the [transactional publishing blog post](/blog/2026/05/01/pg-stream-broker-benefits) for examples.
+The publish function supports version-based suppression (via `p_version` and `p_version_epoch` parameters) and idempotency (via `p_idempotency_key`). See the [transactional publishing blog post](/blog/2026/05/15/pg-stream-broker-benefits) for examples.
 
 ### Differences from the Redis broker
 

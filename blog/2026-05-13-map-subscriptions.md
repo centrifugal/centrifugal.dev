@@ -12,7 +12,7 @@ draft: true
 
 import MapSubscriptionDiagram from '@site/src/components/MapSubscriptionDiagram';
 
-A **map subscription** is a real-time key-value collection that Centrifugo manages. The map broker stores the entries; the SDK keeps a live/realtime mirror on every subscribed client.
+A **map subscription** — new in Centrifugo v6.8.0 — is a real-time key-value collection that Centrifugo manages. The map broker stores the entries; the SDK keeps a live/realtime mirror on every subscribed client.
 
 Subscribe – and you get the current snapshot, then live updates as keys updated/removed, then automatic re-sync on reconnect. No separate REST endpoint to load initial state, no race window between HTTP and WebSocket. Convergence is part of the protocol — no `recovered: false` flag to handle in app code.
 
@@ -20,9 +20,9 @@ Centrifugo's original model is **stream subscriptions** — channel-based pub/su
 
 For the broad case of "I have data in my own database and want clients to see it live", a stream subscription with a `getState` callback reading from your own tables is usually the natural fit — your schema stays the source of truth. Map subscriptions fit a different shape: collections without an obvious home in the application's database — cursors that exist for a few seconds at a time, presence sets, IoT device state, lobby members, feature flags, live dashboards. Each is conceptually just a key-value collection that should be live in the browser. Building a store, a change feed, and a snapshot endpoint for each one is a lot of infrastructure for that. Map subscriptions are that primitive, baked into Centrifugo.
 
-This post introduces map subscriptions and focuses on cases where Centrifugo owning the collection is exactly what you want. **Map subscriptions can also mirror data you already store elsewhere** — accepting some duplication into `cf_map_state` in exchange for the synchronized snapshot, paginated state delivery, per-key TTL, and consistent reads on the client without writing your own initial-state endpoint. A different trade-off, not a forbidden one.
+This post introduces map subscriptions and focuses on cases where Centrifugo owning the collection is exactly what you want. **Map subscriptions can also mirror data you already store elsewhere** — you pay for some duplication into `cf_map_state`, and in return you get the synchronized snapshot, paginated state delivery, per-key TTL, and consistent reads on the client without writing your own initial-state endpoint. A different trade-off, not a forbidden one.
 
-And moreover, Centrifugo now provides an alternative presence implementation as a special case of map subscriptions, inheriting all the benefits of the protocol—automatic synchronization and a convenient API in the SDK.
+Centrifugo also offers a new presence implementation built on map subscriptions, with all the same benefits — automatic synchronization and a clean SDK API.
 
 <!--truncate-->
 
@@ -34,7 +34,7 @@ Consider two examples. First, shared cursors: each user publishes their cursor p
 
 Second, a live scoreboard. The client doesn't care about the history of score changes — it needs the current state of all matches, and it needs updates as they happen. You can absolutely build this with stream subscriptions — we did exactly that in our [real-time leaderboard tutorial](/blog/2025/04/28/websocket-real-time-leaderboard) using Redis, cache recovery, and delta compression. It works well. The challenge is the initial load: there's a gap between the REST response and the moment the subscription starts, and updates published during that gap can be missed.
 
-We've [explored this problem before](/blog/2024/06/03/real-time-document-state-sync) and even provided a `RealTimeDocument` helper class that manages versioning, re-fetches state on gaps, and reconciles late-arriving updates. It works, but we kept seeing teams building collaborative features, live dashboards, or presence systems implementing similar logic on top. We wanted to provide a more convenient SDK API for this pattern — a way to build synchronized experiences with automatic state delivery and recovery built in, so application code doesn't have to manage it.
+We've [explored this problem before](/blog/2024/06/03/real-time-document-state-sync) and even provided a `RealTimeDocument` helper class that manages versioning, re-fetches state on gaps, and reconciles late-arriving updates. It works, but we kept seeing teams building collaborative features, live dashboards, or presence systems implementing similar logic on top. We wanted a more convenient SDK API for this pattern — one where state delivery and recovery are built in, so application code doesn't have to manage them.
 
 ## A new subscription type for keyed state
 
@@ -60,7 +60,7 @@ Map subscriptions are configured through the same [channel namespace](/docs/serv
 
 ## Three-phase sync protocol
 
-This apparent simplicity masks an underlying protocol challenge: the client must paginate through potentially large state while new updates keep arriving. This is the same race condition that `RealTimeDocument` addressed — but now solved at the protocol level, so application developers don't have to think about it.
+Underneath the simple-looking API there's a real protocol challenge: the client must paginate through potentially large state while new updates keep arriving. This is the same race condition that `RealTimeDocument` addressed — but now solved at the protocol level, so application developers don't have to think about it.
 
 The subscription goes through three phases:
 
@@ -174,15 +174,15 @@ Here's a sprint board demo where cards are moved between columns — each drag-a
 
 ## Where this fits in the landscape
 
-Most real-time messaging systems are built around PUB/SUB — Pusher, Socket.IO, NATS all center on message delivery. A growing number do offer built-in state synchronization. Firebase Realtime Database and Supabase Realtime sync data to clients directly from their managed databases. Ably has expanded beyond pub/sub with LiveSync and LiveObjects for database-to-client sync and collaborative state primitives. Liveblocks provides collaborative state with CRDTs. But these are either cloud-only services tied to a specific database — where integration depth is bounded by the deployment model — or specialized tools for a narrow use case like collaborative editing.
+Most real-time messaging systems are built around PUB/SUB — Pusher, Socket.IO, NATS all center on message delivery. A growing number do offer built-in state synchronization. Firebase Realtime Database and Supabase Realtime sync data to clients directly from their managed databases. Ably has expanded beyond pub/sub with LiveSync and LiveObjects for database-to-client sync and collaborative state primitives. Liveblocks provides collaborative state with CRDTs. But these are either cloud-only services tied to a specific database — where you can only integrate as deeply as the platform allows — or specialized tools for a narrow use case like collaborative editing.
 
-A natural question is why Centrifugo doesn't go down the CRDT path. The answer is consistency with what Centrifugo has always been: a generic real-time transport that is agnostic to data payloads. Centrifugo delivers JSON or binary payloads without interpreting their contents — it doesn't parse your data, doesn't merge it, doesn't resolve conflicts at the field level. The entire protocol — including map subscriptions — works over both JSON and [Protobuf](/docs/transports/overview#protobuf-protocol), so latency-sensitive or bandwidth-constrained applications can use compact binary encoding end to end. CRDTs require the transport layer to understand the data structure and apply merge semantics, which ties the system to specific data types. Map subscriptions follow the same philosophy as stream subscriptions: Centrifugo synchronizes opaque key-value entries — your application decides what those entries contain and how to interpret them. This keeps the system generic and the development line consistent across all three subscription types.
+Why not CRDTs? Because we want to stay consistent with what Centrifugo has always been: a generic real-time transport that doesn't interpret the data it carries. Centrifugo delivers JSON or binary payloads without interpreting their contents — it doesn't parse your data, doesn't merge it, doesn't resolve conflicts at the field level. The entire protocol — including map subscriptions — works over both JSON and [Protobuf](/docs/transports/overview#protobuf-protocol), so latency-sensitive or bandwidth-constrained applications can use compact binary encoding end to end. CRDTs require the transport layer to understand the data structure and apply merge semantics, which ties the system to specific data types. Map subscriptions work the same way as stream subscriptions: Centrifugo synchronizes opaque key-value entries — your application decides what they contain and how to interpret them. This keeps the system generic and the design consistent across all three subscription types.
 
-Centrifugo occupies a different spot because it's self-hosted — it runs in your infrastructure, connects to your databases, and calls your backend directly. That proximity enables features structurally outside the reach of a cloud service sitting between you and your users — from transactional publishing (where the publish *is* part of your DB transaction, not an after-the-fact CDC reaction) to the low-latency proxy system that powers subscribe authorization and shared poll refresh.
+Centrifugo occupies a different spot because it's self-hosted — it runs in your infrastructure, connects to your databases, and calls your backend directly. That proximity opens up features a cloud service sitting between you and your users can't really offer — from transactional publishing (where the publish *is* part of your DB transaction, not an after-the-fact CDC reaction) to the low-latency proxy system that powers subscribe authorization and shared poll refresh.
 
 For scenarios that need per-item access control within a single map channel, [Centrifugo PRO](/docs/pro/server_tags_filter) adds a server-side publication tags filter — your backend assigns tags to entries and sets a filter per subscriber via the subscribe proxy or JWT. Only matching entries are delivered, across all sync phases. This enables RBAC patterns without splitting data into separate channels per access scope.
 
-Stream subscriptions, map subscriptions, and [shared poll subscriptions](/blog/2026/04/28/shared-poll-subscriptions) cover three fundamentally different relationships between clients and data — ordered events, synchronized collections, and polled read-only state — while maintaining the same commitment to payload-agnostic transport. Your application decides what the data means; Centrifugo handles delivery. Switching between primitives is a namespace configuration choice, not an architectural one.
+Stream subscriptions, map subscriptions, and [shared poll subscriptions](/blog/2026/05/12/shared-poll-subscriptions) cover three different ways clients relate to data — ordered events, synchronized collections, and polled read-only state — while staying payload-agnostic across the board. Your application decides what the data means; Centrifugo handles delivery. Switching between primitives is a namespace configuration choice, not an architectural one.
 
 ## What's next
 
@@ -190,7 +190,7 @@ Map subscriptions are currently experimental — we may adjust the API, configur
 
 We designed map subscriptions to share everything stream subscriptions already have — not a separate system grafted on. Same namespace configuration, same Redis infrastructure, same client SDK connection, proxy system, recovery internals, and [transport layer](/docs/transports/overview). The goal is that adopting map subscriptions should feel like switching a namespace option, not adopting a different system.
 
-And check out the companion post on [shared poll subscriptions](/blog/2026/04/28/shared-poll-subscriptions) — the other new subscription type we're introducing alongside map subscriptions.
+And check out the companion post on [shared poll subscriptions](/blog/2026/05/12/shared-poll-subscriptions) — the other new subscription type we're introducing alongside map subscriptions.
 
 We've published a [collection of interactive demos](https://github.com/centrifugal/examples/tree/master/v6/map_demo) covering different map subscription features — from ephemeral cursors to PostgreSQL-backed sprint boards. Each demo runs with Docker Compose and showcases a different aspect of the feature.
 

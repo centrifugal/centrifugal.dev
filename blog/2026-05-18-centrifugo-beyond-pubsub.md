@@ -21,7 +21,7 @@ The second is **persistent state where the real-time update should commit with t
 
 Pure pub/sub, even with stream history and message recovery on reconnect — which Centrifugo has had for years — doesn't cover either case on its own.
 
-The recent release bakes those patterns into the core: two new subscription primitives — **[map subscriptions](/blog/2026/04/29/map-subscriptions)** for synchronized key-value collections and **[shared poll subscriptions](/blog/2026/04/28/shared-poll-subscriptions)** for read-only state the application doesn't write directly — and three Postgres-backed components: a **[stream broker](/blog/2026/05/01/pg-stream-broker-benefits)**, **[map broker](/blog/2026/04/30/map-subscriptions-part-2)**, and **[controller](/blog/2026/05/02/pg-controller-multi-node)**. The Postgres path lets multi-node clusters drop their Redis dependency.
+Centrifugo v6.8.0 bakes those patterns into the core: two new subscription primitives — **[map subscriptions](/blog/2026/05/13/map-subscriptions)** for synchronized key-value collections and **[shared poll subscriptions](/blog/2026/05/12/shared-poll-subscriptions)** for read-only state the application doesn't write directly — and three Postgres-backed components: a **[stream broker](/blog/2026/05/15/pg-stream-broker-benefits)**, **[map broker](/blog/2026/05/14/map-subscriptions-part-2)**, and **[controller](/blog/2026/05/16/pg-controller-multi-node)**. The Postgres path lets multi-node clusters drop their Redis dependency.
 
 <!--truncate-->
 
@@ -95,7 +95,7 @@ The broker is a configuration choice on the server. The protocol on the wire is 
 
 **Presence is a map subscription.** Centrifugo has had presence (who's connected to a channel) for years — historically a parallel API with its own semantics. Map subscriptions express presence as a special case: the broker tracks per-client entries with TTL keyed on connection ID. One protocol primitive, presence scales the same way map subscriptions do.
 
-How far does that go? Two browser tabs subscribed to a single `map_clients` channel with **100,000 connected members**, joining mid-fill, converging to the same state, then surviving page reloads (the demo from [Part 1 of the map subscriptions post](/blog/2026/04/29/map-subscriptions)):
+How far does that go? Two browser tabs subscribed to a single `map_clients` channel with **100,000 connected members**, joining mid-fill, converging to the same state, then surviving page reloads (the demo from [Part 1 of the map subscriptions post](/blog/2026/05/13/map-subscriptions)):
 
 <video width="100%" controls preload="metadata" src="/img/demo_map_presence.mp4"></video>
 
@@ -214,7 +214,7 @@ For applications already running Postgres for everything else, the messaging pla
 
 ## Where this leaves Centrifugo
 
-For more than a decade, Centrifugo has been a channel-based pub/sub server. With the recent release, it evolves into a realtime backend with general-purpose primitives. Different subscription types address different shapes of realtime applications.
+For more than a decade, Centrifugo has been a channel-based pub/sub server. With v6.8.0, it evolves into a realtime backend with general-purpose primitives. Different subscription types address different shapes of realtime applications.
 
 Stream subscriptions remain the primary primitive for most deployments—chat, notifications, activity feeds, audit logs, and other event-shaped workloads—with or without history and recovery. Map and shared poll sit alongside, covering patterns that traditional pub/sub alone does not handle well. The brokers behind all of them can run on memory, Redis, or Postgres; for teams already using Postgres, the database becomes a first-class option.
 
