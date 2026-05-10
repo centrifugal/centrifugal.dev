@@ -61,6 +61,8 @@ The publisher's job is constant: pack the whole 2200 × 2200 world at 1 bit per 
 
 <video width="100%" controls preload="metadata" src="/img/demo_particles_tiny.mp4"></video>
 
+See in [better quality on YouTube](https://youtu.be/VA3s0iowel4).
+
 It works — but at roughly 5× the bytes the original sends to each viewer (~605 KB vs. ~129 KB). It's by design: Centrifugo is a standalone broker. It doesn't know about user cameras, viewports, or which slice each viewer cares about, so a single channel has to ship bytes useful for any subscriber, and the simplest "useful" is the whole world.
 
 And the gap widens with world size. Bump the world to 10000 × 10000 and the naive port ships ~12.5 MB per viewer per tick, while the original would still send ~129 KB — each viewer only pays for their viewport. The naive approach scales with world size; the original scales with viewport size. So we have a real reason to find a better fit.
@@ -193,6 +195,8 @@ function updateTracking() {
 The result where we also show movement over the world:
 
 <video width="100%" controls preload="metadata" src="/img/demo_particles_2_tiny.mp4"></video>
+
+See in [better quality on YouTube](https://youtu.be/R32qXLu8GOU).
 
 Same simulation, same MacBook 1410 × 730 viewport. Now let's compare:
 
