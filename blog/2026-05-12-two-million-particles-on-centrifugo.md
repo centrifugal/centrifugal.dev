@@ -59,7 +59,7 @@ The backend publishes one binary payload per tick to a single Centrifugo channel
 
 The publisher's job is constant: pack the whole 2200 × 2200 world at 1 bit per pixel, send to a channel — and that's it – Centrifugo handles the fan-out. Pan works locally too: each browser has the whole world in memory and just slides a camera over the bitmap.
 
-<video width="100%" controls preload="metadata" src="/img/demo_particles.mp4"></video>
+<video width="100%" controls preload="metadata" src="/img/demo_particles_tiny.mp4"></video>
 
 It works — but at roughly 5× the bytes the original sends to each viewer (~605 KB vs. ~129 KB). It's by design: Centrifugo is a standalone broker. It doesn't know about user cameras, viewports, or which slice each viewer cares about, so a single channel has to ship bytes useful for any subscriber, and the simplest "useful" is the whole world.
 
