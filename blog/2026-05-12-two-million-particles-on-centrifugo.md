@@ -19,7 +19,7 @@ David Gerrells wrote a blog post [*How fast is Go - simulating millions of parti
 </div>
 <p></p>
 
-David's goal was to explore the performance of the Go runtime. Once we saw the demo we immediately wanted to try reproducing it on top of Centrifugo — to see whether a generic real-time transport like Centrifugo could carry this kind of payload. At first glance it looked straightforward: Centrifugo provides a binary WebSocket transport, and the simulation already runs on the server. But along the way we ran into design differences that meant we couldn't quite match the original's per-viewer bytes on the wire. We'll show what we built, what it cost, and why the overhead is worth it for UX and scalability.
+David's goal was to explore Go performance. Once we saw the demo we immediately wanted to try reproducing it on top of Centrifugo — to see whether a generic real-time transport like Centrifugo could carry this kind of payload. At first glance it looked straightforward: Centrifugo provides a binary WebSocket transport, and the simulation already runs on the server. But along the way we ran into design differences that meant we couldn't quite match the original's per-viewer bytes on the wire. We'll show what we built, what it cost, and why the overhead is worth it for UX and scalability.
 
 Source code of our final demo: [`v6/millions_of_particles`](https://github.com/centrifugal/examples/tree/master/v6/millions_of_particles).
 
@@ -223,7 +223,7 @@ Tile alignment is the small overhead: your viewport rarely lines up with tile ed
 - **The prefetch ring shrinks in pixels.** A one-tile margin on each side gets smaller as tiles do, so prefetch waste drops linearly with tile size.
 - **Per-tile fixed overhead grows in total.** Each tile is its own `shared_poll_publish` frame with key, version, epoch, and framing bytes — plus byte-alignment loss inside the 1bpp packing (a 35-px row still needs 5 bytes, with most of the last byte wasted). Halving tile size yields 4× more tiles, so those fixed costs scale up 4×.
 
-The two roughly cancel — the answer lands near 1.44× across a wide range of grid sizes. Going larger makes prefetch waste dominate; going smaller makes per-tile overhead dominate. The 1.44× ceiling is built into the tile model whenever you also want panning to stay smooth — it's not something you can tune away.
+The two roughly cancel — the ratio stays near the same value across a wide range of grid sizes. Going larger makes prefetch waste dominate; going smaller makes per-tile overhead dominate. That ceiling is built into the tile model whenever you also want panning to stay smooth — it's not something you can tune away.
 
 **Why prefetch exists at all — and why pans feel smoother because of it.** The two designs differ in *where the world lives* on the client.
 
@@ -235,12 +235,12 @@ The catch: the cache has edges. Pan into a tile you weren't tracking and you'd r
 
 So prefetch is the price of having a local cache, and the local cache is what makes pans feel smoother. They come together.
 
-**What the broker model gives you.** The 1.44× isn't what you pay for the broker — it's the cost of prefetch + alignment *within* the broker model. What the broker actually brings doesn't show up in bytes per viewer at all:
+**What the broker model gives you.** That overhead isn't what you pay for the broker — it's the cost of prefetch + alignment *within* the broker model. What the broker actually brings doesn't show up in bytes per viewer at all:
 
 - **Publish work is flat in viewer count.** The publisher packs tiles once per tick and sends them once. One viewer or a thousand, same job; Centrifugo fans out from there. Backend → Centrifugo stays at ~19 MB/s regardless of who's connected.
 - **Multi-node is just configuration.** Switch the broker to [Redis or NATS](https://centrifugal.dev/docs/server/engines) and the same setup runs across many Centrifugo nodes — tiles published anywhere reach viewers anywhere, viewers connect to whichever node is least busy, and the publisher doesn't know how many nodes exist. Application code unchanged.
 
-The trade: 1.44× bytes per viewer, in exchange for fan-out that doesn't grow with viewer count and multi-node by configuration. The original was built for a different goal — exploring the Go runtime in a single-process design — and it's excellent at that. A project that needed both 1.0× per-viewer bytes *and* multi-node would have to build the broker layer itself.
+The trade: 1.44× bytes per viewer, in exchange for fan-out that doesn't grow with viewer count and multi-node by configuration. The original was built for a different goal — exploring Go performance in a single-process design — and it's excellent at that. A project that needed both 1.0× per-viewer bytes *and* multi-node would have to build the broker layer itself.
 
 Both modes are wired into a single docker-compose; pick one with the `MODE` env var:
 
@@ -253,7 +253,7 @@ MODE=shared_poll docker compose up --build         # shared-poll tiles, full-res
 
 We re-implemented the demo in Centrifugo. We didn't match the original's WebSocket bytes — but the trade buys better publish scalability and smoother panning.
 
-The tile model costs 1.44× the bytes per viewer, and the breakdown above pins almost all of that on prefetch — drop it and you're at 1.11×, with visible pop-in on the leading edge during fast pans. So the byte overhead is essentially the price of a UX choice we made, not the price of using Centrifugo.
+The breakdown above pins almost all of the per-viewer overhead on prefetch — drop it and you're at 1.11×, with visible pop-in on the leading edge during fast pans. So the byte overhead is essentially the price of a UX choice we made, not the price of using Centrifugo.
 
 Shared Poll subscriptions are a clean way to track many objects with a single subscription — `track`/`untrack` is one protocol frame for multiple keys, no per-object subscribe handshake. The name comes from the polling delivery mode, but versioned mode also exposes a fast push path (`shared_poll_publish`), which is what gives us low-latency world updates here.
 

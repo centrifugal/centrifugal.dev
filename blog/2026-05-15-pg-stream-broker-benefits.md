@@ -10,7 +10,7 @@ hide_table_of_contents: false
 draft: true
 ---
 
-In [Part 2 of the map subscriptions series](/blog/2026/05/14/map-subscriptions-part-2), we introduced a PostgreSQL map broker that lets your application publish real-time map updates inside a database transaction — removing the dual-write problem for callers that publish via the broker's SQL function from their own transactions. That capability applied only to map subscriptions — keyed state like leaderboards, collaborative boards, and inventories.
+In [Part 2 of the map subscriptions series](/blog/2026/05/14/map-subscriptions-part-2), we introduced a PostgreSQL map broker that lets your application publish real-time map updates inside a database transaction — removing the dual-write problem when you publish via the broker's SQL function from your own transactions. That capability applied only to map subscriptions — keyed state like leaderboards, collaborative boards, and inventories.
 
 Today we're extending the same shape to **stream subscriptions** — the ordered-event primitive that powers notifications, activity feeds, chat messages, audit logs, and order updates. If you have a database row and you want to announce a change in real time, you can now do it atomically with your write — same `BEGIN / COMMIT`, same outbox architecture, same "no Redis" simplicity.
 
@@ -35,7 +35,7 @@ Available in Centrifugo v6.8.0+. The PostgreSQL stream broker is a recent additi
 
 Integrating a real-time system with a relational database creates the same gap: the backend writes to the database, then publishes to the real-time layer as a separate operation. If the process crashes between them — or if the publish fails — the database and subscribers fall out of sync. Users see stale data until they refresh.
 
-We [covered this in depth](/blog/2026/05/14/map-subscriptions-part-2#the-dual-write-problem) for map subscriptions. The same problem applies — arguably more broadly — to stream subscriptions. Every notification system, every audit trail, every order-status feed has the same shape: write a row to your database, then announce the change over WebSocket. The PostgreSQL stream broker lets you combine both into one transaction.
+We [covered this in depth](/blog/2026/05/14/map-subscriptions-part-2#the-dual-write-problem) for map subscriptions. The same problem applies — even more broadly — to stream subscriptions. Every notification system, every audit trail, every order-status feed has the same shape: write a row to your database, then announce the change over WebSocket. The PostgreSQL stream broker lets you combine both into one transaction.
 
 ## Publishing inside your transaction
 
@@ -63,7 +63,7 @@ The transactional guarantee applies to **callers using the SQL function path** �
 
 For applications where the data already lives in your own tables — orders, notifications, activity feeds, chat — the stream broker is enough on its own. No duplicate state table, no broker-managed snapshot. Your app database is the source of truth; Centrifugo streams only the change events. The stream broker keeps a thin bridging window in `cf_stream` (the partition retention window) while your app DB owns historical data.
 
-The client SDK now supports a `getState` callback for stream subscriptions that automates this pattern. We [previously described](/blog/2024/06/03/real-time-document-state-sync) the challenge of synchronizing a document state loaded from a REST API with a real-time subscription — the race window between the HTTP response and the subscription start, the need to handle `recovered: false` on reconnects, the manual position tracking. The `getState` callback solves all of this natively:
+The client SDK now supports a `getState` callback for stream subscriptions that automates this pattern. We [previously described](/blog/2024/06/03/real-time-document-state-sync) the challenge of keeping document state loaded from a REST API in sync with a real-time subscription — the race window between the HTTP response and the subscription start, the need to handle `recovered: false` on reconnects, the manual position tracking. The `getState` callback solves all of this natively:
 
 ```javascript
 const sub = client.newSubscription('orders:user_42', {
@@ -89,7 +89,7 @@ sub.subscribe();
 
 The callback is called on initial subscribe and when recovery fails after a reconnect. On normal reconnects where the server successfully recovers missed publications, `getState` is not called — recovered publications simply arrive as `publication` events. When recovery fails (history expired, epoch changed), the SDK calls `getState` again automatically: the app refreshes from its source of truth, and the SDK resubscribes from the fresh position.
 
-The position should come from `cf_stream_top_position`, called inside the same transaction (or before) your data read. Reading position first ensures it's a lower bound — recovered publications may overlap with your loaded data, but you'll never have gaps. This works correctly when updates are idempotent (e.g. "set status to shipped"). For non-idempotent updates, deduplicate by publication offset — the same consideration we described in [Proper real-time document state synchronization](/blog/2024/06/03/real-time-document-state-sync), but now handled by the SDK rather than application code.
+The position should come from `cf_stream_top_position`, called inside the same transaction (or before) your data read. Reading position first ensures it's a lower bound — recovered publications may overlap with your loaded data, but you'll never have gaps. This works correctly when updates are idempotent (e.g. "set status to shipped"). For non-idempotent updates, deduplicate by publication offset — the same caveat we described in [Proper real-time document state synchronization](/blog/2024/06/03/real-time-document-state-sync), but now handled by the SDK rather than application code.
 
 On error (network failure, database timeout), the SDK emits an error event and retries with backoff.
 
@@ -145,7 +145,7 @@ The client's `getState` follows the same recipe shown earlier: read `cf_stream_t
 
 If you'd rather eliminate that replay window entirely — for example, when events are non-idempotent deltas and you don't want to add offset-based dedup — wrap both reads in a single `REPEATABLE READ` transaction. Both reads then see the same MVCC snapshot: the returned position is the exact watermark baked into the snapshot, and catch-up delivers only events committed strictly after it — no overlap to reconcile at all.
 
-This shape — aggregator-as-publisher, single-tx atomicity for the snapshot update + the publish — is the natural fit whenever you have an upstream feed (Kafka, NATS, CDC, anything else) being shaped into stored views. The PG stream broker removes the cross-system offset bridge by making one process responsible for both the stored aggregate and the broker stream that describes its evolution.
+This shape — aggregator-as-publisher, single-tx atomicity for the snapshot update + the publish — is the natural fit whenever you have an upstream feed (Kafka, NATS, CDC, anything else) being shaped into stored views. The PG stream broker removes the cross-system offset bridge by making one process responsible for both the stored aggregate and the change stream.
 
 ## A second shape: per-tenant channels
 
@@ -167,7 +167,7 @@ BEGIN;
 COMMIT;
 ```
 
-Status transitions (`received` → `preparing` → `ready` → `served`) do the same — `UPDATE orders` + `cf_stream_publish(p_channel := 'kitchen:42', …)` in one transaction. The invariant the application must preserve is: every code path that mutates a row for restaurant X emits the publish for `kitchen:X` in the same transaction.
+Status transitions (`received` → `preparing` → `ready` → `served`) do the same — `UPDATE orders` + `cf_stream_publish(p_channel := 'kitchen:42', …)` in one transaction. The application must follow one rule: every code path that mutates a row for restaurant X emits the publish for `kitchen:X` in the same transaction.
 
 The read path is the position-first recipe from earlier, with the snapshot filtered by restaurant:
 
@@ -192,7 +192,7 @@ On a local PostgreSQL 16 (Homebrew, Apple M4):
 | **Publish → delivery latency** | ~2 ms |
 | **Partition drop** (10K rows) | ~1 ms |
 
-These numbers are from a single Centrifugo instance running the broker's Go integration tests in benchmark mode against the same machine's PostgreSQL — small JSON payloads, default broker configuration, parallel goroutines exercising `cf_stream_publish`. They're rough indicators of order-of-magnitude, not portable production guarantees: real workloads vary with payload size, connection pool, network latency, and your PostgreSQL's own write capacity. In production, multiple Centrifugo nodes and application instances call `cf_stream_publish` concurrently — aggregate throughput scales with the number of writers up to PostgreSQL's own write capacity. For notification, audit-log, and order-update workloads this is plenty of headroom. For ultra-high-volume telemetry that doesn't need transactional publishing, the Redis broker remains the right choice.
+These numbers are from a single Centrifugo instance running the broker's Go integration tests in benchmark mode against the same machine's PostgreSQL — small JSON payloads, default broker configuration, parallel goroutines exercising `cf_stream_publish`. They're rough estimates, not numbers you can take to production: real workloads vary with payload size, connection pool, network latency, and your PostgreSQL's own write capacity. In production, multiple Centrifugo nodes and application instances call `cf_stream_publish` concurrently — aggregate throughput scales with the number of writers up to PostgreSQL's own write capacity. For notification, audit-log, and order-update workloads this is plenty of headroom. For ultra-high-volume telemetry that doesn't need transactional publishing, the Redis broker remains the right choice.
 
 ## Getting started
 

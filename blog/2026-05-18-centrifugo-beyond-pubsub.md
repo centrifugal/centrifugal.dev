@@ -15,7 +15,7 @@ import PgOutboxDiagram from '@site/src/components/PgOutboxDiagram';
 
 For over a decade, [Centrifugo](https://centrifugal.dev) has been a channel-based pub/sub server: clients subscribe, the backend publishes, messages fan out over WebSocket (or SSE / HTTP-streaming when WebSocket isn't available). Over the years, certain problems kept coming up that pub/sub couldn't solve well on its own — and teams ended up working around them.
 
-Two recurring patterns show where pub/sub alone falls short. The first is **ephemeral state nobody wants in their main database** — cursor positions in a collaborative editor, typing indicators, presence rosters, in-flight match state. The values are short-lived and worthless after the client disconnects; putting them in your application schema is overkill, but rolling them on Redis fronted by hand-built initial-state, TTL, and reconnect logic is the same wheel every team reinvents.
+Two recurring patterns show where pub/sub alone falls short. The first is **ephemeral state nobody wants in their main database** — cursor positions in a collaborative editor, typing indicators, presence rosters, in-flight match state. The values are short-lived and worthless after the client disconnects; putting them in your application schema is overkill, but building it on Redis with hand-built initial-state, TTL, and reconnect logic is the same wheel every team reinvents.
 
 The second is **persistent state where the real-time update should commit with the database write** — order status, document edits, ticket transitions. The database is the right home; the dual-write problem becomes a cost you keep paying.
 
@@ -31,7 +31,7 @@ Stream subscriptions give you events; the client reconstructs state by replaying
 
 A **map subscription** is a real-time key-value collection delivered as a protocol primitive. Subscribe once; the server ships the current entries (paginated for large collections), then per-key updates as they happen. Per-key TTL handles cleanup. CAS-style conditional writes handle concurrent updates. On reconnect, the SDK reconciles silently.
 
-The canonical example is a collaborative editor's cursor map: every connected user contributes one entry — their current position — keyed by user ID, with a short TTL so disconnects clean up automatically. The client API is two events:
+The classic example is a collaborative editor's cursor map: every connected user contributes one entry — their current position — keyed by user ID, with a short TTL so disconnects clean up automatically. The client API is two events:
 
 ```javascript
 const sub = client.newMapSubscription('cursors:room1');
@@ -93,13 +93,13 @@ Convergence is guaranteed by the protocol's offset tracking, not by application-
 
 The broker is a configuration choice on the server. The protocol on the wire is identical.
 
-**Presence is a map subscription.** Centrifugo has had presence (who's connected to a channel) for years — historically a parallel API with its own semantics. Map subscriptions express presence as a special case: the broker tracks per-client entries with TTL keyed on connection ID. One protocol primitive, presence scales the same way map subscriptions do.
+**Presence is a map subscription.** Centrifugo has had presence (who's connected to a channel) for years — it used to be a separate API with its own behavior. Now presence is just a special kind of map subscription: the broker tracks per-client entries with TTL keyed on connection ID. One protocol primitive, presence scales the same way map subscriptions do.
 
 How far does that go? Two browser tabs subscribed to a single `map_clients` channel with **100,000 connected members**, joining mid-fill, converging to the same state, then surviving page reloads (the demo from [Part 1 of the map subscriptions post](/blog/2026/05/13/map-subscriptions)):
 
 <video width="100%" controls preload="metadata" src="/img/demo_map_presence.mp4"></video>
 
-While we don't expect 100k keys in most map subscription use cases and don't recommend it for production, it's good to see that the protocol is capable.
+While we don't expect 100k keys in most map subscription use cases and don't recommend it for production, it's good to see the protocol can handle it.
 
 ## Shared poll subscriptions — inverting the polling model
 
@@ -125,18 +125,18 @@ The demo shows the polling + direct-publish combination at work: timer polling d
 
 <video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/demo_votes.mp4"></video>
 
-**HMAC, not JWT, for per-item authorization.** A shared poll client tracks many keys within a single channel subscription. Authorizing each key would be expensive with JWT verification (asymmetric crypto, larger token payloads). HMAC is roughly an order of magnitude faster to generate and verify. Tracked keys are first-class values in the protocol rather than buried in a token; when the client calls `track(keys)`, the backend signs only the authorized subset and returns the signature. Centrifugo verifies the HMAC locally on every track request — no auth-service round-trip on the hot path. If the backend returns fewer keys than requested, the omitted keys are treated as revoked, propagating access changes on the next signature refresh.
+**HMAC, not JWT, for per-item authorization.** A shared poll client tracks many keys within a single channel subscription. Authorizing each key would be expensive with JWT verification (asymmetric crypto, larger token payloads). HMAC is roughly an order of magnitude faster to generate and verify. Tracked keys are first-class values in the protocol rather than buried in a token; when the client calls `track(keys)`, the backend signs only the authorized subset and returns the signature. Centrifugo verifies the HMAC locally on every track request — no auth-service round-trip on the hot path. If the backend returns fewer keys than requested, the omitted keys are treated as revoked, so access revocations take effect on the next signature refresh.
 
 **Latency varies by integration; correctness doesn't.** Polling alone is enough to keep every tracked key in sync at the configured cadence, regardless of what else is wired in. Direct publish via `shared_poll_publish` lowers latency on application write paths; if a publish is missed for any reason, the next poll cycle catches up.
 
 ## Postgres as a first-class integration
 
-For state that needs durability — map subscriptions backed by Postgres, stream subscriptions where atomicity matters — Centrifugo now ships three Postgres-backed components: a **stream broker**, a **map broker**, and a **controller** for cross-node coordination. They share one operational pattern — partitioned outbox tables, shard locks for write serialization, LISTEN/NOTIFY for wakeup, daily retention — so an operator who learns the model once knows how all three behave.
+For state that needs durability — map subscriptions backed by Postgres, stream subscriptions where atomicity matters — Centrifugo now ships three Postgres-backed components: a **stream broker**, a **map broker**, and a **controller** for cross-node coordination. They share one operational pattern — partitioned outbox tables, shard locks for write serialization, LISTEN/NOTIFY for wakeup, daily retention — so once you learn how one works, you know how all three behave.
 
-**Outbox, not WAL/CDC.** The straightforward way to bridge a database to a real-time layer is logical replication: read the WAL, fan changes out. Tools like Debezium make that work. We chose a different approach — an explicit outbox table that the application writes to transactionally, with Centrifugo workers polling it:
+**Outbox, not WAL/CDC.** The straightforward way to bridge a database to a real-time layer is logical replication: read the WAL, fan changes out. Tools like Debezium make that work. We chose a different approach — an explicit outbox table that the application writes to inside its own transaction, with Centrifugo workers polling it:
 
 - The application controls *what* gets published. WAL-based CDC turns every row change into a candidate publication; an outbox is opt-in per row.
-- Outbox writes commit with the application transaction. If the transaction rolls back, the publish disappears with it. WAL-based publish-after-commit can drift from application semantics in subtle ways — especially around constraint violations and rollbacks.
+- Outbox writes commit with the application transaction. If the transaction rolls back, the publish disappears with it. WAL-based publish-after-commit can drift from what the application actually intended in subtle ways — especially around constraint violations and rollbacks.
 - Outbox is portable. No replication slots, no special PG configuration, no operator privileges. A regular database with `INSERT` permission is enough. Works on managed Postgres (RDS, Cloud SQL, Supabase, Neon) without configuration changes.
 
 **LISTEN/NOTIFY for low-latency wakeup, polling for correctness.** Pure polling has predictable latency, bounded by the polling interval. Pure LISTEN/NOTIFY is fast but lossy: notifications can be dropped if listeners fall behind, and the queue is bounded. Centrifugo combines them. NOTIFY wakes the worker; polling reads what's actually there. Worst case, NOTIFY misses a wakeup — the next poll catches up. Best case, end-to-end latency stays in low single-digit milliseconds.
@@ -214,8 +214,8 @@ For applications already running Postgres for everything else, the messaging pla
 
 ## Where this leaves Centrifugo
 
-For more than a decade, Centrifugo has been a channel-based pub/sub server. With v6.8.0, it evolves into a realtime backend with general-purpose primitives. Different subscription types address different shapes of realtime applications.
+For more than a decade, Centrifugo has been a channel-based pub/sub server. With v6.8.0, it evolves into a realtime backend with general-purpose primitives. Different subscription types fit different shapes of realtime applications.
 
 Stream subscriptions remain the primary primitive for most deployments—chat, notifications, activity feeds, audit logs, and other event-shaped workloads—with or without history and recovery. Map and shared poll sit alongside, covering patterns that traditional pub/sub alone does not handle well. The brokers behind all of them can run on memory, Redis, or Postgres; for teams already using Postgres, the database becomes a first-class option.
 
-While the new subscription types expand the surface area, we’ve reused the existing protocol wherever possible and preserved established channel behavior. The transport remains generic. The protocol stays payload-agnostic. Your data stays yours.
+While the new subscription types add new capabilities, we’ve reused the existing protocol wherever possible and kept existing channel behavior intact. The transport remains generic. The protocol stays payload-agnostic. Your data stays yours.

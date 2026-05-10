@@ -183,7 +183,17 @@ This feature is experimental.
 
 :::
 
-With node-grouped PUB/SUB, subscriptions are grouped by Redis Cluster node — reducing the total number of connections from one Centrifugo node from `num_partitions` to `num_redis_nodes`.
+With node-grouped PUB/SUB, subscriptions are grouped by Redis Cluster node — reducing the total number of PUB/SUB connections from one Centrifugo node from `num_partitions` down to `num_redis_nodes`.
+
+As a worked example from a real deployment — 200 Centrifugo nodes, 128 partitions, a 6-node Redis Cluster:
+
+|                                   | Per-partition       | Node-grouped      |
+|-----------------------------------|---------------------|-------------------|
+| PUB/SUB connections per Centrifugo node | 128            | 6                 |
+| Total Centrifugo↔Redis PUB/SUB conns    | `200 × 128 = 25,600` | `200 × 6 = 1,200` |
+| Average connections per Redis node      | `25,600 / 6 ≈ 4,267` | `1,200 / 6 = 200` |
+
+The per-Redis-node view is usually the constraint that bites first: at ~4k connections per node you're brushing default `maxclients`, file-descriptor ceilings, and per-connection memory overhead on the Redis side. Node-grouped collapses that to ~200 per node and equalizes load across the cluster.
 
 ```json title="config.json"
 {

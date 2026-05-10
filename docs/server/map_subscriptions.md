@@ -655,9 +655,7 @@ At this point only `centrifuge-js` SDK supports map subscriptions. Support for o
 Use `newMapSubscription` instead of `newSubscription`:
 
 ```javascript
-const sub = client.newMapSubscription('cursors:room1', {
-  limit: 100,             // Page size for state/stream pagination
-});
+const sub = client.newMapSubscription('cursors:room1', {});
 ```
 
 ### Events
@@ -817,9 +815,7 @@ curl -X POST http://localhost:8000/api/map_publish \
 Client code:
 
 ```javascript
-const sub = client.newMapSubscription('scoreboard:main', {
-  limit: 50,
-});
+const sub = client.newMapSubscription('scoreboard:main', {});
 
 sub.on('sync', (ctx) => {
   renderScoreboard(ctx.entries);
