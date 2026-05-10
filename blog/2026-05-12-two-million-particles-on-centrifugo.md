@@ -192,7 +192,7 @@ function updateTracking() {
 
 The result where we also show movement over the world:
 
-<video width="100%" controls preload="metadata" src="/img/demo_particles_2.mp4"></video>
+<video width="100%" controls preload="metadata" src="/img/demo_particles_2_tiny.mp4"></video>
 
 Same simulation, same MacBook 1410 × 730 viewport. Now let's compare:
 
