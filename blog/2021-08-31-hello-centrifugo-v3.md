@@ -9,8 +9,6 @@ image: /img/v3_blog.jpg
 hide_table_of_contents: false
 ---
 
-![Centrifuge](/img/v3_blog.jpg)
-
 After almost three years of Centrifugo v2 life cycle we are happy to announce the next major release of Centrifugo. During the last several months deep in our Centrifugal laboratory we had been synthesizing an improved version of the server.
 
 New Centrifugo v3 is targeting to improve Centrifugo adoption for basic real-time application cases, improves server performance and extends existing features with new functionality. It comes with unidirectional real-time transports, protocol speedups, super-fast engine implementation based on Tarantool, new documentation site, GRPC proxy, API extensions and PRO version which provides unique possibilities for business adopters.

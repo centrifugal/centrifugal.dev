@@ -4,7 +4,7 @@ id: connections
 title: Connections API
 ---
 
-Centrifugo PRO offers an extra API call, `connections`, which enables retrieval of all active sessions (based on user ID or expression) without the need to activate the presence feature for channels. Furthermore, developers can attach any desired JSON payload to a connection that will then be visible in the result of the connections call. It's worth noting that this additional meta-information remains hidden from the client-side, unlike the info associated with the connection.
+Centrifugo PRO offers an extra API call, `connections`, which enables retrieval of all active sessions (based on user ID or expression) without the need to activate the presence feature for channels. Furthermore, developers can attach any desired JSON payload to a connection that will then be visible in the result of the connections call. It's worth noting that this additional meta-information remains hidden from the client side, unlike the info associated with the connection.
 
 This feature serves a valuable purpose in managing active user sessions, particularly for messenger applications. Users can review their current sessions and terminate some of them using the Centrifugo disconnect server API.
 
@@ -77,7 +77,7 @@ The result:
 
 Here we can see that user has 2 connections from `terminal` app.
 
-Each connection can be annotated with meta JSON information which is set during connection establishment (over `meta` claim of JWT or by returning `meta` in the connect proxy result).
+Each connection can be annotated with meta JSON information which is set during connection establishment (via the `meta` claim of JWT or by returning `meta` in the connect proxy result).
 
 ### connections
 

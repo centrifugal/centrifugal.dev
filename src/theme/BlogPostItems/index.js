@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from "@docusaurus/Link";
-import {useBlogPost} from '@docusaurus/plugin-content-blog/client'
+import { useBlogPost } from '@docusaurus/plugin-content-blog/client'
 import BlogPostItemContainer from "@theme/BlogPostItem/Container";
 import { BlogPostProvider } from '@docusaurus/plugin-content-blog/client';
 import styles from './styles.module.css';
@@ -18,63 +18,71 @@ function BlogPostItems({
   component: BlogPostItemComponent = BlogPostItem,
 }) {
   return (
-    <>
-      {items.map(({ content: BlogPostContent }) => (
+    <div className={styles.list}>
+      {items.map(({ content: BlogPostContent }, index) => (
         <BlogPostProvider
           key={BlogPostContent.metadata.permalink}
           content={BlogPostContent}>
-          <BlogPostItemComponent>
+          <BlogPostItemComponent featured={index === 0}>
             <BlogPostContent />
           </BlogPostItemComponent>
         </BlogPostProvider>
       ))}
-    </>
+    </div>
   );
 }
 
-function BlogPostItem({ className }) {
+function BlogPostItem({ featured }) {
   const { metadata } = useBlogPost();
 
   const {
     permalink,
     title,
-    // date,
-    formattedDate,
+    date,
     frontMatter,
     description,
-    // tags,
+    readingTime,
   } = metadata;
 
   const author = metadata.authors[0];
+  const readMin = readingTime ? `${Math.ceil(readingTime)} min read` : null;
+  const formattedDate = new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  if (featured) {
+    return (
+      <BlogPostItemContainer>
+        <Link itemProp="url" to={permalink} className={styles.featuredCard}>
+          <div className={styles.featuredImage}>
+            {frontMatter.image && <img src={frontMatter.image} alt={title} />}
+            <span className={styles.metaTag}>{formattedDate}{readMin && ` · ${readMin}`}</span>
+          </div>
+          <div className={styles.featuredOverlay}>
+            <h2 className={styles.featuredTitle}>{title}</h2>
+            <p className={styles.featuredDesc}>{description}</p>
+          </div>
+        </Link>
+      </BlogPostItemContainer>
+    );
+  }
 
   return (
-    <BlogPostItemContainer className={className}>
-      <div className={styles.container}>
-        <div className={styles.leftColumn}>
-          <img src={frontMatter.image} width="200px" />
+    <BlogPostItemContainer>
+      <Link itemProp="url" to={permalink} className={styles.card}>
+        <div className={styles.cardImageWrap}>
+          <div className={styles.cardImage}>
+            {frontMatter.image && <img src={frontMatter.image} alt={title} />}
+          </div>
+          <span className={styles.metaTag}>{formattedDate}{readMin && ` · ${readMin}`}</span>
         </div>
-        <div className={styles.rightColumn}>
-          <div>
-            <Link itemProp="url" to={permalink} style={{ "fontSize": "1.0em" }}>
-              {title}
-            </Link>
-          </div>
-          <div
-            style={{ "fontSize": "0.8em", color: "#6d6666" }}
-          >
-            {formattedDate} by {author?.name}
-          </div>
-          <div>
-            <div>
-              <div
-                style={{ fontSize: "0.9em" }}
-              >
-                {description}
-              </div>
-            </div>
-          </div>
+        <div className={styles.cardOverlay}>
+          <h3 className={styles.cardTitle}>{title}</h3>
         </div>
-      </div>
+        <p className={styles.cardDesc}>{description}</p>
+      </Link>
     </BlogPostItemContainer>
   );
 }

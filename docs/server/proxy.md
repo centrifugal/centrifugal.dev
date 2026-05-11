@@ -8,6 +8,18 @@ Due to its self-hosted nature, Centrifugo can offer an efficient way to proxy cl
 
 For example, you can authenticate connections by responding to requests from Centrifugo to your application backend, subscribe connections to a stable set of channels, refresh client sessions, and handle RPC calls sent by a client over a bidirectional real-time connection. Additionally, you can control subscription and publication permissions using these event proxy hooks.
 
+:::tip Proxy endpoint ≠ main application backend
+
+A common assumption is that proxy endpoints must live in your main application backend. They don't have to. The proxy endpoint is any HTTP or GRPC service that speaks Centrifugo's proxy protocol — so it can be:
+
+- **Your main application backend** — simplest and most common.
+- **A lightweight standalone service** — a small service (often in Go, Rust, or another fast language) that handles only proxy events and consults your database or main backend as needed. Useful when your main backend is slow-starting, written in a language less suited for high-QPS hot paths, or when you want to isolate real-time auth logic from your main app's request surface.
+- **A Centrifugo sidecar** — deployed next to each Centrifugo instance, keeping proxy latency in microseconds. Especially valuable for `subscribe`/`publish` hooks that run on every hot-path operation.
+
+Pick based on latency sensitivity and operational preference — the proxy protocol doesn't care where the endpoint lives.
+
+:::
+
 ## Supported proxy events
 
 Here is the full list of events which can be proxied (we will show the details about how to configure each of those later in this chapter).
@@ -23,8 +35,8 @@ Channel-wide proxy events:
 * `publish` - called when a client tries to publish into a channel, so it's possible to check permissions and optionally modify publication data. Works for bidirectional transports only.
 * `sub_refresh` - called when a client subscription is going to expire, so it's possible to prolong it or just let it expire. Can also be used just as a periodical subscription liveness callback from Centrifugo to app backend. Works for bidirectional and unidirectional transports.
 * `subscribe_stream` – this is an experimental proxy for simple integration of Centrifugo with third-party streams. It works only for bidirectional transports, and it's a bit special, so we describe this proxy type in a dedicated chapter [Proxy subscription streams](./proxy_streams.md).
-* `cache_empty` – a hook available in Centrifugo PRO to be notified about data missing in channels with cache recovery mode. See a [dedicated description](../pro/channel_cache_empty.md).
-* `state` – a hook available in Centrifugo PRO to be notified about channel `occupied` or `vacated` states. See a [dedicated description](../pro/channel_events.md).
+* `cache_empty` – a hook available in Centrifugo PRO to be notified about data missing in channels with cache recovery mode. See a [dedicated description](../pro/event_hooks.md#cache-empty-events).
+* `state` – a hook available in Centrifugo PRO to be notified about channel `occupied` or `vacated` states. See a [dedicated description](../pro/event_hooks.md#channel-state-events).
 
 Finally, Centrifugo can proxy client RPC calls to the backend:
 
@@ -117,7 +129,7 @@ Centrifugo re-uses the same configuration object for all proxy types. This objec
 | `endpoint`                | `string`                                                       | yes      | HTTP or GRPC endpoint in the same format as in default proxy mode. For example, `http://localhost:3000/path` for HTTP or `grpc://localhost:3000` for GRPC.              |
 | `timeout`                 | [`duration`](./configuration.md#duration-type) | no       | Proxy request timeout, default `"1s"`                                                                                                                                   |
 | `http_headers`            | `array[string]`                                                | no       | List of headers from incoming client connection to proxy, by default no headers will be proxied. See [Proxy HTTP headers](#proxy-http-headers) section.                 |
-| `grpc_metadata`           | `array[string]`                                                | no       | List of GRPC metadata keys from incomig GRPC connection to proxy, by default no metadata keys will be proxied. See [Proxy GRPC metadata](#proxy-grpc-metadata) section. |
+| `grpc_metadata`           | `array[string]`                                                | no       | List of GRPC metadata keys from incoming GRPC connection to proxy, by default no metadata keys will be proxied. See [Proxy GRPC metadata](#proxy-grpc-metadata) section. |
 | `include_connection_meta` | `bool`                                                         | no       | Include meta information (attached on connect). This is noop for connect proxy now. See [Include connection meta](#include-connection-meta) section.                    |
 | `http`                    | [`HTTP options`](#http-options-object)                | no       | Allows configuring outgoing HTTP protocol specific options.                                                                                                             |
 | `grpc`                    | [`GRPC options`](#grpc-options-object)                | no       | Allows configuring outgoing GRPC protocol specific options.                                                                                                             |
@@ -346,7 +358,7 @@ This is what sent from Centrifugo to application backend in case of connect prox
 | Field name | Field type | Optional | Description       |
 |------------|------------|----------|-------------------|
 | `code`     | `integer`  | no       | Disconnect code   |
-| `reason`   | `string`   | yes      | Disconenct reason |
+| `reason`   | `string`   | yes      | Disconnect reason |
 
 #### ConnectResult
 
@@ -433,7 +445,7 @@ We also have a tutorial in the blog about [Centrifugo integration with NodeJS](/
 
 #### What if connection is unauthenticated/unauthorized to connect?
 
-In this case return a disconnect object in a response. See [Return custom disconnect](#return-custom-disconnect) section. Depending on whether you want connection to reconnect or not (usually not) you can select the appropriate disconnect code. Sth like this in response:
+In this case return a disconnect object in a response. See [Return custom disconnect](#return-custom-disconnect) section. Depending on whether you want the connection to reconnect or not (usually not) you can select the appropriate disconnect code. Something like this in response:
 
 ```json
 {
@@ -792,13 +804,24 @@ The expected response example if a publication is allowed:
 
 #### PublishResult
 
-| Field          | Type     | Optional | Description                                                                                                                                          |
-|----------------|----------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `data`         | `JSON`   | yes      | an optional JSON data to send into a channel **instead of** original data sent by a client                                                           |
-| `b64data`      | `string` | yes      | a binary data encoded in base64 format, the meaning is the same as for data above, will be decoded to raw bytes on Centrifugo side before publishing |
-| `skip_history` | `bool`   | yes      | when set to `true` Centrifugo won't save publication to the channel history                                                                          |
+| Field             | Type                  | Optional | Description                                                                                                                                                                                       |
+|-------------------|-----------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `data`            | `JSON`                | yes      | an optional JSON data to send into a channel **instead of** original data sent by a client                                                                                                        |
+| `b64data`         | `string`              | yes      | a binary data encoded in base64 format, the meaning is the same as for data above, will be decoded to raw bytes on Centrifugo side before publishing                                              |
+| `skip_history`    | `bool`                | yes      | when set to `true` Centrifugo won't save publication to the channel history                                                                                                                       |
+| `tags`            | `map<string, string>` | yes      | Since Centrifugo v6.8.0. Server-controlled publication tags attached to the resulting publication. Useful together with [server-side publication tags filter](../pro/server_tags_filter.md) — the proxy is the natural place to stamp RBAC tags on client-originated publishes since clients cannot send tags themselves |
+| `idempotency_key` | `string`              | yes      | Since Centrifugo v6.8.0. Idempotency key for safe retries — duplicate publishes with the same key within the broker's idempotent result TTL window are suppressed                                  |
+| `delta`           | `bool`                | yes      | Since Centrifugo v6.8.0. Enable delta compression for this publication                                                                                                                            |
+| `version`         | `uint64`              | yes      | Since Centrifugo v6.8.0. Per-publication version used by Centrifugo to drop non-actual publications when publication carries the entire state                                                     |
+| `version_epoch`   | `string`              | yes      | Since Centrifugo v6.8.0. Scopes `version` — use when version may be reused (e.g. comes from a system that can lose state)                                                                         |
 
 See below on how to [return an error](#return-custom-error) in case you don't want to allow publishing.
+
+### Map publish/remove proxy
+
+Map subscriptions ([experimental](./map_subscriptions.md)) have their own publish and remove proxies — they intercept client-originated `mapPublish` and `mapRemove` calls in the same way the regular publish proxy intercepts client publishes. The map proxies share the same authorization model and the same `error` / `disconnect` response semantics as the publish proxy described above, but accept and return additional fields that only make sense for map subscriptions (key overrides, score, conditional `key_mode`, separate stream payload, server-stamped tags on removals, etc.).
+
+The complete request/response reference for the map publish/remove proxy lives in the map subscriptions doc — see [Map publish/remove proxy](./map_subscriptions.md#map-publishremove-proxy).
 
 ### Sub refresh proxy
 
@@ -926,11 +949,11 @@ An experimental proxy for simple integration of Centrifugo with third-party stre
 
 ### Cache empty proxy
 
-A hook available in Centrifugo PRO to be notified about data missing in channels with cache recovery mode. See a [dedicated description](../pro/channel_cache_empty.md).
+A hook available in Centrifugo PRO to be notified about data missing in channels with cache recovery mode. See a [dedicated description](../pro/event_hooks.md#cache-empty-events).
 
 ### State proxy
 
-A hook available in Centrifugo PRO to be notified about channel `occupied` or `vacated` states. See a [dedicated description](../pro/channel_events.md).
+A hook available in Centrifugo PRO to be notified about channel `occupied` or `vacated` states. See a [dedicated description](../pro/event_hooks.md#channel-state-events).
 
 ## Client RPC proxy
 
@@ -1248,7 +1271,7 @@ For `subscribe`, `publish`, `rpc` proxies the error reaches bidirectional client
 
 For `publish` and `rpc` the error reaches app developer's code and developers can handle it in a custom way.
 
-Errors for `subscribe` are handled by the bidirectional SDKs automatically and my result into automatic re-subscription, or terminal unsubscribe (depending on the `temporary` flag of error object). The error `100: internal server error` used by default in case of non-200 HTTP proxy request status is temporary and leads to a re-subscription.
+Errors for `subscribe` are handled by the bidirectional SDKs automatically and may result in automatic re-subscription, or terminal unsubscribe (depending on the `temporary` flag of error object). The error `100: internal server error` used by default in case of non-200 HTTP proxy request status is temporary and leads to a re-subscription.
 
 If the error happens during `refresh` proxy call – Centrifugo automatically retries the refresh call after some time, so temporary downtime of the app backend does not corrupt established connections.
 

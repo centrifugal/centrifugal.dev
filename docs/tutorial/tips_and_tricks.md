@@ -5,7 +5,7 @@ sidebar_label: "Appx #2: Tips and tricks"
 title: "Appendix #2: Tips and tricks"
 ---
 
-Making this tutorial took quite a lot of time for us. We want to collect some useful tips and tricks here for those who decide to play with the final example. Feel free to contribute if you find something which could help others.
+Making this tutorial took quite a lot of time for us. We want to collect some useful tips and tricks here for those who decide to play with the final example. Feel free to contribute if you find something that could help others.
 
 ## Point to Centrifugo running on host (outside Docker)
 
@@ -14,7 +14,7 @@ We did this ourselves while experimenting and measuring latency numbers in diffe
 * On Linux run `ifconfig` and find `docker0` interface – use its ip address to point to Centrifugo. In our case it was `172.17.0.1`, so we pointed Nginx to `172.17.0.1:8000` upstream (Centrifugo runs on port 8000 by default), and in Django code used `http://172.17.0.1:8000/api/broadcast` endpoint. Also, make sure you are using `"address": "0.0.0.0"` in Centrifugo configuration
 * On Macos – use `host.docker.internal` special name, i.e. `host.docker.internal:8000` in Nginx and `http://host.docker.internal:8000/api/broadcast` as API endpoint for Django code.
 
-## Connect to PosgreSQL
+## Connect to PostgreSQL
 
 Run from within example repo root:
 

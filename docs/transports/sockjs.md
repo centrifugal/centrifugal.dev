@@ -10,7 +10,7 @@ SockJS transport was **REMOVED** in Centrifugo v6.
 
 :::
 
-SockJS is a polyfill browser library which provides HTTP-based fallback transports in case when it's not possible to establish Websocket connection. This can happen in old client browsers or because of some proxy behind client and server that cuts of Websocket traffic. You can find more information on [SockJS project Github page](https://github.com/sockjs/sockjs-client).
+SockJS is a polyfill browser library which provides HTTP-based fallback transports in cases when it's not possible to establish a WebSocket connection. This can happen in old client browsers or because of some proxy between client and server that cuts off WebSocket traffic. You can find more information on the [SockJS project Github page](https://github.com/sockjs/sockjs-client).
 
 If you have a requirement to work everywhere SockJS is the solution. SockJS will automatically choose best fallback transport if Websocket connection failed for some reason. Some of the fallback transports are:
 
@@ -35,7 +35,7 @@ There are several important caveats to know when using SockJS – see below.
 
 ### Sticky sessions
 
-First is that you need to use sticky sessions mechanism if you have **more than one** Centrifugo nodes running behind a load balancer. This mechanism usually supported by load balancers (for example Nginx). Sticky sessions mean that all requests from the same client will come to the same Centrifugo node. This is necessary because SockJS maintains connection session in process memory thus allowing bidirectional communication between a client and a server. Sticky mechanism not required if you only use one Centrifugo node on a backend.
+First is that you need to use the sticky sessions mechanism if you have **more than one** Centrifugo node running behind a load balancer. This mechanism is usually supported by load balancers (for example Nginx). Sticky sessions mean that all requests from the same client will come to the same Centrifugo node. This is necessary because SockJS maintains the connection session in process memory, thus allowing bidirectional communication between a client and a server. The sticky mechanism is not required if you only use one Centrifugo node on the backend.
 
 For example, with Nginx sticky support can be enabled with `ip_hash` directive for upstream:
 
@@ -57,7 +57,7 @@ So the best solution would be using something like [nginx-sticky-module](https:/
 
 ### Browser only
 
-SockJS is only supported by centrifuge-js – i.e. our browser client. There is no much sense to use SockJS outside of a browser these days.
+SockJS is only supported by centrifuge-js – i.e. our browser client. There is not much sense in using SockJS outside of a browser these days.
 
 ### JSON only
 

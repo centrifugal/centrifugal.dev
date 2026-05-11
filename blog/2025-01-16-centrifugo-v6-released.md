@@ -11,8 +11,6 @@ hide_table_of_contents: false
 
 <!--truncate-->
 
-<img src="/img/v6.jpg" />
-
 We are excited to announce Centrifugo v6 – a new major release that is now live. This release includes fundamental improvements in the configuration to simplify working with Centrifugo from both user and core development perspectives. It also adds several useful features and enhances observability for both Centrifugo OSS and Centrifugo PRO.
 
 :::tip Prefer podcast version of this post? (8.5 MB).

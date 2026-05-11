@@ -1,11 +1,11 @@
 ---
 description: "Centrifugo PRO is the enhanced commercial version with push notifications, real-time analytics, rate limiting, SSO, tracing, and enterprise features."
 id: overview
-title: Centrifugo PRO ♻️
-sidebar_label: Centrifugo PRO
+title: Centrifugo PRO
+sidebar_label: Centrifugo PRO overview
 ---
 
-Centrifugo PRO is the enhanced version of Centrifugo offered by Centrifugal Labs LTD under a commercial license. It's packed with a unique set of features designed to fit requirements of corporate and enterprise environments, decrease costs at scale, and benefit from additional features such as push notifications support, real-time analytics, and so on. We have leveraged our extensive experience to build Centrifugo PRO, ensuring its extra powers are practical and ready for production workloads. See information about [pricing](#pricing) and [try for free](#try-for-free-in-sandbox-mode) in sandbox mode.
+Centrifugo PRO is the enhanced version of Centrifugo offered by Centrifugal Labs under a commercial license. It's packed with a unique set of features designed to fit requirements of corporate and enterprise environments, decrease costs at scale, and benefit from additional features such as push notifications support, real-time analytics, and so on. We have leveraged our extensive experience to build Centrifugo PRO, ensuring its extra powers are practical and ready for production workloads. See information about [pricing](#pricing) and [try for free](#try-for-free-in-sandbox-mode) in sandbox mode.
 
 ## Features
 
@@ -22,19 +22,20 @@ Centrifugo PRO is packed with the following features:
 * 🔑 [Server API JWKS auth](./server_api_auth.md) to protect HTTP API with JWT tokens validated against JWKS endpoint.
 * 🟢 [User status API](./user_status.md) feature allows understanding activity state for a list of users.
 * 🔌 [Connections API](./connections.md) to query, filter and inspect active connections.
-* ✋ [User blocking API](./user_block.md) to block/unblock abusive users by ID.
-* 🛑 [JWT revoking and invalidation API](./token_revocation.md) to revoke tokens by ID and invalidate user's tokens based on issue time.
-* 🔔 [Channel state events](channel_events.md) to be notified on the backend about channel `occupied` and `vacated` events.
-* 🥣 [Channel cache empty events](channel_cache_empty.md) to react on cache misses in channels with cache recovery mode.
+* ✋ [User blocking and token revocation API](./access_revoke.md) to block/unblock abusive users and revoke tokens by ID or invalidate user's tokens based on issue time.
+* 🔔 [Additional event hooks](event_hooks.md) — channel state events (`occupied`/`vacated`) and cache empty events for lazy state population.
 * 💪 [Channel capabilities](./capabilities.md) for controlling channel permissions per connection or per subscription.
 * 📜 [Channel patterns](./channel_patterns.md) allow defining channel configuration like HTTP routes with parameters.
 * ✍️ [Channel CEL expressions](./cel_expressions.md) to write custom efficient permission rules for channel operations.
 * 🚀 [Faster performance](./performance.md) to reduce resource usage on server side.
 * 🔮 [Scalability optimizations](./scalability.md) with singleflight technique and shared position synchronization.
-* 📚 [Per-namespace engines](./scalability.md#per-namespace-engines) to configure various PUB/SUB brokers and presence managers on namespace level.
-* 🕹️ [Setting custom Controller](./scalability.md#setting-custom-controller) to isolate controller load from channel load (i.e. from Broker)
-* 🗜️ [Bandwidth optimizations](./bandwidth_optimizations.md) to reduce network costs. [Delta compression for at most once](./bandwidth_optimizations.md#delta-compression-for-at-most-once), [channel compaction](./bandwidth_optimizations.md#channel-compaction).
+* 📚 [Per-namespace engines](./scalability.md#per-namespace-engines) — assign different brokers per namespace to match backends to features and scale load across separate infrastructure. Redis or Nats for one realtime feature, PostgreSQL for another.
+* 🕹️ [Setting custom Controller](./scalability.md#setting-custom-controller) to isolate controller load from channel load — supports Redis, Nats, and PostgreSQL (enabling fully PostgreSQL-only multi-node clusters)
+* 🗜️ [Bandwidth optimizations](./bandwidth_optimizations.md) to reduce network costs. [Delta compression for at most once](./bandwidth_optimizations.md#delta-compression-for-at-most-once), [channel compaction](./bandwidth_optimizations.md#channel-compaction), [publish debouncing](./bandwidth_optimizations.md#publish-debouncing).
 * 🍔 [Message batching control](./client_msg_batching.md) for advanced tuning of client connection write behaviour.
+* 🏷️ [Server-side publication tags filter](./server_tags_filter.md) for per-subscriber access control via publication tags — works for stream and map subscriptions.
+* 🗺️ [Map subscriptions enhancements](./map_subscriptions.md) with in-memory cache layer, PostgreSQL enhancements, Redis Cluster support, and per-namespace map brokers.
+* 🔄 [Shared poll enhancements](./shared_poll.md) with instant initial data, delta compression, notification fast path, and adaptive backpressure (shared poll relay is in progress).
 * 🧐 [Observability enhancements](./observability_enhancements.md) for additional more granular system state insights.
 
 And more to come!
@@ -45,7 +46,7 @@ Centrifugo PRO requires a license key to run. The pricing information for the li
 
 The license key allows running Centrifugo PRO without any limits for organization projects, includes 1 year of prioritized support and updates. Our pricing is flat and based on your company size and Centrifugo role. Please contact us for more details and a quote.
 
-We would be happy to learn more about your real-time challenges and how Centrifugo can help you address them. Don't hesitate to ask for an online meeting to discuss the use case in-person.
+We would be happy to learn more about your real-time challenges and how Centrifugo can help you address them. Don't hesitate to ask for an online meeting to discuss the use case in person.
 
 ## Try for free in sandbox mode
 

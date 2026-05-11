@@ -5,7 +5,7 @@ title: Unidirectional client protocol
 sidebar_label: Unidirectional protocol
 ---
 
-As mentioned earlier, you can bypass the need for Centrifugo bidirectional real-time SDKs by opting for the [unidirectional approach](./overview.md#unidirectional). By using unidirectional Centrifugo transports, you can harness the power of native browser APIs while still benefiting of Centrifugo features, including efficient subscription multiplexing, scalability, a ready-to-use publication API, and more. This approach allows you to introduce real-time features with minimal dependencies on the client side, still having scalable and efficient real-time backend.
+As mentioned earlier, you can bypass the need for Centrifugo bidirectional real-time SDKs by opting for the [unidirectional approach](./overview.md#unidirectional). By using unidirectional Centrifugo transports, you can harness the power of native browser APIs while still benefiting from Centrifugo features, including efficient subscription multiplexing, scalability, a ready-to-use publication API, and more. This approach allows you to introduce real-time features with minimal dependencies on the client side, while still having a scalable and efficient real-time backend.
 
 By sticking with the unidirectional approach, you'll need to implement some basic parsing on the client side to handle the message types sent by Centrifugo over unidirectional connections.
 
@@ -52,14 +52,14 @@ Or, for unidirectional HTTP-streaming transport:
 
 For establishing the unidirectional connection, you need to use the appropriate transport endpoint, pass connection request payload, and then handle incoming push messages.
 
-The exact endpoint to connect varies depending on the transport you choose, you can find default in the documentation for a specific transport:
+The exact endpoint to connect varies depending on the transport you choose; you can find the default in the documentation for a specific transport:
 
 * [Unidirectional WebSocket](./uni_websocket.md) - `/connection/uni_websocket`
 * [Unidirectional HTTP streaming](./uni_http_stream.md) - `/connection/uni_http_stream`
 * [Unidirectional Server-Sent Events (EventSource)](./uni_sse.md) - `/connection/uni_sse`
 * [Unidirectional gRPC](./uni_grpc.md) - uses custom GRPC server and port to connect.
 
-Upon connection, you can pass initial connection payload to Centrifugo. The way you send it varies for different unidirectional transports.  But generally the connect request structure is the same and is defined in [Centrifugo protocol Protobuf schema](https://github.com/centrifugal/protocol/blob/master/definitions/client.proto) - see `ConnectRequest` message type. Let's describe it in more detail in relation to unidirectional transports.
+Upon connection, you can pass the initial connection payload to Centrifugo. The way you send it varies for different unidirectional transports. But generally the connect request structure is the same and is defined in [Centrifugo protocol Protobuf schema](https://github.com/centrifugal/protocol/blob/master/definitions/client.proto) - see `ConnectRequest` message type. Let's describe it in more detail in relation to unidirectional transports.
 
 ### ConnectRequest
 
@@ -106,7 +106,7 @@ Note, that Centrifugo won't simply accept subscriptions from `subs` – only if 
 
 ## Unidirectional pushes
 
-Once unidirectional connection is established, Centrifugo will send `Push` frames over the connection. The structure of those `Push` frames is defined in the [client protocol schema](https://github.com/centrifugal/protocol/blob/master/definitions/client.proto), meaning Centrifugo leverages a portion of its bidirectional protocol for unidirectional communication. In bidirectional protocol Centrifugo uses `Command` and `Reply` messages on top level, and when sending asynchronous real-time messages it sends `Reply` message with `push` field (of `Push` type). In unidirectional case command-reply pattern is not possible, so Centrifugo just always sends `Push` types over the connection.
+Once unidirectional connection is established, Centrifugo will send `Push` frames over the connection. The structure of those `Push` frames is defined in the [client protocol schema](https://github.com/centrifugal/protocol/blob/master/definitions/client.proto), meaning Centrifugo leverages a portion of its bidirectional protocol for unidirectional communication. In the bidirectional protocol Centrifugo uses `Command` and `Reply` messages at the top level, and when sending asynchronous real-time messages it sends a `Reply` message with a `push` field (of `Push` type). In the unidirectional case the command-reply pattern is not possible, so Centrifugo always sends `Push` types over the connection.
 
 This is how a `Push` message is defined in the schema:
 
@@ -186,7 +186,7 @@ Example:
 }
 ```
 
-It contains information about client identifier, established server-side subscriptions (with pos), ping and session identifier information.
+It contains information about the client identifier, established server-side subscriptions (with position), ping, and session identifier information.
 
 ### publication
 
@@ -210,7 +210,7 @@ Note, in Protobuf schema `data` field of `Publication` message is represented by
 
 ### join
 
-Sent if a channel has join/leave features enabled and someone joins (subscribes) to a channel.
+Sent if a channel has join/leave features enabled and someone joins (subscribes to) a channel.
 
 Example:
 
@@ -225,7 +225,7 @@ Example:
 
 ### leave
 
-Sent if a channel has join/leave features enabled and someone leaves (unsubscribes) a channel.
+Sent if a channel has join/leave features enabled and someone leaves (unsubscribes from) a channel.
 
 ```json
 {
@@ -238,7 +238,7 @@ Sent if a channel has join/leave features enabled and someone leaves (unsubscrib
 
 ### disconnect
 
-When connection can't be established or is closed by a server for some reason. Connection is closed by a server after sending this message.
+Sent when the connection can't be established or is closed by a server for some reason. The connection is closed by the server after sending this message.
 
 ```json
 {
@@ -251,7 +251,7 @@ When connection can't be established or is closed by a server for some reason. C
 
 ### unsubscribe
 
-Sent when connection was unsubscribed from a channel during its lifetime.
+Sent when the connection was unsubscribed from a channel during its lifetime.
 
 ```json
 {
@@ -262,7 +262,7 @@ Sent when connection was unsubscribed from a channel during its lifetime.
 
 ### subscribe
 
-Sent when connection was subscribed to a channel during its lifetime.
+Sent when the connection was subscribed to a channel during its lifetime.
 
 ```json
 {
@@ -273,7 +273,7 @@ Sent when connection was subscribed to a channel during its lifetime.
 
 ### refresh
 
-Sent when connection was refreshed. Generally, it's rarely needed in practice.
+Sent when the connection was refreshed. Generally, it's rarely needed in practice.
 
 ### ping
 

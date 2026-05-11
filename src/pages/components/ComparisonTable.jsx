@@ -10,9 +10,22 @@ const data = [
             { name: 'WebSocket, SSE, HTTP-streaming, WebTransport, GRPC transports', oss: true, pro: true },
             { name: 'WebSocket bidirectional emulation', oss: true, pro: true },
             { name: 'Stream subscriptions with history, recovery, cache mode', oss: true, pro: true },
-            { name: 'Map subscriptions for state sync', oss: 'soon', pro: 'soon' },
+            { name: 'Map subscriptions for state sync', oss: true, pro: true },
+            {
+                name: 'Map subscriptions enhancements', pro: true, link: '/docs/pro/map_subscriptions',
+                description: 'In-memory cache layer, PostgreSQL read replicas and broker fan-out, Redis Cluster support with sharded PUB/SUB, and per-namespace map brokers for using different backends per channel namespace.',
+            },
+            { name: 'Shared poll subscriptions', oss: true, pro: true },
+            {
+                name: 'Shared poll enhancements', pro: true, link: '/docs/pro/shared_poll',
+                description: 'Instant initial data via cached items, delta compression, notification fast path for near-instant updates, adaptive backpressure, and a standalone relay server to centralize backend polling.',
+            },
             { name: 'Presence & join/leave events', oss: true, pro: true },
-            { name: 'Delta compression, publication filtering by tags', oss: true, pro: true },
+            { name: 'Delta compression, client-side publication filtering by tags', oss: true, pro: true },
+            {
+                name: 'Server-side publication tags filter', pro: true, link: '/docs/pro/server_tags_filter',
+                description: 'Server-controlled per-subscriber publication filtering via tags. Set by your backend through subscribe proxy or JWT — the client cannot override it. Works for stream and map subscriptions, enabling fine-grained access control within channels.',
+            },
             { name: 'Proxy events (connect, subscribe, publish, RPC)', oss: true, pro: true },
             { name: 'Official real-time SDKs for popular languages', oss: true, pro: true },
         ],
@@ -39,7 +52,7 @@ const data = [
                 description: 'Block users at the Centrifugo level — blocked users are immediately disconnected and cannot reconnect. Supports optional persistence to Redis or database so blocks survive restarts.',
             },
             {
-                name: 'Token revocation & invalidation', pro: true, link: '/docs/pro/token_revocation',
+                name: 'Token revocation & invalidation', pro: true, link: '/docs/pro/access_revoke#token-revocation',
                 description: 'Revoke individual tokens by JTI claim or invalidate all tokens issued before a specific time using IAT claim. Revocation info is kept in-memory with periodic sync, making checks fast.',
             },
             {
@@ -59,7 +72,7 @@ const data = [
             { name: 'Scale with Redis, Redis Cluster and NATS', oss: true, pro: true },
             {
                 name: 'Per-namespace engines', pro: true, link: '/docs/pro/scalability#per-namespace-engines',
-                description: 'Use different broker or presence backends per namespace. For example, Redis for most channels but NATS for wildcard subscriptions — within a single Centrifugo setup.',
+                description: 'Assign different broker backends to different namespaces to scale load and match each feature to the right backend — PostgreSQL for transactional channels, Redis for high-throughput channels, separate Redis instances per namespace to distribute load.',
             },
             {
                 name: 'Singleflight & shared position sync', pro: true, link: '/docs/pro/scalability',
@@ -70,12 +83,20 @@ const data = [
                 description: 'Batch periodic client events (ping, presence updates) to reduce CPU usage and system calls. Reported over 2x CPU reduction for idle connections in benchmarks.',
             },
             {
+                name: 'Sharded PUB/SUB for Redis Cluster', pro: true, link: '/docs/pro/scalability#redis-cluster-sharded-pubsub',
+                description: 'Use Redis 7.0+ sharded PUB/SUB to distribute channel load across cluster nodes instead of broadcasting to all. Includes node-grouped mode that reduces connection count from num_partitions to num_redis_nodes. Works for both Engine and Map Broker.',
+            },
+            {
                 name: 'Bandwidth optimizations', pro: true, link: '/docs/pro/bandwidth_optimizations',
-                description: 'Enable delta compression for at-most-once delivery by keeping the latest publication in node memory. Reduces outgoing bandwidth without requiring history or recovery to be enabled.',
+                description: 'Delta compression for at-most-once delivery, channel compaction, and client publish debouncing to coalesce rapid updates. Reduces bandwidth and broker load.',
             },
             {
                 name: 'Advanced message write and batching', pro: true, link: '/docs/pro/client_message_batching',
                 description: 'Configure write_delay to collect messages before sending, trading delivery latency for reduced CPU. Can cut overall cluster CPU usage by half for high message rate scenarios.',
+            },
+            {
+                name: 'Custom Controller (Redis, Nats, PostgreSQL)', pro: true, link: '/docs/pro/scalability#setting-custom-controller',
+                description: 'Isolate cross-node control traffic from channel data using a dedicated controller. Supports Redis, Nats, and PostgreSQL — the PostgreSQL controller enables fully PostgreSQL-only multi-node clusters with no Redis dependency.',
             },
         ],
     },
@@ -125,12 +146,8 @@ const data = [
         comment: 'Extended server-side APIs and channel events for deeper integration',
         features: [
             {
-                name: 'Channel state events (occupied/vacated)', pro: true, link: '/docs/pro/channel_state_events', preview: true,
-                description: 'Webhook notifications when a channel becomes occupied (first subscriber) or vacated (last subscriber leaves). Requires Redis engine with presence enabled on channels.',
-            },
-            {
-                name: 'Cache empty events', pro: true, link: '/docs/pro/channel_cache_empty',
-                description: 'Proxy notification when a client in cache recovery mode finds no publication in the channel history stream, allowing your backend to populate the cache on demand.',
+                name: 'Additional event hooks', pro: true, link: '/docs/pro/event_hooks',
+                description: 'Channel state events (occupied/vacated webhooks when subscribers join or leave) and cache empty events (notify backend on cache misses for lazy state population).',
             },
             {
                 name: 'User status API', pro: true, link: '/docs/pro/user_status',

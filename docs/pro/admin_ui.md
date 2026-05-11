@@ -12,7 +12,7 @@ Also, Centrifugo PRO extends admin UI in other ways providing more data about th
 
 ## SSO for admin UI (OIDC)
 
-As soon as OIDC integration configured, instead of password field Centrifugo PRO admin web UI shows a button to log in using a configured Identity Provider. As soon as user successfully logs in over the IDP, user is redirected back to Centrifugo admin UI. Centrifugo checks user's access token and permissions to access admin functionality upon every request to admin resources.
+As soon as OIDC integration is configured, instead of the password field, Centrifugo PRO admin web UI shows a button to log in using a configured Identity Provider. As soon as a user successfully logs in via the IDP, the user is redirected back to Centrifugo admin UI. Centrifugo checks the user's access token and permissions to access admin functionality upon every request to admin resources.
 
 ![](/img/admin_idp_auth.png)
 
@@ -43,7 +43,7 @@ As soon as OIDC integration configured, instead of password field Centrifugo PRO
 * `admin.oidc.audience` - optional string, if not set Centrifugo expects access token audience (`aud`) to match configured `client_id` value (as required by the OIDC spec).
 * `admin.oidc.redirect_uri` - required string, redirect URI to use.
 * `admin.oidc.extra_scopes` - optional array of extra string scopes to request from IDP. Centrifugo always includes `openid` scope as it's required by OpenID Connect protocol.
-* `admin.oidc.access_cel` – required string, this is a CEL expression which describes rule for checking access to Centrifugo admin resources. For now we don't provide RBAC – when this expression returns true the user gets full access to Centrifugo admin resources. If false – no access at all. For more information about what is CEL check out [Channel CEL expressions](./cel_expressions.md) chapter where CEL expressions are used for channel permission checks.
+* `admin.oidc.access_cel` – required string, this is a CEL expression which describes the rule for checking access to Centrifugo admin resources. For now we don't provide RBAC – when this expression returns true the user gets full access to Centrifugo admin resources. If false – no access at all. For more information about what CEL is, check out the [Channel CEL expressions](./cel_expressions.md) chapter where CEL expressions are used for channel permission checks.
 
 Let's look closer at `admin.oidc.access_cel`. In the example above we check this based on a user group membership:
 
@@ -59,7 +59,7 @@ Let's look closer at `admin.oidc.access_cel`. In the example above we check this
 }
 ```
 
-The expression may differ depending on IDP used – you can modify it to fit your case. Inside CEL you have access token `claims` object with all claims of access token (which is JWT), so custom logic is possible. If you want to allow all authenticated users to access Centrifugo admin resources – then you can do the following:
+The expression may differ depending on the IDP used – you can modify it to fit your case. Inside CEL you have access to the token `claims` object with all claims of the access token (which is a JWT), so custom logic is possible. If you want to allow all authenticated users to access Centrifugo admin resources – then you can do the following:
 
 :::caution
 
@@ -81,7 +81,7 @@ This is usually not recommended, since every new user in your IDP will get acces
 
 ### Configuring server-side OIDC
 
-Starting from Centrifugo PRO v6.5.2 a server-side OIDC flow is supported. In that case token exchange happens on the backend side using `client_secret`, and Centrifugo uses HTTP-only cookie for the established authenticated session. In case of using server-side flow using `https` for Centrifugo admin UI is required because cookie is set with a secure flag.
+Starting from Centrifugo PRO v6.5.2 a server-side OIDC flow is supported. In that case token exchange happens on the backend side using `client_secret`, and Centrifugo uses HTTP-only cookie for the established authenticated session. When using the server-side flow, `https` for Centrifugo admin UI is required because the cookie is set with a secure flag.
 
 To enable server-side OIDC flow, add the `client_secret` option to your OIDC configuration:
 
@@ -128,7 +128,7 @@ The choice between PKCE and server-side flow depends on your security requiremen
 
 ## Channels and Connections Snapshots
 
-This feature allows using admin web UI to inspect current connections and channels state. It allows to:
+This feature allows using the admin web UI to inspect the current connections and channels state. It allows you to:
 
 * See current connections and channels state in the cluster
 * Search connections by user ID, inspect subscribers of the channel
@@ -188,7 +188,7 @@ Centrifugo PRO supports snapshot export only over ClickHouse native TCP protocol
 
 ## More data in admin UI
 
-* an ability to show: CPU and RSS memory usage of each node, updated in near real-time
+* an ability to show CPU and RSS memory usage of each node, updated in near real-time
 * show aggregations over `node.info_metrics_aggregate_interval` for each node:
 * Distribution by client name
 * Client incoming frames rate

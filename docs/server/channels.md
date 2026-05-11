@@ -71,7 +71,7 @@ User-limited channels must be enabled for a channel namespace using [allow_user_
 
 ### private channel prefix (`$`)
 
-Centrifugo maintains compatibility with its previous versions which had concept of private channels. In earlier versions — specifically Centrifugo v1, v2, and v3—only – only channels beginning with `$` required a subscription JWT for subscribing. With Centrifugo v4, this is no longer the case; clients can subscribe to any channel if they have a valid subscription token.
+Centrifugo maintains compatibility with its previous versions which had concept of private channels. In earlier versions — specifically Centrifugo v1, v2, and v3 — only channels beginning with `$` required a subscription JWT for subscribing. With Centrifugo v4, this is no longer the case; clients can subscribe to any channel if they have a valid subscription token.
 
 However, for namespaces where the `allow_subscribe_for_client` option is activated, Centrifugo prohibits subscriptions to channels that start with the `channel_private_prefix` (which defaults to `$`) unless a subscription token is provided. This restriction is designed to facilitate a secure migration to Centrifugo v4 or later versions.
 
@@ -212,7 +212,7 @@ If pushing join/leave is not forced then client can provide a corresponding Subs
 
 `history_size` (integer, default `0`) – history size (amount of messages) for channels. As Centrifugo keeps all history messages in process memory (or in a broker memory) it's very important to limit the maximum amount of messages in channel history with a reasonable value. `history_size` defines the maximum amount of messages that Centrifugo will keep for **each** channel in the namespace. As soon as history has more messages than defined by history size – old messages will be evicted.
 
-Setting only `history_size` **is not enough to enable history in channels** – you also need to wisely configure `history_ttl` option (see below). 
+Setting only `history_size` **is not enough to enable history in channels** – you also need to carefully configure the `history_ttl` option (see below).
 
 :::caution
 
@@ -308,7 +308,7 @@ If positioning is not forced then client can provide a corresponding Subscriptio
 
 `force_recovery` (boolean, default `false`) – when the `force_recovery` option is on Centrifugo forces all subscriptions in a namespace to be `recoverable`. When enabled Centrifugo will try to recover missed publications in channels after a client reconnects for some reason (bad internet connection for example). Also when the recovery feature is on Centrifugo automatically enables properties of the `force_positioning` option described above.
 
-`force_recovery` option must be used in conjunction with reasonably configured message history for channel i.e. `history_size` and `history_ttl` **must be set** (because Centrifugo uses channel history to recover messages).
+`force_recovery` option must be used in conjunction with a reasonably configured message history for a channel, i.e. `history_size` and `history_ttl` **must be set** (because Centrifugo uses channel history to recover messages).
 
 If recovery is not forced then client can provide a corresponding Subscription option to enable it – but it should have permissions to access channel history (by having an explicit capability or if allowed on a namespace level).
 
@@ -552,7 +552,7 @@ Available since Centrifugo v6.4.0.
 
 ### cache_empty_proxy_enabled
 
-`cache_empty_proxy_enabled` (boolean, default `false`, Centrifugo PRO only) – turns on [cache empty proxy](../pro/channel_cache_empty.md).
+`cache_empty_proxy_enabled` (boolean, default `false`, Centrifugo PRO only) – turns on [cache empty proxy](../pro/event_hooks.md#cache-empty-events).
 
 ### cache_empty_proxy_name
 
@@ -560,11 +560,11 @@ Available since Centrifugo v6.4.0.
 
 ### state_proxy_enabled
 
-`state_proxy_enabled` (boolean, default `false`, Centrifugo PRO only) - allows enabling [channel state proxy](../pro/channel_events.md)
+`state_proxy_enabled` (boolean, default `false`, Centrifugo PRO only) - allows enabling [channel state proxy](../pro/event_hooks.md#channel-state-events)
 
 ### state_events
 
-`state_events` (array of strings, empty by default, Centrifugo PRO only) - can help configuring notifications about channel's `occupied` and `vacated` state. See [more details](../pro/channel_events.md) in Centrifugo PRO docs.
+`state_events` (array of strings, empty by default, Centrifugo PRO only) - can help configuring notifications about channel's `occupied` and `vacated` state. See [more details](../pro/event_hooks.md#channel-state-events) in Centrifugo PRO docs.
 
 ### shared_position_sync
 
@@ -637,7 +637,7 @@ Let's look at how to set some of these options in a config. In this example we t
 }
 ```
 
-Here we set channel options on config top-level – these options will affect channels without namespace. In many cases defining namespaces is a recommended approach so you can manage options for every real-time feature separately. With namespaces the above config may transform to:
+Here we set channel options at the config top level – these options will affect channels without a namespace. In many cases defining namespaces is the recommended approach so you can manage options for every real-time feature separately. With namespaces the above config may transform to:
 
 ```json title="config.json"
 {

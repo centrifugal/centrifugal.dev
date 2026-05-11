@@ -292,7 +292,7 @@ But when setting over the environment variable it must be an array of objects en
 CENTRIFUGO_CHANNEL_NAMESPACES='[{"name": "ns1"}, {"name": "ns2"}]' ./centrifugo
 ```
 
-This applies for other options which have are array of objects.
+This applies to other options which are arrays of objects.
 
 ### TLS config object
 
@@ -333,7 +333,7 @@ So in the configuration the usage of TLS config for HTTP server may be like this
 
 Centrifugo validates configuration on start, in case the configuration is invalid server exits with code 1. See also some built-in [CLI helpers](./console_commands.md).
 
-Centrifugo also tries to help you find misconfigurations by writing logs on WARN level during server startup in case configuration file or environment variables have keys which are not known by Centrifugo. Unknown keys do not result into server exiting at this point.
+Centrifugo also tries to help you find misconfigurations by writing logs at WARN level during server startup in case the configuration file or environment variables have keys which are not known by Centrifugo. Unknown keys do not result in the server exiting at this point.
 
 It's recommended to pay attention to logs on server start to ensure that configuration is correct.
 
@@ -381,15 +381,15 @@ Bind your Centrifugo to a specific interface address. By default `""` - listen o
 
 [Unified TLS object](#tls-config-object). By default – disabled.
 
-TLS layer is very important not only for securing your connections but also to increase a chance to establish Websocket connection.
+The TLS layer is very important not only for securing your connections but also to increase the chance of establishing a WebSocket connection.
 
 :::tip
 
-In most situations you better put TLS termination task on your reverse proxy/load balancing software such as Nginx. This can be a good thing for performance.
+In most situations you should put the TLS termination task on your reverse proxy/load balancing software such as Nginx. This can be beneficial for performance.
 
 :::
 
-If you still need to configure Centrifugo server TLS then `tls` object can help you. This is a [unified TLS object](#tls-config-object). If set and enabled Centrifugo HTTP server will start with TLS support.
+If you still need to configure Centrifugo server TLS then the `tls` object can help you. This is a [unified TLS object](#tls-config-object). If set and enabled, the Centrifugo HTTP server will start with TLS support.
 
 ### `http_server.tls_autocert`
 
@@ -891,13 +891,13 @@ The configuration object for proxy to use for channel subscribe stream. See how 
 
 Object.
 
-The configuration object for proxy to use for channel state events. Centrifugo PRO only – see [docs](../pro/channel_events.md).
+The configuration object for proxy to use for channel state events. Centrifugo PRO only – see [docs](../pro/event_hooks.md#channel-state-events).
 
 ### `chanel.proxy.cache_empty`
 
 Object.
 
-The configuration object for proxy to use for cache empty events. Centrifugo PRO only – see [docs](../pro/channel_cache_empty.md).
+The configuration object for proxy to use for cache empty events. Centrifugo PRO only – see [docs](../pro/event_hooks.md#cache-empty-events).
 
 ### `channel.max_length`
 

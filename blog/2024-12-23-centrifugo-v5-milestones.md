@@ -11,8 +11,6 @@ hide_table_of_contents: false
 
 <!--truncate-->
 
-<img src="/img/v5_milestones.jpg" />
-
 While we concentrate our main efforts on Centrifugo v6 development, let's recap the most notable features and improvements introduced during Centrifugo v5 lifecycle.
 
 We are excited about how many things done in 2024 we can be proud of. Also, we are grateful to our community for the feedback, support and love towards the project we see.

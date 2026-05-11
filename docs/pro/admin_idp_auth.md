@@ -10,7 +10,7 @@ Admin UI of Centrifugo OSS supports only one admin user identified by the precon
 
 ## How it works
 
-As soon as OIDC integration configured, instead of password field Centrifugo PRO admin web UI shows a button to log in using a configured Identity Provider. As soon as user successfully logs in over the IDP, user is redirected back to Centrifugo admin UI. Centrifugo checks user's access token and permissions to access admin functionality upon every request to admin resources.
+As soon as OIDC integration is configured, instead of the password field, Centrifugo PRO admin web UI shows a button to log in using a configured Identity Provider. As soon as a user successfully logs in via the IDP, the user is redirected back to Centrifugo admin UI. Centrifugo checks the user's access token and permissions to access admin functionality upon every request to admin resources.
 
 ![](/img/admin_idp_auth.png)
 
@@ -41,7 +41,7 @@ As soon as OIDC integration configured, instead of password field Centrifugo PRO
 * `admin.oidc.audience` - optional string, if not set Centrifugo expects access token audience (`aud`) to match configured `client_id` value (as required by the OIDC spec).
 * `admin.oidc.redirect_uri` - required string, redirect URI to use.
 * `admin.oidc.extra_scopes` - optional array of extra string scopes to request from IDP. Centrifugo always includes `openid` scope as it's required by OpenID Connect protocol.
-* `admin.oidc.access_cel` – required string, this is a CEL expression which describes rule for checking access to Centrifugo admin resources. For now we don't provide RBAC – when this expression returns true the user gets full access to Centrifugo admin resources. If false – no access at all. For more information about what is CEL check out [Channel CEL expressions](./cel_expressions.md) chapter where CEL expressions are used for channel permission checks.
+* `admin.oidc.access_cel` – required string, this is a CEL expression which describes the rule for checking access to Centrifugo admin resources. For now we don't provide RBAC – when this expression returns true the user gets full access to Centrifugo admin resources. If false – no access at all. For more information about what CEL is, check out the [Channel CEL expressions](./cel_expressions.md) chapter where CEL expressions are used for channel permission checks.
 
 Let's look closer at `admin.oidc.access_cel`. In the example above we check this based on a user group membership:
 
@@ -57,7 +57,7 @@ Let's look closer at `admin.oidc.access_cel`. In the example above we check this
 }
 ```
 
-The expression may differ depending on IDP used – you can modify it to fit your case. Inside CEL you have access token `claims` object with all claims of access token (which is JWT), so custom logic is possible. If you want to allow all authenticated users to access Centrifugo admin resources – then you can do the following:
+The expression may differ depending on the IDP used – you can modify it to fit your case. Inside CEL you have access to the token `claims` object with all claims of the access token (which is a JWT), so custom logic is possible. If you want to allow all authenticated users to access Centrifugo admin resources – then you can do the following:
 
 :::caution
 

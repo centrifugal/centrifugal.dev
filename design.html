@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Centrifugo — Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050807;
+    --bg-2: #0a110d;
+    --green: #4ade80;
+    --green-deep: #22c55e;
+    --green-dim: #14532d;
+    --amber: #fbbf24;
+    --magenta: #f472b6;
+    --text: #d1fae5;
+    --dim: #6b9a7a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* CRT scanlines */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 2px,
+      rgba(0,0,0,0.18) 2px,
+      rgba(0,0,0,0.18) 3px
+    );
+    z-index: 100;
+  }
+  /* CRT vignette */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.55) 100%);
+    z-index: 99;
+  }
+  /* subtle phosphor flicker */
+  @keyframes flicker {
+    0%, 100% { opacity: 1; }
+    97% { opacity: 1; }
+    98% { opacity: 0.92; }
+    99% { opacity: 0.98; }
+  }
+  .screen { animation: flicker 6s infinite; }
+
+  .terminal {
+    max-width: 1180px;
+    margin: 32px auto;
+    border: 1px solid var(--green-dim);
+    background: linear-gradient(180deg, rgba(20,83,45,0.06), rgba(20,83,45,0.02));
+    box-shadow: 0 0 60px rgba(74,222,128,0.08), inset 0 0 80px rgba(74,222,128,0.025);
+    border-radius: 4px;
+  }
+
+  .titlebar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--green-dim);
+    font-size: 12px;
+    color: var(--dim);
+  }
+  .titlebar .dots { display: flex; gap: 6px; }
+  .titlebar .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--green-dim); border: 1px solid var(--green); }
+  .titlebar .dot:nth-child(1) { background: #ef4444; border-color: #ef4444; opacity: 0.55; }
+  .titlebar .dot:nth-child(2) { background: var(--amber); border-color: var(--amber); opacity: 0.55; }
+  .titlebar .dot:nth-child(3) { background: var(--green); opacity: 0.7; }
+  .titlebar .path { flex: 1; text-align: center; }
+  .titlebar .path span { color: var(--green); }
+
+  .body {
+    padding: 36px 40px 32px;
+    text-shadow: 0 0 6px rgba(74,222,128,0.35);
+  }
+
+  .line { display: flex; gap: 14px; align-items: baseline; margin: 6px 0; font-size: 14px; }
+  .prompt { color: var(--green); font-weight: 700; user-select: none; }
+  .cmd { color: var(--text); }
+  .out { color: var(--dim); padding-left: 28px; font-size: 13px; }
+  .out .ok { color: var(--green); }
+  .out .key { color: var(--amber); }
+  .out .magenta { color: var(--magenta); }
+
+  .ascii {
+    font-family: 'VT323', monospace;
+    color: var(--green);
+    font-size: clamp(28px, 5.2vw, 64px);
+    line-height: 1.05;
+    letter-spacing: 0.04em;
+    margin: 26px 0 8px;
+    white-space: pre;
+    text-shadow: 0 0 14px rgba(74,222,128,0.5), 0 0 30px rgba(74,222,128,0.2);
+    overflow-x: auto;
+  }
+
+  .tag {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    color: var(--magenta);
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .tag::before { content: '▮'; }
+
+  .tagline {
+    font-family: 'VT323', monospace;
+    font-size: clamp(28px, 4.5vw, 56px);
+    line-height: 1.05;
+    color: var(--text);
+    margin: 18px 0 6px;
+    text-shadow: 0 0 10px rgba(209,250,229,0.3);
+  }
+  .tagline .glow { color: var(--green); text-shadow: 0 0 14px rgba(74,222,128,0.7); }
+
+  .desc {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text);
+    max-width: 760px;
+    margin: 18px 0 28px;
+    opacity: 0.92;
+  }
+  .desc .hl { color: var(--green); font-weight: 500; }
+  .desc .am { color: var(--amber); font-weight: 500; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; }
+  .btn {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+    padding: 12px 20px;
+    background: transparent;
+    color: var(--green);
+    border: 1px solid var(--green);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    transition: 0.15s;
+    text-shadow: 0 0 8px rgba(74,222,128,0.4);
+    box-shadow: inset 0 0 0 0 var(--green);
+  }
+  .btn:hover {
+    background: var(--green);
+    color: var(--bg);
+    text-shadow: none;
+    box-shadow: 0 0 24px rgba(74,222,128,0.55);
+  }
+  .btn--ghost { color: var(--dim); border-color: var(--green-dim); text-shadow: none; }
+  .btn--ghost:hover { background: var(--green-dim); color: var(--green); border-color: var(--green-dim); box-shadow: none; }
+
+  .stars-line {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-top: 28px;
+    padding-top: 18px;
+    border-top: 1px dashed var(--green-dim);
+    font-size: 13px;
+    color: var(--dim);
+  }
+  .stars-line .star { color: var(--amber); text-shadow: 0 0 10px rgba(251,191,36,0.4); }
+  .stars-line .count { color: var(--green); font-weight: 700; font-size: 18px; text-shadow: 0 0 10px rgba(74,222,128,0.5); }
+
+  .blink {
+    display: inline-block;
+    width: 10px;
+    height: 18px;
+    background: var(--green);
+    vertical-align: -3px;
+    margin-left: 4px;
+    animation: blink 1s steps(2) infinite;
+    box-shadow: 0 0 10px var(--green);
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .meter {
+    display: inline-grid;
+    grid-template-columns: repeat(20, 1fr);
+    gap: 2px;
+    width: 200px;
+    vertical-align: middle;
+    margin: 0 8px;
+  }
+  .meter span { height: 10px; background: var(--green-dim); }
+  .meter span.on { background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+  .footer-status {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-top: 1px solid var(--green-dim);
+    font-size: 11px;
+    color: var(--dim);
+    letter-spacing: 0.1em;
+  }
+  .footer-status .stat { display: flex; gap: 18px; }
+  .footer-status .live { color: var(--green); }
+  .footer-status .live::before { content: '●'; margin-right: 6px; animation: pulse 1.4s infinite; }
+  @keyframes pulse { 50% { opacity: 0.3; } }
+
+  @media (max-width: 600px) {
+    .body { padding: 24px 18px; }
+    .ascii { font-size: 30px; }
+  }
+</style>
+</head>
+<body class="screen">
+
+<div class="terminal">
+
+  <div class="titlebar">
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="path">~/<span>centrifugo</span> — bash — 120×40</div>
+    <div style="font-size: 11px; letter-spacing: 0.1em;">SSH · prod-eu-west-1</div>
+  </div>
+
+  <div class="body">
+
+    <div class="line"><span class="prompt">$</span><span class="cmd">centrifugo --version</span></div>
+    <div class="out">centrifugo <span class="ok">v6.0.1</span> · <span class="key">go1.23</span> · linux/amd64</div>
+
+    <div class="line" style="margin-top: 10px;"><span class="prompt">$</span><span class="cmd">cat README.txt</span></div>
+
+    <pre class="ascii">  ____ _____ _   _ _____ ____  ___ _____ _   _  ____  ___
+ / ___| ____| \ | |_   _|  _ \|_ _|  ___| | | |/ ___|/ _ \
+| |   |  _| |  \| | | | | |_) || || |_  | | | | |  _| | | |
+| |___| |___| |\  | | | |  _ < | ||  _| | |_| | |_| | |_| |
+ \____|_____|_| \_| |_| |_| \_\___|_|    \___/ \____|\___/</pre>
+
+    <div class="tag">// Mission Brief</div>
+
+    <h1 class="tagline">Wash away realtime <span class="glow">complexity.</span><span class="blink"></span></h1>
+
+    <p class="desc">
+      Scalable <span class="hl">realtime messaging</span> and <span class="am">data sync</span> for any stack — Go, Python, Node, Ruby, PHP, Rust, you name it. Spin up one binary. Forget about WebSocket plumbing, pub/sub, presence, history, and reconnect logic. Forever.
+    </p>
+
+    <div class="line"><span class="prompt">$</span><span class="cmd">centrifugo bench --connections 1M --node 1</span></div>
+    <div class="out">connections .... <span class="ok">OK</span>  <span class="meter"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></span> <span class="key">1,048,576 / 1,048,576</span></div>
+    <div class="out">throughput ..... <span class="ok">OK</span>  <span class="meter"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></span> <span class="key">2.4M msg/s</span></div>
+    <div class="out">latency p99 .... <span class="ok">OK</span>  <span class="meter"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span> <span class="key">8 ms</span></div>
+    <div class="out" style="margin-top: 6px;"><span class="magenta">✓ all systems nominal — proceed.</span></div>
+
+    <div class="line" style="margin-top: 22px;"><span class="prompt">$</span><span class="cmd">./engage</span></div>
+
+    <div class="controls">
+      <a class="btn" href="#">▶ get_started()</a>
+      <a class="btn btn--ghost" href="#">read_docs --full</a>
+      <a class="btn btn--ghost" href="#">git clone .</a>
+    </div>
+
+    <div class="stars-line">
+      <span class="star">★</span>
+      <span>repo · centrifugal/centrifugo</span>
+      <span class="count">10,247</span>
+      <span>stargazers and counting</span>
+    </div>
+
+  </div>
+
+  <div class="footer-status">
+    <div class="stat">
+      <span class="live">cluster online</span>
+      <span>nodes: 12</span>
+      <span>uptime: 99.999%</span>
+    </div>
+    <div>MIT · self-host · zero telemetry</div>
+  </div>
+
+</div>
+
+</body>
+</html>

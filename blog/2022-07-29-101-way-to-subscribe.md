@@ -9,8 +9,6 @@ image: /img/101-way_thumb.jpg
 hide_table_of_contents: false
 ---
 
-![Centrifuge](/img/101-way.png)
-
 Let's say you develop an application and want a real-time connection which is subscribed to one channel. Let's also assume that this channel is used for user personal notifications. So only one user in the application can subcribe to that channel to receive its notifications in real-time.
 
 In this post we will look at various ways to achieve this with Centrifugo, and consider trade-offs of the available approaches. The main goal of this tutorial is to help Centrifugo newcomers be aware of all the ways to control channel permissions by reading just one document.

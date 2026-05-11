@@ -65,7 +65,7 @@ const resp = await client.presence(channel);
 
 If the permission check has passed successfully – both methods will return an object containing information about currently subscribed clients.
 
-Also, `presenceStats` method is avalable:
+Also, `presenceStats` method is available:
 
 ```javascript
 const resp = await subscription.presenceStats(channel);

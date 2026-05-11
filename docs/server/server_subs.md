@@ -4,7 +4,7 @@ id: server_subs
 title: Server-side subscriptions
 ---
 
-Centrifugo clients can initiate a subscription to a channel by calling the `subscribe` method of client API. We call it client-side subscriptions. In most cases, client-side subscriptions is a flexible and recommended approach to subscribe to channels. A frontend usually knows which channels it needs to consume at a concrete moment.
+Centrifugo clients can initiate a subscription to a channel by calling the `subscribe` method of client API. We call it client-side subscriptions. In most cases, client-side subscriptions are a flexible and recommended approach to subscribing to channels. A frontend usually knows which channels it needs to consume at a concrete moment.
 
 But in some situations, all you need is to subscribe your connections to several channels on a server-side at the moment of connection establishment. So client effectively starts receiving publications from those channels without calling the `subscribe` API at all. Centrifugo allows doing this with its server-side subscriptions feature.
 
@@ -29,7 +29,7 @@ centrifuge.on('publication', function(ctx) {
 centrifuge.connect();
 ```
 
-I.e. listen for publications without any usage of subscription objects. You can get a channel publication relates to by using field in the callback context as shown in the example above.
+I.e. listen for publications without any usage of subscription objects. You can get the channel a publication relates to by using the field in the callback context as shown in the example above.
 
 :::tip
 

@@ -8,7 +8,7 @@ Answers to popular questions here.
 
 ### Disconnected due to client credentials not found
 
-If you connect to Centrifugo first time, and your client disconnected with code `3501` and reason `"bad request"` – then in many cases this means you have not provided authentication credentials. Check out server logs – if you see `credentials not found` message on INFO level – this is exactly it.
+If you connect to Centrifugo for the first time, and your client disconnected with code `3501` and reason `"bad request"` – then in many cases this means you have not provided authentication credentials. Check out server logs – if you see `credentials not found` message on INFO level – this is exactly it.
 
 When connecting to Centrifugo client must authenticate using one of the supported ways. This may be:
 
@@ -18,7 +18,7 @@ When connecting to Centrifugo client must authenticate using one of the supporte
 
 You can also [configure access without token](../server/configuration.md#clientallow_anonymous_connect_without_token) – in this case Centrifugo will consider a connection without provided token anonymous. Or, if you just want to quickly experiment with Centrifugo during development, it's possible to turn on [client.insecure](../server/configuration.md#clientinsecure) option – but it **should never be used in production** since disables most of security checks.
 
-Another possible reason of first time connection problems - not properly configured [allowed_origins](../server/configuration.md#clientallowed_origins). Centrifugo server logs should also clearly indicate such issues on INFO level.
+Another possible reason for first-time connection problems — not properly configured [allowed_origins](../server/configuration.md#clientallowed_origins). Centrifugo server logs should also clearly indicate such issues on INFO level.
 
 ### How many connections can one Centrifugo instance handle?
 
@@ -52,7 +52,7 @@ See [design overview](../getting-started/design.md#message-order-guarantees).
 
 ### Should I create channels explicitly?
 
-No. By default, channels are created automatically as soon as the first client subscribed to it. And destroyed automatically when the last client unsubscribes from a channel.
+No. By default, channels are created automatically as soon as the first client subscribes to it. And destroyed automatically when the last client unsubscribes from a channel.
 
 When history inside the channel is on then a window of last messages is kept automatically during the retention period. So a client that comes later and subscribes to a channel can retrieve those messages using the call to the history API (or maybe by using the automatic recovery feature which also uses a history internally).
 
@@ -73,7 +73,7 @@ We know that services like Pusher provide a way to exclude current client by pro
 * Client can reconnect while message travels over wire/Backend/Centrifugo – in this case client has a chance to receive a message unexpectedly since it will have another client ID (socket ID)
 * Client can call a history manually or message recovery process can run upon reconnect – in this case a message will present in a history
 
-Both cases may result in duplicate messages. These reasons prevent us adding such functionality into Centrifugo, the correct application architecture requires having some sort of idempotent identifier which allow dealing with message duplicates.
+Both cases may result in duplicate messages. These reasons prevent us adding such functionality into Centrifugo, the correct application architecture requires having some sort of idempotent identifier which allows dealing with message duplicates.
 
 Once added nobody will think about idempotency and this can lead to hard to catch/fix problems in an application. This can also make enabling channel history harder at some point.
 
@@ -180,17 +180,17 @@ Centrifugo does not support unsubscribe/disconnect hooks – see the reasoning b
 
 :::tip UPDATE
 
-Centrifugo PRO now solves the pitfalls mentioned here with its [Channel State Events](../pro/channel_events.md) feature.
+Centrifugo PRO now solves the pitfalls mentioned here with its [Channel State Events](../pro/event_hooks.md#channel-state-events) feature.
 
 :::
 
 Centrifugo does not support disconnect hooks at this point. We understand that this may be useful for some use cases but there are some pitfalls which prevent us adding such hooks to Centrifugo. 
 
-Let's consider a case when Centrifugo node is unexpectedly killed. In this case there is no chance for Centrifugo to emit disconnect events for connections on that node. While this may be rare thing in practice – it may lead to inconsistent state in your app if you'd rely on disconnect hooks.
+Let's consider a case when Centrifugo node is unexpectedly killed. In this case there is no chance for Centrifugo to emit disconnect events for connections on that node. While this may be a rare thing in practice – it may lead to inconsistent state in your app if you'd rely on disconnect hooks.
 
 Another reason is that Centrifugo is designed to scale to many concurrent connections. Think millions of them. As we [mentioned in our blog](https://centrifugal.dev/blog/2020/11/12/scaling-websocket#massive-reconnect) there are cases when all connections start reconnecting at the same time. In this case, Centrifugo could potentially generate lots of disconnect events. Even if disconnect events were queued, rate-limited, or suppressed for quickly reconnected clients there could be situations when your app processes disconnect hook after user already reconnected. This is a racy situation which also can lead to the inconsistency if not properly addressed.
 
-Is there a workaround though? If you need to know that client disconnected and program your business logic around this fact then the reasonable approach could be periodically call your backend while client connection is active and update status somewhere on the backend (possibly using Redis for this). Then periodically do clealup logic for connections/users not updated for a configured interval. This is a robust solution where you can't occasionally miss disconnect events. You can also utilize Centrifugo [connect proxy](../server/proxy.md#connect-proxy) + [refresh proxy](../server/proxy.md#refresh-proxy) for getting notified about initial connection and get periodic refresh requests while connection is alive.
+Is there a workaround though? If you need to know that client disconnected and program your business logic around this fact then the reasonable approach could be periodically call your backend while client connection is active and update status somewhere on the backend (possibly using Redis for this). Then periodically do cleanup logic for connections/users not updated for a configured interval. This is a robust solution where you can't occasionally miss disconnect events. You can also utilize Centrifugo [connect proxy](../server/proxy.md#connect-proxy) + [refresh proxy](../server/proxy.md#refresh-proxy) for getting notified about initial connection and get periodic refresh requests while connection is alive.
 
 The trade-off of the described workaround scenario is that you will notice disconnection only with some delay – this may be acceptable in many cases though.
 
@@ -210,7 +210,7 @@ There is `presence_stats` API method that can be helpful if you only need to kno
 
 You may consider using a separate service to deal with presence status information that provides information in near real-time maybe with some reasonable approximation. Centrifugo PRO provides a [user status](../pro/user_status.md) feature which may fit your needs.
 
-The same is true for join/leave messages - as soon as you turn on join/leave events for a channel with many active subscribers each subscriber starts generating indiviaual join/leave events. This may result in many messages sent to each subscriber in a channel, drastically multiplying the amount of messages traveling through the system. Especially when all clients reconnect simultaneously. So be careful and estimate the possible load. There is no magic, unfortunately.
+The same is true for join/leave messages - as soon as you turn on join/leave events for a channel with many active subscribers each subscriber starts generating individual join/leave events. This may result in many messages sent to each subscriber in a channel, drastically multiplying the amount of messages traveling through the system. Especially when all clients reconnect simultaneously. So be careful and estimate the possible load. There is no magic, unfortunately.
 
 ### How to send initial data to channel subscriber?
 

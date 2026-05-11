@@ -28,7 +28,7 @@ Avoid running Centrifugo v5 in the same cluster with Centrifugo v4 nodes – v4 
 
 Prefer using new HTTP API format instead of old one where possible. The old format still works and enabled by default. But we are planning to migrate our API libraries to the new format eventually – and then remove the old format. If you are using one of our HTTP API libs - at some point a new version will be released which will seamlessly migrate you to the modern HTTP API format.
 
-If you are using hand-written requests – then some refactoring is required. It should be rather straighforward:
+If you are using hand-written requests – then some refactoring is required. It should be rather straightforward:
 
 * replace request path from `/api` to `/api/<method>`
 * replace payload from having `method` and `params` on top level. Payload does not include method and params keys anymore. Please refer to: https://centrifugal.dev/blog/2023/06/29/centrifugo-v5-released#new-http-api-format

@@ -1,0 +1,76 @@
+.section {
+    padding: 3rem 0;
+}
+
+.heading {
+    text-align: center;
+    font-family: "Nunito";
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0 0 0.4rem;
+}
+
+.subheading {
+    text-align: center;
+    color: var(--ifm-color-emphasis-600);
+    font-size: 1.05rem;
+    margin: 0 0 2rem;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+@media (max-width: 768px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    border-radius: 12px;
+    border: 1px solid var(--ifm-toc-border-color);
+    text-decoration: none !important;
+    color: inherit !important;
+    transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    border-color: var(--ifm-color-emphasis-300);
+    text-decoration: none !important;
+}
+
+html[data-theme="dark"] .card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.iconWrap {
+    margin-bottom: 12px;
+}
+
+.cardTitle {
+    font-family: "Nunito";
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0 0 8px;
+}
+
+.cardDesc {
+    font-size: 0.92rem;
+    line-height: 1.55;
+    margin: 0 0 10px;
+    color: var(--ifm-font-color-base);
+}
+
+.cardDetail {
+    font-size: 0.82rem;
+    line-height: 1.5;
+    margin: 0;
+    color: var(--ifm-color-emphasis-600);
+}

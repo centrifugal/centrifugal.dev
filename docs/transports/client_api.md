@@ -6,7 +6,7 @@ title: Client SDK specification
 
 Centrifugo has several client SDKs to establish a real-time connection with a server. Centrifugo SDKs use WebSocket as the main data transport and send/receive messages encoded according to our bidirectional protocol. That protocol is built on top of the [Protobuf schema](https://github.com/centrifugal/protocol/blob/master/definitions/client.proto) (both JSON and binary Protobuf formats are supported). It provides asynchronous communication, sending RPC, multiplexing subscriptions to channels, etc. Client SDK wraps the protocol and exposes a set of APIs to developers.
 
-This chapter describes the core concepts of client SDKs API. All our [official real-time SDKs](./client_sdk.md#list-of-client-sdks) follow this specification. This document describes behaviour visible to SDK user, if you want to find out low-level client protocol framing details – look at [client protocol](client_protocol.md) document.
+This chapter describes the core concepts of client SDKs API. All our [official real-time SDKs](./client_sdk.md#list-of-client-sdks) follow this specification. This document describes behavior visible to SDK user; if you want to find out low-level client protocol framing details – look at [client protocol](client_protocol.md) document.
 
 Most examples here are written using our Javascript real-time SDK (`centrifuge-js`), but all other Centrifugo connectors have very similar semantics and APIs very close to each other.
 
@@ -169,15 +169,15 @@ In case of successful connection Client states will transition like this:
 
 `disconnected` (initial) -> `connecting` (`on('connecting')` called) -> `connected` (`on('connected')` called).
 
-In case of already connected Client temporary lost a connection with a server and then successfully reconnected:
+In case of an already connected Client temporarily losing a connection with a server and then successfully reconnecting:
 
 `connected` -> `connecting` (`on('connecting')` called) -> `connected` (`on('connected')` called).
 
-In case of already connected Client temporary lost a connection with a server, but got a terminal error upon reconnection:
+In case of an already connected Client temporarily losing a connection with a server, but getting a terminal error upon reconnection:
 
 `connected` -> `connecting` (`on('connecting')` called) -> `disconnected` (`on('disconnected')` called).
 
-In case of already connected Client came across terminal condition (for example, if during a connection token refresh application found that user has no permission to connect anymore):
+In case of an already connected Client coming across a terminal condition (for example, if during a connection token refresh the application found that the user has no permission to connect anymore):
 
 `connected` -> `disconnected` (`on('disconnected')` called).
 
@@ -209,13 +209,13 @@ In this case `on('disconnected')` will be called. You can call `connect()` again
 
 There are several common options available when creating Client instance.
 
-* option to set connection token and callback to get connection token upon expiration (see below [mode details](#client-connection-token))
+* option to set connection token and callback to get connection token upon expiration (see [more details below](#client-connection-token))
 * option to set connect data
 * option to configure operation timeout
 * tweaks for reconnect backoff algorithm (min delay, max delay)
 * configure max delay of server pings (to detect broken connection)
-* configure headers to send in WebSocket upgrade request (except `centrifuge-js`)
-* configure client name and version for analytics purpose
+* configure headers to send in WebSocket upgrade request (not applicable to `centrifuge-js`)
+* configure client name and version for analytics purposes
 
 ## Client methods
 
@@ -287,7 +287,7 @@ const sub = centrifuge.newSubscription(channel);
 sub.subscribe();
 ```
 
-When a`newSubscription` method is called Client allocates a new Subscription instance and saves it in the internal subscription registry. Having a registry of allocated subscriptions allows SDK to manage resubscribes upon reconnecting to a server. Centrifugo connectors do not allow creating two subscriptions to the same channel – in this case, `newSubscription` can throw an exception.
+When the `newSubscription` method is called Client allocates a new Subscription instance and saves it in the internal subscription registry. Having a registry of allocated subscriptions allows SDK to manage resubscribes upon reconnecting to a server. Centrifugo connectors do not allow creating two subscriptions to the same channel – in this case, `newSubscription` can throw an exception.
 
 Subscription has 3 states:
 
@@ -431,13 +431,13 @@ if err != nil {
 </Tabs>
 ````
 
-Subscriptions also go to `subscribing` state when Client connection (i.e. transport) becomes unavailable. Upon connection re-establishement all subscriptions which are not in `unsubscribed` state will resubscribe automatically.
+Subscriptions also go to `subscribing` state when Client connection (i.e. transport) becomes unavailable. Upon connection re-establishment all subscriptions which are not in `unsubscribed` state will resubscribe automatically.
 
 In case of successful subscription states will transition like this:
 
 `unsubscribed` (initial) -> `subscribing` (`on('subscribing')` called) -> `subscribed` (`on('subscribed')` called).
 
-In case of connected and subscribed Client temporary lost a connection with a server and then succesfully reconnected and resubscribed:
+In case of a connected and subscribed Client temporarily losing a connection with a server and then successfully reconnecting and resubscribing:
 
 `subscribed` -> `subscribing` (`on('subscribing')` called) -> `subscribed` (`on('subscribed')` called).
 
@@ -490,7 +490,7 @@ Publication context has several fields:
 * `data` - publication payload, this can be JSON or binary data
 * `offset` - optional offset inside history stream, this is an incremental number
 * `tags` - optional tags, this is a map with string keys and string values
-* `info` - optional information about client connection who published this (only exists if publication comes from client-side `publish()` API).
+* `info` - optional information about the client connection that published this (only exists if publication comes from client-side `publish()` API).
 
 So minimal code where we connect to a server and listen for messages published into `example` channel may look like:
 
@@ -625,27 +625,28 @@ if err = client.Connect(); err != nil {
 </Tabs>
 ````
 
-Note, that we can call `subscribe()` before making a connection to a server – and this will work just fine, subscription goes to `subscribing` state and will be subscribed upon succesfull connection. And of course, it's possible to call `.subscribe()` after `.connect()`. 
+Note that we can call `subscribe()` before making a connection to a server – and this will work just fine, subscription goes to `subscribing` state and will be subscribed upon successful connection. And of course, it's possible to call `.subscribe()` after `.connect()`.
 
 ## Subscription recovery state
 
-Subscriptions to channels with recovery option enabled maintain stream position information internally. On every publication received this information updated and used to recover missed publications upon resubscribe (caused by reconnect for example).
+Subscriptions to channels with recovery option enabled maintain stream position information internally. On every publication received, this information is updated and used to recover missed publications upon resubscribe (caused by reconnect for example).
 
 When you call `unsubscribe()` Subscription position state is not cleared. So it's possible to call `subscribe()` later and catch up a state.
 
 The recovery process result – i.e. whether all missed publications recovered or not – can be found in `on('subscribed')` event context. Centrifuge protocol provides two fields:
 
-* `wasRecovering` - boolean flag that tells whether recovery was used during subscription process resulted into subscribed state. Can be useful if you want to distinguish first subscribe attempt (when subscription does not have any position information yet)
+* `wasRecovering` - boolean flag that tells whether recovery was used during the subscription process that resulted in subscribed state. Can be useful if you want to distinguish the first subscribe attempt (when subscription does not have any position information yet)
 * `recovered` - boolean flag that tells whether Centrifugo thinks that all missed publications can be successfully recovered and there is no need to load state from the main application database. It's always `false` when `wasRecovering` is `false`.
 
 ## Subscription common options
 
 There are several common options available when creating Subscription instance.
 
-* option to set subscription token and callback to get subscription token upon expiration (see [below more details](#subscription-token))
+* option to set subscription token and callback to get subscription token upon expiration (see [more details below](#subscription-token))
 * option to set subscription `data` (attached to every subscribe/resubscribe request)
 * options to tweak resubscribe backoff algorithm
 * option to start Subscription `since` known Stream Position (i.e. attempt recovery on first subscribe)
+* option to set `getState` callback for stream subscriptions (see [below more details](#subscription-getstate))
 * option to ask server to make subscription `positioned` (if not forced by a server)
 * option to ask server to make subscription `recoverable` (if not forced by a server)
 * option to ask server to push Join/Leave messages (if not forced by a server)
@@ -670,7 +671,7 @@ const sub = centrifuge.newSubscription(channel, {
 sub.subscribe();
 ```
 
-If token sets subscription expiration client SDK will keep token refreshed. It does this by calling special callback function. This callback must return a new token. If new token with updated subscription expiration returned from a callback then it's sent to Centrifugo. If your callback returns an empty string – this means user has no permission to subscribe to a channel anymore and subscription will be unsubscribed. In case of error returned by your callback SDK will retry operation after some jittered time. 
+If the token sets subscription expiration, the client SDK will keep the token refreshed. It does this by calling a special callback function. This callback must return a new token. If a new token with updated subscription expiration is returned from a callback then it's sent to Centrifugo. If your callback returns an empty string – this means the user has no permission to subscribe to a channel anymore and the subscription will be unsubscribed. In case of an error returned by your callback, the SDK will retry the operation after some jittered time.
 
 An example:
 
@@ -712,6 +713,30 @@ If initial token is not provided, but `getToken` is specified – then SDK shoul
 
 :::
 
+## Subscription getState
+
+For stream subscriptions where the application owns the state (e.g., data lives in your database and Centrifugo delivers real-time updates), the `getState` option provides automatic state recovery without manual reconciliation.
+
+When `getState` is set, the SDK calls it before the initial subscribe to load the application's current state and capture the stream position. On reconnect, the SDK first attempts recovery from its saved position. If recovery fails (the stream no longer contains the required publications), the SDK calls `getState` again — the application reloads its state from the database and returns a fresh stream position.
+
+```javascript
+const sub = client.newSubscription('updates', {
+  getState: async () => {
+    // 1. Read the current stream position FIRST.
+    const position = await fetchStreamPosition('updates');
+    // 2. Load and render your application state.
+    const data = await fetchDataFromDB();
+    renderUI(data);
+    // 3. Return the position — SDK subscribes from here.
+    return { offset: position.offset, epoch: position.epoch };
+  },
+});
+```
+
+The order matters: read the stream position **before** loading data. This ensures the position is a lower bound — publications between the captured position and the moment data was loaded may be returned by Centrifugo during recovery. Your application must handle replaying these publications without corrupting its state — the exact approach depends on your data model (e.g., offset-based dedup, last-write-wins, or idempotent updates).
+
+Without `getState`, a failed recovery results in a `subscribed` event with `recovered: false`, and the application must handle the gap manually. With `getState`, the SDK handles it automatically — the application just reloads its state and the SDK re-subscribes from the correct position.
+
 ## Server-side subscriptions
 
 We encourage using client-side subscriptions where possible as they provide a better control and isolation from connection. But in some cases you may want to use server-side subscriptions (i.e. subscriptions created by server upon connection establishment).
@@ -731,8 +756,8 @@ client.on('subscribed', function(ctx) {
 });
 
 client.on('subscribing', function(ctx) {
-    // Called when existing connection lost (Client reconnects) or Client
-    // explicitly disconnected. Client continue keeping server-side subscription
+    // Called when existing connection is lost (Client reconnects) or Client
+    // is explicitly disconnected. Client continues keeping server-side subscription
     // registry with stream position information where applicable.
     console.log('subscribing to server-side channel', ctx.channel);
 });
@@ -745,15 +770,15 @@ client.on('unsubscribed', function(ctx) {
 
 client.on('publication', function(ctx) {
     // Called when server sends Publication over server-side subscription.
-    console.log('publication receive from server-side channel', ctx.channel, ctx.data);
+    console.log('publication received from server-side channel', ctx.channel, ctx.data);
 });
 
 client.connect();
 ```
 
-Server-side subscription events mostly mimic events of client-side subscriptions. But again – they do not provide control to the client and managed entirely by a server side.
+Server-side subscription events mostly mimic events of client-side subscriptions. But again – they do not provide control to the client and are managed entirely by the server side.
 
-Additionally, Client has several top-level methods to call with server-side subscription related operations:
+Additionally, Client has several top-level methods for server-side subscription related operations:
 
 * `publish(channel, data)`
 * `history(channel, options)`
@@ -764,15 +789,15 @@ Additionally, Client has several top-level methods to call with server-side subs
 
 Server can return error codes in range 100-1999. Error codes in interval 0-399 reserved by Centrifuge/Centrifugo server. Codes in range [400, 1999] may be returned by application code built on top of Centrifuge/Centrifugo.
 
-Server errors contain a `temporary` boolean flag which works as a signal that error may be fixed by a later retry.
+Server errors contain a `temporary` boolean flag which works as a signal that the error may be fixed by a later retry.
 
-Errors with codes 0-100 can be used by client-side implementation. Client-side errors may not have code attached at all since in many languages error can be distinguished by its type.
+Errors with codes 0-100 can be used by client-side implementation. Client-side errors may not have a code attached at all since in many languages an error can be distinguished by its type.
 
 ## Unsubscribe codes
 
 Server may return unsubscribe codes. Server unsubscribe codes must be in range `[2000, 2999]`.
 
-Unsubscribe codes >= 2500 coming from server to client result into automatic resubscribe attempt (i.e. client goes to `subscribing` state). Codes < 2500 result into going to `unsubscribed` state.
+Unsubscribe codes >= 2500 coming from server to client result in an automatic resubscribe attempt (i.e. client goes to `subscribing` state). Codes < 2500 result in going to `unsubscribed` state.
 
 Client implementation can use codes < 2000 for client-side specific unsubscribe reasons. 
 
@@ -780,7 +805,7 @@ Client implementation can use codes < 2000 for client-side specific unsubscribe 
 
 Server may send custom disconnect codes to a client. Custom disconnect codes must be in range `[3000, 4999]`.
 
-Client automatically reconnects upon receiving code in range 3000-3499, 4000-4499 (i.e. Client goes to `connecting` state). Other codes result into going to `disconnected` state.
+Client automatically reconnects upon receiving a code in range 3000-3499, 4000-4499 (i.e. Client goes to `connecting` state). Other codes result in going to `disconnected` state.
 
 Client implementation can use codes < 3000 for client-side specific disconnect reasons. 
 
@@ -849,6 +874,6 @@ const resp = await subscription.presenceStats();
 
 ## SDK common best practices
 
-* Callbacks must be fast. Avoid blocking operations inside event handlers. Callbacks caused by protocol messages received from a server are called synchronously and connection read loop is blocked while such callbacks are being executed. Consider doing heavy work asynchronously.
+* Callbacks must be fast. Avoid blocking operations inside event handlers. Callbacks caused by protocol messages received from a server are called synchronously and the connection read loop is blocked while such callbacks are being executed. Consider doing heavy work asynchronously.
 * Do not blindly rely on the current Client or Subscription state when making client API calls – state can change at any moment, so don't forget to handle errors.
 * Disconnect from a server when a mobile application goes to the background since a mobile OS can kill the connection at some point without any callbacks called.

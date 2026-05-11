@@ -5,7 +5,7 @@ title: Client Authentication Enhancements
 sidebar_label: Client authentication
 ---
 
-Centrifugo OSS provides JWT based client authentication. It's a very powerful mechanism because it helps a lot to reduce load on your session backend when dealing with many concurrent connections and [massive reconnections](/blog/2020/11/12/scaling-websocket#massive-reconnect) from time to time. Centrifugo PRO comes with extra features for more convenient client authentication management.
+Centrifugo OSS provides JWT-based client authentication. It's a very powerful mechanism because it helps a lot to reduce load on your session backend when dealing with many concurrent connections and [massive reconnections](/blog/2020/11/12/scaling-websocket#massive-reconnect) from time to time. Centrifugo PRO comes with extra features for more convenient client authentication management.
 
 ![](/img/client_auth.png)
 
@@ -105,7 +105,7 @@ The connection will have the following `meta` object:
 ### Implementation notes
 
 * Meta field names (the keys in the `meta_from_claim` map) must follow `^[A-Za-z_][A-Za-z0-9_]*$` regex. This is validated on Centrifugo start.
-* Meta claims extraction allows using dots for extracting values from JWT claims nested objects. In `meta_from_claim` values Centrifugo does not allow using special characters like `@#[]{}*?!` by default, but you can use `\` character to escape them if needed. Values are validated on Centrifugo start.
+* Meta claims extraction allows using dots for extracting values from nested JWT claim objects. In `meta_from_claim` values, Centrifugo does not allow using special characters like `@#[]{}*?!` by default, but you can use the `\` character to escape them if needed. Values are validated on Centrifugo start.
 * If a path in `meta_from_claim` value doesn't exist in the JWT token, it will be **silently skipped**. Only claims that exist in the token will be extracted.
 * If your JWT token already contains a `meta` claim, the extracted fields will **override** the existing fields.
 * Meta claims extraction only works for connection tokens, not subscription tokens. Subscription tokens do not support the `meta` claim.
@@ -122,7 +122,7 @@ This feature is available since Centrifugo PRO v6.5.0, currently in beta status.
 
 While the standard `client.token.jwks_public_endpoint` configuration allows fetching public keys from a single JWKS endpoint, this feature enables you to configure multiple JWKS endpoints, each associated with a specific token issuer. Centrifugo will automatically route token verification to the correct provider based on the `iss` (issuer) claim in the JWT.
 
-**Note:** `client.token.jwks_public_endpoint` and `client.token.jwks.providers` are mutually exclusive at this point - you cannot use both at the same time.
+**Note:** `client.token.jwks_public_endpoint` and `client.token.jwks.providers` are mutually exclusive at this point — you cannot use both at the same time.
 
 ### Configuration
 
@@ -208,9 +208,9 @@ In this configuration:
 - Tokens with the same issuer but an unrecognized audience will be rejected
 
 **Validation rules:**
-- If the same issuer appears in multiple enabled providers, each provider MUST have a different `audience` set
-- Duplicate issuer+audience pairs are not allowed
-- Providers with the same issuer cannot have empty audiences
+- If the same issuer appears in multiple enabled providers, each provider MUST have a different `audience` set.
+- Duplicate issuer+audience pairs are not allowed.
+- Providers with the same issuer cannot have empty audiences.
 
 ### JWKS configuration
 
@@ -281,5 +281,5 @@ JWKS providers work for both connection tokens and subscription tokens. [As usua
 ```
 
 **Notes:**
-- `meta_from_claim` is not supported for subscription tokens as subscription tokens do not support `meta` claim at this moment. This is validated on Centrifugo start.
-- Issuer+audience matching works the same way for subscription tokens as it does for connection tokens - you can configure multiple providers with the same issuer but different audiences.
+- `meta_from_claim` is not supported for subscription tokens, as subscription tokens do not support the `meta` claim at this moment. This is validated on Centrifugo start.
+- Issuer+audience matching works the same way for subscription tokens as it does for connection tokens — you can configure multiple providers with the same issuer but different audiences.

@@ -112,7 +112,7 @@ nginx:
     - backend
 ```
 
-As you may noticed we added several locations to Nginx:
+As you may have noticed we added several locations to Nginx:
 
 * `/api` - this is an entrypoint for backend REST API. We will implement it shortly.
 * `/admin` - serves Django built-in admin web UI, it will allow us to create some rooms to interact with
@@ -120,6 +120,6 @@ As you may noticed we added several locations to Nginx:
 * `/connection/websocket` - this is a proxy to Centrifugo service, we will setup Centrifugo later in this tutorial
 * `/` – and finally root path serves the frontend app, we will be creating it soon too.
 
-Run the app, go to [http://localhost:9000/admin](http://localhost:9000/admin) – authenticate using superuser credentials created previously and create some rooms.
+Run the app, go to [http://localhost:9000/admin](http://localhost:9000/admin) – authenticate using the superuser credentials created previously and create some rooms.
 ![admin](/img/grand-chat-tutorial-admin.png)
-Now it's time to build the frontend part of the app – to display user rooms, join/leave rooms and create new messages.
+Now it's time to build the frontend part of the app – to display user rooms, join/leave rooms, and create new messages.

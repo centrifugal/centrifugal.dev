@@ -5,7 +5,7 @@ title: Ephemeral client publications
 sidebar_label: Ephemeral publications
 ---
 
-Centrifugo PRO provides schema validation for client publications, enabling ephemeral messaging: client publications can pass through Centrifugo directly without involving backend proxy logic, reducing backend load and delivery latency. Normally the backend is required because it may validate and store messages in the main database, but for certain types of messages—such as typing notifications in a chat room—backend involvement adds unnecessary overhead. Centrifugo PRO offers an efficient way to address that.
+Centrifugo PRO provides schema validation for client publications, enabling ephemeral messaging: client publications can pass through Centrifugo directly without involving backend proxy logic, reducing backend load and delivery latency. Normally the backend is required because it may validate and store messages in the main database, but for certain types of messages — such as typing notifications in a chat room — backend involvement adds unnecessary overhead. Centrifugo PRO offers an efficient way to address that.
 
 ## Overview
 
@@ -794,7 +794,7 @@ Centrifugo validates configurations at startup:
 
 ### Bottom line
 
-Generally speaking all the existing namespace options like recovery/positioning, delta compression, channel batching controls will apply to namespaces with ephemeral client publications also. Then it depends on the specific use case whether you would like to apply those or not.
+Generally speaking, all the existing namespace options like recovery/positioning, delta compression, and channel batching controls will also apply to namespaces with ephemeral client publications. Then it depends on the specific use case whether you would like to apply those or not.
 
 ## See also
 

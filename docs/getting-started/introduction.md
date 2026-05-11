@@ -22,6 +22,8 @@ import ArchitectureDiagram from '@site/src/components/ArchitectureDiagram';
 
 Centrifugo is language-agnostic and can be used to build chat apps, live comments, multiplayer games, real-time data visualizations, collaborative tools, AI streaming responses, etc., in combination with any backend and frontend. It is well suited for modern architectures and allows decoupling of business logic from the real-time transport layer.
 
+Centrifugo provides channel history with automatic stream recovery on reconnect, online [presence](../server/presence.md) to see who is currently subscribed to a channel, and delta compression to reduce bandwidth usage.
+
 Centrifugo scales horizontally, allowing multiple Centrifugo nodes in a cluster to load balance client connections. A message published to any Centrifugo node in this setup will be delivered to online subscribers connected to other nodes. This is achieved through an integration with a set of high-performance PUB/SUB brokers capable of handling millions of concurrent channels.
 
 Several official SDKs for browser and mobile development wrap the bidirectional client-to-server protocol, offering a straightforward API for real-time subscriptions multiplexed over a single connection. These SDKs handle reconnects, manage ping-pong, timeouts, and deal with other complexities of working with real-time connections. Additionally, Centrifugo supports a unidirectional approach for simple use cases with no SDK dependency.
@@ -74,3 +76,11 @@ borderRadius: '0px',
 These days, Centrifugo offers advanced and unique features that can significantly simplify a developer's workload and save months (if not years) of development time, even if the application's backend is built with an asynchronous concurrent language or framework. The documentation uncovers features step by step.
 
 Centrifugo fits well with modern architectures and can serve as a universal real-time component, regardless of the application's technology stack. It stands as a powerful self-hosted alternative to cloud solutions like Pusher, Ably, or PubNub. Moreover, due to its self-hosted nature, Centrifugo may offer deeper integration of real-time connection management with your application backend.
+
+## Beyond PUB/SUB
+
+While Centrifugo started as a PUB/SUB server for delivering messages to channels, it has evolved beyond that. Features like [map subscriptions](../server/map_subscriptions.md) and [shared poll subscriptions](../server/shared_poll.md) introduce **real-time state synchronization** — where Centrifugo manages not just message delivery, but the state itself.
+
+With map subscriptions, channels maintain a **live key-value state** that is automatically synchronized to all subscribers. Clients receive the current state on subscribe, catch up efficiently on reconnect, and get incremental updates in real-time. Coupled with PostgreSQL integration, your application can publish state changes **transactionally** — within the same database transaction as your business logic — eliminating the dual-write problem entirely. For applications that already own state in their own database and want Centrifugo to only deliver change events, the [PostgreSQL stream broker](../server/engines.md) paired with the `getState` callback on stream subscriptions covers that pattern.
+
+This shifts Centrifugo from a transport layer into a **real-time data synchronization platform** — applications can rely on Centrifugo not just to push events, but to keep distributed clients in sync with shared, mutable state.

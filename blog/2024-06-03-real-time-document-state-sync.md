@@ -9,8 +9,6 @@ image: /img/docsync_cover.jpg
 hide_table_of_contents: false
 ---
 
-<img src="/img/docsync_cover.jpg" />
-
 Centrifugo and its main building block Centrifuge library for Go both provide a way for clients to receive a stream of events in channels using Subscription objects. Also, there is an automatic history recovery feature which allows clients catching up with missed publications after the reconnect to the WebSocket server and restore the state of a real-time component. While the continuity in the stream is not broken clients can avoid re-fetching a state from the main application database – which optimizes a scenario when many real-time connections reconnect all within a short time interval (for example, during a load balancer restart) by reducing the excessive load on the application database.
 
 <!-- truncate -->

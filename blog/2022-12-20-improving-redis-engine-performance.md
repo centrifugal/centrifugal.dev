@@ -9,8 +9,6 @@ image: /img/redis_cover.png
 hide_table_of_contents: false
 ---
 
-![Centrifugo_Redis_Engine_Improvements](/img/redis_cover.png)
-
 The main objective of Centrifugo is to manage persistent client connections established over various real-time transports (including WebSocket, HTTP-Streaming, SSE, WebTransport, etc – see [here](https://centrifugal.dev/docs/transports/overview)) and offer an API for publishing data towards established connections. Clients subscribe to channels, hence Centrifugo implements PUB/SUB mechanics to transmit published data to all online channel subscribers.
 
 Centrifugo employs [Redis](https://redis.com/) as its primary scalability option – so that it's possible to distribute client connections amongst numerous Centrifugo nodes without worrying about channel subscribers connected to separate nodes. Redis is incredibly mature, simple, and fast in-memory storage. Due to various built-in data structures and PUB/SUB support Redis is a perfect fit to be both Centrifugo `Broker` and `PresenceManager` (we will describe what's this shortly).

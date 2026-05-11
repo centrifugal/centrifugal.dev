@@ -5,7 +5,7 @@ sidebar_label: Channel patterns
 title: Channel patterns
 ---
 
-Centrifugo PRO enhances a way to configure channels with Channel Patterns feature. This opens a road for building channel model similar to what developers got used to when writing HTTP servers and configuring routes for HTTP request processing.
+Centrifugo PRO enhances the way to configure channels with the Channel Patterns feature. This opens the way to building a channel model similar to what developers are used to when writing HTTP servers and configuring routes for HTTP request processing.
 
 ### Configuration
 
@@ -29,11 +29,11 @@ Let's look at the example:
 }
 ```
 
-To enable the feature `channel.patterns` option must be set to `true` (Centrifugo PRO requires explicit intent to use channel patterns because theoretically channels with `/` may be already in use for channels without namespace – in that case enabling channel patterns will result into wrong namespace resolution).
+To enable the feature, the `channel.patterns` option must be set to `true` (Centrifugo PRO requires explicit intent to use channel patterns because theoretically channels with `/` may already be in use for channels without a namespace – in that case enabling channel patterns will result in wrong namespace resolution).
 
 Once feature flag enabled, a namespace with `pattern` key which starts with `/` is considered a channel pattern namespace. Just like an HTTP path pattern consists of segments delimited by `/`. The `:` symbol in the segment beginning defines a variable part – more information below.
 
-In this case a channel to be used must be sth like `/users/mario` - i.e. start with `/` and match one of the patterns defined in the configuration. So this channel pattern matching mechanics behaves mostly like HTTP route matching in many frameworks.
+In this case a channel to be used must be something like `/users/mario` - i.e. start with `/` and match one of the patterns defined in the configuration. So this channel pattern matching mechanic behaves mostly like HTTP route matching in many frameworks.
 
 Given the configuration example above:
 
@@ -52,12 +52,12 @@ client.connect();
 
 Some implementation restrictions and details to know about:
 
-* When using channel patterns feature `:` symbol in a namespace pattern defines a variable part. The entire channel starting with `/` is matched over the configured channel patterns, namespace name does not participate in matching at all.
-* Centrifugo only allows explicit channel pattern matching which do not result into channel pattern conflicts in runtime, this is checked during configuration validation on server start. Explicitly defined static patterns (without variables) have precedence over patterns with variables.
-* There is no analogue of top-level namespace (like we have for standard namespace configuration) for channels starting with `/`. If a channel starting with `/` does not match any explicitly defined pattern then Centrifugo returns the `102: unknown channel` error. And Centrifugo prohibits defining pattern for channels without namespace (i.e. inside `channel.without_namespace` section).
-* If you define `channel_regex` inside channel pattern options – then regex matches over the entire channel (since variable parts are located in the namespace name in this case).
+* When using the channel patterns feature, the `:` symbol in a namespace pattern defines a variable part. The entire channel starting with `/` is matched against the configured channel patterns; the namespace name does not participate in matching at all.
+* Centrifugo only allows explicit channel pattern matching that does not result in channel pattern conflicts at runtime; this is checked during configuration validation on server start. Explicitly defined static patterns (without variables) take precedence over patterns with variables.
+* There is no analogue of a top-level namespace (like we have for standard namespace configuration) for channels starting with `/`. If a channel starting with `/` does not match any explicitly defined pattern, Centrifugo returns the `102: unknown channel` error. Centrifugo also prohibits defining a pattern for channels without a namespace (i.e. inside the `channel.without_namespace` section).
+* If you define `channel_regex` inside channel pattern options – then the regex matches over the entire channel (since variable parts are located in the namespace name in this case).
 * Channel pattern must only contain ASCII characters.
-* Duplicate variable names are not allowed inside an individual pattern, i.e. defining `/users/:user/:user` will result into validation error on start.
+* Duplicate variable names are not allowed inside an individual pattern, i.e. defining `/users/:user/:user` will result in a validation error on start.
 
 ### Variables
 

@@ -9,8 +9,6 @@ image: /img/ws_compression_cover.jpg
 hide_table_of_contents: false
 ---
 
-<img src="/img/ws_compression_cover.jpg" />
-
 In a recent blog post, we [talked about the Delta Compression](https://centrifugal.dev/blog/2024/05/30/real-time-data-compression-experiments) feature of the Centrifuge/Centrifugo stack. We continue the topic of real-time data compression here, and in this post, we will show the optimizations for WebSocket compression made recently in collaboration with one of our Centrifugo PRO customers.
 
 The optimizations described here allowed our customer to reduce the transmit bandwidth used for real-time communication by 3x by enabling WebSocket compression, while keeping server CPU and memory utilization at comparable levels. This eventually resulted in notable savings of up to $12,000 per month on their bandwidth bill.

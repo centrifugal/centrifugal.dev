@@ -16,6 +16,10 @@ function cartesianToPolar(centerX, centerY, X, Y) {
     return (radians * 180) / Math.PI;
 }
 
+// Sprite cache shared across all instances. Pre-rendering once avoids
+// gradient allocations per frame on software-rendered canvases.
+const sprites = {};
+
 function Segment(ctx, X, Y, x, y, radius, r, w, rotate, speed, angleDiff, segmentColor) {
     this.ctx = ctx;
     this.init(X, Y, x, y, radius, r, w, rotate, speed, angleDiff, segmentColor);
@@ -36,48 +40,63 @@ Segment.prototype.init = function init(X, Y, x, y, rad, r, w, rotate, speed, ang
     this.a = 0;
 };
 
-Segment.prototype.drawSegment = function drawSegment(fromAngle, toAngle, rotateAngle) {
-    this.ctx.translate(this.x, this.y);
-    this.ctx.rotate((rotateAngle * Math.PI) / 180);
-    this.ctx.translate(-this.x, -this.y);
-    this.ctx.beginPath();
+function getSegmentSprite(r, w, color, fromAngle, toAngle) {
+    const key = `seg:${r | 0}:${w | 0}:${color}:${fromAngle}:${toAngle}`;
+    if (sprites[key]) return sprites[key];
+    if (typeof document === 'undefined') return null;
 
-    const res = polarToCartesian(this.x, this.y, this.r, fromAngle);
-    const startX = res[0];
-    const startY = res[1];
-    const toRes = polarToCartesian(this.x, this.y, this.r, toAngle);
-    const endX = toRes[0];
-    const endY = toRes[1];
+    const padding = 6; // room for stroke + antialiasing
+    const size = Math.ceil(r * 2 + padding * 2);
+    const c = document.createElement('canvas');
+    c.width = size;
+    c.height = size;
+    const sctx = c.getContext('2d');
 
-    const anotherX = startX - this.w;
-    const anotherY = endY - this.w;
-    const innerAngleStart = cartesianToPolar(this.x, this.y, anotherX, startY);
-    const innerAngleEnd = cartesianToPolar(this.x, this.y, endX, anotherY);
-    const toAngleRad = (toAngle * Math.PI) / 180;
-    const fromAngleRad = (fromAngle * Math.PI) / 180;
-    const innerAngleStartRad = (innerAngleStart * Math.PI) / 180;
-    const innerAngleEndRad = (innerAngleEnd * Math.PI) / 180;
+    const cx = size / 2;
+    const cy = size / 2;
 
-    this.ctx.arc(this.x, this.y, this.r, toAngleRad, fromAngleRad, true);
-    this.ctx.arc(this.x, this.y, this.r - this.w, innerAngleStartRad, innerAngleEndRad, false);
-    this.ctx.closePath();
-    this.ctx.fillStyle = this.c;
-    this.ctx.fill();
-    this.ctx.stroke();
-};
+    const fromRad = (fromAngle * Math.PI) / 180;
+    const toRad = (toAngle * Math.PI) / 180;
+    const startX = cx + r * Math.cos(fromRad);
+    const startY = cy + r * Math.sin(fromRad);
+    const endX = cx + r * Math.cos(toRad);
+    const endY = cy + r * Math.sin(toRad);
+    const anotherX = startX - w;
+    const anotherY = endY - w;
+    const innerAngleStart = Math.atan2(startY - cy, anotherX - cx);
+    const innerAngleEnd = Math.atan2(anotherY - cy, endX - cx);
+
+    sctx.beginPath();
+    sctx.arc(cx, cy, r, toRad, fromRad, true);
+    sctx.arc(cx, cy, r - w, innerAngleStart, innerAngleEnd, false);
+    sctx.closePath();
+    sctx.fillStyle = color;
+    sctx.strokeStyle = color;
+    sctx.lineWidth = 3;
+    sctx.fill();
+    sctx.stroke();
+
+    sprites[key] = c;
+    return c;
+}
 
 Segment.prototype.draw = function draw() {
-    this.ctx.save();
-    this.ctx.lineWidth = 3;
-    this.ctx.strokeStyle = this.c;
-    this.ctx.shadowColor = this.c;
-    this.drawSegment(4 + this.angleDiff, 86 - this.angleDiff, this.rotate + this.a);
-    this.ctx.restore();
-};
+    const ctx = this.ctx;
+    const sprite = getSegmentSprite(
+        this.r,
+        this.w,
+        this.c,
+        4 + this.angleDiff,
+        86 - this.angleDiff,
+    );
+    if (!sprite) return;
 
-Segment.prototype.resize = function resize() {
-    this.x = this.X / 2;
-    this.y = this.Y / 2;
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(((this.rotate + this.a) * Math.PI) / 180);
+    const half = sprite.width / 2;
+    ctx.drawImage(sprite, -half, -half);
+    ctx.restore();
 };
 
 Segment.prototype.updateParams = function updateParams(elapsedTime) {
@@ -89,102 +108,42 @@ Segment.prototype.render = function render(elapsedTime) {
     this.draw();
 };
 
-function Line(ctx, X, Y, x, y, lineColor) {
-    this.ctx = ctx;
-    this.init(X, Y, x, y, lineColor);
-}
-
-Line.prototype.init = function init(X, Y, x, y, lineColor) {
-    this.X = X;
-    this.Y = Y;
-    this.x = x;
-    this.y = y;
-    this.c = lineColor;
-    this.lw = 1;
-    this.v = {
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-    };
-};
-
-Line.prototype.draw = function draw() {
-    this.ctx.save();
-    this.ctx.lineWidth = this.lw;
-    this.ctx.strokeStyle = this.c;
-    this.ctx.beginPath();
-    this.ctx.moveTo(0, this.y);
-    this.ctx.lineTo(this.X, this.y);
-    this.ctx.stroke();
-    this.ctx.lineWidth = this.lw;
-    this.ctx.beginPath();
-    this.ctx.moveTo(this.x, 0);
-    this.ctx.lineTo(this.x, this.Y);
-    this.ctx.stroke();
-    this.ctx.restore();
-};
-
-Line.prototype.updatePosition = function updatePosition(elapsedTime) {
-    this.x += this.v.x * elapsedTime;
-    this.y += this.v.y * elapsedTime;
-};
-
-Line.prototype.wrapPosition = function wrapPosition() {
-    if (this.x < 0) this.x = this.X;
-    if (this.x > this.X) this.x = 0;
-    if (this.y < 0) this.y = this.Y;
-    if (this.y > this.Y) this.y = 0;
-};
-
-Line.prototype.render = function render(elapsedTime) {
-    this.updatePosition(elapsedTime);
-    this.wrapPosition();
-    this.draw();
-};
-
 function Bubble(ctx, canvasWidth, canvasHeight, isDarkTheme) {
     this.ctx = ctx;
     this.isDarkTheme = isDarkTheme;
     this.canvasWidth = canvasWidth;
     this.canvasHeight = canvasHeight;
-    // Use the original color passed in.
     this.color = 'rgba(46, 3, 15, 0.35)';
-    // Start at a random position.
     this.x = Math.random() * canvasWidth;
     this.y = Math.random() * canvasHeight;
-    // Random radius between 5 and 20.
-    this.radius = Math.random() * canvasWidth/60 + 5;
-    // Random velocities for a gentle drifting effect.
+    this.radius = Math.random() * canvasWidth / 60 + 5;
     this.vx = (Math.random() - 0.5) * 70;
     this.vy = (Math.random() - 0.5) * 70;
-    // Base opacity for the bubble (more opaque).
     this.alpha = Math.random() * 0.3 + 0.7;
-    // Variables for a pulsating (breathing) effect.
-    this.pulse = 0;//Math.random() * Math.PI * 2;
-    this.pulseSpeed = 0;// Math.random() * 2 + 1;
-    // Burst parameters.
-    this.burstInterval = Math.random() * 50 + 3; // seconds until burst.
+    this.pulse = 0;
+    this.pulseSpeed = 0;
+    // Burst parameters. Minimum interval must exceed the max appearDuration
+    // (~6s) so bubbles finish fading in before they can auto-burst.
+    this.burstInterval = Math.random() * 50 + 8;
     this.timeSinceLastBurst = 0;
     this.bursting = false;
     this.burstProgress = 0;
-    this.burstDuration = 0.5; // seconds for burst animation.
-    // Appear (fade-in) parameters.
-    this.appearDuration = Math.random() * 1 + 5; // seconds to fully appear.
-    this.appearProgress = 0; // start completely invisible.
-    // Splash particles will be generated on burst.
+    this.burstDuration = 0.5;
+    this.appearDuration = Math.random() * 1 + 5;
+    this.appearProgress = 0;
     this.splashParticles = null;
 }
 
 Bubble.prototype.reset = function() {
-    // Reset bubble after burst.
     this.x = Math.random() * this.canvasWidth;
     this.y = Math.random() * this.canvasHeight;
-    this.radius = Math.random() * this.canvasWidth/60 + 5;
+    this.radius = Math.random() * this.canvasWidth / 60 + 5;
     this.vx = (Math.random() - 0.5) * 50;
     this.vy = (Math.random() - 0.5) * 50;
     this.alpha = Math.random() * 0.3 + 0.7;
     this.pulse = Math.random() * Math.PI * 2;
     this.pulseSpeed = Math.random() * 2 + 1;
-    this.burstInterval = Math.random() * 50 + 3;
+    this.burstInterval = Math.random() * 50 + 8;
     this.timeSinceLastBurst = 0;
     this.bursting = false;
     this.burstProgress = 0;
@@ -192,41 +151,44 @@ Bubble.prototype.reset = function() {
     this.splashParticles = null;
 };
 
+Bubble.prototype.startBurst = function() {
+    if (this.bursting) return;
+    this.bursting = true;
+    this.justStartedBursting = true;
+    this.burstProgress = 0;
+    const numSplashes = Math.floor(Math.random() * 6) + 10;
+    this.splashParticles = [];
+    for (let i = 0; i < numSplashes; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 50 + 50;
+        const length = Math.random() * 10 + 5;
+        this.splashParticles.push({
+            dx: Math.cos(angle) * speed,
+            dy: Math.sin(angle) * speed,
+            length,
+        });
+    }
+};
+
 Bubble.prototype.update = function(elapsedTime) {
-    // Always update movement.
     this.x += this.vx * elapsedTime;
     this.y += this.vy * elapsedTime;
 
-    // Bounce off the canvas edges.
     if (this.x < 0) { this.x = 0; this.vx *= -1; }
     if (this.x > this.canvasWidth) { this.x = this.canvasWidth; this.vx *= -1; }
     if (this.y < 0) { this.y = 0; this.vy *= -1; }
     if (this.y > this.canvasHeight) { this.y = this.canvasHeight; this.vy *= -1; }
 
     if (!this.bursting) {
-        // Normal behavior when not bursting.
         this.pulse += this.pulseSpeed * elapsedTime;
         this.appearProgress = Math.min(1, this.appearProgress + elapsedTime / this.appearDuration);
         this.timeSinceLastBurst += elapsedTime;
         if (this.timeSinceLastBurst >= this.burstInterval) {
-            this.bursting = true;
-            this.burstProgress = 0;
-            let numSplashes = Math.floor(Math.random() * 6) + 10;
-            this.splashParticles = [];
-            for (let i = 0; i < numSplashes; i++) {
-                let angle = Math.random() * Math.PI * 2;
-                // Speed controls how fast the splash particle moves outward.
-                let speed = Math.random() * 50 + 50;
-                // Each particle's "length" defines its initial size.
-                let length = Math.random() * 10 + 5;
-                this.splashParticles.push({angle: angle, speed: speed, length: length});
-            }
+            this.startBurst();
         }
     } else {
-        // Update burst progress while still moving.
         this.burstProgress += elapsedTime / this.burstDuration;
         if (this.burstProgress >= 1) {
-            // Reset bubble after burst.
             this.reset();
         }
     }
@@ -237,12 +199,9 @@ Bubble.prototype.draw = function() {
     ctx.save();
 
     if (!this.bursting) {
-        // Normal bubble drawing with pulsating and fade-in effect.
         const dynamicAlpha = (this.alpha + 0.3 * Math.sin(this.pulse)) * this.appearProgress;
         ctx.globalAlpha = Math.max(0, Math.min(0.7, dynamicAlpha));
 
-        // Create a radial gradient with a white center highlight,
-        // transitioning to a colored rim and then fading out.
         const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
         if (this.isDarkTheme) {
             gradient.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
@@ -253,14 +212,13 @@ Bubble.prototype.draw = function() {
             gradient.addColorStop(0.95, 'rgba(139, 131, 148, 0.17)');
             gradient.addColorStop(1, 'rgba(6, 5, 81, 0.23)');
         }
-        
+
         ctx.fillStyle = gradient;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();
     } else {
-        // Bursting animation: bubble expands and fades out.
-        const burstRadius = this.radius * (1 + 0.1*this.burstProgress);
+        const burstRadius = this.radius * (1 + 0.1 * this.burstProgress);
         ctx.globalAlpha = Math.max(0, 1 - this.burstProgress);
         const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, burstRadius);
         if (this.isDarkTheme) {
@@ -277,28 +235,23 @@ Bubble.prototype.draw = function() {
         ctx.arc(this.x, this.y, burstRadius, 0, Math.PI * 2);
         ctx.fill();
 
-        // Draw splash particles to simulate droplets flying outward.
         if (this.splashParticles) {
+            const burstAlpha = Math.max(0, 1 - this.burstProgress);
+            ctx.fillStyle = this.isDarkTheme ? 'rgba(255, 255, 255, 0.71)' : 'rgb(174,174,174)';
+            ctx.globalAlpha = burstAlpha;
+            const inv = 1 - this.burstProgress;
             for (let i = 0; i < this.splashParticles.length; i++) {
-                let p = this.splashParticles[i];
-                // Calculate outward displacement based on burst progress.
-                let offset = p.speed * this.burstProgress;
-                let splashX = this.x + Math.cos(p.angle) * offset;
-                let splashY = this.y + Math.sin(p.angle) * offset;
-                // Gradually decrease the size of the splash particle.
-                let splashRadius = p.length * (1 - this.burstProgress);
-                ctx.globalAlpha = Math.max(0, 1 - this.burstProgress);
-                if (this.isDarkTheme) {
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.71)';
-                } else {
-                    ctx.fillStyle = 'rgb(174,174,174)';
-                }
+                const p = this.splashParticles[i];
+                const splashX = this.x + p.dx * this.burstProgress;
+                const splashY = this.y + p.dy * this.burstProgress;
+                const splashRadius = 0.1 * p.length * inv;
                 ctx.beginPath();
-                ctx.arc(splashX, splashY, 0.1*splashRadius, 0, Math.PI * 2);
+                ctx.arc(splashX, splashY, splashRadius, 0, Math.PI * 2);
                 ctx.fill();
             }
         }
     }
+
     ctx.restore();
 };
 
@@ -307,83 +260,29 @@ Bubble.prototype.render = function(elapsedTime) {
     this.draw();
 };
 
-function drawBranch(ctx, startX, startY, endX, endY, thickness) {
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    ctx.lineTo(endX, endY);
-    ctx.lineWidth = thickness;
-    ctx.strokeStyle = '#F6CFC7';
-    ctx.stroke();
-
-    // Create a gradient for the glow effect.
-    const gradient = ctx.createLinearGradient(startX, startY, endX, endY);
-    gradient.addColorStop(0, '#F60809');
-    gradient.addColorStop(1, '#F6B9BD');
-    
-    // Draw the glow.
-    ctx.strokeStyle = gradient;
-    ctx.lineWidth = thickness;
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = 'red';
-    ctx.stroke();
-}
-
-function drawLightning(ctx, X, Y) {
-    const startX = X / 2 + (0.5 - Math.random()) * 30;
-    const startY = Y / 2 + (0.5 - Math.random()) * 30;
-    const numSegments = Math.floor(Math.random() * 10) + 2;
-    let currentX = startX;
-    let currentY = startY;
-
-    const initialAngle = Math.random() * Math.PI * 2;  // Random initial angle
-
-    ctx.globalCompositeOperation = 'lighter';
-
-    for (let i = 0; i < numSegments; i++) {
-        const segmentLength = Math.random() * 10;
-        const angle = initialAngle + (Math.random() - 0.5) * Math.PI / 3;
-        const endX = currentX + Math.cos(angle) * segmentLength;
-        const endY = currentY + Math.sin(angle) * segmentLength;
-
-        drawBranch(ctx, currentX, currentY, endX, endY, 3);
-
-        // Branching.
-        if (Math.random() > 0.7) {
-            drawBranch(ctx, currentX, currentY, currentX + Math.cos(angle + Math.PI / 4) * segmentLength, currentY + Math.sin(angle + Math.PI / 4) * segmentLength, 3);
-        }
-        if (Math.random() > 0.7) {
-            drawBranch(ctx, currentX, currentY, currentX + Math.cos(angle - Math.PI / 4) * segmentLength, currentY + Math.sin(angle - Math.PI / 4) * segmentLength, 3);
-        }
-        if (Math.random() > 0.7) {
-            drawBranch(ctx, currentX, currentY, currentX + Math.cos(angle - Math.PI / 4) * segmentLength, currentY + Math.sin(angle - Math.PI / 4) * segmentLength, 3);
-        }
-
-        currentX = endX;
-        currentY = endY;
-    }
-
-    ctx.globalCompositeOperation = 'source-over';
-}
-
-function draw(canvas, X, Y, isDarkTheme) {
+function draw(canvas, _X, _Y, isDarkTheme) {
+    // Always read current canvas dimensions. React state can be stale right
+    // after a theme switch (the browser may have re-laid out the canvas
+    // before setScale propagated).
+    canvas.width = canvas.clientWidth || _X || 1;
+    canvas.height = canvas.clientHeight || _Y || 1;
+    const X = canvas.width;
+    const Y = canvas.height;
     const ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     const centerX = X / 2;
     const centerY = Y / 2;
-    let lineColor, outerSegmentColor, innnerSegmentColor;
+    let outerSegmentColor, innerSegmentColor;
     if (isDarkTheme) {
-        lineColor = '#8d3838';
         outerSegmentColor = '#6e2b2b';
-        innnerSegmentColor = '#6e2b2b';
+        innerSegmentColor = '#6e2b2b';
     } else {
-        lineColor = '#ffd4d4';
         outerSegmentColor = '#e6e8eb';
-        innnerSegmentColor = '#ffd4d4';
+        innerSegmentColor = '#ffd4d4';
     }
 
-    const linesNum = 3;
-    const lines = [];
-    const segments = [];
     const radius = Y / 7;
     const lw = radius / 15;
 
@@ -393,129 +292,144 @@ function draw(canvas, X, Y, isDarkTheme) {
             setTimeout(cb, 17);
         };
 
-    const bubbleCount = 32; // Or however many bubbles you prefer.
+    const bubbleCount = 32;
     const bubbles = [];
     for (let i = 0; i < bubbleCount; i++) {
-        // Use the same color as your original line color.
         bubbles.push(new Bubble(ctx, X, Y, isDarkTheme));
     }
-    
-    // --- New: Burst only the bubble clicked ---
-    canvas.addEventListener('click', (event) => {
-        // Get the click coordinates relative to the canvas.
+
+    // Chain-burst: when a bubble bursts, any bubbles whose circles intersect
+    // it ignite too, with a small stagger so the cascade reads as deliberate.
+    const pendingChainTimers = [];
+    const triggerIntersectionBurst = (source) => {
+        for (let i = 0; i < bubbles.length; i++) {
+            const other = bubbles[i];
+            if (other === source || other.bursting) continue;
+            const dx = other.x - source.x;
+            const dy = other.y - source.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < source.radius + other.radius) {
+                const delay = 40 + Math.random() * 80;
+                const timerId = setTimeout(() => {
+                    if (cancelled) return;
+                    if (!other.bursting) other.startBurst();
+                }, delay);
+                pendingChainTimers.push(timerId);
+            }
+        }
+    };
+
+    const segments = [];
+    segments.push(new Segment(ctx, X, Y, centerX, centerY, radius, radius * 2.65, lw * 9, 0,   -1.5, 0, outerSegmentColor));
+    segments.push(new Segment(ctx, X, Y, centerX, centerY, radius, radius * 2.65, lw * 9, 90,  -1.5, 0, outerSegmentColor));
+    segments.push(new Segment(ctx, X, Y, centerX, centerY, radius, radius * 2.65, lw * 9, 180, -1.5, 0, outerSegmentColor));
+    segments.push(new Segment(ctx, X, Y, centerX, centerY, radius, radius * 2.65, lw * 9, 270, -1.5, 0, outerSegmentColor));
+    segments.push(new Segment(ctx, X, Y, centerX, centerY, radius, radius * 1.45, lw * 8, 45,   1.5, 2, innerSegmentColor));
+    segments.push(new Segment(ctx, X, Y, centerX, centerY, radius, radius * 1.45, lw * 8, 135,  1.5, 2, innerSegmentColor));
+    segments.push(new Segment(ctx, X, Y, centerX, centerY, radius, radius * 1.45, lw * 8, 225,  1.5, 2, innerSegmentColor));
+
+    // Click handler: burst every bubble at the click position.
+    const clickHandler = (event) => {
         const rect = canvas.getBoundingClientRect();
         const clickX = event.clientX - rect.left;
         const clickY = event.clientY - rect.top;
-        bubbles.forEach(bubble => {
-            // Check if the click is inside the bubble.
-            const dx = clickX - bubble.x;
-            const dy = clickY - bubble.y;
-            if (Math.sqrt(dx * dx + dy * dy) <= bubble.radius) {
-                if (!bubble.bursting) {
-                    bubble.bursting = true;
-                    bubble.burstProgress = 0;
-                    let numSplashes = Math.floor(Math.random() * 6) + 10;
-                    bubble.splashParticles = [];
-                    for (let i = 0; i < numSplashes; i++) {
-                        let angle = Math.random() * Math.PI * 2;
-                        let speed = Math.random() * 50 + 50;
-                        let length = Math.random() * 10 + 5;
-                        bubble.splashParticles.push({ angle, speed, length });
-                    }
-                }
+        for (const b of bubbles) {
+            if (b.bursting) continue;
+            const dx = clickX - b.x;
+            const dy = clickY - b.y;
+            if (Math.sqrt(dx * dx + dy * dy) <= b.radius) {
+                b.startBurst();
             }
-        });
-    });
-    // --- End new code ---
-
-    for (let i = 0; i < linesNum; i += 1) {
-        const line = new Line(ctx, X, Y, rand(0, X), rand(0, Y), lineColor);
-        lines.push(line);
-    }
-
-    segments.push(new Segment(
-        ctx, X, Y, centerX, centerY, radius, radius * 2.65, lw * 9, 0, -1.5, 0, outerSegmentColor,
-    ));
-    segments.push(new Segment(
-        ctx, X, Y, centerX, centerY, radius, radius * 2.65, lw * 9, 90, -1.5, 0, outerSegmentColor,
-    ));
-    segments.push(new Segment(
-        ctx, X, Y, centerX, centerY, radius, radius * 2.65, lw * 9, 180, -1.5, 0, outerSegmentColor,
-    ));
-    segments.push(new Segment(
-        ctx, X, Y, centerX, centerY, radius, radius * 2.65, lw * 9, 270, -1.5, 0, outerSegmentColor,
-    ));
-    segments.push(new Segment(
-        ctx, X, Y, centerX, centerY, radius, radius * 1.45, lw * 8, 45, 1.5, 2, innnerSegmentColor,
-    ));
-    segments.push(new Segment(
-        ctx, X, Y, centerX, centerY, radius, radius * 1.45, lw * 8, 135, 1.5, 2, innnerSegmentColor,
-    ));
-    segments.push(new Segment(
-        ctx, X, Y, centerX, centerY, radius, radius * 1.45, lw * 8, 225, 1.5, 2, innnerSegmentColor,
-    ));
+        }
+    };
+    canvas.addEventListener('click', clickHandler);
 
     let lastRenderTime = 0;
-    const useLightnings = localStorage.getItem("lights") == "up";
+    let cancelled = false;
+    let rafId = null;
 
-    function isCanvasVisible() {
-        return !(canvas.offsetParent === null);
+    // IntersectionObserver replaces per-frame offsetParent polling (which
+    // forces a synchronous layout reflow).
+    let canvasVisible = true;
+    let intersectionObserver = null;
+    if (typeof IntersectionObserver !== 'undefined') {
+        intersectionObserver = new IntersectionObserver(([entry]) => {
+            canvasVisible = entry ? entry.isIntersecting : true;
+        }, { threshold: 0 });
+        intersectionObserver.observe(canvas);
     }
 
     function render(currentTime) {
-        if (X <= 1) {
+        if (cancelled || X <= 1) {
             return;
         }
 
-        const secondsSinceLastRender = (currentTime - lastRenderTime) / 1000;
+        // First frame: establish the clock, skip physics. rAF's currentTime is
+        // ms-since-page-load, not ms-since-mount, so initializing lastRenderTime
+        // to 0 would produce a huge first-frame elapsedTime on every re-mount.
+        if (lastRenderTime === 0) {
+            lastRenderTime = currentTime;
+            rafId = requestAnimationFrame(render);
+            return;
+        }
 
-        if (isCanvasVisible()) {
+        // Cap elapsedTime defensively — covers long backgrounded tabs etc.
+        const secondsSinceLastRender = Math.min(0.1, (currentTime - lastRenderTime) / 1000);
+
+        if (canvasVisible) {
             ctx.clearRect(0, 0, X, Y);
-
-            // Uncomment the following if you wish to render lines when not dark.
-            // for (let i = 0; i < lines.length; i += 1) {
-            //     lines[i].render(secondsSinceLastRender);
-            // }
+            ctx.globalAlpha = 1;
 
             for (let i = 0; i < segments.length; i += 1) {
                 segments[i].render(secondsSinceLastRender);
             }
 
-            // Render bubbles.
             for (let i = 0; i < bubbles.length; i++) {
-                bubbles[i].render(secondsSinceLastRender);
+                const b = bubbles[i];
+                if (b.justStartedBursting) {
+                    b.justStartedBursting = false;
+                    triggerIntersectionBurst(b);
+                }
+                b.render(secondsSinceLastRender);
             }
 
-            if (isDarkTheme && useLightnings && X > 1280) {
-                if (Math.random() > 0.95) {
-                    drawLightning(ctx, X, Y);
-                }
-                ctx.shadowBlur = 100;
-            } else {
-                ctx.shadowBlur = 0;
-            }
+            ctx.shadowBlur = 0;
         }
 
         lastRenderTime = currentTime;
-        requestAnimationFrame(render);
+        rafId = requestAnimationFrame(render);
     }
 
-    requestAnimationFrame(render);
+    rafId = requestAnimationFrame(render);
+
+    return () => {
+        cancelled = true;
+        if (rafId !== null && typeof cancelAnimationFrame !== 'undefined') {
+            cancelAnimationFrame(rafId);
+        }
+        canvas.removeEventListener('click', clickHandler);
+        if (intersectionObserver) intersectionObserver.disconnect();
+        for (let i = 0; i < pendingChainTimers.length; i++) {
+            clearTimeout(pendingChainTimers[i]);
+        }
+    };
 }
 
 let observer;
 if (global.window || (process && process.browser)) {
-    // Need to handle theme switch.
+    // Watch the data-theme attribute only - not every attribute change.
     observer = new MutationObserver(function (mutations) {
-        mutations.forEach(function (mutation) {
-            if (mutation.type == "attributes") {
+        for (const mutation of mutations) {
+            if (mutation.type === "attributes" && mutation.attributeName === "data-theme") {
                 window.dispatchEvent(new Event('resized'));
+                break;
             }
-        });
+        }
     });
     const element = document.querySelector('html');
     observer.observe(element, {
-        attributes: true
+        attributes: true,
+        attributeFilter: ['data-theme'],
     });
 }
 
@@ -523,16 +437,17 @@ const Logo = (props) => {
     const [scale, setScale] = React.useState({ x: 1, y: 1 });
     const canvas = React.useRef(null);
 
-    const calculateScaleX = () => (!canvas.current ? 0 : canvas.current.clientWidth);
-    const calculateScaleY = () => (!canvas.current ? 0 : canvas.current.clientHeight);
-
     const resized = () => {
         if (canvas.current === null) {
             return;
         }
-        canvas.current.width = canvas.current.clientWidth;
-        canvas.current.height = canvas.current.clientHeight;
-        setScale({ x: calculateScaleX(), y: calculateScaleY() });
+        const newW = canvas.current.clientWidth;
+        const newH = canvas.current.clientHeight;
+        if (canvas.current.width !== newW || canvas.current.height !== newH) {
+            canvas.current.width = newW;
+            canvas.current.height = newH;
+            setScale({ x: newW, y: newH });
+        }
     };
 
     React.useEffect(() => resized(), []);
@@ -540,17 +455,18 @@ const Logo = (props) => {
     if (global.window || (process && process.browser)) {
         React.useEffect(() => {
             window.addEventListener("resize", resized);
-            return () => window.removeEventListener("resize", resized);
-        });
-        React.useEffect(() => {
             window.addEventListener("resized", resized);
-            return () => window.removeEventListener("resized", resized);
-        });
+            return () => {
+                window.removeEventListener("resize", resized);
+                window.removeEventListener("resized", resized);
+            };
+        }, []);
     }
 
     React.useEffect(() => {
-        draw(canvas.current, scale.x, scale.y, props.isDarkTheme);
-    }, [scale]);
+        const cleanup = draw(canvas.current, scale.x, scale.y, props.isDarkTheme);
+        return cleanup;
+    }, [scale.x, scale.y, props.isDarkTheme]);
 
     return <canvas ref={canvas} style={{ width: "100%", height: "100%" }} />;
 }

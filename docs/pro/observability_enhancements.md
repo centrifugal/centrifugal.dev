@@ -4,13 +4,13 @@ id: observability_enhancements
 title: Observability enhancements
 ---
 
-Centrifugo PRO version provides an enhanced observability as when the business grows it's crucial to have a deep insight into the system.
+Centrifugo PRO provides enhanced observability, as when the business grows it's crucial to have deep insight into the system.
 
 ## Client name resolution in metrics
 
 Centrifugo PRO has some enhancements to exposed metrics.
 
-It's possible to understand how many clients from different environments are currently connected to your Centrifugo. I.e. from browser, from Android, iOS devices. This is possible because our SDKs pass the name of SDK to a server, and provide a way to redefine it.
+It's possible to understand how many clients from different environments are currently connected to your Centrifugo — i.e. from a browser, from Android, iOS devices. This is possible because our SDKs pass the name of the SDK to a server and provide a way to redefine it.
 
 Names of clients you are using in SDKs must be registered in Centrifugo configuration. This is done to avoid cardinality issues in Prometheus.
 
@@ -26,11 +26,11 @@ Names of clients you are using in SDKs must be registered in Centrifugo configur
 }
 ```
 
-And Centrifugo PRO already aware of some names used by our official SDKs, so out of the box you will get segmentation by those.
+Centrifugo PRO is already aware of some names used by our official SDKs, so out of the box you will get segmentation by those.
 
 ## Channel namespace resolution for metrics
 
-Centrifugo PRO supports channel namespace resolution for many metrics related to channel. One application could be for setups with many namespaces to understand which namespaces consume more bandwidth. Or which namespace generates more frames, or errors. Or number inflight subscriptions with channel namespace resolution!
+Centrifugo PRO supports channel namespace resolution for many metrics related to channel. One application could be for setups with many namespaces, to understand which namespaces consume more bandwidth, or which namespace generates more frames or errors. Or the number of inflight subscriptions with channel namespace resolution!
 
 To enable:
 
@@ -43,7 +43,7 @@ To enable:
 }
 ```
 
-Centrifugo PRO requires separate flag to enable channel namespace resolution for metrics because it may have some overhead (in most cases negligible though).
+Centrifugo PRO requires a separate flag to enable channel namespace resolution for metrics because it may have some overhead (in most cases negligible though).
 
 ## Transport accept protocol resolution
 

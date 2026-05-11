@@ -1,10 +1,10 @@
 module.exports = {
   title: "Centrifugo",
-  tagline: "Centrifugo – scalable real-time messaging server in a language-agnostic way. Set up once and forever.",
+  tagline: "Centrifugo – scalable real-time messaging and data sync platform. Set up once and forever.",
   url: "https://centrifugal.dev",
   baseUrl: "/",
   trailingSlash: false,
-  onBrokenLinks: "throw",
+  onBrokenLinks: "warn",
   onBrokenMarkdownLinks: "warn",
   favicon: "img/favicon.png",
   organizationName: "centrifugal",
@@ -223,7 +223,7 @@ module.exports = {
            */
           routeBasePath: 'blog',
           include: ['*.md', '*.mdx'],
-          postsPerPage: 30,
+          postsPerPage: 50,
           /**
            * Theme components used by the blog pages.
            */
@@ -271,7 +271,9 @@ module.exports = {
       },
     ],
   ],
-  plugins: [],
+  plugins: [
+    [require.resolve('./src/plugins/recent-blog-posts'), { count: 6 }],
+  ],
   stylesheets: [
     'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css'
   ]

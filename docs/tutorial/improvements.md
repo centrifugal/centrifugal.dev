@@ -11,7 +11,7 @@ There are still many areas for improvement in GrandChat, but we had to halt at a
 
 💡 Provide non-admin users with the ability to create new rooms, perhaps creating private rooms for one-to-one communication that are not visible on the "Discover" page. One-to-one chats may just be a subset of our current chat room implementation. At some point, you may add a property to the room defining the room type, allowing for different behavior in rooms of different types.
 
-💡 Enhance the frontend by adding more strict types – leveraging the full power of TypeScript. While using any in some places helped us evolve quickly during the tutorial, strict typing in production will eventually save you time.
+💡 Enhance the frontend by adding stricter types – leveraging the full power of TypeScript. While using `any` in some places helped us evolve quickly during the tutorial, strict typing in production will eventually save you time.
 
 💡 Introduce "system" messages, such as displaying messages about users who joined/left inside the room detail view. In this case, the message won't have a user author. We've already made the user field of the `Message` model nullable to support this scenario.
 
@@ -29,7 +29,7 @@ There are still many areas for improvement in GrandChat, but we had to halt at a
 
 💡 [Add push notifications](./push_notifications.md) to engage offline users to come back to the app or notify them about important messages, such as when someone mentions a user in the room. Centrifugo PRO provides a [push notifications API](../pro/push_notifications.md), but you can also use any third-party service.
 
-💡 There is one more possible issue in application state sync we've decided not to solve here – it may occur during the initial load of data from the backend upon page load. If a real-time message comes after the state is loaded but before a real-time subscription is established for the first time, the message won't be shown until page reload. There are multiple ways to fix this, such as establishing a real-time connection/subscription first and then loading the initial chat state and applying messages received while the state was loading. Or get stream top offset from Centrifigo history API before initial state load, then use it for the initial subscribe. Alternatively, silently re-sync the state in the background after setting up a real-time subscription to a personal channel.
+💡 There is one more possible issue in application state sync we've decided not to solve here – it may occur during the initial load of data from the backend upon page load. If a real-time message comes after the state is loaded but before a real-time subscription is established for the first time, the message won't be shown until page reload. There are multiple ways to fix this, such as establishing a real-time connection/subscription first and then loading the initial chat state and applying messages received while the state was loading. Or get the stream top offset from the Centrifugo history API before the initial state load, then use it for the initial subscribe. Alternatively, silently re-sync the state in the background after setting up a real-time subscription to a personal channel.
 
 💡 Integrate with the ChatGPT API and introduce chatbots with AI skills. In this case, you may additionally send all the messages in chat rooms to Kafka to create an extensible chatbot platform that can be a completely isolated service from the chat core.
 

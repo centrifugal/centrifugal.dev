@@ -9,8 +9,6 @@ image: /img/django_tutorial.jpg
 hide_table_of_contents: false
 ---
 
-![Centrifuge](/img/django_tutorial.jpg)
-
 In this tutorial, we will create a basic chat server using the [Django framework](https://www.djangoproject.com/) and [Centrifugo](https://centrifugal.dev/). Our chat application will have two pages:
 
 1. A page that lets you type the name of a chat room to join.

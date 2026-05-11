@@ -26,7 +26,8 @@ function TitleWithCatPro({ isDarkTheme }) {
         width="760.000000pt"
         height="233.000000pt"
         viewBox="0 0 760.000000 233.000000"
-        preserveAspectRatio="xMidYMid meet">
+        preserveAspectRatio="xMidYMid meet"
+        aria-hidden="true">
         <g transform="translate(0.000000,233.000000) scale(0.100000,-0.100000)"
           fill="currentColor" stroke="none">
           <path d={mainPath}/>
@@ -49,14 +50,15 @@ function TitleWithCatPro({ isDarkTheme }) {
         width="760.000000pt"
         height="233.000000pt"
         viewBox="0 0 760.000000 233.000000"
-        preserveAspectRatio="xMidYMid meet">
+        preserveAspectRatio="xMidYMid meet"
+        aria-hidden="true">
         <g transform="translate(0.000000,233.000000) scale(0.100000,-0.100000)"
           fill="currentColor" stroke="none">
           <path d={mainPath}/>
           <path className={proLocalStyles.eyeBlink} fill={eyeBackgroundColor} d={eyeCircle1Path}/>
           <path className={proLocalStyles.eyeBlink} fill={eyeBackgroundColor} d={eyeCircle2Path}/>
-          <path d={eyePath1}/>
-          <path d={eyePath2}/>
+          <path fill={eyePupilColor} d={eyePath1}/>
+          <path fill={eyePupilColor} d={eyePath2}/>
         </g>
       </svg>
     </div>

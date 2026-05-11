@@ -146,7 +146,7 @@ See our [official Kubernetes Helm chart](https://github.com/centrifugal/helm-cha
 
 Every time we make a new Centrifugo release we upload rpm and deb packages for popular Linux distributions on [packagecloud.io](https://packagecloud.io/FZambia/centrifugo).
 
-At moment, we support versions of the following distributions:
+At the moment, we support versions of the following distributions:
 
 * 64-bit Debian 10 Buster
 * 64-bit Debian 11 Bullseye

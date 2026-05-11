@@ -29,6 +29,11 @@
   clip-path: inset(0 0 0 50%);
 }
 
+.catRightSleep {
+  transform: translate(-43%, 1px) rotate(6deg);
+  transform-origin: 50% 50%;
+}
+
 @media (min-width: 997px) {
   .cat {
     display: block;

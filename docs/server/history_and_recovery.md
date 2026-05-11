@@ -8,7 +8,7 @@ Centrifugo engines can maintain publication history for channels with configured
 
 ## History design
 
-History properties configured on a namespace level, to enable history both [history_size](./channels.md#history_size) and [history_ttl](./channels.md#history_ttl) should be set to a value greater than zero. 
+History properties are configured at the namespace level; to enable history, both [history_size](./channels.md#history_size) and [history_ttl](./channels.md#history_ttl) should be set to a value greater than zero.
 
 Centrifugo is designed with an idea that history streams are ephemeral (can be created on the fly without explicit create call from Centrifugo users) and can expire or can be lost at any moment. Centrifugo provides a way for a client to understand that channel history lost. In this case, the main application database should be the source of truth and state recovery.
 
@@ -24,7 +24,7 @@ History in channels is not enabled by default. See how to enable it over [channe
 
 ## History iteration API
 
-History iteration based on three fields:
+History iteration is based on three fields:
 
 * `limit`
 * `since`
@@ -136,7 +136,7 @@ The recovery process works this way:
 2. Client receives subscribe reply from Centrifugo with two values: stream `epoch` and stream top `offset`, those values are saved by an SDK implementation.
 3. Every received publication has incremental `offset`, client SDK increments locally saved offset on each publication from a channel.
 4. Let's say at this point client disconnected for a while.
-5. Upon resubscribing to a channel SDK provides last seen `epoch` anf `offset` to Centrifugo.
+5. Upon resubscribing to a channel, the SDK provides the last seen `epoch` and `offset` to Centrifugo.
 6. Centrifugo tries to load all the missed publications starting from the stream position provided by a client.
 7. If Centrifugo decides it can successfully recover client's state – then all missed publications returned in subscribe reply and client receives `recovered: true` in subscribed event context, and `publication` event handler of Subscription is called for every missed publication. Otherwise no publications returned and `recovered` flag of subscribed event context is set to `false`.
 

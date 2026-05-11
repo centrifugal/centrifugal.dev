@@ -5,7 +5,7 @@ sidebar_label: "Creating SPA frontend"
 title: "Creating SPA frontend with React"
 ---
 
-On the frontend we will use Vite with React and Typescript. In this tutorial we are not paying a lot of attention to making all the types strict and using `any` a lot. Which is actually a point for improvement, but at least helps to make the tutorial slightly shorter. The prerequisites is NodeJS >= 18.
+On the frontend we will use Vite with React and TypeScript. In this tutorial we are not paying a lot of attention to making all the types strict and use `any` a lot. This is actually a point for improvement, but at least it helps to make the tutorial slightly shorter. The prerequisite is NodeJS >= 18.
 
 We can start by creating frontend app with Vite inside `grand-chat-tutorial` dir:
 
@@ -54,7 +54,7 @@ frontend:
     - backend
 ```
 
-When you eventually run application with docker compose, the frontend will be updated automatically upon changes in source code files – which is super nice for the development. 
+When you eventually run the application with docker compose, the frontend will be updated automatically upon changes in source code files – which is very nice for development.
 
 ## App layout
 
@@ -102,7 +102,7 @@ export default App;
 
 Here we skipped some final code to emphasize the core layout.
 
-First thing to note is that we wrapped the app into two React contexts: `CsrfContext` and `AuthContext`. React contexts allow sharing some state without need to pass it over props to children components. `CsrfContext` allows access to CSRF token everywhere in the app, `AuthContext` provides authentication information.
+The first thing to note is that we wrapped the app into two React contexts: `CsrfContext` and `AuthContext`. React contexts allow sharing some state without needing to pass it over props to children components. `CsrfContext` allows access to the CSRF token everywhere in the app; `AuthContext` provides authentication information.
 
 We render `ChatLogin` page if user is not authenticated and one of the chat screens if user authenticated. [React Router](https://reactrouter.com/en/main) is used for the navigation.
 
@@ -193,7 +193,7 @@ export const login = async (csrfToken: string, username: string, password: strin
 }
 ```
 
-Other API calls look very similar, so we wan't pay attention to them further – but you can always take a look in source code.
+Other API calls look very similar, so we won't pay attention to them further – but you can always take a look in the source code.
 
 ## Chat room list screen
 
@@ -238,7 +238,7 @@ const ChatRoomList = () => {
 export default ChatRoomList;
 ```
 
-Note, we iterate over `state.rooms` array which only contains IDs of rooms and is a source of truth for the order of rooms on the screen. To remind: we sort rooms on this screen by `bumped_at` field in the descending order. 
+Note, we iterate over the `state.rooms` array which only contains IDs of rooms and is the source of truth for the order of rooms on the screen. As a reminder: we sort rooms on this screen by the `bumped_at` field in descending order.
 
 ## Chat room search screen
 
@@ -566,7 +566,7 @@ In the app we have several reducer actions to modify this state:
 * `ADD_MESSAGES`
 * `SET_ROOM_MEMBER_COUNT`
 
-State management in React is not very handy to write to be honest. What we've found though while writing this tutorial is that ChatGPT helps a lot with this task. If you describe the desired behavior properly – ChatGPT answers correctly.
+State management in React is not very easy to write, to be honest. What we found though while writing this tutorial is that ChatGPT helps a lot with this task. If you describe the desired behavior properly – ChatGPT answers correctly.
 
 ### CLEAR_CHAT_STATE
 
@@ -617,7 +617,7 @@ case 'ADD_ROOMS': {
 
 ### DELETE_ROOM
 
-This action helps to remove the room from room list screen. Used when current user leaves the room from search screen, or when we received an event that current user left the room – this help us to sync accross different devices.
+This action helps to remove the room from the room list screen. Used when the current user leaves the room from the search screen, or when we receive an event that the current user left the room – this helps us to sync across different devices.
 
 ```javascript
 case 'DELETE_ROOM': {
@@ -646,7 +646,7 @@ case 'DELETE_ROOM': {
 
 ### ADD_MESSAGES
 
-Whenever we send message, got async real-time message, or simply load messages on Chat Detail Screen - we call this action to maintain a proper message list for each known room on room list screen.
+Whenever we send a message, receive an async real-time message, or simply load messages on the Chat Detail Screen - we call this action to maintain a proper message list for each known room on the room list screen.
 
 ```javascript
 case 'ADD_MESSAGES': {
@@ -702,7 +702,7 @@ case 'ADD_MESSAGES': {
 
 ### SET_ROOM_MEMBER_COUNT
 
-This reducer is called whenever we are getting events about membership changes – we will add such events soon when talk about Centrifugo integration.
+This reducer is called whenever we get events about membership changes – we will add such events soon when we talk about Centrifugo integration.
 
 ```javascript
 case 'SET_ROOM_MEMBER_COUNT': {
@@ -744,6 +744,6 @@ For making frontend layout we use flexbox for CSS rules so the app will be fully
 
 ## What we have at this point
 
-Actually, at this point we have an app which provides messenger functionality. 
+Actually, at this point we have an app which provides messenger functionality.
 
-You can use Django admin web UI to create some rooms and interact with them. Users can join/leave rooms, send messages. But to see new messages in room users need to reload a page. Not a good thing for chat app, right? Counters about number of users in particular room are also not updated until page reload. So finally we are ready to integrate the app with Centrifugo.
+You can use Django admin web UI to create some rooms and interact with them. Users can join/leave rooms and send messages. But to see new messages in a room, users need to reload the page. Not a good thing for a chat app, right? Counters about the number of users in a particular room are also not updated until page reload. So finally we are ready to integrate the app with Centrifugo.

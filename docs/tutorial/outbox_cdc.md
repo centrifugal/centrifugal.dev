@@ -5,7 +5,7 @@ sidebar_label: "Broadcast: outbox and CDC"
 title: "Broadcast using transactional outbox and CDC"
 ---
 
-Some of you may notice one potential issue which could prevent event delivery to users when publishing messages to Centrifugo API. Since we do this after a transaction and via a network call (in our case, using HTTP), it means the broadcast API call may return an error.
+Some of you may notice one potential issue that could prevent event delivery to users when publishing messages to Centrifugo API. Since we do this after a transaction and via a network call (in our case, using HTTP), it means the broadcast API call may return an error.
 
 There are real-time applications that can tolerate the loss of real-time messages. In normal conditions, the number of such errors should be small, and in most cases, they can be addressed by adding retries. Moreover, publishing directly over the Centrifugo API usually allows achieving the best delivery latency.
 
@@ -73,7 +73,7 @@ Also, add the following to Centrifugo configuration:
 }
 ```
 
-That's it! Now if you save some model and write an event to outbox table insde transaction – you don't need to worry - an event will be delivered to Centrifugo.
+That's it! Now if you save some model and write an event to the outbox table inside a transaction – you don't need to worry - the event will be delivered to Centrifugo.
 
 But, if you take a look at the configuration above you will see it has option `"partition_poll_interval": "300ms"`. This means the outbox approach may add delay for the real-time message. It's possible to reduce this polling interval – but this would mean increasing number of queries to PostgreSQL database. We can do slightly better.
 
@@ -126,7 +126,7 @@ After doing that restart everything – and enjoy instant event delivery!
 
 Let's also look at another approach - usually known as CDC - Change Data Capture (you can learn more about it from [this post](https://www.confluent.io/learn/change-data-capture/), for example). We will use Kafka Connect with Debezium connector to read updates from PostgreSQL WAL and translate them to Kafka. Then we will use built-in Centrifugo possibility to [consume Kafka topics](../server/consumers.md#kafka-consumer).
 
-The CDC approach with reading WAL has an advantage that in most cases it comes with a very low overhead for the database. In the outbox shown case above we constantly polling PostgreSQL for changes, which may be less effective for the database.
+The CDC approach with reading WAL has the advantage that in most cases it comes with a very low overhead for the database. In the outbox case shown above we constantly poll PostgreSQL for changes, which may be less efficient for the database.
 
 To configure CDC flow we must first configure PostgreSQL to use logical replication. To do this let's update `db` service in `docker-compose.yml`:
 
@@ -205,7 +205,7 @@ connect:
     STATUS_STORAGE_TOPIC: connect_statuses
 ```
 
-Kafka uses Zookeeper, so we added it here too. Next, we need to configure Debezium to use PostgreSQL plugin:
+Kafka uses ZooKeeper, so we added it here too. Next, we need to configure Debezium to use the PostgreSQL plugin:
 
 ```json title="debezium/debezium-config.json"
 {
@@ -264,7 +264,7 @@ connect-config-loader:
     "
 ```
 
-Here we recreate Kafka Connect configuration on every start of Docker compose, in real life you won't do this - you will create configuration once and update it only if needed. But for development we want to apply changes in file automatically without the need to use REST API of Kafka Connect manually.
+Here we recreate the Kafka Connect configuration on every start of Docker Compose; in real life you won't do this - you will create the configuration once and update it only if needed. But for development we want to apply changes in the file automatically without the need to use the REST API of Kafka Connect manually.
 
 Next step here is configure Centrifugo to consume Kafka topic:
 

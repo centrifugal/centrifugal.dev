@@ -13,7 +13,7 @@ cd grand-chat-tutorial
 touch docker-compose.yml
 ```
 
-We will use `docker compose` to build the app. It will include several services at the end. If you are not familiar with Docker and Docker Compose - we recommend to [learn it first](https://gabrieltanner.org/blog/docker-compose/).
+We will use `docker compose` to build the app. It will include several services at the end. If you are not familiar with Docker and Docker Compose - we recommend [learning it first](https://gabrieltanner.org/blog/docker-compose/).
 
 ## Start Django project
 
@@ -48,7 +48,7 @@ cd backend
 python manage.py startapp chat
 ```
 
-This will create `chat` folder with sth like this inside:
+This will create a `chat` folder with something like this inside:
 
 ```bash
 chat/
@@ -167,7 +167,7 @@ CMD ["gunicorn",  "app.wsgi", "--reload", "--access-logfile", "-", \
     "--workers", "2", "--bind", "0.0.0.0:8000"]
 ```
 
-Here we are using `gunicorn` with hot reload here to simplify development, of course you won't do this in production.
+Here we are using `gunicorn` with hot reload to simplify development; of course you won't do this in production.
 
 Now add `backend` service to `docker-compose.yml`:
 
@@ -183,7 +183,7 @@ backend:
       condition: service_healthy
 ```
 
-Note that we pass backend dir to the container, also passing and installing dependencies, as a result we will get Django app served and with hot reload upon source code changes.
+Note that we pass the backend dir to the container, also passing and installing dependencies; as a result we will get the Django app served with hot reload upon source code changes.
 
 ## Creating models
 
@@ -262,7 +262,7 @@ Let's also create an admin user (or better two!):
 docker compose exec backend python manage.py createsuperuser
 ```
 
-At this point we have a Django app with a configured database that has all the required tables for our app core entities. To access the app we will add one more element – Nginx reverse proxy. It's usually optional while developing, but in our case it's super-useful since we are building SPA-application and want to serve both frontend and backend from the same domain. But before moving to Nginx configuration we need to add some views to Django app – for user login/logout, and api for rooms, membership and messages. 
+At this point we have a Django app with a configured database that has all the required tables for our app's core entities. To access the app we will add one more element – Nginx reverse proxy. It's usually optional while developing, but in our case it's super-useful since we are building an SPA application and want to serve both frontend and backend from the same domain. But before moving to Nginx configuration we need to add some views to the Django app – for user login/logout, and an API for rooms, membership, and messages.
 
 ## Adding backend API
 
@@ -339,7 +339,7 @@ def logout_view(request):
 
 ### GET /api/rooms/search/
 
-For rooms search we will simply return all the rooms sorted by name. As mentioned before for the restful layer we work with models using Django Rest framework. This means we need to tell DRF how to serialize models describing `Serializer` class and then we can use serializers in DRF predefined viewsets to create views.
+For room search we will simply return all the rooms sorted by name. As mentioned before, for the RESTful layer we work with models using Django Rest Framework. This means we need to tell DRF how to serialize models by describing a `Serializer` class, and then we can use serializers in DRF predefined viewsets to create views.
 
 ```python title="backend/chat/serializers.py"
 class RoomSearchSerializer(serializers.ModelSerializer):
@@ -531,7 +531,7 @@ Here we remove the current request user from the room.
 
 ### Register urls
 
-After serializers and view written, we just need to add urls to route requests to views:
+After serializers and views are written, we just need to add URLs to route requests to views:
 
 ```python title="backend/chat/urls.py"
 from django.urls import path
@@ -572,8 +572,8 @@ urlpatterns = [
 urlpatterns += staticfiles_urlpatterns()
 ```
 
-So we included all the views we wrote, included chat application urls.
+So we included all the views we wrote, and included chat application URLs.
 
 ### Adding admin models
 
-We also serving Django built-in admin - it will allow us to create some rooms to play with. In the example source code you may find some additional code in `backend/chat/admin.py` which registers models in Django admin. After adding Nginx you will be able to start the app and go to [http://localhost:9000/admin](http://localhost:9000/admin) – and create some rooms. Let's add Nginx now.
+We also serve Django's built-in admin - it will allow us to create some rooms to play with. In the example source code you may find some additional code in `backend/chat/admin.py` which registers models in Django admin. After adding Nginx you will be able to start the app and go to [http://localhost:9000/admin](http://localhost:9000/admin) – and create some rooms. Let's add Nginx now.

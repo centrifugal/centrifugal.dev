@@ -29,11 +29,11 @@ To implement this, we need to extend the Centrifugo `personal` namespace configu
 }
 ```
 
-We set `history_size` and `history_ttl` to some reasonable values, also enebled auto recovery for channels in `personal` namespace. This configuration is enough for recovery to start working in our app - without any changes on the frontend side.
+We set `history_size` and `history_ttl` to some reasonable values, also enabled auto recovery for channels in the `personal` namespace. This configuration is enough for recovery to start working in our app - without any changes on the frontend side.
 
 Now if client temporary looses internet connection and then comes back online – Centrifugo will redeliver client all the publications from last seen publication offset. It's also possible to set initial offset (if known) when creating subscription object. The feature is described in detail in [History and recovery](../server/history_and_recovery.md) chapter.
 
-If client was offline for a long time or there were mode than 300 publications while client was offline Centrifugo understands that it can't recover client's state. In this case Centrifugo sets a special flag to `subscribed` state event context. We can handle it and suggest client to reload the app:
+If the client was offline for a long time or there were more than 300 publications while the client was offline, Centrifugo understands that it can't recover the client's state. In this case Centrifugo sets a special flag in the `subscribed` state event context. We can handle it and suggest the client reload the app:
 
 ```javascript
 sub.on('subscribed', (ctx: SubscribedContext) => {
@@ -43,8 +43,8 @@ sub.on('subscribed', (ctx: SubscribedContext) => {
 })
 ```
 
-So the idea here that in most case Centrifug message history cache will help clients catch up, in some cases though clients still need to load state from scratch from the main database. So that we effectively solve mass reconnect problem.
+So the idea here is that in most cases the Centrifugo message history cache will help clients catch up; in some cases though, clients still need to load state from scratch from the main database. This way we effectively solve the mass reconnect problem.
 
-Also note, that message history cache in Centrifugo Memory Engine used in the example does not survive Centrifugo node restarts – so clients will get `"recovered": false` upon reconnecting after Centrifugo restart. This is where Redis Engine has an advantage – it allows message hostory to survive Centrifugo node restarts.
+Also note that the message history cache in the Centrifugo Memory Engine used in the example does not survive Centrifugo node restarts – so clients will get `"recovered": false` upon reconnecting after a Centrifugo restart. This is where the Redis Engine has an advantage – it allows message history to survive Centrifugo node restarts.
 
 In the next chapter we will discuss one more aspect of reliable message delivery - on the way between backend and Centrifugo.

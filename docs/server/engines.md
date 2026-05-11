@@ -19,7 +19,7 @@ By default, Centrifugo uses a `memory` engine – where all the data is kept in 
 
 With default `memory` engine you can start only one node of Centrifugo, while Redis engine allows running several nodes on different machines for high availability and to scale client connections. In distributed case all Centrifugo nodes will be connected via broker PUB/SUB, will discover each other and deliver publications to the node where active channel subscribers exist – so it's possible to publish message to a channel on any node and it will be automatically delivered to subscriber which can be connected to another Centrifugo node.
 
-Memory engine keeps history and presence data in process memory, so the data is lost upon server restart. Given the ephemeral nature of Centrifugo data – the loss may be totally acceptable. When using Redis Engine the data is kept in Redis (where you can configure the desired persistence properties) instead of Centrifugo node process memory, so channel channel history data won't be lost upon Centrifugo server restart.
+Memory engine keeps history and presence data in process memory, so the data is lost upon server restart. Given the ephemeral nature of Centrifugo data – the loss may be totally acceptable. When using Redis Engine the data is kept in Redis (where you can configure the desired persistence properties) instead of Centrifugo node process memory, so channel history data won't be lost upon Centrifugo server restart.
 
 ## `engine`
 
@@ -367,7 +367,7 @@ This resolves the situation when Redis becoming a bottleneck on a large Centrifu
 
 ![](/img/redis_app_level_sharding.png)
 
-At moment Centrifugo supports a simple comma-based approach to configuring Redis shards. Let's just look at examples.
+At the moment Centrifugo supports a simple comma-based approach to configuring Redis shards. Let's just look at examples.
 
 To start Centrifugo with 2 Redis shards use config like this:
 
@@ -393,7 +393,7 @@ Due to how Redis PUB/SUB works you must not (and it's pretty useless anyway) to 
 
 :::
 
-When sharding enabled Centrifugo will spread channels and history/presence keys over configured Redis instances using a consistent hashing algorithm. At moment we use Jump consistent hash algorithm (see [paper](https://arxiv.org/pdf/1406.2294.pdf) and [implementation](https://github.com/dgryski/go-jump)).
+When sharding enabled Centrifugo will spread channels and history/presence keys over configured Redis instances using a consistent hashing algorithm. At the moment we use Jump consistent hash algorithm (see [paper](https://arxiv.org/pdf/1406.2294.pdf) and [implementation](https://github.com/dgryski/go-jump)).
 
 ### Redis Cluster support
 
@@ -474,7 +474,7 @@ To set a separate broker use config like this:
 
 ### `broker.type`
 
-Allowed options for `broker.type` are `redis` and `nats`.
+Allowed options for `broker.type` are `redis`, `nats`, and `postgres`.
 
 ### `broker.redis`
 
@@ -486,13 +486,17 @@ For Redis broker implementation Centrifugo basically re-uses the same configurat
 {
   "broker": {
     "enabled": true,
-    "type": "redis"
+    "type": "redis",
     "redis": {
       "address": "redis://..."
     }
   }
 }
 ```
+
+### `broker.postgres`
+
+Object. See the [PostgreSQL broker](#postgresql-broker) section below for full configuration and usage details.
 
 ## `presence_manager`
 
@@ -661,7 +665,7 @@ Here is how raw mode may be enabled:
 }
 ```
 
-`channel_replacements` is a `map[string]string` option which allows transforming Centrifugo channel to Nats channel before subscribing and back when consuming a message from Nats. For example, in the example above we can see `channel_replacements` set in a way to transform `chat:index` Centrifugo channel to `chat.index` Nats topic upon subscription. Centrifugo simply replaces all occurences of symbols in `channel_replacements` map to corresponding values.
+`channel_replacements` is a `map[string]string` option which allows transforming Centrifugo channel to Nats channel before subscribing and back when consuming a message from Nats. For example, in the example above we can see `channel_replacements` set in a way to transform `chat:index` Centrifugo channel to `chat.index` Nats topic upon subscription. Centrifugo simply replaces all occurrences of symbols in `channel_replacements` map to corresponding values.
 
 If you publish to Centrifugo API with raw mode enabled – publication payloads will be simply published to Nats subject without any Centrifugo-specific wrapping too.
 
@@ -688,3 +692,195 @@ Allows transforming Centrifugo channel to Nats channel before subscribing and ba
 String, default `""`.
 
 Prefix for channels used by Centrifugo inside Nats when raw mode is on. In raw mode Centrifugo does not use default `broker.nats.prefix` option to be as `raw` as possible by default (i.e. to translate channels 1 to 1).
+
+## PostgreSQL broker
+
+:::caution Experimental
+
+The PostgreSQL broker for stream subscriptions is experimental. The API, configuration options, and SQL function signatures may change based on feedback. Use it in development and staging environments; production use should be accompanied by thorough testing of your specific workload.
+
+:::
+
+The PostgreSQL broker implements the `Broker` interface for [stream subscriptions](/docs/server/channels#stream-subscriptions) using PostgreSQL as the backing store. It provides **transactional publishing** — your application can publish real-time updates inside the same database transaction as your business writes, eliminating the [dual-write problem](https://thorben-janssen.com/dual-writes/). This is the same transactional-publishing capability that the [PostgreSQL map broker](/docs/server/map_subscriptions#postgresql) provides for map subscriptions, now extended to stream subscriptions.
+
+**Key characteristics:**
+
+- **History and recovery** — fully supported. Publications are stored in a partitioned PostgreSQL table and delivered to subscribers via an outbox worker
+- **Transactional publishing** — call `cf_stream_publish()` inside your `BEGIN/COMMIT` to publish atomically with your business writes
+- **No Redis dependency** — PostgreSQL handles both persistence and real-time delivery
+- **Automatic partitioning** — the stream table is partitioned by day with automatic lookahead creation and retention-based cleanup (vacuum-free `DROP TABLE`)
+
+Requires **PostgreSQL 16** or later.
+
+**When to use the PostgreSQL broker** instead of Redis:
+
+- Your publications correspond to database writes (notifications, audit logs, order updates) and you want them atomic with your transaction
+- You want to eliminate Redis as a dependency and use PostgreSQL as the only infrastructure
+- Your throughput is in the low thousands of publishes per second per broker (for higher throughput without transactional guarantees, use Redis)
+
+### PostgreSQL broker quickstart
+
+Start Centrifugo with the PostgreSQL broker:
+
+```json title="config.json"
+{
+  "broker": {
+    "enabled": true,
+    "type": "postgres",
+    "postgres": {
+      "dsn": "postgres://user:pass@localhost:5432/app?sslmode=disable",
+      "use_notify": true
+    }
+  }
+}
+```
+
+Centrifugo automatically creates the required tables and SQL functions on startup.
+
+### Transactional publishing
+
+Your application can call `cf_stream_publish` inside its own transactions:
+
+```sql
+BEGIN;
+  -- Business logic
+  INSERT INTO notifications (user_id, message)
+  VALUES (42, 'Your order has shipped');
+
+  -- Publish to real-time channel (same transaction)
+  SELECT * FROM cf_stream_publish(
+    p_channel := 'notifications:user_42',
+    p_data    := '{"message": "Your order has shipped"}'::jsonb
+  );
+COMMIT;
+```
+
+If the transaction rolls back, the real-time update never happened. The outbox architecture is the same as the [PostgreSQL map broker](/blog/2026/05/14/map-subscriptions-part-2#under-the-hood) — per-shard workers poll the stream table, coordinate via shard locks, and wake via `LISTEN/NOTIFY`.
+
+### `broker.postgres`
+
+Configuration options for the PostgreSQL broker:
+
+#### `broker.postgres.dsn`
+
+String, required. PostgreSQL connection string.
+
+Example: `"postgres://user:pass@localhost:5432/app?sslmode=disable"`
+
+#### `broker.postgres.pool_size`
+
+Integer, default `16`. Maximum number of connections in the primary pool.
+
+#### `broker.postgres.num_shards`
+
+Integer, default `8`. Number of delivery worker shards. Channels are distributed across shards via consistent hashing.
+
+#### `broker.postgres.cleanup_interval`
+
+[Duration](./configuration.md#duration-type), default `"1m"`. How often the cleanup and partition workers tick.
+
+#### `broker.postgres.idempotent_result_ttl`
+
+[Duration](./configuration.md#duration-type), default `"5m"`. TTL for idempotency cache entries.
+
+#### `broker.postgres.binary_data`
+
+Boolean, default `false`. Use `BYTEA` columns instead of `JSONB` for data fields. Set to `true` if your payloads are not valid JSON (e.g. Protobuf).
+
+#### `broker.postgres.table_prefix`
+
+String, default `"cf"`. Namespace prefix for all table and function names. The broker appends `_stream_` (or `_binary_stream_` when `binary_data` is `true`) internally, so the default produces `cf_stream_*` tables and `cf_stream_publish(...)` functions. Use distinct prefixes for multi-tenant deployments sharing one PostgreSQL instance (e.g. `"prod_us_cf"`, `"prod_eu_cf"`).
+
+#### `broker.postgres.stream_retention`
+
+[Duration](./configuration.md#duration-type), default `"24h"`. Safety floor for `HistoryMetaTTL` when neither publish options nor node config sets it. Guarantees every channel meta row eventually expires.
+
+#### `broker.postgres.use_notify`
+
+Boolean, default `false`. Enable PostgreSQL `LISTEN/NOTIFY` for low-latency outbox wakeup. When `false`, the outbox worker polls on `outbox.poll_interval` (default 100ms). When `true`, delivery latency drops to low single-digit milliseconds.
+
+:::note LISTEN/NOTIFY and connection poolers
+
+`LISTEN/NOTIFY` requires a persistent, dedicated connection to PostgreSQL. PGBouncer in **transaction pooling mode** (the most common setup) is incompatible with it — the pooler may route the `LISTEN` command and subsequent notifications to different backend connections. Other poolers with similar limitations: **RDS Proxy** (not supported at all), **PgCat**. Supavisor and PgBouncer 1.21+ (with experimental `listen_notify` option) do support it.
+
+When `dsn` points at an incompatible pooler, set `notify_dsn` to a direct PostgreSQL URL. Centrifugo will use that DSN exclusively for the single LISTEN connection while the main pool continues to go through the pooler. Alternatively, set `use_notify: false` and rely on polling.
+
+:::
+
+#### `broker.postgres.notify_dsn`
+
+String, default `""`. Optional separate DSN used exclusively for the `LISTEN` connection when `use_notify` is `true`. Set this to a **direct PostgreSQL URL** (bypassing PGBouncer or other poolers) when `dsn` points at a connection pooler that is incompatible with LISTEN/NOTIFY. If empty, the primary DSN pool is used.
+
+#### `broker.postgres.skip_schema_init`
+
+Boolean, default `false`. Skip automatic schema creation on startup. When `true`, the schema must be managed externally.
+
+#### `broker.postgres.partition_lookahead_days`
+
+Integer, default `2`. Number of future daily partitions to pre-create. Must be > 0 to avoid write failures at the day boundary. A value of 2 gives a 48-hour safety window if the lookahead worker stalls.
+
+#### `broker.postgres.partition_retention_days`
+
+Integer, default `7`. Partitions older than this are dropped automatically via `DROP TABLE` — instant, vacuum-free cleanup. Set to `0` for unlimited retention (old partitions accumulate but can be dropped manually).
+
+#### `broker.postgres.fine_grained_history_cleanup`
+
+Boolean, default `false`. Enables an opt-in chunked `DELETE` pass that removes history rows past their channel's `history_ttl`, instead of waiting for partition retention. Use for tight-storage deployments where `HistoryTTL` is much smaller than `partition_retention_days`.
+
+#### `broker.postgres.outbox.poll_interval`
+
+[Duration](./configuration.md#duration-type), default `"100ms"`. How often to poll for new history rows when idle.
+
+#### `broker.postgres.outbox.batch_size`
+
+Integer, default `1000`. Maximum number of rows to process per outbox batch.
+
+### PostgreSQL broker SQL functions
+
+Centrifugo creates these SQL functions when the schema is initialized:
+
+| Function | Purpose |
+|---|---|
+| `cf_stream_publish(...)` | Atomic publish: shard lock → meta UPSERT → history INSERT → NOTIFY |
+| `cf_stream_publish_strict(...)` | Same as publish, but raises an exception on suppression |
+| `cf_stream_publish_join(...)` | Insert a join event (kind=1) |
+| `cf_stream_publish_leave(...)` | Insert a leave event (kind=2) |
+| `cf_stream_remove_history(...)` | Remove all publications for a channel |
+| `cf_stream_top_position(...)` | Get current stream position (offset + epoch) for the external-state pattern |
+
+When a custom `table_prefix` is configured, all table and function names use that prefix instead of the default `cf` — for example, `myapp_stream_publish(...)`, `myapp_stream_history`, etc. When `binary_data` is enabled, the `_binary_stream_` variant is used (e.g. `cf_binary_stream_publish`).
+
+The publish function supports version-based suppression (via `p_version` and `p_version_epoch` parameters) and idempotency (via `p_idempotency_key`). See the [transactional publishing blog post](/blog/2026/05/15/pg-stream-broker-benefits) for examples.
+
+### Differences from the Redis broker
+
+Unlike the Redis broker, the PostgreSQL broker **always tracks stream position** (offset and epoch) for every publication — even when `HistoryTTL` and `HistorySize` are not configured on the channel. This is because the PG broker's live delivery mechanism is the stream table itself: the outbox worker polls it for new rows. Every publish must write to the stream table and increment the offset, otherwise live delivery wouldn't work.
+
+In contrast, the Redis broker uses separate PUB/SUB and Stream mechanisms. When `HistoryTTL`/`HistorySize` are not set, Redis publishes via PUB/SUB only (fire-and-forget, no offset tracking). With the PG broker, this distinction doesn't exist — the stream table serves both live delivery and history.
+
+**Other differences to be aware of:**
+
+- **Meta TTL not refreshed on reads.** The Redis and Memory brokers refresh the channel metadata TTL when `History()` is called — so a channel with active readers but no publishers stays alive. The PostgreSQL broker does not: meta TTL is only set/refreshed on publish. A channel that stops receiving publishes will eventually have its meta expire, even if clients are still reading history.
+- **Polling-based delivery, not PUB/SUB.** Each Centrifugo node polls the PostgreSQL stream table independently. With N nodes, that's N× the read load on PostgreSQL. The Redis broker uses native PUB/SUB where the message is delivered once and fanned out. For multi-node PG setups, [Centrifugo PRO's broker fan-out](../pro/map_subscriptions.md#broker-fan-out) reduces this to one poller per shard.
+- **Partition-based cleanup.** Data is cleaned up by dropping entire daily partitions (controlled by `partition_retention_days`), not per-key TTL. Individual publications can't expire independently — the whole partition is dropped or retained. The optional `fine_grained_history_cleanup` adds per-channel row deletion within partitions for tighter storage control.
+- **`p_history_ttl` should not exceed `partition_retention_days`** — once a partition is dropped, the rows are gone regardless of the TTL. For example, with the default `partition_retention_days: 7`, setting `history_ttl` to 30 days would promise more history than the partitions retain.
+
+**When calling SQL functions directly:**
+
+- `cf_stream_publish(p_channel, p_data)` without `p_history_ttl`/`p_history_size` uses built-in defaults (`history_ttl = 1 minute`, `history_size = 100`). These defaults ensure History() and recovery work correctly out of the box. When publishing via the Centrifugo API, channel namespace config values override these defaults automatically.
+- You can pass `p_history_ttl` and `p_history_size` explicitly to override the defaults. Values are preserved across publishes via `COALESCE` — once set on a channel, subsequent publishes without these parameters keep the existing values.
+
+### PostgreSQL broker scaling
+
+[Centrifugo PRO](../pro/overview.md) extends the PostgreSQL stream broker with the same scaling features available for the [PostgreSQL map broker](../pro/map_subscriptions.md#postgresql-enhancements):
+
+- [**Read replicas**](../pro/map_subscriptions.md#read-replicas) — distributes read load across PostgreSQL replicas
+- [**Broker fan-out**](../pro/map_subscriptions.md#broker-fan-out) — only one node per shard polls PostgreSQL, then publishes updates through Redis or NATS. Reduces PostgreSQL load proportionally to cluster size
+
+Configuration follows the same pattern — see the [PostgreSQL map broker PRO docs](../pro/map_subscriptions.md#postgresql-enhancements) for examples.
+
+:::tip Using PostgreSQL broker alongside Redis
+
+In Centrifugo OSS, the broker setting is global — all channels use the same backend. If you already run Redis and want to use the PostgreSQL broker for specific channels (e.g. order updates that benefit from transactional publishing), [Centrifugo PRO's per-namespace engines](../pro/scalability.md#per-namespace-engines) let you assign the PostgreSQL broker to individual namespaces while keeping Redis as the default for everything else.
+
+:::

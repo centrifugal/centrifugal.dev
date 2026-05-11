@@ -240,6 +240,16 @@ String. Default: `""`.
 
 Optional name of LISTEN/NOTIFY channel to trigger consuming upon data added to outbox partition.
 
+:::tip PGBouncer compatibility
+PostgreSQL LISTEN/NOTIFY requires a persistent, dedicated connection. PGBouncer in **transaction pooling mode** (the most common setup) is incompatible with this — it may route the LISTEN command and subsequent notifications to different backend connections. If your `dsn` points at PGBouncer, set `partition_notification_dsn` to a direct PostgreSQL URL for the LISTEN connection. If `partition_notification_dsn` is not set, the primary pool is used (fine for direct PostgreSQL connections).
+:::
+
+### `consumers[].postgresql.partition_notification_dsn`
+
+String. Default: `""`.
+
+Optional separate DSN used exclusively for the LISTEN connection when `partition_notification_channel` is set. Use this to provide a **direct PostgreSQL URL** (bypassing PGBouncer) when the primary `dsn` points at a PGBouncer endpoint. PGBouncer transaction pooling mode is incompatible with LISTEN/NOTIFY. If empty, the primary DSN pool is used.
+
 ### `consumers[].postgresql.tls`
 
 [TLS object](./configuration.md#tls-config-object). By default, no TLS is used.

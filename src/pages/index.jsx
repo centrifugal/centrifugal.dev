@@ -6,8 +6,8 @@ import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import styles from "./styles.module.css";
-import Logo from "./components/logo";
 import { useColorMode } from '@docusaurus/theme-common';
+import Hero from '../components/Hero';
 import Highlight from './components/Highlight';
 import TitleWithCat from './components/TitleWithCat';
 import Badoo from "./components/logos/Badoo";
@@ -25,9 +25,12 @@ import Altamira from "./components/logos/Altamira";
 import TestimonialsCarousel from '../components/TestimonialsCarousel';
 import ProBanner from '../components/ProBanner';
 import ImageRotator from '../components/ImageRotator';
+import ProCtaBanner from '../components/ProCtaBanner';
+import RecentBlogPosts from '../components/RecentBlogPosts';
+import SubscriptionTypes from '../components/SubscriptionTypes';
 import GitHubStarButton from '../components/GitHubStarButton';
 import QuickStart, { QuickStartDescription } from '../components/QuickStart';
-import { ChatIcon, DashboardIcon, GameIcon, CollaborationIcon, FinancialIcon, NotificationIcon, IoTIcon, AIIcon } from '../components/UseCaseIcons';
+import { ChatIcon, DashboardIcon, GameIcon, DataSyncIcon, FinancialIcon, LiveFeedIcon, IoTIcon, AIIcon } from '../components/UseCaseIcons';
 
 function Feature({ imageUrl, title, children }) {
   const imgUrl = useBaseUrl(imageUrl);
@@ -47,33 +50,30 @@ function Feature({ imageUrl, title, children }) {
 }
 
 function Header() {
-  const isDarkTheme = useColorMode().colorMode == 'dark';
+  const isDarkTheme = useColorMode().colorMode === 'dark';
   return (
-    <header id="hero" className={clsx("hero hero--primary", styles.heroBanner)}>
-      <Logo isDarkTheme={isDarkTheme} />
-      <div className="container" style={{ "zIndex": 1, pointerEvents: "none" }}>
-        <div className={styles.mainTitle}>
-          <TitleWithCat isDarkTheme={isDarkTheme} />
-        </div>
-        <div className={styles.subTitle}>
-          Wash away WebSocket scalability issues
-        </div>
-        <div className={styles.subSubTitle}>
-          Reliable real-time messaging for any stack. Spin up once and forever.
-        </div>
-        <div className={styles.buttons}>
-          <Link
-            className={clsx(
-              "button button--outline button--secondary button--lg"
-            )}
-            to={useBaseUrl("docs/getting-started/introduction")}
-          >
-            GET STARTED
-          </Link>
-          <GitHubStarButton />
-        </div>
+    <Hero>
+      <div className={styles.mainTitle}>
+        <TitleWithCat isDarkTheme={isDarkTheme} />
       </div>
-    </header>
+      <div className={styles.subTitle}>
+        Wash away realtime complexity
+      </div>
+      <div className={styles.subSubTitle}>
+        Scalable <span className="text-gradient text-gradient-hero">realtime messaging</span> and <span className="text-gradient text-gradient-hero">data sync</span> for any stack. Spin up once and forever.
+      </div>
+      <div className={styles.buttons}>
+        <Link
+          className={clsx(
+            "button button--outline button--secondary button--lg"
+          )}
+          to={useBaseUrl("docs/getting-started/introduction")}
+        >
+          GET STARTED
+        </Link>
+        <GitHubStarButton />
+      </div>
+    </Hero>
   );
 }
 
@@ -83,7 +83,7 @@ function Home() {
   return (
     <Layout
       title={tagline}
-      description="Centrifugo is an open source server designed to help building interactive real-time messaging applications. Think chats, live comments, multiplayer games, streaming metrics etc. Centrifugo provides a variety of real-time transports, scales well and integrates with any application."
+      description="Centrifugo is an open source realtime messaging and data sync platform. Build chats, live dashboards, multiplayer games, collaborative tools, and more. Provides WebSocket, SSE, HTTP-streaming, WebTransport transports, scales well and integrates with any application."
     >
       <Head>
         <script type="application/ld+json">
@@ -95,7 +95,7 @@ function Home() {
                 "name": "Centrifugal Labs LTD",
                 "url": "https://centrifugal.dev",
                 "logo": "https://centrifugal.dev/img/logo.svg",
-                "description": "Centrifugal Labs powers real-time magic. The flagship product is Centrifugo — a self-hosted real-time messaging server, stack-agnostic and integrates with any frontend or backend technology.",
+                "description": "Centrifugal Labs powers realtime magic. The flagship product is Centrifugo — a self-hosted realtime messaging and data sync platform, stack-agnostic and integrates with any frontend or backend technology.",
                 "sameAs": [
                   "https://github.com/centrifugal",
                   "https://twitter.com/centrifugalabs",
@@ -108,7 +108,7 @@ function Home() {
                 "url": "https://centrifugal.dev",
                 "applicationCategory": "DeveloperApplication",
                 "operatingSystem": "Linux, macOS, Windows, Docker, Kubernetes",
-                "description": "Self-hosted real-time messaging server that blasts messages to online users instantly via WebSocket, HTTP-streaming, SSE, WebTransport, or gRPC. Perfect for chats, live updates, streaming AI/LLM responses, multiplayer games, and dashboards. Channel-based PUB/SUB with stream recovery, presence, delta compression, flexible auth, and great observability. Scales to millions of connections.",
+                "description": "Self-hosted realtime messaging and data sync platform. Delivers messages instantly via WebSocket, HTTP-streaming, SSE, WebTransport, or gRPC. Synchronizes key-value state across clients with transactional consistency. Perfect for chats, live updates, AI streaming, multiplayer games, dashboards, and collaborative tools. Scales to millions of connections.",
                 "offers": {
                   "@type": "Offer",
                   "price": "0",
@@ -123,9 +123,11 @@ function Home() {
           })}
         </script>
       </Head>
-      <Header />
-      <ProBanner />
-      <main>
+      <div className={styles.landingTop}>
+        <div className={styles.landingBackdrop} aria-hidden="true" />
+        <Header />
+        <ProBanner />
+        <main>
         <section className={clsx("logos-wrapper", styles.logos)}>
           <div className="container">
             <div className={styles.logosHeader}>
@@ -191,7 +193,7 @@ function Home() {
               <Feature title="Seamless Integration" imageUrl="img/feature_integration.png">
                 Centrifugo is a self-hosted service which handles connections over various <a href="/docs/transports/overview">transports</a> and provides a simple <a href="/docs/server/server_api">publishing API</a>.
                 Centrifugo nicely integrates with any application &mdash; no changes in
-                the existing app architecture required to introduce real-time updates.
+                the existing app architecture required to introduce realtime updates.
               </Feature>
               <Feature title="Great Performance" imageUrl="img/feature_performance.png">
                 Centrifugo is written in Go language and includes some smart optimizations.
@@ -213,7 +215,7 @@ function Home() {
               </Feature>
               <Feature title="Centrifugo PRO" imageUrl="img/feature_pro.png">
                 <a href="/pro">Centrifugo PRO</a> offers great benefits for corporate and enterprise environments by providing unique features on top of the OSS version: analytics
-                with ClickHouse, real-time tracing, performance optimizations, push notification API, SSO integrations for web UI, etc.
+                with ClickHouse, realtime tracing, performance optimizations, push notification API, SSO integrations for web UI, etc.
               </Feature>
             </div>
           </div>
@@ -224,71 +226,24 @@ function Home() {
           }
           reversed
           isDark
-          title="What is real-time messaging?"
+          title="Realtime messaging & data sync"
           text={
             <>
               <p>
-                Real-time messaging is used to create interactive applications where events
-                are delivered to online users with minimal delay.
+                Realtime messaging delivers events to online users with minimal delay. Chats, live comments, multiplayer games, AI streaming responses &mdash; all built on top of a realtime messaging layer.
               </p>
               <p>
-                Chats apps, live comments, multiplayer games, real-time data visualizations, collaborative tools, AI streaming responses, etc. can all be built on top of a real-time messaging system.
+                Data sync allows keeping state synchronized across clients in realtime providing eventual consistency with your database.
               </p>
               <p>
-                Centrifugo is a user facing <b>PUB/SUB</b> server that handles persistent connections over various real-time transports &mdash; <b>WebSocket</b>, HTTP-streaming, SSE (Server-Sent Events), WebTransport, GRPC.
+                Centrifugo handles persistent connections over <b>WebSocket</b>, HTTP-streaming, SSE, WebTransport, and gRPC &mdash; providing both <b>PUB/SUB messaging</b> and <b>state synchronization</b> primitives.
               </p>
             </>
           }
         />
-        <section className={styles.useCases}>
-          <div className="container">
-            <div className={styles.useCasesGrid}>
-              <div className={styles.useCaseItem}>
-                <div className={styles.useCaseIcon}><ChatIcon /></div>
-                <h3>Chat & Messaging</h3>
-                <p>Build real-time chat applications, live comments, and instant messaging systems</p>
-              </div>
-              <div className={styles.useCaseItem}>
-                <div className={styles.useCaseIcon}><DashboardIcon /></div>
-                <h3>Live Dashboards</h3>
-                <p>Stream metrics, analytics, and telemetry data for real-time visualization</p>
-              </div>
-              <div className={styles.useCaseItem}>
-                <div className={styles.useCaseIcon}><GameIcon /></div>
-                <h3>Multiplayer Games</h3>
-                <p>Synchronize game state and player actions in real-time gaming experiences</p>
-              </div>
-              <div className={styles.useCaseItem}>
-                <div className={styles.useCaseIcon}><CollaborationIcon /></div>
-                <h3>Collaboration Tools</h3>
-                <p>Enable co-editing, shared workspaces, and team coordination features</p>
-              </div>
-              <div className={styles.useCaseItem}>
-                <div className={styles.useCaseIcon}><FinancialIcon /></div>
-                <h3>Financial Data</h3>
-                <p>Deliver real-time stock prices, trading updates, and market information</p>
-              </div>
-              <div className={styles.useCaseItem}>
-                <div className={styles.useCaseIcon}><NotificationIcon /></div>
-                <h3>Notifications</h3>
-                <p>Push instant alerts, updates, and event notifications to connected users</p>
-              </div>
-              <div className={styles.useCaseItem}>
-                <div className={styles.useCaseIcon}><IoTIcon /></div>
-                <h3>IoT & Tracking</h3>
-                <p>Track vehicles, devices, and sensor data with live location updates</p>
-              </div>
-              <div className={styles.useCaseItem}>
-                <div className={styles.useCaseIcon}><AIIcon /></div>
-                <h3>AI Streaming</h3>
-                <p>Stream AI model responses and live generation results to users</p>
-              </div>
-            </div>
-          </div>
-        </section>        
         < Highlight
           img={
-            <img src="/img/broadcast.svg" alt="Broadcast illustration" style={{ backgroundColor: '#17171B', borderRadius: '10px' }} />
+            <img src="/img/broadcast.svg" alt="Broadcast illustration" className={styles.broadcastImg} />
           }
           title="Efficient message broadcast"
           text={
@@ -297,7 +252,7 @@ function Home() {
                 Centrifugo excels at broadcasting messages to many subscribers simultaneously. The efficient client protocol (JSON or binary Protobuf) enables high-throughput messaging at scale.
               </p>
               <p>
-                The design of Centrifugo is optimized for scenarios where a single message needs to be sent to thousands or even millions of clients, making it ideal for real-time applications that require instant updates to large audiences.
+                The design of Centrifugo is optimized for scenarios where a single message needs to be sent to thousands or even millions of clients, making it ideal for realtime applications that require instant updates to large audiences.
               </p>
               <div className={styles.buttons}>
                 <Link
@@ -313,6 +268,52 @@ function Home() {
             </>
           }
         />
+        <section className={styles.useCases}>
+          <div className="container">
+            <div className={styles.useCasesGrid}>
+              <div className={styles.useCaseItem}>
+                <div className={styles.useCaseIcon}><ChatIcon /></div>
+                <h3>Chat & Messaging</h3>
+                <p>Build realtime chat applications, live comments, and instant messaging systems</p>
+              </div>
+              <div className={styles.useCaseItem}>
+                <div className={styles.useCaseIcon}><DashboardIcon /></div>
+                <h3>Live Dashboards</h3>
+                <p>Stream metrics, analytics, and telemetry data for realtime visualization</p>
+              </div>
+              <div className={styles.useCaseItem}>
+                <div className={styles.useCaseIcon}><GameIcon /></div>
+                <h3>Multiplayer Games</h3>
+                <p>Synchronize game state and player actions in realtime gaming experiences</p>
+              </div>
+              <div className={styles.useCaseItem}>
+                <div className={styles.useCaseIcon}><DataSyncIcon /></div>
+                <h3>Data Sync</h3>
+                <p>Synchronize key-value state across clients with transactional consistency</p>
+              </div>
+              <div className={styles.useCaseItem}>
+                <div className={styles.useCaseIcon}><FinancialIcon /></div>
+                <h3>Financial Data</h3>
+                <p>Deliver realtime stock prices, trading updates, and market information</p>
+              </div>
+              <div className={styles.useCaseItem}>
+                <div className={styles.useCaseIcon}><LiveFeedIcon /></div>
+                <h3>Live Data Feeds</h3>
+                <p>Poll backend once, fan out changes to thousands of clients automatically</p>
+              </div>
+              <div className={styles.useCaseItem}>
+                <div className={styles.useCaseIcon}><IoTIcon /></div>
+                <h3>IoT & Tracking</h3>
+                <p>Track vehicles, devices, and sensor data with live location updates</p>
+              </div>
+              <div className={styles.useCaseItem}>
+                <div className={styles.useCaseIcon}><AIIcon /></div>
+                <h3>AI Streaming</h3>
+                <p>Stream AI model responses and live generation results to users</p>
+              </div>
+            </div>
+          </div>
+        </section>
         <TestimonialsCarousel />
         < Highlight
           img={
@@ -330,7 +331,7 @@ function Home() {
           text={
             <>
               <p>
-                Here is the real-time telemetry streamed from the Assetto Corsa racing simulator to the Grafana dashboard with a help of our WebSocket technologies.
+                Here is the realtime telemetry streamed from the Assetto Corsa racing simulator to the Grafana dashboard with a help of our WebSocket technologies.
               </p>
               <p>This demonstrates that you can stream <b>60Hz</b> data towards client connections and thus provide instant visual feedback on the state of the system.</p>
               <div className={styles.buttons}>
@@ -368,7 +369,7 @@ function Home() {
               <p>
                 Straightforward with Centrifugo! Even though your backend does not support concurrency. See the tutorial where we build a beautiful messenger app and go beyond usually shown basics.
               </p>
-              <p>Centrifugo is a versatile real-time component – it can be used to build various types of real-time applications, not just messengers.</p>
+              <p>Centrifugo is a versatile realtime component – it can be used to build various types of realtime applications, not just messengers.</p>
               <div className={styles.buttons}>
                 <Link
                   className={clsx(
@@ -382,33 +383,11 @@ function Home() {
               </div>
             </>
           }
-        />        
-        < Highlight
-          img={
-            <ImageRotator />
-          }
-          title="Are you Enterprise?"
-          reversed
-          text={
-            <>
-              <p>
-                Centrifugal Labs offers a PRO version of Centrifugo that includes a set of unique features, additional APIs, and enhanced performance. Ever dreamed about a self-hosted real-time messaging system combined with a push notification system? Want to benefit from analytics of real-time connections and subscriptions? Centrifugo PRO makes this all possible.
-              </p>
-              <div className={styles.buttons}>
-                <Link
-                  className={clsx(
-                    "button button--outline button--secondary button--lg",
-                    styles.getStarted
-                  )}
-                  to={useBaseUrl("/pro")}
-                >
-                  More about Centrifugo PRO
-                </Link>
-              </div>
-            </>
-          }
         />
-      </main >
+        <RecentBlogPosts />
+        <ProCtaBanner />
+        </main >
+      </div>
     </Layout >
   );
 }

@@ -9,8 +9,6 @@ image: /img/v4_thumb.jpg
 hide_table_of_contents: false
 ---
 
-![Centrifuge](/img/v4.jpg)
-
 Today we are excited to announce the next generation of Centrifugo – Centrifugo v4. The release takes Centrifugo to the next level in terms of client protocol performance, WebSocket fallback simplicity, SDK ecosystem and channel security model. It also comes with a couple of cutting-edge technologies to experiment with such as HTTP/3 and WebTransport.
 
 <!--truncate-->

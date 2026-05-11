@@ -10,11 +10,11 @@ The situation is different when we are talking about client real-time API.
 
 In order to configure which client (i.e. connection established using one of supported bidirectional real-time transports) can subscribe to channels and call publish, history and presence real-time APIs Centrifugo provides several ways to configure the desired behavior.
 
-Let's start from looking at Centrifugo subscribe permission model.
+Let's start by looking at the Centrifugo subscribe permission model.
 
 ### Subscribe permission model
 
-By default, client's attempt to subscribe on a channel will be rejected by a server with `103: permission denied` error. There are several approaches how to control channel subscribe permissions:
+By default, a client's attempt to subscribe to a channel will be rejected by the server with a `103: permission denied` error. There are several approaches to controlling channel subscribe permissions:
 
 * [Provide subscription token](#provide-subscription-token)
 * [Configure subscribe proxy](#configure-subscribe-proxy)
@@ -29,7 +29,7 @@ Below, we are describing those in detail.
 
 A client can provide a subscription token in subscribe request. See [the format of the token](channel_token_auth.md).
 
-If client provides a valid token then subscription will be accepted. In Centrifugo PRO subscription token can additionally grant `publish`, `history` and `presence` permissions to a client.
+If a client provides a valid token then the subscription will be accepted. In Centrifugo PRO, a subscription token can additionally grant `publish`, `history` and `presence` permissions to a client.
 
 :::caution
 
@@ -39,13 +39,13 @@ For namespaces with `allow_subscribe_for_client` channel option ON Centrifugo do
 
 #### Configure subscribe proxy
 
-If client subscribes on a namespace with configured subscribe proxy then depending on proxy response subscription will be accepted or not.
+If a client subscribes to a namespace with a configured subscribe proxy, then depending on the proxy response the subscription will be accepted or not.
 
-If a namespace has configured subscribe proxy, but user came with a token – then subscribe proxy is not used, we are relying on token in this case. If a namespace has subscribe proxy, but user subscribes on a user-limited channel – then subscribe proxy is not used also.
+If a namespace has a configured subscribe proxy, but the user came with a token – then the subscribe proxy is not used; we rely on the token in this case. If a namespace has a subscribe proxy, but the user subscribes to a user-limited channel – then the subscribe proxy is not used either.
 
 #### Use user-limited channels
 
-If client subscribes on a user-limited channel and there is a user ID match then subscription will be accepted.
+If a client subscribes to a user-limited channel and there is a user ID match, then the subscription will be accepted.
 
 :::caution
 
@@ -85,7 +85,7 @@ In idiomatic Centrifugo use case data should be published to channels from the a
 
 :::
 
-By default, client's attempt to publish data into a channel will be rejected by a server with `103: permission denied` error. There are several approaches how to control channel publish permissions:
+By default, a client's attempt to publish data into a channel will be rejected by the server with a `103: permission denied` error. There are several approaches to controlling channel publish permissions:
 
 * [Configure publish proxy](#configure-publish-proxy)
 * [Use allow_publish_for_subscriber namespace option](#use-allow_publish_for_subscriber-namespace-option)
@@ -105,7 +105,7 @@ By default, client's attempt to publish data into a channel will be rejected by 
 
 #### Configure publish proxy
 
-If client publishes to a namespace with configured publish proxy then depending on proxy response publication will be accepted or not.
+If a client publishes to a namespace with a configured publish proxy, then depending on the proxy response the publication will be accepted or not.
 
 Configured publish proxy always used??? (what if user has permission in token or allow_publish_for_client?)
 
@@ -135,7 +135,7 @@ Subscribe proxy can return capability object to allow subscriber publish to chan
 
 ### History permission model
 
-By default, client's attempt to call history from a channel (with history retention configured) will be rejected by a server with `103: permission denied` error. There are several approaches how to control channel history permissions.
+By default, a client's attempt to call history from a channel (with history retention configured) will be rejected by the server with a `103: permission denied` error. There are several approaches to controlling channel history permissions.
 
 #### Use allow_history_for_subscriber namespace option
 
@@ -171,7 +171,7 @@ Subscribe proxy can return capability object to allow subscriber call history fr
 
 ### Presence permission model
 
-By default, client's attempt to call presence from a channel (with channel presence configured) will be rejected by a server with `103: permission denied` error. There are several approaches how to control channel presence permissions.
+By default, a client's attempt to call presence from a channel (with channel presence configured) will be rejected by the server with a `103: permission denied` error. There are several approaches to controlling channel presence permissions.
 
 #### Presence capability in subscribe proxy response
 

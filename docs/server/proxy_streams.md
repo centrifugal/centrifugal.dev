@@ -7,7 +7,7 @@ title: Proxy subscription streams
 
 :::caution Experimental
 
-This is an experimental extension of Centrifugo [proxy](./proxy.md). We appreciate your feedback to make sure it's useful and solves real-world problems before marking it as stable and commit to the API.
+This is an experimental extension of Centrifugo [proxy](./proxy.md). We appreciate your feedback to make sure it's useful and solves real-world problems before marking it as stable and committing to the API.
 
 :::
 
@@ -21,7 +21,7 @@ In this case Centrifugo plays a role of WebSocket-to-GRPC streaming proxy – ke
 
 Our bidirectional WebSocket fallbacks (HTTP-streaming and SSE) and experimental WebTransport work with proxy subscription streams too. So it's possible to say that Centrifugo may be also Webtransport-to-GRPC proxy or SSE-to-GRPC proxy.
 
-Subscription streams allow achiving functionality similar to what [Websocketd](https://github.com/joewalnes/websocketd) provides but over the network.
+Subscription streams allow achieving functionality similar to what [Websocketd](https://github.com/joewalnes/websocketd) provides but over the network.
 
 ### Scalability concerns
 
@@ -53,7 +53,7 @@ Let's describe a real-life use case. Say you have [Loki](https://grafana.com/oss
 
 Client can provide custom data upon subscribing to a channel which makes it possible to pass query filters from the frontend app to the backend. In the example with Loki above this may be a LogQL query.
 
-In case of proxy subscription streams all the client authentication may be delegated to common Centrifugo mechanisms, so when the channel stream is established you know the ID of user (obtained by Centrifugo from [JWT auth](./authentication.md) process or over [connect proxy](./proxy.md#connect-proxy)). You can additionally check channel permissions at the moment of stream establishement.
+In case of proxy subscription streams all the client authentication may be delegated to common Centrifugo mechanisms, so when the channel stream is established you know the ID of user (obtained by Centrifugo from [JWT auth](./authentication.md) process or over [connect proxy](./proxy.md#connect-proxy)). You can additionally check channel permissions at the moment of stream establishment.
 
 As soon as client unsubscribes from the channel – Centrifugo closes the unidirectional GRPC stream – so your backend will notice that. If client disconnects – stream is closed also.
 
@@ -207,7 +207,7 @@ Note we have increased `grpc.MaxConcurrentStreams` for server to handle more sim
 
 :::
 
-Centrifugo has some rules about messages in streams. Upon stream establishement Centrifugo expects backend to send first message from a stream - this is a `StreamSubscribeResponse` with `SubscribeResponse` in it. Centrifugo waits for this message before replying to the client's subscription command. This way we can communicate initial state with a client and make sure streaming is properly established with all permission checks passed. After sending initial message you can send events (publications) as they appear in your system.
+Centrifugo has some rules about messages in streams. Upon stream establishment, Centrifugo expects the backend to send the first message from a stream — this is a `StreamSubscribeResponse` with `SubscribeResponse` in it. Centrifugo waits for this message before replying to the client's subscription command. This way we can communicate the initial state with a client and make sure streaming is properly established with all permission checks passed. After sending the initial message you can send events (publications) as they appear in your system.
 
 Now everything should be ready to test it out from the client side: just subscribe to a channel where stream proxy is on with our SDK – and you will see your stream handler called and data streamed from it to a client. For example, with our Javascript SDK:
 
@@ -227,7 +227,7 @@ const sub = client.newSubscription('streams:123e4567-e89b-12d3-a456-426614174000
 sub.subscribe();
 ```
 
-Again, while we are still looking for a proper semantics of subscription streams we recommend using unique channel names for all on-demand streams you are establishing.
+Again, while we are still looking for a proper semantics of subscription streams, we recommend using unique channel names for all on-demand streams you are establishing.
 
 ### Bidirectional subscription streams
 

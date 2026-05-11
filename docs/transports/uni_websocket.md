@@ -5,7 +5,7 @@ title: Unidirectional WebSocket
 sidebar_label: WebSocket
 ---
 
-While WebSocket is bidirectional transport in its nature Centrifugo provides its unidirectional version too to give developers more choice in transports when using the unidirectional approach.
+While WebSocket is a bidirectional transport in its nature, Centrifugo provides its unidirectional version too to give developers more choice in transports when using the unidirectional approach.
 
 When using unidirectional WebSocket Centrifugo uses both native frame ping/pong mechanism and periodic Centrifugo protocol specific application-level pings. This combination allows to detect broken connections faster and still have server ping accessible for application-level logic.
 
@@ -29,7 +29,7 @@ Default unidirectional WebSocket connection endpoint in Centrifugo is:
 
 ## Send connect request
 
-Once connection established you should pass [ConnectRequest](./uni_client_protocol.md#connectrequest) as first WebSocket message to server. This allows Centrifugo to authenticate the connection.
+Once the connection is established you should pass [ConnectRequest](./uni_client_protocol.md#connectrequest) as the first WebSocket message to the server. This allows Centrifugo to authenticate the connection.
 
 Alternatively, since Centrifugo v6.3.0 you can use `cf_connect` URL query parameter to pass connection command in the URL itself. This way you can connect to unidirectional WebSocket endpoint without sending the first connect message from client to server. This works similar to what [Centrifugo has for unidirectional SSE](./uni_sse.md#send-connect-request) transport.
 
@@ -67,7 +67,7 @@ Maximum allowed size of a first connect message received from WebSocket connecti
 
 Boolean. Default: `false`. New in Centrifugo v6.0.3
 
-Once the option enabled, Centrifugo can join different messages going through unidirectional WebSocket into a single websocket frame. The messages are joined using the same approach as Centrifugo uses for bidirectional protocol. This means that for JSON case messages are joined with new line.
+Once the option is enabled, Centrifugo can join different messages going through unidirectional WebSocket into a single WebSocket frame. The messages are joined using the same approach as Centrifugo uses for bidirectional protocol. This means that for JSON case messages are joined with new line.
 
 :::caution
 
@@ -91,7 +91,7 @@ Default: `false`. Available since Centrifugo v6.5.1
 
 Default: `false`. Available since Centrifugo v6.5.1
 
-`disable_disconnect_push` boolean option disables sending disconnect push messages to clients. It's sent by default to make unidirectional transports similar, but since unidirectional WebSocket transport transport also sends close frame to the client with the same code/reason – some users may want to disable disconnect push to avoid ambiguity.
+`disable_disconnect_push` boolean option disables sending disconnect push messages to clients. It's sent by default to make unidirectional transports consistent, but since the unidirectional WebSocket transport also sends a close frame to the client with the same code/reason – some users may want to disable disconnect push to avoid ambiguity.
 
 ## WebSocket over HTTP/2 (RFC 8441)
 

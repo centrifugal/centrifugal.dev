@@ -54,9 +54,50 @@ To enable channel compaction, set the `allow_channel_compaction` option to `true
 }
 ```
 
-After that client SDKs which support channel compaction will automatically negotiate it during the subscription, no additional steps required.
+After that, client SDKs which support channel compaction will automatically negotiate it during the subscription; no additional steps are required.
 
 At this moment only JavaScript SDK (`centrifuge-js`) supports this feature (since v5.5.0). Centrifugo PRO supports this since v6.5.0.
+
+## Client publish debouncing
+
+:::info SDK support
+
+At this moment, client publish debouncing is only supported by `centrifuge-js`. See the [SDK feature matrix](/docs/transports/client_sdk#sdk-feature-matrix) for the current status.
+
+:::
+
+Debouncing reduces upstream traffic by coalescing rapid client publishes to the same channel. When configured, the server returns the debounce interval in the subscribe result — the client SDK holds back subsequent publishes locally, sending only the latest value after the interval expires.
+
+The `client_publish_debounce_interval` namespace option controls the debounce interval. The server includes this value in the subscribe result. The debounce is applied when publishing via the subscription object (`sub.publish()` / `sub.mapPublish()`).
+
+```json title="config.json"
+{
+  "channel": {
+    "namespaces": [
+      {
+        "name": "cursors",
+        "client_publish_debounce_interval": "50ms"
+      }
+    ]
+  }
+}
+```
+
+Behavior:
+
+- The first publish is never debounced — it goes through immediately
+- Subsequent publishes within the debounce window are held locally in the SDK — only the latest value is kept
+- When the timer fires, the SDK sends the latest pending value to the server
+- For map subscriptions, debouncing is per key — different keys are debounced independently
+- For stream subscriptions, debouncing is per channel
+- On unsubscribe or disconnect, the SDK drops all pending publishes — nothing to clean up on the server
+- From the application's perspective, every `publish()` / `mapPublish()` call resolves immediately
+
+:::info Fire-and-forget only
+
+Client publish debouncing is designed for ephemeral, fire-and-forget data — cursor positions, typing indicators, sensor readings. Pending data is lost on disconnect or unsubscribe. Do not use debouncing for data that must reliably reach the server.
+
+:::
 
 ## Drop intermediary publications
 

@@ -9,7 +9,7 @@ Cache recovery mode in channels is designed to quickly deliver the most recent (
 
 Cache recovery mode works best for channels where every Publication data represents the entire state required to display the real-time element.
 
-Cache recovery mode may eliminate the need for the "fetch initial state" stage in many use cases, reducing server load and application complexity. When a client subscribes to a channel with cache recovery mode, it receives the most recent cached value immediately. Also, on every resubscription (due to network issues for example) the latest publication will be also immediately delivered.
+Cache recovery mode may eliminate the need for the "fetch initial state" stage in many use cases, reducing server load and application complexity. When a client subscribes to a channel with cache recovery mode, it receives the most recent cached value immediately. Also, on every resubscription (due to network issues for example) the latest publication will also be immediately delivered.
 
 As an example, one of Centrifugo users – [AzuraCast](https://www.azuracast.com/) web radio station server – uses such mode for its `now playing` feature, significantly reducing the load on the backend. As another example, check out [this Twitter/X post](https://x.com/centrifugalabs/status/1790786663884411105).
 
@@ -55,15 +55,15 @@ Of course you also need to make sure you properly configured channel permissions
 
 :::caution
 
-Using cache recovery mode may result into indermediary messages being lost and not delivered, only the latest publication in channel is interesting for it.
+Using cache recovery mode may result in intermediary messages being lost and not delivered; only the latest publication in the channel is of interest in this mode.
 
 :::
 
-The rest works very similar to stream recovery described in [history and recovery](./history_and_recovery.md) chapter. If there is an error upon using cache and Centrifugo can't receover state providing latest publication – then `ctx` will contain `recovered: false` flag, and `true` in case of success.
+The rest works very similarly to the stream recovery described in the [history and recovery](./history_and_recovery.md) chapter. If there is an error when using the cache and Centrifugo can't recover state by providing the latest publication – then `ctx` will contain a `recovered: false` flag, and `true` in case of success.
 
-Note, that history has retention TTL set over `history_ttl` channel option. So in case of retention expired, or maybe in case of restart of Centrifugo node with Memory Engine – the history is cleaned up, so your application should tolerate the missing value in case of insuccessful recovery.
+Note that history has a retention TTL set via the `history_ttl` channel option. So in the case of retention expiry, or in the case of a restart of a Centrifugo node with Memory Engine – the history is cleaned up, so your application should tolerate the missing value in case of unsuccessful recovery.
 
-Centrifugo PRO provide a feature to configure channel [cache empty event proxy](../pro/channel_cache_empty.md) to notify your backend about missing publication scenario. So that you can re-populate the channel history with an actual value.
+Centrifugo PRO provide a feature to configure channel [cache empty event proxy](../pro/event_hooks.md#cache-empty-events) to notify your backend about missing publication scenario. So that you can re-populate the channel history with an actual value.
 
 ## Conclusion
 

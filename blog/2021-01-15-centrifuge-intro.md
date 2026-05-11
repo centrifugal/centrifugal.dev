@@ -10,8 +10,6 @@ hide_table_of_contents: false
 ---
 
 
-![Centrifuge](https://i.imgur.com/W1PeoJL.jpg)
-
 In this post I'll try to introduce [Centrifuge](https://github.com/centrifugal/centrifuge) - the heart of Centrifugo.
 
 Centrifuge is a real-time messaging library for the Go language.

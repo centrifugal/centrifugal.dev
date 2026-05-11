@@ -79,4 +79,4 @@ When enabling `sse` you can connect to `/connection/sse` from `centrifuge-js`. N
 
 Default: 65536 (64KB)
 
-Maximum allowed size of a initial HTTP POST request in bytes when using HTTP POST requests to connect (browsers are using GET so it's not applied).
+Maximum allowed size of an initial HTTP POST request in bytes when using HTTP POST requests to connect (browsers are using GET so it's not applied).
