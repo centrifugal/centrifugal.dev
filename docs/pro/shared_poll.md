@@ -56,6 +56,21 @@ This is particularly valuable for:
 Without `keep_latest_data`, the open-source version still reduces cold-start delay via [**cold key auto-poll**](../server/shared_poll.md#quick-initial-data): when a key is tracked for the first time across all connections, an immediate backend poll is triggered. But with `keep_latest_data`, data for already-cached keys is served directly from memory — no backend call needed.
 :::
 
+:::caution Memory bound
+
+With `keep_latest_data` enabled, each tracked key holds one in-memory copy of its latest value per Centrifugo node. The cache scales with the number of *distinct keys currently tracked by at least one connection on that node* — entries are freed automatically when the last subscriber for a key untracks or disconnects, and the channel state itself is torn down after `channel_shutdown_delay` once it has no tracked keys.
+
+Worst-case footprint per node is roughly:
+
+```
+N_unique_tracked_keys × avg_value_size
+```
+
+In practice the cache size is bounded by your `max_keys_per_connection` setting times the number of concurrent connections, divided by the typical sharing factor between connections (many clients usually track overlapping key sets). For high-cardinality use cases with little sharing — for example per-user keys with thousands of users on one node — size the node accordingly.
+
+Centrifugo does not enforce a hard upper bound on the cache today; a per-channel LRU eviction option may be added in a future release for workloads where the value space is very large. If memory pressure is a concern, prefer lower `max_keys_per_connection`, shorter `channel_shutdown_delay`, or run without `keep_latest_data` and rely on the [polling safety net](../server/shared_poll.md#how-it-works) for delivery.
+:::
+
 ### Delta compression
 
 Shared poll subscriptions support [fossil delta compression](../server/delta_compression.md) to minimize bandwidth when item data changes by small amounts. Add `"fossil"` to `allowed_delta_types` in the namespace (in addition to `keep_latest_data`).
@@ -117,7 +132,7 @@ When using the [shared poll relay](#shared-poll-relay), the two-hop path works a
 
 1. Your app publishes to the **notify channel** (default `shared_poll_notify`)
 2. The relay process subscribes, calls the backend for the notified keys, caches the result
-3. The relay publishes a **ready signal** to the **ready channel** (default `shared_poll_ready`)
+3. The relay publishes a **ready signal** to the **ready channel** (default `shared_poll_ready`; when `notification.channel` is customised, the ready channel becomes `<notification.channel>_ready`)
 4. Normal nodes subscribe to the ready channel, then query the relay for the already-cached fresh data
 
 This happens automatically — when `shared_poll_relay.enabled` is `true`, normal nodes subscribe to the ready channel instead of the notify channel.

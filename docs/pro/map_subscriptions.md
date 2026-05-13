@@ -118,7 +118,7 @@ No map subscription SDK APIs needed — it's a standard stream subscription. The
 4. Each tick: serialize the cache into a deterministic JSON array, compute Fossil delta against the previous frame, broadcast to local subscribers
 5. Unchanged frames are skipped — no bandwidth is used when the state hasn't changed
 6. Each node independently produces deltas from its own cache — no cross-node coordination
-7. When all subscribers leave, the tick loop stops after 60 seconds of idle time
+7. When all subscribers leave, the tick loop stops after 30 seconds of idle time
 
 #### Bandwidth savings
 
