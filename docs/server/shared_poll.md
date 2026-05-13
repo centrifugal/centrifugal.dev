@@ -15,7 +15,7 @@ Shared poll subscriptions is an experimental feature available since **Centrifug
 
 Many applications poll the backend to keep data fresh — vote counts, stock prices, live scores, inventory levels, configuration. Polling is simple but wasteful: most requests return unchanged data, backend load grows linearly with the number of clients, and there is an inherent trade-off between update freshness and request rate.
 
-Shared poll subscriptions move the polling from clients to Centrifugo. Clients establish a persistent connection, register their interest in specific items, and Centrifugo polls the backend once on a configurable schedule — collecting current data and pushing only the changes to interested clients. Instead of 10,000 clients each polling your backend every second, Centrifugo makes a single request and fans out updates to all subscribers. The backend load depends on the number of unique items being watched, not on the number of connected clients (O(unique_items) instead of O(clients)).
+Shared poll subscriptions move the polling from clients to Centrifugo. Clients establish a persistent connection, register their interest in specific items, and Centrifugo polls the backend on a configurable schedule — collecting current data and pushing only the changes to interested clients. Instead of 10,000 clients each polling your backend every second, Centrifugo makes one request per cycle per Centrifugo node and fans out updates to all subscribers on that node. The backend load depends on the number of unique items being watched and the number of Centrifugo nodes, not on the number of connected clients (`O(unique_items × active_nodes)` instead of `O(clients)`). See [How it works](#how-it-works) for the multi-node behaviour and [Centrifugo PRO's shared poll relay](../pro/shared_poll.md#shared-poll-relay) for centralised polling that drops the `× active_nodes` factor.
 
 Your backend just answers one question: "what is the current state of these items?" This works with any data source you can read from: your own database, a third-party API, a legacy system. Since Centrifugo re-polls on a schedule, all clients always converge to the latest data (eventual consistency) — even if something is temporarily missed, the next poll cycle catches up.
 
@@ -75,7 +75,9 @@ Refresh cycle (interval=1s, 3000 tracked keys, batch_size=1000)
    │                     │                               │
 ```
 
-`subscribe` is lightweight (no data delivery, no recovery) — `track` is where data starts flowing. Shared poll works for both authenticated and anonymous users. Backend load scales with the number of unique tracked items, not connected clients — if many clients watch the same 200 items, those 200 items are polled once per cycle.
+`subscribe` is lightweight (no data delivery, no recovery) — `track` is where data starts flowing. Shared poll works for both authenticated and anonymous users.
+
+On a **single Centrifugo node**, backend load scales with the number of unique tracked items, not connected clients — if many clients watch the same 200 items, those 200 items are polled once per cycle. In a **multi-node** Centrifugo deployment, each node runs its own refresh worker and polls the backend independently for the keys tracked by its own connections. With `N` nodes that each have at least one connection tracking a given key, that key is polled `N` times per cycle. The backend still scales with `O(unique_items × active_nodes)` rather than `O(clients)`, but operators sizing the backend should account for the node count. Centrifugo PRO's [shared poll relay](../pro/shared_poll.md#shared-poll-relay) centralises polling into a single process so the backend sees one request per cycle regardless of node count.
 
 ### Authorization with HMAC signatures
 
@@ -93,17 +95,21 @@ Where:
 - `exp` — expiry Unix timestamp (seconds), `0` for no expiry
 - `hmac_hex` — hex-encoded HMAC-SHA256
 
-The HMAC is computed over the following payload:
+The HMAC is computed over the following payload, with fields joined by null bytes (`\x00`):
 
 ```
-HMAC-SHA256(secret, "iat:exp:user_id:channel:keys_hash")
+HMAC-SHA256(secret, iat \x00 exp \x00 user_id \x00 channel \x00 keys_hash)
 ```
 
 Where `keys_hash` is the hex-encoded SHA-256 of keys joined with null bytes (`\x00`), and `secret` is the `hmac_secret_key` from the `shared_poll` configuration. The `user_id` is the authenticated user's ID (empty string for anonymous users).
 
+The null-byte separator is important: using a printable separator like `:` would make the payload for `(user="alice", channel="news:tech")` byte-identical to the one for `(user="alice:news", channel="tech")`, allowing a signature issued for one tuple to be replayed against the other. NUL bytes never appear in real channel names or user IDs, so the field boundaries are unambiguous.
+
+The outer signature string itself (`iat:exp:hmac_hex`) still uses `:` separators — its fields are integers and hex by construction, so no ambiguity is possible there.
+
 The keys are hashed in the order they appear in the request — no canonical sort. Your backend must sign over the keys in the same order it returns them to the client; the SDK forwards that order verbatim to the server, which verifies against the keys received in the `track()` call.
 
-Your backend generates this signature when the client requests authorization for a set of keys. Centrifugo verifies the HMAC on every `track()` call and rejects requests with invalid or expired signatures (with a 30-second grace period after expiry).
+Your backend generates this signature when the client requests authorization for a set of keys. Centrifugo verifies the HMAC on every `track()` call and rejects requests with an invalid signature, or with a signature whose `exp` is more than 5 seconds in the past (a small fixed grace period for clock skew and in-flight requests). For *already-tracked* keys, an additional namespace-configurable window — `track_expired_extra_delay`, default 25s — lets the client refresh the signature before the server drops the keys from per-connection state. The two windows are independent: the 5s applies at signature-verify time, the 25s applies to server-side bookkeeping of keys already authorized.
 
 ### Backend signature generation
 
@@ -126,22 +132,14 @@ import TabItem from '@theme/TabItem';
 <TabItem value="python">
 
 ```python
-import hashlib
-import hmac
-import time
+import hashlib, hmac, time
 
-
-def make_shared_poll_signature(
-    secret: str, user_id: str, channel: str, keys: list[str], ttl: int
-) -> str:
+def make_shared_poll_signature(secret, user_id, channel, keys, ttl):
     now = int(time.time())
     exp = now + ttl
-
-    keys_hash = hashlib.sha256("\x00".join(keys).encode()).hexdigest()
-
-    payload = f"{now}:{exp}:{user_id}:{channel}:{keys_hash}"
+    kh = hashlib.sha256("\x00".join(keys).encode()).hexdigest()
+    payload = f"{now}\0{exp}\0{user_id}\0{channel}\0{kh}"
     mac = hmac.new(secret.encode(), payload.encode(), hashlib.sha256).hexdigest()
-
     return f"{now}:{exp}:{mac}"
 ```
 
@@ -154,18 +152,9 @@ const crypto = require('crypto');
 function makeSharedPollSignature(secret, userId, channel, keys, ttl) {
   const now = Math.floor(Date.now() / 1000);
   const exp = now + ttl;
-
-  const keysHash = crypto
-    .createHash('sha256')
-    .update(keys.join('\x00'))
-    .digest('hex');
-
-  const payload = `${now}:${exp}:${userId}:${channel}:${keysHash}`;
-  const mac = crypto
-    .createHmac('sha256', secret)
-    .update(payload)
-    .digest('hex');
-
+  const kh = crypto.createHash('sha256').update(keys.join('\x00')).digest('hex');
+  const payload = `${now}\0${exp}\0${userId}\0${channel}\0${kh}`;
+  const mac = crypto.createHmac('sha256', secret).update(payload).digest('hex');
   return `${now}:${exp}:${mac}`;
 }
 ```
@@ -182,18 +171,13 @@ import (
 	"time"
 )
 
-func makeSharedPollSignature(
-	secret, userID, channel string, keys []string, ttl int,
-) string {
+func makeSharedPollSignature(secret, userID, channel string, keys []string, ttl int) string {
 	now := time.Now().Unix()
 	exp := now + int64(ttl)
-
-	keysHash := sha256.Sum256([]byte(strings.Join(keys, "\x00")))
-
-	payload := fmt.Sprintf("%d:%d:%s:%s:%x", now, exp, userID, channel, keysHash)
+	kh := sha256.Sum256([]byte(strings.Join(keys, "\x00")))
+	payload := fmt.Sprintf("%d\x00%d\x00%s\x00%s\x00%x", now, exp, userID, channel, kh)
 	mac := hmac.New(sha256.New, []byte(secret))
 	mac.Write([]byte(payload))
-
 	return fmt.Sprintf("%d:%d:%x", now, exp, mac.Sum(nil))
 }
 ```
@@ -208,26 +192,14 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.HexFormat;
 
-public static String makeSharedPollSignature(
-        String secret, String userId, String channel,
-        String[] keys, int ttl) throws Exception {
+public static String makeSharedPollSignature(String secret, String userId, String channel, String[] keys, int ttl) throws Exception {
     long now = System.currentTimeMillis() / 1000;
     long exp = now + ttl;
-
-    byte[] keysBytes = String.join("\0", keys)
-            .getBytes(StandardCharsets.UTF_8);
-    String keysHash = HexFormat.of().formatHex(
-            MessageDigest.getInstance("SHA-256").digest(keysBytes));
-
-    String payload = String.format(
-            "%d:%d:%s:%s:%s", now, exp, userId, channel, keysHash);
+    String kh = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(String.join("\0", keys).getBytes(StandardCharsets.UTF_8)));
+    String payload = String.format("%d\0%d\0%s\0%s\0%s", now, exp, userId, channel, kh);
     Mac mac = Mac.getInstance("HmacSHA256");
-    mac.init(new SecretKeySpec(
-            secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
-    String hmacHex = HexFormat.of().formatHex(
-            mac.doFinal(payload.getBytes(StandardCharsets.UTF_8)));
-
-    return String.format("%d:%d:%s", now, exp, hmacHex);
+    mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+    return String.format("%d:%d:%s", now, exp, HexFormat.of().formatHex(mac.doFinal(payload.getBytes(StandardCharsets.UTF_8))));
 }
 ```
 
@@ -235,19 +207,12 @@ public static String makeSharedPollSignature(
 <TabItem value="php">
 
 ```php
-function makeSharedPollSignature(
-    string $secret, string $userId, string $channel,
-    array $keys, int $ttl
-): string {
+function makeSharedPollSignature(string $secret, string $userId, string $channel, array $keys, int $ttl): string {
     $now = time();
     $exp = $now + $ttl;
-
-    $keysHash = hash('sha256', implode("\x00", $keys));
-
-    $payload = "{$now}:{$exp}:{$userId}:{$channel}:{$keysHash}";
-    $mac = hash_hmac('sha256', $payload, $secret);
-
-    return "{$now}:{$exp}:{$mac}";
+    $kh = hash('sha256', implode("\x00", $keys));
+    $payload = "{$now}\0{$exp}\0{$userId}\0{$channel}\0{$kh}";
+    return "{$now}:{$exp}:" . hash_hmac('sha256', $payload, $secret);
 }
 ```
 
@@ -261,13 +226,9 @@ require 'digest'
 def make_shared_poll_signature(secret, user_id, channel, keys, ttl)
   now = Time.now.to_i
   exp = now + ttl
-
-  keys_hash = Digest::SHA256.hexdigest(keys.join("\x00"))
-
-  payload = "#{now}:#{exp}:#{user_id}:#{channel}:#{keys_hash}"
-  mac = OpenSSL::HMAC.hexdigest('SHA256', secret, payload)
-
-  "#{now}:#{exp}:#{mac}"
+  kh = Digest::SHA256.hexdigest(keys.join("\x00"))
+  payload = "#{now}\0#{exp}\0#{user_id}\0#{channel}\0#{kh}"
+  "#{now}:#{exp}:#{OpenSSL::HMAC.hexdigest('SHA256', secret, payload)}"
 end
 ```
 
@@ -591,6 +552,7 @@ Each item in the response:
 | `key` | string | Item key |
 | `data` | JSON | Current item data |
 | `version` | uint64 | Item version — **required** in versioned mode, **optional** in versionless mode. Must increase monotonically on changes |
+| `prev_data` | JSON | Optional previous value Centrifugo uses as the delta base when fossil delta compression is enabled on the namespace. Saves Centrifugo from caching the previous value itself; ignored when delta is disabled or when [`keep_latest_data`](../pro/shared_poll.md#instant-initial-data) (PRO) is on, in which case Centrifugo has the previous value cached already |
 | `removed` | boolean | If `true`, item is removed — Centrifugo sends a removal event to tracking clients and stops tracking the key. Items omitted from the response are treated as unchanged |
 
 ### Error response
@@ -652,7 +614,7 @@ To distribute publications across multiple Centrifugo nodes, enable `publish_ena
 
 When `publish_enabled` is `true`, Centrifugo subscribes to the Broker (Redis, NATS, or memory) for each active shared poll channel, enabling cross-node delivery via the existing PUB/SUB infrastructure.
 
-When `publish_enabled` is `false` (default), `shared_poll_publish` only delivers to clients connected to the node that receives the API call. This is sufficient for single-node deployments.
+`shared_poll_publish` requires `publish_enabled: true` on the namespace — calls against a namespace with the default value (`false`) return `ErrorNotAvailable`. Set it to `true` even in single-node deployments if you want to use the `shared_poll_publish` API.
 
 ### API
 
@@ -675,10 +637,10 @@ curl -X POST http://localhost:8000/api/shared_poll_publish \
 | `key` | string | yes | Item key |
 | `data` | JSON | yes | Item data (delivered to clients as-is) |
 | `b64data` | string | | Base64-encoded data (alternative to `data` for binary payloads) |
-| `version` | uint64 | yes | Item version. Must be in the same version space as versions returned by the backend poll handler. Stale versions (≤ current) within the same epoch are ignored |
+| `version` | uint64 | yes | Item version, must be ≥ 1 (passing `0` is rejected with `ErrorBadRequest`). Must be in the same version space as versions returned by the backend poll handler. Stale versions (≤ current) within the same epoch are accepted but silently dropped — see Version semantics below |
 | `epoch` | string | | Channel-level publisher epoch — see [Epoch](#epoch-publisher-restart-resilience). A change versus the channel's stored epoch resets per-key versions and unsubscribes current subscribers with insufficient-state code |
 
-**Version semantics**: the version you provide must be comparable to versions returned by your `OnSharedPoll` backend handler. If the published version is less than or equal to the version Centrifugo already has for that key, the publication is silently dropped. This prevents stale data from overwriting newer data.
+**Version semantics**: the version you provide must be comparable to versions returned by your `OnSharedPoll` backend handler. If the published version is less than or equal to the version Centrifugo already has for that key, the publication is silently dropped (note: this is different from `version=0` which is rejected up-front with `ErrorBadRequest`). This prevents stale data from overwriting newer data.
 
 ### Example: publish after database write
 

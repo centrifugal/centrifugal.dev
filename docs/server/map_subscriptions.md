@@ -23,8 +23,6 @@ import PgTransactionalDiagram from '@site/src/components/PgTransactionalDiagram'
 
 <PgTransactionalDiagram />
 
-Map subscriptions also introduce a **built-in map presence** mechanism (`map_clients` and `map_users` subscription types) that translates map subscription properties to presence tracking — paginated state delivery, stream-based catch-up on reconnect, and per-key TTL expiration. This opens a road to larger presence state and convergence after reconnects.
-
 ## When to use map subscriptions — and when not to
 
 Map subscriptions are the natural fit when **the broker should be the canonical store** for a keyed collection — your application is comfortable letting Centrifugo own the entries and reads them back through subscriptions (or, for backends that need it, the server `map_read_state` API).
@@ -70,8 +68,8 @@ Each namespace must declare which subscription type it supports. The client spec
 |------|-------------|
 | `stream` | Traditional PUB/SUB with optional history stream, automatic recovery from stream, and cache recovery mode (default type, Centrifugo always had it) |
 | `map` | Map subscription — keyed state with real-time updates, configurable sync and retention via mode (ephemeral/recoverable/persistent) with stream-based catch-up in recoverable/persistent modes, per-key TTL support, and paginated state sync protocol |
-| `map_clients` | A special type of map subscription for presence — one entry per client connection, automatically managed by the server. Both joins and leaves are delivered immediately. The system is eventually consistent: if a remove operation to the broker fails (e.g. due to a transient network error), the stale entry will expire after `map.key_ttl` (60s by default) rather than lingering indefinitely |
-| `map_users` | A special type of map subscription for presence — one entry per user ID, automatically managed by the server. New users appear immediately, but removals are driven by key TTL — since a single user may have multiple connections, the entry can't be removed when one connection disconnects. Instead, it expires after `map.key_ttl` (60s by default) once the last connection for that user leaves the channel |
+| `map_clients` | A special type of map subscription for presence — one entry per client connection, automatically managed by the server. Both joins and leaves are delivered immediately. The system is eventually consistent: if a remove operation to the broker fails (e.g. due to a transient network error), the stale entry will expire after the configured `map.key_ttl` rather than lingering indefinitely. `map.key_ttl` is required for this type (mode must be `ephemeral` or `recoverable` — `persistent` is rejected at config-load because TTL-based cleanup is the only fallback) |
+| `map_users` | A special type of map subscription for presence — one entry per user ID, automatically managed by the server. New users appear immediately, but removals are driven by key TTL — since a single user may have multiple connections, the entry can't be removed when one connection disconnects. Instead, it expires after the configured `map.key_ttl` once the last connection for that user leaves the channel. `map.key_ttl` is required for this type (mode must be `ephemeral` or `recoverable` — `persistent` is rejected at config-load) |
 
 The `map_clients` and `map_users` types are automatically managed by the server for presence tracking. The `map` type is the general-purpose map subscription where the application controls keys and values. It's like real-time map which is synchronized to clients.
 
@@ -94,8 +92,7 @@ Each step adds capability: `ephemeral` is the lightest — no stream overhead. `
 | Cursors, typing indicators | `ephemeral` | Short-lived data, no need for stream overhead |
 | Presence, heartbeats | `recoverable` | Entries auto-expire, but reconnecting clients catch up from stream instead of re-fetching |
 | Time-limited polls, sessions | `recoverable` | Entries auto-expire, efficient reconnect recovery |
-| Scoreboards, inventories | `persistent` | Permanent state with efficient reconnect recovery |
-| Inventories, collaborative docs | `persistent` | Permanent state with efficient reconnect recovery |
+| Scoreboards, inventories, collaborative docs | `persistent` | Permanent state with efficient reconnect recovery |
 
 :::tip When your app already owns state
 
@@ -362,9 +359,13 @@ Declares the subscription type for the namespace — one of the [supported types
 |-------|----------|
 | `""` (empty/default) | Client-provided key is used as-is. In most cases you should validate it — enable `map.publish_proxy_enabled` to route through a [map publish proxy](#map-publishremove-proxy) |
 | `"client_id"` | Key is overridden with the client's connection ID |
-| `"user_id"` | Key is overridden with the client's user ID |
+| `"user_id"` | Key is overridden with the client's user ID. Anonymous clients (empty user ID) are rejected with `ErrorPermissionDenied` — the server has no identifier to use as the key |
 
 This applies to both map publish and map remove operations. When set, the client-provided key is ignored.
+
+:::note Mutually exclusive with the proxy
+`map.client_key` cannot be combined with `map.publish_proxy_enabled` or `map.remove_proxy_enabled` — the two are different ways to control keying, and Centrifugo rejects this combination at config-load. When you need server-driven keying behind a proxy, derive the key inside the proxy and return it via `result.key` (see [MapPublishResult](#mappublishresult)).
+:::
 
 #### Automatic cleanup on unsubscribe
 
@@ -438,9 +439,11 @@ When `map.publish_proxy_enabled` or `map.remove_proxy_enabled` is set, the corre
 
 - Allow or deny the operation, or disconnect the client
 - Validate that the client has permission to publish/remove for the specific key
-- Override the key (e.g. force it to a server-derived value)
+- Override the key (e.g. force it to a server-derived value) — leave `result.key` unset to approve the client-supplied key as-is
 - Override the data and provide a separate stream payload
 - Stamp server-controlled metadata on the resulting publication — tags, version, key mode, idempotency key, delta hint
+
+Because the proxy is the single keying authority when enabled, `map.client_key` cannot be set on the same namespace — Centrifugo rejects that combination at config-load. To get server-driven keying behind a proxy, derive the key inside the proxy and return it via `result.key`.
 
 This makes the publish proxy the natural place to combine authorization with **RBAC tag enrichment** for client-originated publishes: clients cannot send tags themselves, so the proxy is the only path that can attach tags read by [server-side publication tags filter](../pro/server_tags_filter.md).
 
@@ -486,7 +489,7 @@ The proxy receives a JSON request with these fields:
 | `encoding`  | `string` | protocol encoding (`json` or `binary`)                                                               |
 | `user`      | `string` | the connection's user ID from authentication                                                         |
 | `channel`   | `string` | the map channel the client is publishing to                                                          |
-| `key`       | `string` | the key sent by the client (may be empty when the namespace uses server-driven `client_key`)         |
+| `key`       | `string` | the key sent by the client (may be empty if the client did not supply one)                           |
 | `data`      | `JSON`   | the data sent by the client                                                                          |
 | `b64data`   | `string` | base64-encoded data, used instead of `data` when binary proxy mode is enabled                        |
 | `meta`      | `JSON`   | the connection's attached meta (off by default, enable with `"include_connection_meta": true`)       |
@@ -501,17 +504,15 @@ The proxy receives a JSON request with these fields:
 
 ##### MapPublishResult
 
-All fields are optional. Any field left unset falls back to the value sent by the client (for `key`/`data`) or to the default behaviour.
+All fields are optional. Any field left unset falls back to the value sent by the client (for `key`/`data`) or to the default behaviour. Returning a `Result` (even an empty one) means the publish is approved.
 
 | Field              | Type                  | Description                                                                                                                                                                                       |
 |--------------------|-----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `key`              | `string`              | Override the key used for the publish. Useful for forcing keys to server-derived values (e.g. user ID, deal ID).                                                                                  |
+| `key`              | `string`              | Override the key used for the publish. Useful for forcing keys to server-derived values (e.g. user ID, deal ID). Leave unset to approve the client-supplied key.                                  |
 | `data`             | `JSON`                | Replace the publication data the client sent.                                                                                                                                                     |
 | `b64data`          | `string`              | Binary data encoded in base64, used instead of `data` in binary proxy mode.                                                                                                                       |
 | `tags`             | `map<string, string>` | Server-stamped publication tags. Clients cannot send tags themselves — the proxy is the only path that can attach tags read by [server-side publication tags filter](../pro/server_tags_filter.md) for per-subscriber RBAC. |
 | `key_mode`         | `string`              | `"if_new"` to publish only when the key does not yet exist, `"if_exists"` to publish only when it already exists. Useful for enforcing insert-only or update-only access patterns.                |
-| `stream_data`      | `JSON`                | Separate payload to publish to the stream/PUB-SUB while keeping `data` in the state. Use when state and stream payloads should differ (e.g. state is the full snapshot, stream carries deltas).   |
-| `b64stream_data`   | `string`              | Binary equivalent of `stream_data` for binary proxy mode.                                                                                                                                         |
 | `idempotency_key`  | `string`              | Idempotency key for safe retries — duplicates within the broker's idempotent result TTL window are suppressed.                                                                                    |
 | `delta`            | `bool`                | Enable delta compression for this publication.                                                                                                                                                    |
 | `version`          | `uint64`              | Per-key version used by Centrifugo to drop non-actual publications.                                                                                                                               |
@@ -540,9 +541,11 @@ All fields are optional. Any field left unset falls back to the value sent by th
 
 ##### MapRemoveResult
 
+All fields are optional. Any field left unset falls back to the value sent by the client (for `key`) or to the default behaviour. Returning a `Result` (even an empty one) means the remove is approved.
+
 | Field             | Type                  | Description                                                                                                                                                                                                                            |
 |-------------------|-----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `key`             | `string`              | Override the key being removed.                                                                                                                                                                                                        |
+| `key`             | `string`              | Override the key being removed. Leave unset to approve the client-supplied key.                                                                                                                                                        |
 | `tags`            | `map<string, string>` | Tags attached to the removal publication. When unset, the broker reads the removed entry's stored tags automatically. Set explicitly only to override. |
 | `idempotency_key` | `string`              | Idempotency key for safe retries on removal.                                                                                                                                                                                           |
 
@@ -578,7 +581,6 @@ Options:
 - `tags` — key-value metadata for filtering
 - `version` / `version_epoch` — per-key version for ordering
 - `delta` — enable delta compression
-- `stream_data` — separate data for the stream (when state and stream payloads differ)
 
 ### map_remove
 
@@ -666,7 +668,8 @@ Unlike regular stream subscriptions, where the application must handle `publicat
 
 ```javascript
 sub.on('sync', (ctx) => {
-  // ctx.entries is the full state (array of { key, data, removed })
+  // ctx.entries is the full state — array of { key, data } entries
+  // (a snapshot, so no removed keys are present)
   renderFullState(ctx.entries);
 });
 ```
@@ -692,10 +695,10 @@ Standard subscription events (`publication`, `subscribing`, `subscribed`, `unsub
 
 ```javascript
 // Publish to a key (key may be empty if server assigns it via map.client_key)
-await sub.mapPublish('mykey', { x: 100, y: 200 });
+await sub.publish('mykey', { x: 100, y: 200 });
 
 // Remove a key
-await sub.mapRemove('mykey');
+await sub.remove('mykey');
 ```
 
 ### Options
@@ -767,7 +770,7 @@ sub.subscribe();
 
 // Publish cursor position (key is auto-assigned to client ID by server)
 document.addEventListener('mousemove', throttle((e) => {
-  sub.mapPublish('', { x: e.clientX, y: e.clientY });
+  sub.publish('', { x: e.clientX, y: e.clientY });
 }, 50));
 ```
 
@@ -847,6 +850,6 @@ A collection of interactive demos showcasing map subscriptions is available in t
 - **Sprint Board (PostgreSQL)** — Kanban board with drag-and-drop using native PostgreSQL `cf_map_*` functions for transactional publishing
 - **Live Polls (PostgreSQL)** — server-driven polls with real-time voting, bot participants, and auto-rotation using `cf_map_*` functions
 
-The demo runs with Docker Compose (PostgreSQL + Python backend + Nginx) and requires Centrifugo v6.7+ with `centrifuge-js`.
+The demo runs with Docker Compose (PostgreSQL + Python backend + Nginx) and requires Centrifugo v6.8.0+ with `centrifuge-js`.
 
 For the app-owned state pattern (app DB as source of truth + transactional publishing via the PostgreSQL stream broker + stream subscription `getState`), see the [pg_stream_broker kitchen orders demo](https://github.com/centrifugal/examples/tree/master/v6/pg_stream_broker) and the blog post [Transactional publishing for stream subscriptions with PostgreSQL](/blog/2026/05/15/pg-stream-broker-benefits).

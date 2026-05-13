@@ -819,7 +819,7 @@ See below on how to [return an error](#return-custom-error) in case you don't wa
 
 ### Map publish/remove proxy
 
-Map subscriptions ([experimental](./map_subscriptions.md)) have their own publish and remove proxies — they intercept client-originated `mapPublish` and `mapRemove` calls in the same way the regular publish proxy intercepts client publishes. The map proxies share the same authorization model and the same `error` / `disconnect` response semantics as the publish proxy described above, but accept and return additional fields that only make sense for map subscriptions (key overrides, score, conditional `key_mode`, separate stream payload, server-stamped tags on removals, etc.).
+Map subscriptions ([experimental](./map_subscriptions.md)) have their own publish and remove proxies — they intercept client-originated map `publish` and `remove` calls (i.e. `mapSub.publish(key, data)` / `mapSub.remove(key)` in the SDK) in the same way the regular publish proxy intercepts client publishes. The map proxies share the same authorization model and the same `error` / `disconnect` response semantics as the publish proxy described above, but accept and return additional fields that only make sense for map subscriptions (key overrides, score, conditional `key_mode`, separate stream payload, server-stamped tags on removals, etc.).
 
 The complete request/response reference for the map publish/remove proxy lives in the map subscriptions doc — see [Map publish/remove proxy](./map_subscriptions.md#map-publishremove-proxy).
 

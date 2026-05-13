@@ -39,7 +39,6 @@ Key options:
 | `max_channels` | `1000` | Maximum number of channels cached per node |
 | `idle_timeout` | `"10m"` | Evict channels with no subscribers after this duration |
 | `sync_interval` | `"30s"` | How often to sync cache with the backend |
-| `sync_jitter` | `0.1` | Randomize sync interval by +/- this fraction to avoid thundering herd |
 | `sync_concurrency` | `64` | Number of parallel sync workers |
 | `sync_batch_size` | `1000` | Max entries per sync batch |
 | `load_timeout` | `"5s"` | Timeout for loading a channel from backend on first subscribe |

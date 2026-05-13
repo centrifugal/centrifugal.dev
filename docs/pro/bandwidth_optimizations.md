@@ -68,7 +68,7 @@ At this moment, client publish debouncing is only supported by `centrifuge-js`. 
 
 Debouncing reduces upstream traffic by coalescing rapid client publishes to the same channel. When configured, the server returns the debounce interval in the subscribe result — the client SDK holds back subsequent publishes locally, sending only the latest value after the interval expires.
 
-The `client_publish_debounce_interval` namespace option controls the debounce interval. The server includes this value in the subscribe result. The debounce is applied when publishing via the subscription object (`sub.publish()` / `sub.mapPublish()`).
+The `client_publish_debounce_interval` namespace option controls the debounce interval. The server includes this value in the subscribe result. The debounce is applied when publishing via the subscription object — `sub.publish(data)` on a stream subscription and `sub.publish(key, data)` on a map subscription.
 
 ```json title="config.json"
 {
@@ -91,7 +91,7 @@ Behavior:
 - For map subscriptions, debouncing is per key — different keys are debounced independently
 - For stream subscriptions, debouncing is per channel
 - On unsubscribe or disconnect, the SDK drops all pending publishes — nothing to clean up on the server
-- From the application's perspective, every `publish()` / `mapPublish()` call resolves immediately
+- From the application's perspective, every `publish()` call resolves immediately
 
 :::info Fire-and-forget only
 
