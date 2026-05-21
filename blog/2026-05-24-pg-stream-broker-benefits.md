@@ -10,7 +10,7 @@ hide_table_of_contents: false
 draft: true
 ---
 
-In [Part 2 of the map subscriptions series](/blog/2026/05/14/map-subscriptions-part-2), we introduced a PostgreSQL map broker that lets your application publish real-time map updates inside a database transaction — removing the dual-write problem when you publish via the broker's SQL function from your own transactions. That capability applied only to map subscriptions — keyed state like leaderboards, collaborative boards, and inventories.
+In [Part 2 of the map subscriptions series](/blog/2026/05/23/map-subscriptions-part-2), we introduced a PostgreSQL map broker that lets your application publish real-time map updates inside a database transaction — removing the dual-write problem when you publish via the broker's SQL function from your own transactions. That capability applied only to map subscriptions — keyed state like leaderboards, collaborative boards, and inventories.
 
 Today we're extending the same shape to **stream subscriptions** — the ordered-event primitive that powers notifications, activity feeds, chat messages, audit logs, and order updates. If you have a database row and you want to announce a change in real time, you can now do it atomically with your write — same `BEGIN / COMMIT`, same outbox architecture, same "no Redis" simplicity.
 
@@ -25,7 +25,7 @@ Available in Centrifugo v6.8.0+. The PostgreSQL stream broker is a recent additi
 :::tip TL;DR
 
 - Call `cf_stream_publish(...)` inside the same SQL transaction as your row write — both commit atomically. No outbox table to manage in your app, no CDC pipeline, no dual-write gap.
-- The broker shares its outbox infrastructure with the [PG map broker](/blog/2026/05/14/map-subscriptions-part-2) — partitioned table, `LISTEN/NOTIFY` for low-latency wakeup, vacuum-free retention.
+- The broker shares its outbox infrastructure with the [PG map broker](/blog/2026/05/23/map-subscriptions-part-2) — partitioned table, `LISTEN/NOTIFY` for low-latency wakeup, vacuum-free retention.
 - Pairs with a `getState` callback in the SDK: load app-owned state plus a stream position in one shot; the SDK subscribes from there and recovers automatically on reconnect.
 - Two concrete shapes worked through below: an aggregator-as-publisher fronting a Kafka feed, and per-tenant channels (one per restaurant) over a shared `orders` table.
 
@@ -35,7 +35,7 @@ Available in Centrifugo v6.8.0+. The PostgreSQL stream broker is a recent additi
 
 Integrating a real-time system with a relational database creates the same gap: the backend writes to the database, then publishes to the real-time layer as a separate operation. If the process crashes between them — or if the publish fails — the database and subscribers fall out of sync. Users see stale data until they refresh.
 
-We [covered this in depth](/blog/2026/05/14/map-subscriptions-part-2#the-dual-write-problem) for map subscriptions. The same problem applies — even more broadly — to stream subscriptions. Every notification system, every audit trail, every order-status feed has the same shape: write a row to your database, then announce the change over WebSocket. The PostgreSQL stream broker lets you combine both into one transaction.
+We [covered this in depth](/blog/2026/05/23/map-subscriptions-part-2#the-dual-write-problem) for map subscriptions. The same problem applies — even more broadly — to stream subscriptions. Every notification system, every audit trail, every order-status feed has the same shape: write a row to your database, then announce the change over WebSocket. The PostgreSQL stream broker lets you combine both into one transaction.
 
 ## Publishing inside your transaction
 
@@ -214,4 +214,4 @@ Configure the PostgreSQL stream broker as your Centrifugo broker:
 
 The broker automatically creates the required tables and SQL functions on startup. Call `cf_stream_publish` from your application's SQL transactions to publish atomically.
 
-Read the full [stream broker documentation](/docs/server/engines#postgresql-broker) for configuration reference, and see the [map subscriptions Part 2](/blog/2026/05/14/map-subscriptions-part-2) post for the outbox architecture deep-dive that both brokers share.
+Read the full [stream broker documentation](/docs/server/engines#postgresql-broker) for configuration reference, and see the [map subscriptions Part 2](/blog/2026/05/23/map-subscriptions-part-2) post for the outbox architecture deep-dive that both brokers share.

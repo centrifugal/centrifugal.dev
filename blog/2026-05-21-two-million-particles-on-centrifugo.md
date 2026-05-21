@@ -6,7 +6,7 @@ author: Alexander Emelin
 authorTitle: Founder of Centrifugal Labs
 authorImageURL: /img/alexander_emelin.jpeg
 image: /img/cover_2_million_particles.png
-date: 2026-05-12T18:00:00
+date: 2026-05-21T18:00:00
 hide_table_of_contents: false
 ---
 

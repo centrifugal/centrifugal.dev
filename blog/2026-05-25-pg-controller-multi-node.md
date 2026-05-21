@@ -12,7 +12,7 @@ draft: true
 
 For most of [Centrifugo](https://centrifugal.dev)'s history, scaling past one node meant adding Redis — even on stacks running on PostgreSQL alone. One more service to provision, monitor, secure, and back up, just so Centrifugo nodes could coordinate with each other.
 
-The new PostgreSQL controller makes Redis optional. Together with the [stream broker](/blog/2026/05/15/pg-stream-broker-benefits) and [map broker](/blog/2026/05/14/map-subscriptions-part-2) shipped earlier in this release cycle, Centrifugo's full OSS messaging plane now runs on the PostgreSQL you already have. Same database, one operational story.
+The new PostgreSQL controller makes Redis optional. Together with the [stream broker](/blog/2026/05/24/pg-stream-broker-benefits) and [map broker](/blog/2026/05/23/map-subscriptions-part-2) shipped earlier in this release cycle, Centrifugo's full OSS messaging plane now runs on the PostgreSQL you already have. Same database, one operational story.
 
 <!--truncate-->
 
@@ -32,7 +32,7 @@ That gap is what the PostgreSQL controller closes.
 
 ## How the controller works
 
-The controller uses the same outbox pattern that powers the [PG stream broker](/blog/2026/05/15/pg-stream-broker-benefits) and the [PG map broker](/blog/2026/05/14/map-subscriptions-part-2):
+The controller uses the same outbox pattern that powers the [PG stream broker](/blog/2026/05/24/pg-stream-broker-benefits) and the [PG map broker](/blog/2026/05/23/map-subscriptions-part-2):
 
 - Control messages are written to a partitioned PostgreSQL table — one row per message.
 - Each Centrifugo node polls the table for new entries and processes them.
@@ -107,7 +107,7 @@ Enable the PostgreSQL controller alongside any existing broker configuration:
 
 The controller creates its required tables, partitions, and SQL functions on startup. Bring up two or more Centrifugo nodes pointing at the same PostgreSQL, and they'll coordinate without further setup.
 
-For background on the outbox pattern shared with the brokers, see the [PG stream broker post](/blog/2026/05/15/pg-stream-broker-benefits) and the [PG map broker post](/blog/2026/05/14/map-subscriptions-part-2). The full configuration reference lives in the [engines documentation](/docs/server/engines).
+For background on the outbox pattern shared with the brokers, see the [PG stream broker post](/blog/2026/05/24/pg-stream-broker-benefits) and the [PG map broker post](/blog/2026/05/23/map-subscriptions-part-2). The full configuration reference lives in the [engines documentation](/docs/server/engines).
 
 ## A runnable demo
 

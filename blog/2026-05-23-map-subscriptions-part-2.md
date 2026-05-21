@@ -36,7 +36,7 @@ COMMIT;
 
 If the transaction rolls back, the real-time update never happened. No outbox table to maintain, no CDC pipeline, no eventual consistency — just one PostgreSQL transaction. The rest of this post unpacks how it works.
 
-[Part 1](/blog/2026/05/13/map-subscriptions) introduced map subscriptions and the memory and Redis brokers. This post focuses on the PostgreSQL broker, new in Centrifugo v6.8.0.
+[Part 1](/blog/2026/05/22/map-subscriptions) introduced map subscriptions and the memory and Redis brokers. This post focuses on the PostgreSQL broker, new in Centrifugo v6.8.0.
 
 ## How the SQL functions work
 
@@ -111,6 +111,6 @@ These numbers come from the broker's Go integration tests in benchmark mode agai
 
 Transactional publishing is currently experimental — we may adjust the SQL function API and outbox architecture based on feedback. We've published several PostgreSQL-backed demos in the [map demo collection](https://github.com/centrifugal/examples/tree/master/v6/map_demo), including a sprint board that demonstrates transactional publishing with Docker Compose.
 
-[Part 1](/blog/2026/05/13/map-subscriptions) covers the full map subscriptions design — sync protocol, modes, and broker overview. And check out the companion post on [shared poll subscriptions](/blog/2026/05/12/shared-poll-subscriptions) — the other new subscription type we're introducing alongside map subscriptions.
+[Part 1](/blog/2026/05/22/map-subscriptions) covers the full map subscriptions design — sync protocol, modes, and broker overview. And check out the companion post on [shared poll subscriptions](/blog/2026/05/21/shared-poll-subscriptions) — the other new subscription type we're introducing alongside map subscriptions.
 
 Read the full [map subscriptions documentation](/docs/server/map_subscriptions) for configuration reference, PostgreSQL broker setup, and transactional publishing examples.

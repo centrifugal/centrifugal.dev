@@ -6,7 +6,7 @@ author: Alexander Emelin
 image: /img/blog_shared_poll.jpg
 authorTitle: Founder of Centrifugal Labs
 authorImageURL: /img/alexander_emelin.jpeg
-date: 2026-05-12T10:00:00
+date: 2026-05-21T10:00:00
 hide_table_of_contents: false
 ---
 

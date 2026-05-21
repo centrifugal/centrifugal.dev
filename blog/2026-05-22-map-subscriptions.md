@@ -182,7 +182,7 @@ Centrifugo occupies a different spot because it's self-hosted — it runs in you
 
 For scenarios that need per-item access control within a single map channel, [Centrifugo PRO](/docs/pro/server_tags_filter) adds a server-side publication tags filter — your backend assigns tags to entries and sets a filter per subscriber via the subscribe proxy or JWT. Only matching entries are delivered, across all sync phases. This enables RBAC patterns without splitting data into separate channels per access scope.
 
-Stream subscriptions, map subscriptions, and [shared poll subscriptions](/blog/2026/05/12/shared-poll-subscriptions) cover three different ways clients relate to data — ordered events, synchronized collections, and polled read-only state — while staying payload-agnostic across the board. Your application decides what the data means; Centrifugo handles delivery. Switching between primitives is a namespace configuration choice, not an architectural one.
+Stream subscriptions, map subscriptions, and [shared poll subscriptions](/blog/2026/05/21/shared-poll-subscriptions) cover three different ways clients relate to data — ordered events, synchronized collections, and polled read-only state — while staying payload-agnostic across the board. Your application decides what the data means; Centrifugo handles delivery. Switching between primitives is a namespace configuration choice, not an architectural one.
 
 ## What's next
 
@@ -190,7 +190,7 @@ Map subscriptions are currently experimental — we may adjust the API, configur
 
 We designed map subscriptions to share everything stream subscriptions already have — not a separate system grafted on. Same namespace configuration, same Redis infrastructure, same client SDK connection, proxy system, recovery internals, and [transport layer](/docs/transports/overview). The goal is that adopting map subscriptions should feel like switching a namespace option, not adopting a different system.
 
-And check out the companion post on [shared poll subscriptions](/blog/2026/05/12/shared-poll-subscriptions) — the other new subscription type we're introducing alongside map subscriptions.
+And check out the companion post on [shared poll subscriptions](/blog/2026/05/21/shared-poll-subscriptions) — the other new subscription type we're introducing alongside map subscriptions.
 
 We've published a [collection of interactive demos](https://github.com/centrifugal/examples/tree/master/v6/map_demo) covering different map subscription features — from ephemeral cursors to PostgreSQL-backed sprint boards. Each demo runs with Docker Compose and showcases a different aspect of the feature.
 

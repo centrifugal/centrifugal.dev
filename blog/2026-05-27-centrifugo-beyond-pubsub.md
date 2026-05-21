@@ -21,7 +21,7 @@ The second is **persistent state where the real-time update should commit with t
 
 Pure pub/sub, even with stream history and message recovery on reconnect — which Centrifugo has had for years — doesn't cover either case on its own.
 
-Centrifugo v6.8.0 bakes those patterns into the core: two new subscription primitives — **[map subscriptions](/blog/2026/05/13/map-subscriptions)** for synchronized key-value collections and **[shared poll subscriptions](/blog/2026/05/12/shared-poll-subscriptions)** for read-only state the application doesn't write directly — and three Postgres-backed components: a **[stream broker](/blog/2026/05/15/pg-stream-broker-benefits)**, **[map broker](/blog/2026/05/14/map-subscriptions-part-2)**, and **[controller](/blog/2026/05/16/pg-controller-multi-node)**. The Postgres path lets multi-node clusters drop their Redis dependency.
+Centrifugo v6.8.0 bakes those patterns into the core: two new subscription primitives — **[map subscriptions](/blog/2026/05/22/map-subscriptions)** for synchronized key-value collections and **[shared poll subscriptions](/blog/2026/05/21/shared-poll-subscriptions)** for read-only state the application doesn't write directly — and three Postgres-backed components: a **[stream broker](/blog/2026/05/24/pg-stream-broker-benefits)**, **[map broker](/blog/2026/05/23/map-subscriptions-part-2)**, and **[controller](/blog/2026/05/25/pg-controller-multi-node)**. The Postgres path lets multi-node clusters drop their Redis dependency.
 
 <!--truncate-->
 
@@ -95,7 +95,7 @@ The broker is a configuration choice on the server. The protocol on the wire is 
 
 **Presence is a map subscription.** Centrifugo has had presence (who's connected to a channel) for years — it used to be a separate API with its own behavior. Now presence is just a special kind of map subscription: the broker tracks per-client entries with TTL keyed on connection ID. One protocol primitive, presence scales the same way map subscriptions do.
 
-How far does that go? Two browser tabs subscribed to a single `map_clients` channel with **100,000 connected members**, joining mid-fill, converging to the same state, then surviving page reloads (the demo from [Part 1 of the map subscriptions post](/blog/2026/05/13/map-subscriptions)):
+How far does that go? Two browser tabs subscribed to a single `map_clients` channel with **100,000 connected members**, joining mid-fill, converging to the same state, then surviving page reloads (the demo from [Part 1 of the map subscriptions post](/blog/2026/05/22/map-subscriptions)):
 
 <video width="100%" controls preload="metadata" src="/img/demo_map_presence.mp4"></video>
 

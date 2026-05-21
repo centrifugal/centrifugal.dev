@@ -823,10 +823,6 @@ Integer, default `2`. Number of future daily partitions to pre-create. Must be >
 
 Integer, default `7`. Partitions older than this are dropped automatically via `DROP TABLE` — instant, vacuum-free cleanup. Set to `0` for unlimited retention (old partitions accumulate but can be dropped manually).
 
-#### `broker.postgres.fine_grained_history_cleanup`
-
-Boolean, default `false`. Enables an opt-in chunked `DELETE` pass that removes history rows past their channel's `history_ttl`, instead of waiting for partition retention. Use for tight-storage deployments where `HistoryTTL` is much smaller than `partition_retention_days`.
-
 #### `broker.postgres.outbox.poll_interval`
 
 [Duration](./configuration.md#duration-type), default `"100ms"`. How often to poll for new history rows when idle.
@@ -862,7 +858,7 @@ In contrast, the Redis broker uses separate PUB/SUB and Stream mechanisms. When 
 
 - **Meta TTL not refreshed on reads.** The Redis and Memory brokers refresh the channel metadata TTL when `History()` is called — so a channel with active readers but no publishers stays alive. The PostgreSQL broker does not: meta TTL is only set/refreshed on publish. A channel that stops receiving publishes will eventually have its meta expire, even if clients are still reading history.
 - **Polling-based delivery, not PUB/SUB.** Each Centrifugo node polls the PostgreSQL stream table independently. With N nodes, that's N× the read load on PostgreSQL. The Redis broker uses native PUB/SUB where the message is delivered once and fanned out. For multi-node PG setups, [Centrifugo PRO's broker fan-out](../pro/map_subscriptions.md#broker-fan-out) reduces this to one poller per shard.
-- **Partition-based cleanup.** Data is cleaned up by dropping entire daily partitions (controlled by `partition_retention_days`), not per-key TTL. Individual publications can't expire independently — the whole partition is dropped or retained. The optional `fine_grained_history_cleanup` adds per-channel row deletion within partitions for tighter storage control.
+- **Partition-based cleanup.** Data is cleaned up by dropping entire daily partitions (controlled by `partition_retention_days`), not per-channel TTL. Individual publications can't expire independently — the whole partition is dropped or retained. Align `partition_retention_days` with your longest channel `history_ttl` to control storage.
 - **`p_history_ttl` should not exceed `partition_retention_days`** — once a partition is dropped, the rows are gone regardless of the TTL. For example, with the default `partition_retention_days: 7`, setting `history_ttl` to 30 days would promise more history than the partitions retain.
 
 **When calling SQL functions directly:**
