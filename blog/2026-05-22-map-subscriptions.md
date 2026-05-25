@@ -7,7 +7,7 @@ image: /img/blog_map_subs_01.jpg
 authorTitle: Founder of Centrifugal Labs
 authorImageURL: /img/alexander_emelin.jpeg
 hide_table_of_contents: false
-draft: true
+draft: false
 ---
 
 import MapSubscriptionDiagram from '@site/src/components/MapSubscriptionDiagram';
