@@ -108,19 +108,21 @@ html[data-theme="light"] .subSubTitle {
 
 .buttons a {
     pointer-events: all;
+    max-width: 100%;
+}
+
+@media screen and (max-width: 600px) {
+    .buttons :global(.button--lg) {
+        font-size: 0.95rem;
+        padding: 0.5rem 1rem;
+        white-space: normal;
+        line-height: 1.25;
+    }
 }
 
 @media screen and (max-width: 480px) {
     .buttons {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
-        max-width: 280px;
-    }
-
-    .buttons a {
-        width: 100%;
-        text-align: center;
+        gap: 8px;
     }
 }
 

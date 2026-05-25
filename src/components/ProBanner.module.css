@@ -10,6 +10,7 @@
     color: #9b9b9b;
     animation: fadeIn 0.7s linear forwards;
     overflow: hidden;
+    min-width: 0;
 }
 
 html[data-theme="light"] .strip {
@@ -56,6 +57,10 @@ html[data-theme="light"] .badge {
     color: #fff;
     font-weight: 600;
     text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
 }
 
 .link:hover {
@@ -69,6 +74,8 @@ html[data-theme="light"] .badge {
     display: inline-flex;
     align-items: center;
     height: 1.6em;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .unit {
@@ -76,6 +83,8 @@ html[data-theme="light"] .badge {
     align-items: center;
     gap: 8px;
     white-space: nowrap;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .placeholder {
