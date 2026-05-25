@@ -40,47 +40,6 @@ By default, stats will be aggregated over 10 seconds intervals inside Centrifugo
 
 If you need to change this aggregation interval use the `graphite_interval` option (in seconds, default `10`).
 
-### Native histograms
-
-New in Centrifugo v6.8.1
-
-Centrifugo can expose Histogram metrics in Prometheus [native histogram](https://prometheus.io/docs/specs/native_histograms/) form — a sparse, exponential representation introduced in Prometheus 2.40. Native histograms auto-adapt to the value distribution and are the form that maps cleanly to OpenTelemetry's `ExponentialHistogram` when bridged.
-
-To enable:
-
-```json title="config.json"
-{
-  "prometheus": {
-    "enabled": true,
-    "native_histograms": true
-  }
-}
-```
-
-The flag is opt-in. With it off, all metrics keep today's behavior (backwards compatible). New `*_seconds_histogram` companion metrics were added in v6.8.1 for every Summary that didn't previously have one — they are exposed unconditionally with classic buckets by default, and switch to native schema when the flag is on.
-
-When the flag is on:
-
-- Every Summary listed in the metrics reference below stops being exposed; its `_histogram` companion is the canonical instrument.
-- Every Histogram in the package (existing and newly added companions) switches to native (sparse, exponential) schema with no explicit buckets exposed.
-
-Operational notes:
-
-- **Breaking change for dashboards relying on `{quantile="..."}` labels** on the dropped Summaries — switch to `histogram_quantile()` against the corresponding `_histogram` metric.
-- **Text-format Prometheus scrapes lose `_bucket` series** on Histograms — only `_count` and `_sum` remain visible. Configure your scrape job to use the protobuf format to receive the native histogram data:
-  ```yaml
-  scrape_configs:
-    - job_name: centrifugo
-      scrape_protocols: [PrometheusProto, OpenMetricsText1.0.0, PrometheusText0.0.4]
-      # ...
-  ```
-  Prometheus 2.40+ is required for native histogram ingestion.
-- Native histograms are still flagged experimental in `client_golang`. The feature is opt-in for that reason.
-
-**Why enable this in plain Prometheus setups?** Histograms aggregate correctly across multiple Centrifugo nodes — `histogram_quantile()` over fleet-wide bucket counts gives a meaningful fleet-wide p99. Summaries can't be aggregated this way (their per-node quantile estimates aren't mathematically combinable). Native histograms keep the storage cost low while providing this aggregation property. If you're scraping Centrifugo with Prometheus 2.40+, this flag gives you better percentile data for free.
-
-If you also want to push metrics to an OpenTelemetry backend (Grafana Cloud, GCP, Datadog via OTLP, etc.) without running a Prometheus sidecar, Centrifugo PRO adds a built-in bridge that translates the in-process Prometheus registry to OTLP — see [OpenTelemetry metrics export](../pro/observability_enhancements.md#opentelemetry-metrics-export). With native histograms enabled, the bridge produces high-fidelity OTel `ExponentialHistogram` data points.
-
 ### Grafana dashboard
 
 Check out Centrifugo [official Grafana dashboard](https://grafana.com/grafana/dashboards/13039) for Prometheus storage. You can import that dashboard to your Grafana, point to Prometheus storage – and enjoy visualized metrics.
@@ -151,23 +110,10 @@ Here is a description of various metrics exposed by Centrifugo.
 
 #### centrifugo_node_survey_duration_seconds
 
-:::caution Deprecated
-This Summary is deprecated and will be removed in Centrifugo v7. Use the `_histogram` companion below. Not exposed when [`prometheus.native_histograms`](#native-histograms) is enabled.
-:::
-
 - **Type:** Summary
 - **Labels:** op
 - **Description:** Captures the duration of surveys conducted by the node.
 - **Usage:** Helps in performance monitoring and identifying any delays or issues in survey operations.
-
-#### centrifugo_node_survey_duration_seconds_histogram
-
-New in Centrifugo v6.8.1
-
-- **Type:** Histogram. Uses native (sparse, exponential) schema when [`prometheus.native_histograms`](#native-histograms) is enabled.
-- **Labels:** op
-- **Description:** Same data as the Summary above, exposed in `histogram_quantile()`- and OpenTelemetry-friendly form.
-- **Usage:** Prefer this metric for percentile queries and OpenTelemetry export.
 
 #### centrifugo_client_num_reply_errors
 
@@ -192,23 +138,10 @@ New in Centrifugo v6.8.1
 
 #### centrifugo_client_command_duration_seconds
 
-:::caution Deprecated
-This Summary is deprecated and will be removed in Centrifugo v7. Use the `_histogram` companion below. Not exposed when [`prometheus.native_histograms`](#native-histograms) is enabled.
-:::
-
 - **Type:** Summary
 - **Labels:** method, channel_namespace (Centrifugo PRO)
 - **Description:** Measures the duration of commands executed by clients.
 - **Usage:** Essential for performance monitoring and ensuring timely responses to client commands.
-
-#### centrifugo_client_command_duration_seconds_histogram
-
-New in Centrifugo v6.8.1
-
-- **Type:** Histogram. Uses native (sparse, exponential) schema when [`prometheus.native_histograms`](#native-histograms) is enabled.
-- **Labels:** method, channel_namespace (Centrifugo PRO)
-- **Description:** Same data as the Summary above, exposed in `histogram_quantile()`- and OpenTelemetry-friendly form.
-- **Usage:** Prefer this metric for percentile queries and OpenTelemetry export.
 
 #### centrifugo_client_recover
 
@@ -308,21 +241,10 @@ Note, this metric is disabled by default. To enable it set `prometheus.recovered
 
 #### centrifugo_proxy_duration_seconds
 
-:::caution Deprecated
-This Summary is deprecated and will be removed in Centrifugo v7. Use `centrifugo_proxy_duration_seconds_histogram` (below). Not exposed when [`prometheus.native_histograms`](#native-histograms) is enabled.
-:::
-
-- **Type:** Summary
+- **Type:** Summary & Histogram
 - **Labels:** protocol, type
 - **Description:** Captures the duration of proxy calls.
 - **Usage:** Critical for understanding the performance of proxy calls and identifying any potential bottlenecks or issues.
-
-#### centrifugo_proxy_duration_seconds_histogram
-
-- **Type:** Histogram. Uses native (sparse, exponential) schema when [`prometheus.native_histograms`](#native-histograms) is enabled.
-- **Labels:** protocol, type
-- **Description:** Same data as the Summary above, exposed in `histogram_quantile()`- and OpenTelemetry-friendly form.
-- **Usage:** Prefer this metric for percentile queries and OpenTelemetry export.
 
 #### centrifugo_proxy_errors
 
@@ -333,21 +255,10 @@ This Summary is deprecated and will be removed in Centrifugo v7. Use `centrifugo
 
 #### centrifugo_granular_proxy_duration_seconds
 
-:::caution Deprecated
-This Summary is deprecated and will be removed in Centrifugo v7. Use `centrifugo_granular_proxy_duration_seconds_histogram` (below). Not exposed when [`prometheus.native_histograms`](#native-histograms) is enabled.
-:::
-
-- **Type:** Summary
+- **Type:** Summary & Histogram
 - **Labels:** type, name
 - **Description:** Measures the duration of granular proxy calls.
 - **Usage:** Use this to get more detailed insights into the performance of granular proxy operations.
-
-#### centrifugo_granular_proxy_duration_seconds_histogram
-
-- **Type:** Histogram. Uses native (sparse, exponential) schema when [`prometheus.native_histograms`](#native-histograms) is enabled.
-- **Labels:** type, name
-- **Description:** Same data as the Summary above, exposed in `histogram_quantile()`- and OpenTelemetry-friendly form.
-- **Usage:** Prefer this metric for percentile queries and OpenTelemetry export.
 
 #### centrifugo_granular_proxy_errors
 
@@ -358,10 +269,6 @@ This Summary is deprecated and will be removed in Centrifugo v7. Use `centrifugo
 
 #### centrifugo_api_command_duration_seconds
 
-:::caution Deprecated
-This Summary is deprecated and will be removed in Centrifugo v7. Use `centrifugo_api_command_duration_seconds_histogram` (below). Not exposed when [`prometheus.native_histograms`](#native-histograms) is enabled.
-:::
-
 - **Type:** Summary
 - **Labels:** protocol, method
 - **Description:** Tracks the duration of API commands.
@@ -369,30 +276,10 @@ This Summary is deprecated and will be removed in Centrifugo v7. Use `centrifugo
 
 #### centrifugo_api_command_duration_seconds_histogram
 
-- **Type:** Histogram. Uses native (sparse, exponential) schema when [`prometheus.native_histograms`](#native-histograms) is enabled.
+- **Type:** Histogram
 - **Labels:** protocol, method
-- **Description:** Same data as the Summary above, exposed in `histogram_quantile()`- and OpenTelemetry-friendly form.
-- **Usage:** Prefer this metric for percentile queries and OpenTelemetry export.
-
-#### centrifugo_api_rpc_duration_seconds
-
-:::caution Deprecated
-This Summary is deprecated and will be removed in Centrifugo v7. Use `centrifugo_api_rpc_duration_seconds_histogram` (below). Not exposed when [`prometheus.native_histograms`](#native-histograms) is enabled.
-:::
-
-- **Type:** Summary
-- **Labels:** protocol, method
-- **Description:** Tracks the duration of API RPC calls.
-- **Usage:** Helps in monitoring RPC performance and ensuring timely responses.
-
-#### centrifugo_api_rpc_duration_seconds_histogram
-
-New in Centrifugo v6.8.1
-
-- **Type:** Histogram. Uses native (sparse, exponential) schema when [`prometheus.native_histograms`](#native-histograms) is enabled.
-- **Labels:** protocol, method
-- **Description:** Same data as the Summary above, exposed in `histogram_quantile()`- and OpenTelemetry-friendly form.
-- **Usage:** Prefer this metric for percentile queries and OpenTelemetry export.
+- **Description:** Tracks the duration of API commands.
+- **Usage:** Helps in monitoring the API performance and ensuring timely responses.
 
 #### centrifugo_node_pub_sub_lag_seconds
 

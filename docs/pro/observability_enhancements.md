@@ -71,67 +71,6 @@ The `accept_protocol` label can have the following values:
 
 This helps in understanding the protocol distribution across your infrastructure and can be useful for performance analysis and infrastructure planning.
 
-## OpenTelemetry metrics export
-
-New in Centrifugo PRO v6.8.1
-
-Centrifugo PRO can export its metrics to an OpenTelemetry-compatible backend (Grafana Cloud, GCP Cloud Operations, Datadog, AWS CloudWatch via OTLP, OTel Collector, etc.) without running a Prometheus sidecar. Internally Centrifugo continues to use Prometheus instrumentation, then a bridge translates the metrics registry into OTLP and pushes them via the OTel SDK.
-
-To enable, both flags are needed — the OpenTelemetry section turns the subsystem on, and `metrics: true` activates the metrics pipeline (in addition to traces):
-
-```json title="config.json"
-{
-  "opentelemetry": {
-    "enabled": true,
-    "metrics": true
-  }
-}
-```
-
-Endpoint, headers, and protocol are configured via the standard `OTEL_EXPORTER_OTLP_*` environment variables — the same ones that drive trace export:
-
-```bash
-OTEL_EXPORTER_OTLP_ENDPOINT="https://otlp.example.com" \
-OTEL_EXPORTER_OTLP_HEADERS="api-key=..." \
-OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf" \
-./centrifugo
-```
-
-`OTEL_EXPORTER_OTLP_PROTOCOL` accepts `http/protobuf` (default) or `grpc`.
-
-### Pair with native histograms for full fidelity
-
-By default, Prometheus Histograms are translated to OTel fixed-bucket histograms. To get the high-fidelity `ExponentialHistogram` representation that most OTel-native backends prefer, enable [native histograms](../server/observability.md#native-histograms) alongside:
-
-```json title="config.json"
-{
-  "prometheus": {
-    "enabled": true,
-    "native_histograms": true
-  },
-  "opentelemetry": {
-    "enabled": true,
-    "metrics": true
-  }
-}
-```
-
-This is the recommended configuration for new OTel-only deployments. Prometheus scraping is not required when the OTLP push pipeline is the source of truth — you can leave `prometheus.enabled: false` if there are no Prometheus consumers (the bridge still works against the in-process registry).
-
-### Summary instruments are deprecated
-
-:::caution Deprecation notice
-All Prometheus Summary instruments in Centrifugo are deprecated as of v6.8.1 and will be removed in Centrifugo v7. Use the `_histogram` companions instead — they expose the same data in a form that aggregates correctly across nodes (`histogram_quantile()`) and translates cleanly to OpenTelemetry.
-:::
-
-With `prometheus.native_histograms: true` recommended above, Centrifugo stops exposing all Prometheus Summary instruments — every duration/distribution metric is carried by its `_histogram` companion (which uses native exponential schema when the flag is on). The OTel pipeline therefore carries only Histograms and ExponentialHistograms — clean ingest at OTel-native backends.
-
-If you leave `prometheus.native_histograms` off but still enable `opentelemetry.metrics`, Centrifugo's Summary metrics will be translated to OTel's legacy `Summary` data point shape, which most OTel-native backends treat as second-class data or drop at ingest. Use the corresponding `_histogram` companion metrics in your OTel dashboards in that mode, or — strongly recommended — enable native histograms and get the clean pipeline.
-
-The pro-only Summary metrics deprecated by the same migration are: `centrifugo_push_job_duration_seconds`, `centrifugo_clickhouse_analytics_flush_duration_seconds`, `centrifugo_clickhouse_analytics_batch_size`, and `centrifugo_shared_poll_relay_backend_duration_seconds`. Each has an `_histogram` companion (added in v6.8.1) that becomes the canonical instrument when native histograms is enabled.
-
-**Why Summaries are being removed**: in a clustered Centrifugo deployment (multiple nodes), Summary's pre-computed quantile estimates cannot be aggregated across instances — there's no mathematically valid way to combine per-node p99s into a fleet-wide p99. Histograms solve this by aggregating bucket counts across nodes, then computing percentiles with `histogram_quantile()`. For any multi-node deployment the Summary quantile data is, at best, misleading.
-
 ## Sentry integration
 
 Centrifugo PRO comes with an integration with [Sentry](https://sentry.io/). Just a couple of lines in the configuration:
