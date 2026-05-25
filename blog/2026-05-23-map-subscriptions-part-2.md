@@ -7,15 +7,13 @@ authorTitle: Founder of Centrifugal Labs
 image: /img/blog_map_subs_02.jpg
 authorImageURL: /img/alexander_emelin.jpeg
 hide_table_of_contents: false
-draft: true
+draft: false
 ---
 
 import PgTransactionalDiagram from '@site/src/components/PgTransactionalDiagram';
 import PgOutboxDiagram from '@site/src/components/PgOutboxDiagram';
 
-Write a row to PostgreSQL. Publish to Centrifugo. Crash between the two — and your subscribers stay frozen on stale state until something refreshes them. This is the dual-write problem, and every team putting a real-time layer in front of a database hits it. The usual fixes — application-side outbox tables maintained by hand, CDC pipelines reading the WAL, eventual-consistency reconciliation — all add infrastructure to paper over a one-line gap between two writes.
-
-The PostgreSQL map broker collapses that gap into a single SQL transaction:
+In the previous blog post we introduced Map Subscriptions. We mentioned that Centrifugo has PostgreSQL Map Broker, in this post we are providing more details about it. The PostgreSQL map broker allows publishing to a Centrifugo Map within an application SQL transaction:
 
 <!--truncate-->
 
