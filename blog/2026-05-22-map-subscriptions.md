@@ -20,8 +20,6 @@ Centrifugo's original model is **stream subscriptions** — channel-based pub/su
 
 For the broad case of "I have data in my own database and want clients to see it live", a stream subscription with a `getState` callback reading from your own tables is usually the natural fit — your schema stays the source of truth. Map subscriptions fit a different shape: collections without an obvious home in the application's database — cursors that exist for a few seconds at a time, presence sets, IoT device state, lobby members, feature flags, live dashboards. Each is conceptually just a key-value collection that should be live in the browser. Building a store, a change feed, and a snapshot endpoint for each one is a lot of infrastructure for that. Map subscriptions are that primitive, baked into Centrifugo.
 
-This post introduces map subscriptions and focuses on cases where Centrifugo owning the collection is exactly what you want. **Map subscriptions can also mirror data you already store elsewhere** — you pay for some duplication into `cf_map_state`, and in return you get the synchronized snapshot, paginated state delivery, per-key TTL, and consistent reads on the client without writing your own initial-state endpoint. A different trade-off, not a forbidden one.
-
 Centrifugo also offers a new presence implementation built on map subscriptions, with all the same benefits — automatic synchronization and a clean SDK API.
 
 <!--truncate-->
