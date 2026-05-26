@@ -7,7 +7,7 @@ authorTitle: Founder of Centrifugal Labs
 authorImageURL: /img/alexander_emelin.jpeg
 image: /img/blog_pg_controller.jpg
 hide_table_of_contents: false
-draft: true
+draft: false
 ---
 
 For most of [Centrifugo](https://centrifugal.dev)'s history, scaling past one node meant adding Redis — even on stacks running on PostgreSQL alone. One more service to provision, monitor, secure, and back up, just so Centrifugo nodes could coordinate with each other.
