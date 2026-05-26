@@ -109,7 +109,7 @@ For background on the outbox pattern shared with the brokers, see the [PG stream
 
 ## A runnable demo
 
-A working three-node example lives in [`examples/v6/pg_cluster_demo`](https://github.com/centrifugal/centrifugo/tree/master/examples/v6/pg_cluster_demo). It boots a single PostgreSQL container, three local Centrifugo nodes pointing at the same DSN, and a static page that exercises all three components at once:
+A working three-node example lives in [`examples/v6/pg_cluster_demo`](https://github.com/centrifugal/examples/tree/master/v6/pg_cluster_demo). It boots a single PostgreSQL container, three local Centrifugo nodes pointing at the same DSN, and a static page that exercises all three components at once:
 
 <img src="/img/demo_pg_only.jpg" /><br /><br />
 
