@@ -18,7 +18,7 @@ Today we're extending the same shape to **stream subscriptions** — the ordered
 
 :::info New and evolving
 
-Available in Centrifugo v6.8.0+. The PostgreSQL stream broker is a recent addition — we're eager for production feedback. SQL function shapes, configuration keys, and outbox internals may still adjust before they're considered stable.
+Available in Centrifugo v6.8.0+. The PostgreSQL stream broker is a recent addition — we're eager for feedback. SQL function shapes, configuration keys, and outbox internals may still adjust before they're considered stable.
 
 :::
 
