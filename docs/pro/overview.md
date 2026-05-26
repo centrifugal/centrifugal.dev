@@ -19,7 +19,7 @@ Centrifugo PRO is packed with the following features:
 * 🔐 [SSO for admin UI](./admin_ui.md) using OpenID Connect (OIDC) protocol. Also, more data about the system state.
 * 📸 [Channels and connections snapshots](./admin_ui.md#channels-and-connections-snapshots) to drill down into the system state right from admin UI.
 * 🪪 [Extracting meta from JWT claims](./client_authentication.md#extracting-meta-from-jwt-claims). And [Multiple JWKS providers](./client_authentication.md#multiple-jwks-providers) for client authentication.
-* 🔑 [Server API JWKS auth](./server_api_auth.md) to protect HTTP API with JWT tokens validated against JWKS endpoint.
+* 🔑 [Server API enhancements](./server_api_enhancements.md) — JWKS-based auth for HTTP/GRPC APIs, and `label_filter` for targeting operations (disconnect, refresh, subscribe, unsubscribe) by [client labels](./client_authentication.md#client-labels).
 * 🟢 [User status API](./user_status.md) feature allows understanding activity state for a list of users.
 * 🔌 [Connections API](./connections.md) to query, filter and inspect active connections.
 * ✋ [User blocking and token revocation API](./access_revoke.md) to block/unblock abusive users and revoke tokens by ID or invalidate user's tokens based on issue time.

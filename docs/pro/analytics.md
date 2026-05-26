@@ -148,6 +148,7 @@ SHOW CREATE TABLE centrifugo.connections;
     `transport` String,
     `headers` Map(String, Array(String)),
     `metadata` Map(String, Array(String)),
+    `labels` Map(String, String),
     `time` DateTime
 )
 ENGINE = ReplicatedMergeTree('/clickhouse/tables/{cluster}/{shard}/connections', '{replica}')
@@ -173,11 +174,14 @@ SHOW CREATE TABLE centrifugo.connections_distributed;
     `transport` String,
     `headers` Map(String, Array(String)),
     `metadata` Map(String, Array(String)),
+    `labels` Map(String, String),
     `time` DateTime
 )
 ENGINE = Distributed('centrifugo_cluster', 'centrifugo', 'connections', murmurHash3_64(client)) │
 └─────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
+
+The `labels` column carries [client labels](./client_authentication.md#client-labels) attached to the connection. Available since the labels feature shipped — see [Migration](#migration) below for the one-time `ALTER` to add the column to existing deployments.
 
 ## Subscriptions table
 
@@ -233,6 +237,7 @@ SHOW CREATE TABLE centrifugo.operations;
     `error` UInt32,
     `disconnect` UInt32,
     `duration` UInt64,
+    `labels` Map(String, String),
     `time` DateTime
 )
 ENGINE = ReplicatedMergeTree('/clickhouse/tables/{cluster}/{shard}/operations', '{replica}')
@@ -259,6 +264,7 @@ SHOW CREATE TABLE centrifugo.operations_distributed;
     `error` UInt32,
     `disconnect` UInt32,
     `duration` UInt64,
+    `labels` Map(String, String),
     `time` DateTime
 )
 ENGINE = Distributed('centrifugo_cluster', 'centrifugo', 'operations', murmurHash3_64(client)) │
@@ -362,6 +368,57 @@ SHOW CREATE TABLE centrifugo.notifications_distributed;
 ENGINE = Distributed('centrifugo_cluster', 'centrifugo', 'notifications', murmurHash3_64(uid)) │
 └────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
+
+## Snapshot tables
+
+When `clickhouse_analytics.snapshots.enabled` is set, two additional tables are created for point-in-time snapshots created via the [admin connections](./connections.md) snapshot endpoint:
+
+- `snapshot_channels` — one row per (snapshot_id, channel, node).
+- `snapshot_connections` — one row per (snapshot_id, client). Includes the same `labels Map(String, String)` column as the [connections table](#connections-table). The snapshot create API accepts a `label_filter` argument; matching is applied at gather time on each node's hub, so the table only ever stores the filtered subset.
+
+## Migration
+
+When upgrading from a pre-labels Centrifugo PRO release with existing analytics tables, run the following `ALTER` statements **before** starting the new binary. The labels column must be present for inserts to succeed; on startup, Centrifugo refuses to start with an actionable error pointing back to this section if any required column is missing on a table whose ingestion is enabled.
+
+`ALTER TABLE ... ADD COLUMN ... DEFAULT map()` is a metadata-only operation on MergeTree (no data rewrite) — fast even on large tables.
+
+For standalone ClickHouse:
+
+```sql
+ALTER TABLE centrifugo.connections          ADD COLUMN IF NOT EXISTS labels Map(String, String) DEFAULT map();
+ALTER TABLE centrifugo.operations           ADD COLUMN IF NOT EXISTS labels Map(String, String) DEFAULT map();
+ALTER TABLE centrifugo.snapshot_connections ADD COLUMN IF NOT EXISTS labels Map(String, String) DEFAULT map();
+```
+
+For a ClickHouse cluster (replace `'centrifugo_cluster'` with your `clickhouse_cluster` config value):
+
+```sql
+ALTER TABLE centrifugo.connections          ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS labels Map(String, String) DEFAULT map();
+ALTER TABLE centrifugo.operations           ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS labels Map(String, String) DEFAULT map();
+ALTER TABLE centrifugo.snapshot_connections ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS labels Map(String, String) DEFAULT map();
+```
+
+Replace `centrifugo` with your `clickhouse_database` if it differs. Apply only the lines for tables you actually have enabled (the startup probe only checks tables with ingestion enabled, so skipped ALTERs for disabled tables are harmless).
+
+If you use the `_distributed` companion tables (set when `clickhouse_cluster` is configured), apply the same column addition there as well so distributed inserts succeed:
+
+```sql
+ALTER TABLE centrifugo.connections_distributed          ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS labels Map(String, String) DEFAULT map();
+ALTER TABLE centrifugo.operations_distributed           ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS labels Map(String, String) DEFAULT map();
+ALTER TABLE centrifugo.snapshot_connections_distributed ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS labels Map(String, String) DEFAULT map();
+```
+
+### Downgrade safety
+
+After the migration, rolling back to an older Centrifugo build is safe — the column has `DEFAULT map()` so inserts from the older binary (which omit the `labels` column from `INSERT VALUES`) get an empty map and continue to succeed. There is no need to roll back the schema.
+
+### Greenfield deployments
+
+New deployments (no existing tables) need no action — the `CREATE TABLE IF NOT EXISTS` issued by Centrifugo on first start already includes the labels column.
+
+### Cardinality warning
+
+The `labels` column is a `Map(String, String)` — every unique label key/value combination adds to the column's dictionary. Putting unbounded values into labels (session IDs, request IDs, user IDs) bloats the column and degrades compression. The same concern applies to the Prometheus dimensions exported via [`prometheus.client_labels`](./observability_enhancements.md#client-labels-as-prometheus-dimensions) — keep labels bounded at the source.
 
 ## Query examples
 

@@ -60,7 +60,7 @@ const data = [
                 description: 'Automatically extract and map JWT claims from third-party identity providers into Centrifugo connection metadata. Useful when working with providers that issue non-customizable tokens.',
             },
             {
-                name: 'Server API JWKS authentication', pro: true, link: '/docs/pro/server_api_auth',
+                name: 'Server API JWKS authentication', pro: true, link: '/docs/pro/server_api_enhancements#jwks-authentication',
                 description: 'Protect HTTP and GRPC server APIs with JWKS-based JWT authentication. Use tokens from your identity provider (Keycloak, Auth0, etc.) instead of static API keys.',
             },
         ],
