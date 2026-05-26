@@ -7,7 +7,7 @@ authorTitle: Founder of Centrifugal Labs
 authorImageURL: /img/alexander_emelin.jpeg
 image: /img/blog_pg_stream_broker.jpg
 hide_table_of_contents: false
-draft: true
+draft: false
 ---
 
 In [Part 2 of the map subscriptions series](/blog/2026/05/23/map-subscriptions-part-2), we introduced a PostgreSQL map broker that lets your application publish real-time map updates inside a database transaction — removing the dual-write problem when you publish via the broker's SQL function from your own transactions. That capability applied only to map subscriptions — keyed state like leaderboards, collaborative boards, and inventories.

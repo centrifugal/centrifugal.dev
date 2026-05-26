@@ -78,15 +78,6 @@ In effect, the broker-owned collection lives durably in PostgreSQL with the same
 
 The stream table is automatically partitioned by day. Old partitions are dropped entirely — instant, no row-by-row deletion, no expensive vacuum operations. This is built into the open-source broker via `partition_retention_days` (default 7) and `partition_lookahead_days` (default 2). No manual maintenance needed — the broker pre-creates future partitions and drops old ones on a regular interval.
 
-## Scaling with Centrifugo PRO
-
-The OSS broker works well for single-node and small-cluster deployments. Four patterns start to bite as you grow — more Centrifugo nodes, more channels, higher write throughput, or UIs that render the whole collection every frame — and [Centrifugo PRO](/docs/pro/map_subscriptions) addresses each:
-
-- **PG read load that grows linearly with cluster size.** By default, every Centrifugo node independently polls the outbox. At a few nodes that's fine; at a dozen, the read traffic on PG starts to matter. PRO's **broker fan-out** elects one node per shard to poll (shard leadership coordinated via PostgreSQL advisory locks) and re-broadcasts to peers via Redis or NATS — PG read load stays constant regardless of how many Centrifugo nodes are behind it.
-- **Subscribe latency hitting PG on every new client.** As channels and connection churn grow, every new subscriber that wants initial state causes a PG read. PRO's **in-memory cache layer** keeps channel state on each Centrifugo node, fed by PUB/SUB so the cache reflects both local and remote writes in near real-time. Subscribes resolve from memory at microsecond latency instead of hitting PG, and a configurable `sync_interval` periodically reconciles with the backend as a safety net for any PUB/SUB messages that may have been missed.
-- **Read load that the primary alone can't carry.** State pagination and stream catch-up reads add up at scale, and on a single primary they compete with writes. PRO's **read-replica routing** distributes those reads across PostgreSQL replicas using consistent hashing on the channel name, while writes still go to the primary — so the primary keeps headroom for the work that actually requires it.
-- **Bandwidth on full-state UIs.** For collections where every client renders the entire map every frame — cursor sets, game positions, IoT fleet dashboards — publishing one update per key change is wasteful when subscribers want the whole picture anyway. PRO's **full-state delta mode** (built on top of the cache layer) exposes a derived stream channel that publishes the entire map as a single Fossil-delta-compressed payload per configurable tick. Bandwidth then scales with the size of the change, not with the number of keys touched or the size of the full state.
-
 ## Performance
 
 On PostgreSQL 16 (Apple M4, native install — not Docker):
