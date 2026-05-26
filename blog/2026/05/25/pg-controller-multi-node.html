@@ -17,7 +17,7 @@
 <link rel="search" type="application/opensearchdescription+xml" title="Centrifugo" href="/opensearch.xml">
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.97689a2c.css">
-<script src="/assets/js/runtime~main.4f2a2fa8.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.5bb85803.js" defer="defer"></script>
 <script src="/assets/js/main.3ea9fb4d.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -66,7 +66,7 @@
 <p>The controller creates its required tables, partitions, and SQL functions on startup. Bring up two or more Centrifugo nodes pointing at the same PostgreSQL, and they&#x27;ll coordinate without further setup.</p>
 <p>For background on the outbox pattern shared with the brokers, see the <a class="" href="/blog/2026/05/24/pg-stream-broker-benefits">PG stream broker post</a> and the <a class="" href="/blog/2026/05/23/map-subscriptions-part-2">PG map broker post</a>. The full configuration reference lives in the <a class="" href="/docs/server/engines">engines documentation</a>.</p>
 <h2 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="a-runnable-demo">A runnable demo<a href="#a-runnable-demo" class="hash-link" aria-label="Direct link to A runnable demo" title="Direct link to A runnable demo" translate="no">​</a></h2>
-<p>A working three-node example lives in <a href="https://github.com/centrifugal/centrifugo/tree/master/examples/v6/pg_cluster_demo" target="_blank" rel="noopener noreferrer" class=""><code>examples/v6/pg_cluster_demo</code></a>. It boots a single PostgreSQL container, three local Centrifugo nodes pointing at the same DSN, and a static page that exercises all three components at once:</p>
+<p>A working three-node example lives in <a href="https://github.com/centrifugal/examples/tree/master/v6/pg_cluster_demo" target="_blank" rel="noopener noreferrer" class=""><code>examples/v6/pg_cluster_demo</code></a>. It boots a single PostgreSQL container, three local Centrifugo nodes pointing at the same DSN, and a static page that exercises all three components at once:</p>
 <img src="/img/demo_pg_only.jpg">
 <br>
 <br>
