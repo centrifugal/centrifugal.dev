@@ -112,7 +112,18 @@ The connection will have the following `meta` object:
 
 ## Client labels
 
-Client labels are a string-to-string map (`map[string]string`) attached to a connection at connect time. Once set, labels are **immutable** for the connection's lifetime. They power per-client Prometheus dimensions, the `label_filter` argument on the [server API](./connections.md), filtering at [snapshot](./connections.md) gather time, and the `labels` variable in [CEL expressions](./cel_expressions.md), and are always attached to outgoing [proxy](./event_hooks.md) requests.
+Client labels are a string-to-string map (`map[string]string`) attached to a connection at connect time. Once set, labels are **immutable** for the connection's lifetime. They power per-client Prometheus dimensions, the `label_filter` argument on the [server API](./server_api_enhancements.md#targeted-ops-by-client-labels), filtering at [snapshot](./connections.md) gather time, and the `labels` variable in [CEL expressions](./cel_expressions.md), and are always attached to outgoing [proxy](./event_hooks.md) requests. See the [Client labels landing page](./client_labels.md) for the full cross-subsystem overview.
+
+### Labels vs `meta`
+
+Centrifugo connections already have a `meta` JSON object that flows from JWT/proxy into per-connection metadata. Labels are a separate primitive with a narrower contract:
+
+- **`meta`** is free-form JSON. Use it when your backend needs richer per-connection context — nested objects, arrays, app-specific shapes. Not filterable on the server side.
+- **`labels`** is a typed `map[string]string`. Use it when the value is a categorical key/value pair you want to *filter on, segment by, or target with* an op (metrics dimensions, server-API `label_filter`, listings, CEL gates, analytics columns).
+
+Rule of thumb: tier/region/app-version → `labels`. Anything richer than a string-keyed string value → `meta`. The same JWT claim can populate both — use whichever shape fits the consumer. Both are immutable after connect.
+
+### Sources
 
 Centrifugo PRO accepts client labels from two sources:
 
