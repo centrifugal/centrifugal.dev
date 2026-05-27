@@ -268,63 +268,78 @@ response, err := client.Publish(ctx, &api.PublishRequest{
 })
 ```
 
-## Filtering targeted ops by client labels
+## Targeted ops by client labels
 
-The `subscribe`, `unsubscribe`, `disconnect`, and `refresh` methods accept an optional `label_filter` argument that further narrows the call to connections whose [client labels](./client_authentication.md#client-labels) match the predicate.
+The `subscribe`, `unsubscribe`, `disconnect`, and `refresh` server-API methods accept two optional arguments for [client-label](./client_authentication.md#client-labels)-based targeting:
 
-:::caution Requires `user` to be set
+- **`label_filter`** — a `FilterNode` predicate matched against `Client.Labels`. Same expression language as the [server tags filter](./server_tags_filter.md) — operators `eq`, `neq`, `in`, `nin`, `ex`, `nex`, `sw`, `ew`, `ct`, `gt`, `gte`, `lt`, `lte`, `and`, `or`, `not`. The difference vs. `server_tags_filter` is the subject: `server_tags_filter` matches publication tags; `label_filter` matches connection labels.
+- **`all_users`** — boolean. Changes the meaning of an empty `user` from "anonymous-user bucket only" to "every connection on every node." No effect when `user` is non-empty. Required to act fleet-wide on labels alone.
 
-`label_filter` on these four ops is a **narrower within a user's connections**, not a fleet-wide selector. The op still requires `user` (or `client` / `session`) to identify which connections to consider. A request that sets only `label_filter` with an empty `user` matches zero connections and silently no-ops.
+### How `user`, `all_users`, and `label_filter` interact
 
-This mirrors how `client` and `session` work today — they narrow within a user's connections, never act fleet-wide on their own. The same constraint applies because the underlying centrifuge hub is indexed by user ID, so the op machinery dispatches to a user first and then iterates that user's connections.
+| `user`     | `all_users` | Target set                                              |
+|------------|-------------|---------------------------------------------------------|
+| `"alice"`  | any         | Alice's connections (existing behavior; `all_users` ignored). |
+| `""`       | `false`     | Anonymous-user bucket only (existing behavior — backward compatible). |
+| `""`       | `true`      | **Every connection across the cluster**, narrowed by `label_filter` if set. |
 
-For fleet-wide *listings* by labels (no `user` required), use the [`connections`](./connections.md) API, which goes through a survey across the entire hub. For fleet-wide *actions* by labels, list connections by label first and dispatch the action per user.
+`label_filter`, `client`, and `session` always act as additive narrowers within the chosen target set. A connection must satisfy every set criterion to be affected.
+
+:::caution Fleet-wide ops without `label_filter` are destructive
+
+`{"all_users": true}` with no `label_filter` will disconnect / refresh / subscribe / unsubscribe **every connection in the cluster**. Use only for planned operations (maintenance evacuation, incident response). Log audits will show the call without a filter — make sure your monitoring catches it.
 
 :::
 
-The filter uses the same FilterNode tree as the [server tags filter](./server_tags_filter.md): operators `eq`, `neq`, `in`, `nin`, `ex`, `nex`, `sw`, `ew`, `ct`, `gt`, `gte`, `lt`, `lte`, `and`, `or`, `not`. The difference is the *subject*: `server_tags_filter` matches publication tags; `label_filter` matches connection labels (`map[string]string`) attached to the centrifuge client.
-
 ### Examples
 
-Disconnect a user's connections only when they are on a beta build:
+#### Fleet-wide: disconnect all EU pro-tier users
 
 ```bash
 curl --header "X-API-Key: <API_KEY>" \
   --request POST \
   --data '{
-    "user": "user42",
-    "label_filter": {"key": "channel", "cmp": "eq", "val": "beta"}
+    "all_users": true,
+    "label_filter": {
+      "op": "and",
+      "nodes": [
+        {"key": "region", "cmp": "eq", "val": "eu"},
+        {"key": "tier", "cmp": "eq", "val": "pro"}
+      ]
+    }
   }' \
   http://localhost:8000/api/disconnect
 ```
 
-Refresh a user's connections only when they are running a deprecated app version (handy after rolling out new auth requirements that older clients can't honor):
+#### Fleet-wide: refresh every client running a deprecated app version
 
 ```bash
 curl --header "X-API-Key: <API_KEY>" \
   --request POST \
   --data '{
-    "user": "user42",
+    "all_users": true,
     "expired": true,
     "label_filter": {"key": "app_version", "cmp": "in", "vals": ["1.0.0", "1.1.0"]}
   }' \
   http://localhost:8000/api/refresh
 ```
 
-Server-side subscribe a user's pro-tier connections to a feature channel, leaving free-tier connections alone:
+#### Fleet-wide: server-side subscribe every pro-tier connection to a feature channel
 
 ```bash
 curl --header "X-API-Key: <API_KEY>" \
   --request POST \
   --data '{
-    "user": "user42",
+    "all_users": true,
     "channel": "pricing:v2",
     "label_filter": {"key": "tier", "cmp": "eq", "val": "pro"}
   }' \
   http://localhost:8000/api/subscribe
 ```
 
-Unsubscribe a user's legacy desktop connections from a chat channel:
+#### Per-user: narrow within one user's connections
+
+When you know the user, leave `all_users` off and use `label_filter` as an additive narrower:
 
 ```bash
 curl --header "X-API-Key: <API_KEY>" \
@@ -343,13 +358,27 @@ curl --header "X-API-Key: <API_KEY>" \
   http://localhost:8000/api/unsubscribe
 ```
 
-### Combining with `client` and `session`
+#### Maintenance evacuation: disconnect everything
 
-`label_filter` is **additive** with `client` and `session` — they further narrow within the same user's connections. A connection must match all set criteria to be affected by the op.
+```bash
+curl --header "X-API-Key: <API_KEY>" \
+  --request POST \
+  --data '{
+    "all_users": true,
+    "disconnect": {"code": 4000, "reason": "scheduled maintenance"}
+  }' \
+  http://localhost:8000/api/disconnect
+```
+
+### Performance
+
+Fleet-wide ops iterate every shard's full connection table on every node. For deployments with tens of thousands of connections per node, this is O(N) work per call — single call site, no label index. Prefer narrower scoping (`user`, or per-tenant channels) when the same query can be expressed that way. Reach for `all_users` + `label_filter` when label-based targeting is the genuine intent or for one-shot operational actions.
+
+Cluster behavior: a fleet-wide op is fanned out via the control protocol — every receiving node runs the same hub-iteration filter locally. Mixed-version clusters (during rolling upgrade) safely degrade: older nodes that don't know `all_users` interpret it as `false` and run the anonymous-only path on their share. Bump every node before relying on fleet-wide semantics in production.
 
 ### Connections listing with `label_filter`
 
-The [`connections`](./connections.md) admin API supports `label_filter` as a fleet-wide selector — it doesn't require `user` to be set. Listings go through a per-node survey across the entire hub. The snapshot creation endpoint also accepts `label_filter` and applies it at gather time — see [Connections API](./connections.md) for the details.
+The [`connections`](./connections.md) admin API supports `label_filter` as a fleet-wide selector without needing `all_users`. Listings go through a per-node survey across the entire hub. The snapshot creation endpoint also accepts `label_filter` and applies it at gather time — see [Connections API](./connections.md) for the details.
 
 ## See also
 

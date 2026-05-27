@@ -142,7 +142,9 @@ At least one of `user`, `expression`, or `label_filter` must be set — the API 
 
 ### Label filter
 
-`label_filter` on `connections` restricts the listing to connections whose [labels](./client_authentication.md#client-labels) match the predicate. Unlike the targeted ops in [Server API enhancements](./server_api_enhancements.md), the listing supports `label_filter` as a fleet-wide selector — `user` and `expression` may both be left unset when filtering by labels alone.
+`label_filter` on `connections` restricts the listing to connections whose [labels](./client_authentication.md#client-labels) match the predicate. The listing supports `label_filter` as a fleet-wide selector — `user` and `expression` may both be left unset when filtering by labels alone (no `all_users` flag needed here; the survey already walks the full hub).
+
+For *acting* on the matched connections fleet-wide (disconnect, refresh, subscribe, unsubscribe) see [Server API enhancements → targeted ops by client labels](./server_api_enhancements.md#targeted-ops-by-client-labels), which use the `all_users` flag.
 
 Fleet-wide example (every EU pro/enterprise connection across all users):
 
