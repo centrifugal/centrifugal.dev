@@ -269,9 +269,9 @@ First, you need to create configuration for additional brokers:
     {
       "enabled": true,
       "name": "mycustompg",
-      "type": "postgresql",
-      "postgresql": {
-        "dsn": "postgresql://..."
+      "type": "postgres",
+      "postgres": {
+        "dsn": "postgres://user:pass@localhost:5432/app?sslmode=disable"
       }
     }
   ]
@@ -282,7 +282,7 @@ At this point Centrifugo PRO supports three broker types:
 
 * `redis` - inherits all the possibilities of Centrifugo OSS [Redis integration](../server/engines.md#redis-engine)
 * `nats` –  inherits all the possibilities of Centrifugo OSS [integration with Nats](../server/engines.md#nats-broker).
-* `postgresql` –  inherits all the possibilities of Centrifugo OSS [integration with PostgreSQL](../server/engines.md#postgresql-broker).
+* `postgres` –  inherits all the possibilities of Centrifugo OSS [integration with PostgreSQL](../server/engines.md#postgresql-broker).
 
 These brokers inherit all options described in the [Engines and scalability](../server/engines.md) chapter. The only difference is that it's possible to specify which custom broker to use inside a channel namespace:
 
