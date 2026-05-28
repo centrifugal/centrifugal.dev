@@ -837,12 +837,11 @@ sub.subscribe();
 
 ## Demos
 
-A collection of interactive demos showcasing map subscriptions is available in the [map_demo](https://github.com/centrifugal/examples/tree/master/v6/map_demo) example. It includes 9 scenarios covering different map subscription features:
+A collection of interactive demos showcasing map subscriptions is available in the [map_demo](https://github.com/centrifugal/examples/tree/master/v6/map_demo) example. It includes 8 scenarios covering different map subscription features:
 
 ![map demo](/img/map_demo.jpg)
 
 - **Sync Protocol Visualizer** — step through the STATE → STREAM → LIVE sync phases with interactive sequence diagrams and frame inspection
-- **Ephemeral Cursors** — real-time cursor positions using ephemeral sync with auto-cleanup on disconnect
 - **Game Lobby** — 2-player lobby with slot claiming, live updates, and automatic game start using recoverable sync
 - **Inventory (CAS)** — compare-and-swap for safe concurrent updates with conflict handling
 - **Stock Tickers** — real-time price feed with sector filtering using tags filter
@@ -851,5 +850,7 @@ A collection of interactive demos showcasing map subscriptions is available in t
 - **Live Polls (PostgreSQL)** — server-driven polls with real-time voting, bot participants, and auto-rotation using `cf_map_*` functions
 
 The demo runs with Docker Compose (PostgreSQL + Python backend + Nginx) and requires Centrifugo v6.8.0+ with `centrifuge-js`.
+
+A separate [map_cursors](https://github.com/centrifugal/examples/tree/master/v6/map_cursors) example demonstrates real-time multi-user cursors using ephemeral sync with auto-cleanup on disconnect, backed by the Redis map broker — a better fit than PostgreSQL for high-frequency ephemeral updates.
 
 For the app-owned state pattern (app DB as source of truth + transactional publishing via the PostgreSQL stream broker + stream subscription `getState`), see the [pg_stream_broker kitchen orders demo](https://github.com/centrifugal/examples/tree/master/v6/pg_stream_broker) and the blog post [Transactional publishing for stream subscriptions with PostgreSQL](/blog/2026/05/15/pg-stream-broker-benefits).
