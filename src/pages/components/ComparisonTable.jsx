@@ -127,7 +127,7 @@ const data = [
             },
             {
                 name: 'Enhanced metrics', pro: true, link: '/docs/pro/observability_enhancements',
-                description: 'Channel namespace resolution and client SDK name breakdown in Prometheus metrics, per-node CPU and RSS stats in admin UI, and more.',
+                description: 'Channel namespace resolution and client SDK name breakdown in Prometheus metrics, Prometheus to OTEL metrics bridge, per-node CPU and RSS stats in admin UI, and more.',
             },
         ],
     },

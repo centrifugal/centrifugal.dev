@@ -7,26 +7,24 @@ authorTitle: Founder of Centrifugal Labs
 authorImageURL: /img/alexander_emelin.jpeg
 image: /img/blog_pg_controller.jpg
 hide_table_of_contents: false
-draft: true
+draft: false
 ---
 
-For most of [Centrifugo](https://centrifugal.dev)'s history, scaling past one node meant adding Redis — even on stacks running on PostgreSQL alone. One more service to provision, monitor, secure, and back up, just so Centrifugo nodes could coordinate with each other.
-
-The new PostgreSQL controller makes Redis optional. Together with the [stream broker](/blog/2026/05/24/pg-stream-broker-benefits) and [map broker](/blog/2026/05/23/map-subscriptions-part-2) shipped earlier in this release cycle, Centrifugo's full OSS messaging plane now runs on the PostgreSQL you already have. Same database, one operational story.
+For most of [Centrifugo](https://centrifugal.dev)'s history, scaling past one node meant adding Redis. The new PostgreSQL controller makes Redis optional. Together with the [stream broker](/blog/2026/05/24/pg-stream-broker-benefits) and [map broker](/blog/2026/05/23/map-subscriptions-part-2) shipped earlier in this release cycle, Centrifugo's full OSS messaging cluster now runs on the PostgreSQL only.
 
 <!--truncate-->
 
 :::info New and evolving
 
-Available in Centrifugo v6.8.0+. The PostgreSQL controller is a recent addition — we're eager for production feedback. Configuration keys, schema, and outbox internals may still adjust before they're considered stable.
+Available in Centrifugo v6.8.0+. The PostgreSQL controller is a recent addition — we're eager for feedback. Configuration keys, schema, and outbox internals may still adjust before they're considered stable.
 
 :::
 
 ## Why Redis was the OSS reality
 
-A single Centrifugo node is self-contained — clients connect, the node tracks subscriptions in memory, publishes go straight to subscribers. Add a second node and that breaks: a publish that arrives at node A needs to reach the clients connected to node B; subscribes, unsubscribes, and disconnects need to propagate; each node needs to know the live cluster topology. Centrifugo solves this with a `Controller` interface that distributes control messages between nodes.
+A single Centrifugo node is self-contained — clients connect, the node tracks subscriptions in memory, publishes go straight to subscribers. Once a second node added, that breaks: a publish that arrives at node A needs to reach the clients connected to node B; subscribes, unsubscribes, and disconnects need to propagate; each node needs to know the live cluster topology. Centrifugo solves this with a `Controller` interface that distributes control messages between nodes.
 
-For most of Centrifugo's history, that interface had two implementations: Redis and NATS. NATS, however, is a Centrifugo PRO option. So the OSS reality was effectively *Redis or single-node*. Teams already running Redis for caching paid no extra operational cost. Teams running PostgreSQL as their primary store and nothing else had to provision and operate a Redis instance just to scale Centrifugo horizontally — even small deployments where PG could have handled the messaging traffic just fine.
+Before v6.8.0, that interface had two implementations: Redis and NATS. NATS, however, is a Centrifugo PRO option. So the OSS reality was effectively *Redis or single-node*. Teams already running Redis for caching paid no extra operational cost. Teams running PostgreSQL as their primary store and nothing else had to provision and operate a Redis instance just to scale Centrifugo horizontally — even small deployments where PG could have handled the messaging traffic just fine.
 
 That gap is what the PostgreSQL controller closes.
 
@@ -39,7 +37,7 @@ The controller uses the same outbox pattern that powers the [PG stream broker](/
 - `LISTEN/NOTIFY` provides low-latency wakeup, so polling cadence stays low under quiet load while latency stays in the low single-digit milliseconds when traffic exists.
 - Old partitions are dropped whole — vacuum-free cleanup that keeps long-lived deployments tidy without any manual maintenance.
 
-The shape mirrors the brokers — if you know one, you already know how the other behaves. Configuration keys, retention semantics, partition lookahead — all the same vocabulary.
+The shape simply mirrors PostgreSQL brokers we described in recent blog posts.
 
 ## What flows through the controller
 
@@ -111,7 +109,7 @@ For background on the outbox pattern shared with the brokers, see the [PG stream
 
 ## A runnable demo
 
-A working three-node example lives in [`examples/v6/pg_cluster_demo`](https://github.com/centrifugal/centrifugo/tree/master/examples/v6/pg_cluster_demo). It boots a single PostgreSQL container, three local Centrifugo nodes pointing at the same DSN, and a static page that exercises all three components at once:
+A working three-node example lives in [`examples/v6/pg_cluster_demo`](https://github.com/centrifugal/examples/tree/master/v6/pg_cluster_demo). It boots a single PostgreSQL container, three local Centrifugo nodes pointing at the same DSN, and a static page that exercises all three components at once:
 
 <img src="/img/demo_pg_only.jpg" /><br /><br />
 
