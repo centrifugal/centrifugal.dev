@@ -55,9 +55,9 @@ function Header() {
       <div className={styles.mainTitle}>
         <TitleWithCat isDarkTheme={isDarkTheme} />
       </div>
-      <div className={styles.subTitle}>
+      <h1 className={styles.subTitle}>
         Wash away realtime complexity
-      </div>
+      </h1>
       <div className={styles.subSubTitle}>
         Scalable <span className="text-gradient text-gradient-hero">realtime messaging</span> and <span className="text-gradient text-gradient-hero">data sync</span> for any stack. Spin up once and forever.
       </div>

@@ -141,7 +141,10 @@ module.exports = {
         sitemap: {
           changefreq: 'weekly',
           priority: 0.5,
-          ignorePatterns: ['/license_exchange_*'],
+          // Keep older doc versions (v3/v4/v5) out of the sitemap — they are
+          // also marked noindex (see src/theme/DocItem/Content) so search
+          // engines rank the current version instead of duplicating it.
+          ignorePatterns: ['/license_exchange_*', '/docs/3/**', '/docs/4/**', '/docs/5/**'],
           filename: 'sitemap.xml',
         },
         docs: {
