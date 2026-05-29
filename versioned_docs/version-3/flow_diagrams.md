@@ -1,3 +1,9 @@
+---
+id: flow_diagrams
+title: "Flow diagrams"
+unlisted: true
+---
+
 For swimlines.io:
 
 ```

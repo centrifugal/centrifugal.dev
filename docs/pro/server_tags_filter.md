@@ -1,6 +1,7 @@
 ---
 id: server_tags_filter
 title: Server-side publication tags filter
+description: "Server-controlled publication filtering in Centrifugo PRO for per-subscriber access control within channels — works with both stream and map subscriptions."
 ---
 
 Centrifugo PRO supports **server-controlled publication filtering** — a mechanism for per-subscriber access control within channels. Unlike the [client-side tags filter](/docs/server/publication_filtering) (a bandwidth optimization the client controls), the server-side filter is set by your backend and cannot be overridden by the client.

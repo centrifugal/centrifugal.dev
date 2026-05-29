@@ -1,6 +1,7 @@
 ---
 id: map_subscriptions
 title: Map subscriptions enhancements
+description: "Centrifugo PRO map subscription enhancements: in-memory cache layer, full-state delta sync, PostgreSQL read replicas, broker fan-out, and per-namespace brokers."
 ---
 
 :::caution Experimental

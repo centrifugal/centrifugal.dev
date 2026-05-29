@@ -1,7 +1,8 @@
 ---
 id: map_subscriptions
-title: "Map subscriptions 🔮"
+title: "Map subscriptions"
 sidebar_label: "Map subscriptions 🔮"
+description: "Centrifugo map subscriptions deliver real-time key-value collections managed by the server — snapshot on subscribe, catch-up after disconnect, and live updates."
 ---
 
 :::caution Experimental

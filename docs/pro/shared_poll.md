@@ -1,6 +1,7 @@
 ---
 id: shared_poll
 title: Shared poll enhancements
+description: "Centrifugo PRO shared poll enhancements: cached latest data, delta compression, adaptive backpressure, and a notification fast path for near-instant updates."
 ---
 
 :::caution Experimental

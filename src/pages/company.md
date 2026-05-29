@@ -1,6 +1,7 @@
 ---
 id: company
 title: Centrifugal Labs LTD
+description: "Centrifugal Labs LTD — the Cyprus-based software company behind Centrifugo, building self-hosted real-time messaging that scales reliably in production."
 ---
 
 import Tabs from '@theme/Tabs';

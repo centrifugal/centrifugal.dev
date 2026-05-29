@@ -1,7 +1,8 @@
 ---
 id: shared_poll
-title: "Shared poll subscriptions 🔮"
+title: "Shared poll subscriptions"
 sidebar_label: "Shared poll subscriptions 🔮"
+description: "Shared poll subscriptions let Centrifugo poll your backend on a schedule and fan results out to all subscribers, cutting backend load with eventual consistency."
 ---
 
 import SharedPollDiagram from '@site/src/components/SharedPollDiagram';

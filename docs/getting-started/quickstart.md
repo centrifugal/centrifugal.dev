@@ -2,7 +2,7 @@
 description: "Build your first real-time app with Centrifugo. Step-by-step tutorial covering WebSocket connections, channel subscriptions, and publishing messages."
 id: quickstart
 sidebar_label: Quickstart tutorial
-title: Quickstart tutorial ⏱️
+title: Quickstart tutorial
 ---
 
 In this tutorial we'll build a simple browser app where all open tabs receive real-time counter updates via WebSocket. It takes about 5 minutes.

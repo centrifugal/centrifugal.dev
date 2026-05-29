@@ -3,7 +3,6 @@ import clsx from "clsx";
 import Layout from "@theme/Layout";
 import Head from "@docusaurus/Head";
 import Link from "@docusaurus/Link";
-import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import styles from "../styles.module.css";
 import { useColorMode } from '@docusaurus/theme-common';
@@ -73,12 +72,10 @@ function Header() {
 }
 
 function Pro() {
-    const context = useDocusaurusContext();
-    const { siteConfig: { tagline } = {} } = context;
     return (
         <Layout
-            title={tagline}
-            description="Centrifugo PRO - the full power of self-hosted realtime messaging. An enhanced version of Centrifugo that includes a set of unique features, additional APIs, faster performance and more flexible scalability."
+            title="Centrifugo PRO – push notifications, analytics, rate limits & SSO"
+            description="The enhanced commercial edition of the self-hosted Centrifugo real-time messaging server — extra APIs, faster performance, advanced scalability & observability."
         >
             <Head>
                 <script type="application/ld+json">

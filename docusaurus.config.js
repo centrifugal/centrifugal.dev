@@ -1,6 +1,6 @@
 module.exports = {
   title: "Centrifugo",
-  tagline: "Centrifugo – scalable real-time messaging and data sync platform. Set up once and forever.",
+  tagline: "Scalable real-time messaging server in a language-agnostic way. Self-hosted alternative to PubNub, Pusher, Ably, Socket.IO, Phoenix.PubSub, SignalR. Set up once and forever.",
   url: "https://centrifugal.dev",
   baseUrl: "/",
   trailingSlash: false,

@@ -3,7 +3,6 @@ import clsx from "clsx";
 import Layout from "@theme/Layout";
 import Head from "@docusaurus/Head";
 import Link from "@docusaurus/Link";
-import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import styles from "./styles.module.css";
 import { useColorMode } from '@docusaurus/theme-common';
@@ -78,12 +77,10 @@ function Header() {
 }
 
 function Home() {
-  const context = useDocusaurusContext();
-  const { siteConfig: { tagline } = {} } = context;
   return (
     <Layout
-      title={tagline}
-      description="Centrifugo is an open source realtime messaging and data sync platform. Build chats, live dashboards, multiplayer games, collaborative tools, and more. Provides WebSocket, SSE, HTTP-streaming, WebTransport transports, scales well and integrates with any application."
+      title="Scalable real-time messaging server"
+      description="Open-source real-time messaging server — a self-hosted alternative to PubNub, Pusher, Ably, Socket.IO, Phoenix.PubSub & SignalR. Set up once and forever."
     >
       <Head>
         <script type="application/ld+json">
