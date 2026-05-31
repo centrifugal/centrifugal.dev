@@ -11,7 +11,7 @@ With Centrifugo PRO push notifications may be delivered to all popular applicati
 
 * <i className="bi bi-android2" style={{'color': 'yellowgreen'}}></i> Android devices
 * <i className="bi bi-apple" style={{'color': 'cornflowerblue'}}></i> iOS devices
-* <i className="bi bi-globe" style={{color: 'orange'}}></i> Web browsers which support Web Push API (Chrome, Firefox, see <a href="https://caniuse.com/push-api">this matrix</a>)
+* <i className="bi bi-globe" style={{color: 'orange'}}></i> Web browsers which support Web Push API — desktop *and* mobile, including installed PWAs on Android and iOS (Chrome, Firefox, Edge, Safari; see <a href="https://caniuse.com/push-api">this matrix</a>). With [native Web Push](#web-push-vapid) this is the easiest path to push — no Firebase, no native app.
 
 Centrifugo PRO provides an API to manage user device tokens and device topic subscriptions, and an API to send push notifications to registered devices and groups of devices (subscribed to a topic). The API also supports timezone-aware push notifications, push localizations, templating, and per-user device push rate limiting. You can also use your own device token storage and use Centrifugo PRO as a high-performance way to send push notifications to supported providers.
 
@@ -323,7 +323,15 @@ We also support auth over p12 certificates (set `auth_type` to `"cert"`) with th
 
 ### Web Push (VAPID)
 
-Native Web Push delivers notifications directly to browsers using the standard [Web Push protocol](https://datatracker.ietf.org/doc/html/rfc8030) with [VAPID](https://datatracker.ietf.org/doc/html/rfc8292) — no Firebase required. A single configuration reaches Chrome, Edge, Firefox, and Safari (16.4+).
+Native Web Push delivers notifications directly to browsers using the standard [Web Push protocol](https://datatracker.ietf.org/doc/html/rfc8030) with [VAPID](https://datatracker.ietf.org/doc/html/rfc8292) — no Firebase required.
+
+**This is the easiest way to add push notifications to a web app — desktop *and* mobile.** You generate a VAPID key pair once (a single command), set three config values, and add a service worker plus a `pushManager.subscribe` call on the frontend — no Firebase project, no Apple push certificates, no native app, no app store. One implementation covers **desktop browsers** (Chrome, Edge, Firefox, Safari) and **mobile** — Android browsers (Chrome, Firefox, …) and, on iOS/iPadOS 16.4+, web apps added to the Home Screen (installed PWAs). So with a single VAPID setup you reach browsers across every major OS.
+
+:::note Mobile specifics
+
+On **Android**, Web Push works in the browser directly. On **iOS/iPadOS** it works for web apps the user has **added to the Home Screen** (an installed PWA) on Safari 16.4+ — it does not work in a regular Safari tab. Either way it's the same VAPID setup on your side; no per-platform code.
+
+:::
 
 First generate a VAPID key pair (for example with `npx web-push generate-vapid-keys`, or the helper in our [Web Push example](https://github.com/centrifugal/centrifugo/tree/master/misc/examples/webpush)). Then configure:
 
