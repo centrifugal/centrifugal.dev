@@ -112,7 +112,19 @@ The connection will have the following `meta` object:
 
 ## Client labels
 
-Client labels are a string-to-string map (`map[string]string`) attached to a connection at connect time. Once set, labels are **immutable** for the connection's lifetime. They power per-client Prometheus dimensions, the `label_filter` argument on the [server API](./server_api_enhancements.md#targeted-ops-by-client-labels), filtering at [snapshot](./connections.md) gather time, and the `labels` variable in [CEL expressions](./cel_expressions.md), and are always attached to outgoing [proxy](./event_hooks.md) requests. See the [Client labels landing page](./client_labels.md) for the full cross-subsystem overview.
+Client labels are a small string-to-string map (`map[string]string`) attached to a connection at connect time. Once set, labels are **immutable** for the connection's lifetime. Centrifugo PRO uses them as a first-class connection primitive across many subsystems — think of them as Kubernetes labels or Datadog tags for real-time connections: a categorical key/value space operators set once at auth time, then segment, filter, and target on for the connection's lifetime.
+
+### At a glance
+
+| Where labels are set                                                                   | Where labels are used                                                                                          |
+|----------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
+| JWT `labels` claim                                                                     | [Prometheus dimensions](./observability_enhancements.md#client-labels-as-prometheus-dimensions) on per-client metrics |
+| JWT `labels_from_claim` mapping ([per token](#extracting-labels-from-jwt-claims) or per JWKS provider) | `label_filter` argument on [server API](./server_api_enhancements.md#targeted-ops-by-client-labels) `subscribe`/`unsubscribe`/`disconnect`/`refresh` |
+| [Connect proxy](#from-the-connect-proxy-response) response `labels` field              | [Connections API](./connections.md) filtering and listings                                                     |
+|                                                                                        | `labels` variable in [CEL expressions](./cel_expressions.md) for channel-permission gates                       |
+|                                                                                        | [ClickHouse analytics](./analytics.md) `labels` column on `connections`, `operations`, `snapshot_connections`  |
+|                                                                                        | [Snapshot](./connections.md) `label_filter` at gather time                                                     |
+|                                                                                        | Always attached on outgoing [proxy requests](./event_hooks.md) (publish, subscribe, RPC, refresh, sub_refresh, map_publish, map_remove) |
 
 ### Labels vs `meta`
 
@@ -207,6 +219,23 @@ For every outgoing proxy request that already carries `meta` (publish, subscribe
 ```
 
 Backends can use the labels for routing, authorization, or correlation without a separate lookup against your session store.
+
+### Consumers
+
+Labels are one primitive flowing through many subsystems. This page is the reference for *setting* them; each consumer documents its own contract:
+
+- **[Server API enhancements](./server_api_enhancements.md#targeted-ops-by-client-labels)** — `label_filter` and `all_users` on `subscribe`/`unsubscribe`/`disconnect`/`refresh` (including fleet-wide targeting).
+- **[Connections API](./connections.md)** — `label_filter` on listings; the snapshot create endpoint accepts a gather-time `label_filter`.
+- **[CEL expressions](./cel_expressions.md)** — the `labels` variable in channel-permission expressions.
+- **[Observability enhancements](./observability_enhancements.md#client-labels-as-prometheus-dimensions)** — the `prometheus.client_labels` option, the `app_*` Prometheus dimension prefix, and the cardinality warning.
+- **[ClickHouse analytics](./analytics.md)** — the `labels` column on `connections`, `operations`, and `snapshot_connections`, plus the one-time `ALTER TABLE` migration for existing deployments.
+- **[Event hooks](./event_hooks.md)** — the connect proxy `labels` response field and the always-attached labels on outgoing proxy requests.
+
+:::caution Keep cardinality bounded
+
+Labels become Prometheus dimensions (when `prometheus.client_labels` is set) and ClickHouse `Map(String, String)` columns (when analytics is enabled). Never put user IDs, session IDs, request IDs, or other unbounded values into labels — they explode metric series and degrade analytics compression. Use bounded categorical sets: `region` (5–20 values), `tier` (3–5 values), `app_version` (dozens). The same rule applies to label *keys* — they are the column dictionary in ClickHouse.
+
+:::
 
 ## Multiple JWKS Providers
 

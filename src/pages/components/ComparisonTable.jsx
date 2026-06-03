@@ -60,7 +60,7 @@ const data = [
                 description: 'Automatically extract and map JWT claims from third-party identity providers into Centrifugo connection metadata. Useful when working with providers that issue non-customizable tokens.',
             },
             {
-                name: 'Client labels', pro: true, link: '/docs/pro/client_labels',
+                name: 'Client labels', pro: true, link: '/docs/pro/client_authentication#client-labels',
                 description: 'Attach a typed string map to each connection from JWT or the connect proxy. Use labels to segment Prometheus metrics, filter the server API (disconnect/refresh/subscribe/unsubscribe) by region/tier/version including fleet-wide, gate channels via CEL, segment ClickHouse analytics, and pass through to backend proxy requests.',
             },
             {

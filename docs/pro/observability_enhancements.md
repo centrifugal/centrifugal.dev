@@ -73,7 +73,7 @@ This helps in understanding the protocol distribution across your infrastructure
 
 ## Client labels as Prometheus dimensions
 
-Centrifugo PRO can export selected [client labels](./client_labels.md) as additional Prometheus dimensions on per-client metrics. Combined with labels set from JWT or the connect proxy, this gives per-tier, per-region, per-app-version breakdowns of connection-level metrics without operating multiple Centrifugo deployments.
+Centrifugo PRO can export selected [client labels](./client_authentication.md#client-labels) as additional Prometheus dimensions on per-client metrics. Combined with labels set from JWT or the connect proxy, this gives per-tier, per-region, per-app-version breakdowns of connection-level metrics without operating multiple Centrifugo deployments.
 
 To enable, list the label keys to export under `prometheus.client_labels`:
 
