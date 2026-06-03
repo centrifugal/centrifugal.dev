@@ -477,6 +477,47 @@ Send some API requests - and open [http://localhost:16686](http://localhost:1668
 
 By default, Centrifugo exports traces in `http/protobuf` format. If you want to use GRPC exporter then it's possible to turn it on by setting environment variable `OTEL_EXPORTER_OTLP_PROTOCOL` to `grpc` (GRPC exporter format supported since Centrifugo v5.0.3).
 
+#### Export to Google Cloud (ADC)
+
+New in Centrifugo v6.8.2
+
+Google Cloud's OTLP endpoint (`telemetry.googleapis.com`) requires every request to carry a valid OAuth2 access token. The standard OTLP exporter does not attach one, so by default export to Google Cloud fails as unauthenticated — the usual workaround is to run a sidecar collector just to inject credentials.
+
+Set `opentelemetry.google_cloud_adc_auth` to `true` to make Centrifugo authenticate the exporter with [Google Cloud Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/application-default-credentials), so you can push directly to `telemetry.googleapis.com` without a sidecar:
+
+```json title="config.json"
+{
+  "opentelemetry": {
+    "enabled": true,
+    "api": true,
+    "google_cloud_adc_auth": true
+  }
+}
+```
+
+The option works with both exporter protocols — over `grpc` the ADC token is attached as a per-RPC credential, over `http/protobuf` via an OAuth2 HTTP client transport. In both cases the token is minted lazily on first export and then cached and refreshed automatically. The endpoint and target project are still configured via the standard `OTEL_EXPORTER_OTLP_*` environment variables:
+
+```bash
+OTEL_EXPORTER_OTLP_ENDPOINT="https://telemetry.googleapis.com" \
+OTEL_EXPORTER_OTLP_PROTOCOL="grpc" \
+OTEL_RESOURCE_ATTRIBUTES="gcp.project_id=YOUR_PROJECT_ID" \
+CENTRIFUGO_OPENTELEMETRY=1 CENTRIFUGO_OPENTELEMETRY_API=1 CENTRIFUGO_OPENTELEMETRY_GOOGLE_CLOUD_ADC_AUTH=1 ./centrifugo
+```
+
+:::tip
+
+Set the target project via `OTEL_RESOURCE_ATTRIBUTES="gcp.project_id=..."`. Do not put it in `OTEL_EXPORTER_OTLP_HEADERS` as `x-goog-user-project` — Google warns that this can produce duplicate values and fail requests.
+
+:::
+
+:::note
+
+ADC must be resolvable in the runtime environment — automatic on GKE/GCE/Cloud Run via the attached service account, or locally via `GOOGLE_APPLICATION_CREDENTIALS` / `gcloud auth application-default login`. When ADC resolves through the metadata server (no explicit credentials file), Centrifugo performs a one-time metadata lookup at startup; the credential is opt-in via the flag, so there is no probe unless you enable it.
+
+:::
+
+In Centrifugo PRO the same flag also authenticates [OpenTelemetry metrics export](../pro/observability_enhancements.md#export-to-google-cloud-adc) to `telemetry.googleapis.com`.
+
 ## Logs
 
 Logging may be configured using `log_level` option. It may have the following values:

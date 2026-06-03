@@ -99,6 +99,41 @@ OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf" \
 
 `OTEL_EXPORTER_OTLP_PROTOCOL` accepts `http/protobuf` (default) or `grpc`.
 
+### Export to Google Cloud (ADC)
+
+New in Centrifugo PRO v6.8.2
+
+Google Cloud's OTLP endpoint (`telemetry.googleapis.com`) requires every request to carry a valid OAuth2 access token. The standard OTLP exporter does not attach one, so pushing metrics straight to Google Cloud fails as unauthenticated unless you run a sidecar collector to inject credentials — which defeats the point of moving off a Prometheus sidecar.
+
+Set `opentelemetry.google_cloud_adc_auth` to `true` to make Centrifugo authenticate the exporter with [Google Cloud Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/application-default-credentials). Then metrics (and traces) can be pushed directly to `telemetry.googleapis.com` without a sidecar:
+
+```json title="config.json"
+{
+  "opentelemetry": {
+    "enabled": true,
+    "metrics": true,
+    "google_cloud_adc_auth": true
+  }
+}
+```
+
+```bash
+OTEL_EXPORTER_OTLP_ENDPOINT="https://telemetry.googleapis.com" \
+OTEL_EXPORTER_OTLP_PROTOCOL="grpc" \
+OTEL_RESOURCE_ATTRIBUTES="gcp.project_id=YOUR_PROJECT_ID" \
+./centrifugo
+```
+
+The option works with both exporter protocols — over `grpc` the ADC token is attached as a per-RPC credential, over `http/protobuf` via an OAuth2 HTTP client transport. In both cases the token is minted lazily on first export and then cached and refreshed automatically. `google_cloud_adc_auth` is a base OpenTelemetry option (shared with [tracing](../server/observability.md#export-to-google-cloud-adc)), so a single setting covers both pipelines.
+
+:::tip
+
+Set the target project via `OTEL_RESOURCE_ATTRIBUTES="gcp.project_id=..."`. Do not put it in `OTEL_EXPORTER_OTLP_HEADERS` as `x-goog-user-project` — Google warns that this can produce duplicate values and fail requests.
+
+:::
+
+ADC must be resolvable in the runtime environment — automatic on GKE/GCE/Cloud Run via the attached service account, or locally via `GOOGLE_APPLICATION_CREDENTIALS` / `gcloud auth application-default login`.
+
 ### Pair with native histograms for full fidelity
 
 By default, Prometheus Histograms are translated to OTel fixed-bucket histograms. To get the high-fidelity `ExponentialHistogram` representation that most OTel-native backends prefer, enable [native histograms](../server/observability.md#native-histograms) alongside:
