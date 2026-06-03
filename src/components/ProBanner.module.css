@@ -13,6 +13,16 @@
     min-width: 0;
 }
 
+/* Dark theme: let the body aurora show through instead of a flat
+   opaque bar. A faint translucent tint + hairline keeps it legible
+   and defined against the hero above. */
+html[data-theme="dark"] .strip {
+    background: rgba(255, 255, 255, 0.025);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(4px);
+}
+
 html[data-theme="light"] .strip {
     background: #f0f0f0;
     color: #666;

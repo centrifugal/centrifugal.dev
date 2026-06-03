@@ -271,7 +271,14 @@ html[data-theme="dark"] .logos svg * {
 
 .broadcastImg {
     border-radius: 10px;
+    padding: 1.25rem;
     background-color: #17171B;
+}
+
+html[data-theme="dark"] .broadcastImg {
+    background: linear-gradient(160deg, #1c1a1d, #161416 50%, #1a1719);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 html[data-theme="light"] .broadcastImg {
@@ -403,8 +410,8 @@ html[data-theme="light"] .broadcastImg {
 
 html[data-theme="dark"] .useCases::before {
     background-image:
-        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-        linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+        linear-gradient(rgba(255, 255, 255, 0.01) 1px, transparent 1px),
+        linear-gradient(to right, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
 }
 
 .useCasesTitle {
@@ -563,5 +570,51 @@ html[data-theme="dark"] .useCaseItem:hover h3 {
         width: 40px;
         height: 40px;
     }
+}
+
+/* ============================================================
+   Dark theme — let the fixed body aurora flow through the
+   alternating landing sections instead of opaque dark blocks.
+   Each band keeps a faint translucent lift for rhythm, but
+   fades to transparent at its top/bottom edges so there are
+   no hard seams against neighbouring (transparent) sections.
+   Light theme keeps its solid backgrounds (rules above).
+   ============================================================ */
+html[data-theme="dark"] .heroBanner {
+    background-color: transparent;
+    background-image: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.02),
+        transparent 90%
+    );
+}
+
+html[data-theme="dark"] .sectionAlt,
+html[data-theme="dark"] .architecture {
+    background-color: transparent;
+    background-image: linear-gradient(
+        180deg,
+        transparent,
+        rgba(255, 255, 255, 0.012) 22%,
+        rgba(255, 255, 255, 0.012) 78%,
+        transparent
+    );
+}
+
+html[data-theme="dark"] .useCases {
+    background-color: transparent;
+}
+
+/* Fade the decorative grid out at the edges (via mask) so it melts
+   into the aurora instead of being clipped flat by an opaque vignette. */
+html[data-theme="dark"] .useCases::before {
+    mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, #000 25%, transparent 78%);
+    -webkit-mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, #000 25%, transparent 78%);
+}
+
+/* Drop the opaque radial vignette that previously repainted the
+   section background colour over the aurora. */
+html[data-theme="dark"] .useCases::after {
+    background: none;
 }
 
