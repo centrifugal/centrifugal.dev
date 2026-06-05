@@ -333,7 +333,7 @@ On **Android**, Web Push works in the browser directly. On **iOS/iPadOS** it wor
 
 :::
 
-First generate a VAPID key pair (for example with `npx web-push generate-vapid-keys`, or the helper in our [Web Push example](https://github.com/centrifugal/centrifugo/tree/master/misc/examples/webpush)). Then configure:
+First generate a VAPID key pair (for example with `npx web-push generate-vapid-keys`, or the helper in our [Web Push example](https://github.com/centrifugal/examples/tree/master/v6/webpush)). Then configure:
 
 ```json title="config.json"
 {
