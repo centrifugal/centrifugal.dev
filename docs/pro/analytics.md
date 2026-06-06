@@ -418,134 +418,6 @@ When `clickhouse_analytics.snapshots.enabled` is set, two additional tables are 
 - `snapshot_channels` — one row per (snapshot_id, channel, node).
 - `snapshot_connections` — one row per (snapshot_id, client). Includes the same `labels Map(String, String)` column as the [connections table](#connections-table). The snapshot create API accepts a `label_filter` argument; matching is applied at gather time on each node's hub, so the table only ever stores the filtered subset.
 
-## Migration
-
-This release adds several columns across the analytics tables:
-
-| New column | Tables | Purpose |
-|------------|--------|---------|
-| `labels Map(String, String)` | `connections`, `operations`, `snapshot_connections` | [Client labels](./client_authentication.md#client-labels) on the connection |
-| `namespace String` | `operations`, `publications`, `subscriptions` | Low-cardinality [channel namespace](#namespace-resolution), always resolved at export time |
-| `channel String` | `subscriptions` | Per-subscription channel — the table is now [one row per subscription](#subscriptions-one-row-per-subscription) |
-| `latency Int64` | `connections` | Client ping/pong RTT (ns) — powers the **Connection latency p95** trend |
-| `node String` | `connections`, `operations`, `publications`, `subscriptions` | ID of the Centrifugo node — per-node breakdowns & load-imbalance detection |
-| `protocol String` | `connections` | Client protocol (json/protobuf) — protocol-mix breakdowns |
-| `connected_at DateTime` | `connections` | When the connection was established — connection age / session duration |
-
-:::tip Applied automatically by default
-
-When Centrifugo manages the ClickHouse schema — the default, `clickhouse_analytics.skip_schema_initialization` is `false` — it **adds these columns automatically on start**, the same way it creates missing tables. The `ALTER`s are metadata-only (no data rewrite, fast even on large tables) and idempotent, so an upgrade just works with no manual step.
-
-You only need the manual SQL below when:
-
-* you run with `clickhouse_analytics.skip_schema_initialization: true` (you manage the schema yourself), or
-* the ClickHouse user Centrifugo connects with lacks `ALTER` privilege.
-
-In both cases Centrifugo's startup probe still refuses to start with an actionable error listing the exact statements to run, so you can never run against a stale schema.
-
-:::
-
-### Manual migration
-
-Only needed for the two cases above — run **before** starting the new binary.
-
-**Standalone ClickHouse** — run all statements (replace `centrifugo` with your `clickhouse_database` if it differs; skip any line for a table whose ingestion you have not enabled — the probe only checks enabled tables):
-
-```sql
--- connections: client labels + latency + node + protocol + connected_at
-ALTER TABLE centrifugo.connections          ADD COLUMN IF NOT EXISTS labels       Map(String, String) DEFAULT map();
-ALTER TABLE centrifugo.connections          ADD COLUMN IF NOT EXISTS latency      Int64               DEFAULT 0;
-ALTER TABLE centrifugo.connections          ADD COLUMN IF NOT EXISTS node         String              DEFAULT '';
-ALTER TABLE centrifugo.connections          ADD COLUMN IF NOT EXISTS protocol     String              DEFAULT '';
-ALTER TABLE centrifugo.connections          ADD COLUMN IF NOT EXISTS connected_at DateTime            DEFAULT toDateTime(0);
--- operations: client labels + channel namespace + node
-ALTER TABLE centrifugo.operations           ADD COLUMN IF NOT EXISTS labels       Map(String, String) DEFAULT map();
-ALTER TABLE centrifugo.operations           ADD COLUMN IF NOT EXISTS namespace    String              DEFAULT '';
-ALTER TABLE centrifugo.operations           ADD COLUMN IF NOT EXISTS node         String              DEFAULT '';
--- publications: channel namespace + node
-ALTER TABLE centrifugo.publications         ADD COLUMN IF NOT EXISTS namespace    String              DEFAULT '';
-ALTER TABLE centrifugo.publications         ADD COLUMN IF NOT EXISTS node         String              DEFAULT '';
--- subscriptions: channel namespace + per-subscription channel + node
-ALTER TABLE centrifugo.subscriptions        ADD COLUMN IF NOT EXISTS namespace    String              DEFAULT '';
-ALTER TABLE centrifugo.subscriptions        ADD COLUMN IF NOT EXISTS channel      String              DEFAULT '';
-ALTER TABLE centrifugo.subscriptions        ADD COLUMN IF NOT EXISTS node         String              DEFAULT '';
--- snapshot_connections: client labels
-ALTER TABLE centrifugo.snapshot_connections ADD COLUMN IF NOT EXISTS labels       Map(String, String) DEFAULT map();
-```
-
-**ClickHouse cluster** — add `ON CLUSTER 'centrifugo_cluster'` (use your `clickhouse_cluster` value) to every statement above, and apply the *same* additions to the `_distributed` companion tables so distributed inserts succeed:
-
-```sql
--- local (Replicated) tables
-ALTER TABLE centrifugo.connections          ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS labels       Map(String, String) DEFAULT map();
-ALTER TABLE centrifugo.connections          ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS latency      Int64               DEFAULT 0;
-ALTER TABLE centrifugo.connections          ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS node         String              DEFAULT '';
-ALTER TABLE centrifugo.connections          ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS protocol     String              DEFAULT '';
-ALTER TABLE centrifugo.connections          ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS connected_at DateTime            DEFAULT toDateTime(0);
-ALTER TABLE centrifugo.operations           ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS labels       Map(String, String) DEFAULT map();
-ALTER TABLE centrifugo.operations           ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS namespace    String              DEFAULT '';
-ALTER TABLE centrifugo.operations           ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS node         String              DEFAULT '';
-ALTER TABLE centrifugo.publications         ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS namespace    String              DEFAULT '';
-ALTER TABLE centrifugo.publications         ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS node         String              DEFAULT '';
-ALTER TABLE centrifugo.subscriptions        ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS namespace    String              DEFAULT '';
-ALTER TABLE centrifugo.subscriptions        ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS channel      String              DEFAULT '';
-ALTER TABLE centrifugo.subscriptions        ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS node         String              DEFAULT '';
-ALTER TABLE centrifugo.snapshot_connections ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS labels       Map(String, String) DEFAULT map();
-
--- _distributed companion tables
-ALTER TABLE centrifugo.connections_distributed          ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS labels       Map(String, String) DEFAULT map();
-ALTER TABLE centrifugo.connections_distributed          ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS latency      Int64               DEFAULT 0;
-ALTER TABLE centrifugo.connections_distributed          ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS node         String              DEFAULT '';
-ALTER TABLE centrifugo.connections_distributed          ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS protocol     String              DEFAULT '';
-ALTER TABLE centrifugo.connections_distributed          ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS connected_at DateTime            DEFAULT toDateTime(0);
-ALTER TABLE centrifugo.operations_distributed           ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS labels       Map(String, String) DEFAULT map();
-ALTER TABLE centrifugo.operations_distributed           ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS namespace    String              DEFAULT '';
-ALTER TABLE centrifugo.operations_distributed           ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS node         String              DEFAULT '';
-ALTER TABLE centrifugo.publications_distributed         ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS namespace    String              DEFAULT '';
-ALTER TABLE centrifugo.publications_distributed         ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS node         String              DEFAULT '';
-ALTER TABLE centrifugo.subscriptions_distributed        ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS namespace    String              DEFAULT '';
-ALTER TABLE centrifugo.subscriptions_distributed        ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS channel      String              DEFAULT '';
-ALTER TABLE centrifugo.subscriptions_distributed        ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS node         String              DEFAULT '';
-ALTER TABLE centrifugo.snapshot_connections_distributed ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS labels       Map(String, String) DEFAULT map();
-```
-
-:::tip Greenfield & downgrade safety
-
-**New deployments** need no action — the `CREATE TABLE IF NOT EXISTS` issued on first start already includes every column above.
-
-**Downgrade stays safe** — all columns have defaults (`map()`, `''`, `0`, `toDateTime(0)`), so an older binary that omits them from `INSERT VALUES` keeps inserting successfully. No schema rollback needed.
-
-:::
-
-### Namespace resolution
-
-The `namespace` column is always resolved from the channel at export time, using the same logic as [Prometheus channel namespace metrics](./observability_enhancements.md). For RPC operations (which have no channel) the namespace is resolved from the RPC method instead, using the configured `rpc_namespace_boundary`. No configuration is required — there is no opt-in toggle.
-
-### Subscriptions: one row per subscription
-
-Alongside the `namespace` column, the `subscriptions` table moves to **one row per subscription**: the old `channels Array(String)` column is replaced by a scalar `channel String`, making it consistent with `operations`/`publications` and removing the need for `ARRAY JOIN` in queries.
-
-```text
-before:  client | user | channels Array(String) | time
-after:   client | user | channel String | namespace String | time
-```
-
-The `ALTER` above is additive — the new scalar `channel` is added alongside the existing `channels` array, which Centrifugo simply stops writing.
-
-:::tip Transitional behavior
-This is non-destructive but **not retroactive**. Existing rows keep their data in the old `channels` array with an empty scalar `channel`, so they will **not** appear in channel/namespace-based subscription views until they expire under the table TTL (default 7 days). For that TTL window after upgrade, subscription trends count only newly-exported rows — expect them to ramp up to steady state over the first TTL period. No action is needed; it self-heals as old rows age out.
-:::
-
-The dead `channels` array column is harmless and ages out within the TTL. Once the migration window has fully passed you may optionally reclaim its space:
-
-```sql
-ALTER TABLE centrifugo.subscriptions DROP COLUMN IF EXISTS channels;  -- optional, after the TTL window
-```
-
-### Cardinality warning
-
-The `labels` column is a `Map(String, String)` — every unique label key/value combination adds to the column's dictionary. Putting unbounded values into labels (session IDs, request IDs, user IDs) bloats the column and degrades compression. The same concern applies to the Prometheus dimensions exported via [`prometheus.client_labels`](./observability_enhancements.md#client-labels-as-prometheus-dimensions) — keep labels bounded at the source.
-
 ## Query examples
 
 Show unique users which were connected:
@@ -732,3 +604,131 @@ Several metrics are exposed to monitor export process health:
 - **Labels:** type
 - **Description:** Distribution of batch sizes for ClickHouse flush.
 - **Usage:** Useful for understanding the size of data batches being flushed to ClickHouse, helping optimize performance.
+
+## Migration
+
+Release v6.8.2 added several columns across the analytics tables:
+
+| New column | Tables | Purpose |
+|------------|--------|---------|
+| `labels Map(String, String)` | `connections`, `operations`, `snapshot_connections` | [Client labels](./client_authentication.md#client-labels) on the connection |
+| `namespace String` | `operations`, `publications`, `subscriptions` | Low-cardinality [channel namespace](#namespace-resolution), always resolved at export time |
+| `channel String` | `subscriptions` | Per-subscription channel — the table is now [one row per subscription](#subscriptions-one-row-per-subscription) |
+| `latency Int64` | `connections` | Client ping/pong RTT (ns) — powers the **Connection latency p95** trend |
+| `node String` | `connections`, `operations`, `publications`, `subscriptions` | ID of the Centrifugo node — per-node breakdowns & load-imbalance detection |
+| `protocol String` | `connections` | Client protocol (json/protobuf) — protocol-mix breakdowns |
+| `connected_at DateTime` | `connections` | When the connection was established — connection age / session duration |
+
+:::tip Applied automatically by default
+
+When Centrifugo manages the ClickHouse schema — the default, `clickhouse_analytics.skip_schema_initialization` is `false` — it **adds these columns automatically on start**, the same way it creates missing tables. The `ALTER`s are metadata-only (no data rewrite, fast even on large tables) and idempotent, so an upgrade just works with no manual step.
+
+You only need the manual SQL below when:
+
+* you run with `clickhouse_analytics.skip_schema_initialization: true` (you manage the schema yourself), or
+* the ClickHouse user Centrifugo connects with lacks `ALTER` privilege.
+
+In both cases Centrifugo's startup probe still refuses to start with an actionable error listing the exact statements to run, so you can never run against a stale schema.
+
+:::
+
+### Manual migration
+
+Only needed for the two cases above — run **before** starting the new binary.
+
+**Standalone ClickHouse** — run all statements (replace `centrifugo` with your `clickhouse_database` if it differs; skip any line for a table whose ingestion you have not enabled — the probe only checks enabled tables):
+
+```sql
+-- connections: client labels + latency + node + protocol + connected_at
+ALTER TABLE centrifugo.connections          ADD COLUMN IF NOT EXISTS labels       Map(String, String) DEFAULT map();
+ALTER TABLE centrifugo.connections          ADD COLUMN IF NOT EXISTS latency      Int64               DEFAULT 0;
+ALTER TABLE centrifugo.connections          ADD COLUMN IF NOT EXISTS node         String              DEFAULT '';
+ALTER TABLE centrifugo.connections          ADD COLUMN IF NOT EXISTS protocol     String              DEFAULT '';
+ALTER TABLE centrifugo.connections          ADD COLUMN IF NOT EXISTS connected_at DateTime            DEFAULT toDateTime(0);
+-- operations: client labels + channel namespace + node
+ALTER TABLE centrifugo.operations           ADD COLUMN IF NOT EXISTS labels       Map(String, String) DEFAULT map();
+ALTER TABLE centrifugo.operations           ADD COLUMN IF NOT EXISTS namespace    String              DEFAULT '';
+ALTER TABLE centrifugo.operations           ADD COLUMN IF NOT EXISTS node         String              DEFAULT '';
+-- publications: channel namespace + node
+ALTER TABLE centrifugo.publications         ADD COLUMN IF NOT EXISTS namespace    String              DEFAULT '';
+ALTER TABLE centrifugo.publications         ADD COLUMN IF NOT EXISTS node         String              DEFAULT '';
+-- subscriptions: channel namespace + per-subscription channel + node
+ALTER TABLE centrifugo.subscriptions        ADD COLUMN IF NOT EXISTS namespace    String              DEFAULT '';
+ALTER TABLE centrifugo.subscriptions        ADD COLUMN IF NOT EXISTS channel      String              DEFAULT '';
+ALTER TABLE centrifugo.subscriptions        ADD COLUMN IF NOT EXISTS node         String              DEFAULT '';
+-- snapshot_connections: client labels
+ALTER TABLE centrifugo.snapshot_connections ADD COLUMN IF NOT EXISTS labels       Map(String, String) DEFAULT map();
+```
+
+**ClickHouse cluster** — add `ON CLUSTER 'centrifugo_cluster'` (use your `clickhouse_cluster` value) to every statement above, and apply the *same* additions to the `_distributed` companion tables so distributed inserts succeed:
+
+```sql
+-- local (Replicated) tables
+ALTER TABLE centrifugo.connections          ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS labels       Map(String, String) DEFAULT map();
+ALTER TABLE centrifugo.connections          ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS latency      Int64               DEFAULT 0;
+ALTER TABLE centrifugo.connections          ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS node         String              DEFAULT '';
+ALTER TABLE centrifugo.connections          ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS protocol     String              DEFAULT '';
+ALTER TABLE centrifugo.connections          ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS connected_at DateTime            DEFAULT toDateTime(0);
+ALTER TABLE centrifugo.operations           ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS labels       Map(String, String) DEFAULT map();
+ALTER TABLE centrifugo.operations           ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS namespace    String              DEFAULT '';
+ALTER TABLE centrifugo.operations           ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS node         String              DEFAULT '';
+ALTER TABLE centrifugo.publications         ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS namespace    String              DEFAULT '';
+ALTER TABLE centrifugo.publications         ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS node         String              DEFAULT '';
+ALTER TABLE centrifugo.subscriptions        ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS namespace    String              DEFAULT '';
+ALTER TABLE centrifugo.subscriptions        ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS channel      String              DEFAULT '';
+ALTER TABLE centrifugo.subscriptions        ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS node         String              DEFAULT '';
+ALTER TABLE centrifugo.snapshot_connections ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS labels       Map(String, String) DEFAULT map();
+
+-- _distributed companion tables
+ALTER TABLE centrifugo.connections_distributed          ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS labels       Map(String, String) DEFAULT map();
+ALTER TABLE centrifugo.connections_distributed          ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS latency      Int64               DEFAULT 0;
+ALTER TABLE centrifugo.connections_distributed          ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS node         String              DEFAULT '';
+ALTER TABLE centrifugo.connections_distributed          ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS protocol     String              DEFAULT '';
+ALTER TABLE centrifugo.connections_distributed          ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS connected_at DateTime            DEFAULT toDateTime(0);
+ALTER TABLE centrifugo.operations_distributed           ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS labels       Map(String, String) DEFAULT map();
+ALTER TABLE centrifugo.operations_distributed           ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS namespace    String              DEFAULT '';
+ALTER TABLE centrifugo.operations_distributed           ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS node         String              DEFAULT '';
+ALTER TABLE centrifugo.publications_distributed         ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS namespace    String              DEFAULT '';
+ALTER TABLE centrifugo.publications_distributed         ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS node         String              DEFAULT '';
+ALTER TABLE centrifugo.subscriptions_distributed        ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS namespace    String              DEFAULT '';
+ALTER TABLE centrifugo.subscriptions_distributed        ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS channel      String              DEFAULT '';
+ALTER TABLE centrifugo.subscriptions_distributed        ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS node         String              DEFAULT '';
+ALTER TABLE centrifugo.snapshot_connections_distributed ON CLUSTER 'centrifugo_cluster' ADD COLUMN IF NOT EXISTS labels       Map(String, String) DEFAULT map();
+```
+
+:::tip Downgrade safety
+
+**New deployments** need no action — the `CREATE TABLE IF NOT EXISTS` issued on first start already includes every column above.
+
+**Downgrade stays safe** — all columns have defaults (`map()`, `''`, `0`, `toDateTime(0)`), so an older binary that omits them from `INSERT VALUES` keeps inserting successfully. No schema rollback needed.
+
+:::
+
+### Namespace resolution
+
+The `namespace` column is always resolved from the channel at export time, using the same logic as [Prometheus channel namespace metrics](./observability_enhancements.md). For RPC operations (which have no channel) the namespace is resolved from the RPC method instead, using the configured `rpc_namespace_boundary`. No configuration is required — there is no opt-in toggle.
+
+### Subscriptions: one row per subscription
+
+Alongside the `namespace` column, the `subscriptions` table moves to **one row per subscription**: the old `channels Array(String)` column is replaced by a scalar `channel String`, making it consistent with `operations`/`publications` and removing the need for `ARRAY JOIN` in queries.
+
+```text
+before:  client | user | channels Array(String) | time
+after:   client | user | channel String | namespace String | time
+```
+
+The `ALTER` above is additive — the new scalar `channel` is added alongside the existing `channels` array, which Centrifugo simply stops writing.
+
+:::tip Transitional behavior
+This is non-destructive but **not retroactive**. Existing rows keep their data in the old `channels` array with an empty scalar `channel`, so they will **not** appear in channel/namespace-based subscription views until they expire under the table TTL (default 7 days). For that TTL window after upgrade, subscription trends count only newly-exported rows — expect them to ramp up to steady state over the first TTL period. No action is needed; it self-heals as old rows age out.
+:::
+
+The dead `channels` array column is harmless and ages out within the TTL. Once the migration window has fully passed you may optionally reclaim its space:
+
+```sql
+ALTER TABLE centrifugo.subscriptions DROP COLUMN IF EXISTS channels;  -- optional, after the TTL window
+```
+
+### Cardinality warning
+
+The `labels` column is a `Map(String, String)` — every unique label key/value combination adds to the column's dictionary. Putting unbounded values into labels (session IDs, request IDs, user IDs) bloats the column and degrades compression. The same concern applies to the Prometheus dimensions exported via [`prometheus.client_labels`](./observability_enhancements.md#client-labels-as-prometheus-dimensions) — keep labels bounded at the source.

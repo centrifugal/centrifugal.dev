@@ -99,8 +99,8 @@ const data = [
                 description: 'Configure write_delay to collect messages before sending, trading delivery latency for reduced CPU. Can cut overall cluster CPU usage by half for high message rate scenarios.',
             },
             {
-                name: 'Custom Controller (Redis, Nats, PostgreSQL)', pro: true, link: '/docs/pro/scalability#setting-custom-controller',
-                description: 'Isolate cross-node control traffic from channel data using a dedicated controller. Supports Redis, Nats, and PostgreSQL — the PostgreSQL controller enables fully PostgreSQL-only multi-node clusters with no Redis dependency.',
+                name: 'Fast Custom Controllers (Redis, Nats)', pro: true, link: '/docs/pro/scalability#setting-custom-controller',
+                description: 'Isolate cross-node control traffic from channel data using a dedicated controller. Supports Redis, Nats in addition to PostgreSQL from the OSS version',
             },
         ],
     },
@@ -110,8 +110,8 @@ const data = [
         features: [
             { name: 'Prometheus metrics, admin UI', oss: true, pro: true },
             {
-                name: 'ClickHouse analytics', pro: true, link: '/docs/pro/analytics',
-                description: 'Export publications, connections, subscriptions, operations, and push notification events to ClickHouse. Run fast analytical queries with effective data retention policies.',
+                name: 'ClickHouse analytics (current stats, trends, per-connection resolution)', pro: true, link: '/docs/pro/analytics',
+                description: 'Export publications, connections, subscriptions, operations, and push notification events to ClickHouse. Run fast analytical queries with effective data retention policies. Trends and connection flight recorder in admin web UI.',
             },
             {
                 name: 'Real-time channel & user tracing', pro: true, link: '/docs/pro/tracing',
@@ -136,8 +136,8 @@ const data = [
         comment: 'Reach users even when they are offline',
         features: [
             {
-                name: 'Push notifications (FCM, APNs, HMS)', pro: true, link: '/docs/pro/push_notifications',
-                description: 'Send push notifications to Android, iOS, and web via FCM, APNs, and HMS. Supports timezone-aware delivery, localization, and templating.',
+                name: 'Push notifications (FCM, APNs, HMS, WebPush)', pro: true, link: '/docs/pro/push_notifications',
+                description: 'Send push notifications to Android, iOS, and web via FCM, APNs, HMS and WebPush (VAPID). Supports timezone-aware delivery, localization, and templating.',
             },
             {
                 name: 'Device token management & topics', pro: true, link: '/docs/pro/push_notifications',

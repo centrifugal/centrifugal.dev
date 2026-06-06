@@ -2,7 +2,7 @@
 description: "Centrifugo PRO admin UI features: SSO via OpenID Connect, real-time channel and connection snapshots, analytics dashboards (trends, explorers, flight recorder), and enhanced system state monitoring."
 id: admin_ui
 sidebar_label: "Admin UI: SSO, Snapshots, Analytics"
-title: "Admin UI: SSO, State Snapshots, Analytics Dashboards, and more"
+title: "Admin UI: SSO, State Snapshots, Analytics"
 ---
 
 Admin UI of Centrifugo OSS supports only one admin user identified by the preconfigured password. For the corporate and enterprise environments Centrifugo PRO provides a way to integrate with popular User [Identity Providers](https://en.wikipedia.org/wiki/Identity_provider) (IDP), such as Okta, KeyCloak, Google Workspace, Azure and others. Most of the modern providers which support [OpenID connect](https://openid.net/specs/openid-connect-core-1_0.html) (OIDC) protocol with [Proof Key for Code Exchange](https://oauth.net/2/pkce/)
@@ -190,7 +190,7 @@ Centrifugo PRO supports snapshot export only over ClickHouse native TCP protocol
 
 When the [ClickHouse analytics](./analytics.md) integration is enabled, the admin UI gains an **Analytics** page with several views built on top of the exported data: **Trends**, a **User explorer**, a **Channel explorer**, and an experimental **Flight recorder**. They turn the raw ClickHouse tables into ready-to-use dashboards, so most day-to-day observability questions can be answered without writing SQL.
 
-![Admin analytics](/img/pro_analytics.png)
+![Admin analytics](/img/admin_analytics_dashboard.png)
 
 :::info Prerequisites
 
@@ -207,6 +207,8 @@ Every view only sees data ClickHouse still retains. The default per-export `ttl`
 :::
 
 ### Trends
+
+![Trends UI](/img/admin_trends.png)
 
 The Trends tab shows a single metric at a time as a time-series chart. You pick a metric from a catalog and a time range — presets from 15 minutes up to 30 days, or a custom range — and the engine buckets the data automatically at a granularity that suits the range (so all metrics share one aligned time axis). Charts render as line, stacked area, or bar depending on the metric, support hover tooltips, a zoom slider, and a "solo" legend (click a series to isolate it). Multi-series stacked trends also have a **stacked / overlaid** toggle — stacked shows the summed total, overlaid lays the series over each other for direct comparison.
 
@@ -242,6 +244,8 @@ Enter a channel and a time range to inspect one channel: its resolved namespace 
 The Flight recorder is experimental and its UI may change between releases.
 
 :::
+
+![Flight recorder UI](/img/admin_flight_recorder.png)
 
 The Flight recorder reconstructs a chronological **operation timeline** for a single connection (by client ID) or for all connections of a user (by user ID) within an exact time range. It is the tool for answering "what exactly happened on this connection, in order?" — every connect, subscribe, publish, RPC, error, and disconnect (with decoded reason), each with its duration.
 
