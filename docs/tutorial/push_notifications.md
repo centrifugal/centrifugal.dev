@@ -157,6 +157,12 @@ def device_register_view(request):
     # Attach user ID to device info.
     device_info["user"] = str(request.user.pk)
 
+    # The frontend stores the device ID under "device_id"; Centrifugo's device_register
+    # field is "id". Map it so re-registration updates the existing device in place
+    # (instead of creating a new one and orphaning the old token).
+    if device_info.get("device_id"):
+        device_info["id"] = device_info.pop("device_id")
+
     session = requests.Session()
     try:
         resp = session.post(
@@ -350,9 +356,9 @@ Once user logs into app – we ask for push notification permission and extract 
                 token: token,
                 platform: 'web',
                 meta: { 'user-agent': navigator.userAgent },
-                tags: {
-                    tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                },
+                // timezone is a first-class device field (IANA name) used for
+                // timezone-aware push; Intl gives us exactly that value.
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             };
             if (localStorage.getItem(LOCAL_STORAGE_DEVICE_ID_KEY)) {
                 deviceInfo['device_id'] = localStorage.getItem(LOCAL_STORAGE_DEVICE_ID_KEY);
@@ -379,6 +385,12 @@ Once user logs into app – we ask for push notification permission and extract 
 ```
 
 We register this token in Centrifugo PRO using Centrifugo API. To do this we call the new Django endpoint `/api/device/register` and call the Centrifugo `device_register` method from it. On every app load we update the token registration in Centrifugo PRO.
+
+:::tip Device ID lifecycle
+
+This example follows the robust pattern: the first `device_register` omits `id`, the returned device ID is saved in `localStorage`, and that stored ID is sent back on every subsequent registration. Passing the stored ID matters — when FCM rotates the token it updates the existing device in place instead of creating a duplicate (and leaving the old token to be cleaned up only after its next failed push). On logout we drop the stored ID and call `device_remove` (which also removes the device's topics). For topic subscriptions, prefer binding topics to the **user** via `user_topic_update` — Centrifugo applies them to the user's devices immediately (and to any device registered later), so you don't resend them each time. The `device_register` `topics` argument is only for device-specific subscriptions (it is rebuilt on every register). See [Device lifecycle and best practices](../pro/push_notifications.md#device-lifecycle-and-best-practices) for the full rules.
+
+:::
 
 Once the user logs out we unregister the device token from Centrifugo PRO and remove the token from FCM:
 
