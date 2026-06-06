@@ -85,10 +85,13 @@ Returns information about active connections according to the request.
 
 #### ConnectionsRequest
 
-| Parameter name | Parameter type | Required | Description                    |
-|----------------|----------------|----------|--------------------------------|
-| `user`         | `string`       | no       | fast filter by User ID         |
-| `expression`   | `string`       | no       | CEL expression to filter users |
+| Parameter name | Parameter type | Required | Description                                                                                                                       |
+|----------------|----------------|----------|-----------------------------------------------------------------------------------------------------------------------------------|
+| `user`         | `string`       | no       | fast filter by User ID                                                                                                            |
+| `expression`   | `string`       | no       | CEL expression to filter users                                                                                                    |
+| `label_filter` | `FilterNode`   | no       | Restrict the listing to connections whose [labels](./client_authentication.md#client-labels) match this filter (see [Label filter](#label-filter) below) |
+
+At least one of `user`, `expression`, or `label_filter` must be set — the API rejects requests with all three empty so an accidentally-blank request doesn't return the entire fleet.
 
 #### ConnectionsResult
 
@@ -98,14 +101,15 @@ Returns information about active connections according to the request.
 
 #### ConnectionInfo
 
-| Field name    | Field type        | Optional | Description                                   |
-|---------------|-------------------|----------|-----------------------------------------------|
-| `app_name`    | `string`          | yes      | client app name (if provided by client)       |
-| `app_version` | `string`          | yes      | client app version (if provided by client)    |
-| `transport`   | `string`          | no       | client connection transport                   |
-| `protocol`    | `string`          | no       | client connection protocol (json or protobuf) |
-| `user`        | `string`          | yes      | client user ID                                |
-| `state`       | `ConnectionState` | yes      | connection state                              |
+| Field name    | Field type          | Optional | Description                                                                            |
+|---------------|---------------------|----------|----------------------------------------------------------------------------------------|
+| `app_name`    | `string`            | yes      | client app name (if provided by client)                                                |
+| `app_version` | `string`            | yes      | client app version (if provided by client)                                             |
+| `transport`   | `string`            | no       | client connection transport                                                            |
+| `protocol`    | `string`            | no       | client connection protocol (json or protobuf)                                          |
+| `user`        | `string`            | yes      | client user ID                                                                         |
+| `state`       | `ConnectionState`   | yes      | connection state                                                                       |
+| `labels`      | `map[string]string` | yes      | [client labels](./client_authentication.md#client-labels) attached to the connection   |
 
 #### ConnectionState object
 
@@ -135,3 +139,34 @@ Returns information about active connections according to the request.
 |-------------|------------|----------|-------------------------------------------|
 | `uid`       | `string`   | yes      | unique token ID (jti)                     |
 | `issued_at` | `int`      | yes      | time (Unix seconds) when token was issued |
+
+### Label filter
+
+`label_filter` on `connections` restricts the listing to connections whose [labels](./client_authentication.md#client-labels) match the predicate. The listing supports `label_filter` as a fleet-wide selector — `user` and `expression` may both be left unset when filtering by labels alone (no `all_users` flag needed here; the survey already walks the full hub).
+
+For *acting* on the matched connections fleet-wide (disconnect, refresh, subscribe, unsubscribe) see [Server API enhancements → targeted ops by client labels](./server_api_enhancements.md#targeted-ops-by-client-labels), which use the `all_users` flag.
+
+Fleet-wide example (every EU pro/enterprise connection across all users):
+
+```json
+{
+  "label_filter": {
+    "op": "and",
+    "nodes": [
+      {"key": "region", "cmp": "eq", "val": "eu"},
+      {"key": "tier", "cmp": "in", "vals": ["pro", "enterprise"]}
+    ]
+  }
+}
+```
+
+Combine with `user` to scope the listing within a user's connections:
+
+```json
+{
+  "user": "user42",
+  "label_filter": {"key": "tier", "cmp": "eq", "val": "pro"}
+}
+```
+
+The listing is implemented as a survey over each node's full connection hub, evaluating the filter per-client in-memory (no label index). Listings on very large deployments — tens of thousands of connections per node — scale linearly with hub size; prefer narrower scoping (`user`) when the same query can be expressed that way.

@@ -77,7 +77,7 @@ module.exports = {
     "pro/rate_limiting",
     "pro/admin_ui",
     "pro/client_authentication",
-    "pro/server_api_auth",
+    "pro/server_api_enhancements",
     "pro/user_status",
     "pro/connections",
     "pro/access_revoke",

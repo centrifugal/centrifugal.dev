@@ -1,13 +1,17 @@
 ---
-description: "Secure Centrifugo PRO HTTP and GRPC server APIs with JWKS-based JWT authentication from identity providers like Keycloak and Auth0."
-id: server_api_auth
-sidebar_label: Server API JWKS auth
-title: Server API JWKS auth
+description: "Centrifugo PRO server API enhancements: JWKS-based authentication for HTTP and GRPC server APIs, and client-label-based filtering for targeted server-API operations and connection listings."
+id: server_api_enhancements
+sidebar_label: Server API enhancements
+title: Server API enhancements
 ---
+
+Centrifugo PRO extends the OSS [server API](../server/server_api.md) with extra authentication options and request arguments. This page documents the additions; everything else (transport, base method semantics) is inherited from OSS unchanged.
+
+## JWKS authentication
 
 Centrifugo PRO supports protecting HTTP API and GRPC API with JWKS (JSON Web Key Set) based authentication. This allows you to use JWT tokens issued by your identity provider (like Keycloak, Auth0, or any other OIDC-compliant provider) to authenticate server API requests.
 
-## Overview
+### Overview
 
 Instead of using the traditional API key authentication with `X-API-Key` header (for HTTP API) or metadata (for GRPC API), you can configure Centrifugo to validate JWT tokens signed by keys from a JWKS endpoint. This provides a more flexible and standardized way to protect your server API, especially when integrating with existing identity and access management systems.
 
@@ -15,9 +19,9 @@ Instead of using the traditional API key authentication with `X-API-Key` header 
 
 The feature is available since Centrifugo PRO v6.3.2
 
-## Configuration
+### Configuration
 
-### HTTP API
+#### HTTP API
 
 JWKS authentication is configured under the `http_api.jwks` section:
 
@@ -35,7 +39,7 @@ JWKS authentication is configured under the `http_api.jwks` section:
 }
 ```
 
-### GRPC API
+#### GRPC API
 
 JWKS authentication is configured under the `grpc_api.jwks` section:
 
@@ -59,15 +63,15 @@ JWKS authentication is configured under the `grpc_api.jwks` section:
 }
 ```
 
-### Configuration options
+#### Configuration options
 
-#### `http_api.jwks.enabled` / `grpc_api.jwks.enabled`
+##### `http_api.jwks.enabled` / `grpc_api.jwks.enabled`
 
 Boolean. Default: `false`.
 
 Turns on JWKS authentication for HTTP API or GRPC API. When enabled, Centrifugo will validate JWT tokens from the `Authorization: Bearer <TOKEN>` header (for HTTP API) or from gRPC metadata (for GRPC API) against the JWKS endpoint.
 
-#### `http_api.jwks.endpoint` / `grpc_api.jwks.endpoint`
+##### `http_api.jwks.endpoint` / `grpc_api.jwks.endpoint`
 
 String. Required when JWKS is enabled.
 
@@ -78,7 +82,7 @@ Examples:
 - Auth0: `https://YOUR_DOMAIN.auth0.com/.well-known/jwks.json`
 - Custom OIDC provider: `https://identity.example.com/.well-known/jwks.json`
 
-#### `http_api.jwks.audience` / `grpc_api.jwks.audience`
+##### `http_api.jwks.audience` / `grpc_api.jwks.audience`
 
 String. Optional; when not set, audience check is skipped. It's recommended to set it.
 
@@ -86,7 +90,7 @@ The expected audience claim (`aud`) in the JWT token. This should match the audi
 
 Example: `https://centrifugo.test.env`
 
-#### `http_api.jwks.issuer` / `grpc_api.jwks.issuer`
+##### `http_api.jwks.issuer` / `grpc_api.jwks.issuer`
 
 String. Optional; when not set, issuer check is skipped. It's recommended to set it.
 
@@ -94,7 +98,7 @@ The expected issuer claim (`iss`) in the JWT token. This should match the issuer
 
 Example: `https://keycloak.test.env/auth/realms/myrealm`
 
-#### `http_api.jwks.scope` / `grpc_api.jwks.scope`
+##### `http_api.jwks.scope` / `grpc_api.jwks.scope`
 
 String. Optional.
 
@@ -102,15 +106,15 @@ The required scope claim in the JWT token. If set, Centrifugo will verify that t
 
 Example: `centrifugo:api`
 
-#### `http_api.jwks.tls` / `grpc_api.jwks.tls`
+##### `http_api.jwks.tls` / `grpc_api.jwks.tls`
 
 [Unified TLS object](../server/configuration.md#tls-config-object). Optional.
 
 TLS configuration for HTTPS connection to JWKS endpoint. Use this if your JWKS endpoint requires custom TLS settings, such as custom CA certificates or client certificates.
 
-## Usage
+### Usage
 
-### HTTP API
+#### HTTP API
 
 Once JWKS authentication is configured, API clients need to provide a valid JWT token in the `Authorization` header when making HTTP API requests:
 
@@ -129,7 +133,7 @@ echo '{"channel": "chat", "data": {"text": "hello"}}' | \
   "Authorization: Bearer <JWT_TOKEN>"
 ```
 
-### GRPC API
+#### GRPC API
 
 For GRPC API, clients need to provide the JWT token in the gRPC metadata with the `authorization` key:
 
@@ -159,11 +163,11 @@ response, err := client.Publish(ctx, &api.PublishRequest{
 })
 ```
 
-## JWKS caching, refresh and rotation
+### JWKS caching, refresh and rotation
 
 Centrifugo automatically caches the JWKS keys fetched from the endpoint to avoid making a request on every API call. The cache is periodically refreshed to pick up key rotations performed by your identity provider.
 
-## Combining with API key authentication
+### Combining with API key authentication
 
 JWKS authentication can be used alongside API key authentication provided by Centrifugo OSS. If both `http_api.key` and `http_api.jwks` are configured (or `grpc_api.key` and `grpc_api.jwks`), Centrifugo PRO will accept requests authenticated with either method:
 
@@ -194,7 +198,7 @@ JWKS authentication can be used alongside API key authentication provided by Cen
 
 This can be useful during migration from API key to JWKS authentication, or when you need to support both authentication methods simultaneously.
 
-## Example: Keycloak integration
+### Example: Keycloak integration
 
 Here's a complete example of integrating Centrifugo HTTP API and GRPC API with Keycloak:
 
@@ -263,3 +267,121 @@ response, err := client.Publish(ctx, &api.PublishRequest{
     Data:    []byte(`{"text": "hello"}`),
 })
 ```
+
+## Targeted ops by client labels
+
+The `subscribe`, `unsubscribe`, `disconnect`, and `refresh` server-API methods accept two optional arguments for [client-label](./client_authentication.md#client-labels)-based targeting:
+
+- **`label_filter`** — a `FilterNode` predicate matched against `Client.Labels`. Same expression language as the [server tags filter](./server_tags_filter.md) — operators `eq`, `neq`, `in`, `nin`, `ex`, `nex`, `sw`, `ew`, `ct`, `gt`, `gte`, `lt`, `lte`, `and`, `or`, `not`. The difference vs. `server_tags_filter` is the subject: `server_tags_filter` matches publication tags; `label_filter` matches connection labels.
+- **`all_users`** — boolean. Changes the meaning of an empty `user` from "anonymous-user bucket only" to "every connection on every node." No effect when `user` is non-empty. Required to act fleet-wide on labels alone.
+
+### How `user`, `all_users`, and `label_filter` interact
+
+| `user`     | `all_users` | Target set                                              |
+|------------|-------------|---------------------------------------------------------|
+| `"alice"`  | any         | Alice's connections (existing behavior; `all_users` ignored). |
+| `""`       | `false`     | Anonymous-user bucket only (existing behavior — backward compatible). |
+| `""`       | `true`      | **Every connection across the cluster**, narrowed by `label_filter` if set. |
+
+`label_filter`, `client`, and `session` always act as additive narrowers within the chosen target set. A connection must satisfy every set criterion to be affected.
+
+:::caution Fleet-wide ops without `label_filter` are destructive
+
+`{"all_users": true}` with no `label_filter` will disconnect / refresh / subscribe / unsubscribe **every connection in the cluster**. Use only for planned operations (maintenance evacuation, incident response). Log audits will show the call without a filter — make sure your monitoring catches it.
+
+:::
+
+### Examples
+
+#### Fleet-wide: disconnect all EU pro-tier users
+
+```bash
+curl --header "X-API-Key: <API_KEY>" \
+  --request POST \
+  --data '{
+    "all_users": true,
+    "label_filter": {
+      "op": "and",
+      "nodes": [
+        {"key": "region", "cmp": "eq", "val": "eu"},
+        {"key": "tier", "cmp": "eq", "val": "pro"}
+      ]
+    }
+  }' \
+  http://localhost:8000/api/disconnect
+```
+
+#### Fleet-wide: refresh every client running a deprecated app version
+
+```bash
+curl --header "X-API-Key: <API_KEY>" \
+  --request POST \
+  --data '{
+    "all_users": true,
+    "expired": true,
+    "label_filter": {"key": "app_version", "cmp": "in", "vals": ["1.0.0", "1.1.0"]}
+  }' \
+  http://localhost:8000/api/refresh
+```
+
+#### Fleet-wide: server-side subscribe every pro-tier connection to a feature channel
+
+```bash
+curl --header "X-API-Key: <API_KEY>" \
+  --request POST \
+  --data '{
+    "all_users": true,
+    "channel": "pricing:v2",
+    "label_filter": {"key": "tier", "cmp": "eq", "val": "pro"}
+  }' \
+  http://localhost:8000/api/subscribe
+```
+
+#### Per-user: narrow within one user's connections
+
+When you know the user, leave `all_users` off and use `label_filter` as an additive narrower:
+
+```bash
+curl --header "X-API-Key: <API_KEY>" \
+  --request POST \
+  --data '{
+    "user": "user42",
+    "channel": "chat:lobby",
+    "label_filter": {
+      "op": "and",
+      "nodes": [
+        {"key": "platform", "cmp": "eq", "val": "desktop"},
+        {"key": "app_version", "cmp": "lt", "val": "3.0.0"}
+      ]
+    }
+  }' \
+  http://localhost:8000/api/unsubscribe
+```
+
+#### Maintenance evacuation: disconnect everything
+
+```bash
+curl --header "X-API-Key: <API_KEY>" \
+  --request POST \
+  --data '{
+    "all_users": true,
+    "disconnect": {"code": 4000, "reason": "scheduled maintenance"}
+  }' \
+  http://localhost:8000/api/disconnect
+```
+
+### Performance
+
+Fleet-wide ops iterate every shard's full connection table on every node. For deployments with tens of thousands of connections per node, this is O(N) work per call — single call site, no label index. Prefer narrower scoping (`user`, or per-tenant channels) when the same query can be expressed that way. Reach for `all_users` + `label_filter` when label-based targeting is the genuine intent or for one-shot operational actions.
+
+Cluster behavior: a fleet-wide op is fanned out via the control protocol — every receiving node runs the same hub-iteration filter locally. Mixed-version clusters (during rolling upgrade) safely degrade: older nodes that don't know `all_users` interpret it as `false` and run the anonymous-only path on their share. Bump every node before relying on fleet-wide semantics in production.
+
+### Connections listing with `label_filter`
+
+The [`connections`](./connections.md) admin API supports `label_filter` as a fleet-wide selector without needing `all_users`. Listings go through a per-node survey across the entire hub. The snapshot creation endpoint also accepts `label_filter` and applies it at gather time — see [Connections API](./connections.md) for the details.
+
+## See also
+
+- [Client labels](./client_authentication.md#client-labels) — how to attach labels via JWT or connect proxy.
+- [Server tags filter](./server_tags_filter.md) — sibling FilterNode-based feature for per-publication tag filtering.
+- [Connections API](./connections.md) — the PRO `connections` listing endpoint and snapshot endpoints.

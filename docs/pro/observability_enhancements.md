@@ -71,6 +71,35 @@ The `accept_protocol` label can have the following values:
 
 This helps in understanding the protocol distribution across your infrastructure and can be useful for performance analysis and infrastructure planning.
 
+## Client labels as Prometheus dimensions
+
+Centrifugo PRO can export selected [client labels](./client_authentication.md#client-labels) as additional Prometheus dimensions on per-client metrics. Combined with labels set from JWT or the connect proxy, this gives per-tier, per-region, per-app-version breakdowns of connection-level metrics without operating multiple Centrifugo deployments.
+
+To enable, list the label keys to export under `prometheus.client_labels`:
+
+```json title="config.json"
+{
+  "prometheus": {
+    "enabled": true,
+    "client_labels": ["region", "tier", "app_version"]
+  }
+}
+```
+
+Exported dimension names are prefixed with `app_` to guarantee they cannot collide with built-in metric labels — for example, `client_labels: ["region", "tier"]` becomes the Prometheus dimensions `app_region` and `app_tier`. Your application code reads the unprefixed keys via `labels.region` / `labels.tier` (e.g., in CEL expressions or proxy requests) — the prefix is applied only on the metric export path.
+
+When a configured key is missing on a particular client, the empty string is used as the dimension value (so all metric series stay shape-consistent).
+
+:::warning Cardinality
+
+Every unique combination of exported label values creates a new Prometheus time series. Keep the value set **bounded and small** — region (5–20 values), tier (3–5 values), app version (dozens, not millions). **Do not export user IDs, session IDs, request IDs, or any unbounded input.** Combined with built-in labels like transport and op, even a few high-cardinality keys can multiply your time series count rapidly.
+
+The same caveat applies to the [analytics labels column](./analytics.md) — different storage, same cardinality concern.
+
+:::
+
+When `client_labels` is empty (the default), no label dimensions are exported and there is zero overhead on the metric emission path.
+
 ## OpenTelemetry metrics export
 
 New in Centrifugo PRO v6.8.1

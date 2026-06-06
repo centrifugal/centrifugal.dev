@@ -67,13 +67,14 @@ Information about current `user` ID, `meta` information attached to the connecti
 
 Say client with user ID `123` subscribes to a channel `/users/4` which matched the [channel pattern](./channel_patterns.md) `/users/:user`:
 
-| Variable   | Type                | Example                | Description                                                                                                   |
-|------------|---------------------|------------------------|---------------------------------------------------------------------------------------------------------------|
-| subscribed | `bool`              | `false`                | Whether client is subscribed to channel, always `false` for `subscribe` operation                             |
-| user       | `string`            | `"123"`                | Current authenticated user ID (known from JWT or connect proxy result)                                        |
-| meta       | `map[string]any`    | `{"roles": ["admin"]}` | Meta information attached to the connection by the application backend (in JWT or over connect proxy result)  |
-| channel    | `string`            | `"/users/4"`           | Channel client tries to subscribe                                                                             |
-| vars       | `map[string]string` | `{"user": "4"}`        | Extracted variables from the matched channel pattern. It's empty in case of using channels without variables. |
+| Variable   | Type                   | Example                  | Description                                                                                                                                                       |
+|------------|------------------------|--------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| subscribed | `bool`                 | `false`                  | Whether client is subscribed to channel, always `false` for `subscribe` operation                                                                                 |
+| user       | `string`               | `"123"`                  | Current authenticated user ID (known from JWT or connect proxy result)                                                                                            |
+| meta       | `map[string]any`       | `{"roles": ["admin"]}`   | Meta information attached to the connection by the application backend (in JWT or over connect proxy result)                                                      |
+| channel    | `string`               | `"/users/4"`             | Channel client tries to subscribe                                                                                                                                 |
+| vars       | `map[string]string`    | `{"user": "4"}`          | Extracted variables from the matched channel pattern. It's empty in case of using channels without variables.                                                     |
+| labels     | `map[string]string`    | `{"region": "eu"}`       | [Client labels](./client_authentication.md#client-labels) attached to the connection (in JWT, `labels_from_claim` mapping, or connect proxy result). Always present as a map (empty when the client has no labels). Direct access like `labels.region` errors on a missing key — guard with `"region" in labels` first, same idiom as `meta`. |
 
 In this case, to allow admin to subscribe on any user's channel or allow non-admin user to subscribe only on its own channel, you may construct an expression like this:
 
@@ -83,6 +84,21 @@ In this case, to allow admin to subscribe on any user's channel or allow non-adm
     "without_namespace": {
       "subscribe_cel": "vars.user == user or 'admin' in meta.roles"
     }
+  }
+}
+```
+
+Or, when you carry tier information in [client labels](./client_authentication.md#client-labels) (set by JWT or by the connect proxy), a permission gate keyed on labels — guard the access with `in` for connections that may not have the `tier` label set:
+
+```json
+{
+  "channel": {
+    "namespaces": [
+      {
+        "name": "pro_features",
+        "subscribe_cel": "'tier' in labels && labels.tier == 'pro'"
+      }
+    ]
   }
 }
 ```

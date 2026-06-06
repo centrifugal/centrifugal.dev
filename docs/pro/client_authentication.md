@@ -110,6 +110,133 @@ The connection will have the following `meta` object:
 * If your JWT token already contains a `meta` claim, the extracted fields will **override** the existing fields.
 * Meta claims extraction only works for connection tokens, not subscription tokens. Subscription tokens do not support the `meta` claim.
 
+## Client labels
+
+Client labels are a small string-to-string map (`map[string]string`) attached to a connection at connect time. Once set, labels are **immutable** for the connection's lifetime. Centrifugo PRO uses them as a first-class connection primitive across many subsystems — think of them as Kubernetes labels or Datadog tags for real-time connections: a categorical key/value space operators set once at auth time, then segment, filter, and target on for the connection's lifetime.
+
+### At a glance
+
+| Where labels are set                                                                   | Where labels are used                                                                                          |
+|----------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
+| JWT `labels` claim                                                                     | [Prometheus dimensions](./observability_enhancements.md#client-labels-as-prometheus-dimensions) on per-client metrics |
+| JWT `labels_from_claim` mapping ([per token](#extracting-labels-from-jwt-claims) or per JWKS provider) | `label_filter` argument on [server API](./server_api_enhancements.md#targeted-ops-by-client-labels) `subscribe`/`unsubscribe`/`disconnect`/`refresh` |
+| [Connect proxy](#from-the-connect-proxy-response) response `labels` field              | [Connections API](./connections.md) filtering and listings                                                     |
+|                                                                                        | `labels` variable in [CEL expressions](./cel_expressions.md) for channel-permission gates                       |
+|                                                                                        | [ClickHouse analytics](./analytics.md) `labels` column on `connections`, `operations`, `snapshot_connections`  |
+|                                                                                        | [Snapshot](./connections.md) `label_filter` at gather time                                                     |
+|                                                                                        | Always attached on outgoing [proxy requests](./event_hooks.md) (publish, subscribe, RPC, refresh, sub_refresh, map_publish, map_remove) |
+
+### Labels vs `meta`
+
+Centrifugo connections already have a `meta` JSON object that flows from JWT/proxy into per-connection metadata. Labels are a separate primitive with a narrower contract:
+
+- **`meta`** is free-form JSON. Use it when your backend needs richer per-connection context — nested objects, arrays, app-specific shapes. Not filterable on the server side.
+- **`labels`** is a typed `map[string]string`. Use it when the value is a categorical key/value pair you want to *filter on, segment by, or target with* an op (metrics dimensions, server-API `label_filter`, listings, CEL gates, analytics columns).
+
+Rule of thumb: tier/region/app-version → `labels`. Anything richer than a string-keyed string value → `meta`. The same JWT claim can populate both — use whichever shape fits the consumer. Both are immutable after connect.
+
+### Sources
+
+Centrifugo PRO accepts client labels from two sources:
+
+1. A top-level `labels` claim in the connection JWT.
+2. The `labels_from_claim` mapping (see [Extracting labels from JWT claims](#extracting-labels-from-jwt-claims) below), analogous to `meta_from_claim`.
+
+When both are present, mapped entries from `labels_from_claim` override entries from the top-level `labels` claim on key collisions.
+
+### Top-level `labels` claim
+
+The simplest path — put a `labels` object on your JWT:
+
+```json
+{
+    "sub": "user42",
+    "exp": 1799999999,
+    "labels": {
+        "region": "eu",
+        "tier": "pro",
+        "app_version": "3.4.1"
+    }
+}
+```
+
+All string keys and string values are accepted.
+
+### Extracting labels from JWT claims
+
+When the labels you want live on existing JWT claims (often the case with third-party identity providers), use `labels_from_claim` — same shape and semantics as [`meta_from_claim`](#extracting-meta-from-jwt-claims). Keys become label keys in the resulting map; values are gjson paths into the JWT claims.
+
+```json
+{
+    "client": {
+        "token": {
+            "hmac_secret_key": "your-secret-key",
+            "labels_from_claim": [
+                { "key": "region", "value": "deployment.region" },
+                { "key": "tier", "value": "subscription.tier" }
+            ]
+        }
+    }
+}
+```
+
+Given a JWT with claims `{"deployment": {"region": "eu"}, "subscription": {"tier": "pro"}, "sub": "user42"}`, the connection labels become `{"region": "eu", "tier": "pro"}`.
+
+### Implementation notes
+
+* `labels_from_claim` is configured per-token (`client.token.labels_from_claim`) and optionally per-JWKS-provider (`client.token.jwks.providers[].labels_from_claim`). Per-provider config wins over global config when a provider matches a token's issuer.
+* Missing JWT paths are silently skipped — no empty-string insertion.
+* Non-string scalar values from JWT claims are stringified with Go's `fmt.Sprint` semantics.
+* `labels_from_claim` only works for connection tokens. Subscription tokens do not carry connection labels (validated on Centrifugo start).
+* Labels are immutable post-connect. To change a label value, the client must reconnect with a new token.
+* Avoid putting high-cardinality values (user IDs, session IDs) into labels — they end up as Prometheus dimensions (when `prometheus.client_labels` is set) and as a ClickHouse `Map(String, String)` column (when analytics is enabled). See the corresponding sections for the cardinality discussion.
+
+### From the connect proxy response
+
+When authentication is delegated to your backend via the [connect proxy](../server/proxy.md), the proxy response may include a top-level `labels` field with the same shape (`map<string, string>`). Centrifugo PRO attaches those labels to the connection just like the JWT path. When both a JWT and a connect proxy run for the same connection, the connect proxy wins (same precedence as `meta`).
+
+```json
+{
+  "result": {
+    "user": "user42",
+    "labels": {"region": "eu", "tier": "pro"}
+  }
+}
+```
+
+### Outgoing proxy requests always carry labels
+
+For every outgoing proxy request that already carries `meta` (publish, subscribe, RPC, refresh, sub_refresh, map publish, map remove), Centrifugo PRO **always** attaches the connection's `labels` as a top-level `labels` map. Unlike `meta`, this has no configuration toggle — labels are PRO-only and small, so opt-in adds friction without protecting against bloat (keep label cardinality low at the source instead).
+
+```json
+{
+  "client": "abc123",
+  "user": "user42",
+  "channel": "chat:room",
+  "data": {"text": "hi"},
+  "labels": {"region": "eu", "tier": "pro"}
+}
+```
+
+Backends can use the labels for routing, authorization, or correlation without a separate lookup against your session store.
+
+### Consumers
+
+Labels are one primitive flowing through many subsystems. This page is the reference for *setting* them; each consumer documents its own contract:
+
+- **[Server API enhancements](./server_api_enhancements.md#targeted-ops-by-client-labels)** — `label_filter` and `all_users` on `subscribe`/`unsubscribe`/`disconnect`/`refresh` (including fleet-wide targeting).
+- **[Connections API](./connections.md)** — `label_filter` on listings; the snapshot create endpoint accepts a gather-time `label_filter`.
+- **[CEL expressions](./cel_expressions.md)** — the `labels` variable in channel-permission expressions.
+- **[Observability enhancements](./observability_enhancements.md#client-labels-as-prometheus-dimensions)** — the `prometheus.client_labels` option, the `app_*` Prometheus dimension prefix, and the cardinality warning.
+- **[ClickHouse analytics](./analytics.md)** — the `labels` column on `connections`, `operations`, and `snapshot_connections`, plus the one-time `ALTER TABLE` migration for existing deployments.
+- **[Event hooks](./event_hooks.md)** — the connect proxy `labels` response field and the always-attached labels on outgoing proxy requests.
+
+:::caution Keep cardinality bounded
+
+Labels become Prometheus dimensions (when `prometheus.client_labels` is set) and ClickHouse `Map(String, String)` columns (when analytics is enabled). Never put user IDs, session IDs, request IDs, or other unbounded values into labels — they explode metric series and degrade analytics compression. Use bounded categorical sets: `region` (5–20 values), `tier` (3–5 values), `app_version` (dozens). The same rule applies to label *keys* — they are the column dictionary in ClickHouse.
+
+:::
+
 ## Multiple JWKS Providers
 
 Centrifugo PRO supports configuring multiple JWKS (JSON Web Key Set) providers for client connection authentication with automatic token routing based on the issuer (`iss`) claim. This may be useful for multi-tenant scenarios where tokens may come from different identity providers.
@@ -230,6 +357,7 @@ In this configuration:
 | audience | `string`  | No       | Expected audience claim value. **While optional, it's highly recommended to set this in most cases** to prevent client tokens related to other audiences issued by the same issuer from being accepted by Centrifugo. When the same issuer is used by multiple providers, each must have a different audience set to enable issuer+audience matching                                  |
 | tls      | [`TLS`](../server/configuration.md#tls-config-object) object  | No       | Custom TLS configuration for the JWKS endpoint HTTP client                            |
 | meta_from_claim      | [StringKeyValues](../server/configuration.md#stringkeyvalues-type)  | No       | Config to transform JWT claims to connection meta object. Must be explicitly set for each provider, not inherited from upper config level.                              |
+| labels_from_claim    | [StringKeyValues](../server/configuration.md#stringkeyvalues-type)  | No       | Config to transform JWT claims to [connection labels](#client-labels). Must be explicitly set for each provider, not inherited from upper config level.                  |
 
 ### How It Works
 
@@ -282,4 +410,5 @@ JWKS providers work for both connection tokens and subscription tokens. [As usua
 
 **Notes:**
 - `meta_from_claim` is not supported for subscription tokens, as subscription tokens do not support the `meta` claim at this moment. This is validated on Centrifugo start.
+- `labels_from_claim` is also not supported for subscription tokens — connection labels are a connect-time primitive only.
 - Issuer+audience matching works the same way for subscription tokens as it does for connection tokens — you can configure multiple providers with the same issuer but different audiences.
