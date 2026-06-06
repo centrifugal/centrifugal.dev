@@ -128,6 +128,8 @@ OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf" \
 
 `OTEL_EXPORTER_OTLP_PROTOCOL` accepts `http/protobuf` (default) or `grpc`.
 
+If your backend is Google Cloud, set `opentelemetry.google_cloud_adc_auth` to push metrics straight to `telemetry.googleapis.com` without a sidecar — see [Export to Google Cloud (ADC)](#export-to-google-cloud-adc) below. This is a base OpenTelemetry option available in Centrifugo OSS, where it authenticates [trace export](../server/observability.md#export-to-google-cloud-adc); in Centrifugo PRO the same single setting also covers the metrics pipeline.
+
 ### Export to Google Cloud (ADC)
 
 New in Centrifugo PRO v6.8.2

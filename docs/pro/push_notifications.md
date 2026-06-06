@@ -323,7 +323,7 @@ We also support auth over p12 certificates (set `auth_type` to `"cert"`) with th
 
 ### Web Push (VAPID)
 
-Native Web Push delivers notifications directly to browsers using the standard [Web Push protocol](https://datatracker.ietf.org/doc/html/rfc8030) with [VAPID](https://datatracker.ietf.org/doc/html/rfc8292) — no Firebase required.
+Native Web Push delivers notifications directly to browsers using the standard [Web Push protocol](https://datatracker.ietf.org/doc/html/rfc8030) with [VAPID](https://datatracker.ietf.org/doc/html/rfc8292) — no Firebase required. Payloads are end-to-end encrypted to the browser's subscription keys per [Message Encryption for Web Push (RFC 8291)](https://datatracker.ietf.org/doc/html/rfc8291) using the `aes128gcm` [encrypted content-encoding (RFC 8188)](https://datatracker.ietf.org/doc/html/rfc8188), so the push service never sees the message content.
 
 **This is the easiest way to add push notifications to a web app — desktop *and* mobile.** You generate a VAPID key pair once (a single command), set three config values, and add a service worker plus a `pushManager.subscribe` call on the frontend — no Firebase project, no Apple push certificates, no native app, no app store. One implementation covers **desktop browsers** (Chrome, Edge, Firefox, Safari) and **mobile** — Android browsers (Chrome, Firefox, …) and, on iOS/iPadOS 16.4+, web apps added to the Home Screen (installed PWAs). So with a single VAPID setup you reach browsers across every major OS.
 
