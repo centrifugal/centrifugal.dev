@@ -111,7 +111,7 @@ Almost all Centrifugo options can be set over env in the format `CENTRIFUGO_<OPT
 
 :::tip
 
-There are some cases with more complex config types where you need to configure maps or arrays of objects. See docs for [MapStringString](#mapstringstring-type) and [StringKeyValues](#stringkeyvalues-type) types which represent maps. For arrays of objects Centrifugo either provides a way to point the specific array instance by name when setting environment variable, or always supports [setting the entire array of objects as a JSON string](#setting-arrays-over-env).
+There are some cases with more complex config types where you need to configure maps or arrays of objects. See docs for [MapStringString](#mapstringstring-type) and [StringKeyValues](#stringkeyvalues-type) types which represent maps. For arrays of objects Centrifugo either provides a way to point the specific array instance by name when setting environment variable, or always supports [setting the entire array of objects as a JSON string](#array-of-objects).
 
 :::
 

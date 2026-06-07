@@ -13,6 +13,12 @@ There are two kinds of server API available at the moment:
 
 Both are similar in terms of request/response structures as they share the same schema under the hood.
 
+:::tip
+
+Centrifugo PRO extends the server API with [additional methods](../pro/server_api_enhancements.md) and a [Connections API](../pro/connections.md) to query active connections and their attached metadata without enabling channel presence.
+
+:::
+
 ## HTTP API
 
 HTTP API is the simplest way to communicate with Centrifugo from your application backend or from terminal.
@@ -599,7 +605,7 @@ curl --header "X-API-Key: <API_KEY>" \
 
 :::caution
 
-Keep in mind that since the `channels` method by default returns all active channels it can be really heavy for massive deployments. Centrifugo does not provide a way to paginate over channels list. At the moment we mostly suppose that `channels` API call will be used in the development process or for administrative/debug purposes, and in not very massive Centrifugo setups (with no more than 10k active channels). A better and scalable approach for huge setups could be a real-time analytics approach [described here](../pro/analytics.md).
+Keep in mind that since the `channels` method by default returns all active channels it can be really heavy for massive deployments. Centrifugo does not provide a way to paginate over channels list. At the moment we mostly suppose that `channels` API call will be used in the development process or for administrative/debug purposes, and in not very massive Centrifugo setups (with no more than 10k active channels). For large deployments, channel insights can instead be obtained via the [analytics approach](../pro/analytics.md) in Centrifugo PRO.
 
 :::
 

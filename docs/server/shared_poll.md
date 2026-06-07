@@ -368,11 +368,11 @@ The shared poll refresh proxy uses the standard Centrifugo proxy protocol (HTTP 
 | Delta compression¹ | ★★★ | ★★★ |
 | Notification fast path | ★★★ | ★★★ |
 | [Direct publish](#direct-publish) | ☆☆☆ | ★★★ |
-| Cached initial data ([PRO](../pro/shared_poll.md#instant-initial-data)) | ☆☆☆ | ★★★ |
+| Cached initial data ([PRO](../pro/shared_poll.md#instant-data-for-new-clients)) | ☆☆☆ | ★★★ |
 | Efficient reconnect² | ★★☆ | ★★★ |
 | Backend-side bandwidth optimization | ☆☆☆ | ★★★ |
 
-¹ Requires [`keep_latest_data: true`](../pro/shared_poll.md#keep_latest_data) (PRO) and delta enabled on client.
+¹ Requires [`keep_latest_data: true`](../pro/shared_poll.md#cached-latest-data) (PRO) and delta enabled on client.
 
 ² On reconnect, client sends last received version — only newer items are delivered. In versionless mode, synthetic versions are local to each node, so reconnecting to a different node resets versions and triggers a full data re-delivery. In versioned mode, versions come from the backend and are valid across all nodes.
 
@@ -553,7 +553,7 @@ Each item in the response:
 | `key` | string | Item key |
 | `data` | JSON | Current item data |
 | `version` | uint64 | Item version — **required** in versioned mode, **optional** in versionless mode. Must increase monotonically on changes |
-| `prev_data` | JSON | Optional previous value Centrifugo uses as the delta base when fossil delta compression is enabled on the namespace. Saves Centrifugo from caching the previous value itself; ignored when delta is disabled or when [`keep_latest_data`](../pro/shared_poll.md#instant-initial-data) (PRO) is on, in which case Centrifugo has the previous value cached already |
+| `prev_data` | JSON | Optional previous value Centrifugo uses as the delta base when fossil delta compression is enabled on the namespace. Saves Centrifugo from caching the previous value itself; ignored when delta is disabled or when [`keep_latest_data`](../pro/shared_poll.md#instant-data-for-new-clients) (PRO) is on, in which case Centrifugo has the previous value cached already |
 | `removed` | boolean | If `true`, item is removed — Centrifugo sends a removal event to tracking clients and stops tracking the key. Items omitted from the response are treated as unchanged |
 
 ### Error response
@@ -684,7 +684,7 @@ Clients don't always have to wait for the next regular poll cycle to receive dat
 
 **Cold key auto-poll** — when a client tracks a key with version `0` ("I have no data") and no other connection on the node is currently tracking that key, Centrifugo automatically triggers an immediate backend poll for that key. Data arrives within milliseconds instead of waiting up to `refresh_interval`. This requires no additional configuration. Clients that track with a non-zero version (already have data) skip the auto-poll — the regular poll cycle will deliver any newer data.
 
-**Cached data on track** — with [Centrifugo PRO's `keep_latest_data`](../pro/shared_poll.md#instant-initial-data) option (requires `versioned` refresh mode), the server caches latest data for each tracked key in memory. When a client tracks keys and the server has a newer version than the client, data is returned directly in the track response — no backend call needed for items already in cache. This is ideal for config sync, reconnect scenarios, and channels with long refresh intervals. See the [PRO documentation](../pro/shared_poll.md#instant-initial-data) for details.
+**Cached data on track** — with [Centrifugo PRO's `keep_latest_data`](../pro/shared_poll.md#instant-data-for-new-clients) option (requires `versioned` refresh mode), the server caches latest data for each tracked key in memory. When a client tracks keys and the server has a newer version than the client, data is returned directly in the track response — no backend call needed for items already in cache. This is ideal for config sync, reconnect scenarios, and channels with long refresh intervals. See the [PRO documentation](../pro/shared_poll.md#instant-data-for-new-clients) for details.
 
 ### Version semantics
 
@@ -729,7 +729,7 @@ sub.subscribe();
 sub.track(['app_settings']);
 ```
 
-When the admin updates settings, your backend calls `shared_poll_publish` — all connected clients receive the update instantly. New clients connecting later get data quickly via the cold key auto-poll, or instantly from cache with [PRO's `keep_latest_data`](../pro/shared_poll.md#instant-initial-data).
+When the admin updates settings, your backend calls `shared_poll_publish` — all connected clients receive the update instantly. New clients connecting later get data quickly via the cold key auto-poll, or instantly from cache with [PRO's `keep_latest_data`](../pro/shared_poll.md#instant-data-for-new-clients).
 
 ## Client SDK API
 
@@ -766,7 +766,7 @@ The simplest way to track items is by passing key names as strings. The SDK auto
 sub.track(['post_123', 'post_456']);
 ```
 
-Keys tracked this way use version `0` ("no data"), which means the server will return data quickly via [cold key auto-poll](#quick-initial-data) (or instantly from cache with [PRO's `keep_latest_data`](../pro/shared_poll.md#instant-initial-data)).
+Keys tracked this way use version `0` ("no data"), which means the server will return data quickly via [cold key auto-poll](#quick-initial-data) (or instantly from cache with [PRO's `keep_latest_data`](../pro/shared_poll.md#instant-data-for-new-clients)).
 
 Alternatively, you can provide explicit versions and a pre-computed signature:
 
@@ -809,7 +809,7 @@ Standard subscription events (`subscribing`, `subscribed`, `unsubscribed`, `erro
 
 When `delta: 'fossil'` is enabled, Centrifugo sends [fossil delta](./delta_compression.md) patches instead of full data when the change is small. The SDK applies the patch automatically — the `update` event always contains the full reconstructed data.
 
-For delta compression to work effectively with shared poll, configure [`keep_latest_data: true`](../pro/shared_poll.md#keep_latest_data) in the namespace ([Centrifugo PRO](../pro/overview.md)) or return `prev_data` from your proxy response.
+For delta compression to work effectively with shared poll, configure [`keep_latest_data: true`](../pro/shared_poll.md#cached-latest-data) in the namespace ([Centrifugo PRO](../pro/overview.md)) or return `prev_data` from your proxy response.
 
 ### Reconnect resilience
 

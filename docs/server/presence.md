@@ -146,6 +146,12 @@ See [more about presence design](../getting-started/design.md#online-presence-co
 
 Also [check out FAQ](../faq/index.md#how-scalable-is-the-online-presence-and-joinleave-features) which mentions scalability concerns for presence data and join/leave events.
 
+:::tip
+
+To track per-user online/activity status (rather than per-channel presence), Centrifugo PRO provides a Redis-backed [User status API](../pro/user_status.md) with bulk queries for a list of users.
+
+:::
+
 ## Conclusion
 
 The online presence feature of Centrifugo is a highly useful tool for real-time applications. It provides instant and live data about user activity, which can be critical for interactive features in chats, collaborative tools, multiplayer games, or live tracking systems. Make sure to configure and use this feature appropriately to get the most out of your real-time application.

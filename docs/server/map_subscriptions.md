@@ -28,7 +28,7 @@ import PgTransactionalDiagram from '@site/src/components/PgTransactionalDiagram'
 
 Map subscriptions are the natural fit when **the broker should be the canonical store** for a keyed collection — your application is comfortable letting Centrifugo own the entries and reads them back through subscriptions (or, for backends that need it, the server `map_read_state` API).
 
-When your data already lives in your own application database (orders, documents, tickets, notifications), there's an alternative shape worth knowing about: a **stream subscription with a `getState` callback**, backed by the [PostgreSQL stream broker](./engines.md). You write to your own tables and call `cf_stream_publish` in the same SQL transaction — clients render state from your own schema and receive events for incremental changes, with no duplicate state in the broker. See [Transactional publishing for stream subscriptions with PostgreSQL](/blog/2026/05/15/pg-stream-broker-benefits) and the [pg_stream_broker example](https://github.com/centrifugal/examples/tree/master/v6/pg_stream_broker).
+When your data already lives in your own application database (orders, documents, tickets, notifications), there's an alternative shape worth knowing about: a **stream subscription with a `getState` callback**, backed by the [PostgreSQL stream broker](./engines.md). You write to your own tables and call `cf_stream_publish` in the same SQL transaction — clients render state from your own schema and receive events for incremental changes, with no duplicate state in the broker. See [Transactional publishing for stream subscriptions with PostgreSQL](/blog/2026/05/24/pg-stream-broker-benefits) and the [pg_stream_broker example](https://github.com/centrifugal/examples/tree/master/v6/pg_stream_broker).
 
 That said, **map subscriptions can still be the right answer even when the data has a home elsewhere** — if the convenience matters more to you than the duplication. With map subscriptions you get the synchronized snapshot, paginated state delivery, and per-key TTL with auto-removal out of the box. With stream + `getState` you have to build the snapshot endpoint yourself and reason about what your subscription consumer rebuilds on the client. Neither is universally better — pick by what you'd rather own.
 
@@ -36,7 +36,7 @@ That said, **map subscriptions can still be the right answer even when the data 
 |---|---|
 | Ordered events (chat, notifications, activity feeds) | Stream subscription |
 | Latest value of a single thing (with [cache recovery](/docs/server/cache_recovery)) | Stream subscription + cache recovery |
-| Real-time sync of data already in your app DB, app DB stays the only source of truth | Stream subscription + `getState` ([pattern](/blog/2026/05/15/pg-stream-broker-benefits)) |
+| Real-time sync of data already in your app DB, app DB stays the only source of truth | Stream subscription + `getState` ([pattern](/blog/2026/05/24/pg-stream-broker-benefits)) |
 | A Centrifugo-managed keyed collection (cursors, presence, IoT fleet, feature flags, lobbies) | **Map subscription** |
 | Centrifugo-managed keyed collection backed by transactional PostgreSQL | **Map subscription + PostgreSQL map broker** |
 | Real-time sync of data in your app DB, where the convenience of map subscriptions outweighs the cost of mirroring entries into `cf_map_state` | **Map subscription + PostgreSQL map broker** (mirror via transactional `cf_map_publish` from your own SQL transactions) |
@@ -97,7 +97,7 @@ Each step adds capability: `ephemeral` is the lightest — no stream overhead. `
 
 :::tip When your app already owns state
 
-Map subscriptions fit "key-value real-time collection" use cases where the broker *is* the store — presence, cursors, feature flags, IoT device fleet, lobby members. If your data already lives in your own database (orders, documents, tickets) and you want Centrifugo to just deliver change events, use a **stream subscription with a `getState` callback** backed by the [PostgreSQL stream broker](./engines.md) — your writes and publishes commit together in one SQL transaction, and clients render state from your own schema. See [Transactional publishing for stream subscriptions with PostgreSQL](/blog/2026/05/15/pg-stream-broker-benefits) and the [pg_stream_broker example](https://github.com/centrifugal/examples/tree/master/v6/pg_stream_broker).
+Map subscriptions fit "key-value real-time collection" use cases where the broker *is* the store — presence, cursors, feature flags, IoT device fleet, lobby members. If your data already lives in your own database (orders, documents, tickets) and you want Centrifugo to just deliver change events, use a **stream subscription with a `getState` callback** backed by the [PostgreSQL stream broker](./engines.md) — your writes and publishes commit together in one SQL transaction, and clients render state from your own schema. See [Transactional publishing for stream subscriptions with PostgreSQL](/blog/2026/05/24/pg-stream-broker-benefits) and the [pg_stream_broker example](https://github.com/centrifugal/examples/tree/master/v6/pg_stream_broker).
 
 :::
 
@@ -182,7 +182,7 @@ Key options:
 | `binary_data` | boolean | `false` | Use BYTEA instead of JSONB for data columns |
 | `table_prefix` | string | `"cf"` | Namespace prefix for table and function names. Default produces `cf_map_*` tables and `cf_map_publish(...)` functions. Use distinct prefixes for multi-tenant deployments sharing one PostgreSQL instance |
 | `stream_retention` | [duration](./configuration.md#duration-type) | `"24h"` | How long stream entries are kept |
-| `use_notify` | boolean | `false` | Enable LISTEN/NOTIFY for low-latency delivery. See [connection pooler note](../server/engines.md#listennotify-and-connection-poolers) |
+| `use_notify` | boolean | `false` | Enable LISTEN/NOTIFY for low-latency delivery. See [connection pooler note](../server/engines.md#brokerpostgresuse_notify) |
 | `notify_dsn` | string | `""` | Separate DSN for the LISTEN connection. Use a direct PostgreSQL URL when `dsn` points at PGBouncer or another pooler incompatible with LISTEN/NOTIFY |
 | `skip_schema_init` | boolean | `false` | Skip automatic table creation on startup |
 | `partition_lookahead_days` | integer | `2` | Number of future daily partitions to pre-create |
@@ -854,4 +854,4 @@ The demo runs with Docker Compose (PostgreSQL + Python backend + Nginx) and requ
 
 A separate [map_cursors](https://github.com/centrifugal/examples/tree/master/v6/map_cursors) example demonstrates real-time multi-user cursors using ephemeral sync with auto-cleanup on disconnect, backed by the Redis map broker — a better fit than PostgreSQL for high-frequency ephemeral updates.
 
-For the app-owned state pattern (app DB as source of truth + transactional publishing via the PostgreSQL stream broker + stream subscription `getState`), see the [pg_stream_broker kitchen orders demo](https://github.com/centrifugal/examples/tree/master/v6/pg_stream_broker) and the blog post [Transactional publishing for stream subscriptions with PostgreSQL](/blog/2026/05/15/pg-stream-broker-benefits).
+For the app-owned state pattern (app DB as source of truth + transactional publishing via the PostgreSQL stream broker + stream subscription `getState`), see the [pg_stream_broker kitchen orders demo](https://github.com/centrifugal/examples/tree/master/v6/pg_stream_broker) and the blog post [Transactional publishing for stream subscriptions with PostgreSQL](/blog/2026/05/24/pg-stream-broker-benefits).

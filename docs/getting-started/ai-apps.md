@@ -17,7 +17,7 @@ We've covered AI transport scenarios in the Centrifugo blog:
 - **[Streaming AI responses with Centrifugo](/blog/2025/06/17/streaming-ai-gpt-responses-with-centrifugo)** — end-to-end tutorial streaming GPT-3.5 responses with FastAPI and temporary channels.
 - **[Scaling AI token streams with Centrifugo](/blog/2026/03/01/scaling-ai-token-streams-with-centrifugo)** — covers reconnect recovery, multi-tab synchronization, transport fallbacks, and horizontal scaling with Redis. Source on [GitHub](https://github.com/centrifugal/examples/tree/master/v6/scale-ai).
 
-For the transactional-publishing angle — where the assistant message row and the published event commit together in one PostgreSQL transaction — see the [PostgreSQL stream broker post](/blog/2026/05/15/pg-stream-broker-benefits).
+For the transactional-publishing angle — where the assistant message row and the published event commit together in one PostgreSQL transaction — see the [PostgreSQL stream broker post](/blog/2026/05/24/pg-stream-broker-benefits).
 
 ## When to use Centrifugo for AI workloads
 
