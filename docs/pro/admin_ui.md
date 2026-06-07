@@ -1,5 +1,5 @@
 ---
-description: "Centrifugo PRO admin UI features: SSO via OpenID Connect, real-time channel and connection snapshots, analytics dashboards (trends, explorers, flight recorder), and enhanced system state monitoring."
+description: "Centrifugo PRO admin UI features: SSO via OpenID Connect, a redacted configuration viewer, real-time channel and connection snapshots, analytics dashboards (trends, explorers, flight recorder), and enhanced system state monitoring."
 id: admin_ui
 sidebar_label: "Admin UI: SSO, Snapshots, Analytics"
 title: "Admin UI: SSO, State Snapshots, Analytics"
@@ -258,6 +258,14 @@ Features:
 * **Export** — copy a session as text, or download the full window as CSV (beyond the rendered cap).
 
 All timestamps on this page are shown in your browser's local time zone (labelled on the From/To pickers); CSV export uses UTC (ISO-8601).
+
+## Configuration viewer
+
+The admin UI includes a **Config** page that shows the effective configuration of the node serving the request — handy to confirm what a node is actually running with. It's presented as a searchable tree with inline docs for each field, and an *Only non-defaults* toggle to quickly see what this node overrides.
+
+![Admin config viewer](/img/admin_config.png)
+
+The view is read-only and safe to expose to admins: secret values and credentials in URLs/DSNs are masked on the server and never sent to the browser.
 
 ## More data in admin UI
 

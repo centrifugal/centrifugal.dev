@@ -2,7 +2,7 @@
 description: "Build a real-time WebSocket chat app from scratch with Centrifugo, Django, React, and PostgreSQL. A comprehensive messenger tutorial beyond the basics."
 id: intro
 sidebar_label: "Real-time app from scratch"
-title: "Building WebSocket chat (messenger) app from scratch"
+title: "WebSocket chat (messenger) app from scratch"
 ---
 
 In this tutorial, we show how to build a rather complex real-time application with Centrifugo. It features a modern and responsive frontend, user authentication, channel permission checks, and the main database as a source of truth.
