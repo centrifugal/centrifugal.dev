@@ -90,7 +90,9 @@ function Home() {
             "@graph": [
               {
                 "@type": "Organization",
+                "@id": "https://centrifugal.dev/#organization",
                 "name": "Centrifugal Labs LTD",
+                "alternateName": "Centrifugal Labs",
                 "url": "https://centrifugal.dev",
                 "logo": "https://centrifugal.dev/img/logo.svg",
                 "description": "Centrifugal Labs powers realtime magic. The flagship product is Centrifugo — a self-hosted realtime messaging and data sync platform, stack-agnostic and integrates with any frontend or backend technology.",
@@ -101,7 +103,17 @@ function Home() {
                 ]
               },
               {
+                "@type": "WebSite",
+                "@id": "https://centrifugal.dev/#website",
+                "name": "Centrifugo",
+                "alternateName": ["Centrifugo real-time messaging server", "Centrifugo server"],
+                "url": "https://centrifugal.dev",
+                "publisher": { "@id": "https://centrifugal.dev/#organization" },
+                "about": { "@id": "https://centrifugal.dev/#software" }
+              },
+              {
                 "@type": "SoftwareApplication",
+                "@id": "https://centrifugal.dev/#software",
                 "name": "Centrifugo",
                 "url": "https://centrifugal.dev",
                 "applicationCategory": "DeveloperApplication",
@@ -112,10 +124,8 @@ function Home() {
                   "price": "0",
                   "priceCurrency": "EUR"
                 },
-                "author": {
-                  "@type": "Organization",
-                  "name": "Centrifugal Labs LTD"
-                }
+                "publisher": { "@id": "https://centrifugal.dev/#organization" },
+                "author": { "@id": "https://centrifugal.dev/#organization" }
               }
             ]
           })}
