@@ -362,7 +362,133 @@ First generate a VAPID key pair (for example with `npx web-push generate-vapid-k
 }
 ```
 
-On the frontend, use the same `vapid_public_key` as the `applicationServerKey` when calling `pushManager.subscribe`, then register the resulting `PushSubscription` object as the device token (pass the whole subscription JSON as `token` in `device_register`).
+On the frontend, use the same `vapid_public_key` as the `applicationServerKey` when calling `pushManager.subscribe`. This yields a [`PushSubscription`](https://developer.mozilla.org/en-US/docs/Web/API/PushSubscription) object that looks like this:
+
+```json
+{
+  "endpoint": "https://fcm.googleapis.com/fcm/send/abc...",
+  "keys": {
+    "p256dh": "BN...",
+    "auth": "k9..."
+  }
+}
+```
+
+To register the device, serialize this **entire `PushSubscription` object to a JSON string** and pass it as the `token` field of `device_register`. The `token` is a plain string field (see the [`device_register` API](#device_register)), so this works identically over the HTTP and gRPC APIs and from any language — Centrifugo parses the string server-side. Do **not** pass the subscription as a nested object; it must be a string.
+
+Typically you don't call `device_register` from the browser (it requires the API key), but from your backend, which receives the `PushSubscription` from the frontend and forwards it. Here is how to build the `token` in different languages:
+
+````mdx-code-block
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs
+  className="unique-tabs"
+  defaultValue="python"
+  values={[
+    {label: 'Python', value: 'python'},
+    {label: 'NodeJS', value: 'node'},
+    {label: 'PHP', value: 'php'},
+    {label: 'Go', value: 'go'},
+  ]
+}>
+<TabItem value="python">
+
+```python
+import json
+import requests
+
+# subscription is the PushSubscription received from the browser (a dict).
+payload = {
+    "provider": "webpush",
+    "platform": "web",
+    "user": "42",
+    # token is a STRING: the whole PushSubscription serialized as JSON.
+    "token": json.dumps(subscription),
+}
+
+requests.post(
+    "http://localhost:8000/api/device_register",
+    json=payload,
+    headers={"Authorization": "apikey <CENTRIFUGO_API_KEY>"},
+)
+```
+
+</TabItem>
+<TabItem value="node">
+
+```javascript
+// subscription is the PushSubscription received from the browser (an object).
+await fetch("http://localhost:8000/api/device_register", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": "apikey <CENTRIFUGO_API_KEY>",
+  },
+  body: JSON.stringify({
+    provider: "webpush",
+    platform: "web",
+    user: "42",
+    // token is a STRING: the whole PushSubscription serialized as JSON.
+    token: JSON.stringify(subscription),
+  }),
+});
+```
+
+</TabItem>
+<TabItem value="php">
+
+```php
+<?php
+// $subscription is the PushSubscription received from the browser (an array).
+$payload = [
+    'provider' => 'webpush',
+    'platform' => 'web',
+    'user' => '42',
+    // token is a STRING: the whole PushSubscription serialized as JSON.
+    'token' => json_encode($subscription),
+];
+
+$ch = curl_init('http://localhost:8000/api/device_register');
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_HTTPHEADER => [
+        'Content-Type: application/json',
+        'Authorization: apikey <CENTRIFUGO_API_KEY>',
+    ],
+    CURLOPT_POSTFIELDS => json_encode($payload),
+    CURLOPT_RETURNTRANSFER => true,
+]);
+curl_exec($ch);
+```
+
+</TabItem>
+<TabItem value="go">
+
+```go
+// subscription holds the raw PushSubscription JSON bytes from the browser.
+var subscription json.RawMessage
+
+payload, _ := json.Marshal(map[string]any{
+    "provider": "webpush",
+    "platform": "web",
+    "user":     "42",
+    // token is a STRING: the whole PushSubscription serialized as JSON.
+    // subscription already holds the JSON bytes, so just reinterpret them as a string.
+    "token": string(subscription),
+})
+
+req, _ := http.NewRequest(http.MethodPost, "http://localhost:8000/api/device_register", bytes.NewReader(payload))
+req.Header.Set("Content-Type", "application/json")
+req.Header.Set("Authorization", "apikey <CENTRIFUGO_API_KEY>")
+http.DefaultClient.Do(req)
+```
+
+</TabItem>
+</Tabs>
+````
+
+The examples above use the HTTP API, where the JSON library escapes the `token` string for you when serializing the outer request. Over the [gRPC API](../server/server_api.md#grpc-api) it's even simpler: `token` is a protobuf `string` field, so you assign the serialized subscription to it directly and the framing handles the rest — no escaping involved. Either way you serialize the subscription exactly once and never hand-escape it.
 
 :::tip
 
@@ -381,6 +507,47 @@ Each browser uses a different push service endpoint (Chrome → `fcm.googleapis.
 The subscription **endpoint** is stored as the device token (its stable identity, like an FCM/APNs token); the encryption keys are stored alongside it. Registration validates the subscription per [RFC 8291](https://datatracker.ietf.org/doc/html/rfc8291) (P-256 `p256dh` point, 16-byte `auth`) and rejects invalid ones. When a push service reports a subscription is gone (`404`/`410`), Centrifugo removes that device automatically. When a browser re-subscribes (new endpoint) the app should call `device_register` again with the new subscription; the obsolete one is cleaned up on its next failed send. As with other providers, the always-on dead-token cleanup (`404`/`410`) keeps the table healthy; the optional `max_inactive_device_interval` drops abandoned installs by registration recency, so enable it only for apps that re-register on each open (see the cleanup note under [Device lifecycle](#device-lifecycle-and-best-practices)).
 
 :::
+
+#### Web Push endpoint SSRF protection
+
+A Web Push endpoint is a URL that originates in the end user's browser and is later fetched by Centrifugo when sending a notification — the same class of outbound-request-to-a-user-supplied-URL as webhook delivery. Without controls, a malicious user could register an endpoint pointing at internal infrastructure (e.g. `169.254.169.254`, `localhost`, a private service) and have Centrifugo issue requests there. Centrifugo applies the standard SSRF defenses, most of which are **always on and not configurable**:
+
+- **https only** — non-`https` endpoints are rejected (RFC 8030 requires TLS anyway).
+- **No IP-literal hosts** — the endpoint host must be a domain name; literal IPs (any form) are rejected, since no real push service uses one.
+- **Private address block** — connections are refused if the endpoint's host **resolves** to a loopback, private (RFC 1918 / IPv6 ULA), link-local (including the cloud-metadata address) or unspecified address. This check runs at connect time on the resolved IP, so it is not bypassable by DNS rebinding, and it has **no opt-out**.
+- **No redirects** — a `3xx` from the push service is not followed (it could otherwise smuggle the request to a different host).
+
+On top of that, Centrifugo restricts the **origin** of the endpoint to an allowlist. By default this is a built-in list of the mainstream browser push services, which covers every browser in practice:
+
+```
+https://*.googleapis.com                # Chrome / Chromium browsers (FCM: fcm.googleapis.com)
+https://*.push.apple.com                # Safari, iOS / iPadOS
+https://*.notify.windows.com            # Microsoft Edge / Windows (WNS)
+https://*.push.services.mozilla.com     # Firefox
+```
+
+You control this list with two options (glob patterns, same syntax as [`client.allowed_origins`](../server/configuration.md#clientallowed_origins)):
+
+- [`allowed_endpoint_origins`](#push_notificationswebpush) — **replaces** the built-in list. Set it to pin delivery to a specific set of origins (or to `["*"]` to allow any origin and rely only on the always-on checks above).
+- [`extra_allowed_endpoint_origins`](#push_notificationswebpush) — **added on top of** the effective list (the built-in defaults, or your `allowed_endpoint_origins` if set). Use this to allow an extra origin — e.g. a self-hosted push service — without restating the defaults.
+
+```json title="config.json"
+{
+  "push_notifications": {
+    "webpush": {
+      "extra_allowed_endpoint_origins": ["https://push.example.com"]
+    }
+  }
+}
+```
+
+:::caution Self-hosted push services
+
+Because the private-address block has no opt-out and IP-literal hosts are rejected, a self-hosted push service (e.g. self-hosted Mozilla autopush) must be reachable over **https** at a **publicly-routable** address via a **domain name**, and its origin must be allowed (via `extra_allowed_endpoint_origins` or `allowed_endpoint_origins`). Push services on private/internal IPs are not supported.
+
+:::
+
+For defense in depth, you can additionally restrict Centrifugo's outbound network egress at the infrastructure layer (firewall, Kubernetes `NetworkPolicy`, or an egress proxy).
 
 ### Use PostgreSQL as queue
 
@@ -571,6 +738,8 @@ Web Push (VAPID) provider configuration object.
 | `vapid_private_key` | string | | **Required.** base64url-encoded VAPID private key. Keep it secret |
 | `subject` | string | | **Required.** VAPID subject (JWT `sub` claim) — a `mailto:` or `https:` URL identifying the application server contact |
 | `tokens_batch_size` | int | `100` | Maximum number of subscriptions to send to concurrently |
+| `allowed_endpoint_origins` | array[string] | built-in list | Allowed push service origins (glob patterns, same syntax as `client.allowed_origins`). When **empty**, a built-in list of the mainstream browser push services is used; when **set**, it **replaces** that list. Use `*` to allow any origin. See [Endpoint SSRF protection](#web-push-endpoint-ssrf-protection) |
+| `extra_allowed_endpoint_origins` | array[string] | `[]` | Origins (same glob syntax) **added on top of** `allowed_endpoint_origins` (or the built-in defaults when it is unset). Use it to allow a self-hosted push service while keeping the defaults |
 
 ### Complete configuration example
 

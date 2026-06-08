@@ -126,6 +126,10 @@ const data = [
                 description: 'Authenticate admin UI users via any OIDC-compatible identity provider (Okta, KeyCloak, Google, Azure, etc.) with PKCE support. Checks user permissions on every request.',
             },
             {
+                name: 'Configuration viewer', pro: true, link: '/docs/pro/admin_ui',
+                description: 'Effective configuration is visible in admin web UI',
+            },
+            {
                 name: 'Enhanced metrics', pro: true, link: '/docs/pro/observability_enhancements',
                 description: 'Channel namespace resolution and client SDK name breakdown in Prometheus metrics, Prometheus to OTEL metrics bridge, per-node CPU and RSS stats in admin UI, and more.',
             },
