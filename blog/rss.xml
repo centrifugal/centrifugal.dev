@@ -1627,7 +1627,7 @@ Analysis: Combining both methods results in a data size of 11.11%. Even more tha
 <li class="">hms - <a href="https://developer.huawei.com/consumer/en/hms/huawei-pushkit/" target="_blank" rel="noopener noreferrer" class="">Huawei Messaging Service (HMS) Push Kit</a> <i class="bi bi-android2" style="color:yellowgreen"></i> <i class="bi bi-apple" style="color:cornflowerblue"></i> <i class="bi bi-globe" style="color:orange"></i></li>
 <li class="">apns - <a href="https://developer.apple.com/documentation/usernotifications" target="_blank" rel="noopener noreferrer" class="">Apple Push Notification service (APNs) </a> <i class="bi bi-apple" style="color:cornflowerblue"></i></li>
 </ul>
-<p><img decoding="async" loading="lazy" alt="Push" src="https://centrifugal.dev/assets/images/push_notifications-c1af39fb6bbb1da727bd940368acd4f8.png" width="2879" height="1195" class="img_ev3q"></p>
+<p><img decoding="async" loading="lazy" alt="Push" src="https://centrifugal.dev/assets/images/push_notifications-97d3e940efd8a02ab6781f048031f100.png" width="1799" height="938" class="img_ev3q"></p>
 <p>So we basically cover all the most popular platforms out of the box.</p>
 <p>After registering the device token, Centrifugo PRO returns a <code>device_id</code> to you. This device ID must be stored on the client device. As long as the frontend has this <code>device_id</code>, it can update the device's push token information from time to time to keep it current (by just calling <code>device_register</code> again, but with <code>device_id</code> attached).</p>
 <p>After saving the token, your backend can start sending push notifications to devices.</p>
