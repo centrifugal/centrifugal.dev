@@ -167,6 +167,8 @@ module.exports = {
             }
           },
           lastVersion: "current",
+          // No visible breadcrumb nav (design choice). BreadcrumbList structured
+          // data for SEO is emitted separately in src/theme/DocItem/Content.
           breadcrumbs: false,
           sidebarPath: require.resolve("./src/sidebars"),
           editUrl:

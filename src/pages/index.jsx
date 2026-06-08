@@ -230,7 +230,7 @@ function Home() {
         </section>
         <Highlight
           img={
-            <img src="/img/basic_pub_sub.png" />
+            <img src="/img/basic_pub_sub.png" alt="Centrifugo PUB/SUB architecture: a backend publishes messages to channels and Centrifugo broadcasts them in real time to subscribed WebSocket clients" loading="lazy" />
           }
           reversed
           isDark
