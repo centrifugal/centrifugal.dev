@@ -75,11 +75,6 @@ export default function ArchitectureDiagram() {
           0%, 100% { opacity: 0.55; }
           50% { opacity: 1; }
         }
-        /* Cards gently lift on hover */
-        .cf-arch .cf-card {
-          transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-        .cf-arch .cf-card:hover { transform: translateY(-3px); }
         @media (prefers-reduced-motion: reduce) {
           .cf-arch * { animation: none !important; }
           .cf-arch .cf-pt { display: none; }
