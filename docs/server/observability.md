@@ -512,6 +512,12 @@ Set the target project via `OTEL_RESOURCE_ATTRIBUTES="gcp.project_id=..."`. Do n
 
 :::note
 
+Exported telemetry carries standard OTel resource attributes: `service.name` is `centrifugo` (override with `OTEL_SERVICE_NAME`), attributes from `OTEL_RESOURCE_ATTRIBUTES` are merged in (environment values take precedence over Centrifugo defaults), and since Centrifugo v6.8.3 `service.instance.id` defaults to the unique Centrifugo node ID.
+
+:::
+
+:::note
+
 ADC must be resolvable in the runtime environment — automatic on GKE/GCE/Cloud Run via the attached service account, or locally via `GOOGLE_APPLICATION_CREDENTIALS` / `gcloud auth application-default login`. When ADC resolves through the metadata server (no explicit credentials file), Centrifugo performs a one-time metadata lookup at startup; the credential is opt-in via the flag, so there is no probe unless you enable it.
 
 :::
