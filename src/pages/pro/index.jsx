@@ -37,9 +37,9 @@ function Header() {
             <div className={styles.mainTitle}>
                 <TitleWithCatPro isDarkTheme={isDarkTheme} />
             </div>
-            <div className={styles.subTitle}>
+            <h1 className={styles.subTitle}>
                 Unlock the full power of Centrifugo
-            </div>
+            </h1>
             <div className={styles.subSubTitle}>
                 Next-level <span className="text-gradient text-gradient-hero">realtime messaging</span> and <span className="text-gradient text-gradient-hero">data sync</span><br />
                 for your organization

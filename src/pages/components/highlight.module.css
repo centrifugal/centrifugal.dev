@@ -35,7 +35,8 @@
     padding: var(--cf-spacing-vertical) var(--ifm-spacing-horizontal) !important;
 }
 
-.featureImage iframe {
+.featureImage iframe,
+.featureImage video {
     width: 100%;
     border-radius: 0.5em !important;
     overflow: hidden;

@@ -81,7 +81,7 @@ function Home() {
   return (
     <Layout
       title="Scalable real-time messaging server"
-      description="Open-source real-time messaging server — a self-hosted alternative to PubNub, Pusher, Ably, Socket.IO, Phoenix.PubSub & SignalR. Set up once and forever."
+      description="Centrifugo is an open-source real-time messaging server — a self-hosted alternative to PubNub, Pusher, Ably, Socket.IO, Phoenix.PubSub & SignalR. Set up once and forever."
     >
       <Head>
         <script type="application/ld+json">
