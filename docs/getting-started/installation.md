@@ -166,8 +166,11 @@ If you are developing on macOS then you can install Centrifugo over `brew`:
 
 ```
 brew tap centrifugal/centrifugo
+brew trust centrifugal/centrifugo
 brew install centrifugo
 ```
+
+The `brew trust` step is required by recent Homebrew versions for all third-party taps (see [Homebrew Tap Trust documentation](https://docs.brew.sh/Tap-Trust)). Without it, Homebrew skips the tap with a warning like `Skipping centrifugal/centrifugo because it is not trusted`. On older Homebrew versions where the `brew trust` command does not exist yet, simply skip that step.
 
 ## Build from source
 
