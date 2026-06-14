@@ -28,8 +28,8 @@ example.
 {
   "tls": {
     "enabled": true,
-    "key_pem_file": "server.key",
-    "cert_pem_file": "server.crt"
+    "key_pem": "server.key",
+    "cert_pem": "server.crt"
   }
 }
 ```
@@ -50,7 +50,7 @@ For automatic certificates from Let's Encrypt add into configuration file:
 {
   "tls_autocert": {
     "enabled": true,
-    "host_whitelist": "www.example.com",
+    "host_whitelist": ["www.example.com"],
     "cache_dir": "/tmp/certs",
     "email": "user@example.com",
     "http": true,
@@ -61,8 +61,7 @@ For automatic certificates from Let's Encrypt add into configuration file:
 
 `tls_autocert.enabled` (boolean) says Centrifugo that you want automatic certificate handling using ACME provider.
 
-`tls_autocert.host_whitelist` (string) is a string with your app domain address. This can be comma-separated
-list. It's optional but recommended for extra security.
+`tls_autocert.host_whitelist` (array of strings) is the list of domains certificates are allowed for. It's optional but recommended for extra security.
 
 `tls_autocert.cache_dir` (string) is a path to a folder to cache issued certificate files. This is optional
 but will increase performance.
@@ -91,9 +90,9 @@ You can configure TLS for the GRPC unidirectional stream endpoint. Set `uni_grpc
 
 Centrifugo v5 started a migration to a new unified way to configure TLS for all parts of Centrifugo. Some reasoning may be found in [this issue on GitHub](https://github.com/centrifugal/centrifugo/issues/831).
 
-:::caution
+:::tip
 
-At this point we use a unified TLS configuration object only for some parts of Centrifugo, but planning to extend this to all TLS configurations in Centrifugo v6. We explicitly point to this config in feature descriptions at this stage. 
+As of Centrifugo v6 this unified TLS configuration object is used consistently across all parts of Centrifugo that support TLS (HTTP server, GRPC API, uni-GRPC, proxies, NATS, PostgreSQL, Kafka, etc.).
 
 :::
 
@@ -104,26 +103,14 @@ New TLS config is an object that has the following structure.
 | Option Name           | Type    | Description                                                                                          |
 |-----------------------|---------|------------------------------------------------------------------------------------------------------|
 | `enabled`             | bool    | Turns on using TLS.                                                                                  |
-| `cert_pem`            | string  | Certificate in PEM format.                                                                           |
-| `cert_pem_b64`        | string  | Certificate in base64 encoded PEM format.                                                            |
-| `cert_pem_file`       | string  | Path to a file with certificate in PEM format.                                                       |
-| `key_pem`             | string  | Key in PEM format.                                                                                   |
-| `key_pem_b64`         | string  | Key in base64 encoded PEM format.                                                                    |
-| `key_pem_file`        | string  | Path to a file with key in PEM format.                                                               |
-| `server_ca_pem`       | string  | Server root CA certificate in PEM format used by client to verify server's certificate during handshake. |
-| `server_ca_pem_b64`   | string  | Server root CA certificate in base64 encoded PEM format.                                             |
-| `server_ca_pem_file`  | string  | Path to a file with server root CA certificate in PEM format.                                        |
-| `client_ca_pem`       | string  | Client CA certificate in PEM format used by server to verify client's certificate during handshake.  |
-| `client_ca_pem_b64`   | string  | Client CA certificate in base64 encoded PEM format.                                                  |
-| `client_ca_pem_file`  | string  | Path to a file with client CA certificate in PEM format.                                             |
+| `cert_pem`            | string  | Certificate in PEM format. May be a raw PEM string, base64-encoded PEM, or a path to a PEM file.    |
+| `key_pem`             | string  | Private key in PEM format. May be a raw PEM string, base64-encoded PEM, or a path to a PEM file.    |
+| `server_ca_pem`       | string  | Server root CA in PEM format used by the client to verify the server's certificate during handshake. Raw PEM, base64 PEM, or file path. |
+| `client_ca_pem`       | string  | Client CA in PEM format used by the server to verify client certificates (enables mutual TLS). Raw PEM, base64 PEM, or file path. |
 | `insecure_skip_verify`| bool    | Turns off server certificate verification.                                                           |
 | `server_name`         | string  | Used to verify the hostname on the returned certificates.                                            |
 
-- **Source Priority:** The configuration allows specifying TLS settings from multiple sources: file, base64 encoded PEM, and raw PEM. The sources are prioritized in the following order:
-  1. File to PEM
-  2. Base64 encoded PEM
-  3. Raw PEM
-- **Single Source Usage:** Users should ensure that only one source of configured values is used. For example, if both `cert_pem_file` and `cert_pem` are set, the file source (`cert_pem_file`) will be used, and the raw PEM (`cert_pem`) will be ignored.
+- **Flexible source:** Each PEM field (`cert_pem`, `key_pem`, `server_ca_pem`, `client_ca_pem`) accepts its value in any of three forms, auto-detected in this order: 1) raw PEM content, 2) base64-encoded PEM, 3) a path to a PEM file.
 - **Server and Client CA:** `server_ca_pem` and `client_ca_pem` are used for verifying the server and client certificates respectively during the TLS handshake.
 - **Insecure Option:** The `insecure_skip_verify` option can be used to turn off server certificate verification, which is not recommended for production environments.
 - **Hostname Verification:** The `server_name` is utilized to verify the hostname on the returned certificates, providing an additional layer of security.
@@ -136,8 +123,8 @@ So in the configuration the usage of new TLS config may be like this:
     "grpc": {
       "tls": {
         "enabled": true,
-        "cert_pem_file": "/path/to/cert.pem",
-        "key_pem_file": "/path/to/key.pem"
+        "cert_pem": "/path/to/cert.pem",
+        "key_pem": "/path/to/key.pem"
       }
     }
   }

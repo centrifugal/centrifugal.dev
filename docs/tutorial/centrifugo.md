@@ -11,9 +11,9 @@ To add Centrifugo let's update `docker-compose.yml` file:
 
 ```yaml
 centrifugo:
-  image: centrifugo/centrifugo:v5.2.0
+  image: centrifugo/centrifugo:v6
   volumes:
-    - ./centrifugo/config.json:/centrifugo/config.json
+    - ./centrifugo:/centrifugo
   command: centrifugo -c config.json
   expose:
     - 8000
@@ -51,53 +51,43 @@ We will be using the `personal` [namespace](../server/channels.md#channel-namesp
 
 Our next goal is to connect to Centrifugo from the frontend app. We will do this right after user authenticated and chat layout loaded.
 
-To add real-time WebSocket connection you need to install `centrifuge-js` - Centrifugo SDK for Javascript.
+To add the real-time WebSocket connection you need to install Centrifugo's JavaScript SDK – the package is named `centrifuge` (the project is sometimes referred to as `centrifuge-js`):
 
 ```bash
 npm install centrifuge
 ```
 
-Then import it in `App.jsx`:
+Then import it in `App.tsx`:
 
-```javascript
-import {
-  Centrifuge, PublicationContext, SubscriptionStateContext,
-  SubscribedContext, SubscriptionState
-} from 'centrifuge';
+```typescript
+import { Centrifuge, SubscriptionState } from 'centrifuge';
+import type { PublicationContext, SubscriptionStateContext, SubscribedContext } from 'centrifuge';
 ```
 
-We also imported some types we will be using in the app.
+We also imported some types we will be using in the app (with `import type`, since they are only used in type positions).
 
 To establish a connection with Centrifugo as soon as user authenticated in the app we can use `useEffect` React hook with the dependency on `userInfo`:
 
-```javascript
+```typescript
 useEffect(() => {
   if (!userInfo.id) {
     return;
   }
 
-  let centrifuge: Centrifuge | null = null;
-
-  const init = async () => {
-    centrifuge = new Centrifuge(WS_ENDPOINT, {
-      debug: true
-    })
-    centrifuge.connect()
-  }
-
-  // As soon as we get authenticated user – init our app.
-  init()
+  // Create the client synchronously (not inside an async function) so the cleanup below
+  // always has it to disconnect, even if the effect is torn down quickly.
+  const centrifuge = new Centrifuge(WS_ENDPOINT, {
+    debug: true
+  })
+  centrifuge.connect()
 
   return () => {
-    if (centrifuge) {
-      console.log("disconnect Centrifuge")
-      centrifuge.disconnect()
-    }
+    centrifuge.disconnect()
   }
 }, [userInfo])
 ```
 
-When user logs out and `userInfo.id` is not set – the connection to server is closed as we do `centrifuge.disconnect()` in `useEffect` cleanup function.
+When user logs out and `userInfo.id` is not set – the connection to server is closed as we do `centrifuge.disconnect()` in `useEffect` cleanup function. Creating the `Centrifuge` instance directly in the effect body (rather than inside an `async` helper) matters: the cleanup function closes over it, so React can always tear the connection down – otherwise a quick unmount could leak a connection.
 
 But if you run the code like this – the connection won't be established. That's bad news! But we also have good news - this means that Centrifugo supports secure communication and we need to authenticate the connection upon establishing it! Let's do this.
 
@@ -105,8 +95,8 @@ But if you run the code like this – the connection won't be established. That'
 
 Change `Centrifuge` constructor to:
 
-```javascript
-centrifuge = new Centrifuge(WS_ENDPOINT, {
+```typescript
+const centrifuge = new Centrifuge(WS_ENDPOINT, {
     getToken: getConnectionToken,
     debug: true
 })
@@ -156,7 +146,7 @@ Note, we are using `settings.CENTRIFUGO_TOKEN_SECRET` here, we need to include t
 CENTRIFUGO_TOKEN_SECRET = 'secret'
 ```
 
-It must match the value of `"token_hmac_secret_key"` option from Centrifugo configuration.
+It must match the value of the `client.token.hmac_secret_key` option from the Centrifugo configuration.
 
 Don't forget to include this view in the `urls.py` configuration, and then you can finally connect to Centrifugo from the frontend: upon page load the `centrifuge-js` SDK makes a request to the backend to load the connection token, establishes a WebSocket connection with Centrifugo passing the connection token. Centrifugo validates the token and since the secrets match, Centrifugo can be sure the token contains valid information about the user.
 
@@ -184,12 +174,8 @@ export const getSubscriptionToken = async (channel: string) => {
   return response.data.token;
 }
 
-const getPersonalChannelSubscriptionToken = async () => {
-    return getSubscriptionToken(personalChannel)
-}
-
 const sub = centrifuge.newSubscription(personalChannel, {
-    getToken: getPersonalChannelSubscriptionToken
+    getToken: () => getSubscriptionToken(personalChannel)
 })
 sub.on('publication', (ctx: PublicationContext) => {
     // Used to process incoming channel publications. We will talk about it soon.
@@ -226,15 +212,13 @@ Please refer to [client SDK spec](../transports/client_api.md#subscription-token
 
 Let's also finish up the logic with real-time subscription status now:
 
-```javascript
+```typescript
 sub.on('state', (ctx: SubscriptionStateContext) => {
-  if (ctx.newState == SubscriptionState.Subscribed) {
-    setRealTimeStatus('🟢')
-  } else {
-    setRealTimeStatus('🔴')
-  }
+  setConnected(ctx.newState === SubscriptionState.Subscribed)
 })
 ```
+
+We keep a simple `connected` boolean in state and render it as a 🟢 / 🔴 indicator in the navbar.
 
 There are several subscription states in all our SDKs - `unsubscribed`, `subscribing`, `subscribed`. You can also listen for them separately for more granular logic and get more detailed information about the reason of subscription loss. See [client SDK spec](../transports/client_api.md) for more detailed description.
 
@@ -265,7 +249,9 @@ class CentrifugoMixin:
         members = RoomMember.objects.filter(room_id=room_id).values_list('user', flat=True)
         return [f'personal:{user_id}' for user_id in members]
 
-    def broadcast_room(self, room_id, broadcast_payload):
+    def broadcast_room(self, room, broadcast_payload):
+        room_id = room.pk
+        room_name = room.name  # used later when we add push notifications
         # Using Centrifugo HTTP API is the simplest way to send real-time message, and usually
         # it provides the best latency. The trade-off here is that error here may result in
         # lost real-time event. Depending on the application requirements this may be fine or not.  
@@ -275,7 +261,7 @@ class CentrifugoMixin:
             session.mount('http://', HTTPAdapter(max_retries=retries))
             try:
                 session.post(
-                    "http://centrifugo:8000/api/broadcast",
+                    settings.CENTRIFUGO_HTTP_API_ENDPOINT + '/api/broadcast',
                     data=json.dumps(broadcast_payload),
                     headers={
                         'Content-type': 'application/json', 
@@ -284,7 +270,7 @@ class CentrifugoMixin:
                     }
                 )
             except requests.exceptions.RequestException as e:
-                logging.error(e)
+                logger.error(e)
 
         # We need to use on_commit here to not send notification to Centrifugo before
         # changes applied to the database. Since we are inside transaction.atomic block
@@ -298,6 +284,8 @@ class MessageListCreateAPIView(ListCreateAPIView, CentrifugoMixin):
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         room_id = self.kwargs['room_id']
+        # Only members of the room may post messages to it.
+        get_object_or_404(RoomMember, user=request.user, room_id=room_id)
         room = Room.objects.select_for_update().get(id=room_id)
         room.increment_version()
         channels = self.get_room_member_channels(room_id)
@@ -305,6 +293,7 @@ class MessageListCreateAPIView(ListCreateAPIView, CentrifugoMixin):
         serializer.is_valid(raise_exception=True)
         obj = serializer.save(room=room, user=request.user)
         room.last_message = obj
+        room.bumped_at = timezone.now()
         room.save()
 
         # This is where we add code to broadcast over Centrifugo API.
@@ -316,7 +305,7 @@ class MessageListCreateAPIView(ListCreateAPIView, CentrifugoMixin):
             },
             'idempotency_key': f'message_{serializer.data["id"]}'
         }
-        self.broadcast_room(room_id, broadcast_payload)
+        self.broadcast_room(room, broadcast_payload)
         
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -330,9 +319,11 @@ Here we use `requests` library for making HTTP requests (`pip install requests`)
 
 We construct list of channels using `values_list` method of Django queryset to make query more efficient.
 
-We also use `settings.CENTRIFUGO_HTTP_API_KEY` which is set in `settings.py` and matches the `api_key` option from the Centrifugo configuration file:
+Both `settings.CENTRIFUGO_HTTP_API_ENDPOINT` and `settings.CENTRIFUGO_HTTP_API_KEY` are set in `settings.py`. The endpoint points at the Centrifugo service (the `centrifugo` docker compose service name), and the API key must match the `http_api.key` option from the Centrifugo configuration file:
 
-```
+```python title="backend/app/settings.py"
+# Base URL of the Centrifugo HTTP API – "centrifugo" is the docker compose service name.
+CENTRIFUGO_HTTP_API_ENDPOINT = "http://centrifugo:8000"
 # CENTRIFUGO_HTTP_API_KEY is used for auth in Centrifugo server HTTP API.
 # SECURITY WARNING: make it strong, keep it in secret!
 CENTRIFUGO_HTTP_API_KEY = 'api_key'
@@ -370,7 +361,7 @@ class JoinRoomView(APIView, CentrifugoMixin):
             },
             'idempotency_key': f'user_joined_{obj.pk}'
         }
-        self.broadcast_room(room_id, broadcast_payload)
+        self.broadcast_room(room, broadcast_payload)
         return Response(body, status=status.HTTP_200_OK)
 
 
@@ -394,7 +385,7 @@ class LeaveRoomView(APIView, CentrifugoMixin):
             },
             'idempotency_key': f'user_left_{pk}'
         }
-        self.broadcast_room(room_id, broadcast_payload)
+        self.broadcast_room(room, broadcast_payload)
         return Response(body, status=status.HTTP_200_OK)
 
 ```
@@ -403,111 +394,69 @@ We would also like to mention the concept of room `version`. Each room has a ver
 
 ## Handle real-time messages
 
-As we already shown above the entrypoint for incoming real-time messages on the frontend side is `on('publication')` callback of Subscription object.
+As we already shown above the entrypoint for incoming real-time messages on the frontend side is the `on('publication')` callback of the Subscription object:
 
-```javascript
+```typescript
 sub.on('publication', (ctx: PublicationContext) => {
     onPublication(ctx.data)
 })
 ```
 
-Where `onPublication` is:
+Where `onPublication` simply dispatches to a handler based on the event type:
 
-```javascript
-const onPublication = (publication: any) => {
-  setMessageQueue(prevQueue => [...prevQueue, publication]);
-};
+```typescript
+const onPublication = (event: RealTimeEvent) => {
+  switch (event.type) {
+    case 'message_added':
+      processMessageAdded(event.body)
+      break
+    case 'user_joined':
+      processUserJoined(event.body)
+      break
+    case 'user_left':
+      processUserLeft(event.body)
+      break
+  }
+}
 ```
 
-In our app example we process the messages using an asynchronous queue. To be honest, it's hard to give a universal recipe here – it seems to be a good approach for our example, but probably in your own app you will organise message processing differently.
+`RealTimeEvent` is a discriminated union of our three event types, declared in `types.ts`. The `type` field lets TypeScript narrow `body` to the right shape in each branch.
 
-```javascript
-const [chatState, dispatch] = useReducer(reducer, initialChatState);
-const [messageQueue, setMessageQueue] = useState<any[]>([]);
+We handle events as they arrive – there's no need to queue them. This works because our reducer updates are idempotent (we dedupe rooms and messages by id) and every event carries the room `version` we discussed above, so duplicate or out-of-order events are handled safely. The idempotent state design is exactly what keeps this real-time layer simple.
 
+There is one subtlety though: the subscription is created once (when we connect) and lives for the whole session, so its callback would otherwise close over a stale `chatState`. We keep the latest state in a ref and read `chatStateRef.current` inside the handlers:
+
+```typescript
+const chatStateRef = useRef(chatState);
 useEffect(() => {
-  if (messageQueue.length === 0) {
-    return; // Return if no messages to process.
-  }
-
-  const processUserJoined = async (body: any) => {
-    // We will describe this very soon.
-  }
-
-  const processUserLeft = async (body: any) => {
-    // We will describe this very soon.
-  }
-
-  const processMessageAdded = async (body: any) => {
-    // We will describe this very soon.
-  };
-
-  const processMessage = async () => {
-    const message = messageQueue[0];
-
-    const { type, body } = message
-    switch (type) {
-      case 'message_added': {
-        await processMessageAdded(body);
-        break
-      }
-      case 'user_joined': {
-        await processUserJoined(body);
-        break
-      }
-      case 'user_left': {
-        await processUserLeft(body);
-        break
-      }
-      default:
-        console.log('unsupported message type', type, body)
-    }
-
-    // Remove the processed message from the queue
-    setMessageQueue(prevQueue => prevQueue.slice(1));
-  };
-
-  processMessage();
-}, [messageQueue, chatState]);
+  chatStateRef.current = chatState;
+}, [chatState]);
 ```
+
+Let's look at each handler.
 
 ## Handle message added event
 
 Let's look what's going on inside `processMessageAdded` function:
 
-```javascript
-const processMessageAdded = async (body: any) => {
+```typescript
+const processMessageAdded = async (body: Message) => {
   const roomId = body.room.id
-  const newMessage = body
-
-  let room = chatState.roomsById[roomId]
-  if (!room) {
-    room = await fetchRoom(roomId)
-    dispatch({
-      type: "ADD_ROOMS", payload: {
-        rooms: [room]
-      }
-    })
-  }
-
-  let messages = chatState.messagesByRoomId[roomId]
-  if (!messages) {
-    const messages = await fetchMessages(roomId)
-    dispatch({
-      type: "ADD_MESSAGES", payload: {
-        roomId: roomId,
-        messages: messages
-      }
-    })
-    return;
-  }
-
-  dispatch({
-    type: "ADD_MESSAGES", payload: {
-      roomId: roomId,
-      messages: [newMessage]
+  if (!chatStateRef.current.roomsById[roomId]) {
+    const room = await fetchRoom(String(roomId))
+    if (room) {
+      dispatch({ type: "ADD_ROOMS", payload: { rooms: [room] } })
     }
-  })
+  }
+  if (!chatStateRef.current.messagesByRoomId[roomId]) {
+    // First time we see this room – load its history (which already includes this message).
+    const messages = await fetchMessages(String(roomId))
+    if (messages) {
+      dispatch({ type: "ADD_MESSAGES", payload: { roomId: roomId, messages: messages } })
+    }
+    return
+  }
+  dispatch({ type: "ADD_MESSAGES", payload: { roomId: roomId, messages: [body] } })
 }
 ```
 
@@ -515,26 +464,19 @@ We load the room if it was not loaded yet, and load the room's messages if it's 
 
 ## Handle user joined event
 
-```javascript
-const processUserJoined = async (body: any) => {
+```typescript
+const processUserJoined = async (body: RoomMembership) => {
   const roomId = body.room.id
-  const roomVersion = body.room.version
-  let room = chatState.roomsById[roomId]
-  if (!room) {
-    room = await fetchRoom(roomId)
-    if (room === null) {
-      return
+  if (!chatStateRef.current.roomsById[roomId]) {
+    const room = await fetchRoom(String(roomId))
+    if (room) {
+      dispatch({ type: "ADD_ROOMS", payload: { rooms: [room] } })
     }
-    dispatch({
-      type: "ADD_ROOMS", payload: {
-        rooms: [room]
-      }
-    })
   } else {
     dispatch({
       type: "SET_ROOM_MEMBER_COUNT", payload: {
         roomId: roomId,
-        version: roomVersion,
+        version: body.room.version,
         memberCount: body.room.member_count
       }
     })
@@ -544,42 +486,35 @@ const processUserJoined = async (body: any) => {
 
 ## Handle user left event
 
-```javascript
-const processUserLeft = async (body: any) => {
+```typescript
+const processUserLeft = async (body: RoomMembership) => {
   const roomId = body.room.id
-  const roomVersion = body.room.version
-  const leftUserId = body.user.id
-  let room = chatState.roomsById[roomId]
+  const room = chatStateRef.current.roomsById[roomId]
   if (room) {
-    if (room.version >= roomVersion) {
-      console.error(`Outdated version for room ID ${roomId}.`);
-      return
+    if (body.room.version <= room.version) {
+      return // Outdated event – we already have a newer version of this room.
     }
-    if (userInfo.id == leftUserId) {
-      dispatch({
-        type: "DELETE_ROOM", payload: {
-          roomId: roomId
-        }
-      })
+    if (userInfo.id === body.user.id) {
+      dispatch({ type: "DELETE_ROOM", payload: { roomId: roomId } })
     } else {
       dispatch({
         type: "SET_ROOM_MEMBER_COUNT", payload: {
           roomId: roomId,
-          version: roomVersion,
+          version: body.room.version,
           memberCount: body.room.member_count
         }
       })
     }
-  } else if (userInfo.id != leftUserId) {
-    room = await fetchRoom(roomId)
-    dispatch({
-      type: "ADD_ROOMS", payload: {
-        rooms: [room]
-      }
-    })
+  } else if (userInfo.id !== body.user.id) {
+    const room = await fetchRoom(String(roomId))
+    if (room) {
+      dispatch({ type: "ADD_ROOMS", payload: { rooms: [room] } })
+    }
   }
 }
 ```
+
+Here the room `version` check shows its value: if we receive a `user_left` event that is older than the room state we already have (for example a late event arriving after we loaded fresher data), we simply ignore it.
 
 ## We did it
 

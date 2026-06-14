@@ -345,14 +345,14 @@ Configuration options of Centrifugo HTTP server are combined under `http_server`
 
 ### `http_server.port`
 
-String. Default: `"8000"`.
+Integer. Default: `8000`.
 
 Port to bind Centrifugo to. Example:
 
 ```json title="config.json"
 {
   "http_server" : {
-    "port": "8000"
+    "port": 8000
   }
 }
 ```
@@ -723,7 +723,7 @@ Integer. Default: `0`
 
 The maximum number of connections from a user (with known user ID) to Centrifugo node. By default, unlimited.
 
-The important thing to emphasize is that `client_user_connection_limit` works only per one Centrifugo node and exists mostly to protect Centrifugo from many connections from a single user – but not for business logic limitations. This means that if you set this to 1 and scale nodes – say run 10 Centrifugo nodes – then a user will be able to create 10 connections (one to each node).
+The important thing to emphasize is that `client.user_connection_limit` works only per one Centrifugo node and exists mostly to protect Centrifugo from many connections from a single user – but not for business logic limitations. This means that if you set this to 1 and scale nodes – say run 10 Centrifugo nodes – then a user will be able to create 10 connections (one to each node).
 
 ### `client.connection_limit`
 
@@ -744,12 +744,6 @@ Integer. Default: `0`
 By default, no limit is used.
 
 Note, that at this point `client.connection_rate_limit` does not affect connections coming over GRPC unidirectional transport.
-
-### `client.queue_max_size`
-
-Integer. Default: `1048576`
-
-Maximum client message queue size in bytes to close slow reader connections. By default - 1mb.
 
 ### `client.concurrency`
 
@@ -893,7 +887,7 @@ Object.
 
 The configuration object for proxy to use for channel state events. Centrifugo PRO only – see [docs](../pro/event_hooks.md#channel-state-events).
 
-### `chanel.proxy.cache_empty`
+### `channel.proxy.cache_empty`
 
 Object.
 
@@ -1228,12 +1222,13 @@ It's a good practice to protect all these endpoints with a firewall. For example
 
 Though sometimes you don't have access to a per-location configuration in your proxy/load balancer software. For example when using Amazon ELB. In this case, you can change ports on which your internal endpoints work.
 
-To run internal endpoints on custom port use `internal_port` option:
+To run internal endpoints on a custom port use the `http_server.internal_port` option (a string):
 
 ```json title="config.json"
 {
-    ...
-    "internal_port": 9000
+  "http_server": {
+    "internal_port": "9000"
+  }
 }
 ```
 
@@ -1299,12 +1294,13 @@ http://localhost:8000/connection/uni_websocket
 http://localhost:8000/api
 ```
 
-By default, all endpoints work on port `8000`. This can be changed with [port](#http_serverport) option:
+By default, all endpoints work on port `8000`. This can be changed with the [http_server.port](#http_serverport) option:
 
 ```json title="config.json"
 {
-  ...
-  "port": 9000
+  "http_server": {
+    "port": 9000
+  }
 }
 ```
 
@@ -1322,7 +1318,7 @@ It's possible to customize server HTTP handler endpoints. To do this Centrifugo 
 * `sse.handler_prefix` (default `"/connection/sse"`) - to control SSE/EventSource URL prefix
 * `emulation.handler_prefix` (default `"/emulation"`) - to control emulation endpoint prefix
 * `uni_sse.handler_prefix` (default `"/connection/uni_sse"`) - to control unidirectional Eventsource URL prefix
-* `uni_http.stream_handler_prefix` (default `"/connection/uni_http_stream"`) - to control unidirectional HTTP streaming URL prefix
+* `uni_http_stream.handler_prefix` (default `"/connection/uni_http_stream"`) - to control unidirectional HTTP streaming URL prefix
 * `uni_websocket.handler_prefix` (default `"/connection/uni_websocket"`) - to control unidirectional WebSocket URL prefix
 * `http_api.handler_prefix` (default `"/api"`) - to control HTTP API URL prefix
 * `prometheus.handler_prefix` (default `"/metrics"`) - to control Prometheus URL prefix
@@ -1346,7 +1342,7 @@ kill -HUP <PID>
 
 Though at moment **this will only reload token secrets and channel options (top-level and namespaces)**.
 
-Centrifugo tries to gracefully shut down client connections when SIGINT or SIGTERM signals are received. By default, the maximum graceful shutdown period is 30 seconds but can be changed using `shutdown_timeout` (integer, in seconds) configuration option.
+Centrifugo tries to gracefully shut down client connections when SIGINT or SIGTERM signals are received. By default, the maximum graceful shutdown period is 30 seconds but can be changed using the `shutdown.timeout` ([duration](#duration-type), default `"30s"`) configuration option.
 
 ## Anonymous usage stats
 
@@ -1354,7 +1350,7 @@ Centrifugo periodically sends anonymous usage information (once in 24 hours). Th
 
 Please do not disable usage stats sending without reason. If you depend on Centrifugo – sure you are interested in further project improvements. Usage stats help us understand Centrifugo use cases better, concentrate on widely-used features, and be confident we are moving in the right direction. Developing in the dark is hard, and decisions may be non-optimal.
 
-To disable sending usage stats set `usage_stats_disable` option:
+To disable sending usage stats set the `usage_stats.disabled` option:
 
 ```json title="config.json"
 {

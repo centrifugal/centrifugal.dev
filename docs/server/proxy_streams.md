@@ -235,7 +235,7 @@ In addition to unidirectional streams, Centrifugo supports bidirectional streams
 
 In terms of general design bidirectional streams behave similar to unidirectional streams as described above.
 
-When enabling subscription streams, Centrifugo uses unidirectional GRPC streams by default – as those should fit most of the use cases proxy subscription streams were introduced for. To tell Centrifugo use bidirectional streaming add `proxy_subscribe_stream_bidirectional` flag to the namespace configuration:
+When enabling subscription streams, Centrifugo uses unidirectional GRPC streams by default – as those should fit most of the use cases proxy subscription streams were introduced for. To tell Centrifugo use bidirectional streaming add `subscribe_stream_proxy_bidirectional` flag to the namespace configuration:
 
 ```json title="config.json"
 {

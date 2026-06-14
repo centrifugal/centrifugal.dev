@@ -426,7 +426,7 @@ If you need to shard data (using [app-level sharding](#redis-sharding)) between 
 }
 ```
 
-Sharding between different Redis clusters can make sense due to the fact how PUB/SUB works in the Redis cluster. It does not scale linearly when adding nodes as all PUB/SUB messages got copied to every cluster node. See [this discussion](https://github.com/antirez/redis/issues/2672) for more information on topic. To spread data between different Redis clusters Centrifugo uses the same consistent hashing algorithm described above (i.e. `Jump`).
+Sharding between different Redis clusters can make sense due to the fact how PUB/SUB works in the Redis cluster. It does not scale linearly when adding nodes as all PUB/SUB messages got copied to every cluster node. See [this discussion](https://github.com/redis/redis/issues/2672) for more information on topic. To spread data between different Redis clusters Centrifugo uses the same consistent hashing algorithm described above (i.e. `Jump`).
 
 Centrifugo PRO supports Redis Cluster [sharded PUB/SUB](../pro/scalability.md#redis-cluster-sharded-pubsub) and allows [utilizing Redis replicas](../pro/scalability.md#leverage-redis-replicas) in Cluster setup.
 
@@ -513,7 +513,7 @@ To set a separate presence manager use config like this:
 }
 ```
 
-At this point only `redis` is allowed for `presence_manager.type`.
+`presence_manager.type` defaults to `memory` and may be set to `redis` (the only alternative full implementation at this point).
 
 ### `presence_manager.redis`
 
@@ -593,7 +593,7 @@ Under the `broker.nats` section you can specify options specific to Nats.
 
 ### `broker.nats.url`
 
-String, default `nats://127.0.0.1:4222`.
+String, default `nats://localhost:4222`.
 
 Connection url in format `nats://derek:pass@localhost:4222`.
 
@@ -921,7 +921,7 @@ Centrifugo automatically manages the required database schema (tables, functions
 | `num_shards` | int | 1 | Number of shards for serialized publishing |
 | `table_prefix` | string | `"cf"` | Namespace prefix for table names (e.g. `cf_controller_messages`) |
 | `poll_interval` | duration | `"50ms"` | Idle poll interval for the outbox worker |
-| `use_notify` | bool | false | Enable LISTEN/NOTIFY for low-latency delivery. See the [`broker.postgres.use_notify` note](#brokerpostgresuse_notify) for connection-pooler caveats |
+| `use_notify` | bool | true | Enable LISTEN/NOTIFY for low-latency delivery. See the [`broker.postgres.use_notify` note](#brokerpostgresuse_notify) for connection-pooler caveats |
 | `notify_dsn` | string | `""` | Separate DSN for the LISTEN connection. Use a direct PostgreSQL URL when `dsn` points at PGBouncer or another pooler incompatible with LISTEN/NOTIFY |
 | `partition_retention_days` | int | 1 | Days to keep old partitions before dropping |
 | `partition_lookahead_days` | int | 2 | Future daily partitions to pre-create |

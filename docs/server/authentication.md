@@ -24,7 +24,7 @@ Upon connection, the client should supply a connection JWT containing several pr
 
 For more information about handling connection tokens on the client side, see the [client SDK specification](../transports/client_api.md#client-connection-token).
 
-Currently, Centrifugo supports HMAC, RSA, and ECDSA JWT algorithms - specifically HS256, HS384, HS512, RSA256, RSA384, RSA512, EC256, EC384, and EC512.
+Currently, Centrifugo supports HMAC, RSA, and ECDSA JWT algorithms - specifically HS256, HS384, HS512, RS256, RS384, RS512, ES256, ES384, and ES512 (and EdDSA/Ed25519 via JWKS).
 
 Here, we will demonstrate example snippets using the Javascript Centrifugo client for the client-side and the [PyJWT](https://github.com/jpadilla/pyjwt) Python library to generate a connection token on the backend side.
 

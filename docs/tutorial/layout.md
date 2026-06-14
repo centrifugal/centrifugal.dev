@@ -43,10 +43,10 @@ Of course messages are sent in real-time to all users participating in chat. Als
 
 ## 2-column layout in mind 
 
-Often in messenger apps you can see the layout where a list of chats is the left column, and chat details shown on the right. Like this one in Slack:
-
-![TBD](https://www.cnet.com/a/img/hub/2023/08/08/f4e09832-9f2b-4967-ac66-53fc8dfc6588/slack-redesign-2023-before-home.png)
+Often in messenger apps you can see the layout where the list of chats is the left column and the open chat is shown on the right – like in Slack, Telegram or Discord.
 
 While we use a slightly simplified layout in the app with a separate chat room list and chat detail screens (more often seen on mobile devices), we keep in mind the possibility to switch to the 2-column layout if needed - just with a change of React component arrangement and some CSS. With our implementation user may be theoretically a member of hundreds or thousands of rooms and receive updates from all of them on one screen. Like in Telegram, Discord or Slack messengers.
 
 This predetermined the fact that we are using individual user channels in the app to receive real-time updates from all the rooms, instead of subscribing to each individual chat room channel. We will talk about this decision later; for now let's simply say: using individual real-time channels drastically simplifies frontend implementation, leaving the complexity for the backend side.
+
+We deliver exactly this two-column layout at the end of the tutorial, in the [Two-column layout](./two_column.md) chapter – and you'll see it takes almost no extra code precisely because of this design choice.

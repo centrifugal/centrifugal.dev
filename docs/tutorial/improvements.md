@@ -7,11 +7,7 @@ title: "Appendix #1: Possible Improvements"
 
 There are still many areas for improvement in GrandChat, but we had to halt at a certain point to prevent the tutorial from becoming a book. If you enjoyed the tutorial and wish to enhance GrandChat further, here are some bright ideas:
 
-💡 Implement a 2-column layout on wide desktop screens – a list of chat rooms on the left and room details on the right. As mentioned in the beginning, this is already achievable with some rearrangement of React components and CSS.
-
 💡 Provide non-admin users with the ability to create new rooms, perhaps creating private rooms for one-to-one communication that are not visible on the "Discover" page. One-to-one chats may just be a subset of our current chat room implementation. At some point, you may add a property to the room defining the room type, allowing for different behavior in rooms of different types.
-
-💡 Enhance the frontend by adding stricter types – leveraging the full power of TypeScript. While using `any` in some places helped us evolve quickly during the tutorial, strict typing in production will eventually save you time.
 
 💡 Introduce "system" messages, such as displaying messages about users who joined/left inside the room detail view. In this case, the message won't have a user author. We've already made the user field of the `Message` model nullable to support this scenario.
 

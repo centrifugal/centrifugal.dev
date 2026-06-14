@@ -104,6 +104,7 @@ module.exports = {
     "tutorial/recovery",
     "tutorial/outbox_cdc",
     "tutorial/scale",
+    "tutorial/two_column",
     "tutorial/outro",
     "tutorial/improvements",
     "tutorial/tips_and_tricks",

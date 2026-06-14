@@ -5,11 +5,9 @@ sidebar_label: "Appx #4: Adding push notifications"
 title: "Appendix #4: Adding push notifications"
 ---
 
-:::info Under construction 🚧
+:::info Optional appendix – needs Centrifugo PRO and Firebase
 
-This chapter is under construction.
-
-The tutorial source code already has a working implementation for push notifications, but may have some rough edges. To enable push notifications some adjustments to the tutorial source code should be made. These adjustments are mentioned in this tutorial and listed in the tutorial source code in the comment for the PUSH_NOTIFICATIONS_ENABLED option in backend/app/settings.py.
+Push notifications are an optional feature. They require **Centrifugo PRO** (the push API is PRO-only) and a **Firebase Cloud Messaging (FCM)** project, so unlike the rest of the tutorial this chapter can't be run with just `docker compose up` out of the box. The implementation already ships in the source code but is disabled by default (`PUSH_NOTIFICATIONS_ENABLED = False`). This chapter walks through how it's built, and the [Turning push notifications on](#turning-push-notifications-on) section at the end lists the exact steps to enable it.
 
 :::
 
@@ -128,12 +126,12 @@ self.update_user_room_topic(request.user.pk, room_id, 'remove')
 
 This way we will get the proper mapping of users to push topics in Centrifugo database.  
 
-We also need to add some options to the backend:
+We also need to add some options to the backend. They are disabled / empty by default in `settings.py`; you'll fill in the real values in `local_settings.py` when [turning the feature on](#turning-push-notifications-on):
 
 ```python title="backend/app/settings.py"
 PUSH_NOTIFICATIONS_ENABLED = False
-PUSH_NOTIFICATIONS_VAPID_PUBLIC_KEY = 'YOUR_VAPID_PUBLIC_KEY'
-PUSH_NOTIFICATIONS_FIREBASE_CONFIG = {...YOUR FIREBASE CONFIG}
+PUSH_NOTIFICATIONS_VAPID_PUBLIC_KEY = ''
+PUSH_NOTIFICATIONS_FIREBASE_CONFIG = {}
 ```
 
 Add the following to `backend/app/urls.py`:
@@ -142,7 +140,22 @@ Add the following to `backend/app/urls.py`:
 path('api/device/register/', views.device_register_view, name='api-device-register'),
 ```
 
-Implement device registering view:
+Calling the Centrifugo HTTP API looks the same here as it did for broadcasting, so we wrap it in a small helper to avoid repeating ourselves:
+
+```python title="backend/app/views.py"
+def centrifugo_api_request(method, payload):
+    """Send a command to the Centrifugo HTTP API and return the response."""
+    return requests.post(
+        f'{settings.CENTRIFUGO_HTTP_API_ENDPOINT}/api/{method}',
+        json=payload,
+        headers={
+            'X-API-Key': settings.CENTRIFUGO_HTTP_API_KEY,
+            'X-Centrifugo-Error-Mode': 'transport',
+        },
+    )
+```
+
+Now implement the device registering view:
 
 ```python title="backend/app/views.py"
 @require_POST
@@ -154,32 +167,21 @@ def device_register_view(request):
     if not device_info:
         return JsonResponse({'detail': 'device not found'}, status=400)
 
-    # Attach user ID to device info.
-    device_info["user"] = str(request.user.pk)
+    # Attach the current user, and map the frontend's "device_id" to Centrifugo's "id" field
+    # so re-registration updates the existing device in place (instead of creating a new one
+    # and orphaning the old token).
+    device_info['user'] = str(request.user.pk)
+    if device_info.get('device_id'):
+        device_info['id'] = device_info.pop('device_id')
 
-    # The frontend stores the device ID under "device_id"; Centrifugo's device_register
-    # field is "id". Map it so re-registration updates the existing device in place
-    # (instead of creating a new one and orphaning the old token).
-    if device_info.get("device_id"):
-        device_info["id"] = device_info.pop("device_id")
-
-    session = requests.Session()
     try:
-        resp = session.post(
-            settings.CENTRIFUGO_HTTP_API_ENDPOINT + '/api/device_register',
-            data=json.dumps(device_info),
-            headers={
-                'Content-type': 'application/json',
-                'X-API-Key': settings.CENTRIFUGO_HTTP_API_KEY,
-                'X-Centrifugo-Error-Mode': 'transport'
-            }
-        )
+        resp = centrifugo_api_request('device_register', device_info)
     except requests.exceptions.RequestException as e:
-        logging.error(e)
+        logger.error(e)
         return JsonResponse({'detail': 'failed to register device'}, status=500)
 
     if resp.status_code != 200:
-        logging.error(resp.json())
+        logger.error(resp.json())
         return JsonResponse({'detail': 'failed to register device'}, status=500)
 
     return JsonResponse({
@@ -211,30 +213,20 @@ Also extend logout view:
 @require_POST
 def logout_view(request):
     ...
-    
-    device_ids = []
-    device_id = json.loads(request.body).get('device_id', '')
-    if device_id:
-        device_ids = [device_id]
 
-    session = requests.Session()
-    try:
-        resp = session.post(
-            settings.CENTRIFUGO_HTTP_API_ENDPOINT + '/api/device_remove',
-            data=json.dumps({
+    # Only relevant when push notifications are enabled (otherwise there are no devices).
+    if settings.PUSH_NOTIFICATIONS_ENABLED:
+        device_id = json.loads(request.body).get('device_id', '')
+        device_ids = [device_id] if device_id else []
+        try:
+            centrifugo_api_request('device_remove', {
                 'users': [str(request.user.pk)],
-                'ids': device_ids
-            }),
-            headers={
-                'Content-type': 'application/json',
-                'X-API-Key': settings.CENTRIFUGO_HTTP_API_KEY,
-                'X-Centrifugo-Error-Mode': 'transport'
-            }
-        )
-    except requests.exceptions.RequestException as e:
-        logging.error(e)
-        return JsonResponse({'detail': 'failed to register device'}, status=500)
-    
+                'ids': device_ids,
+            })
+        except requests.exceptions.RequestException as e:
+            logger.error(e)
+            return JsonResponse({'detail': 'failed to remove device'}, status=500)
+
     ...
 ```
 
@@ -242,33 +234,36 @@ So that we can unregister device token from Centrifugo PRO device storage when u
 
 ### Send push notifications
 
-Once a new message is sent to a chat room we can send a push notification to all users subscribed to this chat room topic. To do this we can use `send_push_notification` method of Centrifugo API:
+Once a new message is sent to a chat room we can send a push notification to all users subscribed to this chat room topic, using the `send_push_notification` method of the Centrifugo API. We do this right inside `broadcast_room` (the same helper that already broadcasts the real-time event), but only for `message_added` events, only when push is enabled, and only in a CDC mode (since we deliver the command through the CDC outbox):
 
 ```python title="backend/chat/views.py"
-partition = hash(room_id)
-payload = {
-    "recipient": {
-        "filter": {
-            "topics": [f'chat:messages:{room_id}']
-        }
-    },
-    "notification": {
-        "fcm": {
-            "message": {
-                "notification": {
-                    "title": room_name,
-                    "body": broadcast_payload.get('data', {}).get('body', {}).get('content', '')
-                },
-                "webpush": {
-                  "fcm_options": {
-                    "link": f'http://localhost:9000/rooms/{room_id}'
-                  }
+# ...at the end of CentrifugoMixin.broadcast_room, after the real-time broadcast:
+is_message_added = broadcast_payload.get('data', {}).get('type') == 'message_added'
+if is_message_added and settings.PUSH_NOTIFICATIONS_ENABLED and 'cdc' in settings.CENTRIFUGO_BROADCAST_MODE:
+    partition = hash(room_id)
+    payload = {
+        "recipient": {
+            "filter": {
+                "topics": [f'chat:messages:{room_id}']
+            }
+        },
+        "notification": {
+            "fcm": {
+                "message": {
+                    "notification": {
+                        "title": room_name,
+                        "body": broadcast_payload.get('data', {}).get('body', {}).get('content', '')
+                    },
+                    "webpush": {
+                      "fcm_options": {
+                        "link": f'http://localhost:9000/rooms/{room_id}'
+                      }
+                    }
                 }
             }
         }
     }
-}
-CDC.objects.create(method='send_push_notification', payload=payload, partition=partition)
+    CDC.objects.create(method='send_push_notification', payload=payload, partition=partition)
 ```
 
 Note, here we send a push to all subscribers of the `chat:messages:{room_id}` topic – and Centrifugo PRO will do the rest, iterating over all registered devices which have users subscribed to the topic and sending pushes to them.
@@ -281,15 +276,18 @@ In the frontend we need to add code to request permission for push notifications
 
 To request permissions for push notifications we should first add `firebase` SDK to `package.json`. Then let's create a module to work with FCM tokens:
 
-```javascript title="frontend/src/PushNotification.tsx"
+```typescript title="frontend/src/PushNotification.tsx"
 import { getMessaging, getToken, onMessage, deleteToken } from 'firebase/messaging';
+import type { Messaging, MessagePayload } from 'firebase/messaging';
 import { initializeApp } from 'firebase/app';
+import type { FirebaseOptions } from 'firebase/app';
 
-let messaging;
+let messaging: Messaging | undefined;
 
-export const initializeFirebase = (firebaseConfig: any) => {
+export const initializeFirebase = (firebaseConfig: FirebaseOptions) => {
     if (!messaging) {
         if (navigator.serviceWorker === undefined) {
+            console.error('Service Worker is not available in this browser.');
             return
         }
         const app = initializeApp(firebaseConfig);
@@ -297,35 +295,44 @@ export const initializeFirebase = (firebaseConfig: any) => {
     }
 };
 
-export const requestNotificationToken = async (firebaseConfig: any, vapidKey: string): Promise<string | null> => {
+export const requestNotificationToken = async (vapidKey: string): Promise<string | null> => {
     try {
+        // Request notification permission.
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') {
+            console.warn('Notification permission denied');
             return null;
         }
 
-        if ('serviceWorker' in navigator) {
-            if (navigator.serviceWorker === undefined) {
-                return null;
-            }
-            try {
-                const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-            } catch (err) {
-                return null;
-            }
-        } else {
+        // Register Service Worker for background notifications.
+        if (!('serviceWorker' in navigator) || navigator.serviceWorker === undefined) {
+            console.warn('Service Worker is not supported in this browser.');
             return null;
         }
+        try {
+            const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            console.log('Service Worker registered with scope:', registration.scope);
+        } catch (err) {
+            console.error('Service Worker registration failed:', err);
+            return null;
+        }
+
+        if (!messaging) {
+            return null;
+        }
+
+        // Get FCM Token.
         const token = await getToken(messaging, {
             vapidKey: vapidKey,
         });
         return token;
     } catch (error) {
+        console.error('Failed to get FCM token:', error);
         return null;
     }
 };
 
-export const onForegroundNotification = (callback) => {
+export const onForegroundNotification = (callback: (payload: MessagePayload) => void) => {
     if (messaging) {
         onMessage(messaging, callback);
     }
@@ -340,49 +347,57 @@ export const removeNotificationToken = async () => {
 
 Once user logs into app – we ask for push notification permission and extract FCM token:
 
-```javascript title="frontend/src/App.tsx"
+```typescript title="frontend/src/App.tsx"
   useEffect(() => {
-    if (!authenticated || !csrf) return;
-    if (!userInfo.settings || !userInfo.settings.push_notifications || !userInfo.settings.push_notifications.enabled) {
-        return;
+    if (!authenticated) {
+      return;
+    }
+    if (!csrf) { // User is authenticated from local storage but CSRF token is not yet fetched.
+      return;
+    }
+    const push = userInfo.settings?.push_notifications;
+    if (!push || !push.enabled) {
+      return;
     }
     const setupNotifications = async () => {
-        initializeFirebase(userInfo.settings.push_notifications.firebase_config);
-        const token = await requestNotificationToken(userInfo.settings.push_notifications.firebase_config, userInfo.settings.push_notifications.vapid_public_key);
+      initializeFirebase(push.firebase_config);
+      const token = await requestNotificationToken(push.vapid_public_key);
 
-        if (token) {
-            const deviceInfo = {
-                provider: 'fcm',
-                token: token,
-                platform: 'web',
-                meta: { 'user-agent': navigator.userAgent },
-                // timezone is a first-class device field (IANA name) used for
-                // timezone-aware push; Intl gives us exactly that value.
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            };
-            if (localStorage.getItem(LOCAL_STORAGE_DEVICE_ID_KEY)) {
-                deviceInfo['device_id'] = localStorage.getItem(LOCAL_STORAGE_DEVICE_ID_KEY);
-            }
-            try {
-                const response = await registerDevice(csrf, deviceInfo);
-                console.log('Token sent to server:', response);
-                const deviceId = response.device_id;
-                localStorage.setItem(LOCAL_STORAGE_DEVICE_ID_KEY, deviceId);
-                onForegroundNotification((payload) => {
-                    console.log('Message received in foreground:', payload);
-                    // We are ignoring foreground messages since we receive them over Centrifugo WebSocket.
-                });
-            } catch (error) {
-                console.error('Failed to send token to server:', error);
-            }
-        } else {
-            console.warn('No token received, cannot proceed.');
-        }
+      if (!token) {
+        console.warn('No token received, cannot proceed.');
+        return;
+      }
+
+      const deviceInfo: DeviceInfo = {
+        provider: 'fcm',
+        token: token,
+        platform: 'web',
+        meta: { 'user-agent': navigator.userAgent },
+        // timezone is a first-class device field (IANA name) used for
+        // timezone-aware push; Intl gives us exactly that value.
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      };
+      const storedDeviceId = localStorage.getItem(LOCAL_STORAGE_DEVICE_ID_KEY);
+      if (storedDeviceId) {
+        deviceInfo.device_id = storedDeviceId;
+      }
+      try {
+        const response = await registerDevice(csrf, deviceInfo);
+        localStorage.setItem(LOCAL_STORAGE_DEVICE_ID_KEY, response.device_id);
+        onForegroundNotification((payload) => {
+          console.log('Message received in foreground:', payload);
+          // We ignore foreground messages since we receive them over the Centrifugo WebSocket.
+        });
+      } catch (error) {
+        console.error('Failed to send token to server:', error);
+      }
     };
 
     setupNotifications();
-}, [authenticated, userInfo, csrf]);
+  }, [authenticated, userInfo, csrf]);
 ```
+
+`DeviceInfo` is a small interface in `types.ts` describing the device payload we send (`provider`, `token`, `platform`, `meta`, `timezone`, and the optional saved `device_id`).
 
 We register this token in Centrifugo PRO using Centrifugo API. To do this we call the new Django endpoint `/api/device/register` and call the Centrifugo `device_register` method from it. On every app load we update the token registration in Centrifugo PRO.
 
@@ -392,11 +407,9 @@ This example follows the robust pattern: the first `device_register` omits `id`,
 
 :::
 
-Once the user logs out we unregister the device token from Centrifugo PRO and remove the token from FCM:
+We already extended `logout_view` above to unregister the device from Centrifugo PRO. On the frontend, `onLoggedOut` also drops the saved device id and deletes the local FCM token:
 
-And on frontend:
-
-```javascript title="frontend/src/App.tsx"
+```typescript title="frontend/src/App.tsx"
   const onLoggedOut = async () => {
     ...
     localStorage.removeItem(LOCAL_STORAGE_DEVICE_ID_KEY);
@@ -412,8 +425,8 @@ The file we're registering as Service Worker looks like this:
 
 ```javascript title="frontend/public/firebase-messaging-sw.js"
 // Scripts for firebase and firebase messaging
-importScripts('https://www.gstatic.com/firebasejs/9.16.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/9.16.0/firebase-messaging-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/12.14.0/firebase-messaging-compat.js');
 importScripts('/firebase-config.js');
 
 if (!self.firebaseConfig) {
@@ -445,6 +458,42 @@ if (!self.firebaseConfig) {
 
 Basically, we are initializing Firebase messaging in the Service Worker and then listening to background messages from Firebase. Once we receive a message we show a notification.
 
+The Service Worker runs outside the app bundle, so it can't read the Firebase config from React. Instead it loads `self.firebaseConfig` from a small file in `frontend/public` that you create with your Firebase web config:
+
+```javascript title="frontend/public/firebase-config.js"
+self.firebaseConfig = {
+  apiKey: "...",
+  authDomain: "...",
+  projectId: "...",
+  messagingSenderId: "...",
+  appId: "...",
+};
+```
+
+### Turning push notifications on
+
+Everything above already ships in the source code, but is gated behind `PUSH_NOTIFICATIONS_ENABLED` (which is `False` by default). Once you have your Firebase project, FCM credentials, VAPID key and web config, enable the feature like this:
+
+1. In `docker-compose.yml`, switch the Centrifugo image to the PRO one: `centrifugo/centrifugo-pro:v6`.
+2. Keep `CENTRIFUGO_BROADCAST_MODE` as `cdc` or `api_cdc` – pushes are delivered through the CDC outbox, so a CDC mode is required (the default `api_cdc` already works).
+3. Put your FCM credentials in `centrifugo/fcm.json` and set `"push_notifications.enabled": true` (plus the `database` section) in `centrifugo/config.json` as shown above.
+4. Create `backend/app/local_settings.py` with your real values (it's imported by `settings.py` and is the right place for secrets you don't want to commit):
+
+   ```python title="backend/app/local_settings.py"
+   PUSH_NOTIFICATIONS_ENABLED = True
+   PUSH_NOTIFICATIONS_VAPID_PUBLIC_KEY = 'YOUR_VAPID_PUBLIC_KEY'
+   PUSH_NOTIFICATIONS_FIREBASE_CONFIG = {...YOUR FIREBASE WEB CONFIG...}
+   ```
+
+5. Create `frontend/public/firebase-config.js` with the same web config (shown above).
+6. Restart everything with `docker compose up` and **re-login** – the per-user push settings are delivered in the login response, so an existing session won't pick them up until you log in again.
+
 ### Conclusion
 
 Here we showed how to add push notifications to the Grand Chat application. We used Centrifugo PRO push notifications API and Firebase Cloud Messaging to achieve this.
+
+:::tip Web-only? Native Web Push is simpler than FCM
+
+We used **FCM** here because it also covers native mobile apps, but GrandChat is a web app – and Centrifugo PRO also supports [native Web Push (VAPID)](../pro/push_notifications.md#web-push-vapid), recently added. It delivers straight to the browser over the standard Web Push protocol with **no Firebase project, no `fcm.json`, and no `firebase-config.js`** – you generate a VAPID key pair, set a few config values, and call `pushManager.subscribe` on the frontend. One setup covers Chrome, Edge, Firefox, Safari, and installed PWAs on Android/iOS. If you only target browsers, prefer this path over FCM.
+
+:::

@@ -36,7 +36,7 @@ def create_users(n):
         username = get_random_string(10)
         email = f"{username}@example.com"
         password = get_random_string(50)
-        user = User(username=username, email=email, password=make_password(password, None))
+        user = User(username=username, email=email, password=make_password(password, None, 'md5'))
         users.append(user)
 
         if len(users) >= 100:

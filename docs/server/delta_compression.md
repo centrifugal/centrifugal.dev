@@ -19,7 +19,7 @@ The diff is calculated using [Fossil](https://fossil-scm.org/home/doc/tip/www/de
 
 :::tip
 
-At this point delta compression is only available for bidirectional client-side subscriptions and supported by Centrifugo Javascript SDK [centrifuge-js](https://github.com/centrifugal/centrifuge-js), Java SDK [centrifuge-java](https://github.com/centrifugal/centrifuge-js), Python SDK [centrifuge-python](https://github.com/centrifugal/centrifuge-python). There is also [unfinished PR](https://github.com/centrifugal/centrifuge-swift/pull/104) to Swift SDK. See also [SDK feature matrix](../transports/client_sdk.md#sdk-feature-matrix).
+At this point delta compression is only available for bidirectional client-side subscriptions and supported by Centrifugo Javascript SDK [centrifuge-js](https://github.com/centrifugal/centrifuge-js), Java SDK [centrifuge-java](https://github.com/centrifugal/centrifuge-java), Python SDK [centrifuge-python](https://github.com/centrifugal/centrifuge-python). There is also [unfinished PR](https://github.com/centrifugal/centrifuge-swift/pull/104) to Swift SDK. See also [SDK feature matrix](../transports/client_sdk.md#sdk-feature-matrix).
 
 :::
 

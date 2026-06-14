@@ -5,7 +5,7 @@ sidebar_label: "Creating SPA frontend"
 title: "Creating SPA frontend with React"
 ---
 
-On the frontend we will use Vite with React and TypeScript. In this tutorial we are not paying a lot of attention to making all the types strict and use `any` a lot. This is actually a point for improvement, but at least it helps to make the tutorial slightly shorter. The prerequisite is NodeJS >= 18.
+On the frontend we will use Vite with React and TypeScript. To keep the code clean and easy to follow, we define a small set of TypeScript interfaces in `frontend/src/types.ts` that mirror the JSON our backend API returns (users, rooms, messages, real-time events) and use them throughout the app. We still keep things simple and avoid advanced React patterns – the goal is readability, not showing off the type system. The prerequisite is NodeJS >= 20 (required by Vite).
 
 We can start by creating frontend app with Vite inside `grand-chat-tutorial` dir:
 
@@ -23,17 +23,18 @@ npm install
 Since we want to start the entire application with a single docker compose command – let's again update `docker-compose.yml`. First, create custom Dockerfile in the frontend folder:
 
 ```Dockerfile title="frontend/Dockerfile"
-FROM node:18-slim
+FROM node:24-slim
 
 WORKDIR /usr/src/app
 
-ENV PATH /usr/src/app/node_modules/.bin:$PATH
+ENV PATH=/usr/src/app/node_modules/.bin:$PATH
 
 # install and cache app dependencies
 COPY package.json .
 COPY package-lock.json .
 RUN npm ci
 
+# start app
 CMD ["vite", "--host"]
 ```
 
@@ -62,17 +63,16 @@ Describing frontend code will be not so linear like we had for the backend case.
 
 ```javascript title="frontend/src/App.tsx"
 const App: React.FC = () => {
-  let localAuth: any = {};
-  if (localStorage.getItem(LOCAL_STORAGE_AUTH_KEY)) {
-    localAuth = JSON.parse(localStorage.getItem(LOCAL_STORAGE_AUTH_KEY)!)
+  let localAuth: AuthInfo = {};
+  if (localStorage.getItem(LOCAL_STORAGE_AUTH_INFO_KEY)) {
+    localAuth = JSON.parse(localStorage.getItem(LOCAL_STORAGE_AUTH_INFO_KEY)!)
   }
   const [authenticated, setAuthenticated] = useState<boolean>(localAuth.id !== undefined)
-  const [userInfo, setUserInfo] = useState<any>(localAuth)
+  const [userInfo, setUserInfo] = useState<AuthInfo>(localAuth)
   const [csrf, setCSRF] = useState('')
   const [unrecoverableError, setUnrecoverableError] = useState('')
   const [chatState, dispatch] = useReducer(reducer, initialChatState);
-  const [realTimeStatus, setRealTimeStatus] = useState('🔴')
-  const [messageQueue, setMessageQueue] = useState<any[]>([]);
+  const [connected, setConnected] = useState(false)
 
   return (
     <CsrfContext.Provider value={csrf}>
@@ -108,13 +108,22 @@ We render `ChatLogin` page if user is not authenticated and one of the chat scre
 
 Authentication information is stored in `LocalStorage` and we load it from there during the app initial load.
 
-Note, that here we are using [React reducer](https://react.dev/reference/react/useReducer) to manage chat state. We do this to serialize changes and thus simplify state management – trust us before we started using the reducer chat state management was a hell. It's not the only approach – there are other techniques to manage state in complex React apps (like [Redux](https://react-redux.js.org/), etc), but reducer works for us here. The initial chat state looks like this:
+Note, that here we are using [React reducer](https://react.dev/reference/react/useReducer) to manage chat state. We do this to serialize changes and thus simplify state management – trust us before we started using the reducer chat state management was a hell. It's not the only approach – there are other techniques to manage state in complex React apps (like [Redux](https://react-redux.js.org/), etc), but reducer works for us here. The chat state shape and its initial value are defined in `frontend/src/types.ts` together with the rest of our domain types:
 
-```javascript title="frontend/src/App.tsx"
-const initialChatState = {
+```typescript title="frontend/src/types.ts"
+export interface ChatState {
+  // Ordered room IDs – the source of truth for room order on the screen.
+  rooms: number[];
+  // Room objects by id. A `null` value marks a room the user has left.
+  roomsById: Record<number, Room | null>;
+  // Messages by room id.
+  messagesByRoomId: Record<number, Message[]>;
+}
+
+export const initialChatState: ChatState = {
   rooms: [],
   roomsById: {},
-  messagesByRoomId: {}
+  messagesByRoomId: {},
 };
 ```
 
@@ -124,34 +133,46 @@ const initialChatState = {
 
 We are not pretending that the way we show here is the best – it could be organized differently no doubt.
 
-Regarding `realTimeStatus` and `messageQueue` – those will be later used for real-time features.
+Regarding `connected` – it will be used later to show whether the real-time connection is currently established (the 🟢 / 🔴 indicator).
 
 ## Login screen
 
 Let's look at `ChatLogin` component. To make it we need to render a login form:
 
-```javascript title=" title="frontend/src/ChatLogin.tsx"
-import React, { useState, useContext } from 'react';
+```typescript title="frontend/src/ChatLogin.tsx"
+import { useState, useContext } from 'react';
+import axios from 'axios';
 import logo from './assets/centrifugo.svg'
 import CsrfContext from './CsrfContext';
 import { login } from './AppApi';
+import type { AuthInfo } from './types';
 
 interface ChatLoginProps {
-  onSuccess: (userId: string) => void;
+  onSuccess: (userInfo: AuthInfo) => void;
 }
 
 const ChatLogin: React.FC<ChatLoginProps> = ({ onSuccess }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const csrf = useContext(CsrfContext);
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const csrf = useContext(CsrfContext)
 
   const handleLogin = async () => {
+    setLoading(true)
+    setError('')
     try {
-      const resp = await login(csrf, username, password)
-      onSuccess(resp.user.id.toString());
+      const userInfo = await login(csrf, username, password)
+      onSuccess(userInfo);
     } catch (err) {
-      console.error('Login failed:', err);
+      // The backend returns a human-readable reason (e.g. "invalid credentials").
+      if (axios.isAxiosError(err) && err.response?.data?.detail) {
+        setError(err.response.data.detail)
+      } else {
+        setError('Login failed, please try again.')
+      }
     }
+    setLoading(false)
   };
 
   return (
@@ -166,10 +187,11 @@ const ChatLogin: React.FC<ChatLoginProps> = ({ onSuccess }) => {
         <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" />
       </div>
       <div className="input-container">
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" autoComplete="current-password" />
       </div>
+      {error && <div className="login-error">{error}</div>}
       <div className='login-button-container'>
-        <button>Login</button>
+        <button disabled={loading} className={`${(loading) ? 'loading' : ''}`}>Login</button>
       </div>
     </form>
   );
@@ -178,12 +200,14 @@ const ChatLogin: React.FC<ChatLoginProps> = ({ onSuccess }) => {
 export default ChatLogin;
 ```
 
-This is quite a straightforward component. Note the import from `./AppApi` - we've put all the API methods to a separate file, where we use `axios` HTTP client to communicate with the backend API. For example, `login` call looks like this:
+This is quite a straightforward component. On success it hands the authenticated user info back to `App` via the `onSuccess` callback; on failure it shows the reason returned by the backend (e.g. wrong credentials). Note the import from `./AppApi` - we've put all the API methods to a separate file, where we use the `axios` HTTP client to communicate with the backend API. Each call is typed with the interfaces from `types.ts`, for example the `login` call looks like this:
 
-```javascript title="frontend/src/AppApi.tsx"
+```typescript title="frontend/src/AppApi.tsx"
+import axios from "axios";
 import { API_ENDPOINT_BASE } from "./AppSettings";
+import type { AuthInfo } from "./types";
 
-export const login = async (csrfToken: string, username: string, password: string) => {
+export const login = async (csrfToken: string, username: string, password: string): Promise<AuthInfo> => {
   const response = await axios.post(`${API_ENDPOINT_BASE}/api/login/`, { username, password }, {
     headers: {
       "X-CSRFToken": csrfToken
@@ -199,7 +223,7 @@ Other API calls look very similar, so we won't pay attention to them further –
 
 On the root page we show rooms current user is member of. `ChatRoomList` component renders rooms. But note that rooms are managed outside of this component – it just renders rooms from application chat state.
 
-```javascript title="frontend/src/ChatRoomList.tsx"
+```typescript title="frontend/src/ChatRoomList.tsx"
 import { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import ChatContext from './ChatContext'
@@ -209,8 +233,11 @@ const ChatRoomList = () => {
 
   return (
     <div id="chat-rooms">
-      {state.rooms.map((roomId: number) => {
+      {state.rooms.map((roomId) => {
         const room = state.roomsById[roomId]
+        if (!room) {
+          return null
+        }
         return <div className="chat-room-block" key={room.id}>
           <Link to={`/rooms/${room.id}`}>
             <div className="left-column">
@@ -244,64 +271,49 @@ Note, we iterate over the `state.rooms` array which only contains IDs of rooms a
 
 Chat rooms search screen shows list of all rooms in the app available to join. What's important to note here – as soon as user joins/leaves the room we update chat state by dispatching `ADD_ROOMS` or `DELETE_ROOM` state events. This allows us to synchronize room state – so that after user joins some room, the room appears on room list screen.
 
-```javascript  title="frontend/src/ChatSearch.tsx"
+```typescript title="frontend/src/ChatSearch.tsx"
 import { useState, useEffect, useContext } from 'react';
 import CsrfContext from './CsrfContext';
 import ChatContext from './ChatContext';
 import { joinRoom, leaveRoom, searchRooms } from './AppApi';
+import type { Room, RoomSearchResult } from './types';
 
 interface ChatSearchProps {
-  fetchRoom: (roomId: string) => Promise<void>
+  fetchRoom: (roomId: string) => Promise<Room | null>
 }
 
 const ChatSearch: React.FC<ChatSearchProps> = ({ fetchRoom }) => {
   const csrf = useContext(CsrfContext);
   const { state, dispatch } = useContext(ChatContext);
-  const [rooms, setRooms] = useState<any>([]);
-  const [loading, setLoading] = useState<any>({})
+  const [rooms, setRooms] = useState<RoomSearchResult[]>([]);
+  const [loading, setLoading] = useState<Record<number, boolean>>({})
 
-  const setLoadingFlag = (roomId: any, value: boolean) => {
-    setLoading((prev: any) => ({
+  const setLoadingFlag = (roomId: number, value: boolean) => {
+    setLoading((prev) => ({
       ...prev,
       [roomId]: value
     }));
   };
 
-  const onJoin = async (roomId: any) => {
+  const onJoin = async (roomId: number) => {
     setLoadingFlag(roomId, true)
     try {
-      await joinRoom(csrf, roomId)
-      const room = await fetchRoom(roomId)
-      dispatch({
-        type: "ADD_ROOMS", payload: {
-          rooms: [room]
-        }
-      })
-      setRooms(rooms.map((room: any) => 
-        room.id === roomId
-          ? { ...room, is_member: true }
-          : room
-      ))
+      await joinRoom(csrf, String(roomId))
+      const room = await fetchRoom(String(roomId))
+      if (room) {
+        dispatch({ type: "ADD_ROOMS", payload: { rooms: [room] } })
+      }
     } catch (e) {
       console.log(e)
     }
     setLoadingFlag(roomId, false)
   };
 
-  const onLeave = async (roomId: any) => {
+  const onLeave = async (roomId: number) => {
     setLoadingFlag(roomId, true)
     try {
-      await leaveRoom(csrf, roomId)
-      dispatch({
-        type: "DELETE_ROOM", payload: {
-          roomId: roomId
-        }
-      })
-      setRooms(rooms.map((room: any) => 
-        room.id === roomId
-          ? { ...room, is_member: false }
-          : room
-      ))
+      await leaveRoom(csrf, String(roomId))
+      dispatch({ type: "DELETE_ROOM", payload: { roomId: roomId } })
     } catch (e) {
       console.log(e)
     }
@@ -318,10 +330,10 @@ const ChatSearch: React.FC<ChatSearchProps> = ({ fetchRoom }) => {
 
   return (
     <div id="chat-rooms">
-      {rooms.map((room: any) => {
+      {rooms.map((room) => {
         const roomState = state.roomsById[room.id]
         let isMember: boolean;
-        if (roomState == null) {
+        if (roomState === null) {
           isMember = false
         } else if (roomState !== undefined) {
           isMember = true
@@ -358,20 +370,23 @@ export default ChatSearch;
 
 This screen displays information about the room, renders its messages and provides an input to send new messages.
 
-```javascript title="frontend/src/CharRoomDetail.tsx"
-import { useState, useEffect, useContext, useRef, UIEvent } from 'react';
+```typescript title="frontend/src/ChatRoomDetail.tsx"
+import { useState, useEffect, useContext, useRef } from 'react';
+import type { UIEvent } from 'react';
 import { useParams } from 'react-router-dom';
 import AuthContext from './AuthContext';
 import ChatContext from './ChatContext';
+import type { Message, Room } from './types';
 
 interface ChatRoomDetailProps {
-  fetchRoom: (roomId: string) => Promise<void>
-  fetchMessages: (roomId: string) => Promise<any[]>
-  publishMessage: (roomId: string, content: string) => Promise<boolean>
+  fetchRoom: (roomId: string) => Promise<Room | null>
+  fetchMessages: (roomId: string) => Promise<Message[] | null>
+  publishMessage: (roomId: string, content: string) => Promise<Message | null>
 }
 
 const ChatRoomDetail: React.FC<ChatRoomDetailProps> = ({ fetchRoom, fetchMessages, publishMessage }) => {
   const { id } = useParams() as { id: string };
+  const roomId = Number(id);
   const userInfo = useContext(AuthContext);
   const { state, dispatch } = useContext(ChatContext);
   const [content, setContent] = useState('')
@@ -379,12 +394,14 @@ const ChatRoomDetail: React.FC<ChatRoomDetailProps> = ({ fetchRoom, fetchMessage
   const [roomLoading, setRoomLoading] = useState(false)
   const [sendLoading, setSendLoading] = useState(false)
   const [notFound, setNotFound] = useState(false);
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const messagesEndRef = useRef<HTMLDivElement>(null); // Ref for the messages container.
 
   useEffect(() => {
     if (messagesLoading) return
     const init = async () => {
       setMessagesLoading(true)
-      if (!state.messagesByRoomId[id]) {
+      if (!state.messagesByRoomId[roomId]) {
         const messages = await fetchMessages(id)
         if (messages === null) {
           setNotFound(true);
@@ -392,7 +409,7 @@ const ChatRoomDetail: React.FC<ChatRoomDetailProps> = ({ fetchRoom, fetchMessage
           setNotFound(false);
           dispatch({
             type: "ADD_MESSAGES", payload: {
-              roomId: id,
+              roomId: roomId,
               messages: messages
             }
           })
@@ -401,13 +418,13 @@ const ChatRoomDetail: React.FC<ChatRoomDetailProps> = ({ fetchRoom, fetchMessage
       setMessagesLoading(false)
     }
     init()
-  }, [id, state.messagesByRoomId, fetchMessages]);
+  }, [id, roomId, state.messagesByRoomId, fetchMessages]);
 
   useEffect(() => {
     if (roomLoading) return
     const init = async () => {
       setRoomLoading(true)
-      if (!state.roomsById[id]) {
+      if (!state.roomsById[roomId]) {
         const room = await fetchRoom(id)
         if (room === null) {
           setNotFound(true);
@@ -423,21 +440,15 @@ const ChatRoomDetail: React.FC<ChatRoomDetailProps> = ({ fetchRoom, fetchMessage
       setRoomLoading(false)
     }
     init()
-  }, [id, state.roomsById, fetchRoom]);
+  }, [id, roomId, state.roomsById, fetchRoom]);
 
-  const room = state.roomsById[id] || {};
-  const messages = state.messagesByRoomId[id] || [];
-
-  const messagesEndRef = useRef<any>(null); // Ref for the messages container
+  const room = state.roomsById[roomId];
+  const messages = state.messagesByRoomId[roomId] || [];
 
   const scrollToBottom = () => {
     const container = messagesEndRef.current;
     if (container) {
-      const scrollOptions = {
-        top: container.scrollHeight,
-        behavior: 'auto'
-      };
-      container.scrollTo(scrollOptions);
+      container.scrollTo({ top: container.scrollHeight, behavior: 'auto' });
     }
   };
 
@@ -456,14 +467,16 @@ const ChatRoomDetail: React.FC<ChatRoomDetailProps> = ({ fetchRoom, fetchMessage
     }
     setSendLoading(true)
     try {
-      const message = await publishMessage(id!, content)
-      dispatch({
-        type: "ADD_MESSAGES", payload: {
-          roomId: id,
-          messages: [message]
-        }
-      })
-      setContent('')
+      const message = await publishMessage(id, content)
+      if (message) {
+        dispatch({
+          type: "ADD_MESSAGES", payload: {
+            roomId: roomId,
+            messages: [message]
+          }
+        })
+        setContent('')
+      }
     } catch (e) {
       console.log(e)
     }
@@ -471,22 +484,21 @@ const ChatRoomDetail: React.FC<ChatRoomDetailProps> = ({ fetchRoom, fetchMessage
   }
 
   const handleScroll = (e: UIEvent<HTMLDivElement>) => {
-    const container = (e.target as HTMLElement);
+    const container = e.target as HTMLElement;
     if (!container) return;
-    const threshold = 40; // Pixels from the bottom to be considered 'near bottom'
+    const threshold = 40; // Pixels from the bottom to be considered 'near bottom'.
     const position = container.scrollTop + container.offsetHeight;
     const height = container.scrollHeight;
     setIsAtBottom(position + threshold >= height)
   };
 
-  const [isAtBottom, setIsAtBottom] = useState(true);
-
-  // Scroll to bottom after layout changes.
+  // Scroll to bottom after layout changes – but only if the user is already near
+  // the bottom, so we don't yank them down while they're reading older messages.
   useEffect(() => {
     if (isAtBottom) {
       scrollToBottom();
     }
-  }, [messages, isAtBottom]); // Dependency on messages ensures it runs after messages are updated.
+  }, [messages, isAtBottom]);
 
   return (
     <div id="chat-room">
@@ -497,11 +509,11 @@ const ChatRoomDetail: React.FC<ChatRoomDetailProps> = ({ fetchRoom, fetchMessage
       ) : (
         <>
           <div id="room-description">
-            <span id="room-name">{room.name}</span>
-            <span id="room-member-count">{room.member_count} <span className='chat-room-member-counter-icon'>🐈</span></span>
+            <span id="room-name">{room?.name}</span>
+            <span id="room-member-count">{room?.member_count} <span className='chat-room-member-counter-icon'>🐈</span></span>
           </div>
           <div id="room-messages" onScroll={handleScroll} ref={messagesEndRef}>
-            {messages.map((message: any) => (
+            {messages.map((message) => (
               <div key={message.id} className={`room-message ${(userInfo.id == message.user.id) ? 'room-message-mine' : 'room-message-not-mine'}`}>
                 <div className='message-avatar'>
                   <img src={`https://robohash.org/user${message.user.id}.png?set=set4`} alt="" />
@@ -548,17 +560,17 @@ The thing to note – again, we use calls to modify state here, `ADD_ROOMS` and 
 
 ## Chat state reducer
 
-To remind, the initial chat state looks like this:
+To remind, the initial chat state (defined in `frontend/src/types.ts`) looks like this:
 
-```javascript title="frontend/src/App.tsx"
-const initialChatState = {
+```typescript title="frontend/src/types.ts"
+export const initialChatState: ChatState = {
   rooms: [],
   roomsById: {},
-  messagesByRoomId: {}
+  messagesByRoomId: {},
 };
 ```
 
-In the app we have several reducer actions to modify this state:
+The reducer itself lives in `frontend/src/App.tsx` and is fully typed – it takes the `ChatState` and a `ChatAction` (a discriminated union of all our actions, also declared in `types.ts`) and returns the next `ChatState`. In the app we have several reducer actions to modify this state:
 
 * `CLEAR_CHAT_STATE`
 * `ADD_ROOMS`
@@ -566,14 +578,14 @@ In the app we have several reducer actions to modify this state:
 * `ADD_MESSAGES`
 * `SET_ROOM_MEMBER_COUNT`
 
-State management in React is not very easy to write, to be honest. What we found though while writing this tutorial is that ChatGPT helps a lot with this task. If you describe the desired behavior properly – ChatGPT answers correctly.
+State management like this is not the easiest thing to get right. Keeping the reducer as the single place where chat state changes – with each action small and focused – is what makes the logic easy to follow, and it's why the real-time handlers we saw can stay so simple.
 
 ### CLEAR_CHAT_STATE
 
 Allows dropping the entire chat state, simply returns `initialChatState` const:
 
-```javascript
-function reducer(state: any, action: any) {
+```typescript
+function reducer(state: ChatState, action: ChatAction): ChatState {
   switch (action.type) {
     case 'CLEAR_CHAT_STATE': {
       return initialChatState;
@@ -584,28 +596,23 @@ function reducer(state: any, action: any) {
 
 Used to add rooms to the state. This may happen when we load rooms for room list screen, when we got an event from a room which is not yet known, also it's called from search screen when user joins some room:
 
-```javascript
+```typescript
 case 'ADD_ROOMS': {
   const newRooms = action.payload.rooms;
 
   // Update roomsById with new rooms, avoiding duplicates.
   const updatedRoomsById = { ...state.roomsById };
-  newRooms.forEach((room: any) => {
+  newRooms.forEach((room) => {
     if (!updatedRoomsById[room.id]) {
       updatedRoomsById[room.id] = room;
     }
   });
 
   // Merge new room IDs with existing ones, filtering out duplicates.
-  const mergedRoomIds = [...new Set([...newRooms.map((room: any) => room.id), ...state.rooms])];
+  const mergedRoomIds = [...new Set([...newRooms.map((room) => room.id), ...state.rooms])];
 
-  // Sort mergedRoomIds based on bumped_at field in updatedRoomsById.
-  const sortedRoomIds = mergedRoomIds.sort((a, b) => {
-    const roomA = updatedRoomsById[a];
-    const roomB = updatedRoomsById[b];
-    // Compare RFC 3339 date strings directly
-    return roomB.bumped_at.localeCompare(roomA.bumped_at);
-  });
+  // Sort room IDs by the bumped_at field of their rooms, newest first.
+  const sortedRoomIds = sortRoomIds(mergedRoomIds, updatedRoomsById);
 
   return {
     ...state,
@@ -615,25 +622,40 @@ case 'ADD_ROOMS': {
 }
 ```
 
+Sorting is shared by a couple of actions, so we extract it into a small helper. Note that RFC 3339 date strings are directly comparable lexicographically, so we don't need to parse them into `Date` objects:
+
+```typescript
+function sortRoomIds(roomIds: number[], roomsById: Record<number, Room | null>): number[] {
+  return [...roomIds].sort((a, b) => {
+    const roomA = roomsById[a];
+    const roomB = roomsById[b];
+    if (!roomA || !roomB) return 0;
+    return roomB.bumped_at.localeCompare(roomA.bumped_at);
+  });
+}
+```
+
 ### DELETE_ROOM
 
 This action helps to remove the room from the room list screen. Used when the current user leaves the room from the search screen, or when we receive an event that the current user left the room – this helps us to sync across different devices.
 
-```javascript
+```typescript
 case 'DELETE_ROOM': {
   const roomId = action.payload.roomId;
 
-  // Set the specified room to null instead of deleting it.
+  // Set the specified room to null instead of deleting it. This lets the
+  // search screen keep its membership badge in sync.
   const newRoomsById = {
     ...state.roomsById,
-    [roomId]: null // On delete we set roomId to null. This allows to sync membership state of rooms on ChatSearch screen.
+    [roomId]: null
   };
 
   // Remove the room from the rooms array.
-  const newRooms = state.rooms.filter((id: any) => id !== roomId);
+  const newRooms = state.rooms.filter((id) => id !== roomId);
 
   // Remove associated messages.
-  const { [roomId]: deletedMessages, ...newMessagesByRoomId } = state.messagesByRoomId;
+  const newMessagesByRoomId = { ...state.messagesByRoomId };
+  delete newMessagesByRoomId[roomId];
 
   return {
     ...state,
@@ -648,11 +670,11 @@ case 'DELETE_ROOM': {
 
 Whenever we send a message, receive an async real-time message, or simply load messages on the Chat Detail Screen - we call this action to maintain a proper message list for each known room on the room list screen.
 
-```javascript
+```typescript
 case 'ADD_MESSAGES': {
   const roomId = action.payload.roomId;
   const newMessages = action.payload.messages;
-  let currentMessages = state.messagesByRoomId[roomId] || [];
+  const currentMessages = state.messagesByRoomId[roomId] || [];
 
   // Combine current and new messages, then filter out duplicates.
   const combinedMessages = [...currentMessages, ...newMessages].filter(
@@ -663,30 +685,25 @@ case 'ADD_MESSAGES': {
   // Sort the combined messages by id in ascending order.
   combinedMessages.sort((a, b) => a.id - b.id);
 
-  // Find the message with the highest ID.
-  const maxMessageId = combinedMessages.length > 0 ? combinedMessages[combinedMessages.length - 1].id : null;
+  // The message with the highest ID is the latest one.
+  const lastMessage = combinedMessages.length > 0 ? combinedMessages[combinedMessages.length - 1] : null;
 
   let needSort = false;
 
-  // Update the roomsById object with the new last_message if necessary.
+  // Update the room's last_message and bumped_at if we got a newer message.
+  // We create a new room object instead of mutating the existing one.
   const updatedRoomsById = { ...state.roomsById };
-  if (maxMessageId !== null && updatedRoomsById[roomId] && (!updatedRoomsById[roomId].last_message || maxMessageId > updatedRoomsById[roomId].last_message.id)) {
-    const newLastMessage = combinedMessages.find(message => message.id === maxMessageId);
-    updatedRoomsById[roomId].last_message = newLastMessage;
-    updatedRoomsById[roomId].bumped_at = newLastMessage.room.bumped_at;
+  const room = updatedRoomsById[roomId];
+  if (lastMessage && room && (!room.last_message || lastMessage.id > room.last_message.id)) {
+    updatedRoomsById[roomId] = {
+      ...room,
+      last_message: lastMessage,
+      bumped_at: lastMessage.room.bumped_at,
+    };
     needSort = true;
   }
 
-  let updatedRooms = [...state.rooms];
-  if (needSort) {
-      // Sort mergedRoomIds based on bumped_at field in updatedRoomsById.
-      updatedRooms = updatedRooms.sort((a: any, b: any) => {
-        const roomA = updatedRoomsById[a];
-        const roomB = updatedRoomsById[b];
-        // Compare RFC 3339 date strings directly
-        return roomB.bumped_at.localeCompare(roomA.bumped_at);
-      });
-  }
+  const updatedRooms = needSort ? sortRoomIds(state.rooms, updatedRoomsById) : state.rooms;
 
   return {
     ...state,
@@ -704,35 +721,28 @@ case 'ADD_MESSAGES': {
 
 This reducer is called whenever we get events about membership changes – we will add such events soon when we talk about Centrifugo integration.
 
-```javascript
+```typescript
 case 'SET_ROOM_MEMBER_COUNT': {
   const { roomId, version, memberCount } = action.payload;
 
-  // Check if the roomId exists in roomsById.
-  if (!state.roomsById[roomId]) {
+  const room = state.roomsById[roomId];
+  if (!room) {
     console.error(`Room with ID ${roomId} not found.`);
     return state;
   }
 
-  // Check if the version in the event is greater than the version in the room object.
-  if (version <= state.roomsById[roomId].version) {
+  // Ignore events older than the state we already have.
+  if (version <= room.version) {
     console.error(`Outdated version for room ID ${roomId}.`);
     return state;
   }
 
-  // Update the member_count and version of the specified room.
-  const updatedRoom = {
-    ...state.roomsById[roomId],
-    member_count: memberCount,
-    version: version,
-  };
-
-  // Return the new state with the updated roomsById.
+  // Return the new state with an updated room object.
   return {
     ...state,
     roomsById: {
       ...state.roomsById,
-      [roomId]: updatedRoom,
+      [roomId]: { ...room, member_count: memberCount, version: version },
     },
   };
 }
