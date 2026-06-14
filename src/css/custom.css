@@ -40,9 +40,24 @@ html[data-theme="dark"] {
 }
 
 html[data-theme="dark"] .navbar {
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Frosted bar is a desktop aesthetic. Scope backdrop-filter to desktop:
+   on mobile it makes .navbar the containing block for the fixed
+   .navbar-sidebar, clipping the menu items (dark mode only, since the
+   filter was dark-only). */
+@media screen and (min-width: 997px) {
+  html[data-theme="dark"] .navbar {
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+  }
+}
+
+/* Keep the mobile menu panel solid/opaque in dark mode (the navbar bg
+   color is translucent for the frosted desktop bar). */
+html[data-theme="dark"] .navbar-sidebar {
+  background-color: #181b21;
 }
 
 html[data-theme="light"] {
