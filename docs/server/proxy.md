@@ -385,6 +385,7 @@ This is what an application returns to Centrifugo inside `result` field in of `C
 | `data`     | `JSON` object                                         | yes      | Custom JSON data to return in subscription context inside Connect reply                                                                                                                           |
 | `b64data`  | `string`                                              | yes      | Same as `data` but in Base64 to send binary data                                                                                                                                                  |
 | `override` | [`SubscribeOptionOverride`](#subscribeoptionoverride) | yes      | Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields)                                                       |
+| `recover`  | `bool`                                                | yes      | (available since Centrifugo v6.8.3) Triggers recovery for this server-side subscription – the server-side equivalent of an empty `since` on the client. Requires recovery to be enabled for the channel; in [cache recovery mode](cache_recovery.md) it delivers the latest publication on (re)connect. Useful for unidirectional clients which can't request recovery themselves |
 
 #### SubscribeOptionOverride
 

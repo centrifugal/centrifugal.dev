@@ -53,6 +53,49 @@ sub.on('publication', (ctx) => {
 
 Of course you also need to make sure you properly configured channel permissions. Then after successful subscription client will get latest publication in `publication` event. 
 
+### Automatic cache recovery
+
+:::info
+
+Automatic cache recovery is available **since Centrifugo v6.8.3**.
+
+:::
+
+Providing an empty `since` works well for bidirectional SDKs, but it has two limitations:
+
+* it must be done on the client side for every subscription;
+* it does not work for **server-side subscriptions** – especially for **unidirectional** clients (SSE, HTTP-streaming, unidirectional WebSocket) which only send a token and may not even know channel names (for example when subscriptions come from a [connect proxy](./proxy.md#connect-proxy) `subs`/`channels` or from a JWT).
+
+To cover these cases the namespace option [auto_cache_recovery](./channels.md#auto_cache_recovery) may be enabled. When it's on Centrifugo automatically initiates cache recovery for **all** subscriptions in the namespace (both client-side and server-side) – so the latest publication is delivered on every (re)subscribe without the client providing an empty `since`:
+
+```json title="config.json"
+{
+  "channel": {
+    "namespaces": [
+      {
+        "name": "example",
+        "force_recovery": true,
+        "force_recovery_mode": "cache",
+        "auto_cache_recovery": true,
+        "history_size": 1,
+        "history_ttl": "1h"
+      }
+    ]
+  }
+}
+```
+
+`auto_cache_recovery` requires `force_recovery` and `force_recovery_mode: cache` to be set.
+
+With this option a unidirectional listener whose channels are decided server-side (for example by a connect proxy) receives the latest publication per channel upon every reconnect, without knowing channel names or stream positions.
+
+:::tip
+
+For a connect proxy that wants to trigger recovery only for specific server-side subscriptions (instead of enabling it namespace-wide), the per-subscription `recover: true` flag can be returned in the `subs` map of the connect proxy result. It is the server-side equivalent of an empty `since` on the client.
+
+:::
+
+
 :::caution
 
 Using cache recovery mode may result in intermediary messages being lost and not delivered; only the latest publication in the channel is of interest in this mode.
