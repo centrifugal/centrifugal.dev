@@ -7,6 +7,7 @@ title: "Switching to a two-column layout"
 
 Back in the [App layout and behavior](./layout.md) chapter we promised that our design keeps the door open for a Telegram/Slack-style two-column layout – the room list on the left, the open room on the right – and that switching to it would be "just a change of React component arrangement and some CSS". Let's cash that promise in. It's also the clearest illustration of *why* we gave every user a single personal channel.
 
+![](/img/grand-chat-2column.png)
 ## Why this is almost free
 
 In our app, all rooms and messages live in one shared chat state, and that state is fed by a **single** subscription to the user's personal channel. The room list and an open room are simply two views over that same live state. So to show them side by side we just render both at once – and because everything flows through one WebSocket connection, both panes stay in sync in real time automatically.
