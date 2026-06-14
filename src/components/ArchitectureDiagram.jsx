@@ -172,7 +172,6 @@ export default function ArchitectureDiagram() {
         <g className="cf-card">
           <rect width="640" height="72" rx="10" fill="url(#cf-glass)" stroke="url(#cf-glass-stroke)" strokeWidth="1" filter="url(#cf-shadow)" />
           <line x1="11" y1="1.2" x2="629" y2="1.2" stroke="#ffffff" strokeOpacity="0.18" strokeWidth="1" />
-          <text x="34" y="46" fontSize="20" fill="#ffffff" fillOpacity="0.1" fontFamily="monospace">{'</>'}</text>
           <text x="320" y="30" fontSize="17" fontWeight="bold" fill="#f2f2f5"
             textAnchor="middle" letterSpacing="2.5px">
             YOUR BACKEND APPLICATION
