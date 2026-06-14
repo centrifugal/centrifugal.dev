@@ -1,6 +1,6 @@
 .section {
     width: 100%;
-    padding: 80px 0;
+    padding: 32px 0 80px;
     background-color: var(--palette-background-alt);
 }
 
@@ -24,15 +24,73 @@ html[data-theme="dark"] .section {
     padding: 0 24px;
 }
 
-.title {
-    font-size: 1.5rem;
-    font-weight: 700;
+/* ── Section header (signals the comparison starts) ── */
+
+.header {
+    text-align: center;
+    max-width: 660px;
+    margin: 0 auto 44px;
+}
+
+.eyebrow {
+    display: inline-block;
     font-family: "Nunito";
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 999px;
+    margin-bottom: 18px;
+}
+
+html[data-theme="light"] .eyebrow {
+    color: #E84C3B;
+    background: rgba(232, 76, 59, 0.08);
+    border: 1px solid rgba(232, 76, 59, 0.2);
+}
+
+html[data-theme="dark"] .eyebrow {
+    color: #fe5e5e;
+    background: rgba(254, 94, 94, 0.1);
+    border: 1px solid rgba(254, 94, 94, 0.25);
+}
+
+.heading {
+    font-family: "Nunito";
+    font-size: 2.4rem;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0 0 12px;
     color: var(--ifm-font-color-base);
 }
 
+.subheading {
+    font-size: 1.05rem;
+    line-height: 1.5;
+    margin: 0;
+    color: var(--ifm-color-emphasis-600);
+}
+
+html[data-theme="dark"] .subheading {
+    color: var(--ifm-color-emphasis-500);
+}
+
+/* ── Card wrapper ── */
+
 .tableWrapper {
     overflow-x: clip;
+    padding: 8px 28px 20px;
+    border: 1px solid var(--ifm-color-emphasis-200);
+    border-radius: 16px;
+    background: var(--ifm-background-color);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 24px 60px -34px rgba(0, 0, 0, 0.22);
+}
+
+html[data-theme="dark"] .tableWrapper {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.02);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 30px 80px -42px rgba(0, 0, 0, 0.6);
 }
 
 .table {
@@ -53,14 +111,18 @@ html[data-theme="dark"] .section {
 
 /* ── Header ── */
 
+.table thead,
+.table thead tr {
+    background: transparent !important;
+    border-bottom: none;
+}
+
 .table thead th {
-    font-family: "Nunito";
-    font-size: 1rem;
-    font-weight: 700;
-    padding: 16px 20px;
-    border-bottom: 2px solid var(--ifm-color-emphasis-200);
-    color: var(--ifm-font-color-base);
+    padding: 4px 20px 14px;
+    background: transparent;
+    border-bottom: none;
     text-align: left;
+    vertical-align: bottom;
 }
 
 .colFeature {
@@ -69,8 +131,36 @@ html[data-theme="dark"] .section {
 
 .colOss,
 .colPro {
-    width: 100px;
+    width: 110px;
     text-align: center !important;
+}
+
+.ossBadge,
+.proBadge {
+    display: inline-block;
+    font-family: "Nunito";
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    padding: 4px 16px;
+    border-radius: 999px;
+}
+
+.ossBadge {
+    color: var(--ifm-color-emphasis-700);
+    background: var(--ifm-color-emphasis-200);
+}
+
+html[data-theme="light"] .proBadge {
+    color: #fff;
+    background: #E84C3B;
+    box-shadow: 0 2px 8px rgba(232, 76, 59, 0.3);
+}
+
+html[data-theme="dark"] .proBadge {
+    color: #fff;
+    background: #fe5e5e;
+    box-shadow: 0 2px 12px rgba(254, 94, 94, 0.35);
 }
 
 /* ── Category rows ── */
@@ -142,7 +232,7 @@ html[data-theme="dark"] .categoryComment {
 /* ── Feature rows ── */
 
 .featureRow td {
-    padding: 8px 20px;
+    padding: 11px 20px;
     border-bottom: 1px solid var(--ifm-color-emphasis-200);
     color: var(--ifm-color-emphasis-700);
     vertical-align: middle;
@@ -329,17 +419,34 @@ html[data-theme="dark"] .docsLink {
 
 @media screen and (max-width: 996px) {
     .section {
-        padding: 60px 0;
+        padding: 24px 0 60px;
     }
 }
 
 @media screen and (max-width: 600px) {
     .section {
-        padding: 40px 0;
+        padding: 16px 0 40px;
     }
 
     .inner {
         padding: 0 16px;
+    }
+
+    .header {
+        margin-bottom: 32px;
+    }
+
+    .heading {
+        font-size: 1.8rem;
+    }
+
+    .subheading {
+        font-size: 0.95rem;
+    }
+
+    .tableWrapper {
+        padding: 4px 12px 12px;
+        border-radius: 12px;
     }
 
     .table {

@@ -97,7 +97,7 @@ html[data-theme="dark"] .text {
     }
 
     .section {
-        padding: 40px 0 30px;
+        padding: 40px 0 16px;
     }
 
     .content {
@@ -106,6 +106,10 @@ html[data-theme="dark"] .text {
 }
 
 @media (max-width: 500px) {
+    .section {
+        padding: 30px 0 8px;
+    }
+
     .content {
         padding: 30px !important;
     }

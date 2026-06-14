@@ -6,7 +6,7 @@ title: WebTransport
 
 WebTransport is an API offering low-latency, bidirectional, client-server messaging on top of [HTTP/3](https://developer.mozilla.org/en-US/docs/Glossary/HTTP_3) (with [QUIC](https://developer.mozilla.org/en-US/docs/Glossary/QUIC) under the hood). See [Using WebTransport](https://web.dev/webtransport/) article that gives a good overview of it.
 
-:::danger
+:::danger Status of WebTransport
 
 WebTransport support in Centrifugo is EXPERIMENTAL and not recommended for production usage. [WebTransport IETF specification](https://datatracker.ietf.org/doc/draft-ietf-webtrans-http3/) is not finished yet and may have breaking changes.
 

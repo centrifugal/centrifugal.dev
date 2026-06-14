@@ -6,7 +6,7 @@ title: Main highlights
 
 At this point, you know how to build the simplest real-time app with Centrifugo. We also provide [a more advanced tutorial](../tutorial/intro.md) which you can refer to when working with Centrifugo.
 
-Beyond core PUB/SUB messaging, Centrifugo provides primitives for real-time state synchronization (data sync) and more to build scalable real-time applications. Let's summarize the main Centrifugo highlights here. Every point is extended throughout the documentation.
+Beyond core PUB/SUB messaging, Centrifugo provides primitives for real-time state synchronization and more to build scalable real-time applications. Let's summarize the main Centrifugo highlights here. Every point is extended throughout the documentation.
 
 ### Integration
 
@@ -70,7 +70,7 @@ Centrifugo is a PUB/SUB server — clients subscribe to [channels](../server/cha
 
 **Stream subscriptions** are the standard type — ordered publications delivered to all channel subscribers. Subscriptions can be initiated by the client or [forced by the server](../server/server_subs.md). They support optional [history with recovery](../server/history_and_recovery.md): clients catch up on missed messages after a reconnect from a fast in-memory cache, without hitting the primary database. A [cache recovery mode](../server/cache_recovery.md) is also available, where the latest publication is delivered immediately on subscribe or resubscribe — useful when a channel represents a single piece of state rather than an event stream.
 
-**Map subscriptions** are Centrifugo's real-time state synchronization (data sync) primitive — a real-time key-value collection managed by Centrifugo. Clients receive a full snapshot on subscribe, catch up after disconnects, and receive incremental per-key updates as they happen. The application does not need a separate "fetch initial state" endpoint or reconciliation logic between an HTTP read and a live stream. See [map subscriptions](../server/map_subscriptions.md).
+**Map subscriptions** are Centrifugo's real-time state synchronization primitive — a real-time key-value collection managed by Centrifugo. Clients receive a full snapshot on subscribe, catch up after disconnects, and receive incremental per-key updates as they happen. The application does not need a separate "fetch initial state" endpoint or reconciliation logic between an HTTP read and a live stream. See [map subscriptions](../server/map_subscriptions.md).
 
 **Proxy subscription streams** allow the backend to push data to a client channel subscription individually over a GRPC stream, established on demand when the client subscribes. This is useful for integrating with third-party streaming sources (log systems, market data feeds, MQTT brokers) or for generating per-client streams that are torn down when the client unsubscribes. Centrifugo acts as a WebSocket-to-GRPC (or SSE-to-GRPC, WebTransport-to-GRPC) proxy, multiplexing many client connections over a pool of HTTP/2 connections to the backend. See [proxy subscription streams](../server/proxy_streams.md).
 

@@ -41,7 +41,7 @@ function Header() {
                 Unlock the full power of Centrifugo
             </h1>
             <div className={styles.subSubTitle}>
-                Next-level <span className="text-gradient text-gradient-hero">realtime messaging</span> and <span className="text-gradient text-gradient-hero">data sync</span><br />
+                Next-level <span className="text-gradient text-gradient-hero">realtime messaging</span> and <span className="text-gradient text-gradient-hero">state sync</span><br />
                 for your organization
             </div>
             <div className={styles.buttons}>
@@ -143,7 +143,7 @@ function Pro() {
                     }
                     reversed
                     isDark
-                    title="Powerful and complete"
+                    title="Powerful, cost-effective, complete"
                     text={
                         <>
                         <p>
@@ -163,30 +163,6 @@ function Pro() {
                         </>
                     }
                 />
-                <section className={clsx("features-wrapper", styles.features)}>
-                    <div className="container">
-                        <div className="row">
-                            <Feature title="Lower resource costs" imageUrl="img/feature_performance.png">
-                                PRO version <a href={"/docs/pro/performance"}>pushes the performance</a> of Centrifugo to the next level. Optimizations for higher throughput. Lower latency, resource usage and <a href={"/docs/pro/bandwidth_optimizations"}>bandwidth</a>.
-                            </Feature>
-                            <Feature title="Push notifications" imageUrl="img/feature_mail.png">
-                                Support for sending <a href={"/docs/pro/push_notifications"}>push notifications</a> with secure topics and flexible API. Integrates with FCM, APNs and HMS push providers.
-                            </Feature>
-                            <Feature title="Enhanced Admin UI" imageUrl="img/feature_thumbs.png">
-                                Built-in <a href={"/docs/pro/admin_ui"}>SSO integration over OIDC</a> protocol, user or channel realtime tracing, analytical widgets, push notification devices, more state data and more.
-                            </Feature>
-                            <Feature title="Flexible scalability" imageUrl="img/feature_cloud.png">
-                                More options to layout your architecture: <a href={"/docs/pro/scalability#subscribe-on-replica"}>Redis replicas</a>, Redis <a href={"/docs/pro/scalability#redis-cluster-sharded-pubsub"}>sharded PUB/SUB</a>, <a href={"/docs/pro/namespace_engines"}>per-namespace Broker</a> configurations.
-                            </Feature>
-                            <Feature title="Better observability" imageUrl="img/feature_pro.png">
-                                A <a href={"/docs/pro/observability_enhancements"}>better observability</a> of your Centrifugo cluster: additional metric insights, realtime tracing and <a href={"/docs/pro/analytics"}>ClickHouse integration</a>, state <a href="/docs/pro/admin_ui#channels-and-connections-snapshots">snapshots</a>.
-                            </Feature>
-                            <Feature title="Protocol rate limits" imageUrl="img/feature_protection.png">
-                                <a href={"/docs/pro/rate_limiting"}>Protect your realtime APIs</a> from misusing and client-side bugs. Detect and disconnect clients generating lots of errors.
-                            </Feature>
-                        </div>
-                    </div>
-                </section>
                 <ComparisonTable />
             </main >
             <Pricing />

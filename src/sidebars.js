@@ -1,7 +1,6 @@
 module.exports = {
   Introduction: [
     "getting-started/introduction",
-    "getting-started/community",
     "getting-started/installation",
     "getting-started/quickstart",
     "getting-started/highlights",
@@ -10,6 +9,7 @@ module.exports = {
     "getting-started/ecosystem",
     "getting-started/comparisons",
     "getting-started/ai_apps",
+    "getting-started/community",    
     "getting-started/migration_v6",
   ],
   Guides: [

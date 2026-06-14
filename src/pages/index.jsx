@@ -60,7 +60,7 @@ function Header() {
         Wash away realtime complexity
       </h1>
       <div className={styles.subSubTitle}>
-        Scalable <span className="text-gradient text-gradient-hero">realtime messaging</span> and <span className="text-gradient text-gradient-hero">data sync</span> for any stack. Spin up once and forever.
+        Scalable <span className="text-gradient text-gradient-hero">realtime messaging</span> and <span className="text-gradient text-gradient-hero">state sync</span> for any stack. Spin up once and forever.
       </div>
       <div className={styles.buttons}>
         <Link
@@ -95,7 +95,7 @@ function Home() {
                 "alternateName": "Centrifugal Labs",
                 "url": "https://centrifugal.dev",
                 "logo": "https://centrifugal.dev/img/logo.svg",
-                "description": "Centrifugal Labs powers realtime magic. The flagship product is Centrifugo — a self-hosted realtime messaging and data sync platform, stack-agnostic and integrates with any frontend or backend technology.",
+                "description": "Centrifugal Labs powers realtime magic. The flagship product is Centrifugo — a self-hosted realtime messaging and state sync platform, stack-agnostic and integrates with any frontend or backend technology.",
                 "sameAs": [
                   "https://github.com/centrifugal",
                   "https://twitter.com/centrifugalabs",
@@ -118,7 +118,7 @@ function Home() {
                 "url": "https://centrifugal.dev",
                 "applicationCategory": "DeveloperApplication",
                 "operatingSystem": "Linux, macOS, Windows, Docker, Kubernetes",
-                "description": "Self-hosted realtime messaging and data sync platform. Delivers messages instantly via WebSocket, HTTP-streaming, SSE, WebTransport, or gRPC. Synchronizes key-value state across clients with transactional consistency. Perfect for chats, live updates, AI streaming, multiplayer games, dashboards, and collaborative tools. Scales to millions of connections.",
+                "description": "Self-hosted realtime messaging and state sync platform. Delivers messages instantly via WebSocket, HTTP-streaming, SSE, WebTransport, or gRPC. Synchronizes key-value state across clients with transactional consistency. Perfect for chats, live updates, AI streaming, multiplayer games, dashboards, and collaborative tools. Scales to millions of connections.",
                 "offers": {
                   "@type": "Offer",
                   "price": "0",
@@ -234,14 +234,14 @@ function Home() {
           }
           reversed
           isDark
-          title="Realtime messaging & data sync"
+          title="Realtime messaging & state sync"
           text={
             <>
               <p>
                 Realtime messaging delivers events to online users with minimal delay. Chats, live comments, multiplayer games, AI streaming responses &mdash; all built on top of a realtime messaging layer.
               </p>
               <p>
-                Data sync allows keeping state synchronized across clients in realtime providing eventual consistency with your database.
+                State sync keeps data consistent across clients in realtime, providing eventual consistency with your database.
               </p>
               <p>
                 Centrifugo handles persistent connections over <b>WebSocket</b>, HTTP-streaming, SSE, WebTransport, and gRPC &mdash; providing both <b>PUB/SUB messaging</b> and <b>state synchronization</b> primitives.
@@ -296,7 +296,7 @@ function Home() {
               </div>
               <div className={styles.useCaseItem}>
                 <div className={styles.useCaseIcon}><DataSyncIcon /></div>
-                <h3>Data Sync</h3>
+                <h3>State Sync</h3>
                 <p>Synchronize key-value state across clients with transactional consistency</p>
               </div>
               <div className={styles.useCaseItem}>
@@ -393,8 +393,8 @@ function Home() {
           }
         />
         <AIStreaming />
-        <RecentBlogPosts />
         <ProCtaBanner />
+        <RecentBlogPosts />
         </main >
       </div>
     </Layout >

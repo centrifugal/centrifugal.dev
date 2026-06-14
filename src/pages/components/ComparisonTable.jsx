@@ -233,13 +233,21 @@ export default function ComparisonTable() {
     return (
         <section className={styles.section}>
             <div className={styles.inner}>
+                <div className={styles.header}>
+                    <span className={styles.eyebrow}>OSS vs PRO</span>
+                    <h2 className={styles.heading}>Compare editions</h2>
+                    <p className={styles.subheading}>
+                        Everything from open-source Centrifugo, plus advanced features for scale,
+                        performance, security, observability, push notifications, and more in PRO.
+                    </p>
+                </div>
                 <div className={styles.tableWrapper}>
                     <table className={styles.table}>
                         <thead>
                             <tr>
-                                <th className={styles.colFeature}><span className={styles.title}>OSS vs PRO</span></th>
-                                <th className={styles.colOss}>OSS</th>
-                                <th className={styles.colPro}>PRO</th>
+                                <th className={styles.colFeature} aria-hidden="true"></th>
+                                <th className={styles.colOss}><span className={styles.ossBadge}>OSS</span></th>
+                                <th className={styles.colPro}><span className={styles.proBadge}>PRO</span></th>
                             </tr>
                         </thead>
                         <tbody>
