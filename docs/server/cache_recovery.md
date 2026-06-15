@@ -66,7 +66,7 @@ Providing an empty `since` works well for bidirectional SDKs, but it has two lim
 * it must be done on the client side for every subscription;
 * it does not work for **server-side subscriptions** – especially for **unidirectional** clients (SSE, HTTP-streaming, unidirectional WebSocket) which only send a token and may not even know channel names (for example when subscriptions come from a [connect proxy](./proxy.md#connect-proxy) `subs`/`channels` or from a JWT).
 
-To cover these cases the namespace option [auto_cache_recovery](./channels.md#auto_cache_recovery) may be enabled. When it's on Centrifugo automatically initiates cache recovery for **all** subscriptions in the namespace (both client-side and server-side) – so the latest publication is delivered on every (re)subscribe without the client providing an empty `since`:
+To cover these cases the namespace option [auto_cache_recover](./channels.md#auto_cache_recover) may be enabled. When it's on Centrifugo automatically initiates cache recovery for **all** subscriptions in the namespace (both client-side and server-side) – so the latest publication is delivered on every (re)subscribe without the client providing an empty `since`:
 
 ```json title="config.json"
 {
@@ -76,7 +76,7 @@ To cover these cases the namespace option [auto_cache_recovery](./channels.md#au
         "name": "example",
         "force_recovery": true,
         "force_recovery_mode": "cache",
-        "auto_cache_recovery": true,
+        "auto_cache_recover": true,
         "history_size": 1,
         "history_ttl": "1h"
       }
@@ -85,7 +85,7 @@ To cover these cases the namespace option [auto_cache_recovery](./channels.md#au
 }
 ```
 
-`auto_cache_recovery` requires `force_recovery` and `force_recovery_mode: cache` to be set.
+`auto_cache_recover` requires `force_recovery` and `force_recovery_mode: cache` to be set.
 
 With this option a unidirectional listener whose channels are decided server-side (for example by a connect proxy) receives the latest publication per channel upon every reconnect, without knowing channel names or stream positions.
 

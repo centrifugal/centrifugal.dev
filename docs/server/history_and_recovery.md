@@ -69,7 +69,7 @@ With history in place, recovery is a small, automatic protocol on top of it. The
 
 That `recovered` flag is the important output. It lets the application stay cheap in the common case and fall back to a full state load from the backend only when recovery genuinely couldn't keep continuity.
 
-The position-tracking in steps 1–4 is done entirely by **bidirectional SDKs** — they hold the `epoch`/`offset` and replay it on resubscribe, so your application code never deals with offsets at all. **Unidirectional** transports (SSE, HTTP-streaming, unidirectional WebSocket) can't drive this themselves; for them Centrifugo can still deliver the latest state on every (re)subscribe via [cache recovery mode](./cache_recovery.md) with [`auto_cache_recovery`](./channels.md#auto_cache_recovery).
+The position-tracking in steps 1–4 is done entirely by **bidirectional SDKs** — they hold the `epoch`/`offset` and replay it on resubscribe, so your application code never deals with offsets at all. **Unidirectional** transports (SSE, HTTP-streaming, unidirectional WebSocket) can't drive this themselves; for them Centrifugo can still deliver the latest state on every (re)subscribe via [cache recovery mode](./cache_recovery.md) with [`auto_cache_recover`](./channels.md#auto_cache_recover).
 
 ## The recovery decision
 

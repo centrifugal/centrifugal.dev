@@ -322,9 +322,9 @@ Not all real-time events require this feature turned on so think wisely when you
 
 `force_recovery_mode` (string, possible values are `stream` or `cache`, when not specified Centrifugo uses `"stream"`). Allows setting recovery mode for all connections which use recovery in the namespace. By default, Centrifugo uses `stream` recovery mode – a mode where subscriber interested in all messages to be delivered. The alternative recovery mode which may be forced by using this option is `cache` – see the detailed description in [Cache recovery mode](./cache_recovery.md) chapter.
 
-### auto_cache_recovery
+### auto_cache_recover
 
-`auto_cache_recovery` (boolean, default `false`, available since Centrifugo v6.8.3) – automatically initiates cache recovery for all subscriptions in the namespace (both client-side and server-side) without requiring the subscriber to request it. In cache recovery mode this delivers the latest publication on every (re)subscribe, so client-side subscribers don't need to provide an empty `since`, and it also enables this delivery for server-side subscriptions of unidirectional clients which can't ask for recovery themselves. Requires `force_recovery` and `force_recovery_mode: cache`. See [Cache recovery mode](./cache_recovery.md#automatic-cache-recovery).
+`auto_cache_recover` (boolean, default `false`, available since Centrifugo v6.8.3) – automatically initiates cache recovery for all subscriptions in the namespace (both client-side and server-side) without requiring the subscriber to request it. In cache recovery mode this delivers the latest publication on every (re)subscribe, so client-side subscribers don't need to provide an empty `since`, and it also enables this delivery for server-side subscriptions of unidirectional clients which can't ask for recovery themselves. Requires `force_recovery` and `force_recovery_mode: cache`. See [Cache recovery mode](./cache_recovery.md#automatic-cache-recovery).
 
 ### allow_subscribe_for_client
 
