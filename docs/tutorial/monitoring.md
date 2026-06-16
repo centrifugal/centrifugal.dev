@@ -15,7 +15,7 @@ The first step would be adding Prometheus service to our `docker-compose.yml` fi
 
 ```yaml title="docker-compose.yml"
   prometheus:
-    image: prom/prometheus:v3.0.1
+    image: prom/prometheus:v3.12.0
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     command:
@@ -24,7 +24,7 @@ The first step would be adding Prometheus service to our `docker-compose.yml` fi
       - 9090:9090
 ```
 
-We also need to create a `prometheus.yml` file in the root of our project. Here is how it looks like:
+We also need to create a `prometheus.yml` file in the `prometheus` directory of our project. Here is how it looks like:
 
 ```yaml title="prometheus/prometheus.yml"
 global:
@@ -44,10 +44,14 @@ In Centrifugo configuration we also need to enable Prometheus metrics endpoint. 
 {
     ...
     "prometheus": {
-        "enabled": true
+        "enabled": true,
+        "instrument_http_handlers": true,
+        "channel_namespace_resolution": true
     }
 }
 ```
+
+Besides enabling the metrics endpoint, we turn on two extra options: `instrument_http_handlers` adds metrics for Centrifugo's HTTP API handlers, and `channel_namespace_resolution` labels channel metrics by namespace – so on the dashboard you can see activity broken down per namespace (e.g. our `personal` namespace).
 
 Now once you start the app with `docker compose up` you can open Prometheus UI at [http://localhost:9090](http://localhost:9090) and see Centrifugo metrics.
 
@@ -57,7 +61,7 @@ Many users prefer to use [Grafana](https://grafana.com/) for visualizing metrics
 
 ```yaml title="docker-compose.yml"
   grafana:
-    image: grafana/grafana-oss:11.4.0
+    image: grafana/grafana-oss:12.4.3
     depends_on:
       - prometheus
     # Expose Grafana on host port 3000

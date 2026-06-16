@@ -151,9 +151,11 @@ When using Centrifugo PRO with the sharded PUB/SUB feature, there are important 
 
 Without this partitioning, each Centrifugo node could potentially create up to 16,384 connections to the Redis Cluster — one for each cluster slot — a number that is impractically large. The partitioning strategy avoids this issue, maintaining efficient and scalable communication between Centrifugo and Redis.
 
-We generally recommend using Redis sharded PUB/SUB only if you are already using a Redis Cluster and are nearing its scalability limits. In such cases, switching to sharded PUB/SUB mode, despite the different keys/channel names in Redis, can significantly enhance the application's ability to handle larger workloads.
+:::caution
 
-Once the scalability limit of a single cluster with sharded PUB/SUB is reached, you can further scale by adding an additional isolated Redis Cluster. Centrifugo can then be configured to use multiple clusters instead of one, enabling scaling similar to its consistent sharding mechanism over isolated single Redis instances. However, in this setup, the sharding occurs across multiple Redis Clusters.
+This means that enabling sharded PUB/SUB changes the key names Centrifugo uses in Redis, so any existing data (history, presence, result cache) is effectively lost on the switch. In many cases Centrifugo data is ephemeral, so if your application is built idiomatically connected subscribers should survive the change without issues.
+
+:::
 
 Here is how to enable sharded PUB/SUB in Centrifugo PRO:
 
@@ -175,11 +177,42 @@ By default, Centrifugo creates one PUB/SUB connection per partition. Each partit
 
 This is the simplest setup and requires no extra configuration beyond `sharded_pub_sub_partitions`. It works well when the partition count is moderate (64–128) and the Centrifugo cluster is moderate size (below ~50 nodes), since the total number of PUB/SUB connections to Redis Cluster is `num_centrifugo_nodes × num_partitions`.
 
+### Even partition distribution with precomputed tags
+
+This option is available since Centrifugo PRO v6.8.3.
+
+By default each partition's hash tag is just its index — `{0}`, `{1}`, ... `{N-1}`. These short numeric strings hash via CRC16 into clustered Redis Cluster slots, so on larger clusters the partitions land very unevenly across nodes. At 16 nodes with 32 partitions, for example, roughly half the cluster nodes end up receiving no sharded PUB/SUB traffic at all.
+
+Setting `use_precomputed_partition_tags` to `true` switches partition hash tags to a precomputed table whose CRC16 slots are chosen to spread evenly across any cluster size. This removes the load skew described above.
+
+```json title="config.json"
+{
+  "engine": {
+    "type": "redis",
+    "redis": {
+      "address": "redis+cluster://localhost:7000",
+      "use_precomputed_partition_tags": true,
+      "sharded_pub_sub_partitions": 128
+    }
+  }
+}
+```
+
+When enabled, `sharded_pub_sub_partitions` must be one of the supported sizes: `16`, `32`, `64`, `128`, `256`, `512`, `1024`, `2048`, `4096`. Centrifugo refuses to start otherwise.
+
+The option also applies to Redis Map Broker (set it inside `map_broker.redis`) and can be combined with `group_sharded_pub_sub_by_node`.
+
+:::caution
+
+Enabling `use_precomputed_partition_tags` changes the key names Centrifugo uses in Redis, so any existing data (history, presence, result cache) is effectively lost on the switch. In many cases Centrifugo data is ephemeral, so if your application is built idiomatically connected subscribers should survive the change without issues.
+
+:::
+
 ### Node-grouped sharded PUB/SUB
 
 :::caution Experimental
 
-This feature is experimental.
+This feature is experimental. Available since Centrifugo PRO v6.8.0
 
 :::
 
@@ -224,8 +257,6 @@ This optimization also applies to Redis Map Broker:
   }
 }
 ```
-
-Sharded PUB/SUB support is a powerful feature which will push your Redis Cluster to its PUB/SUB limits, but it requires careful consideration given the implementation details described above.
 
 ## Per-namespace engines
 

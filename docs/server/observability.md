@@ -236,11 +236,11 @@ Note, this metric is disabled by default. To enable it set `prometheus.recovered
 - **Description:** Measures the number of publications recovered by clients.
 - **Usage:** Use this metric to monitor the effectiveness of the recovery process.
 
-#### centrifugo_client_connection_limit_reached_total
+#### centrifugo_node_client_connection_limit
 
 - **Type:** Counter
 - **Labels:** None
-- **Description:** Number of refused connections due to the node client connection limit.
+- **Description:** Number of refused requests due to the node client connection limit.
 - **Usage:** Useful for monitoring the load on the Centrifugo node and identifying when clients are being refused connections due to reaching the connection limit.
 
 #### centrifugo_client_connections_accepted
@@ -313,48 +313,29 @@ This Summary is deprecated and will be removed in Centrifugo v7. Use `centrifugo
 :::
 
 - **Type:** Summary
-- **Labels:** protocol, type
+- **Labels:** protocol, type, name
 - **Description:** Captures the duration of proxy calls.
 - **Usage:** Critical for understanding the performance of proxy calls and identifying any potential bottlenecks or issues.
 
 #### centrifugo_proxy_duration_seconds_histogram
 
 - **Type:** Histogram. Uses native (sparse, exponential) schema when [`prometheus.native_histograms`](#native-histograms) is enabled.
-- **Labels:** protocol, type
+- **Labels:** protocol, type, name
 - **Description:** Same data as the Summary above, exposed in `histogram_quantile()`- and OpenTelemetry-friendly form.
 - **Usage:** Prefer this metric for percentile queries and OpenTelemetry export.
 
 #### centrifugo_proxy_errors
 
 - **Type:** Counter
-- **Labels:** protocol, type
+- **Labels:** protocol, type, name
 - **Description:** Counts the number of errors occurred during proxy calls.
 - **Usage:** Helps in monitoring the reliability of proxy services and ensuring error-free operations.
 
-#### centrifugo_granular_proxy_duration_seconds
+:::note
 
-:::caution Deprecated
-This Summary is deprecated and will be removed in Centrifugo v7. Use `centrifugo_granular_proxy_duration_seconds_histogram` (below). Not exposed when [`prometheus.native_histograms`](#native-histograms) is enabled.
+Per-proxy ("granular") timings and errors are not separate metrics — they are exposed via the `name` label on the `centrifugo_proxy_*` metrics above, where `name` is the configured proxy name.
+
 :::
-
-- **Type:** Summary
-- **Labels:** type, name
-- **Description:** Measures the duration of granular proxy calls.
-- **Usage:** Use this to get more detailed insights into the performance of granular proxy operations.
-
-#### centrifugo_granular_proxy_duration_seconds_histogram
-
-- **Type:** Histogram. Uses native (sparse, exponential) schema when [`prometheus.native_histograms`](#native-histograms) is enabled.
-- **Labels:** type, name
-- **Description:** Same data as the Summary above, exposed in `histogram_quantile()`- and OpenTelemetry-friendly form.
-- **Usage:** Prefer this metric for percentile queries and OpenTelemetry export.
-
-#### centrifugo_granular_proxy_errors
-
-- **Type:** Counter
-- **Labels:** type, name
-- **Description:** Counts the number of errors in granular proxy calls.
-- **Usage:** Essential for error tracking and ensuring the stability of granular proxy services.
 
 #### centrifugo_api_command_duration_seconds
 
@@ -507,6 +488,12 @@ CENTRIFUGO_OPENTELEMETRY=1 CENTRIFUGO_OPENTELEMETRY_API=1 CENTRIFUGO_OPENTELEMET
 :::tip
 
 Set the target project via `OTEL_RESOURCE_ATTRIBUTES="gcp.project_id=..."`. Do not put it in `OTEL_EXPORTER_OTLP_HEADERS` as `x-goog-user-project` — Google warns that this can produce duplicate values and fail requests.
+
+:::
+
+:::note
+
+Exported telemetry carries standard OTel resource attributes: `service.name` is `centrifugo` (override with `OTEL_SERVICE_NAME`), attributes from `OTEL_RESOURCE_ATTRIBUTES` are merged in (environment values take precedence over Centrifugo defaults), and since Centrifugo v6.8.3 `service.instance.id` defaults to the unique Centrifugo node ID.
 
 :::
 

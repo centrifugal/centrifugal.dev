@@ -4,16 +4,17 @@ id: monitoring
 title: Metrics monitoring
 ---
 
-Centrifugo supports reporting metrics in Prometheus format and can automatically export metrics to Graphite.
+Centrifugo supports reporting metrics in Prometheus format and can automatically export metrics to Graphite. For the full list of exposed metrics, OpenTelemetry export, and native histograms see the [Observability](./observability.md) chapter.
 
 ### Prometheus
 
-To enable Prometheus endpoint start Centrifugo with `prometheus` option on:
+To enable Prometheus endpoint set `prometheus.enabled` to `true`:
 
 ```json title="config.json"
 {
-    ...
-    "prometheus": true
+  "prometheus": {
+    "enabled": true
+  }
 }
 ```
 
@@ -25,16 +26,17 @@ To enable automatic export to Graphite (via TCP):
 
 ```json title="config.json"
 {
-    ...
-    "graphite": true,
-    "graphite_host": "localhost",
-    "graphite_port": 2003
+  "graphite": {
+    "enabled": true,
+    "host": "localhost",
+    "port": 2003
+  }
 }
 ```
 
 By default, stats will be aggregated over 10 seconds intervals inside Centrifugo and then pushed to Graphite over TCP connection.
 
-If you need to change this aggregation interval use the `graphite_interval` option (in seconds, default `10`).
+If you need to change this aggregation interval use the `graphite.interval` option (a [duration](./configuration.md#duration-type), default `"10s"`).
 
 ### Grafana dashboard
 

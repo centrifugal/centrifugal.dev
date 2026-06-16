@@ -70,7 +70,7 @@ Below you can find information regarding support of different features in our of
 | batching API                               | ✅  |      |       |    |      |        |        |
 | bidirectional WebSocket emulation          | ✅  |      |       |    |      |        |    ✅    |
 | headers emulation                          | ✅  | ✅    | na    | na | na   | na     | ✅     |
-| [channel compaction](../pro/bandwidth_optimizations.md#channel-compaction) (Centrifugo PRO) | ✅  |      |       |    |      |        |        |
+| [channel compaction](../pro/bandwidth_optimizations.md#channel-compaction) (Centrifugo PRO) | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
 | [client publish debouncing](../pro/bandwidth_optimizations.md#client-publish-debouncing) (Centrifugo PRO) | ✅  |      |       |    |      |        |        |
 
 </div>
@@ -92,8 +92,8 @@ Below you can find information regarding support of different features in our of
 | manage subscription registry                 | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅
 | optimistic subscriptions                     | ✅  |      |       |    |      |        |        |
 | [delta compression](../server/delta_compression.md) | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |   ✅     |
-| [publication tags filter](../server/publication_filtering.md) | ✅  |      |       |    |      |        |    ✅    |
-| [stream subscription getState](client_api.md#subscription-getstate) | ✅  |      |       |    |      |        |        |
+| [publication tags filter](../server/publication_filtering.md) | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
+| [stream subscription getState](client_api.md#subscription-getstate) | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
 | [map subscriptions](../server/map_subscriptions.md) | ✅  |      |       |    |      |        |        |
 | [shared poll subscriptions](../server/shared_poll.md) | ✅  |      |       |    |      |        |        |
 

@@ -1,6 +1,6 @@
 module.exports = {
   title: "Centrifugo",
-  tagline: "Scalable real-time messaging server in a language-agnostic way. Self-hosted alternative to PubNub, Pusher, Ably, Socket.IO, Phoenix.PubSub, SignalR. Set up once and forever.",
+  tagline: "Centrifugo is a scalable real-time messaging server in a language-agnostic way. Self-hosted alternative to PubNub, Pusher, Ably, Socket.IO, Phoenix.PubSub, SignalR. Set up once and forever.",
   url: "https://centrifugal.dev",
   baseUrl: "/",
   trailingSlash: false,
@@ -211,7 +211,7 @@ module.exports = {
           /**
            * Blog page meta description for better SEO
            */
-          blogDescription: 'Centrifugal Blog',
+          blogDescription: 'News, releases and engineering deep dives from Centrifugal Labs — the team behind Centrifugo, the open-source real-time messaging server.',
           /**
            * Number of blog post elements to show in the blog sidebar
            * 'ALL' to show all blog posts

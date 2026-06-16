@@ -107,7 +107,7 @@ By default, a client's attempt to publish data into a channel will be rejected b
 
 If a client publishes to a namespace with a configured publish proxy, then depending on the proxy response the publication will be accepted or not.
 
-Configured publish proxy always used??? (what if user has permission in token or allow_publish_for_client?)
+When a publish proxy is enabled for a namespace it takes precedence: all client publishes to channels in that namespace are routed to the proxy, and the proxy response alone decides whether the publication is accepted. The built-in `allow_publish_for_client` / `allow_publish_for_subscriber` flags and token publish capabilities are not consulted in this case.
 
 #### Publish capabilities in connection token
 
@@ -119,7 +119,7 @@ Connection token can contain a capability object to allow client to publish to c
 
 <p><mark>Centrifugo PRO only</mark></p>
 
-Connection token can contain a capability object to allow client to publish to a channel.
+Subscription token can contain a capability object to allow client to publish to a channel.
 
 #### Publish capabilities in connect proxy
 

@@ -11,8 +11,14 @@ Making this tutorial took quite a lot of time for us. We want to collect some us
 
 We did this ourselves while experimenting and measuring latency numbers in different scenarios. If you want to run the example, but need to point backend or Nginx to look at Centrifugo on your machine outside Docker, then you can use:
 
-* On Linux run `ifconfig` and find `docker0` interface – use its ip address to point to Centrifugo. In our case it was `172.17.0.1`, so we pointed Nginx to `172.17.0.1:8000` upstream (Centrifugo runs on port 8000 by default), and in Django code used `http://172.17.0.1:8000/api/broadcast` endpoint. Also, make sure you are using `"address": "0.0.0.0"` in Centrifugo configuration
-* On Macos – use `host.docker.internal` special name, i.e. `host.docker.internal:8000` in Nginx and `http://host.docker.internal:8000/api/broadcast` as API endpoint for Django code.
+* On Linux run `ifconfig` and find the `docker0` interface – use its ip address to point to Centrifugo. In our case it was `172.17.0.1`, so we pointed the Nginx upstream to `172.17.0.1:8000` (Centrifugo runs on port 8000 by default) and set `CENTRIFUGO_HTTP_API_ENDPOINT = 'http://172.17.0.1:8000'` in `backend/app/settings.py`. Also make sure you use `"address": "0.0.0.0"` in the Centrifugo configuration.
+* On macOS – use the `host.docker.internal` special name: `host.docker.internal:8000` for the Nginx upstream and `CENTRIFUGO_HTTP_API_ENDPOINT = 'http://host.docker.internal:8000'` in `backend/app/settings.py`.
+
+Both Nginx upstream variants are already present as commented lines in `nginx/nginx.conf`, so you only need to uncomment the one for your OS.
+
+## Centrifugo admin web UI
+
+Centrifugo ships with a built-in admin web UI, enabled in `centrifugo/config.json`. With the default Docker Compose setup it's available at [http://localhost:8000](http://localhost:8000) – log in with the password from the `admin` section of the config (`password` by default). From there you can inspect connected clients and channels, see node metrics, and publish test messages into a channel by hand – handy for poking at the app without touching the backend.
 
 ## Connect to PostgreSQL
 

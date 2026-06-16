@@ -83,7 +83,7 @@ The useful addition in Centrifugo PRO was a possibility to use [per-namespace br
 
 - [Redis 7.4 added possibility](https://redis.io/blog/announcing-redis-community-edition-and-redis-stack-74/#:~:text=You%20can%20now%20set%20an%20expiration%20for%20hash%20fields.) to set per field TTL in HASH data structure. We [utilized this](/docs/server/engines#redis_presence_hash_field_ttl) for Centrifugo presence to handle online presence more efficiently and reducing the overhead of presence requests.
 - Global Redis Presence User Mapping. We've [provided an option](/docs/server/engines#optimize-getting-presence-stats) to drastically improve `presence_stats` performance for channels with a large number of active subscribers, making Redis-backed deployments more efficient.
-- Centrifugo works gracefully with Redis eviction algorithms now. It degrades in a way that clients lose their positions in channel streams, but they can [recover in idiomatic way](/docs/server/history_and_recovery#automatic-message-recovery).
+- Centrifugo works gracefully with Redis eviction algorithms now. It degrades in a way that clients lose their positions in channel streams, but they can [recover in idiomatic way](/docs/server/history_and_recovery#how-recovery-works).
 
 ## Better SDKs
 

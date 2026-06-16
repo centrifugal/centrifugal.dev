@@ -21,6 +21,8 @@ In our blog post [Million connections with Centrifugo](/blog/2020/02/10/million-
 
 But this case is different; in this app we want to have large group chats with many members. The difference here is that publishing involves sending a message to each individual channel – so instead of small fan-in and large fan-out **we have large fan-in and mostly the same fan-out** (mostly – because a user may have several connections from different devices). We also have Django on the backend and database communication here – which also makes the use case different as we need to take backend processing timings into account too.
 
+## Creating test data
+
 Let's create fake users and fill the rooms with members. First, the function to create fake users programatically:
 
 ```python title='backend/app/utils.py'
@@ -36,7 +38,7 @@ def create_users(n):
         username = get_random_string(10)
         email = f"{username}@example.com"
         password = get_random_string(50)
-        user = User(username=username, email=email, password=make_password(password, None))
+        user = User(username=username, email=email, password=make_password(password, None, 'md5'))
         users.append(user)
 
         if len(users) >= 100:
@@ -118,6 +120,8 @@ setup_dev()
 
 This may take a while; please see how to speed this up in the comment of `create_users` in the source code. TLDR - it's possible to relax the password requirements a bit, which is totally OK for experiment purposes and allows creating 100k users in seconds.
 
+## What we measure
+
 Now, let's compare some latency numbers for these rooms when broadcasting a message. We will measure:
 
 * median time of Django handler which processes message creation in every broadcast mode (creation). We have four broadcast modes here: api, outbox, cdc, api_cdc (combined API and CDC)
@@ -125,6 +129,8 @@ Now, let's compare some latency numbers for these rooms when broadcasting a mess
 * end-to-end median latency – the time between a user pressing ENTER and receiving the real-time message (delivery). This includes passing data over the entire stack: Nginx proxy -> Gunicorn/Django -> [api | outbox | cdc | api_cdc ] -> Centrifugo. In practice, in a messenger application, only a small part of those members will be online at the moment of message broadcast – in this experiment we will measure the delivery latency while only one client in the room is online – it's OK because having more users connected scales very well in Centrifugo by adding more nodes, so the numbers achieved here are totally achievable with more online connections in the room just by adding several more Centrifugo nodes.
 
 Also note, that in reality there will be some additional overhead due to network latencies missing in this experiment. Our goal here is to show the overhead of technologies used to build the app here. The experiment's goal is to give you the idea of **difference**, not exact latency values (which may be better or worse depending on the hardware, operating system, etc). All measurements were done on a single local machine – Apple Macbook M1 Pro – not very scientific, but fits the goal.
+
+## Memory engine
 
 We first start with Centrifugo that uses [Memory engine](../server/engines.md#memory-engine) which is the fastest one:
 
@@ -143,6 +149,8 @@ Things to observe:
 * for 10k members in a group, latencies are very acceptable for the messenger app; this is already the scale of quite large organizations which use Slack messenger, and it's not the limit as we will show.
 * using API and CDC together provides better latency than just CDC (so we proved it works as expected!), but for large groups you may want to only use CDC to keep publication time reasonably small.
 
+## Redis engine
+
 Now let's use Centrifugo [Redis engine](../server/engines.md#redis-engine). In the tutorial we used in-memory engine of Centrifugo. But with Redis engine it's possible to scale Centrifugo nodes and load balance WebSocket connections over them. We left Redis Engine out of the scope in the tutorial – but you can simply add it by extending `docker-compose.yml`. Here are results we got for it: 
 
 |      | api | outbox | cdc | api_cdc |
@@ -154,6 +162,8 @@ Now let's use Centrifugo [Redis engine](../server/engines.md#redis-engine). In t
 
 We see that timings went beyond one second in the Redis case for a group with 100k members. Since we are sending to 100k **individual** channels here with saving message history for each, the amount of work is significant. But the channel is the unit of scalability in Centrifugo. Let's discuss how we can improve timings in the Redis engine case.
 
+## Sharding across more Redis instances
+
 The first thing to do is add more Redis instances. Redis operates using a single processor core, so on a modern server machine we can easily start many Redis processes and point Centrifugo to them. Centrifugo will then shard the work between Redis shards. It's also possible to point Centrifugo to a Redis cluster consisting of many nodes.
 
 For example, let's start Redis cluster based on 4 nodes and point Centrifugo to it. We then get the following results (skipped 100, 1k and 10k scenarios here as they already fast enough):
@@ -163,6 +173,8 @@ For example, let's start Redis cluster based on 4 nodes and point Centrifugo to 
 | 100k | creation: 1s<br/>broadcast: 900ms<br/>delivery 950ms    | creation: 220ms<br/>broadcast: 850ms<br/>delivery 1s       |  creation: 200ms<br/>broadcast: 850ms<br/>delivery 1.3s   |  creation: 1.6s<br/>broadcast: 950ms <br/>delivery 1.5s     |
 
 We can see that latency of broadcasting to 100k channels dropped: `1.5s -> 900ms`. This is because we offloaded some work from a single Redis to several instances.
+
+## Splitting broadcasts across nodes
 
 To reduce the latency of massive broadcasts further, another concern should be taken into account – we need to split broadcasts across many Centrifugo nodes. Currently all publications inside a broadcast request are processed by one Centrifugo node (since all the channels belong to one broadcast request). If we add more Centrifugo nodes and split one broadcast request into several ones to utilize different Centrifugo nodes – we will parallelize the work of broadcasting the same message to many channels.
 
@@ -212,8 +224,18 @@ With this batch approach and running Centrifugo with 8 isolated Redis instances 
 
 If we take Slack as an example, this already feels nice to cover messaging needs of some largest organizations in the world. It will also work for Amazon scale, who has around 1.5 million people now – just need more resources for better end-to-end latency or simply trade-off the latency in large messenger groups for reduced resources.
 
+## Conclusion
+
 To conclude, scaling messenger apps requires careful thinking. The complexity in this case stems from the fact that we are using personal channels for message delivery - thus we have a massive fan-in and need to use the broadcast API of Centrifugo.
 
 If we had isolated chat rooms (for example, like real-time comments for each video on the YouTube web site) – then it would be much easier to implement and scale. Because we could just subscribe to the specific room channel instead of the user's individual channel and publish only to one channel on every message sent (using Centrifugo [simple publish API](../server/server_api.md#publish)). It's a very small fan-in and the scalability with many concurrent users may be simply achieved by adding more Centrifugo nodes. Also, if we had only one-to-one chat rooms in the app, without super-groups with 100k members – again, it scales pretty easily. If you don't need message recovery – then disabling it will provide better performance too. Our experiments with 100k members and a single [NATS server as broker](../server/engines.md#nats-broker) showed 300ms delivery latency.
 
 But when we design an app where we want to have a screen with all of a user's rooms, where some rooms have a massive number of members, and need to consume updates from all of them – things become harder as we've just shown above. That's an important thing to keep in mind - application specifics may affect Centrifugo channel configuration and performance a lot.
+
+:::note What would this cost on Django Channels?
+
+The numbers above are measured. Centrifugo broadcasts to all 1,000 members in **one** API request (the full channel list is included) and fans out off-box in ~20–30ms. [Django Channels](https://channels.readthedocs.io/) has no "publish to a list of channels" primitive, so mirroring our per-user design means **1,000 separate `group_send` calls** through the Redis channel layer – and that work runs **inside your Django/ASGI worker process**. In practice this lands in the **seconds** for 1k recipients – orders of magnitude slower than the single ~20–30ms broadcast – because each `group_send` is its own round-trip (and from a sync Django view each call also crosses the async bridge), so the 1,000 calls serialize in-process. It only gets worse at 10k/100k, whereas our single broadcast request plus Redis sharding and node splitting keeps things tractable (and outbox/CDC move the fan-out off the request path entirely).
+
+You *can* make Channels fast on a single publish by using one group **per room** instead (a single `group_send`) – but that gives up the single-per-user-stream model this whole app is built on: every connection then has to join all of the user's room groups on connect (amplifying reconnect storms), the all-rooms-on-one-screen UX becomes much harder, and you'd still re-implement missed-message recovery and presence yourself. The design is expressible on Channels; the fan-in-heavy "all your rooms on one screen" shape is just where Centrifugo's broadcast engine earns its keep.
+
+:::

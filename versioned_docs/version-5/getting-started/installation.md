@@ -106,7 +106,6 @@ Create configuration file `config.json`:
 Create `docker-compose.yml`:
 
 ```yml
-version: "3.9"
 services:
   centrifugo:
     container_name: centrifugo

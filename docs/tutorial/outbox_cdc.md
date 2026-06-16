@@ -136,7 +136,7 @@ db:
   volumes:
     - ./postgres_data:/var/lib/postgresql/data/
   healthcheck:
-    test: [ "CMD", "pg_isready", "-U", "grandchat" ]
+    test: [ "CMD", "pg_isready", "-U", "grandchat", "-d", "grandchat" ]
     interval: 1s
     timeout: 5s
     retries: 10
@@ -157,13 +157,13 @@ Then let's add Kafka Connect and Kafka itself to our `docker-compose.yml`:
 
 ```yaml title="docker-compose.yml"
 zookeeper:
-  image: confluentinc/cp-zookeeper:latest
+  image: confluentinc/cp-zookeeper:7.4.3
   environment:
     ZOOKEEPER_CLIENT_PORT: 2181
     ZOOKEEPER_TICK_TIME: 2000
 
 kafka:
-  image: confluentinc/cp-kafka:latest
+  image: confluentinc/cp-kafka:7.4.3
   depends_on:
     - zookeeper
   ports:
@@ -189,7 +189,7 @@ kafka:
     KAFKA_MAX_PARTITION_FETCH_BYTES: "10485760" # max.partition.fetch.bytes
 
 connect:
-  image: debezium/connect:latest
+  image: debezium/connect:2.5
   depends_on:
     db:
       condition: service_healthy
@@ -225,7 +225,7 @@ Kafka uses ZooKeeper, so we added it here too. Next, we need to configure Debezi
         "tasks.max": "1",
         "producer.override.max.request.size": "10485760",
         "topic.creation.default.cleanup.policy": "delete",
-        "topic.creation.default.partitions": "8",
+        "topic.creation.default.partitions": "40",
         "topic.creation.default.replication.factor": "1",
         "topic.creation.default.retention.ms": "604800000",
         "topic.creation.enable": "true",
@@ -234,7 +234,7 @@ Kafka uses ZooKeeper, so we added it here too. Next, we need to configure Debezi
         "value.converter": "org.apache.kafka.connect.json.JsonConverter",
         "key.converter.schemas.enable": "false",
         "value.converter.schemas.enable": "false",
-        "poll.interval.ms": "100",
+        "poll.interval.ms": "50",
         "transforms": "extractContent",
         "transforms.extractContent.type": "org.apache.kafka.connect.transforms.ExtractField$Value",
         "transforms.extractContent.field": "after",
@@ -258,7 +258,7 @@ connect-config-loader:
       echo 'Waiting for Kafka Connect to start...';
       while ! curl -f http://connect:8083/connectors; do sleep 1; done;
       echo 'Kafka Connect is up, posting configuration';
-      curl -X DELETE -H 'Content-Type: application/json' http://connect:8083/connectors/chat-connector;
+      curl -X DELETE -H 'Content-Type: application/json' http://connect:8083/connectors/grandchat-connector;
       curl -X POST -H 'Content-Type: application/json' -v --data @/debezium-config.json http://connect:8083/connectors;
       echo 'Configuration posted';
     "
@@ -273,7 +273,7 @@ Next step here is configure Centrifugo to consume Kafka topic:
   "consumers": [
     {
       "enabled": true,
-      "name": "my_kafka_consumer",
+      "name": "kafka",
       "type": "kafka",
       "kafka": {
         "brokers": ["kafka:9092"],

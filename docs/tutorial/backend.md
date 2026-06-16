@@ -79,7 +79,7 @@ INSTALLED_APPS = [
 Our backend service will expose REST API for the frontend. The simplest way to add REST in Django is to use [Django Rest framework](https://www.django-rest-framework.org/):
 
 ```bash
-pip install djangorestframework==3.14.0
+pip install djangorestframework
 pip freeze > requirements.txt
 ```
 
@@ -101,15 +101,13 @@ INSTALLED_APPS = [
 For the main database we will use [PostgreSQL](https://www.postgresql.org/) here. Add `db` to `docker-compose.yml`:
 
 ```yaml title="docker-compose.yml"
-version: '3.8'
-
 services:
   db:
     image: postgres:15
     volumes:
       - ./postgres_data:/var/lib/postgresql/data/
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "grandchat" ]
+      test: [ "CMD", "pg_isready", "-U", "grandchat", "-d", "grandchat" ]
       interval: 1s
       timeout: 5s
       retries: 10
@@ -143,14 +141,14 @@ Note that in this example we are running everything in Docker, that's why databa
 Let's also serve Django application when we are running docker compose. We will serve Django using [Gunicorn](https://gunicorn.org/) web server. To add gunicorn to the project:
 
 ```
-pip install gunicorn==21.2.0
+pip install gunicorn
 pip freeze > requirements.txt
 ```
 
 Then create custom Dockerfile inside `backend` directory:
 
 ```Dockerfile title="backend/Dockerfile"
-FROM python:3.11.4-slim-buster
+FROM python:3.13-slim
 
 WORKDIR /usr/src/app
 
@@ -213,7 +211,7 @@ class Room(models.Model):
 
     def increment_version(self):
         self.version += 1
-        self.save()
+        self.save(update_fields=['version'])
         return self.version
 
     def __str__(self):
@@ -241,6 +239,9 @@ class Message(models.Model):
         User, related_name='messages', on_delete=models.CASCADE, null=True)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.content[:50]
 ```
 
 Having the models we now need to make database migrations and create tables for them. First run the app:
@@ -313,7 +314,7 @@ def login_view(request):
         return JsonResponse({'detail': 'invalid credentials'}, status=400)
 
     login(request, user)
-    return JsonResponse({'user': {'id': user.pk, 'username': user.username}})
+    return JsonResponse({'id': user.pk, 'username': user.username})
 ```
 
 ### POST /api/logout/
@@ -348,26 +349,27 @@ class RoomSearchSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Room
-        fields = ['id', 'name', 'created_at', 'updated_at', 'is_member']
+        fields = ['id', 'name', 'created_at', 'is_member']
 ```
 
 And:
 
 ```python title="backend/chat/views.py"
-class RoomSearchViewSet(viewsets.ModelViewSet):
+class RoomSearchViewSet(ListModelMixin, GenericViewSet):
     serializer_class = RoomSearchSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
         user_membership = RoomMember.objects.filter(
             room=OuterRef('pk'),
-            user=user
+            user=self.request.user
         )
         return Room.objects.annotate(
             is_member=Exists(user_membership)
         ).order_by('name')
 ```
+
+This endpoint only lists rooms, so we compose just the "list" capability (`ListModelMixin`) – there's no need to expose create/update/delete here. The query also computes, for each room, whether the current user is already a member, so the frontend can render a Join or Leave button.
 
 ### GET /api/rooms/
 
@@ -386,16 +388,15 @@ class LastMessageSerializer(serializers.ModelSerializer):
         fields = ['id', 'content', 'user', 'created_at']
 
 class RoomSerializer(serializers.ModelSerializer):
-    member_count = serializers.SerializerMethodField()
+    member_count = serializers.IntegerField(read_only=True)
     last_message = LastMessageSerializer(read_only=True)
-
-    def get_member_count(self, obj):
-        return obj.member_count
 
     class Meta:
         model = Room
-        fields = ['id', 'name', 'version', 'member_count', 'last_message']
+        fields = ['id', 'name', 'version', 'bumped_at', 'member_count', 'last_message']
 ```
+
+`member_count` is not a column on the room – it's a value the database computes for us per room (we'll add it to the query in a moment), and `member_count = serializers.IntegerField(read_only=True)` just exposes it in the response.
 
 And:
 
@@ -406,10 +407,10 @@ class RoomListViewSet(ListModelMixin, GenericViewSet):
 
     def get_queryset(self):
         return Room.objects.annotate(
-            member_count=Count('memberships')
+            member_count=Count('memberships__id')
         ).filter(
             memberships__user_id=self.request.user.pk
-        ).prefetch_related('last_message', 'last_message__user').order_by('-memberships__joined_at')
+        ).select_related('last_message', 'last_message__user').order_by('-bumped_at')
 ```
 
 ### GET /api/rooms/:room_id/messages/
@@ -418,7 +419,7 @@ class RoomListViewSet(ListModelMixin, GenericViewSet):
 class MessageRoomSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
-        fields = ['id', 'version']
+        fields = ['id', 'version', 'bumped_at']
 
 
 class MessageSerializer(serializers.ModelSerializer):
@@ -440,12 +441,14 @@ class MessageListCreateAPIView(ListCreateAPIView):
         room_id = self.kwargs['room_id']
         get_object_or_404(RoomMember, user=self.request.user, room_id=room_id)
         return Message.objects.filter(
-            room_id=room_id).prefetch_related('user', 'room').order_by('-created_at')
+            room_id=room_id).select_related('user', 'room').order_by('-created_at')
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         # Will be shown below.
 ```
+
+We only return messages to users who are members of the room (the `get_object_or_404` membership check). We also pull each message's author and room in the same database query (`select_related`) so that serializing a page of messages doesn't trigger a separate query per message.
 
 ### POST /api/rooms/:room_id/messages/
 
@@ -460,9 +463,10 @@ class MessageListCreateAPIView(ListCreateAPIView):
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         room_id = self.kwargs['room_id']
+        # Only members of the room may post messages to it.
+        get_object_or_404(RoomMember, user=request.user, room_id=room_id)
         room = Room.objects.select_for_update().get(id=room_id)
         room.increment_version()
-        channels = self.get_room_member_channels(room_id)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         obj = serializer.save(room=room, user=request.user)
@@ -472,6 +476,8 @@ class MessageListCreateAPIView(ListCreateAPIView):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 ```
+
+We require the request user to be a member of the room before accepting a message (the same check the `GET` handler uses) – otherwise a 404 is returned.
 
 Note we make actions here in transaction (using `@transaction.atomic`), and also use `select_for_update` method to lock the room while we are working with it. This allows us to atomically increment Room version on every change. We will show how having incremental version inside each room helps us on the frontend side later in the tutorial.
 
@@ -496,9 +502,9 @@ class JoinRoomView(APIView):
     @transaction.atomic
     def post(self, request, room_id):
         room = Room.objects.select_for_update().get(id=room_id)
-        room.increment_version()
         if RoomMember.objects.filter(user=request.user, room=room).exists():
             return Response({"message": "already a member"}, status=status.HTTP_409_CONFLICT)
+        room.increment_version()
         obj, _ = RoomMember.objects.get_or_create(user=request.user, room=room)
         channels = self.get_room_member_channels(room_id)
         obj.room.member_count = len(channels)
@@ -517,9 +523,9 @@ class LeaveRoomView(APIView):
     @transaction.atomic
     def post(self, request, room_id):
         room = Room.objects.select_for_update().get(id=room_id)
+        obj = get_object_or_404(RoomMember, user=request.user, room=room)
         room.increment_version()
         channels = self.get_room_member_channels(room_id)
-        obj = get_object_or_404(RoomMember, user=request.user, room=room)
         obj.room.member_count = len(channels) - 1
         pk = obj.pk
         obj.delete()

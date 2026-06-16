@@ -8,27 +8,26 @@ Since Centrifugo deals with lots of persistent connections your operating system
 
 ### Open files limit
 
-You should increase a max number of open files Centrifugo process can open if you want to handle more connections.
+Centrifugo opens one file descriptor per connection, so the maximum number of open files the process is allowed effectively caps how many clients a single node can serve. The default soft limit is low for this purpose — commonly `1024` on Linux distributions and `256` on macOS.
 
-To get the current open files limit run:
+To see the current limit:
 
 ```
 ulimit -n
 ```
 
-On Linux you can check limits for a running process using:
+On Linux you can check the limits of a running process with:
 
 ```
 cat /proc/<PID>/limits
 ```
 
-The open file limit shows approximately how many clients your server can handle. Each connection consumes one file descriptor. On most operating systems this limit is 128-256 by default.
+How you raise it depends on how Centrifugo is launched:
 
-See [this document](https://docs.riak.com/riak/kv/2.2.3/using/performance/open-files-limit.1.html) to get more info on how to increase this number.
+* **As a systemd service** (the usual case in production) – set `LimitNOFILE` in the unit, for example `LimitNOFILE=65536`, then run `systemctl daemon-reload` and restart the service. Note that a `ulimit` change in your shell does **not** affect a systemd-managed process. Centrifugo's official RPM/DEB packages already ship a service unit with a high limit (`65536`).
+* **From a shell or another supervisor** – raise the limit in `/etc/security/limits.conf` (or a drop-in under `/etc/security/limits.d/`), or call `ulimit -n` before starting the process.
 
-If you install Centrifugo using RPM from repo then it automatically sets max open files limit to 65536.
-
-You may also need to increase max open files for Nginx (or any other proxy before Centrifugo).
+Don't forget to raise the same limit for any proxy in front of Centrifugo (Nginx, HAProxy, Envoy).
 
 ### Ephemeral port exhaustion
 
@@ -40,7 +39,7 @@ The problem arises due to the fact that each TCP connection uniquely identified 
 source ip | source port | destination ip | destination port
 ```
 
-On load balancer/server boundary you are limited in 65536 possible variants by default. Actually due to some OS limits not all 65536 ports are available for usage (usually about 15k ports available by default).
+On the load balancer/server boundary you are limited to 65536 possible source ports per destination. In practice only the ephemeral range is used for outgoing connections — on modern Linux that's `ip_local_port_range`, which defaults to `32768–60999` (~28k ports).
 
 In order to eliminate a problem you can:
 
@@ -49,7 +48,7 @@ In order to eliminate a problem you can:
 * Deploy more load balancer instances
 * Use virtual network interfaces
 
-See [a post in Pusher blog](https://making.pusher.com/ephemeral-port-exhaustion-and-how-to-avoid-it/) about this problem and more detailed solution steps.
+See [this archived Pusher blog post](https://web.archive.org/web/20220823105606/https://making.pusher.com/ephemeral-port-exhaustion-and-how-to-avoid-it/) about this problem and more detailed solution steps.
 
 ### Sockets in TIME_WAIT state
 
@@ -58,13 +57,13 @@ On the load balancer/server boundary, one more problem can arise: sockets in TIM
 Under load, when many connections and disconnections happen, socket descriptors can stay in TIME_WAIT state. Those descriptors cannot be reused for a while. So you can get various
 errors when using Centrifugo. For example, something like `(99: Cannot assign requested address) while connecting to upstream` in the Nginx error log and 502 on the client side.
 
-Check how many socket descriptors are in TIME_WAIT state.
+Check how many socket descriptors are in TIME_WAIT state:
 
 ```
-netstat -an |grep TIME_WAIT | grep <CENTRIFUGO_PID> | wc -l
+ss -tan state time-wait | wc -l
 ```
 
-Nice article about TIME_WAIT sockets: http://vincent.bernat.im/en/blog/2014-tcp-time-wait-state-linux.html
+Nice article about TIME_WAIT sockets: https://vincent.bernat.ch/en/blog/2014-tcp-time-wait-state-linux
 
 The advices here are similar to ephemeral port exhaustion problem:
 

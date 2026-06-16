@@ -20,10 +20,9 @@ edge cases when handling HTTP/WebSocket connections from the wild. Also, you pro
 want some sort of load balancing eventually between Centrifugo nodes so that the proxy
 can serve as such a balancer too.
 
-In this section we will look at [Nginx](http://nginx.org/) configuration to deploy Centrifugo.
+In this section we will look at [Nginx](https://nginx.org/) configuration to deploy Centrifugo.
 
-Minimal Nginx version – **1.3.13** because it was the first version that can proxy
-Websocket connections.
+Any reasonably modern Nginx works — WebSocket proxying has been supported since version **1.3.13** (2013), so the version is rarely a concern today.
 
 There are 2 ways: running Centrifugo server as a separate service on its own
 domain, or embedding it at a location of your website (for example at `/centrifugo`).
@@ -144,3 +143,9 @@ events {
     worker_connections 65535;
 }
 ```
+
+:::caution Keep proxy timeouts above the ping interval
+
+A reverse proxy or cloud load balancer drops connections it considers idle. Centrifugo sends a ping to each client periodically (every 25 seconds by default), which counts as upstream activity and keeps the connection alive — so the proxy's read/idle timeout must stay comfortably **above** that interval. The `proxy_read_timeout 60s` used above is safe for the default; if you increase Centrifugo's ping interval, raise the proxy timeout to match. The same rule applies to cloud L4/L7 load balancers (for example, the AWS ALB idle timeout).
+
+:::

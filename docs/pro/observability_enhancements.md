@@ -128,6 +128,8 @@ OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf" \
 
 `OTEL_EXPORTER_OTLP_PROTOCOL` accepts `http/protobuf` (default) or `grpc`.
 
+Exported metrics carry standard OTel resource attributes: `service.name` is `centrifugo` (override with `OTEL_SERVICE_NAME`), attributes from `OTEL_RESOURCE_ATTRIBUTES` are merged in (taking precedence over Centrifugo defaults), and since Centrifugo PRO v6.8.3 `service.instance.id` defaults to the unique Centrifugo node ID (regenerated on each process start).
+
 If your backend is Google Cloud, set `opentelemetry.google_cloud_adc_auth` to push metrics straight to `telemetry.googleapis.com` without a sidecar — see [Export to Google Cloud (ADC)](#export-to-google-cloud-adc) below. This is a base OpenTelemetry option available in Centrifugo OSS, where it authenticates [trace export](../server/observability.md#export-to-google-cloud-adc); in Centrifugo PRO the same single setting also covers the metrics pipeline.
 
 ### Export to Google Cloud (ADC)
@@ -143,7 +145,8 @@ Set `opentelemetry.google_cloud_adc_auth` to `true` to make Centrifugo authentic
   "opentelemetry": {
     "enabled": true,
     "metrics": true,
-    "google_cloud_adc_auth": true
+    "google_cloud_adc_auth": true,
+    "resource_detectors": ["gcp"]
   }
 }
 ```
@@ -155,6 +158,8 @@ OTEL_RESOURCE_ATTRIBUTES="gcp.project_id=YOUR_PROJECT_ID" \
 ./centrifugo
 ```
 
+`resource_detectors: ["gcp"]` is optional but recommended — see [Cloud resource detectors](#cloud-resource-detectors).
+
 The option works with both exporter protocols — over `grpc` the ADC token is attached as a per-RPC credential, over `http/protobuf` via an OAuth2 HTTP client transport. In both cases the token is minted lazily on first export and then cached and refreshed automatically. `google_cloud_adc_auth` is a base OpenTelemetry option (shared with [tracing](../server/observability.md#export-to-google-cloud-adc)), so a single setting covers both pipelines.
 
 :::tip
@@ -163,7 +168,36 @@ Set the target project via `OTEL_RESOURCE_ATTRIBUTES="gcp.project_id=..."`. Do n
 
 :::
 
+:::caution Each instance must report a unique identity
+
+Google Cloud derives the `instance` label of the time series identity from the `service.instance.id` resource attribute and requires points of each series to arrive in order. When several Centrifugo instances report under the same `service.instance.id` — or without one at all — Google Cloud rejects their interleaved points as out-of-order and metrics may collapse to zero. Since Centrifugo PRO v6.8.3 each process reports its unique node ID as `service.instance.id`, so autoscaled deployments get distinct time series automatically. To use your own identity, set `OTEL_RESOURCE_ATTRIBUTES="service.instance.id=..."` — the environment value takes precedence.
+
+:::
+
 ADC must be resolvable in the runtime environment — automatic on GKE/GCE/Cloud Run via the attached service account, or locally via `GOOGLE_APPLICATION_CREDENTIALS` / `gcloud auth application-default login`.
+
+### Cloud resource detectors
+
+New in Centrifugo PRO v6.8.3
+
+`opentelemetry.resource_detectors` lists cloud platforms whose resource attributes Centrifugo detects from the platform metadata service at startup and attaches to exported metrics and traces:
+
+```json title="config.json"
+{
+  "opentelemetry": {
+    "enabled": true,
+    "metrics": true,
+    "resource_detectors": ["gcp"]
+  }
+}
+```
+
+Supported values:
+
+* `gcp` — `cloud.region` / `cloud.availability_zone`, `k8s.cluster.name` on GKE, `faas.*` service info on Cloud Run.
+* `aws` — `cloud.region` / `cloud.availability_zone`, host info on EC2, container and task info on ECS.
+
+For Google Cloud these attributes fill the `location` and `cluster` labels of the time series identity — without them all metrics land in location `global`. Detection outside the listed platform is a no-op, and detected values can be overridden via `OTEL_RESOURCE_ATTRIBUTES`. If Centrifugo runs on the platform but metadata lookups fail (server not ready yet, blocked by network policy), it exits with an error at startup rather than exporting telemetry under an incomplete identity.
 
 ### Pair with native histograms for full fidelity
 

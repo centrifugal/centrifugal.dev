@@ -1,7 +1,7 @@
 .imageContainer {
     width: 100%;
     max-width: 600px;
-    height: 370px;
+    aspect-ratio: 600 / 370;
     overflow: hidden;
     margin: auto;
     position: relative;

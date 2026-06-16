@@ -15,6 +15,8 @@ At this point, we have a working real-time app, so the tutorial comes to an end.
 * Implementing a publication idempotency key for safer and more efficient retries.
 * Leveraging Centrifugo's built-in ability to consume events from PostgreSQL and Kafka.
 
+We also saw the design pay off: because every user has a single personal channel feeding one shared client state, the same app drives either a mobile-style screen flow or a desktop [two-column layout](./two_column.md), with updates from all rooms arriving over one connection.
+
 It's worth noting that these concepts can be applied beyond building a messenger-like application. Centrifugo is not limited to chats; it serves as a general-purpose real-time messaging server. Some approaches here may not perfectly suit your specific use case, so be sure to explore the rest of the documentation for additional possibilities.
 
 Messenger is quite a complex type of application, for simpler use cases your integration with Centrifugo and handling real-time events may not require all the techniques demonstrated here.

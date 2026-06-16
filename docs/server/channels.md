@@ -28,7 +28,7 @@ Ensure you have defined a namespace in the configuration when using channel name
 
 **Only ASCII symbols must be used in a channel string**.
 
-Channel name length limited by `255` characters by default (controlled by configuration option `channel_max_length`).
+Channel name length limited by `255` characters by default (controlled by configuration option `channel.max_length`).
 
 Several symbols in channel names reserved for Centrifugo internal needs:
 
@@ -290,7 +290,7 @@ The persistence properties of history data depend on the Centrifugo engine in us
 
 `history_meta_ttl` ([duration](./configuration.md#duration-type)) – sets a time of history stream metadata expiration (with seconds precision).
 
-If not specified Centrifugo namespace inherits value from `global_history_meta_ttl` ([duration](./configuration.md#duration-type)) option which is 30 days by default (`"720h"`). This should be a good default for most use cases to avoid tweaking `history_meta_ttl` on a namespace level at all. If you have `history_ttl` greater than 30 days – then increase `history_meta_ttl` for namespace (recommended) or increase `global_history_meta_ttl` to be larger than `history_ttl`.
+If not specified Centrifugo namespace inherits value from `channel.history_meta_ttl` ([duration](./configuration.md#duration-type)) option which is 30 days by default (`"720h"`). This should be a good default for most use cases to avoid tweaking `history_meta_ttl` on a namespace level at all. If you have `history_ttl` greater than 30 days – then increase `history_meta_ttl` for namespace (recommended) or increase `channel.history_meta_ttl` to be larger than `history_ttl`.
 
 The motivation to have history meta information TTL is as follows. When using a history in a channel, Centrifugo keeps some metadata for each channel stream. Metadata includes the latest stream offset and its epoch value. In some cases, when channels are created for а short time and then not used anymore, created metadata can stay in memory while not useful. For example, you can have a personal user channel but after using your app for a while user left it forever. From a long-term perspective, this can be an unwanted memory growth. Setting a reasonable value to this option can help to expire metadata faster (or slower if you need it). The rule of thumb here is to keep this value larger than history TTL used.
 
@@ -321,6 +321,10 @@ Not all real-time events require this feature turned on so think wisely when you
 ### force_recovery_mode
 
 `force_recovery_mode` (string, possible values are `stream` or `cache`, when not specified Centrifugo uses `"stream"`). Allows setting recovery mode for all connections which use recovery in the namespace. By default, Centrifugo uses `stream` recovery mode – a mode where subscriber interested in all messages to be delivered. The alternative recovery mode which may be forced by using this option is `cache` – see the detailed description in [Cache recovery mode](./cache_recovery.md) chapter.
+
+### auto_cache_recover
+
+`auto_cache_recover` (boolean, default `false`, available since Centrifugo v6.8.3) – automatically initiates cache recovery for all subscriptions in the namespace (both client-side and server-side) without requiring the subscriber to request it. In cache recovery mode this delivers the latest publication on every (re)subscribe, so client-side subscribers don't need to provide an empty `since`, and it also enables this delivery for server-side subscriptions of unidirectional clients which can't ask for recovery themselves. Requires `force_recovery` and `force_recovery_mode: cache`. See [Cache recovery mode](./cache_recovery.md#automatic-cache-recovery).
 
 ### allow_subscribe_for_client
 

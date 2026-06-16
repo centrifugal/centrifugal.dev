@@ -141,6 +141,16 @@ Error Unrecoverable Position means that stream does not contain required range o
 
 This can happen due to wrong epoch passed.
 
+### Concurrent Pagination
+
+```
+Code:      113
+Message:   "concurrent pagination"
+Temporary: true
+```
+
+Error Concurrent Pagination is returned when a pagination request is made while another pagination over the same stream is still in progress. It's temporary — the client may retry.
+
 ## Client unsubscribe codes
 
 Client can be unsubscribed by a Centrifugo server with custom code and string reason. Here is the list of Centrifugo built-in unsubscribe codes.
@@ -299,6 +309,15 @@ Reason: "too many requests"
 ```
 
 DisconnectTooManyRequests may be issued when client sends too many commands to a server.
+
+#### DisconnectStateInvalidated
+
+```
+Code:   3014
+Reason: "state invalidated"
+```
+
+DisconnectStateInvalidated may be issued when server determines that the connection's cached state and/or token are no longer valid. The client reconnects, fetches a fresh token, and re-synchronizes subscription state.
 
 ### Terminal disconnect codes
 

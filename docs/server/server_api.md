@@ -139,7 +139,7 @@ In response, you will also get 200 OK, but payload will contain `error` field in
 {
     "error": {
         "code": 102,
-        "message": "namespace not found"
+        "message": "unknown channel"
     }
 }
 ```
@@ -250,6 +250,7 @@ This is not a real-time streaming subscription request – it's just a command t
 | `data`          | any `JSON`                          | no       | Custom subscription data (will be sent to client in Subscribe push)                                                           |
 | `b64data`       | `string`                            | no       | Same as data but in base64 format (will be decoded by Centrifugo)                                                             |
 | `recover_since` | [`StreamPosition`](#streamposition) | no       | Stream position to recover from                                                                                               |
+| `expire_at`     | `int`                               | no       | Unix time (in seconds) in the future when the subscription will expire                                                        |
 | `override`      | [`Override`](#override-object)      | no       | Allows dynamically override some channel options defined in Centrifugo configuration (see below available fields)             |
 
 #### Override object
@@ -354,6 +355,7 @@ Empty object at the moment.
 | `session`   | `string`   | no       | Specific client session to refresh (user still required to be set).  |
 | `expired`   | `bool`     | no       | Mark connection as expired and close with Disconnect Expired reason  |
 | `expire_at` | `int`      | no       | Unix time (in seconds) in the future when the connection will expire |
+| `info`      | any `JSON` | no       | Attach/replace connection info on refresh                            |
 
 #### RefreshResponse
 

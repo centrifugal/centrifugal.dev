@@ -94,7 +94,7 @@ When set to `true` allows enabling the configured consumer.
 
 String. Default: `""`. Required.
 
-Describes name of consumer. Must be unique for each consumer and match the regex `^[a-zA-Z0-9_]{2,}` - i.e. latin symbols, digits and underscores and be at least 2 symbols. This name will be used for logging purposes, metrics, also to override some options with environment variables.
+Describes name of consumer. Must be unique for each consumer and match the regex `^[a-zA-Z0-9_]{2,}$` - i.e. latin symbols, digits and underscores and be at least 2 symbols. This name will be used for logging purposes, metrics, also to override some options with environment variables.
 
 ### `consumers[].type`
 
@@ -104,6 +104,11 @@ Type of consumer. At this point can be:
 
 * `postgresql`
 * `kafka`
+* `nats_jetstream`
+* `redis_stream`
+* `google_pub_sub`
+* `aws_sqs`
+* `azure_service_bus`
 
 ## Configure via env vars
 
