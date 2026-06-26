@@ -278,6 +278,30 @@ module.exports = {
   ],
   plugins: [
     [require.resolve('./src/plugins/recent-blog-posts'), { count: 6 }],
+    // Generates /llms-full.txt (full docs corpus for LLM ingestion).
+    // The curated /llms.txt index is maintained by hand in static/llms.txt,
+    // so generateLLMsTxt is disabled here to avoid overwriting it.
+    [
+      'docusaurus-plugin-llms',
+      {
+        generateLLMsTxt: false,
+        generateLLMsFullTxt: true,
+        docsDir: 'docs',
+        includeBlog: true,
+        ignoreFiles: ['attributions.md'],
+        includeOrder: [
+          'getting-started/introduction.md',
+          'getting-started/quickstart.md',
+          'getting-started/highlights.md',
+          'getting-started/design.md',
+          'getting-started/*',
+          'transports/*',
+          'server/*',
+          'tutorial/*',
+          'pro/*',
+        ],
+      },
+    ],
   ],
   stylesheets: [
     'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css'

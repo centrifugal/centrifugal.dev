@@ -6,6 +6,22 @@ title: Comparing with others
 
 Let's compare Centrifugo with various systems. These comparisons arose from popular questions raised in our communities. Here we are emphasizing things that make Centrifugo special.
 
+## Centrifugo vs your own WebSocket server
+
+Why use Centrifugo instead of writing your own WebSocket server? It's a fair question — and the honest answer starts here: you absolutely can build your own. None of what Centrifugo does is magic, and plenty of teams have built excellent real-time systems from scratch.
+
+So the real question isn't whether you _can_, but whether it's where you want to spend your time. A WebSocket server is easy to start — accept connections, keep them in a list, broadcast a message. A real-time layer that holds up in production is a larger, well-understood body of work:
+
+* **Scaling beyond one node** — once you run more than one instance, connections live on different nodes, so you need a broker and a fan-out layer to reach everyone.
+* **State recovery on reconnect** — connections drop constantly, especially on mobile, so clients need channel history to catch up on what they missed.
+* **Surviving reconnect storms** — when a node restarts and many clients reconnect at once, that load has to be kept off your main database.
+* **Client SDKs** — automatic reconnect, resubscribe, token refresh, ping/pong, transport fallback — across web, iOS, and Android.
+* **The surrounding features** — authentication, per-channel permissions, online presence, metrics, an admin UI.
+
+None of this is exotic, and all of it is solvable. But together it's a project of its own — one you'd then own, test, and maintain alongside your actual product. Centrifugo is that project, already built and proven across many production deployments.
+
+So it comes down to focus — the same way most teams use a mature database instead of writing their own. If building and owning a real-time layer is interesting to you, or core to your business, doing it yourself can be a great choice. If it's infrastructure you'd rather rely on than maintain, that's exactly what Centrifugo is for.
+
 ## Centrifugo vs Socket.io
 
 Socket.io is a library; you need to write your own server on top of it. Centrifugo is a ready-to-use standalone server.
