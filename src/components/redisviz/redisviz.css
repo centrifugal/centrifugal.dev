@@ -1,0 +1,260 @@
+/* Shared chrome for the Redis Pub/Sub scaling visualizations.
+   Class-prefixed (rv-) and self-contained so the widgets look identical in
+   the Docusaurus light/dark themes and in the offline render harness. */
+
+.rv-card {
+  --rv-bg: #17171b;
+  --rv-panel: #1e1e24;
+  --rv-slot: #23242b;
+  --rv-border: #2c2c34;
+  --rv-text: #d6d6db;
+  --rv-muted: #8a8a94;
+  --rv-green: #5bef7b;
+  --rv-amber: #f5c451;
+  --rv-hot: #fe5e5e;
+  --rv-blue: #62b0ff;
+
+  background: var(--rv-bg);
+  border: 1px solid var(--rv-border);
+  border-radius: 12px;
+  padding: 18px 20px 16px;
+  margin: 1.4rem 0;
+  color: var(--rv-text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.rv-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 2px;
+}
+.rv-title {
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--rv-text);
+  letter-spacing: 0.1px;
+}
+.rv-subtitle {
+  font-size: 12px;
+  color: var(--rv-muted);
+  margin: 2px 0 0;
+  line-height: 1.45;
+}
+.rv-caption {
+  font-size: 11.5px;
+  color: var(--rv-muted);
+  line-height: 1.5;
+  margin-top: 12px;
+}
+.rv-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+/* ---- controls row ---- */
+.rv-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 22px;
+  margin: 14px 0 16px;
+}
+.rv-control { flex: 1 1 148px; min-width: 138px; }
+.rv-control-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+.rv-control-label {
+  font-size: 11.5px;
+  color: var(--rv-muted);
+  font-weight: 500;
+}
+.rv-control-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--rv-text);
+}
+
+/* range input — themed thumb/track across browsers */
+.rv-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 3px;
+  background: var(--rv-slot);
+  outline: none;
+  cursor: pointer;
+}
+.rv-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 3px;
+  background: transparent;
+}
+.rv-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  margin-top: -5.5px;
+  border-radius: 50%;
+  background: var(--rv-accent, #5bef7b);
+  border: 2px solid var(--rv-bg);
+  box-shadow: 0 0 0 1px var(--rv-accent, #5bef7b);
+  transition: transform 0.1s ease;
+}
+.rv-range::-webkit-slider-thumb:hover { transform: scale(1.15); }
+.rv-range::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--rv-accent, #5bef7b);
+  border: 2px solid var(--rv-bg);
+  cursor: pointer;
+}
+.rv-range::-moz-range-track {
+  height: 4px;
+  border-radius: 3px;
+  background: var(--rv-slot);
+}
+
+/* ---- segmented toggle ---- */
+.rv-toggle {
+  display: inline-flex;
+  background: var(--rv-slot);
+  border: 1px solid var(--rv-border);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 3px;
+}
+.rv-toggle-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--rv-muted);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 13px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+.rv-toggle-btn:hover { color: var(--rv-text); }
+.rv-toggle-btn[data-active="true"] {
+  background: var(--rv-accent, #5bef7b);
+  color: #11140f;
+}
+
+/* ---- stat readouts ---- */
+.rv-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.rv-stat {
+  flex: 1 1 0;
+  min-width: 120px;
+  background: var(--rv-panel);
+  border: 1px solid var(--rv-border);
+  border-radius: 9px;
+  padding: 11px 13px;
+}
+.rv-stat-label {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--rv-muted);
+  margin-bottom: 4px;
+}
+.rv-stat-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 20px;
+  font-weight: 680;
+  line-height: 1.1;
+}
+.rv-stat-sub {
+  font-size: 11px;
+  color: var(--rv-muted);
+  margin-top: 3px;
+}
+
+.rv-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  padding: 2px 9px;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+/* svg text helpers reused across widgets */
+.rv-svg { width: 100%; height: auto; display: block; }
+
+/* ---- proportional comparison bars ---- */
+.rv-bars { display: flex; flex-direction: column; gap: 14px; margin: 4px 0 2px; }
+.rv-bar-row { display: grid; grid-template-columns: 116px 1fr; gap: 12px; align-items: center; }
+.rv-bar-name { font-size: 12px; font-weight: 600; }
+.rv-bar-track {
+  position: relative;
+  height: 30px;
+  background: var(--rv-slot);
+  border-radius: 7px;
+  overflow: hidden;
+}
+.rv-bar-fill {
+  height: 100%;
+  border-radius: 7px;
+  transition: width 0.38s cubic-bezier(0.22, 0.61, 0.36, 1), background 0.2s ease;
+  min-width: 2px;
+}
+.rv-bar-value {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: left 0.38s cubic-bezier(0.22, 0.61, 0.36, 1);
+  pointer-events: none;
+}
+
+/* ---- formula chips ---- */
+.rv-formula {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: var(--rv-muted);
+  flex-wrap: wrap;
+}
+.rv-chip {
+  background: var(--rv-slot);
+  border: 1px solid var(--rv-border);
+  border-radius: 6px;
+  padding: 2px 8px;
+  color: var(--rv-text);
+  font-weight: 600;
+}
+.rv-eq { opacity: 0.7; }
+
+/* reduction pill between the two clusters */
+.rv-reduce {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  background: rgba(91, 239, 123, 0.12);
+  border: 1px solid rgba(91, 239, 123, 0.4);
+  color: var(--rv-green);
+  border-radius: 999px;
+  padding: 4px 13px;
+  font-weight: 700;
+}
+.rv-reduce b { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 15px; }
