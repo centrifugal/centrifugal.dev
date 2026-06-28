@@ -306,6 +306,17 @@ Note, this metric is disabled by default. To enable it set `prometheus.recovered
 - **Description:** Measures the size of messages (in bytes) received from client connections over specific transports.
 - **Usage:** Use this metric to monitor the incoming data size and optimize the application's performance.
 
+#### centrifugo_transport_outgoing_close_count
+
+Available since v6.8.4
+
+- **Type:** Counter
+- **Labels:** transport, code
+- **Description:** Counts the number of close frames sent to client connections, by transport and close code. Only server-sent (outgoing) close codes are recorded – client-supplied close codes are not counted to keep the `code` label cardinality bounded.
+- **Usage:** Helps in monitoring why and how often the server closes client connections over specific transports.
+
+Exposed for WebSocket and unidirectional WebSocket.
+
 #### centrifugo_proxy_duration_seconds
 
 :::caution Deprecated
