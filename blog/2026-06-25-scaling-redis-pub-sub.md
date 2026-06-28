@@ -46,7 +46,7 @@ This post talks about **Redis**, but everything here applies equally to **[Valke
 For a general-purpose real-time messaging server, every deployment looks different, so the design has to handle many cases. Two facts about real-time messaging specifics shaped the decisions in this post:
 
 - **The system can have a lot of active channels** — millions of them. There might be one per user, per document, or per game session, each created and thrown away all the time, so the server is constantly subscribing and unsubscribing. Usually each channel carries fairly light traffic (up to 60-100 messages per second); the load is spread across many channels rather than concentrated in a few.
-- **There can be a lot of subscriber nodes too.** Any node might care about any channel at any moment, so each one subscribes to whatever its clients need and has to receive everything published there. Once a deployment grows to hundreds of nodes, anything that costs something per node adds up very fast. One node in Centrifugo case usually serves up to 100k-200k connections – so setups which aim to have millions on real-time connections end up with hundreds of connection nodes, each subscribed to channels users interested in.
+- **There can be a lot of subscriber nodes too.** Any node might care about any channel at any moment, so each one subscribes to whatever its clients need and has to receive everything published there. Once a deployment grows to hundreds of nodes, anything that costs something per node adds up very fast. In Centrifugo's case, one node usually serves up to 100k-200k connections – so setups which aim to have millions of real-time connections end up with hundreds of connection nodes, each subscribed to the channels its users care about.
 
 ## Keeping up with Redis
 
@@ -56,11 +56,11 @@ Redis Pub/Sub is intentionally simple: a client subscribes to a named *channel*,
 
 Redis runs every command (in this case PUBLISH and SUBSCRIBE) on a single thread sequentially. Modern Redis and Valkey can spread network I/O across extra threads, which [lifts throughput](https://valkey.io/blog/unlock-one-million-rps/), but command execution itself stays serialized, so one instance still has a ceiling you can hit.
 
-Before scaling Redis itself, whatever Redis setup you're running — your app needs to keep up with Redis first. Otherwise, your app is the first bottleneck. With Redis Pub/Sub, each application node — also called a *subscriber node* here — does two things: it publishes messages and subscribes to receive them.
+Whatever Redis setup you run, your app has to keep up with Redis first — otherwise it's the first bottleneck, before Redis itself is even reached. With Redis Pub/Sub, each application node — also called a *subscriber node* here — does two things: it publishes messages and subscribes to receive them.
 
 ### Efficient publishing
 
-Centrifugo publishes over a **pipelined** connection: instead of the connection-pool approach and one command per network round trip. The [rueidis](https://github.com/redis/rueidis) client gathers commands issued close together and writes them as a single batch, with a small flush delay ([`MaxFlushDelay`](/blog/2022/12/20/improving-redis-engine-performance), about 100µs) marking a batch boundary. One round trip then carries many publishes, so the publisher feeds Redis instead of stalling on the wire.
+Centrifugo publishes over a **pipelined** connection instead of the connection-pool approach, where each command takes its own network round trip. The [rueidis](https://github.com/redis/rueidis) client gathers commands issued close together and writes them as a single batch, with a small flush delay ([`MaxFlushDelay`](/blog/2022/12/20/improving-redis-engine-performance), about 100µs) marking a batch boundary. One round trip then carries many publishes, so the publisher feeds Redis instead of stalling on the wire.
 
 Pipelining lifts the overall throughput and surprisingly cuts CPU usage on both the client and Redis sides due to reduced READ/WRITE syscalls — these gains were shown in detail before in [Improving Centrifugo Redis Engine throughput and allocation efficiency with Rueidis Go library](/blog/2022/12/20/improving-redis-engine-performance).
 
@@ -68,7 +68,7 @@ Pipelining lifts the overall throughput and surprisingly cuts CPU usage on both 
 
 The `SUBSCRIBE` command supports subscribing to many channels at once. When many clients reconnect at once or application nodes resubscribe after a network glitch, a few large commands with batched channels are far more efficient across the client, protocol, and Redis layers.
 
-Redis [keeps a buffer](https://redis.io/docs/latest/develop/reference/clients/#output-buffer-limits) for each Pub/Sub connection, and if the reader doesn't drain it fast enough, Redis drops the connection. So the application has to drain the socket as fast as it can and **delegate processing to a dedicated pool of workers**. Because Pub/Sub delivery is at most once, the workers have some freedom in how they handle overload — including dropping messages on application level.
+Redis [keeps a buffer](https://redis.io/docs/latest/develop/reference/clients/#output-buffer-limits) for each Pub/Sub connection, and if the reader doesn't drain it fast enough, Redis drops the connection. So the application has to drain the socket as fast as it can and **delegate processing to a dedicated pool of workers**. Because Pub/Sub delivery is at most once, the workers have some freedom in how they handle overload — including dropping messages at the application level.
 
 It's worth tracking an application metric for the end-to-end lag of a message sent through Pub/Sub — record the publication timestamp on the publisher side and subtract it from the time the message is received on the subscriber side. In most cases, workers falling behind is a signal that it's time to scale the application nodes.
 
@@ -82,7 +82,7 @@ Adding more application nodes helps absorb higher throughput, but keeping each n
 
 A single Redis instance is very fast, and I/O threading lets it use several cores for network work — but it still runs every command on one thread, and once that thread saturates there's nothing Redis can do.
 
-In a Centrifugo benchmark on Hetzner, on a machine with dedicated vCPU, a single Redis instance held a load up to about **650,000 messages per second** (not just published, but all delivered to active subscribers, each message 256 bytes). After that, end-to-end latency started to grow fast — a signal of saturation. This throughput should be enough for most use cases. But to go further you have to stop using a single Redis instance.
+In a Centrifugo benchmark on Hetzner, on a machine with dedicated vCPU, a single Redis instance handled up to about **650,000 messages per second** (not just published, but all delivered to active subscribers, each message 256 bytes). After that, end-to-end latency started to grow fast — a signal of saturation. This throughput should be enough for most use cases. But to go further you have to stop using a single Redis instance.
 
 ## Client-side Pub/Sub sharding
 
