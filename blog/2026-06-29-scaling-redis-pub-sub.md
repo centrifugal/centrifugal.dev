@@ -7,7 +7,6 @@ authorTitle: Founder of Centrifugal Labs
 image: /img/blog_scaling_redis.jpg
 authorImageURL: /img/alexander_emelin.jpeg
 hide_table_of_contents: false
-draft: true
 ---
 
 import RedisClusterSlotsDiagram from '@site/src/components/RedisClusterSlotsDiagram';

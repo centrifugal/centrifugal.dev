@@ -145,6 +145,12 @@ The same may be used when configuring a separate Redis Presence Manager.
 
 Sharded PUB/SUB [was introduced in Redis 7.0](https://redis.io/docs/latest/develop/interact/pubsub/#sharded-pubsub) as an attempt to fix the problem with PUB/SUB scalability in Redis Cluster. With normal PUB/SUB all publications are spread towards all nodes of cluster. This makes Cluster PUB/SUB throughput less with adding more nodes to the cluster. The utilization of Redis shards is usually unequal when using PUB/SUB in Redis Cluster as subscriptions land to one of the shards. In sharded PUB/SUB case channel keyspace is divided to slots in the same way as normal keys, and PUB/SUB is split over Redis Cluster nodes based on channel name.
 
+:::tip
+
+The blog post [Scaling Redis Pub/Sub to Millions of Channels and Hundreds of Subscriber Nodes](/blog/2026/06/29/scaling-redis-pub-sub) walks through the motivation and design behind the features in this chapter — sharded PUB/SUB, slot balance, connection count, and efficient resubscribes.
+
+:::
+
 ![](/img/redis_cluster_sharded_pub_sub.png)
 
 When using Centrifugo PRO with the sharded PUB/SUB feature, there are important considerations to keep in mind. This feature changes how Centrifugo constructs keys and channel names in Redis compared to the standard non-sharded setup. Specifically, Centrifugo divides the channel space into a configurable number of `sharded_pub_sub_partitions`, typically 64 to 128 (but this is up to the developer to decide on the number depending on the load and cluster size). This partitioning is essential to ensure compatibility with Redis Cluster's slot system while keeping the number of connections from Centrifugo to Redis at a manageable level. Each partition uses a dedicated connection for PUB/SUB communication with the Redis Cluster.

@@ -91,6 +91,12 @@ With Redis it's possible to come to the architecture like this:
 
 **Minimal required Redis version is 6.2.0**
 
+:::tip
+
+For a deep dive into how Centrifugo talks to Redis efficiently, shards across isolated Redis instances, and makes PUB/SUB scale on Redis Cluster, see the blog post [Scaling Redis Pub/Sub to Millions of Channels and Hundreds of Subscriber Nodes](/blog/2026/06/29/scaling-redis-pub-sub).
+
+:::
+
 ## `engine.redis`
 
 Let's describe various options available to configure Redis engine.
