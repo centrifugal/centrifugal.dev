@@ -417,6 +417,104 @@ New in Centrifugo v6.8.1
 - **Description:** Number of messages buffered in Redis PUB/SUB.
 - **Usage:** Monitor buffer levels to detect potential bottlenecks in message processing and prevent message drops.
 
+#### centrifugo_map_broker_redis_pub_sub_errors
+
+- **Type:** Counter
+- **Labels:** broker_name, error
+- **Description:** Number of times there was an error in Redis PUB/SUB connection of the Redis map broker (Centrifugo PRO).
+- **Usage:** Critical for monitoring Redis map broker health and identifying connection issues that could affect message delivery.
+
+#### centrifugo_map_broker_redis_pub_sub_dropped_messages
+
+- **Type:** Counter
+- **Labels:** broker_name, channel_type
+- **Description:** Number of dropped messages on application level in Redis PUB/SUB of the Redis map broker (Centrifugo PRO).
+- **Usage:** Helps identify message loss issues in the Redis map broker, which could indicate performance problems or buffer overflows.
+
+#### centrifugo_map_broker_redis_pub_sub_buffered_messages
+
+- **Type:** Gauge
+- **Labels:** broker_name, channel_type, pub_sub_processor
+- **Description:** Number of messages buffered in Redis PUB/SUB of the Redis map broker (Centrifugo PRO).
+- **Usage:** Monitor buffer levels to detect potential bottlenecks in map broker message processing and prevent message drops.
+
+#### centrifugo_broker_publish_suppressed_count
+
+- **Type:** Counter
+- **Labels:** reason, channel_namespace (Centrifugo PRO)
+- **Description:** Number of suppressed publish operations (e.g. deduplicated by idempotency key or skipped due to a version conflict).
+- **Usage:** Monitor how often publishes are suppressed and why, to validate idempotency/versioning behavior.
+
+#### centrifugo_map_broker_publish_suppressed_count
+
+- **Type:** Counter
+- **Labels:** reason, channel_namespace (Centrifugo PRO)
+- **Description:** Number of suppressed map publish operations (Centrifugo PRO).
+- **Usage:** Monitor how often map publishes are suppressed and why.
+
+#### centrifugo_map_broker_remove_suppressed_count
+
+- **Type:** Counter
+- **Labels:** reason, channel_namespace (Centrifugo PRO)
+- **Description:** Number of suppressed map remove operations (Centrifugo PRO).
+- **Usage:** Monitor how often map removes are suppressed and why.
+
+#### centrifugo_map_broker_cleanup_lag_seconds
+
+- **Type:** Gauge
+- **Labels:** broker_name
+- **Description:** Lag between now and the oldest expired entry awaiting cleanup in the map broker (Centrifugo PRO). 0 means caught up.
+- **Usage:** Detect when the map broker cleanup worker falls behind on pruning expired state.
+
+#### centrifugo_map_broker_cleanup_removed_count
+
+- **Type:** Counter
+- **Labels:** broker_name
+- **Description:** Total number of expired entries removed by map broker cleanup (Centrifugo PRO).
+- **Usage:** Observe how much expired state the map broker is pruning over time.
+
+#### centrifugo_map_broker_cleanup_errors_count
+
+- **Type:** Counter
+- **Labels:** broker_name
+- **Description:** Total number of map broker cleanup errors (Centrifugo PRO).
+- **Usage:** Alert on cleanup failures that could let expired state accumulate.
+
+#### centrifugo_broker_postgres_cleanup_removed_total
+
+- **Type:** Counter
+- **Labels:** broker_name, pass
+- **Description:** Total rows removed by each PostgreSQL stream broker cleanup pass (Centrifugo PRO). The `pass` label identifies the table being cleaned.
+- **Usage:** Observe how much expired data the PostgreSQL broker is pruning per cleanup pass.
+
+#### centrifugo_broker_postgres_outbox_cursor_lag_seconds
+
+- **Type:** Gauge
+- **Labels:** broker_name, shard
+- **Description:** Time between the PostgreSQL stream broker outbox cursor's row created_at and now, per shard (Centrifugo PRO).
+- **Usage:** Detect when outbox consumption falls behind, which delays publication delivery.
+
+#### centrifugo_map_broker_postgres_outbox_cursor_lag_seconds
+
+- **Type:** Gauge
+- **Labels:** broker_name, shard
+- **Description:** Time between the PostgreSQL map broker outbox cursor's row created_at and now, per shard (Centrifugo PRO).
+- **Usage:** Detect when map broker outbox consumption falls behind.
+
+#### centrifugo_broker_postgres_partitions
+
+- **Type:** Gauge
+- **Labels:** broker_name
+- **Description:** Count of PostgreSQL stream broker stream/history table partitions (Centrifugo PRO).
+- **Usage:** Monitor partition growth of the PostgreSQL broker tables.
+
+#### centrifugo_map_broker_postgres_partitions
+
+- **Type:** Gauge
+- **Labels:** broker_name
+- **Description:** Count of PostgreSQL map broker table partitions (Centrifugo PRO).
+- **Usage:** Monitor partition growth of the PostgreSQL map broker tables.
+
 ## Traces
 
 ### OpenTelemetry
