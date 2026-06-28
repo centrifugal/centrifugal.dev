@@ -1,0 +1,76 @@
+# Centrifugo
+
+> Centrifugo is a scalable open-source real-time messaging server. It instantly delivers messages to application clients connected over WebSocket, HTTP-streaming, Server-Sent Events (SSE), WebTransport, or GRPC, organized around a PUB/SUB channel model. Centrifugo is language-agnostic: it runs as a standalone server in front of a backend written in any language — a self-hosted alternative to PubNub, Pusher, Ably, and Socket.IO.
+
+Typical usage: your application backend publishes events to channels via the Centrifugo server API, and Centrifugo fans them out to all online subscribers. Centrifugo handles persistent connections, horizontal scaling (via Redis or Nats engines), channel history and recovery on reconnect, online presence, and client authentication/authorization. The links below point to the documentation for the latest version (v6).
+
+## Getting started
+
+- [Introduction](https://centrifugal.dev/docs/getting-started/introduction): what Centrifugo is, its background and core concepts.
+- [Quickstart](https://centrifugal.dev/docs/getting-started/quickstart): build a simple real-time app with Centrifugo step by step.
+- [Main highlights](https://centrifugal.dev/docs/getting-started/highlights): summary of Centrifugo's key features and capabilities.
+- [Design overview](https://centrifugal.dev/docs/getting-started/design): idiomatic usage, message delivery model, history and scalability guidelines.
+- [Installation](https://centrifugal.dev/docs/getting-started/installation): install via Docker, binaries, packages, or Kubernetes.
+- [Integration](https://centrifugal.dev/docs/getting-started/integration): how to integrate Centrifugo with your application backend.
+- [Comparing with others](https://centrifugal.dev/docs/getting-started/comparisons): Centrifugo vs your own WebSocket server, Socket.io, Pusher/Ably/PubNub, Redis, Kafka, Nats.
+- [Real-time for AI apps](https://centrifugal.dev/docs/getting-started/ai-apps): streaming LLM responses and other AI real-time patterns.
+- [Ecosystem](https://centrifugal.dev/docs/getting-started/ecosystem): SDKs, backend framework integrations, and community tools.
+
+## Transports and client SDKs
+
+- [Transports overview](https://centrifugal.dev/docs/transports/overview): all supported client transports and when to use each.
+- [WebSocket](https://centrifugal.dev/docs/transports/websocket): primary bidirectional transport.
+- [HTTP-streaming](https://centrifugal.dev/docs/transports/http_stream): bidirectional transport over fetch streaming.
+- [SSE (EventSource)](https://centrifugal.dev/docs/transports/sse): bidirectional emulation over Server-Sent Events.
+- [WebTransport](https://centrifugal.dev/docs/transports/webtransport): experimental transport over HTTP/3.
+- [Client SDK API](https://centrifugal.dev/docs/transports/client_sdk): common behavior of official client SDKs (reconnect, state, tokens).
+- [Client real-time API](https://centrifugal.dev/docs/transports/client_api): subscriptions, publish, history, presence, RPC from the client.
+- [Client protocol](https://centrifugal.dev/docs/transports/client_protocol): the bidirectional protocol, JSON and Protobuf framing.
+- [Unidirectional protocol](https://centrifugal.dev/docs/transports/uni_client_protocol): server-to-client transports with no SDK dependency.
+
+## Server features
+
+- [Channels and namespaces](https://centrifugal.dev/docs/server/channels): channel concept, namespaces, channel options.
+- [Channel permissions](https://centrifugal.dev/docs/server/channel_permissions): controlling who can subscribe, publish, read history and presence.
+- [Client authentication](https://centrifugal.dev/docs/server/authentication): JWT-based and proxy-based connection authentication.
+- [Channel token authorization](https://centrifugal.dev/docs/server/channel_token_auth): subscription tokens for private channel access.
+- [Server API](https://centrifugal.dev/docs/server/server_api): HTTP/GRPC API to publish, broadcast, manage subscriptions and query state.
+- [Server-side subscriptions](https://centrifugal.dev/docs/server/server_subs): subscribing connections on the server side.
+- [Proxy](https://centrifugal.dev/docs/server/proxy): delegate connect, subscribe, publish, refresh and RPC events to your backend.
+- [Proxy streams](https://centrifugal.dev/docs/server/proxy_streams): stream data to clients from a backend GRPC stream.
+- [History and recovery](https://centrifugal.dev/docs/server/history_and_recovery): channel history, message recovery on reconnect, positioning.
+- [Cache recovery](https://centrifugal.dev/docs/server/cache_recovery): deliver the latest publication on each (re)subscribe.
+- [Presence](https://centrifugal.dev/docs/server/presence): online presence and join/leave events.
+- [Engines and scalability](https://centrifugal.dev/docs/server/engines): Memory, Redis, and Nats engines; Broker and Presence Manager; horizontal scaling.
+- [Asynchronous consumers](https://centrifugal.dev/docs/server/consumers): consume API commands from Kafka, Redis Streams, PostgreSQL outbox, Nats Jetstream, and cloud queues.
+- [Delta compression](https://centrifugal.dev/docs/server/delta_compression): reduce bandwidth with Fossil delta between publications.
+- [Publication filtering](https://centrifugal.dev/docs/server/publication_filtering): deliver only publications matching client tag filters.
+- [Map subscriptions](https://centrifugal.dev/docs/server/map_subscriptions): real-time key-value collections managed by Centrifugo.
+- [Shared poll subscriptions](https://centrifugal.dev/docs/server/shared_poll): poll a backend on a schedule and fan out to subscribers.
+- [Configuration](https://centrifugal.dev/docs/server/configuration): configuration file, environment variables, and flags.
+- [Console commands](https://centrifugal.dev/docs/server/console_commands): genconfig, checkconfig, gentoken and other CLI commands.
+- [Monitoring](https://centrifugal.dev/docs/server/monitoring): Prometheus and Graphite metrics, Grafana dashboard.
+- [Observability](https://centrifugal.dev/docs/server/observability): metrics, logging and operational visibility.
+- [Load balancing](https://centrifugal.dev/docs/server/load_balancing): running multiple nodes behind a load balancer.
+- [TLS](https://centrifugal.dev/docs/server/tls): configuring TLS, including automatic Let's Encrypt.
+- [Error and disconnect codes](https://centrifugal.dev/docs/server/codes): protocol error and disconnect code reference.
+
+## Tutorial
+
+- [Tutorial intro](https://centrifugal.dev/docs/tutorial/intro): end-to-end tutorial building a real-time app with Centrifugo.
+
+## Centrifugo PRO
+
+- [PRO overview](https://centrifugal.dev/docs/pro/overview): commercial features and how to evaluate them.
+- [Push notifications API](https://centrifugal.dev/docs/pro/push_notifications): FCM, APNs, HMS and Web Push device management and delivery.
+- [Real-time analytics](https://centrifugal.dev/docs/pro/analytics): export connections, subscriptions and publications to ClickHouse.
+- [Rate limiting](https://centrifugal.dev/docs/pro/rate_limiting): per-connection and per-user operation rate limits.
+- [Tracing](https://centrifugal.dev/docs/pro/tracing): live inspection of protocol frames for a user or channel.
+- [Scalability enhancements](https://centrifugal.dev/docs/pro/scalability): singleflight, per-namespace engines and Redis Cluster support.
+
+## Optional
+
+- [Migration to v6](https://centrifugal.dev/docs/getting-started/migration-v6): upgrade guide for the latest major version.
+- [FAQ](https://centrifugal.dev/docs/faq): frequently asked questions.
+- [Flow diagrams](https://centrifugal.dev/docs/flow_diagrams): visual diagrams of Centrifugo message flows.
+- [Full documentation corpus](https://centrifugal.dev/llms-full.txt): the complete docs content concatenated for ingestion.
