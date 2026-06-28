@@ -1,7 +1,7 @@
 ---
 title: Scaling Redis Pub/Sub to Millions of Channels and Hundreds of Subscriber Nodes
 tags: [redis, pubsub, scalability]
-description: How we scaled Redis Pub/Sub — from talking to Redis more efficiently to sharding across isolated Redis instances or with Redis Cluster without drowning in connections.
+description: "How Centrifugo scaled Redis Pub/Sub — talking to Redis efficiently, sharding across isolated Redis instances, and making Pub/Sub work on Redis Cluster: sharded Pub/Sub, slot balance, connection count, and efficient resubscribes."
 author: Alexander Emelin
 authorTitle: Founder of Centrifugal Labs
 image: /img/blog_scaling_redis.jpg
@@ -27,84 +27,82 @@ import ResubscribeStormDiagram from '@site/src/components/ResubscribeStormDiagra
 import ResubscribeWorkerShardingDiagram from '@site/src/components/ResubscribeWorkerShardingDiagram';
 import ClusterTopologyRebuildDiagram from '@site/src/components/ClusterTopologyRebuildDiagram';
 
-[Redis Pub/Sub](https://redis.io/docs/latest/develop/pubsub/) is a popular choice for propagating messages between nodes in real-time messaging systems. It lets a system run many nodes — each holding many real-time client connections — and deliver each message to the nodes that have interested subscribers.
+[Redis Pub/Sub](https://redis.io/docs/latest/develop/pubsub/) is a popular choice for passing messages between nodes in real-time messaging systems. It lets a system run many nodes — each holding many real-time client connections — and deliver each message to the nodes that have interested subscribers.
 
 ![](/img/blog_redis_scaling_real_time_system.jpg)
 
-This post walks through the gotchas that come up keeping Pub/Sub working across the variety of setups Centrifugo users run — specifically the ones with millions of channels and hundreds of server nodes handling client connections.
+That simplicity holds at small scale. But at millions of channels and hundreds of subscriber nodes — the scale some Centrifugo users run at — Pub/Sub stops being simple: a single Redis instance is limited by one CPU core, and switching to Redis Cluster can make throughput *worse* instead of better. This post walks through those gotchas, and the techniques that get from a single instance's ceiling to millions of messages per second — across isolated Redis shards or a Redis Cluster.
 
 [Jump to the end for TLDR](#summing-up)
 
 <!--truncate-->
 
-:::note
+:::tip Applies to Valkey too
 
 This post talks about **Redis**, but everything here applies equally to **[Valkey](https://valkey.io/)** too.
 
 :::
 
-For a general-purpose real-time messaging server, scenarios differ a lot from one deployment to another, so the design has to support a range of them. Two real-time-messaging realities in particular shaped the decisions described in this post:
+For a general-purpose real-time messaging server, every deployment looks different, so the design has to handle many cases. Two facts about real-time messaging specifics shaped the decisions in this post:
 
-- **The system can have a lot of active channels** – millions of them. There might be one per user, per document, or per game session, each created and thrown away all the time, so the server is constantly subscribing and unsubscribing. Usually each channel carries fairly light traffic (up to 60-100 messages per second); the load is spread across many channels rather than concentrated in a few.
-- **There can be a lot of subscriber nodes too.** Any node might care about any channel at any moment, so each one subscribes to whatever its clients need and has to receive everything published there. Once a deployment grows to hundreds of nodes, anything that costs something per node adds up very fast.
+- **The system can have a lot of active channels** — millions of them. There might be one per user, per document, or per game session, each created and thrown away all the time, so the server is constantly subscribing and unsubscribing. Usually each channel carries fairly light traffic (up to 60-100 messages per second); the load is spread across many channels rather than concentrated in a few.
+- **There can be a lot of subscriber nodes too.** Any node might care about any channel at any moment, so each one subscribes to whatever its clients need and has to receive everything published there. Once a deployment grows to hundreds of nodes, anything that costs something per node adds up very fast. One node in Centrifugo case usually serves up to 100k-200k connections – so setups which aim to have millions on real-time connections end up with hundreds of connection nodes, each subscribed to channels users interested in.
 
 ## Keeping up with Redis
 
-Redis Pub/Sub is deliberately minimal: a client subscribes to a named *channel*, and a publish to that channel reaches whoever is subscribed at that exact moment. Nothing is stored and nothing is retried, so a subscriber that wasn't connected when a message went out never sees it — delivery is at most once.
-
-Redis runs every command (in this case PUBLISH and SUBSCRIBE) on a single thread sequentially. Modern Redis and Valkey can spread network I/O across extra threads, which [lifts throughput](https://valkey.io/blog/unlock-one-million-rps/), but command execution itself stays serialized, so one instance still has a ceiling you can hit.
-
-Before scaling Redis itself, whatever Redis setup you're running – your app needs to keep up with Redis first. Otherwise, your app is the first bottleneck. When we talk about Redis Pub/Sub, application nodes do two things — publishing messages and subscribing to receive messages.
+Redis Pub/Sub is intentionally simple: a client subscribes to a named *channel*, and a publish to that channel reaches whoever is subscribed at that exact moment. Nothing is stored and nothing is retried, so a subscriber that wasn't connected when a message went out never sees it — delivery is at most once.
 
 <PubSubFanoutDiagram />
 
+Redis runs every command (in this case PUBLISH and SUBSCRIBE) on a single thread sequentially. Modern Redis and Valkey can spread network I/O across extra threads, which [lifts throughput](https://valkey.io/blog/unlock-one-million-rps/), but command execution itself stays serialized, so one instance still has a ceiling you can hit.
+
+Before scaling Redis itself, whatever Redis setup you're running — your app needs to keep up with Redis first. Otherwise, your app is the first bottleneck. With Redis Pub/Sub, each application node — also called a *subscriber node* here — does two things: it publishes messages and subscribes to receive them.
+
 ### Efficient publishing
 
-How the app talks to Redis decides whether it can keep that thread busy. We publish over a **pipelined** connection: instead of one command per network round trip and the connection pool approach, the [rueidis](https://github.com/redis/rueidis) client gathers commands issued close together and writes them as a single batch, with a small flush delay ([`MaxFlushDelay`](/blog/2022/12/20/improving-redis-engine-performance), about 100µs) marking a batch boundary. One round trip then carries many publishes, so the publisher feeds Redis instead of stalling on the wire.
+Centrifugo publishes over a **pipelined** connection: instead of the connection-pool approach and one command per network round trip. The [rueidis](https://github.com/redis/rueidis) client gathers commands issued close together and writes them as a single batch, with a small flush delay ([`MaxFlushDelay`](/blog/2022/12/20/improving-redis-engine-performance), about 100µs) marking a batch boundary. One round trip then carries many publishes, so the publisher feeds Redis instead of stalling on the wire.
 
-This lifts the overall throughput and cuts CPU and allocations on both the client and Redis sides — we measured the gains in detail in [Improving Centrifugo Redis Engine throughput and allocation efficiency with Rueidis Go library](/blog/2022/12/20/improving-redis-engine-performance).
+Pipelining lifts the overall throughput and surprisingly cuts CPU usage on both the client and Redis sides due to reduced READ/WRITE syscalls — these gains were shown in detail before in [Improving Centrifugo Redis Engine throughput and allocation efficiency with Rueidis Go library](/blog/2022/12/20/improving-redis-engine-performance).
 
 ### Efficient subscribing
 
 The `SUBSCRIBE` command supports subscribing to many channels at once. When many clients reconnect at once or application nodes resubscribe after a network glitch, a few large commands with batched channels are far more efficient across the client, protocol, and Redis layers.
 
-Redis [keeps a buffer](https://redis.io/docs/latest/develop/reference/clients/#output-buffer-limits) for each Pub/Sub connection, and if the reader doesn't drain it fast enough, Redis drops the connection. So the application has to drain the socket as fast as it can and hand processing off to a dedicated pool of workers. Because Pub/Sub delivery is at most once, there's freedom in how to handle backpressure in those workers — including dropping messages under overload.
+Redis [keeps a buffer](https://redis.io/docs/latest/develop/reference/clients/#output-buffer-limits) for each Pub/Sub connection, and if the reader doesn't drain it fast enough, Redis drops the connection. So the application has to drain the socket as fast as it can and **delegate processing to a dedicated pool of workers**. Because Pub/Sub delivery is at most once, the workers have some freedom in how they handle overload — including dropping messages on application level.
 
-In most cases, workers falling behind is a signal that it's time to scale the application nodes. We recommend implementing an application metric that shows the end-to-end lag of a message propagated through Pub/Sub. This can be achieved by recording the publication timestamp on the publisher side and subtracting it from the time the message is received on the subscriber side.
+It's worth tracking an application metric for the end-to-end lag of a message sent through Pub/Sub — record the publication timestamp on the publisher side and subtract it from the time the message is received on the subscriber side. In most cases, workers falling behind is a signal that it's time to scale the application nodes.
 
-To keep a channel's messages in order, pick the worker by a hash of the channel name: every message for a channel goes to the same worker, while different channels spread across all the available cores. Using a few pipelined connections instead of one can further raise read throughput.
-
-Adding more application nodes helps absorb higher throughput, but keeping each node fast still matters. Every node opens its own connections to Redis, and at scale the total connection count becomes a concern of its own — we'll come back to it later.
+To keep a channel's messages in order, pick the worker by a hash of the channel name: every message for a channel goes to the same worker, while different channels spread across all the available cores. Also, using a few pipelined connections instead of one can further raise read throughput.
 
 <PubSubReadLoopDiagram />
 
+Adding more application nodes helps absorb higher throughput, but keeping each node fast still matters. Every node opens its own connections to Redis, and at scale the total connection count becomes a concern of its own — more on that later.
+
 ## Single Redis Pub/Sub limit
 
-A single Redis instance is really fast, and I/O threading lets it use several cores for network work — but it still runs every command on one thread, and once that thread saturates there's nothing Redis can do.
+A single Redis instance is very fast, and I/O threading lets it use several cores for network work — but it still runs every command on one thread, and once that thread saturates there's nothing Redis can do.
 
-In our benchmark on Hetzner, on a machine with dedicated vCPU, a single Redis instance held a load up to about **650,000 messages per second** (not just published, but all delivered to active subscribers, each message 256 bytes). After that, end-to-end latency started to grow fast — a signal of saturation. To be honest, this throughput should be enough for most use cases. But to go further you have to stop using a single Redis instance.
+In a Centrifugo benchmark on Hetzner, on a machine with dedicated vCPU, a single Redis instance held a load up to about **650,000 messages per second** (not just published, but all delivered to active subscribers, each message 256 bytes). After that, end-to-end latency started to grow fast — a signal of saturation. This throughput should be enough for most use cases. But to go further you have to stop using a single Redis instance.
 
 ## Client-side Pub/Sub sharding
 
-The simplest solution is to spread the Pub/Sub load across several independent Redis instances. The application decides which Redis instance handles a given channel by hashing the channel's name, for example with a [Jump consistent hash](https://arxiv.org/abs/1406.2294) or any other. Consistent hashing here may help to keep most of the data on the same Redis instances after adding a Redis node and re-sharding.
+The simplest solution is to spread the Pub/Sub load across several independent Redis instances. The application decides which Redis instance handles a given channel by hashing the channel's name, for example with a [Jump consistent hash](https://arxiv.org/abs/1406.2294) or any other. Consistent hashing here may help to keep most of the data on the same Redis instances after adding a Redis node and re-sharding. In Centrifugo case, we keep channel history in Redis in addition to Pub/Sub – the protocol is designed to tolerate the loss of it and provide a signal to real-time clients, so the loss during re-sharding is tolerable. 
 
-A publisher and a subscriber both use the same hash function over the channel name, so they always land on the same instance without having to talk to each other, and the instances don't even know about one another — so each instance you add takes a share of the load.
+In such a setup, a publisher and a subscriber should use the same hash function over the channel name, so they always land on the same instance without having to talk to each other, and the instances don't even know about one another — so each instance you add takes a share of the load.
 
 <PubSubShardingDiagram />
 
-In our benchmarks Pub/Sub throughput increased linearly as we added Redis instances — each one took an even share of the load, about 1/N of it, and latency stayed low. So 650k messages per second became around 5M messages per second with 8 Redis instances and 24 subscriber nodes. The instances share nothing, so the total capacity is just one instance's limit times the number of instances. Connection count naturally grows with the number of shards, of course.
+In our benchmarks Pub/Sub throughput increased linearly as more Redis instances were added — each one took an even share of the load, and latency stayed low. So 650k messages per second became around 5M messages per second with 8 Redis instances. The instances share nothing, so the total capacity is just one instance's limit times the number of instances. Connection count naturally grows with the number of shards.
 
 <ThroughputScalingDiagram />
 
 The number of connections per subscriber node is multiplied by the number of Redis shards. For example, for 8 separate Redis instances and 24 subscriber nodes it's 24 x 8 x (N pipeline conns).
 
-This client-side sharding topology works, but the operational side falls on you. The list of Redis instances lives in the server's own configuration, so adding capacity isn't just starting another Redis — it's a reconfiguration that every node has to pick up.
+Client-side sharding works, but requires manual configuration. The list of Redis instances lives in the server's own configuration, so adding capacity isn't just starting another Redis — every node has to reload the new list.
 
-The obvious next step is to switch to Redis Cluster, which manages the group of nodes for us. But that's where Redis Pub/Sub runs into trouble.
+The obvious next step is to switch to Redis Cluster, which manages the group of nodes for you. But it's not that simple.
 
 ## Classic Redis Cluster Pub/Sub does not scale
-
-So we bring in **Redis Cluster**, which joins a group of Redis nodes into one system.
 
 A single Redis holds everything in one process, while Redis Cluster spreads the data across several nodes. It does this by splitting all possible keys into **16,384 buckets** called *hash slots*: every key belongs to exactly one of them, chosen by `CRC16(key) % 16384`, and each node owns a range of slots. To reach a key, the client hashes it and goes straight to the node that owns that slot.
 
@@ -112,105 +110,118 @@ There's also a handy trick called a **hash tag**. If a key contains braces, Redi
 
 <RedisClusterSlotsDiagram />
 
-Because keys are spread across nodes this way, ordinary operations scale beautifully. A `GET` or `SET` goes only to the node that owns the key, so adding nodes spreads both the data and the load, and throughput grows almost linearly — that's the whole appeal of Redis Cluster. Pub/Sub is the exception.
+Because keys are spread across nodes this way, ordinary operations scale cleanly. A `GET` or `SET` goes only to the node that owns the key, so adding nodes spreads both the data and the load, and throughput grows almost linearly — this is the main benefit of Redis Cluster. Pub/Sub is the exception.
 
 Ordinary Pub/Sub in Redis Cluster sends every published message to *every* node — even the nodes where nobody is subscribed to that channel. It has no real choice: a subscriber could be attached to any node, so the only way to be sure they get the message is to copy it everywhere. That sounds harmless until you see the cost — the more nodes you add, the worse it gets, because each one has to carry every message, including all the ones it has no subscriber for.
 
 <ClusterBroadcastDiagram />
 
-There's a second, less visible problem with this. With classic Pub/Sub you can't choose which node handles your subscriptions — they all go over a single connection to whichever node it happens to point at for the first subscribe operation. So one node can end up tracking every subscription while the rest sit nearly idle — causing an imbalance.
+There's a second, less visible problem with this. With classic Pub/Sub you can't choose which node handles your subscriptions — they all go over a single connection to whichever node it happens to point at for the first subscribe operation. So one node can end up tracking every subscription while the rest sit nearly idle — a subscription imbalance.
 
-In our benchmarks, a classic Redis Cluster behaved just as the theory above says. Under load in a 3-node Redis Cluster, the delivery latency grew from milliseconds to whole seconds long before the 650k messages per second we achieved with a single instance, somewhere around 400k messages per second. And it got even worse as nodes were added.
+In our benchmarks, a classic Redis Cluster behaved just as the theory above says. Under load in a 3-node Redis Cluster, the delivery latency grew from milliseconds to whole seconds long before the 650k messages per second a single instance reached, somewhere around 400k messages per second. And it got even worse as nodes were added.
 
-## Sharded Pub/Sub to the rescue
+## Sharded Pub/Sub
 
-Redis 7 introduced **[sharded Pub/Sub](https://redis.io/docs/latest/develop/pubsub/#sharded-pubsub)** (`SSUBSCRIBE` / `SPUBLISH`) to fix exactly this: a message now travels only to the Redis node that owns its channel's slot — no more broadcast to nodes that don't care, which solves the throughput problem.
+Redis 7 introduced **[sharded Pub/Sub](https://redis.io/docs/latest/develop/pubsub/#sharded-pubsub)** (`SSUBSCRIBE` / `SPUBLISH` commands) to fix exactly this. Within these new commands a Pub/Sub channel respects hash slots and behaves like a normal key: a message goes only to the Redis node that owns the channel's slot, instead of being copied to every node — which solves the throughput problem. The price is that Pub/Sub now has to be coordinated by the Redis client driver: each subscribe and publish must go to the node that owns the slot, instead of one shared connection to any Redis Cluster node.
 
 <ClusterShardedPubSubDiagram />
 
-The following visualization shows the benefit of sharded Pub/Sub and why classic Pub/Sub fails so quickly:
+This visualization shows the benefit of sharded Pub/Sub and why classic Pub/Sub fails to increase Pub/Sub throughput:
 
 <BroadcastAmplificationDiagram />
 
-While for some applications moving to sharded Pub/Sub is a simple move to use new methods of the Redis client driver, for our workloads it was not that simple.
+For some applications, moving to sharded Pub/Sub is easy — just call the new methods in the Redis client driver. For Centrifugo's workloads it was not that simple, here is why.
 
-With classic Pub/Sub, subscribing was trivial: take Pub/Sub connection and send `SUBSCRIBE` commands over it. We did not care which Redis node it points to. Now with sharded Pub/Sub, the connection returned by the `rueidis` driver points to the node that owns the slot of the first channel we subscribe to. `SSUBSCRIBE` also supports a batch of channels, but all must belong to the same hash slot.
+With classic Pub/Sub, subscribing was easy: take a Pub/Sub connection and send `SUBSCRIBE` commands over it, without caring which Redis node it points to. With sharded Pub/Sub, the connection returned by the `rueidis` driver points to the node that owns the slot of the first channel subscribed to. `SSUBSCRIBE` also supports a batch of channels, but all must belong to the same hash slot.
 
-To subscribe to a second channel we cannot simply reuse the existing Pub/Sub connection – we need to create another one. If we had only several channels in the app – we could just create several sharded Pub/Sub connections and that's it. But in our use case we may have millions of channels – we simply can't afford that approach, as creating a million connections to Redis is not something we would even try. So we have a problem with the number of connections. And it's not clear how we could keep the subscribe batching we previously had in this situation.
+Subscribing to a second channel can't reuse the existing Pub/Sub connection — it needs another one. With only a handful of channels that's fine: open a few sharded Pub/Sub connections and you're done. But with millions of channels that approach no longer works — a million connections to Redis isn't something anyone would attempt. So there's a problem with connection count, and also it's not obvious how to keep the subscribe batching that helped to keep the system effective.
 
 ## App-level partitions
 
-The way around we found is to stop treating channels individually and group them. Each channel is hashed into a small, fixed number (**N**) of **partitions**, far smaller than the channel count. And the number of partitions must be larger than your Redis Cluster size for better distribution. By default, we use 128. Every channel in a partition gets the same hash-tag, so they all land in the same slot, on the same Redis node. A channel key ends up shaped like `{<partition>}.<channel>`.
+The way around it is to stop treating channels individually and group them on application level. Each channel is hashed into a small, fixed number (**N**) of **partitions**, far smaller than the channel count. And the number of partitions must be larger than the Redis Cluster size for better distribution. By default, Centrifugo uses 128. Every channel in a partition gets the same hash tag, so they all land in the same slot, on the same Redis node. A channel key ends up shaped like `{<partition>}.<channel>`:
+
+```
+SSUBSCRIBE news sports            # rejected if they hash to different slots
+SSUBSCRIBE {42}.news {42}.sports  # shared {42} tag → one slot → one connection, batched
+```
 
 A single partition then uses a single connection: when the first channel in a partition is subscribed, the client opens one connection to that partition's node, and every other channel in the partition reuses it. Because those channels share a slot, their subscriptions batch and pipeline on that connection, the way classic Pub/Sub batched.
 
-And because the partitions are spread across the cluster, the connections spread with them instead of piling onto one node. So instead of a connection per channel there's **one per partition** — N per node — and subscribing is back to cheap, batched commands over a handful of steady connections, even as channels come and go.
+And because the partitions are spread across the cluster, the connections spread with them instead of piling onto one node. So instead of a connection per channel there's **one per partition** — N per node — and subscribing is back to cheap, batched commands over a handful of steady connections per node, even as channels come and go. That settles the count on a single node; multiplied across a large fleet the cluster-wide total is another matter — more on that below.
 
 <PubSubClusterPartitionDiagram />
 
 ## Fixing uneven slot distribution
 
-Partitions leave a question skipped over, though: what to actually use as each partition's tag? The obvious answer is the partition's own index — `{0}`, `{1}`, `{2}`, … `{N}` — the natural starting point. It works, but it has a hidden problem. Run those short strings through CRC16 and the slots they hash to aren't evenly spread, so some Redis nodes end up with many more partitions than others.
+The partition scheme skips over one important detail: what to use as each partition's tag. The obvious answer is the partition's own index — `{0}`, `{1}`, `{2}`, … `{N}` — the natural starting point. It works, but it has a hidden problem. Run those short strings through CRC16 and the slots they hash to aren't evenly spread, so some Redis nodes end up with many more partitions than others.
 
-Take, for example, a 6-node cluster with N = 128 partitions: with naive `{0}`…`{127}` tags the partitions land `[27, 15, 22, 23, 16, 25]` across the six nodes — the busiest carries nearly twice the load of the lightest, and it only gets more lopsided on bigger clusters. No node sits fully idle, but the load is uneven — and uneven is exactly what you don't want after adding nodes to spread it.
+Take, for example, a 6-node cluster with N = 128 partitions: with naive `{0}`…`{127}` tags the partitions land `[27, 15, 22, 23, 16, 25]` across the six nodes — the busiest node gets nearly twice as many as the lightest, and the gap only grows on bigger clusters. That skew has a real cost: Pub/Sub throughput is capped by the busiest node, so it saturates first while the lightest still has headroom — you pay for all six nodes but leave capacity unused, and that's the opposite of what you add nodes for.
 
-So we had to be more deliberate about picking the tags. For a given number of partitions, an offline search finds a set of short tag strings whose CRC16 slots stay balanced across *every* cluster size from one node up to that number — 1, 2, 3, and so on, each size in the range, not just a few picked in advance. So however many Redis nodes you run today, and however you resize the cluster later, the partitions keep spreading evenly. The search (a small [simulated-annealing pass](https://github.com/centrifugal/centrifuge/tree/master/internal/redispartition)) runs once and bakes its result into a static table of **precomputed tags**, so at runtime it's just a lookup. The partitioning scheme doesn't change, and neither does the connection count — only which slot each partition lands on, and now they're spread out properly. On that same 6-node cluster the 128 partitions land `[21, 22, 21, 21, 22, 21]` — near-perfectly even, instead of the lopsided `[27, 15, 22, 23, 16, 25]` the naive tags gave.
+So the tags need to be chosen more carefully. For a given number of partitions, we've implemented a small [simulated-annealing search script](https://github.com/centrifugal/centrifuge/tree/master/internal/redispartition) — it finds a set of short tag strings whose CRC16 slots stay balanced across *every* cluster size from one node up to the partition count, not just a few sizes picked in advance. It runs once and bakes the result into a static table of string **precomputed tags** Centrifugo can then use, so at runtime it's just a lookup in that table.
 
-The key part: the tags aren't tuned for one cluster size. The search balances the partitions for **every cluster size** from 1 node up to the partition count at once — so with 128 partitions the same set stays even at 3 nodes, 6, 12, 50, anything up to 128. That's the real payoff: whatever size you run today, and whatever you resize to later, no re-tagging is needed and no hot node appears. Take that same setup from 6 nodes to 12 and the tags hold — the 128 partitions now land `[11, 10, 11, 11, 10, 11, 11, 10, 11, 11, 10, 11]`, 10 or 11 on every node. Naive tags go the other way — at 12 nodes they give `[10, 17, 5, 10, 16, 6, 8, 15, 9, 7, 16, 9]`, the busiest node carrying more than three times the lightest. Past 128 nodes you simply have more nodes than partitions, so some would sit empty — but by then you'd raise the partition count.
+On that same 6-node cluster the 128 partitions now land `[21, 22, 21, 21, 22, 21]` — near-even, instead of the uneven spread the naive tags gave. Move to 12 nodes in Redis Cluster, and the tags still hold — `[11, 10, 11, 11, 10, 11, 11, 10, 11, 11, 10, 11]`, while naive tags would give `[10, 17, 5, 10, 16, 6, 8, 15, 9, 7, 16, 9]`. Past 128 nodes you'd have more nodes than partitions, so some would sit empty — but by then you'd raise the partition count.
+
+Here is a visualization of that:
 
 <SlotBalanceDiagram />
 
-It's a real, measurable improvement on clusters of any decent size — the load evens out instead of piling onto a few nodes. With the traffic spread evenly, one problem is left: the total number of connections keeps growing.
-
 ## Reducing connections to cluster
 
-Sharded Pub/Sub with app-level partitions got the throughput back — each message reaches a single node, and the cluster scales the way client-side sharding does. But a new problem shows up as the system grows: the connection count. There's a fixed number of partitions and many consumer nodes, each opening its own connection per partition — and those two counts multiply together.
+Sharded Pub/Sub, combined with app-level partitions, solved the throughput problem — each message reaches a single node, and the cluster scales the way client-side sharding does. Redis nodes get balanced load. But a new problem shows up as the system grows: the connection count. There's a fixed number of partitions and many subscriber nodes, each opening its own connection per partition — and those two counts multiply together.
 
-Let's do the math. Under the partition scheme each node opens one connection per partition, so 128 partitions across 200 nodes works out to `200 × 128 = 25,600` connections into the cluster, and spread over a 6-node cluster that's about 4,267 of them landing on each Redis node. That's the point where you start hitting real limits — `maxclients`, file descriptors, the overhead Redis and the app carry for every connection. We hit exactly this in production, on a setup with 20M WebSocket connections in AWS.
+Here's the math. Under the partition scheme each node opens one subscribe connection per partition, so 128 partitions across 200 nodes works out to `200 × 128 = 25,600` connections into the cluster, and spread over a 6-node cluster that's about 4,267 of them landing on each Redis node. That's the point where you start hitting real limits — `maxclients`, ephemeral ports, file descriptors, the overhead Redis and the app carry for every connection. This comes from a real setup — a Centrifugo user running 20 million WebSocket connections on AWS.
 
-Those connections are largely redundant. Each Redis node owns a whole *range* of slots, so 20-21 of the 128 partitions live on any given node — and a single connection to that node can subscribe to all of them. In that case the natural unit isn't the partition but the Redis node itself — so the idea is to group Pub/Sub connections by node instead of by partition.
+Most of those connections are unnecessary. Each Redis node owns a whole *range* of slots, so 20-21 of the 128 partitions live on any given node — and a single connection to that node can subscribe to all of them. So it makes sense to **group subscribe connections by Redis node**.
 
 <PubSubNodeGroupDiagram />
 
-With the same 200 nodes and the same 6-node cluster, the count drops to `200 × 6 = 1,200` connections in total, just 200 per Redis node.
+With the same 200 nodes and the same 6-node cluster, the count then drops to `200 × 6 = 1,200` connections in total, just 200 per Redis node instead of 4,267.
 
 <ConnectionCalculatorDiagram />
 
-The partition count can then be raised — 1024 or 4096 instead of 128 — without adding connections. A higher count spreads channels across more slots, for a finer, more even distribution on larger clusters.
+With this decision, the partition count can then be raised — 1024 or 4096 instead of 128 — without adding connections. A higher count spreads channels across more slots, for a finer, more even distribution on larger clusters.
 
-You might wonder why partitions stay at all now that connections no longer depend on them — why not drop the layer and let each channel hash to its natural slot? But that wouldn't give one slot per channel: channels still fall into Redis Cluster's 16,384 hash slots, so with millions of them many share a slot and `SSUBSCRIBE` still batches. Dropping partitions doesn't lose batching — it just sets the grouping to its finest, up to 16,384 groups. Partitions are a deliberately *coarser* grouping: a few hundred groups instead of up to 16,384. Since every channel in one `SSUBSCRIBE` must share a slot, fewer groups means fatter batches and fewer commands on a bulk subscribe.
+## Keeping reconnect storms cheap
 
-You won't notice this while the system is just running: subscribing to one new channel is a single `SSUBSCRIBE` no matter how channels are grouped. It only matters during a reconnect storm. A network glitch or a failover drops the connections, and across a large fleet many nodes re-subscribe everything they hold at the same moment — that's when replaying all those subscriptions in as few commands as possible starts to count.
+Connections are under control now. But the partitions earn their keep a second time, in a different place — reconnect storms.
 
-There's a catch in how a node sends those resubscribes, and it's easy to get wrong. To re-subscribe quickly the node splits its channels across several workers that run at the same time — say 16 of them. The obvious way to split the work is to give each worker a share of the channels. But one `SSUBSCRIBE` can only carry channels from a single partition, and if each worker holds a mix of channels from every partition, each worker has to send a separate `SSUBSCRIBE` per partition. With 21 partitions and 16 workers that's 16 × 21 = 336 commands, each carrying a thin slice of a partition.
+Partition grouping makes no difference during normal work: subscribing to one new channel is a single `SSUBSCRIBE`, no matter how channels are grouped. A network glitch or a failover, though, drops the connections, and across a large fleet many nodes resubscribe everything they hold at the same moment — that's when replaying all those subscriptions in as few commands as possible starts to count.
 
-Split the work by partition instead — give each worker a few whole partitions to subscribe — and every partition is one `SSUBSCRIBE` again: 21 commands, not 336. Same channels, same 16 workers, just a smarter split. On a real cluster this one change took a node's resubscribe from a few hundred commands down to a couple dozen.
+There's a catch in how a node sends those resubscribes, and it's easy to get wrong. To resubscribe quickly the node splits its channels across several workers that run at the same time — say 16 of them. The obvious way to split the work is to give each worker a share of the channels. But one `SSUBSCRIBE` can only carry channels from a single partition, and if each worker holds a mix of channels from every partition, each worker has to send a separate `SSUBSCRIBE` per partition. With 21 partitions and 16 workers that's 16 × 21 = 336 commands, each carrying a thin slice of a partition.
+
+Split the work by partition instead — give each worker a few whole partitions to subscribe — and every partition is one `SSUBSCRIBE` again: 21 commands, not 336. The channels and the workers are the same — only the way the work is divided changes. On a real cluster this one change took a node's resubscribe from a few hundred commands down to a couple dozen.
 
 <ResubscribeWorkerShardingDiagram />
 
-Partitions are why that command count is 21 and not thousands in the first place. On a 6-node cluster with 128 partitions each Redis node owns about 21 partitions. Drop partitions and that node owns about 2,731 of the 16,384 slots instead. So when a node resubscribes, its connection to one Redis node sends about **21 `SSUBSCRIBE`s with partitions, or about 2,731 without** — 130 times more. The count never goes past 16,384, and it never grows with the number of channels. (Each `SSUBSCRIBE` carries at most the batch size — 512 in our case — so once a partition holds more than that, both cases send about `channels / 512` commands and the gap closes.) So it's tens of commands per Redis node instead of thousands. That's nothing on its own, but in a fleet-wide reconnect every subscriber node fires its commands at each Redis node at once — right when the cluster is busy recovering — so keeping the per-node count low matters most exactly then.
+Partitions are why that command count is 21 and not thousands in the first place. On a 6-node cluster with 128 partitions each Redis node owns about 21 partitions. Drop partitions and that node owns about 2,731 of the 16,384 slots instead. So when a node resubscribes, its connection to one Redis node sends about **21 `SSUBSCRIBE`s with partitions, or about 2,731 without** — 130 times more. The count never goes past 16,384, and it never grows with the number of channels. (Each `SSUBSCRIBE` carries at most the batch size — 512 in Centrifugo's case — so once a partition holds more than that, both cases send about `channels / 512` commands and the gap closes.) That's nothing on its own, but in a fleet-wide reconnect every subscriber node fires its commands at each Redis node at once — right when the cluster is busy recovering — so keeping the per-node count low matters most exactly then.
 
 <ResubscribeStormDiagram />
 
-So we keep partitions — not for the connection count any more, but to keep these big resubscribes cheap. Dropping them is a fair choice too: you trade the cheap resubscribe for the most even distribution. It's the same dial either way — more partitions (at the limit, the full 16,384 slots) spread channels more evenly but send more subscribe commands; fewer send fewer, bigger commands but pack more channels into each slot.
+So partitions stay — not for the connection count any more, but to keep these big resubscribes cheap. Dropping them is a fair choice too: you get the finest, most even distribution, but each resubscribe costs more. That's the trade-off you control.
 
 ## Following the cluster as it moves
 
-Node grouping isn't free — it adds complexity, mostly around tracking the cluster topology, and it isn't available out of the box in most Redis drivers. Luckily the [rueidis](https://github.com/redis/rueidis) library we use to talk to Redis exposes enough low-level knobs to build it.
+Grouping subscriptions by node isn't free — it adds complexity, mostly around tracking the cluster topology. This mechanism won't be available out of the box in most Redis drivers. Luckily the [rueidis](https://github.com/redis/rueidis) library Centrifugo uses to talk to Redis exposes enough low-level Redis Cluster knobs to build it.
 
 Because the application node decides which Redis node each subscription goes to, it has to track the cluster's layout itself. It keeps a small map — each partition to the Redis node that owns its slot — built from `CLUSTER SLOTS` and the client's node list. Each Redis node gets one connection carrying the partitions it owns. The cluster can reshuffle this at any time — a node joins, a node leaves, or slots move to rebalance — and the app has to notice each change and rewire.
 
-There are two ways it knows about changes. A background loop re-runs `CLUSTER SLOTS` every 30 seconds (in our case) and rebuilds the map; if the node count has changed, or any partition now points at a different node, the layout has changed. But the poll isn't the only signal. When the cluster moves a slot off a node, Redis sends an unsolicited `sunsubscribe` for the sharded channels held there — the node announcing it no longer owns them. The server catches that on the connection and triggers a rebuild right away, so a removed node or a moved slot doesn't wait up to 30 seconds to take effect.
+There are two ways it knows about changes. A background loop re-runs `CLUSTER SLOTS` every 30 seconds (in Centrifugo's case) and rebuilds the map; if the node count has changed, or any partition now points at a different node, the layout has changed. But the poll isn't the only signal. When the cluster moves a slot off a node, Redis sends a `sunsubscribe` for the sharded channels held there on its own — the node announcing it no longer owns them. The subscriber node catches that signal on the subscribe connection and triggers a rebuild right away, so a removed node or a moved slot doesn't wait up to 30 seconds to take effect.
 
-A rebuild recomputes the map and rewires the connections: open one to a Redis node that appeared, drop the one to a node that left, and resubscribe each partition on its new owner. Publishes need no help — a cluster-aware client already sends each `SPUBLISH` to whichever node owns the slot — so once the subscribe side re-points, publisher and subscriber meet on the new node again. One catch: just after a node joins, the client may not know its address yet, so a slot looks unowned. The server sends a throwaway `GET` to a key in that slot, the cluster replies `MOVED`, and the client learns the new node in time for the next rebuild.
+A rebuild recomputes the map and rewires the connections: open one to a Redis node that appeared, drop the one to a node that left, and resubscribe each partition on its new owner. Publishes need no help — a cluster-aware client already sends each `SPUBLISH` to whichever node owns the slot — so once the subscribe side re-points, publisher and subscriber meet on the new node again.
 
 <ClusterTopologyRebuildDiagram />
 
+:::tip
+
+One catch: just after a node joins, the rueidis client may not have a connection to it yet. Until it does, the slots that new node owns don't map to any node the client knows about, so the partition-to-node map can't be completed. To push the client to update, the subscriber node issues a throwaway `GET` for a probe key to provoke a `MOVED` redirect — that makes rueidis re-read the cluster layout and pick up the new node in time for the next rebuild.
+
+:::
+
 ## Cluster or client-side sharding?
 
-With node grouping in place, a Redis Cluster ends up working like client-side sharding: every Redis node is an independent single instance, owning its own slots and carrying no cross-node Pub/Sub traffic. Each node's ceiling is a single core — about 650k messages a second in our benchmarks — and throughput scaled linearly as we added cluster nodes, each one giving about another 650k, the same as adding client-side shards. Run side by side, the two were hard to tell apart: low latency, with the load split evenly and each node carrying its 1/N share.
+With node grouping in place, a Redis Cluster ends up working like client-side sharding: every Redis node is an independent single instance, owning its own slots and carrying no cross-node Pub/Sub traffic. Each node's ceiling is a single core — about 650k messages a second in these benchmarks — and throughput scaled linearly as cluster nodes were added, each one giving about another 650k, the same as adding client-side shards. Run side by side, the two were hard to tell apart: low latency, with the load split evenly and each node carrying its 1/N share.
 
-Let's compare two approaches:
+Here are the two approaches compared:
 
 | | Client-side sharding | Node-grouped Redis Cluster |
 |---|---|---|
@@ -220,7 +231,7 @@ Let's compare two approaches:
 | **Adding capacity** | edit the instance list by hand, every node reloads | add a node, slots rebalance on their own |
 | **What you maintain** | a Redis list in config | extra code for node-grouping |
 
-Honestly, client-side sharding is just simpler — it's a list of Redis addresses and a hash function, nothing more — and for a lot of deployments that's plenty, as long as you don't mind editing that list and resharding by hand as you grow. Redis Cluster earns its extra complexity exactly when you would rather not: it manages membership, failover, and resharding itself, and node grouping is what keeps its Pub/Sub scaling while it does.
+Client-side sharding is simpler — it's a list of Redis addresses and a hash function, nothing more — and for a lot of deployments that's plenty, as long as you don't mind editing that list and resharding by hand as you grow. Redis Cluster is worth its extra complexity when you'd rather not do that by hand: it manages membership, failover, and resharding itself, and node grouping is what keeps its Pub/Sub scaling while it does.
 
 ## Summing up
 
@@ -230,14 +241,16 @@ Redis Cluster, though, broadcasts every published message to all nodes by defaul
 
 Sharded Pub/Sub fixes that by turning the cluster into a set of independent Redis instances, just like client-side sharding — so capacity scales linearly as you add nodes, but without you having to manage the instance list yourself.
 
-For our specific situation — a large number of active channels, a high subscribe/unsubscribe rate, reconnect storms, and lots of subscriber nodes — we needed a few more tricks to make it actually work:
+For Centrifugo's specific situation — a large number of active channels, a high subscribe/unsubscribe rate, reconnect storms, and lots of subscriber nodes — a few more tricks were needed to make it actually work:
 
 * App-level partitions using hash tags to restore efficient batching and control connection growth.
-* Precomputed tags that deliver near-perfect slot balance across any cluster size without retuning.
+* Precomputed tags that keep slot balance even across any cluster size without retuning.
 * Node-grouped subscriptions that cut connections from nodes × partitions down to nodes × Redis nodes — one connection per Redis node instead of one per partition.
 * Partition-grouped resubscribes that keep reconnect storms cheap: after a drop, each node replays its subscriptions in a handful of `SSUBSCRIBE`s per Redis node instead of hundreds.
 * Topology tracking that follows slot moves and resubscribes affected partitions on their new owner.
 
+None of this is a recipe for endless scale. What it gives is a good state to grow from: the Pub/Sub layer stays balanced as the cluster gets larger, and the connection count no longer grows out of control. So you can move to a bigger Redis Cluster and run more subscriber nodes without the number of connections becoming the thing you hit first. Where the real ceiling lands after that depends on the rest of the system — the publishers, the application nodes, the traffic per channel — not on the Pub/Sub itself.
+
 Pub/Sub is not the only load an application generates. You usually also have plain GET/SET operations, which scale well in Redis Cluster without extra engineering. It's often worth running Pub/Sub and GET/SET on separate Redis setups, so each one can be tuned independently.
 
-That's it for this post, thank you for your attention!
+Thank you for your attention!
