@@ -63,6 +63,14 @@ Default: 65536 (64KB)
 
 Maximum allowed size of a first connect message received from WebSocket connection in bytes.
 
+### `uni_websocket.decompressed_message_size_limit`
+
+Default: 0. Available since Centrifugo v6.8.4
+
+Maximum allowed size of a message in bytes after `permessage-deflate` decompression for the unidirectional WebSocket transport. Only used when [`uni_websocket.compression`](#uni_websocketcompression) is enabled.
+
+`uni_websocket.message_size_limit` alone only bounds the compressed bytes received on the wire, so without this limit a small compressed frame could be inflated into a much larger amount of memory (a "decompression bomb"). When set to `0` (the default), the limit is derived from `uni_websocket.message_size_limit` multiplied by the default multiplier (`10`). If a message exceeds the limit, Centrifugo closes the connection with a `message too big` close code.
+
 ### `uni_websocket.join_push_messages`
 
 Boolean. Default: `false`. New in Centrifugo v6.0.3
@@ -92,6 +100,16 @@ Default: `false`. Available since Centrifugo v6.5.1
 Default: `false`. Available since Centrifugo v6.5.1
 
 `disable_disconnect_push` boolean option disables sending disconnect push messages to clients. It's sent by default to make unidirectional transports consistent, but since the unidirectional WebSocket transport also sends a close frame to the client with the same code/reason – some users may want to disable disconnect push to avoid ambiguity.
+
+### `uni_websocket.compression`
+
+Same as for the bidirectional WebSocket transport, Centrifugo supports `permessage-deflate` compression for the unidirectional WebSocket transport. See [`websocket.compression`](./websocket.md#websocketcompression) for a general overview of WebSocket compression and its trade-offs.
+
+To enable it set `uni_websocket.compression` to `true`. After this clients that support `permessage-deflate` will negotiate compression with server automatically. Note that enabling compression does not mean that every connection will use it - this depends on client support for this feature.
+
+`uni_websocket.compression_min_size` (default `0`) is the minimal size of message in bytes for which `deflate` compression is used when writing it to the client's connection. Default value `0` means all messages are compressed when `uni_websocket.compression` is enabled and compression support is negotiated with the client.
+
+`uni_websocket.compression_level` controls the [compress/flate](https://golang.org/pkg/compress/flate/#NewWriter) compression level. By default, when compression is negotiated, Centrifugo uses compression level 1 (BestSpeed).
 
 ## WebSocket over HTTP/2 (RFC 8441)
 

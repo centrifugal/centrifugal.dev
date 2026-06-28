@@ -41,6 +41,14 @@ Default: 65536 (64KB)
 
 Maximum allowed size of a message received from WebSocket connection in bytes.
 
+### `websocket.decompressed_message_size_limit`
+
+Default: 0. Available since Centrifugo v6.8.4
+
+Maximum allowed size of a message in bytes after `permessage-deflate` decompression. Only used when [`websocket.compression`](#websocketcompression) is enabled.
+
+`websocket.message_size_limit` alone only bounds the compressed bytes received on the wire, so without this limit a small compressed frame could be inflated into a much larger amount of memory (a "decompression bomb"). When set to `0` (the default), the limit is derived from `websocket.message_size_limit` multiplied by the default multiplier (`10`). If a message exceeds the limit, Centrifugo closes the connection with a `message too big` close code.
+
 ### `websocket.read_buffer_size`
 
 In bytes, by default 0 which tells Centrifugo to reuse read buffer from HTTP server for WebSocket connection (usually 4096 bytes in size). If set to a lower value can reduce memory usage per WebSocket connection (but can increase number of system calls depending on average message size).

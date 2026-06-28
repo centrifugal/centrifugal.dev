@@ -526,6 +526,36 @@ New in Centrifugo v6.8.1
 - **Description:** Count of PostgreSQL map broker table partitions (Centrifugo PRO).
 - **Usage:** Monitor partition growth of the PostgreSQL map broker tables.
 
+#### centrifugo_broker_redis_node_grouped_topology_rebuild_count
+
+- **Type:** Counter
+- **Labels:** broker_name, trigger, result
+- **Description:** Number of node-grouped sharded Pub/Sub subscription rebuilds after a Redis Cluster topology change (Centrifugo PRO). The `trigger` label is `poll` (a periodic check saw the change) or `sunsubscribe` (Redis pushed a slot-migration notice); `result` is `success` or `error`.
+- **Usage:** Alert on `result="error"` — node-grouped subscriptions did not re-establish, so delivery stays degraded until the next change is noticed.
+
+#### centrifugo_broker_redis_node_grouped_topology_error_count
+
+- **Type:** Counter
+- **Labels:** broker_name, op, stage
+- **Description:** Number of errors while reading or applying Redis Cluster topology for node-grouped sharded Pub/Sub (Centrifugo PRO). The `op` label is `detect` (the periodic check, usually self-heals next cycle) or `rebuild` (re-establishing subscriptions); `stage` is `cluster_slots`, `node_mapping`, or `partition_mapping`.
+- **Usage:** Use the labels to see which Redis step fails. `op="rebuild"` errors are more serious than `op="detect"`.
+
+#### centrifugo_broker_redis_node_grouped_unknown_slot_owner_count
+
+- **Type:** Counter
+- **Labels:** broker_name
+- **Description:** Number of times node-grouped sharded Pub/Sub saw a hash slot owned by a Redis node not yet known to the client, which fires a discovery probe (Centrifugo PRO). Happens right after a node joins or reshards.
+- **Usage:** A short spike after a topology change is normal. A value that keeps growing means the client never discovered the new node and some channels on it may go undelivered.
+
+#### centrifugo_broker_redis_node_grouped_topology_change_gap_seconds
+
+- **Type:** Histogram
+- **Labels:** broker_name
+- **Description:** Time node-grouped sharded Pub/Sub subscriptions were torn down during a Redis Cluster topology change, from teardown to fully re-subscribed (Centrifugo PRO).
+- **Usage:** This is the real delivery interruption a cluster scale or reshard causes. Watch p99 to size the impact.
+
+The Redis map broker exposes the same four metrics under the `map_broker` subsystem (Centrifugo PRO): `centrifugo_map_broker_redis_node_grouped_topology_rebuild_count`, `centrifugo_map_broker_redis_node_grouped_topology_error_count`, `centrifugo_map_broker_redis_node_grouped_unknown_slot_owner_count`, and `centrifugo_map_broker_redis_node_grouped_topology_change_gap_seconds`, with the same labels and meaning for the map broker.
+
 ## Traces
 
 ### OpenTelemetry
