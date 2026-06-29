@@ -16,9 +16,10 @@
 
 <link rel="search" type="application/opensearchdescription+xml" title="Centrifugo" href="/opensearch.xml">
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.86a38ef0.css">
-<script src="/assets/js/runtime~main.7cc1537d.js" defer="defer"></script>
-<script src="/assets/js/main.40139e04.js" defer="defer"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.1b0b11ea.css">
+<script src="/assets/js/runtime~main.5e5f27a8.js" defer="defer"></script>
+<script src="/assets/js/main.8a0be803.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg style="display: none;"><defs>
@@ -74,6 +75,7 @@
 <p>With Redis it&#x27;s possible to come to the architecture like this:</p>
 <p><img decoding="async" loading="lazy" alt="redis" src="/assets/images/redis_arch-2eed8366b3d81263ea9ec2201512f964.png" width="2535" height="1306" class="img_ev3q"></p>
 <p><strong>Minimal required Redis version is 6.2.0</strong></p>
+<div class="theme-admonition theme-admonition-tip admonition_xJq3 alert alert--success"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 12 16"><path fill-rule="evenodd" d="M6.5 0C3.48 0 1 2.19 1 5c0 .92.55 2.25 1 3 1.34 2.25 1.78 2.78 2 4v1h5v-1c.22-1.22.66-1.75 2-4 .45-.75 1-2.08 1-3 0-2.81-2.48-5-5.5-5zm3.64 7.48c-.25.44-.47.8-.67 1.11-.86 1.41-1.25 2.06-1.45 3.23-.02.05-.02.11-.02.17H5c0-.06 0-.13-.02-.17-.2-1.17-.59-1.83-1.45-3.23-.2-.31-.42-.67-.67-1.11C2.44 6.78 2 5.65 2 5c0-2.2 2.02-4 4.5-4 1.22 0 2.36.42 3.22 1.19C10.55 2.94 11 3.94 11 5c0 .66-.44 1.78-.86 2.48zM4 14h5c-.23 1.14-1.3 2-2.5 2s-2.27-.86-2.5-2z"></path></svg></span>tip</div><div class="admonitionContent_BuS1"><p>For a deep dive into how Centrifugo talks to Redis efficiently, shards across isolated Redis instances, and makes PUB/SUB scale on Redis Cluster, see the blog post <a class="" href="/blog/2026/06/29/scaling-redis-pub-sub">Scaling Redis Pub/Sub to Millions of Channels and Hundreds of Subscriber Nodes</a>.</p></div></div>
 <h2 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="engineredis"><code>engine.redis</code><a href="#engineredis" class="hash-link" aria-label="Direct link to engineredis" title="Direct link to engineredis" translate="no">​</a></h2>
 <p>Let&#x27;s describe various options available to configure Redis engine.</p>
 <h3 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="engineredisaddress"><code>engine.redis.address</code><a href="#engineredisaddress" class="hash-link" aria-label="Direct link to engineredisaddress" title="Direct link to engineredisaddress" translate="no">​</a></h3>

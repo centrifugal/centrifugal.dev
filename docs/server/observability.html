@@ -16,9 +16,10 @@
 
 <link rel="search" type="application/opensearchdescription+xml" title="Centrifugo" href="/opensearch.xml">
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.86a38ef0.css">
-<script src="/assets/js/runtime~main.7cc1537d.js" defer="defer"></script>
-<script src="/assets/js/main.40139e04.js" defer="defer"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.1b0b11ea.css">
+<script src="/assets/js/runtime~main.5e5f27a8.js" defer="defer"></script>
+<script src="/assets/js/main.8a0be803.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg style="display: none;"><defs>
@@ -259,6 +260,15 @@
 <li class=""><strong>Description:</strong> Measures the size of messages (in bytes) received from client connections over specific transports.</li>
 <li class=""><strong>Usage:</strong> Use this metric to monitor the incoming data size and optimize the application&#x27;s performance.</li>
 </ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_transport_outgoing_close_count">centrifugo_transport_outgoing_close_count<a href="#centrifugo_transport_outgoing_close_count" class="hash-link" aria-label="Direct link to centrifugo_transport_outgoing_close_count" title="Direct link to centrifugo_transport_outgoing_close_count" translate="no">​</a></h4>
+<p>Available since v6.8.4</p>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> transport, code</li>
+<li class=""><strong>Description:</strong> Counts the number of close frames sent to client connections, by transport and close code. Only server-sent (outgoing) close codes are recorded – client-supplied close codes are not counted to keep the <code>code</code> label cardinality bounded.</li>
+<li class=""><strong>Usage:</strong> Helps in monitoring why and how often the server closes client connections over specific transports.</li>
+</ul>
+<p>Exposed for WebSocket and unidirectional WebSocket.</p>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_proxy_duration_seconds">centrifugo_proxy_duration_seconds<a href="#centrifugo_proxy_duration_seconds" class="hash-link" aria-label="Direct link to centrifugo_proxy_duration_seconds" title="Direct link to centrifugo_proxy_duration_seconds" translate="no">​</a></h4>
 <div class="theme-admonition theme-admonition-caution admonition_xJq3 alert alert--warning"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z"></path></svg></span>Deprecated</div><div class="admonitionContent_BuS1"><p>This Summary is deprecated and will be removed in Centrifugo v7. Use <code>centrifugo_proxy_duration_seconds_histogram</code> (below). Not exposed when <a href="#native-histograms" class=""><code>prometheus.native_histograms</code></a> is enabled.</p></div></div>
 <ul>
@@ -355,6 +365,133 @@
 <li class=""><strong>Description:</strong> Number of messages buffered in Redis PUB/SUB.</li>
 <li class=""><strong>Usage:</strong> Monitor buffer levels to detect potential bottlenecks in message processing and prevent message drops.</li>
 </ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_map_broker_redis_pub_sub_errors">centrifugo_map_broker_redis_pub_sub_errors<a href="#centrifugo_map_broker_redis_pub_sub_errors" class="hash-link" aria-label="Direct link to centrifugo_map_broker_redis_pub_sub_errors" title="Direct link to centrifugo_map_broker_redis_pub_sub_errors" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> broker_name, error</li>
+<li class=""><strong>Description:</strong> Number of times there was an error in Redis PUB/SUB connection of the Redis map broker (Centrifugo PRO).</li>
+<li class=""><strong>Usage:</strong> Critical for monitoring Redis map broker health and identifying connection issues that could affect message delivery.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_map_broker_redis_pub_sub_dropped_messages">centrifugo_map_broker_redis_pub_sub_dropped_messages<a href="#centrifugo_map_broker_redis_pub_sub_dropped_messages" class="hash-link" aria-label="Direct link to centrifugo_map_broker_redis_pub_sub_dropped_messages" title="Direct link to centrifugo_map_broker_redis_pub_sub_dropped_messages" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> broker_name, channel_type</li>
+<li class=""><strong>Description:</strong> Number of dropped messages on application level in Redis PUB/SUB of the Redis map broker (Centrifugo PRO).</li>
+<li class=""><strong>Usage:</strong> Helps identify message loss issues in the Redis map broker, which could indicate performance problems or buffer overflows.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_map_broker_redis_pub_sub_buffered_messages">centrifugo_map_broker_redis_pub_sub_buffered_messages<a href="#centrifugo_map_broker_redis_pub_sub_buffered_messages" class="hash-link" aria-label="Direct link to centrifugo_map_broker_redis_pub_sub_buffered_messages" title="Direct link to centrifugo_map_broker_redis_pub_sub_buffered_messages" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Gauge</li>
+<li class=""><strong>Labels:</strong> broker_name, channel_type, pub_sub_processor</li>
+<li class=""><strong>Description:</strong> Number of messages buffered in Redis PUB/SUB of the Redis map broker (Centrifugo PRO).</li>
+<li class=""><strong>Usage:</strong> Monitor buffer levels to detect potential bottlenecks in map broker message processing and prevent message drops.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_broker_publish_suppressed_count">centrifugo_broker_publish_suppressed_count<a href="#centrifugo_broker_publish_suppressed_count" class="hash-link" aria-label="Direct link to centrifugo_broker_publish_suppressed_count" title="Direct link to centrifugo_broker_publish_suppressed_count" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> reason, channel_namespace (Centrifugo PRO)</li>
+<li class=""><strong>Description:</strong> Number of suppressed publish operations (e.g. deduplicated by idempotency key or skipped due to a version conflict).</li>
+<li class=""><strong>Usage:</strong> Monitor how often publishes are suppressed and why, to validate idempotency/versioning behavior.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_map_broker_publish_suppressed_count">centrifugo_map_broker_publish_suppressed_count<a href="#centrifugo_map_broker_publish_suppressed_count" class="hash-link" aria-label="Direct link to centrifugo_map_broker_publish_suppressed_count" title="Direct link to centrifugo_map_broker_publish_suppressed_count" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> reason, channel_namespace (Centrifugo PRO)</li>
+<li class=""><strong>Description:</strong> Number of suppressed map publish operations (Centrifugo PRO).</li>
+<li class=""><strong>Usage:</strong> Monitor how often map publishes are suppressed and why.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_map_broker_remove_suppressed_count">centrifugo_map_broker_remove_suppressed_count<a href="#centrifugo_map_broker_remove_suppressed_count" class="hash-link" aria-label="Direct link to centrifugo_map_broker_remove_suppressed_count" title="Direct link to centrifugo_map_broker_remove_suppressed_count" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> reason, channel_namespace (Centrifugo PRO)</li>
+<li class=""><strong>Description:</strong> Number of suppressed map remove operations (Centrifugo PRO).</li>
+<li class=""><strong>Usage:</strong> Monitor how often map removes are suppressed and why.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_map_broker_cleanup_lag_seconds">centrifugo_map_broker_cleanup_lag_seconds<a href="#centrifugo_map_broker_cleanup_lag_seconds" class="hash-link" aria-label="Direct link to centrifugo_map_broker_cleanup_lag_seconds" title="Direct link to centrifugo_map_broker_cleanup_lag_seconds" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Gauge</li>
+<li class=""><strong>Labels:</strong> broker_name</li>
+<li class=""><strong>Description:</strong> Lag between now and the oldest expired entry awaiting cleanup in the map broker (Centrifugo PRO). 0 means caught up.</li>
+<li class=""><strong>Usage:</strong> Detect when the map broker cleanup worker falls behind on pruning expired state.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_map_broker_cleanup_removed_count">centrifugo_map_broker_cleanup_removed_count<a href="#centrifugo_map_broker_cleanup_removed_count" class="hash-link" aria-label="Direct link to centrifugo_map_broker_cleanup_removed_count" title="Direct link to centrifugo_map_broker_cleanup_removed_count" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> broker_name</li>
+<li class=""><strong>Description:</strong> Total number of expired entries removed by map broker cleanup (Centrifugo PRO).</li>
+<li class=""><strong>Usage:</strong> Observe how much expired state the map broker is pruning over time.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_map_broker_cleanup_errors_count">centrifugo_map_broker_cleanup_errors_count<a href="#centrifugo_map_broker_cleanup_errors_count" class="hash-link" aria-label="Direct link to centrifugo_map_broker_cleanup_errors_count" title="Direct link to centrifugo_map_broker_cleanup_errors_count" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> broker_name</li>
+<li class=""><strong>Description:</strong> Total number of map broker cleanup errors (Centrifugo PRO).</li>
+<li class=""><strong>Usage:</strong> Alert on cleanup failures that could let expired state accumulate.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_broker_postgres_cleanup_removed_total">centrifugo_broker_postgres_cleanup_removed_total<a href="#centrifugo_broker_postgres_cleanup_removed_total" class="hash-link" aria-label="Direct link to centrifugo_broker_postgres_cleanup_removed_total" title="Direct link to centrifugo_broker_postgres_cleanup_removed_total" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> broker_name, pass</li>
+<li class=""><strong>Description:</strong> Total rows removed by each PostgreSQL stream broker cleanup pass (Centrifugo PRO). The <code>pass</code> label identifies the table being cleaned.</li>
+<li class=""><strong>Usage:</strong> Observe how much expired data the PostgreSQL broker is pruning per cleanup pass.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_broker_postgres_outbox_cursor_lag_seconds">centrifugo_broker_postgres_outbox_cursor_lag_seconds<a href="#centrifugo_broker_postgres_outbox_cursor_lag_seconds" class="hash-link" aria-label="Direct link to centrifugo_broker_postgres_outbox_cursor_lag_seconds" title="Direct link to centrifugo_broker_postgres_outbox_cursor_lag_seconds" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Gauge</li>
+<li class=""><strong>Labels:</strong> broker_name, shard</li>
+<li class=""><strong>Description:</strong> Time between the PostgreSQL stream broker outbox cursor&#x27;s row created_at and now, per shard (Centrifugo PRO).</li>
+<li class=""><strong>Usage:</strong> Detect when outbox consumption falls behind, which delays publication delivery.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_map_broker_postgres_outbox_cursor_lag_seconds">centrifugo_map_broker_postgres_outbox_cursor_lag_seconds<a href="#centrifugo_map_broker_postgres_outbox_cursor_lag_seconds" class="hash-link" aria-label="Direct link to centrifugo_map_broker_postgres_outbox_cursor_lag_seconds" title="Direct link to centrifugo_map_broker_postgres_outbox_cursor_lag_seconds" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Gauge</li>
+<li class=""><strong>Labels:</strong> broker_name, shard</li>
+<li class=""><strong>Description:</strong> Time between the PostgreSQL map broker outbox cursor&#x27;s row created_at and now, per shard (Centrifugo PRO).</li>
+<li class=""><strong>Usage:</strong> Detect when map broker outbox consumption falls behind.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_broker_postgres_partitions">centrifugo_broker_postgres_partitions<a href="#centrifugo_broker_postgres_partitions" class="hash-link" aria-label="Direct link to centrifugo_broker_postgres_partitions" title="Direct link to centrifugo_broker_postgres_partitions" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Gauge</li>
+<li class=""><strong>Labels:</strong> broker_name</li>
+<li class=""><strong>Description:</strong> Count of PostgreSQL stream broker stream/history table partitions (Centrifugo PRO).</li>
+<li class=""><strong>Usage:</strong> Monitor partition growth of the PostgreSQL broker tables.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_map_broker_postgres_partitions">centrifugo_map_broker_postgres_partitions<a href="#centrifugo_map_broker_postgres_partitions" class="hash-link" aria-label="Direct link to centrifugo_map_broker_postgres_partitions" title="Direct link to centrifugo_map_broker_postgres_partitions" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Gauge</li>
+<li class=""><strong>Labels:</strong> broker_name</li>
+<li class=""><strong>Description:</strong> Count of PostgreSQL map broker table partitions (Centrifugo PRO).</li>
+<li class=""><strong>Usage:</strong> Monitor partition growth of the PostgreSQL map broker tables.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_broker_redis_node_grouped_topology_rebuild_count">centrifugo_broker_redis_node_grouped_topology_rebuild_count<a href="#centrifugo_broker_redis_node_grouped_topology_rebuild_count" class="hash-link" aria-label="Direct link to centrifugo_broker_redis_node_grouped_topology_rebuild_count" title="Direct link to centrifugo_broker_redis_node_grouped_topology_rebuild_count" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> broker_name, trigger, result</li>
+<li class=""><strong>Description:</strong> Number of node-grouped sharded Pub/Sub subscription rebuilds after a Redis Cluster topology change (Centrifugo PRO). The <code>trigger</code> label is <code>poll</code> (a periodic check saw the change) or <code>sunsubscribe</code> (Redis pushed a slot-migration notice); <code>result</code> is <code>success</code> or <code>error</code>.</li>
+<li class=""><strong>Usage:</strong> Alert on <code>result=&quot;error&quot;</code> — node-grouped subscriptions did not re-establish, so delivery stays degraded until the next change is noticed.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_broker_redis_node_grouped_topology_error_count">centrifugo_broker_redis_node_grouped_topology_error_count<a href="#centrifugo_broker_redis_node_grouped_topology_error_count" class="hash-link" aria-label="Direct link to centrifugo_broker_redis_node_grouped_topology_error_count" title="Direct link to centrifugo_broker_redis_node_grouped_topology_error_count" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> broker_name, op, stage</li>
+<li class=""><strong>Description:</strong> Number of errors while reading or applying Redis Cluster topology for node-grouped sharded Pub/Sub (Centrifugo PRO). The <code>op</code> label is <code>detect</code> (the periodic check, usually self-heals next cycle) or <code>rebuild</code> (re-establishing subscriptions); <code>stage</code> is <code>cluster_slots</code>, <code>node_mapping</code>, or <code>partition_mapping</code>.</li>
+<li class=""><strong>Usage:</strong> Use the labels to see which Redis step fails. <code>op=&quot;rebuild&quot;</code> errors are more serious than <code>op=&quot;detect&quot;</code>.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_broker_redis_node_grouped_unknown_slot_owner_count">centrifugo_broker_redis_node_grouped_unknown_slot_owner_count<a href="#centrifugo_broker_redis_node_grouped_unknown_slot_owner_count" class="hash-link" aria-label="Direct link to centrifugo_broker_redis_node_grouped_unknown_slot_owner_count" title="Direct link to centrifugo_broker_redis_node_grouped_unknown_slot_owner_count" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> broker_name</li>
+<li class=""><strong>Description:</strong> Number of times node-grouped sharded Pub/Sub saw a hash slot owned by a Redis node not yet known to the client, which fires a discovery probe (Centrifugo PRO). Happens right after a node joins or reshards.</li>
+<li class=""><strong>Usage:</strong> A short spike after a topology change is normal. A value that keeps growing means the client never discovered the new node and some channels on it may go undelivered.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_broker_redis_node_grouped_topology_change_gap_seconds">centrifugo_broker_redis_node_grouped_topology_change_gap_seconds<a href="#centrifugo_broker_redis_node_grouped_topology_change_gap_seconds" class="hash-link" aria-label="Direct link to centrifugo_broker_redis_node_grouped_topology_change_gap_seconds" title="Direct link to centrifugo_broker_redis_node_grouped_topology_change_gap_seconds" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Histogram</li>
+<li class=""><strong>Labels:</strong> broker_name</li>
+<li class=""><strong>Description:</strong> Time node-grouped sharded Pub/Sub subscriptions were torn down during a Redis Cluster topology change, from teardown to fully re-subscribed (Centrifugo PRO).</li>
+<li class=""><strong>Usage:</strong> This is the real delivery interruption a cluster scale or reshard causes. Watch p99 to size the impact.</li>
+</ul>
+<p>The Redis map broker exposes the same four metrics under the <code>map_broker</code> subsystem (Centrifugo PRO): <code>centrifugo_map_broker_redis_node_grouped_topology_rebuild_count</code>, <code>centrifugo_map_broker_redis_node_grouped_topology_error_count</code>, <code>centrifugo_map_broker_redis_node_grouped_unknown_slot_owner_count</code>, and <code>centrifugo_map_broker_redis_node_grouped_topology_change_gap_seconds</code>, with the same labels and meaning for the map broker.</p>
 <h2 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="traces">Traces<a href="#traces" class="hash-link" aria-label="Direct link to Traces" title="Direct link to Traces" translate="no">​</a></h2>
 <h3 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="opentelemetry">OpenTelemetry<a href="#opentelemetry" class="hash-link" aria-label="Direct link to OpenTelemetry" title="Direct link to OpenTelemetry" translate="no">​</a></h3>
 <p>At this point Centrifugo can export traces for HTTP and GRPC server API requests in OpenTelemetry format.</p>

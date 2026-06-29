@@ -16,9 +16,10 @@
 
 <link rel="search" type="application/opensearchdescription+xml" title="Centrifugo" href="/opensearch.xml">
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.86a38ef0.css">
-<script src="/assets/js/runtime~main.7cc1537d.js" defer="defer"></script>
-<script src="/assets/js/main.40139e04.js" defer="defer"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.1b0b11ea.css">
+<script src="/assets/js/runtime~main.5e5f27a8.js" defer="defer"></script>
+<script src="/assets/js/main.8a0be803.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg style="display: none;"><defs>
@@ -69,6 +70,7 @@
 <p>The same may be used when configuring a separate Redis Presence Manager.</p>
 <h2 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="redis-cluster-sharded-pubsub">Redis Cluster sharded PUB/SUB<a href="#redis-cluster-sharded-pubsub" class="hash-link" aria-label="Direct link to Redis Cluster sharded PUB/SUB" title="Direct link to Redis Cluster sharded PUB/SUB" translate="no">​</a></h2>
 <p>Sharded PUB/SUB <a href="https://redis.io/docs/latest/develop/interact/pubsub/#sharded-pubsub" target="_blank" rel="noopener noreferrer" class="">was introduced in Redis 7.0</a> as an attempt to fix the problem with PUB/SUB scalability in Redis Cluster. With normal PUB/SUB all publications are spread towards all nodes of cluster. This makes Cluster PUB/SUB throughput less with adding more nodes to the cluster. The utilization of Redis shards is usually unequal when using PUB/SUB in Redis Cluster as subscriptions land to one of the shards. In sharded PUB/SUB case channel keyspace is divided to slots in the same way as normal keys, and PUB/SUB is split over Redis Cluster nodes based on channel name.</p>
+<div class="theme-admonition theme-admonition-tip admonition_xJq3 alert alert--success"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 12 16"><path fill-rule="evenodd" d="M6.5 0C3.48 0 1 2.19 1 5c0 .92.55 2.25 1 3 1.34 2.25 1.78 2.78 2 4v1h5v-1c.22-1.22.66-1.75 2-4 .45-.75 1-2.08 1-3 0-2.81-2.48-5-5.5-5zm3.64 7.48c-.25.44-.47.8-.67 1.11-.86 1.41-1.25 2.06-1.45 3.23-.02.05-.02.11-.02.17H5c0-.06 0-.13-.02-.17-.2-1.17-.59-1.83-1.45-3.23-.2-.31-.42-.67-.67-1.11C2.44 6.78 2 5.65 2 5c0-2.2 2.02-4 4.5-4 1.22 0 2.36.42 3.22 1.19C10.55 2.94 11 3.94 11 5c0 .66-.44 1.78-.86 2.48zM4 14h5c-.23 1.14-1.3 2-2.5 2s-2.27-.86-2.5-2z"></path></svg></span>tip</div><div class="admonitionContent_BuS1"><p>The blog post <a class="" href="/blog/2026/06/29/scaling-redis-pub-sub">Scaling Redis Pub/Sub to Millions of Channels and Hundreds of Subscriber Nodes</a> walks through the motivation and design behind the features in this chapter — sharded PUB/SUB, slot balance, connection count, and efficient resubscribes.</p></div></div>
 <p><img decoding="async" loading="lazy" src="/assets/images/redis_cluster_sharded_pub_sub-0e42f152d41e71791a7a0486d3f74e04.png" width="2603" height="1265" class="img_ev3q"></p>
 <p>When using Centrifugo PRO with the sharded PUB/SUB feature, there are important considerations to keep in mind. This feature changes how Centrifugo constructs keys and channel names in Redis compared to the standard non-sharded setup. Specifically, Centrifugo divides the channel space into a configurable number of <code>sharded_pub_sub_partitions</code>, typically 64 to 128 (but this is up to the developer to decide on the number depending on the load and cluster size). This partitioning is essential to ensure compatibility with Redis Cluster&#x27;s slot system while keeping the number of connections from Centrifugo to Redis at a manageable level. Each partition uses a dedicated connection for PUB/SUB communication with the Redis Cluster.</p>
 <p>Without this partitioning, each Centrifugo node could potentially create up to 16,384 connections to the Redis Cluster — one for each cluster slot — a number that is impractically large. The partitioning strategy avoids this issue, maintaining efficient and scalable communication between Centrifugo and Redis.</p>
