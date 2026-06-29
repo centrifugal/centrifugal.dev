@@ -53,7 +53,7 @@ Redis Pub/Sub is intentionally simple: a client subscribes to a named *channel*,
 
 <PubSubFanoutDiagram />
 
-Redis runs every command (in this case PUBLISH and SUBSCRIBE) on a single thread sequentially. Modern Redis and Valkey can spread network I/O across extra threads, which [lifts throughput](https://valkey.io/blog/unlock-one-million-rps/), but command execution itself stays serialized, so one instance still has a ceiling you can hit.
+Redis runs every command (in this case PUBLISH and SUBSCRIBE) on a single thread sequentially. Modern Redis and Valkey can spread network I/O across extra threads, which [lifts throughput](https://valkey.io/blog/unlock-one-million-rps/). Also, an application may issue subscriptions to Redis replicas to spread the load a bit. However, command execution stays on the Redis master and remains serialized, so one instance still has a performance ceiling you can hit.
 
 Whatever Redis setup you run, your app has to keep up with Redis first — otherwise it's the first bottleneck, before Redis itself is even reached. With Redis Pub/Sub, each application node — also called a *subscriber node* here — does two things: it publishes messages and subscribes to receive them.
 
