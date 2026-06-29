@@ -16,7 +16,6 @@ import PubSubShardingDiagram from '@site/src/components/PubSubShardingDiagram';
 import ClusterBroadcastDiagram from '@site/src/components/ClusterBroadcastDiagram';
 import ClusterShardedPubSubDiagram from '@site/src/components/ClusterShardedPubSubDiagram';
 import PubSubClusterPartitionDiagram from '@site/src/components/PubSubClusterPartitionDiagram';
-import PubSubPrecomputedTagsDiagram from '@site/src/components/PubSubPrecomputedTagsDiagram';
 import PubSubNodeGroupDiagram from '@site/src/components/PubSubNodeGroupDiagram';
 import ThroughputScalingDiagram from '@site/src/components/ThroughputScalingDiagram';
 import BroadcastAmplificationDiagram from '@site/src/components/BroadcastAmplificationDiagram';
@@ -45,7 +44,7 @@ This post talks about **Redis**, but everything here applies equally to **[Valke
 For a general-purpose real-time messaging server, every deployment looks different, so the design has to handle many cases. Two facts about real-time messaging specifics shaped the decisions in this post:
 
 - **The system can have a lot of active channels** — millions of them. There might be one per user, per document, or per game session, each created and thrown away all the time, so the server is constantly subscribing and unsubscribing. Usually each channel carries fairly light traffic (up to 60-100 messages per second); the load is spread across many channels rather than concentrated in a few.
-- **There can be a lot of subscriber nodes too.** Any node might care about any channel at any moment, so each one subscribes to whatever its clients need and has to receive everything published there. Once a deployment grows to hundreds of nodes, anything that costs something per node adds up very fast. In Centrifugo's case, one node usually serves up to 100k-200k connections – so setups which aim to have millions of real-time connections end up with hundreds of connection nodes, each subscribed to the channels its users care about.
+- **There can be a lot of subscriber nodes too.** Any node might care about any channel at any moment, so each one subscribes to whatever its clients need and has to receive everything published there. Once a deployment grows to hundreds of nodes, anything that costs something per node adds up very fast. In Centrifugo's case, one node usually serves up to 100k-200k connections — so setups which aim to have millions of real-time connections end up with hundreds of connection nodes, each subscribed to the channels its users care about.
 
 ## Keeping up with Redis
 
@@ -85,7 +84,7 @@ In a Centrifugo benchmark on Hetzner, on a machine with dedicated vCPU, a single
 
 ## Client-side Pub/Sub sharding
 
-The simplest solution is to spread the Pub/Sub load across several independent Redis instances. The application decides which Redis instance handles a given channel by hashing the channel's name, for example with a [Jump consistent hash](https://arxiv.org/abs/1406.2294) or any other. Consistent hashing here may help to keep most of the data on the same Redis instances after adding a Redis node and re-sharding. In Centrifugo case, we keep channel history in Redis in addition to Pub/Sub – the protocol is designed to tolerate the loss of it and provide a signal to real-time clients, so the loss during re-sharding is tolerable. 
+The simplest solution is to spread the Pub/Sub load across several independent Redis instances. The application decides which Redis instance handles a given channel by hashing the channel's name, for example with a [Jump consistent hash](https://arxiv.org/abs/1406.2294) or any other. Consistent hashing here may help to keep most of the data on the same Redis instances after adding a Redis node and re-sharding. In Centrifugo's case, we keep channel history in Redis in addition to Pub/Sub — the protocol is designed to tolerate the loss of it and provide a signal to real-time clients, so the loss during re-sharding is tolerable.
 
 In such a setup, a publisher and a subscriber should use the same hash function over the channel name, so they always land on the same instance without having to talk to each other, and the instances don't even know about one another — so each instance you add takes a share of the load.
 
