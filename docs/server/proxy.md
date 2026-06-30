@@ -204,11 +204,15 @@ Centrifugo provides a unique feature called `headers emulation` which simplifies
 
 The thing is that WebSocket browser API does not allow setting custom HTTP headers which makes implementing authentication in the WebSocket world harder. Centrifugo users can provide a custom `headers` map to the browser SDK (`centrifuge-js`) constructor, these headers are then sent in the first message to Centrifugo, and Centrifugo can translate it to the outgoing proxy request native HTTP headers (based on `http_headers` list) – abstracting away the specifics of WebSocket protocol. This can drastically simplify the integration from the auth perspective since the backend may re-use existing code.
 
-:::caution Gotcha when a header is also set by a proxy in front of Centrifugo
+:::caution If you trust a header set by a proxy in front of Centrifugo
 
-Emulated headers come from the client — that's the whole point of the feature. Just keep in mind that emulation and real transport headers share the **same** `http_headers`/`grpc_metadata` allow list. So if you put a reverse proxy / gateway in front of Centrifugo and expect a particular header to be set by that proxy (and not forgeable by clients), remember the client can supply the same header name via emulation. A real transport header only overrides the client value when it's actually present, and for unidirectional GRPC there is no transport-level header to override it at all.
+Emulated headers come from the client — that's the point of the feature — and they share the **same** `http_headers`/`grpc_metadata` allow list as real transport headers. So if you allow-list a header that your proxy sets and you don't want clients to forge, mind this: a real transport header overrides the emulated value only when it is **present** on the connection request. When it's absent, Centrifugo forwards the client-supplied value.
 
-So for any header you intend to be proxy-controlled, make your proxy **set or strip it on every request** — including unauthenticated ones (setting it only after auth is not enough, since an attacker can just connect without triggering that path).
+This means **stripping the header at your proxy is not enough**. The emulated value arrives inside the client's connect frame (the WebSocket message / request body), which your proxy can't see or remove; stripping only drops the real HTTP header, leaving nothing to override the client's value.
+
+So **set (overwrite) the header on every request** — including unauthenticated ones, where it must still be set to a sentinel value rather than left absent — so a real header is always there to win.
+
+This applies to WebSocket, SSE, and HTTP-stream. Unidirectional GRPC has no transport-level header to override, so an allow-listed value there always comes from the client — never allow-list a header you need to be unforgeable on that transport.
 
 :::
 
