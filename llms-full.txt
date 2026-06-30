@@ -38849,7 +38849,7 @@ import ClusterTopologyRebuildDiagram from '@site/src/components/ClusterTopologyR
 
 ![](/img/blog_redis_scaling_real_time_system.jpg)
 
-That simplicity holds at small scale. But at millions of channels and hundreds of subscriber nodes — the scale some Centrifugo users run at — Pub/Sub stops being simple: a single Redis instance is limited by one CPU core, and switching to Redis Cluster can make throughput *worse* instead of better. This post walks through those gotchas, and the techniques that get from a single instance's ceiling to millions of messages per second — across isolated Redis shards or a Redis Cluster.
+At small scale things are quite simple. But at millions of channels and hundreds of subscriber nodes — the scale some Centrifugo users run at — Pub/Sub stops being a simple part of the design: a single Redis instance is limited by one CPU core, and switching to Redis Cluster can make throughput worse. This post walks through those gotchas, and the techniques that get from a single instance's ceiling to millions of messages per second — across isolated Redis shards and specifically in a Redis Cluster.
 
 [Jump to the end for TLDR](#summing-up)
 
