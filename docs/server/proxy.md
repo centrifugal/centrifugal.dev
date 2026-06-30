@@ -203,7 +203,7 @@ Centrifugo forces the `Content-Type` header to be `application/json` in all HTTP
 
 Centrifugo provides a unique feature called `headers emulation` which simplifies working with WebSocket and auth when connecting from web browser and using proxy hooks.
 
-The thing is that WebSocket browser API does not allow setting custom HTTP headers which makes implementing authentication in the WebSocket world harder. Centrifugo users can provide a custom `headers` map to the browser SDK (`centrifuge-js`) constructor, these headers are then sent in the first message to Centrifugo, and Centrifugo can translate them into native HTTP headers on the outgoing proxy request – abstracting away the specifics of WebSocket protocol. This can drastically simplify the integration from the auth perspective since the backend may re-use existing code.
+The thing is that WebSocket browser API does not allow setting custom HTTP headers which makes implementing authentication in the WebSocket world harder. Centrifugo users can provide a custom `headers` map to a client SDK that supports emulation (e.g. `centrifuge-js`, `centrifuge-dart` on web, `centrifuge-csharp`), these headers are then sent in the first message to Centrifugo, and Centrifugo can translate them into native HTTP headers on the outgoing proxy request – abstracting away the specifics of WebSocket protocol. This can drastically simplify the integration from the auth perspective since the backend may re-use existing code.
 
 Because emulated headers are supplied by the client, they are kept separate from real transport headers: list the names you want forwarded in `client_emulated_headers` — the `http_headers` list never forwards emulated values. For example:
 
@@ -239,7 +239,7 @@ A header your backend validates on its own — such as an `Authorization` token 
 
 :::note Upgrading to Centrifugo v6.9.0
 
-`client_emulated_headers` was introduced in Centrifugo v6.9.0. Before v6.9.0, `http_headers` forwarded both transport and emulated headers under one list. If you relied on that to forward emulated headers, move those names into `client_emulated_headers`. To temporarily keep the old behavior, set `http_headers_include_client_emulated: true` on the proxy — this is deprecated and will be removed in Centrifugo v7.
+`client_emulated_headers` was introduced in Centrifugo v6.9.0. Before v6.9.0, `http_headers` forwarded both transport and emulated headers under one list. If you relied on that to forward emulated headers, add those names to `client_emulated_headers` — and keep them in `http_headers` until you're actually running v6.9.0 (on older versions only `http_headers` carries emulated values, so removing them early breaks emulation pre-upgrade). To temporarily keep the old behavior after upgrading, set `http_headers_include_client_emulated: true` on the proxy — this is deprecated and will be removed in Centrifugo v7.
 
 :::
 
