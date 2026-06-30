@@ -128,7 +128,8 @@ Centrifugo re-uses the same configuration object for all proxy types. This objec
 |---------------------------|----------------------------------------------------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `endpoint`                | `string`                                                       | yes      | HTTP or GRPC endpoint in the same format as in default proxy mode. For example, `http://localhost:3000/path` for HTTP or `grpc://localhost:3000` for GRPC.              |
 | `timeout`                 | [`duration`](./configuration.md#duration-type) | no       | Proxy request timeout, default `"1s"`                                                                                                                                   |
-| `http_headers`            | `array[string]`                                                | no       | List of headers from incoming client connection to proxy, by default no headers will be proxied. See [Proxy HTTP headers](#proxy-http-headers) section.                 |
+| `http_headers`            | `array[string]`                                                | no       | List of transport-level headers from the incoming client connection to proxy (not client-supplied emulated headers), by default no headers will be proxied. See [Proxy HTTP headers](#proxy-http-headers) section.                 |
+| `client_emulated_headers` | `array[string]`                                                | no       | List of client-supplied [emulated headers](#http-headers-emulation) to proxy. Client-controlled, so only for values your backend validates. By default none are proxied. |
 | `grpc_metadata`           | `array[string]`                                                | no       | List of GRPC metadata keys from incoming GRPC connection to proxy, by default no metadata keys will be proxied. See [Proxy GRPC metadata](#proxy-grpc-metadata) section. |
 | `include_connection_meta` | `bool`                                                         | no       | Include meta information (attached on connect). This is noop for connect proxy now. See [Include connection meta](#include-connection-meta) section.                    |
 | `http`                    | [`HTTP options`](#http-options-object)                | no       | Allows configuring outgoing HTTP protocol specific options.                                                                                                             |
@@ -164,7 +165,7 @@ It's required to provide an explicit list of HTTP headers you want to be proxied
 
 :::note
 
-`http_headers` forwards **transport-level headers only** — those set on the connection request itself (by the client transport or a reverse proxy in front of Centrifugo), so they cannot be forged by the connecting client. Client-supplied [emulated headers](#http-headers-emulation) are not forwarded through this list — for those use `client_emulated_headers`.
+`http_headers` forwards **transport-level headers only** — those set on the connection request itself (by the client transport or a reverse proxy in front of Centrifugo). Client-supplied [emulated headers](#http-headers-emulation) are not forwarded through this list — for those use `client_emulated_headers`.
 
 :::
 
@@ -204,7 +205,7 @@ Centrifugo provides a unique feature called `headers emulation` which simplifies
 
 The thing is that WebSocket browser API does not allow setting custom HTTP headers which makes implementing authentication in the WebSocket world harder. Centrifugo users can provide a custom `headers` map to the browser SDK (`centrifuge-js`) constructor, these headers are then sent in the first message to Centrifugo, and Centrifugo can translate them into native HTTP headers on the outgoing proxy request – abstracting away the specifics of WebSocket protocol. This can drastically simplify the integration from the auth perspective since the backend may re-use existing code.
 
-Because emulated headers are supplied by the client, they are kept separate from real transport headers: list the names you want forwarded in `client_emulated_headers` (**not** `http_headers`). For example:
+Because emulated headers are supplied by the client, they are kept separate from real transport headers: list the names you want forwarded in `client_emulated_headers` — the `http_headers` list never forwards emulated values. For example:
 
 ```json title="config.json"
 {
@@ -226,7 +227,13 @@ Because emulated headers are supplied by the client, they are kept separate from
 
 Values forwarded via `client_emulated_headers` come from the client's connect frame — the connecting client can set them to anything, and Centrifugo cannot tell a genuine value from a forged one. Forward a header this way only if your backend treats it as untrusted input it then validates (for example an `Authorization` token whose signature the backend verifies).
 
-If you need a header to be **unforgeable** — e.g. an identity like `x-user-id` injected by your gateway — use `http_headers` instead. Those are taken only from the real connection request, never from emulation, so a client cannot inject them. This requires an HTTP-based transport (WebSocket, SSE, HTTP-stream) where such a header exists; unidirectional GRPC has no transport-level headers, so don't rely on an unforgeable header there.
+If you need a header to be **unforgeable** — e.g. an identity like `x-user-id` injected by your gateway — use `http_headers` instead of `client_emulated_headers`. But note `http_headers` is not automatically trusted either: a directly-connecting client can set arbitrary connection headers itself (non-browser SDKs, unlike browsers, can set any header on the WebSocket upgrade or HTTP request). The difference from emulation is that a reverse proxy or gateway in front of Centrifugo **can** overwrite or strip a real transport header, whereas it cannot touch an emulated value (that travels inside the client's connect frame). So a transport header is unforgeable only when such an intermediary sets it on **every** connection and clients can't bypass it to reach Centrifugo directly. This also requires an HTTP-based transport (WebSocket, SSE, HTTP-stream); unidirectional GRPC has no transport-level headers.
+
+:::
+
+:::tip Same header from both sources
+
+A header your backend validates on its own — such as an `Authorization` token whose signature it verifies — can be listed in **both** `http_headers` and `client_emulated_headers`. This is the common browser + native-client setup: browsers deliver it via emulation, native clients (or a gateway) deliver it as a real transport header. When both are present the transport value wins and the emulated value is used as a fallback. Centrifugo does not treat this overlap as an error — it's only unsafe to list an origin-trusted header (like `x-user-id`) in `client_emulated_headers`, since that makes it forgeable.
 
 :::
 
@@ -267,7 +274,7 @@ So it is a map with string keys and string values. You may also set it over envi
 export CENTRIFUGO_CLIENT_PROXY_CONNECT_HTTP_STATIC_HEADERS='{"X-Custom-Header": "custom value"}'
 ```
 
-Static headers may be overridden by the header from the client connection request if you proxy the header with the same name inside `http_headers` option showed above.
+Static headers may be overridden by a header with the same name proxied via `http_headers` (from the connection request) or `client_emulated_headers` (from the client's emulation map).
 
 ## Proxy GRPC metadata
 
