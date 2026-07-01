@@ -129,7 +129,7 @@ Centrifugo re-uses the same configuration object for all proxy types. This objec
 | `endpoint`                | `string`                                                       | yes      | HTTP or GRPC endpoint in the same format as in default proxy mode. For example, `http://localhost:3000/path` for HTTP or `grpc://localhost:3000` for GRPC.              |
 | `timeout`                 | [`duration`](./configuration.md#duration-type) | no       | Proxy request timeout, default `"1s"`                                                                                                                                   |
 | `http_headers`            | `array[string]`                                                | no       | List of transport-level headers from the incoming client connection to proxy (not client-supplied emulated headers), by default no headers will be proxied. See [Proxy HTTP headers](#proxy-http-headers) section.                 |
-| `client_emulated_headers` | `array[string]`                                                | no       | List of client-supplied [emulated headers](#http-headers-emulation) to proxy. Client-controlled, so only for values your backend validates. By default none are proxied. |
+| `emulated_headers` | `array[string]`                                                | no       | List of client-supplied [emulated headers](#http-headers-emulation) to proxy. Client-controlled, so only for values your backend validates. By default none are proxied. |
 | `grpc_metadata`           | `array[string]`                                                | no       | List of GRPC metadata keys from incoming GRPC connection to proxy, by default no metadata keys will be proxied. See [Proxy GRPC metadata](#proxy-grpc-metadata) section. |
 | `include_connection_meta` | `bool`                                                         | no       | Include meta information (attached on connect). This is noop for connect proxy now. See [Include connection meta](#include-connection-meta) section.                    |
 | `http`                    | [`HTTP options`](#http-options-object)                | no       | Allows configuring outgoing HTTP protocol specific options.                                                                                                             |
@@ -165,7 +165,7 @@ It's required to provide an explicit list of HTTP headers you want to be proxied
 
 :::note
 
-`http_headers` forwards **transport-level headers only** — those set on the connection request itself (by the client transport or a reverse proxy in front of Centrifugo). Client-supplied [emulated headers](#http-headers-emulation) are not forwarded through this list — for those use `client_emulated_headers`.
+`http_headers` forwards **transport-level headers only** — those set on the connection request itself (by the client transport or a reverse proxy in front of Centrifugo). Client-supplied [emulated headers](#http-headers-emulation) are not forwarded through this list — for those use `emulated_headers`.
 
 :::
 
@@ -182,7 +182,6 @@ For example, for connect event proxy it may look like this:
           "Cookie",
           "Origin",
           "User-Agent",
-          "Authorization",
           "X-Real-Ip",
           "X-Forwarded-For",
           "X-Request-Id"
@@ -199,13 +198,15 @@ Centrifugo forces the `Content-Type` header to be `application/json` in all HTTP
 
 :::
 
-### HTTP headers emulation
+## HTTP headers emulation
 
 Centrifugo provides a unique feature called `headers emulation` which simplifies working with WebSocket and auth when connecting from web browser and using proxy hooks.
 
 The thing is that WebSocket browser API does not allow setting custom HTTP headers which makes implementing authentication in the WebSocket world harder. Centrifugo users can provide a custom `headers` map to a client SDK that supports emulation (e.g. `centrifuge-js`, `centrifuge-dart` on web, `centrifuge-csharp`), these headers are then sent in the first message to Centrifugo, and Centrifugo can translate them into native HTTP headers on the outgoing proxy request – abstracting away the specifics of WebSocket protocol. This can drastically simplify the integration from the auth perspective since the backend may re-use existing code.
 
-Because emulated headers are supplied by the client, they are kept separate from real transport headers: list the names you want forwarded in `client_emulated_headers` — the `http_headers` list never forwards emulated values. For example:
+The same mechanism is not limited to browsers: unidirectional transports (e.g. [unidirectional GRPC](../transports/uni_grpc.md)) carry these headers in the `headers` map of their `ConnectRequest`, and they are forwarded the same way.
+
+Because emulated headers are supplied by the client, they are kept separate from real transport headers: list the names you want forwarded in `emulated_headers` — the `http_headers` list never forwards emulated values. For example:
 
 ```json title="config.json"
 {
@@ -214,7 +215,7 @@ Because emulated headers are supplied by the client, they are kept separate from
       "connect": {
         "enabled": true,
         "endpoint": "https://your_backend/centrifugo/connect",
-        "client_emulated_headers": [
+        "emulated_headers": [
           "Authorization"
         ]
       }
@@ -223,27 +224,31 @@ Because emulated headers are supplied by the client, they are kept separate from
 }
 ```
 
-:::caution Treat `client_emulated_headers` as untrusted client input
+:::caution Treat `emulated_headers` as untrusted client input
 
-Values forwarded via `client_emulated_headers` come from the client's connect frame — the connecting client can set them to anything, and Centrifugo cannot tell a genuine value from a forged one. Forward a header this way only if your backend treats it as untrusted input it then validates (for example an `Authorization` token whose signature the backend verifies).
+Values forwarded via `emulated_headers` come from the client's connect frame — the connecting client can set them to anything, and Centrifugo cannot tell a genuine value from a forged one. Forward a header this way only if your backend treats it as untrusted input it then validates (for example an `Authorization` token whose signature the backend verifies).
 
-If you need a header to be **unforgeable** — e.g. an identity like `x-user-id` injected by your gateway — use `http_headers` instead of `client_emulated_headers`. But note `http_headers` is not automatically trusted either: a directly-connecting client can set arbitrary connection headers itself (non-browser SDKs, unlike browsers, can set any header on the WebSocket upgrade or HTTP request). The difference from emulation is that a reverse proxy or gateway in front of Centrifugo **can** overwrite or strip a real transport header, whereas it cannot touch an emulated value (that travels inside the client's connect frame). So a transport header is unforgeable only when such an intermediary sets it on **every** connection and clients can't bypass it to reach Centrifugo directly. This also requires an HTTP-based transport (WebSocket, SSE, HTTP-stream); unidirectional GRPC has no transport-level headers.
+If you need a header to be **unforgeable** — e.g. an identity like `x-user-id` injected by your gateway — use `http_headers` instead of `emulated_headers`. But note `http_headers` is not automatically trusted either: a directly-connecting client can set arbitrary connection headers itself (non-browser SDKs, unlike browsers, can set any header on the WebSocket upgrade or HTTP request). The difference from emulation is that a reverse proxy or gateway in front of Centrifugo **can** overwrite or strip a real transport header, whereas it cannot touch an emulated value (that travels inside the client's connect frame). So a transport header is unforgeable only when such an intermediary sets it on **every** connection and clients can't bypass it to reach Centrifugo directly. This also requires an HTTP-based transport (WebSocket, SSE, HTTP-stream); unidirectional GRPC has no transport-level headers.
 
 :::
 
 :::tip Same header from both sources
 
-A header your backend validates on its own — such as an `Authorization` token whose signature it verifies — can be listed in **both** `http_headers` and `client_emulated_headers`. This is the common browser + native-client setup: browsers deliver it via emulation, native clients (or a gateway) deliver it as a real transport header. When both are present the transport value wins and the emulated value is used as a fallback. Centrifugo does not treat this overlap as an error — it's only unsafe to list an origin-trusted header (like `x-user-id`) in `client_emulated_headers`, since that makes it forgeable.
+A header your backend validates on its own — such as an `Authorization` token whose signature it verifies — can be listed in **both** `http_headers` and `emulated_headers`. This is the common browser + native-client setup: browsers deliver it via emulation, native clients (or a gateway) deliver it as a real transport header. When both are present the transport value wins and the emulated value is used as a fallback. Centrifugo does not treat this overlap as an error — it's only unsafe to list an origin-trusted header (like `x-user-id`) in `emulated_headers`, since that makes it forgeable.
 
 :::
 
 :::note Upgrading to Centrifugo v6.9.0
 
-`client_emulated_headers` was introduced in Centrifugo v6.9.0. Before v6.9.0, `http_headers` forwarded both transport and emulated headers under one list. If you relied on that to forward emulated headers, add those names to `client_emulated_headers` — and keep them in `http_headers` until you're actually running v6.9.0 (on older versions only `http_headers` carries emulated values, so removing them early breaks emulation pre-upgrade). To temporarily keep the old behavior after upgrading, set `http_headers_include_client_emulated: true` on the proxy — this is deprecated and will be removed in Centrifugo v7.
+`emulated_headers` was introduced in Centrifugo v6.9.0. Before v6.9.0, `http_headers` forwarded both transport and emulated headers under one list. If you relied on that to forward emulated headers, list those names in `emulated_headers` (keep them in `http_headers` too until you're actually running v6.9.0 — on older versions only `http_headers` carries emulated values, so removing them early breaks emulation pre-upgrade).
+
+If you can't immediately decide which of your `http_headers` names are actually delivered via emulation, copy the whole `http_headers` list into `emulated_headers` to preserve the old behavior, then trim `emulated_headers` down to only the names your backend treats as untrusted client input (never leave origin-trusted names like `x-user-id` or `x-real-ip` in it). The migration hint in the logs tells you which names clients actually rely on.
+
+See the full migration guide in the [v6.9.0 release notes](https://github.com/centrifugal/centrifugo/releases/tag/v6.9.0).
 
 :::
 
-### Static HTTP headers
+## Static HTTP headers
 
 It's possible to configure a static set of headers to be appended to all outgoing HTTP proxy requests (note, this is under `http` section because it's HTTP protocol proxy specific, won't be added to GRPC protocol):
 
@@ -274,11 +279,28 @@ So it is a map with string keys and string values. You may also set it over envi
 export CENTRIFUGO_CLIENT_PROXY_CONNECT_HTTP_STATIC_HEADERS='{"X-Custom-Header": "custom value"}'
 ```
 
-Static headers may be overridden by a header with the same name proxied via `http_headers` (from the connection request) or `client_emulated_headers` (from the client's emulation map).
+Static headers may be overridden by a header with the same name proxied via `http_headers` (from the connection request) or `emulated_headers` (from the client's emulation map).
+
+:::caution
+
+`static_headers` has the lowest priority of the three sources, so if you use it for an **authoritative value** — e.g. a credential Centrifugo sends to your backend — do **not** also list that header's name in `http_headers` or `emulated_headers`. Otherwise a transport header or a client-supplied emulated value of the same name will override your static value (the emulated case means a client could replace it outright).
+
+:::
 
 ## Proxy GRPC metadata
 
 This is only useful when using [GRPC unidirectional stream](../transports/uni_grpc.md) as a client transport. In that case you may want to proxy GRPC metadata from the client request. To do this configure `grpc_metadata` field of Proxy configuration object. This is an array of string metadata keys to be proxied. By default, no metadata keys are proxied.
+
+:::note `grpc_metadata` vs `emulated_headers` for unidirectional clients
+
+A unidirectional GRPC client has two distinct ways to send key-value pairs, controlled by two different options:
+
+* the **GRPC call metadata** — forwarded via `grpc_metadata` (this section);
+* the **`headers` map inside its `ConnectRequest`** — this is the [headers emulation](#http-headers-emulation) channel, forwarded via `emulated_headers`, **not** `grpc_metadata`.
+
+So if your unidirectional client passes `headers` in the `ConnectRequest`, allow-list those names in `emulated_headers`. Both channels are client-controlled for a directly-connecting client, so treat them as untrusted unless a trusted GRPC gateway in front of Centrifugo sets the metadata.
+
+:::
 
 See below [the table of rules](#header-proxy-rules) how metadata and headers proxied in transport/proxy different scenarios.
 
@@ -1277,7 +1299,7 @@ Centrifugo not only supports HTTP-based client transports but also GRPC-based (f
 | HTTP                 | GRPC       | In proxy request metadata | N/A                       |
 | GRPC                 | HTTP       | N/A                       | In proxy request headers  |
 
-The table above covers transport-level headers/metadata configured via `http_headers`/`grpc_metadata`. Client-supplied [emulated headers](#http-headers-emulation) (configured separately via `client_emulated_headers`) are forwarded on top of these regardless of transport, and are always client-controlled.
+The table above covers transport-level headers/metadata configured via `http_headers`/`grpc_metadata`. Client-supplied [emulated headers](#http-headers-emulation) (configured separately via `emulated_headers`) are forwarded on top of these regardless of transport, and are always client-controlled.
 
 ## Binary encoding mode
 
