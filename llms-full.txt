@@ -12672,7 +12672,7 @@ The thing is that WebSocket browser API does not allow setting custom HTTP heade
 
 The same mechanism is not limited to browsers: unidirectional transports (e.g. [unidirectional GRPC](../transports/uni_grpc.md)) carry these headers in the `headers` map of their `ConnectRequest`, and they are forwarded the same way.
 
-Because emulated headers are supplied by the client, they are kept separate from real transport headers: list the names you want forwarded in `emulated_headers` — the `http_headers` list never forwards emulated values. For example:
+Because emulated headers are supplied by the client, they are kept separate from real transport headers: list the names you want forwarded in `emulated_headers` — the `http_headers` list never forwards emulated values.
 
 ```json title="config.json"
 {
@@ -12689,6 +12689,29 @@ Because emulated headers are supplied by the client, they are kept separate from
   }
 }
 ```
+
+In many cases you will want both normal transport and emulated headers to both be proxied:
+
+```json title="config.json"
+{
+  "client": {
+    "proxy": {
+      "connect": {
+        "enabled": true,
+        "endpoint": "https://your_backend/centrifugo/connect",
+        "http_headers": [
+          "Authorization"
+        ],
+        "emulated_headers": [
+          "Authorization"
+        ]
+      }
+    }
+  }
+}
+```
+
+Just make sure that values in `emulated_headers` come from client inside Centrifugo client protocol – and are not accessible by your reverse proxies. This distinction is the reason why we have `http_headers` and `emulated_headers` separate. 
 
 :::caution Treat `emulated_headers` as untrusted client input
 
