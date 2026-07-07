@@ -735,6 +735,18 @@ You can enable GRPC API in Centrifugo using `grpc_api.enabled` option:
 
 By default, GRPC will be served on port `10000` but you can change it using the `grpc_api.port` option.
 
+:::caution GRPC API has no authentication by default
+
+Unlike the HTTP API – which requires an [`http_api.key`](#http_apikey) by default – the GRPC API server runs **without any authentication by default**. As soon as `grpc_api.enabled` is set, anyone who can reach the GRPC port may call all API methods. Make sure to protect it in production using one of the following approaches:
+
+* **API key** – set [`grpc_api.key`](#grpc_apikey) so clients must provide per-RPC credentials in metadata. This is similar to the default `X-API-Key` mechanism of the HTTP API. See [GRPC API key authorization](#grpc-api-key-authorization) below.
+* **Mutual TLS (mTLS)** – configure [`grpc_api.tls`](#grpc_apitls) with client certificate verification so only clients presenting a trusted certificate can connect. See the [TLS config object](./configuration.md#tls-config-object) for available options.
+* **JWKS-based authentication (Centrifugo PRO)** – validate JWT tokens issued by your identity provider against a JWKS endpoint using the `grpc_api.jwks` option. See [server API JWKS authentication](../pro/server_api_enhancements.md#jwks-authentication).
+
+At the very least, make sure the GRPC API port is not exposed to the public network and is protected by firewall or network rules.
+
+:::
+
 Now, as soon as Centrifugo started – you can send GRPC commands to it. To do this get our API Protocol Buffer definitions [from this file](https://github.com/centrifugal/centrifugo/blob/master/internal/apiproto/api.proto).
 
 Then see [GRPC docs specific to your language](https://grpc.io/docs/) to find out how to generate client code from definitions and use generated code to communicate with Centrifugo.
