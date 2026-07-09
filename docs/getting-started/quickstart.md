@@ -5,6 +5,7 @@ sidebar_label: Quickstart tutorial
 title: Quickstart tutorial
 ---
 
+
 In this tutorial we'll build a simple browser app where all open tabs receive real-time counter updates via WebSocket. It takes about 5 minutes.
 
 ## 1. Install and generate config
@@ -88,6 +89,10 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM3MjIiLCJleHAiOjE2NTU0NDgyOTl
 ```
 
 Copy the token — you'll need it in the next step.
+
+:::tip No CLI handy?
+You can also [generate a connection token right in your browser](../server/authentication.md#examples-create-connection-jwt) — paste your `hmac_secret_key`, copy the token, and continue below.
+:::
 
 :::tip Production note
 The generated token has an expiration time. In a real application your backend generates tokens, and the client SDK automatically refreshes them using the `getToken` callback — see [client SDK token refresh](../transports/client_api.md#client-connection-token) for details.

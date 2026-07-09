@@ -1,111 +1,153 @@
 ---
-description: "Centrifugo channel permission model for subscribe, publish, history, and presence operations. Configure access via JWT tokens, proxies, and namespace options."
+description: "Centrifugo channel permission model for subscribe, publish, history, and presence operations. Configure access via JWT tokens, proxies, and namespace options — with interactive explorers to validate your model before writing code."
 id: channel_permissions
 title: Channel permission model
 ---
 
-When using Centrifugo [server API](./server_api.md) you don't need to think about channel permissions at all – everything is allowed. In server API case, request to Centrifugo must be issued by your application backend – so you have all the power to check any required permissions before issuing API request to Centrifugo.
+import PermissionExplorer from '@site/src/components/permissions/PermissionExplorer';
 
-The situation is different when we are talking about client real-time API.
+When using the Centrifugo [server API](./server_api.md) you don't need to think about channel permissions at all – everything is allowed. In the server API case, the request to Centrifugo is issued by your application backend – so you already have all the power to check any required permissions before issuing the API request.
 
-In order to configure which client (i.e. connection established using one of supported bidirectional real-time transports) can subscribe to channels and call publish, history and presence real-time APIs Centrifugo provides several ways to configure the desired behavior.
+The situation is different when we talk about the **client** real-time API – subscribing to channels and calling publish, history and presence from a connection established over one of the bidirectional real-time transports. Centrifugo gives you several ways to control what a client may do, and this document is the single place that describes all of them.
 
-Let's start by looking at the Centrifugo subscribe permission model.
+There are many individual options, so before the reference sections below let's build a **mental model** that makes them fit together.
 
-### Subscribe permission model
+## The mental model
 
-By default, a client's attempt to subscribe to a channel will be rejected by the server with a `103: permission denied` error. There are several approaches to controlling channel subscribe permissions:
+Every client permission decision comes down to two questions: **who decides**, and **when**. There are only three mechanisms, and everything else is a variation on them:
 
-* [Provide subscription token](#provide-subscription-token)
-* [Configure subscribe proxy](#configure-subscribe-proxy)
-* [Use user-limited channels](#use-user-limited-channels)
-* [Use subscribe_allowed_for_client namespace option](#use-allow_subscribe_for_client-namespace-option)
-* [Subscribe capabilities in connection token](#subscribe-capabilities-in-connection-token)
-* [Subscribe capabilities in connect proxy](#subscribe-capabilities-in-connect-proxy)
+| Mechanism | Who decides | When | Scope |
+| --- | --- | --- | --- |
+| **Namespace options** (`allow_*` flags, user-limited channels) | You, in config | Once, at config time | Everyone in the namespace |
+| **Tokens** (connection JWT, subscription JWT) | Your backend, when it issues the token | At token-issue time, re-checked on token expiry | Per user / per subscription |
+| **Proxies** (connect, subscribe, publish proxy) | Your backend, on every relevant event | At the moment of the event | Per event |
 
-Below, we are describing those in detail.
+The same three mechanisms apply to all four operations – **subscribe**, **publish**, **history**, **presence**. In Centrifugo PRO, tokens and proxies can additionally carry a **capability** object that grants fine-grained permissions for several channels at once (more on that in [Capabilities](#capabilities-pro) below).
+
+So instead of memorizing dozens of options, remember the grid: *three mechanisms × four operations*, plus capabilities as the PRO way to batch permissions.
+
+### Choosing an approach
+
+For the common case – "let a specific user access a specific channel" – this is the quick guide:
+
+| If you want… | Use |
+| --- | --- |
+| A public channel (any authenticated connection may subscribe) | `allow_subscribe_for_client` |
+| A per-user channel, checked at your backend, cached on the client | **subscription token** (recommended default) |
+| To be notified on every subscribe / revoke access instantly / deliver initial data | **subscribe proxy** |
+| One channel per user with almost no code | [automatic personal channel](./server_subs.md#automatic-personal-channel-subscription) |
+| Fine-grained, multi-channel grants without per-channel tokens | **capabilities** in connection JWT / connect proxy <span className="pro-tag">PRO</span> |
+
+For a deeper tour of the options for a single personal channel, see the [101 ways to subscribe](/blog/2022/07/29/101-way-to-subscribe) post.
+
+### Validate before you build
+
+Permissions are easiest to get wrong at the *interaction* level – "this user, this channel, this config: allowed or not, and **why**?". Each section below embeds an **interactive explorer** that mirrors Centrifugo's real decision order. Toggle the options, pick a token/proxy outcome, and watch the exact order of checks that leads to `ALLOWED` or `DENIED`. Use it to confirm your permission model before writing a line of code.
+
+:::note
+
+The explorers run entirely in your browser and reproduce the server's decision *order* for teaching purposes. A few advanced knobs (CEL expressions, the bidirectional subscribe-stream proxy) are omitted for clarity. The authoritative behavior is always the server itself.
+
+:::
+
+## Subscribe permission model
+
+By default, a client's attempt to subscribe to a channel is rejected with a `103: permission denied` error. Centrifugo evaluates the following mechanisms **in order** and the first one that grants access wins:
+
+1. **Private-prefix gate** — if the channel name starts with `channel.private_prefix` (`$` by default), a subscription **without a token is rejected immediately**, regardless of any option below. This helps avoid accidentally exposing channels.
+2. **Subscription token** — if a token is supplied, it alone decides the subscription (all mechanisms below are skipped). A valid token accepts; an invalid one rejects.
+3. **User-limited channel** (`#`) — if the namespace enables `allow_user_limited_channels` and the user ID matches, the subscription is accepted. For user-limited channels the proxy and `allow_subscribe_for_client` are **not** consulted.
+4. **Subscribe proxy** — if enabled (and the channel is not user-limited), your backend decides.
+5. **Connection capabilities** <span className="pro-tag">PRO</span> — a `sub` capability from the connection token / connect proxy that matches the channel.
+6. **`allow_subscribe_for_client`** — allows all authenticated (non-anonymous) connections; add `allow_subscribe_for_anonymous` to also allow anonymous ones. Not consulted for user-limited channels.
+
+If none grant access, the subscription is denied.
+
+<PermissionExplorer op="subscribe" />
+
+Below are the details of each mechanism.
 
 #### Provide subscription token
 
-A client can provide a subscription token in subscribe request. See [the format of the token](channel_token_auth.md).
-
-If a client provides a valid token then the subscription will be accepted. In Centrifugo PRO, a subscription token can additionally grant `publish`, `history` and `presence` permissions to a client.
+A client can provide a subscription token in the subscribe request. See [the format of the token](channel_token_auth.md). If a client provides a valid token then the subscription is accepted. In Centrifugo PRO, a subscription token can additionally grant `publish`, `history` and `presence` permissions to a client via the `allow` claim.
 
 :::caution
 
-For namespaces with `allow_subscribe_for_client` channel option ON Centrifugo does not allow subscribing on channels starting with `channel.private_prefix` (`$` by default) without token. This limitation exists to help users migrate to Centrifugo v4 without security risks.
+For namespaces with `allow_subscribe_for_client` ON, Centrifugo does not allow subscribing to channels starting with `channel.private_prefix` (`$` by default) without a token. This limitation exists to help users migrate to Centrifugo v4 without security risks.
 
 :::
 
 #### Configure subscribe proxy
 
-If a client subscribes to a namespace with a configured subscribe proxy, then depending on the proxy response the subscription will be accepted or not.
+If a client subscribes to a namespace with a configured subscribe proxy (`subscribe_proxy_enabled`), then depending on the proxy response the subscription is accepted or not.
 
-If a namespace has a configured subscribe proxy, but the user came with a token – then the subscribe proxy is not used; we rely on the token in this case. If a namespace has a subscribe proxy, but the user subscribes to a user-limited channel – then the subscribe proxy is not used either.
+If a namespace has a configured subscribe proxy, but the client came with a token – then the subscribe proxy is not used; the token decides. If a client subscribes to a user-limited channel – the subscribe proxy is not used either.
 
 #### Use user-limited channels
 
-If a client subscribes to a user-limited channel and there is a user ID match, then the subscription will be accepted.
+If a client subscribes to a user-limited channel and there is a user ID match, then the subscription is accepted. A user-limited channel contains a `#` followed by a comma-separated list of allowed user IDs, e.g. `personal:#17` or `chat:#17,42`.
 
 :::caution
 
-User-limited channels must be enabled in a namespace using `allow_user_limited_channels` channel option.
+User-limited channels must be enabled in a namespace using the `allow_user_limited_channels` channel option.
 
 :::
 
 #### Use allow_subscribe_for_client namespace option
 
-`allow_subscribe_for_client` channel option allows all authenticated non-anonymous connections to subscribe on all channels in a namespace.
+`allow_subscribe_for_client` allows all authenticated non-anonymous connections to subscribe to all channels in a namespace.
 
 :::caution
 
-Turning this option on effectively makes namespace public – no subscribe permissions will be checked (only the check that current connection is authenticated - i.e. has non-empty user ID). Make sure this is really what you want in terms of channels security.
+Turning this option on effectively makes the namespace public – no per-user subscribe permissions are checked (only that the connection is authenticated, i.e. has a non-empty user ID). Make sure this is really what you want in terms of channel security.
 
 :::
 
-To additionally allow subscribing to anonymous connections take a look at `allow_subscribe_for_anonymous` option.
+To additionally allow subscribing for anonymous connections take a look at the `allow_subscribe_for_anonymous` option.
 
 #### Subscribe capabilities in connection token
 
 <p><mark>Centrifugo PRO only</mark></p>
 
-Connection token can contain a capability object to allow user subscribe to channels.
+A connection token can contain a capability object to allow the user to subscribe to channels. See [Capabilities](#capabilities-pro).
 
 #### Subscribe capabilities in connect proxy
 
 <p><mark>Centrifugo PRO only</mark></p>
 
-Connect proxy can return capability object to allow user subscribe to channels.
+A connect proxy can return a capability object to allow the user to subscribe to channels.
 
-### Publish permission model
+## Publish permission model
 
 :::tip
 
-In idiomatic Centrifugo use case data should be published to channels from the application backend (over server API). In this case backend can validate data, save it into persistent storage before publishing in real-time towards connections. When publishing from the client-side backend does not receive publication data at all – it just goes through Centrifugo (except using publish proxy). There are cases when direct publications from the client-side are desired (like typing indicators in chat applications) though.
+In the idiomatic Centrifugo use case, data is published to channels from the application backend (over the server API). The backend can validate data and save it to persistent storage before publishing in real-time. When publishing from the client-side the backend does not receive the publication data at all – it just goes through Centrifugo (except when using a publish proxy). Direct publications from the client-side are still useful in some cases (like typing indicators in chat).
 
 :::
 
-By default, a client's attempt to publish data into a channel will be rejected by the server with a `103: permission denied` error. There are several approaches to controlling channel publish permissions:
+By default, a client's attempt to publish to a channel is rejected with a `103: permission denied` error. Centrifugo evaluates the following **in order**, first match wins:
 
-* [Configure publish proxy](#configure-publish-proxy)
-* [Use allow_publish_for_subscriber namespace option](#use-allow_publish_for_subscriber-namespace-option)
-* [Use allow_publish_for_client namespace option](#use-allow_publish_for_client-namespace-option)
-* [Publish capabilities in connection token](#publish-capabilities-in-connection-token)
-* [Publish capability in subscription token](#publish-capability-in-subscription-token)
-* [Publish capabilities in connect proxy](#publish-capabilities-in-connect-proxy)
-* [Publish capability in subscribe proxy](#publish-capability-in-subscribe-proxy)
+1. **Publish proxy** — if `publish_proxy_enabled`, the proxy **takes precedence over everything else**. The built-in `allow_publish_*` flags and token capabilities are not consulted; the proxy response alone decides.
+2. **`allow_publish_for_client`** — allows all authenticated connections (add `allow_publish_for_anonymous` for anonymous ones).
+3. **`allow_publish_for_subscriber`** — allows connections currently subscribed to the channel they publish into.
+4. **Connection capabilities** <span className="pro-tag">PRO</span> — a `pub` capability from the connection token / connect proxy.
+5. **Subscription capabilities** <span className="pro-tag">PRO</span> — a `pub` capability from the subscription token `allow` / subscribe proxy for this channel.
+
+If none grant access, the publication is denied.
+
+<PermissionExplorer op="publish" />
 
 #### Use allow_publish_for_client namespace option
 
-`allow_publish_for_client` allows publications to channels of a namespace for all client connections. 
+`allow_publish_for_client` allows publications to channels of a namespace for all authenticated client connections. Add `allow_publish_for_anonymous` to also allow anonymous connections.
 
 #### Use allow_publish_for_subscriber namespace option
 
-`allow_publish_for_subscriber` allows publications to channels of a namespace for all connections subscribed on a channel they want to publish data into.
+`allow_publish_for_subscriber` allows publications to channels of a namespace for all connections currently subscribed to the channel they want to publish into.
 
 #### Configure publish proxy
 
-If a client publishes to a namespace with a configured publish proxy, then depending on the proxy response the publication will be accepted or not.
+If a client publishes to a namespace with a configured publish proxy, then depending on the proxy response the publication is accepted or not.
 
 When a publish proxy is enabled for a namespace it takes precedence: all client publishes to channels in that namespace are routed to the proxy, and the proxy response alone decides whether the publication is accepted. The built-in `allow_publish_for_client` / `allow_publish_for_subscriber` flags and token publish capabilities are not consulted in this case.
 
@@ -113,104 +155,143 @@ When a publish proxy is enabled for a namespace it takes precedence: all client 
 
 <p><mark>Centrifugo PRO only</mark></p>
 
-Connection token can contain a capability object to allow client to publish to channels.
+A connection token can contain a capability object to allow the client to publish to channels.
 
 #### Publish capability in subscription token
 
 <p><mark>Centrifugo PRO only</mark></p>
 
-Subscription token can contain a capability object to allow client to publish to a channel.
+A subscription token can contain a `pub` capability in its `allow` claim to allow the client to publish to that channel.
 
 #### Publish capabilities in connect proxy
 
 <p><mark>Centrifugo PRO only</mark></p>
 
-Connect proxy can return capability object to allow client publish to certain channels.
+A connect proxy can return a capability object to allow the client to publish to certain channels.
 
 #### Publish capability in subscribe proxy
 
 <p><mark>Centrifugo PRO only</mark></p>
 
-Subscribe proxy can return capability object to allow subscriber publish to channel.
+A subscribe proxy can return an `allow` list containing `pub` to allow the subscriber to publish to the channel.
 
-### History permission model
+## History permission model
 
-By default, a client's attempt to call history from a channel (with history retention configured) will be rejected by the server with a `103: permission denied` error. There are several approaches to controlling channel history permissions.
+By default, a client's attempt to call history for a channel is rejected with a `103: permission denied` error. History must first be configured for the namespace (`history_size` and `history_ttl` greater than zero) – otherwise the call returns `108: not available` before any permission check. When history is configured, Centrifugo evaluates the following **in order**, first match wins:
 
-#### Use allow_history_for_subscriber namespace option
+1. **`allow_history_for_client`** — allows all authenticated connections (add `allow_history_for_anonymous` for anonymous ones).
+2. **`allow_history_for_subscriber`** — allows connections currently subscribed to the channel.
+3. **Connection capabilities** <span className="pro-tag">PRO</span> — an `hst` capability from the connection token / connect proxy.
+4. **Subscription capabilities** <span className="pro-tag">PRO</span> — an `hst` capability from the subscription token `allow` / subscribe proxy for this channel.
 
-`allow_history_for_subscriber` allows history requests to all channels in a namespace for all client connections subscribed on a channel they want to call history for.
+<PermissionExplorer op="history" />
 
 #### Use allow_history_for_client namespace option
 
-`allow_history_for_client` allows history requests to all channels in a namespace for all client connections.
+`allow_history_for_client` allows history requests to all channels in a namespace for all authenticated client connections. Add `allow_history_for_anonymous` to also allow anonymous connections.
+
+#### Use allow_history_for_subscriber namespace option
+
+`allow_history_for_subscriber` allows history requests for all connections currently subscribed to the channel they want to call history for.
 
 #### History capabilities in connection token
 
 <p><mark>Centrifugo PRO only</mark></p>
 
-Connection token can contain a capability object to allow user call history for channels.
+A connection token can contain a capability object to allow the user to call history for channels.
 
-#### History capabilities in subscription token
+#### History capability in subscription token
 
 <p><mark>Centrifugo PRO only</mark></p>
 
-Connection token can contain a capability object to allow user call history from a channel.
+A subscription token can contain an `hst` capability in its `allow` claim to allow the user to call history for that channel.
 
 #### History capabilities in connect proxy
 
-**This is a Centrifugo PRO feature.**
+<p><mark>Centrifugo PRO only</mark></p>
 
-Connect proxy can return capability object to allow client call history from certain channels.
+A connect proxy can return a capability object to allow the client to call history for certain channels.
 
-#### History capability in subscribe proxy response
+#### History capability in subscribe proxy
 
 <p><mark>Centrifugo PRO only</mark></p>
 
-Subscribe proxy can return capability object to allow subscriber call history from channel.
+A subscribe proxy can return an `allow` list containing `hst` to allow the subscriber to call history for the channel.
 
-### Presence permission model
+## Presence permission model
 
-By default, a client's attempt to call presence from a channel (with channel presence configured) will be rejected by the server with a `103: permission denied` error. There are several approaches to controlling channel presence permissions.
+By default, a client's attempt to call presence for a channel is rejected with a `103: permission denied` error. Presence must first be enabled for the namespace – otherwise the call returns `108: not available` before any permission check. When presence is enabled, Centrifugo evaluates the following **in order**, first match wins:
 
-#### Presence capability in subscribe proxy response
+1. **`allow_presence_for_client`** — allows all authenticated connections (add `allow_presence_for_anonymous` for anonymous ones).
+2. **`allow_presence_for_subscriber`** — allows connections currently subscribed to the channel.
+3. **Connection capabilities** <span className="pro-tag">PRO</span> — a `prs` capability from the connection token / connect proxy.
+4. **Subscription capabilities** <span className="pro-tag">PRO</span> — a `prs` capability from the subscription token `allow` / subscribe proxy for this channel.
 
-Subscribe proxy can return capability object to allow subscriber call presence from channel.
-
-#### Use allow_presence_for_subscriber namespace option
-
-`allow_presence_for_subscriber` allows presence requests to all channels in a namespace for all client connections subscribed on a channel they want to call presence for.
+<PermissionExplorer op="presence" />
 
 #### Use allow_presence_for_client namespace option
 
-`allow_presence_for_client` allows presence requests to all channels in a namespace for all client connections. 
+`allow_presence_for_client` allows presence requests to all channels in a namespace for all authenticated client connections. Add `allow_presence_for_anonymous` to also allow anonymous connections.
+
+#### Use allow_presence_for_subscriber namespace option
+
+`allow_presence_for_subscriber` allows presence requests for all connections currently subscribed to the channel they want to call presence for.
 
 #### Presence capabilities in connection token
 
 <p><mark>Centrifugo PRO only</mark></p>
 
-Connection token can contain a capability object to allow user call presence for channels.
+A connection token can contain a capability object to allow the user to call presence for channels.
 
-#### Presence capabilities in subscription token
+#### Presence capability in subscription token
 
 <p><mark>Centrifugo PRO only</mark></p>
 
-Connection token can contain a capability object to allow user call presence of a channel.
+A subscription token can contain a `prs` capability in its `allow` claim to allow the user to call presence for that channel.
 
 #### Presence capabilities in connect proxy
 
 <p><mark>Centrifugo PRO only</mark></p>
 
-Connect proxy can return capability object to allow client call presence from certain channels.
+A connect proxy can return a capability object to allow the client to call presence for certain channels.
 
-### Positioning permission model
+#### Presence capability in subscribe proxy
 
-Server can turn on positioning for all channels in a namespace using `"force_positioning": true` option or client can create positioned subscriptions (but in this case client must have access to `history` capability).
+<p><mark>Centrifugo PRO only</mark></p>
 
-### Recovery permission model
+A subscribe proxy can return an `allow` list containing `prs` to allow the subscriber to call presence for the channel.
 
-Server can turn on automatic recovery for all channels in a namespace using `"force_recovery": true` option or client can create recoverable subscriptions (but in this case client must have access to `history` capability).
+## Capabilities <span className="pro-tag">PRO</span> {#capabilities-pro}
 
-### Join/Leave permission model
+Capabilities are the Centrifugo PRO way to grant several permissions at once, instead of using a per-channel flag or token. They come in two shapes:
 
-Server can force sending join/leave messages to all subscribers for all channels in a namespace using `"force_push_join_leave": true` option or client can ask server to include join/leave messages upon subscribing (but in this case client must have access to `presence` capability).
+- **Connection capabilities** live in the connection JWT `caps` claim (or the connect proxy result). Each entry grants a set of operations for a set of channels, with an optional matching mode:
+
+  ```json
+  "caps": [
+    {"channels": ["personal:17"], "allow": ["sub"]},
+    {"channels": ["news:*"], "match": "wildcard", "allow": ["sub", "hst"]}
+  ]
+  ```
+
+  The `match` field selects how each channel string is compared to the requested channel: `""` (default) exact match, `wildcard`, or `regex`.
+
+- **Subscription capabilities** live in the subscription JWT `allow` claim (or the subscribe proxy result). This is a flat list of operations for the single channel of that subscription:
+
+  ```json
+  {"channel": "personal:17", "allow": ["pub", "hst", "prs"]}
+  ```
+
+The valid operation strings are `sub` (subscribe), `pub` (publish), `hst` (history) and `prs` (presence). Connection capabilities are checked before subscription capabilities in every operation's decision order.
+
+## Positioning permission model
+
+The server can turn on positioning for all channels in a namespace using the `force_positioning` option, or a client can create positioned subscriptions (in which case the client must have access to the `history` capability).
+
+## Recovery permission model
+
+The server can turn on automatic recovery for all channels in a namespace using the `force_recovery` option, or a client can create recoverable subscriptions (in which case the client must have access to the `history` capability).
+
+## Join/Leave permission model
+
+The server can force sending join/leave messages to all subscribers for all channels in a namespace using the `force_push_join_leave` option, or a client can ask the server to include join/leave messages upon subscribing (in which case the client must have access to the `presence` capability).

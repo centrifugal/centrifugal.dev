@@ -4,6 +4,10 @@ id: authentication
 title: Client JWT authentication
 ---
 
+import ConnectionTokenExplorer from '@site/src/components/auth/ConnectionTokenExplorer';
+import JwksTemplateResolver from '@site/src/components/jwkstemplate/JwksTemplateResolver';
+import JwtGenerator from '@site/src/components/quickstart/JwtGenerator';
+
 To securely authenticate incoming real-time client connections, Centrifugo can use a [JSON Web Token](https://jwt.io/introduction) (JWT) issued by your application backend. This process allows Centrifugo to identify the user's ID in your application securely. Additionally, your application can include extra information within the JWT claims, which Centrifugo can then utilize. This chapter will explain how such connection token may be created and used.
 
 :::tip
@@ -275,9 +279,19 @@ You should provide the same connection JWT you issued when the page was initiall
 
 When you load a new token from your app backend, user authentication must be facilitated by your app's session mechanism. So you know for whom you are going to generate an updated token.
 
+## Try it: connection JWT explorer
+
+Build a connection token below and see whether the connection would be accepted (the claim-level checks Centrifugo runs) and what it becomes — the user ID, expiration, server-side subscriptions, and attached `info` / `meta` — along with the JWT claims to sign and the matching Centrifugo config.
+
+<ConnectionTokenExplorer />
+
 ## Examples: create connection JWT
 
-Let's look at how to generate connection HS256 JWT in Python:
+Generate a token to test with right below — it's signed in your browser (the secret never leaves the page), and it shows how to issue the same token from your backend in Python, Node.js, Go, PHP, and Java, plus how a client uses it.
+
+<JwtGenerator type="connection" />
+
+You can also write it by hand. Here's how to generate a connection HS256 JWT in Python:
 
 ### Simplest token
 
@@ -598,6 +612,12 @@ Setting `client.token.issuer_regex` and `client.token.audience_regex` will also 
 When using `client.token.issuer_regex` and `client.token.audience_regex` make sure `client.token.issuer` and `client.token.audience` not used in the config - otherwise and error will be returned on Centrifugo start.
 
 :::
+
+### Try it: dynamic JWKS resolver
+
+Enter your `issuer_regex` / `audience_regex` and the `jwks_public_endpoint` template, plus a sample token's `iss` / `aud`, to check two things at once: whether the config **passes the startup safety check** (every placeholder must be an explicit list of fixed values), and what concrete JWKS URL a token **resolves to** at runtime (or why it's rejected).
+
+<JwksTemplateResolver />
 
 ## Custom token user id claim
 

@@ -4,6 +4,9 @@ id: channel_token_auth
 title: Channel JWT authorization
 ---
 
+import SubscriptionTokenExplorer from '@site/src/components/auth/SubscriptionTokenExplorer';
+import JwtGenerator from '@site/src/components/quickstart/JwtGenerator';
+
 In the chapter about [channel permissions](channel_permissions.md) we mentioned that to subscribe on a channel client can provide subscription token. This chapter has more information about the subscription token mechanism in Centrifugo.
 
 Subscription token is also JWT. The concept is very similar to the [connection token](authentication.md), but with specific custom claims.
@@ -126,9 +129,19 @@ So for example, you want to turn off emitting a presence information for a parti
 }
 ```
 
+## Try it: subscription JWT explorer
+
+Build a subscription token below and see whether the subscription is authorized (the claim-level checks Centrifugo runs) and what it becomes — the channel, user, expiration, `info`, and any channel-option `override`s — along with the JWT claims to sign and the matching config.
+
+<SubscriptionTokenExplorer />
+
 ## Example: create subscription JWT
 
-So to generate a subscription token you can use something like this in Python (assuming user ID is `42` and the channel is `gossips`):
+Generate a subscription token to test with right below — signed in your browser (the secret never leaves the page) — with the backend code to issue it in several languages and how a client subscribes with it.
+
+<JwtGenerator type="subscription" />
+
+You can also write it by hand. Here's a subscription token in Python (assuming user ID is `42` and the channel is `gossips`):
 
 ````mdx-code-block
 import Tabs from '@theme/Tabs';

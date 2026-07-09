@@ -766,3 +766,19 @@ html[data-theme="dark"] body::after {
     radial-gradient(circle at 100% 45%, rgba(180, 55, 55, 0.04), transparent 36%);
 }
 
+
+/* Compact inline "PRO" tag — fixed small size so it stays tight even inside
+   headings (where a bare <mark> would inherit the heading font size). */
+.pro-tag {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0.03em;
+  padding: 0 0.35em;
+  border-radius: 3px;
+  background: #f5c451;
+  color: #3a2f00;
+  vertical-align: middle;
+  margin-left: 0.15em;
+}

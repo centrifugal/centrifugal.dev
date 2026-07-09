@@ -1,0 +1,295 @@
+.card {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 10px;
+  background: var(--ifm-background-surface-color);
+  margin: 1.2rem 0 1.6rem;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  background: var(--ifm-color-emphasis-100);
+}
+
+.title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.verdict {
+  margin-left: auto;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.allowed { background: rgba(75, 210, 122, 0.16); color: #1a9e52; }
+.denied { background: rgba(254, 94, 94, 0.16); color: #d63b3b; }
+.na { background: var(--ifm-color-emphasis-200); color: var(--ifm-color-emphasis-700); }
+
+html[data-theme='dark'] .allowed { color: #5bef7b; }
+html[data-theme='dark'] .denied { color: #ff7a7a; }
+
+.body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: 0;
+}
+@media (max-width: 720px) {
+  .body { grid-template-columns: 1fr; }
+}
+
+.controls {
+  padding: 0.9rem 1rem;
+  border-right: 1px solid var(--ifm-color-emphasis-200);
+  min-width: 0;
+}
+@media (max-width: 720px) {
+  .controls { border-right: none; border-bottom: 1px solid var(--ifm-color-emphasis-200); }
+}
+
+.trace {
+  padding: 0.9rem 1rem;
+  min-width: 0;
+}
+
+.group { margin-bottom: 0.85rem; }
+.groupLabel {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ifm-color-emphasis-600);
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.28rem 0;
+  font-size: 0.85rem;
+}
+.row label { cursor: pointer; user-select: none; }
+
+.field { display: flex; flex-direction: column; gap: 0.2rem; margin: 0.3rem 0; }
+.field > span { font-size: 0.78rem; color: var(--ifm-color-emphasis-700); }
+
+.text {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.28rem 0.45rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 6px;
+  background: var(--ifm-background-color);
+  color: var(--ifm-font-color-base);
+  width: 100%;
+}
+.mono { font-family: var(--ifm-font-family-monospace); }
+
+.seg { display: inline-flex; border: 1px solid var(--ifm-color-emphasis-300); border-radius: 6px; overflow: hidden; }
+.seg button {
+  font: inherit;
+  font-size: 0.78rem;
+  padding: 0.2rem 0.55rem;
+  border: none;
+  background: var(--ifm-background-color);
+  color: var(--ifm-color-emphasis-700);
+  cursor: pointer;
+}
+.seg button.active { background: var(--ifm-color-primary); color: #fff; }
+.seg button + button { border-left: 1px solid var(--ifm-color-emphasis-300); }
+
+.pro {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0.03em;
+  padding: 0 0.3em;
+  border-radius: 3px;
+  background: #f5c451;
+  color: #3a2f00;
+  vertical-align: middle;
+}
+
+.caps {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.75rem;
+  width: 100%;
+  min-height: 4.5rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 6px;
+  background: var(--ifm-background-color);
+  color: var(--ifm-font-color-base);
+  resize: vertical;
+}
+.capsErr { color: #d63b3b; font-size: 0.72rem; margin-top: 0.15rem; }
+.capsOk { color: #1a9e52; font-size: 0.74rem; margin-top: 0.2rem; display: inline-block; }
+html[data-theme='dark'] .capsOk { color: #5bef7b; }
+.capsWarn { color: #b9791a; font-size: 0.74rem; margin-top: 0.2rem; display: inline-block; }
+html[data-theme='dark'] .capsWarn { color: #f5c451; }
+.capsHint { color: var(--ifm-color-emphasis-600); font-size: 0.72rem; }
+
+.capsFoot { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.3rem; }
+.exampleBtn {
+  font: inherit;
+  font-size: 0.72rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--ifm-color-primary);
+  color: var(--ifm-color-primary);
+  background: none;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.exampleBtn:hover { background: var(--ifm-color-primary); color: #fff; }
+
+.capNeeded label { font-weight: 700; }
+.capNeeded { padding: 0 0.3rem; border-radius: 4px; background: rgba(245, 196, 81, 0.18); }
+
+.advToggle {
+  font-size: 0.75rem;
+  color: var(--ifm-color-primary);
+  background: none;
+  border: none;
+  padding: 0.2rem 0;
+  cursor: pointer;
+}
+
+/* trace steps */
+.stepList { list-style: none; margin: 0; padding: 0; }
+.step {
+  display: flex;
+  gap: 0.55rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px dashed var(--ifm-color-emphasis-200);
+  font-size: 0.82rem;
+}
+.step:last-child { border-bottom: none; }
+.dot {
+  flex: none;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 50%;
+  margin-top: 0.15rem;
+  font-size: 0.65rem;
+  line-height: 0.9rem;
+  text-align: center;
+  color: #fff;
+  font-weight: 800;
+}
+.d-granted { background: #2eae5c; }
+.d-blocked { background: #e04747; }
+.d-no-match { background: #e0a13a; }
+.d-off { background: var(--ifm-color-emphasis-400); }
+.d-skipped { background: var(--ifm-color-emphasis-300); }
+
+.stepMain { min-width: 0; }
+.stepLabel { font-weight: 600; }
+.stepDetail { color: var(--ifm-color-emphasis-700); font-size: 0.78rem; margin-top: 0.1rem; }
+.stepFaint { opacity: 0.55; }
+
+.sourceLine {
+  margin-top: 0.7rem;
+  font-size: 0.82rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+.sourceLine b { color: var(--ifm-color-primary); }
+
+/* Footer note styled as the site's note/secondary admonition. */
+.caveat {
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--ifm-color-emphasis-700);
+  background: linear-gradient(135deg, rgba(140, 150, 170, 0.16), rgba(100, 115, 140, 0.06));
+  border-left: 3px solid #8a8a8a;
+  border-radius: 0.375rem;
+  margin: 0.3rem 0.9rem 0.9rem;
+  padding: 0.5rem 0.7rem;
+}
+html[data-theme='dark'] .caveat { background: linear-gradient(135deg, rgba(160, 170, 190, 0.12), rgba(120, 135, 160, 0.05)); }
+.caveat code { font-size: 0.9em; }
+
+/* implement-this section */
+.implement {
+  padding: 0.85rem 1rem 1rem;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+  background: var(--ifm-color-emphasis-100);
+}
+.implementHead { margin-bottom: 0.6rem; }
+.implementLead { display: block; font-size: 0.82rem; margin-top: 0.2rem; }
+
+.snippets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.8rem;
+}
+
+.snippet {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 8px;
+  background: var(--ifm-background-color);
+  overflow: hidden;
+  min-width: 0;
+}
+.snippetHead {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  background: var(--ifm-color-emphasis-100);
+}
+.snippetTitle { font-size: 0.75rem; font-weight: 700; }
+.copyBtn {
+  margin-left: auto;
+  font: inherit;
+  font-size: 0.68rem;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 5px;
+  background: var(--ifm-background-color);
+  color: var(--ifm-color-emphasis-700);
+  cursor: pointer;
+}
+.copyBtn:hover { border-color: var(--ifm-color-primary); color: var(--ifm-color-primary); }
+.snippetCode {
+  margin: 0;
+  padding: 0.55rem 0.65rem;
+  font-size: 0.74rem;
+  line-height: 1.45;
+  overflow-x: auto;
+  background: transparent;
+  border-radius: 0;
+}
+.snippetNote {
+  font-size: 0.7rem;
+  color: var(--ifm-color-emphasis-600);
+  padding: 0.3rem 0.65rem;
+  border-top: 1px dashed var(--ifm-color-emphasis-200);
+}
+
+/* Dark theme: a subtle frosted panel instead of Infima's flat gray surface. */
+html[data-theme='dark'] .card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.018));
+  border-color: rgba(255, 255, 255, 0.1);
+}
+html[data-theme='dark'] .header,
+html[data-theme='dark'] .implement,
+html[data-theme='dark'] .snippetHead { background: rgba(255, 255, 255, 0.04); }
+html[data-theme='dark'] .header { border-bottom-color: rgba(255, 255, 255, 0.08); }
+html[data-theme='dark'] .implement { border-top-color: rgba(255, 255, 255, 0.08); }
+html[data-theme='dark'] .snippet { border-color: rgba(255, 255, 255, 0.1); }
+
+/* Roomier separation between input groups in the left column. */
+.controls .group { margin-bottom: 1.5rem; }
+.controls .group:last-of-type { margin-bottom: 0.6rem; }

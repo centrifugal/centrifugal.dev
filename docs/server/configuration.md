@@ -4,13 +4,19 @@ id: configuration
 title: Configure Centrifugo
 ---
 
+import ConfigWizard from '@site/src/components/quickstart/ConfigWizard';
+
 Centrifugo can start without any configuration – it runs out-of-the-box with enabled HTTP API endpoint and enabled WebSocket transport endpoint for client real-time connections. In most cases though, you still need to configure it to set [authorization options for HTTP API](./server_api.md#http-api-authorization), [connection JWT authentication](./authentication.md), or maybe authentication over [connect proxy](./proxy.md), describe the desired [channel behaviour](./channels.md), and so on.
 
 This document describes configuration principles and configuration sections, and most of the options available in Centrifugo. Where the feature requires more description we point from here to the dedicated documentation chapters.
 
 ## Lost in options?
 
-Before we start, a little disclaimer: Centrifugo has many configuration options. If you feel lost, you can always use the [defaultconfig](./console_commands.md#defaultconfig), [defaultenv](./console_commands.md#defaultenv) and [configdoc](./console_commands.md#configdoc) CLI commands to check how config file options may be set and how environment variables should be named. Centrifugo also [warns you in logs](#validation-and-warnings-on-start) on start if sth unknown found in the configuration file or environment variables.
+Before we start, a little disclaimer: Centrifugo has many configuration options. If you feel lost, you can always use the [defaultconfig](./console_commands.md#defaultconfig), [defaultenv](./console_commands.md#defaultenv) and [configdoc](./console_commands.md#configdoc) (opens web UI locally with option tree to explore) CLI commands to check how config file options may be set and how environment variables should be named. Centrifugo also [warns you in logs](#validation-and-warnings-on-start) on start if sth unknown found in the configuration file or environment variables.
+
+Or build a starter config right here — pick what you need and copy a ready-to-run `config.json` with freshly generated secrets (everything is generated in your browser, nothing is sent anywhere):
+
+<ConfigWizard />
 
 ## Configuration sources
 

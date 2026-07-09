@@ -5,6 +5,8 @@ sidebar_label: Channel patterns
 title: Channel patterns
 ---
 
+import ChannelPatternMatcher from '@site/src/components/channelpatterns/ChannelPatternMatcher';
+
 Centrifugo PRO enhances the way to configure channels with the Channel Patterns feature. This opens the way to building a channel model similar to what developers are used to when writing HTTP servers and configuring routes for HTTP request processing.
 
 ### Configuration
@@ -92,6 +94,12 @@ Channel pattern "/personal/user_:user":
 /personal/user_john     ✅ match
 /personal/user_         ❌ no match
 ```
+
+### Try it: pattern matcher
+
+Edit the patterns and a test channel to see which namespace the channel resolves to, the extracted variables, and why one pattern wins over another (static beats variable). The panel also flags patterns that would be rejected at startup (wildcards, non-ASCII, duplicate variable names, conflicts).
+
+<ChannelPatternMatcher />
 
 ### Using variables
 

@@ -5,6 +5,9 @@ title: Client Authentication Enhancements
 sidebar_label: Client authentication
 ---
 
+import ClaimMapper from '@site/src/components/auth/ClaimMapper';
+import JwksRouter from '@site/src/components/auth/JwksRouter';
+
 Centrifugo OSS provides JWT-based client authentication. It's a very powerful mechanism because it helps a lot to reduce load on your session backend when dealing with many concurrent connections and [massive reconnections](/blog/2020/11/12/scaling-websocket#massive-reconnect) from time to time. Centrifugo PRO comes with extra features for more convenient client authentication management.
 
 ![](/img/client_auth.png)
@@ -60,7 +63,7 @@ Let's say we have the following configuration:
                     "key": "info",
                     "value": "custom-info"
                 }
-            ],
+            ]
         }
     }
 }
@@ -79,7 +82,7 @@ Given a connection JWT with the following claims:
     "permissions": {
         "level": 5
     },
-    "features": ["dashboard", "api"],
+    "enabled_features": ["dashboard", "api"],
     "custom-info": "some info"
 }
 ```
@@ -97,7 +100,7 @@ The connection will have the following `meta` object:
     "role": "admin",
     "dept": "engineering",
     "access_level": 5,
-    "enabled_features": ["dashboard", "api"],
+    "features": ["dashboard", "api"],
     "info": "some info"
 }
 ```
@@ -109,6 +112,12 @@ The connection will have the following `meta` object:
 * If a path in `meta_from_claim` value doesn't exist in the JWT token, it will be **silently skipped**. Only claims that exist in the token will be extracted.
 * If your JWT token already contains a `meta` claim, the extracted fields will **override** the existing fields.
 * Meta claims extraction only works for connection tokens, not subscription tokens. Subscription tokens do not support the `meta` claim.
+
+### Try it: claim mapping explorer
+
+Edit the JWT claims, `meta_from_claim`, and `labels_from_claim` below and watch the resulting connection `meta` and `labels` — including which mappings were extracted, overrode an existing value, or were silently skipped. It also handles the [`labels_from_claim`](#extracting-labels-from-jwt-claims) mapping described in the next section, and generates the config to reproduce it.
+
+<ClaimMapper />
 
 ## Client labels
 
@@ -186,7 +195,7 @@ Given a JWT with claims `{"deployment": {"region": "eu"}, "subscription": {"tier
 
 * `labels_from_claim` is configured per-token (`client.token.labels_from_claim`) and optionally per-JWKS-provider (`client.token.jwks.providers[].labels_from_claim`). Per-provider config wins over global config when a provider matches a token's issuer.
 * Missing JWT paths are silently skipped — no empty-string insertion.
-* Non-string scalar values from JWT claims are stringified with Go's `fmt.Sprint` semantics.
+* Non-string scalar values from JWT claims are stringified with gjson `Result.String()` semantics: numbers keep their plain decimal form (no scientific notation, even for large integers), booleans become `"true"` / `"false"`, and arrays/objects become their raw JSON text.
 * `labels_from_claim` only works for connection tokens. Subscription tokens do not carry connection labels (validated on Centrifugo start).
 * Labels are immutable post-connect. To change a label value, the client must reconnect with a new token.
 * Avoid putting high-cardinality values (user IDs, session IDs) into labels — they end up as Prometheus dimensions (when `prometheus.client_labels` is set) and as a ClickHouse `Map(String, String)` column (when analytics is enabled). See the corresponding sections for the cardinality discussion.
@@ -371,6 +380,12 @@ In this configuration:
 5. **Signature Verification**: The token signature is verified using the retrieved keys
 
 If no provider matches the token's issuer (and audience when applicable), the connection is rejected.
+
+### Try it: provider routing explorer
+
+Paste a token's claims, edit the providers, and see which one it routes to — or why it's rejected — then the `meta` and `labels` produced by **that provider's own** `meta_from_claim` / `labels_from_claim` (expand a provider's *claim mappings* to edit them). The explorer also flags configurations that would be rejected at startup (duplicate issuer+audience, a repeated issuer without distinct audiences, invalid names).
+
+<JwksRouter />
 
 ### Subscription token
 

@@ -4,6 +4,8 @@ id: capabilities
 title: Channel capabilities
 ---
 
+import CapabilityResolver from '@site/src/components/capabilities/CapabilityResolver';
+
 At this point you know that Centrifugo allows configuring channel permissions on a per-namespace level. When creating a new real-time feature it's recommended to create a new namespace for it and configure permissions. To achieve better channel permission control inside a namespace, Centrifugo PRO provides the possibility to set capabilities on an individual connection basis, or on an individual channel subscription basis.
 
 Let's start by looking at connection-wide capabilities first.
@@ -37,60 +39,49 @@ Known capabilities:
 
 ### Caps processing behavior
 
-Centrifugo processes caps objects until it finds a match for a channel. At that point it applies permissions in the matched object and stops processing remaining caps. If no match is found – then `103 permission denied` is returned to a client (of course if the namespace does not have other permission-related options enabled). Let's consider an example like this:
+Capabilities are evaluated **per operation**. When a client attempts an operation (`sub`/`pub`/`hst`/`prs`) on a channel, Centrifugo scans the `caps` objects and, for that one operation:
 
-```json title="WRONG!"
+1. skips any caps object whose `allow` does **not** include the operation;
+2. for the remaining objects, checks whether any of its `channels` match the target channel (using that object's `match` type);
+3. the first object that both allows the operation **and** matches the channel grants it. If none do, the operation is denied — `103 permission denied` (unless the namespace grants it through some other permission option).
+
+The practical consequence is simple to hold in your head:
+
+:::tip A channel's effective caps = the union of matching objects
+
+For a given channel, the client's capabilities are the **union** of the `allow` sets of **every** caps object whose channels match that channel. Object **order does not change the outcome**, and caps only ever **grant** access — a later or more specific object can never take an operation away.
+
+:::
+
+So the following – which earlier versions of these docs described as "wrong" – actually **works fine**: the client ends up with `["sub", "pub", "hst", "prs"]` on `user_42`, because `sub` comes from the first object and `pub`/`hst`/`prs` from the second:
+
+```json
 {
     "caps": [
-        {
-            "channels": ["news"],
-            "allow": ["pub"]
-        },
-        {
-            "channels": ["news"],
-            "allow": ["sub"]
-        },
+        { "channels": ["news", "user_42"], "allow": ["sub"] },
+        { "channels": ["user_42"], "allow": ["pub", "hst", "prs"] }
     ]
 }
 ```
 
-Here we have two entries for channel `news`, but when client subscribes on `news` only the first entry will be taken into consideration by Centrifugo – so Subscription attempt will be rejected (since first cap object does not have `sub` capability). In real life you don't really want to have cap objects with identical channels – but below we will introduce wildcard matching where understanding how caps processed becomes important.
+You may of course still prefer to keep one object per channel for readability:
 
-Another example:
-
-```json title="WRONG!"
+```json
 {
     "caps": [
-        {
-            "channels": ["news", "user_42"],
-            "allow": ["sub"]
-        },
-        {
-            "channels": ["user_42"],
-            "allow": ["pub", "hst", "prs"]
-        },
+        { "channels": ["news"], "allow": ["sub"] },
+        { "channels": ["user_42"], "allow": ["sub", "pub", "hst", "prs"] }
     ]
 }
 ```
 
-One could expect that the client will have `["sub", "pub", "hst", "prs"]` capabilities for channel `user_42`. But this is not true since Centrifugo processes caps objects and channels inside the caps object in order – it finds a match to `user_42` in the first caps object, which contains only the `"sub"` capability, and processing stops. So the user can subscribe to a channel, but cannot publish, cannot call history and presence APIs even though those capabilities are mentioned in the `caps` object. The correct way to give all caps to the channel `user_42` would be to split channels into different caps objects:
+Both forms grant exactly the same capabilities.
 
-```json title="CORRECT"
-{
-    "caps": [
-        {
-            "channels": ["news"],
-            "allow": ["sub"]
-        },
-        {
-            "channels": ["user_42"],
-            "allow": ["sub", "pub", "hst", "prs"]
-        },
-    ]
-}
-```
+### Try it: capability resolver
 
-The processing behaves like this to avoid potential problems with possibly conflicting matches (mostly when using wildcard and regex matching – see below) and to still allow overriding capabilities for specific channels.
+Edit the `caps` array and the target channel below to see the resulting per-operation verdict — which caps object grants each operation (or why it's denied) and the effective capability set for that channel. Wildcard and regex matching are evaluated exactly as the server does.
+
+<CapabilityResolver />
 
 ### Expiration considerations
 

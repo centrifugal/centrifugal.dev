@@ -4,6 +4,8 @@ id: channels
 title: Channels and namespaces
 ---
 
+import ChannelResolver from '@site/src/components/channels/ChannelResolver';
+
 Centrifugo operates on a PUB/SUB model. Upon connecting to a server, clients can subscribe to channels. A channel is one of the core concepts of Centrifugo. Most of the time when integrating Centrifugo, you will work with channels and determine the optimal channel configuration for your application.
 
 ## What is a channel?
@@ -93,9 +95,16 @@ Namespace has a name, and can contain all the [channel options](#channel-options
 
 When you want to use specific namespace options your channel must be prefixed with namespace name and `:` separator: `public:messages`, `gossips:messages` are two channels in `public` and `gossips` namespaces.
 
-Centrifugo looks for `:` symbol in the channel name, if found – extracts the namespace name, and applies all the configured namespace channel options while processing protocol commands from a client or server API calls.
+Centrifugo decides which options apply by looking for the `:` namespace boundary in the channel name:
 
-All things together here is an example of `config.json` which includes some top-level (without namespace) channel options set and has 2 additional channel namespaces configured:
+* if the channel **contains** `:`, the namespace name is the part before the first `:` (after stripping the `$` private prefix, if present) — Centrifugo applies the options of the namespace with that name from `channel.namespaces`, or returns a `102: unknown channel` error if no namespace with that name is configured;
+* if the channel has **no** `:`, it does not belong to any namespace and uses the options from `channel.without_namespace`.
+
+These options are then applied while processing protocol commands from a client or server API calls.
+
+`channel.without_namespace` sets [channel options](#channel-options) for channels that have no `:` in the name — like `news` or `chat`. Channels with a namespace prefix — like `public:news` — take their options from the matching entry in `channel.namespaces` instead.
+
+All things together here is an example of `config.json` which includes some `without_namespace` channel options set and has 2 additional channel namespaces configured:
 
 ```json title="config.json"
 {
@@ -126,13 +135,13 @@ All things together here is an example of `config.json` which includes some top-
 
 **Channel namespaces also work with private channels and user-limited channels**. For example, if you have a namespace called `dialogs` then the private channel can be constructed as `$dialogs:gossips`, user-limited channel can be constructed as `dialogs:dialog#1,2`.
 
-:::note
-
-There is **no inheritance** in channel options and namespaces – for example, you defined `presence: true` on a top level of configuration and then defined a namespace – that namespace won't have online presence enabled - you must enable it for a namespace explicitly.
-
-:::
-
 There are many options which can be set for channel namespace (on top-level and to named one) to modify behavior of channels belonging to a namespace. Below we describe all these options. 
+
+## Try it: channel resolver
+
+Enter a channel and the list of namespaces you've defined to see which namespace it resolves to (or why it's `102: unknown channel`), how the `:` / `#` / `$` boundaries are parsed, and — for the options below — which features actually become effective. The panel also flags option combinations Centrifugo would reject on startup (for example, `history_size` without `history_ttl`, or `auto_cache_recover` without cache-mode recovery).
+
+<ChannelResolver />
 
 ## Channel options
 

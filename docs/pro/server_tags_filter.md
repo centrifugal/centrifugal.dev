@@ -4,6 +4,8 @@ title: Server-side publication tags filter
 description: "Server-controlled publication filtering in Centrifugo PRO for per-subscriber access control within channels — works with both stream and map subscriptions."
 ---
 
+import TagsFilterEvaluator from '@site/src/components/tagsfilter/TagsFilterEvaluator';
+
 Centrifugo PRO supports **server-controlled publication filtering** — a mechanism for per-subscriber access control within channels. Unlike the [client-side tags filter](/docs/server/publication_filtering) (a bandwidth optimization the client controls), the server-side filter is set by your backend and cannot be overridden by the client.
 
 When a server publication filter is set, only publications with matching tags are delivered to that subscriber. Publications that don't match are silently dropped — the subscriber never sees them.
@@ -115,6 +117,12 @@ The server-side filter uses the same expression language as the [client-side tag
   ]
 }
 ```
+
+## Try it: server tags-filter simulator
+
+Set a publication's `tags`, a **server** filter (your backend's security boundary), and an optional **client** filter, then see whether the publication is delivered — and which filter dropped it. The server filter is always evaluated first; the client filter can only narrow the result further.
+
+<TagsFilterEvaluator server />
 
 ## Stream subscriptions
 

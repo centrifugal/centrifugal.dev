@@ -5,6 +5,8 @@ sidebar_label: Publication filtering
 title: Channel publication filtering
 ---
 
+import TagsFilterEvaluator from '@site/src/components/tagsfilter/TagsFilterEvaluator';
+
 Publication filtering allows clients to subscribe to a channel with a filter, ensuring that only publications with tags matching the specified criteria are delivered to the subscriber. This feature **can significantly reduce bandwidth usage** and minimize client-side processing overhead by filtering out irrelevant messages at the server level.
 
 ![publication filtering](/img/publication_filtering.png)
@@ -213,6 +215,12 @@ Filters are validated when a subscription is established. Invalid filters result
 - Incorrect child node counts for logical operations
 
 During runtime evaluation, invalid numeric values for numeric comparisons cause the filter to evaluate to `false`, ensuring graceful degradation.
+
+## Try it: tags filter evaluator
+
+Edit a publication's `tags` and the filter tree below to see whether the subscriber would receive that publication, with a per-node evaluation trace. Note especially how a numeric comparison (`gt`/`gte`/`lt`/`lte`) silently evaluates to `false` when the tag is absent or non-numeric — a common source of "why isn't this delivered?".
+
+<TagsFilterEvaluator />
 
 ## Publishing with tags
 
