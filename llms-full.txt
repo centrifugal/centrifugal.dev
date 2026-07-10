@@ -4175,25 +4175,25 @@ Example:
 
 #### Subscribe options:
 
-| Field    | Type                      | Optional | Description                                                                                                                                 |
+| Field    | Type                      | Required | Description                                                                                                                                 |
 |----------|---------------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| info     | JSON object               | yes      | Custom channel info                                                                                                                         |
-| b64info  | string                    | yes      | Custom channel info in Base64 - to pass binary channel info                                                                                 |
-| data     | JSON object               | yes      | Custom JSON data to return in subscription context inside Connect reply                                                                     |
-| b64data  | string                    | yes      | Same as `data` but in Base64 to send binary data                                                                                            |
-| override | `SubscribeOptionOverride` | yes      | Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields) |
+| info     | JSON object               | no       | Custom channel info                                                                                                                         |
+| b64info  | string                    | no       | Custom channel info in Base64 - to pass binary channel info                                                                                 |
+| data     | JSON object               | no       | Custom JSON data to return in subscription context inside Connect reply                                                                     |
+| b64data  | string                    | no       | Same as `data` but in Base64 to send binary data                                                                                            |
+| override | `SubscribeOptionOverride` | no       | Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields) |
 
 #### SubscribeOptionOverride
 
 Allow per-connection overrides of some channel namespace options:
 
-| Field                 | Type        | Optional | Description                                             |
+| Field                 | Type        | Required | Description                                             |
 |-----------------------|-------------|----------|---------------------------------------------------------|
-| presence              | `BoolValue` | yes      | Override `presence` from namespace options              |
-| join_leave            | `BoolValue` | yes      | Override `join_leave` from namespace options            |
-| force_recovery        | `BoolValue` | yes      | Override `force_recovery` from namespace options        |
-| force_positioning     | `BoolValue` | yes      | Override `force_positioning` from namespace options     |
-| force_push_join_leave | `BoolValue` | yes      | Override `force_push_join_leave` from namespace options |
+| presence              | `BoolValue` | no       | Override `presence` from namespace options              |
+| join_leave            | `BoolValue` | no       | Override `join_leave` from namespace options            |
+| force_recovery        | `BoolValue` | no       | Override `force_recovery` from namespace options        |
+| force_positioning     | `BoolValue` | no       | Override `force_positioning` from namespace options     |
+| force_push_join_leave | `BoolValue` | no       | Override `force_push_join_leave` from namespace options |
 
 `BoolValue` is an object like this:
 
@@ -5113,13 +5113,13 @@ This is a token unique ID. See [definition in RFC](https://datatracker.ietf.org/
 
 One more claim is `override`. This is an object which allows overriding channel options for the particular channel subscriber which comes with subscription token.
 
-| Field | Type | Optional | Description |
+| Field | Type | Required | Description |
 | ------------ | -------------- | ------------ | ---- |
-| presence     | BoolValue     | yes | override `presence` channel option        |
-| join_leave     | BoolValue     | yes | override `join_leave` channel option   |
-| force_push_join_leave         | BoolValue     | yes | override `force_push_join_leave` channel option          |
-| force_recovery      | BoolValue     | yes | override `force_recovery` channel option |
-| force_positioning       | BoolValue       | yes |  override `force_positioning` channel option  |
+| presence     | BoolValue     | no  | override `presence` channel option        |
+| join_leave     | BoolValue     | no  | override `join_leave` channel option   |
+| force_push_join_leave         | BoolValue     | no  | override `force_push_join_leave` channel option          |
+| force_recovery      | BoolValue     | no  | override `force_recovery` channel option |
+| force_positioning       | BoolValue       | no  |  override `force_positioning` channel option  |
 
 `BoolValue` is an object like this:
 
@@ -13258,29 +13258,29 @@ This is what sent from Centrifugo to application backend in case of connect prox
 
 #### ConnectResponse
 
-| Field name   | Field type                        | Optional | Description         |
+| Field name   | Field type                        | Required | Description         |
 |--------------|-----------------------------------|----------|---------------------|
-| `result`     | [`ConnectResult`](#connectresult) | yes      | Result of operation |
-| `error`      | [`Error`](#error)                 | yes      | Custom error        |
-| `disconnect` | [`Disconnect`](#disconnect)       | yes      | Custom disconnect   |
+| `result`     | [`ConnectResult`](#connectresult) | no       | Result of operation |
+| `error`      | [`Error`](#error)                 | no       | Custom error        |
+| `disconnect` | [`Disconnect`](#disconnect)       | no       | Custom disconnect   |
 
 #### Error
 
 `Error` type represents Centrifugo-level API call error and it has common structure for all server API responses:
 
-| Field name | Field type | Optional | Description   |
+| Field name | Field type | Required | Description   |
 |------------|------------|----------|---------------|
-| `code`     | `integer`  | no       | Error code    |
-| `message`  | `string`   | yes      | Error message |
+| `code`     | `integer`  | yes      | Error code    |
+| `message`  | `string`   | no       | Error message |
 
 #### Disconnect
 
 `Disconnect` type represents custom disconnect code and reason to close connection with.
 
-| Field name | Field type | Optional | Description       |
+| Field name | Field type | Required | Description       |
 |------------|------------|----------|-------------------|
-| `code`     | `integer`  | no       | Disconnect code   |
-| `reason`   | `string`   | yes      | Disconnect reason |
+| `code`     | `integer`  | yes      | Disconnect code   |
+| `reason`   | `string`   | no       | Disconnect reason |
 
 #### ConnectResult
 
@@ -13302,34 +13302,34 @@ This is what an application returns to Centrifugo inside `result` field in of `C
 
 #### SubscribeOptions
 
-| Field      | Type                                                  | Optional | Description                                                                                                                                                                                       |
+| Field      | Type                                                  | Required | Description                                                                                                                                                                                       |
 |------------|-------------------------------------------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `info`     | `JSON` object                                         | yes      | Additional channel-specific information about connection (**valid JSON**). This information will be included in online presence data, join/leave events and into client-side channel publications |
-| `b64info`  | `string`                                              | yes      | Custom channel info in Base64 - to pass binary channel info                                                                                                                                       |
-| `data`     | `JSON` object                                         | yes      | Custom JSON data to return in subscription context inside Connect reply                                                                                                                           |
-| `b64data`  | `string`                                              | yes      | Same as `data` but in Base64 to send binary data                                                                                                                                                  |
-| `override` | [`SubscribeOptionOverride`](#subscribeoptionoverride) | yes      | Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields)                                                       |
-| `cache_recover` | `bool`                                           | yes      | (available since Centrifugo v6.8.3) Triggers cache recovery for this server-side subscription – the server-side equivalent of an empty `since` on the client. Requires recovery to be enabled for the channel and only applies in [cache recovery mode](cache_recovery.md), where it delivers the latest publication on (re)connect. Useful for unidirectional clients which can't request recovery themselves |
+| `info`     | `JSON` object                                         | no       | Additional channel-specific information about connection (**valid JSON**). This information will be included in online presence data, join/leave events and into client-side channel publications |
+| `b64info`  | `string`                                              | no       | Custom channel info in Base64 - to pass binary channel info                                                                                                                                       |
+| `data`     | `JSON` object                                         | no       | Custom JSON data to return in subscription context inside Connect reply                                                                                                                           |
+| `b64data`  | `string`                                              | no       | Same as `data` but in Base64 to send binary data                                                                                                                                                  |
+| `override` | [`SubscribeOptionOverride`](#subscribeoptionoverride) | no       | Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields)                                                       |
+| `cache_recover` | `bool`                                           | no       | (available since Centrifugo v6.8.3) Triggers cache recovery for this server-side subscription – the server-side equivalent of an empty `since` on the client. Requires recovery to be enabled for the channel and only applies in [cache recovery mode](cache_recovery.md), where it delivers the latest publication on (re)connect. Useful for unidirectional clients which can't request recovery themselves |
 
 #### SubscribeOptionOverride
 
 Allow per-connection overrides of some channel namespace options:
 
-| Field                   | Type                      | Optional | Description                                             |
+| Field                   | Type                      | Required | Description                                             |
 |-------------------------|---------------------------|----------|---------------------------------------------------------|
-| `presence`              | [`BoolValue`](#boolvalue) | yes      | Override `presence` from namespace options              |
-| `join_leave`            | [`BoolValue`](#boolvalue) | yes      | Override `join_leave` from namespace options            |
-| `force_recovery`        | [`BoolValue`](#boolvalue) | yes      | Override `force_recovery` from namespace options        |
-| `force_positioning`     | [`BoolValue`](#boolvalue) | yes      | Override `force_positioning` from namespace options     |
-| `force_push_join_leave` | [`BoolValue`](#boolvalue) | yes      | Override `force_push_join_leave` from namespace options |
+| `presence`              | [`BoolValue`](#boolvalue) | no       | Override `presence` from namespace options              |
+| `join_leave`            | [`BoolValue`](#boolvalue) | no       | Override `join_leave` from namespace options            |
+| `force_recovery`        | [`BoolValue`](#boolvalue) | no       | Override `force_recovery` from namespace options        |
+| `force_positioning`     | [`BoolValue`](#boolvalue) | no       | Override `force_positioning` from namespace options     |
+| `force_push_join_leave` | [`BoolValue`](#boolvalue) | no       | Override `force_push_join_leave` from namespace options |
 
 #### BoolValue
 
 Is an object like this:
 
-| Field   | Type   | Optional | Description       |
+| Field   | Type   | Required | Description       |
 |---------|--------|----------|-------------------|
-| `value` | `bool` | no       | `true` or `false` |
+| `value` | `bool` | yes      | `true` or `false` |
 
 #### Example
 
@@ -13428,31 +13428,31 @@ Where `expire_at` contains some Unix time in the future (until which connection 
 
 #### RefreshRequest
 
-| Field       | Type     | Optional | Description                                                                                |
+| Field       | Type     | Required | Description                                                                                |
 |-------------|----------|----------|--------------------------------------------------------------------------------------------|
-| `client`    | `string` | no       | unique client ID generated by Centrifugo for each incoming connection                      |
-| `transport` | `string` | no       | transport name (ex. `websocket`, `sockjs`, `uni_sse` etc.)                                 |
-| `protocol`  | `string` | no       | protocol type used by client (`json` or `protobuf` at moment)                              |
-| `encoding`  | `string` | no       | protocol encoding type used (`json` or `binary` at moment)                                 |
-| `user`      | `string` | no       | a connection user ID obtained during authentication process                                |
-| `meta`      | `JSON`   | yes      | a connection attached meta (off by default, enable with `"include_connection_meta": true`) |
+| `client`    | `string` | yes      | unique client ID generated by Centrifugo for each incoming connection                      |
+| `transport` | `string` | yes      | transport name (ex. `websocket`, `sockjs`, `uni_sse` etc.)                                 |
+| `protocol`  | `string` | yes      | protocol type used by client (`json` or `protobuf` at moment)                              |
+| `encoding`  | `string` | yes      | protocol encoding type used (`json` or `binary` at moment)                                 |
+| `user`      | `string` | yes      | a connection user ID obtained during authentication process                                |
+| `meta`      | `JSON`   | no       | a connection attached meta (off by default, enable with `"include_connection_meta": true`) |
 
 #### RefreshResponse
 
-| Field name | Field type                        | Optional | Description                 |
+| Field name | Field type                        | Required | Description                 |
 |------------|-----------------------------------|----------|-----------------------------|
-| `result`   | [`RefreshResult`](#refreshresult) | no       | Result of refresh operation |
+| `result`   | [`RefreshResult`](#refreshresult) | yes      | Result of refresh operation |
 
 #### RefreshResult
 
-| Field       | Type      | Optional | Description                                                                                                                |
+| Field       | Type      | Required | Description                                                                                                                |
 |-------------|-----------|----------|----------------------------------------------------------------------------------------------------------------------------|
-| `expired`   | `bool`    | yes      | a flag to mark the connection as expired - the client will be disconnected                                                 |
-| `expire_at` | `integer` | yes      | a timestamp in the future when connection must be considered expired                                                       |
-| `info`      | `JSON`    | yes      | update connection info JSON                                                                                                |
-| `b64info`   | `string`  | yes      | alternative to `info` - a binary connection info encoded in base64 format, will be decoded to raw bytes on Centrifugo side |
-| `meta`      | `JSON`    | yes      | update the connection's attached `meta` (server-side only, not exposed to the client)                                     |
-| `caps`      | `array`   | yes      | (**Centrifugo PRO**) refresh capability-based authorization rules for the connection. See [capabilities](../pro/capabilities.md) |
+| `expired`   | `bool`    | no       | a flag to mark the connection as expired - the client will be disconnected                                                 |
+| `expire_at` | `integer` | no       | a timestamp in the future when connection must be considered expired                                                       |
+| `info`      | `JSON`    | no       | update connection info JSON                                                                                                |
+| `b64info`   | `string`  | no       | alternative to `info` - a binary connection info encoded in base64 format, will be decoded to raw bytes on Centrifugo side |
+| `meta`      | `JSON`    | no       | update the connection's attached `meta` (server-side only, not exposed to the client)                                     |
+| `caps`      | `array`   | no       | (**Centrifugo PRO**) refresh capability-based authorization rules for the connection. See [capabilities](../pro/capabilities.md) |
 
 ## Channel-wide proxy events
 
@@ -13549,58 +13549,58 @@ See below on how to [return an error](#what-if-connection-is-not-allowed-to-subs
 
 #### SubscribeRequest
 
-| Field       | Type     | Optional | Description                                                                                                                |
+| Field       | Type     | Required | Description                                                                                                                |
 |-------------|----------|----------|----------------------------------------------------------------------------------------------------------------------------|
-| `client`    | `string` | no       | unique client ID generated by Centrifugo for each incoming connection                                                      |
-| `transport` | `string` | no       | transport name (ex. `websocket` or `sockjs`)                                                                               |
-| `protocol`  | `string` | no       | protocol type used by the client (`json` or `protobuf` at moment)                                                          |
-| `encoding`  | `string` | no       | protocol encoding type used (`json` or `binary` at moment)                                                                 |
-| `user`      | `string` | no       | a connection user ID obtained during authentication process                                                                |
-| `channel`   | `string` | no       | a string channel client wants to subscribe to                                                                              |
-| `token`     | `string` | yes      | subscription token (JWT) provided by the client for this channel when [subscription token authorization](channel_token_auth.md) is used — empty otherwise |
-| `meta`      | `JSON`   | yes      | a connection attached meta (off by default, enable with `"include_connection_meta": true`)                                 |
-| `data`      | `JSON`   | yes      | custom data from client sent with subscription request (this field will only be set if provided by a client on subscribe). |
-| `b64data`   | `string` | yes      | optional subscription data from the client in base64 format (if the binary proxy mode is used).                            |
-| `labels`    | `JSON`   | yes      | connection labels attached during authentication (**Centrifugo PRO** only)                                                 |
+| `client`    | `string` | yes      | unique client ID generated by Centrifugo for each incoming connection                                                      |
+| `transport` | `string` | yes      | transport name (ex. `websocket` or `sockjs`)                                                                               |
+| `protocol`  | `string` | yes      | protocol type used by the client (`json` or `protobuf` at moment)                                                          |
+| `encoding`  | `string` | yes      | protocol encoding type used (`json` or `binary` at moment)                                                                 |
+| `user`      | `string` | yes      | a connection user ID obtained during authentication process                                                                |
+| `channel`   | `string` | yes      | a string channel client wants to subscribe to                                                                              |
+| `token`     | `string` | no       | subscription token (JWT) provided by the client for this channel when [subscription token authorization](channel_token_auth.md) is used — empty otherwise |
+| `meta`      | `JSON`   | no       | a connection attached meta (off by default, enable with `"include_connection_meta": true`)                                 |
+| `data`      | `JSON`   | no       | custom data from client sent with subscription request (this field will only be set if provided by a client on subscribe). |
+| `b64data`   | `string` | no       | optional subscription data from the client in base64 format (if the binary proxy mode is used).                            |
+| `labels`    | `JSON`   | no       | connection labels attached during authentication (**Centrifugo PRO** only)                                                 |
 
 #### SubscribeResponse
 
-| Field name   | Field type                              | Optional | Description         |
+| Field name   | Field type                              | Required | Description         |
 |--------------|-----------------------------------------|----------|---------------------|
-| `result`     | [`SubscribeResult`](#subscriberesult)   | yes      | Result of operation |
-| `error`      | [`Error`](#error)                       | yes      | Custom error        |
-| `disconnect` | [`Disconnect`](#disconnect)             | yes      | Custom disconnect   |
+| `result`     | [`SubscribeResult`](#subscriberesult)   | no       | Result of operation |
+| `error`      | [`Error`](#error)                       | no       | Custom error        |
+| `disconnect` | [`Disconnect`](#disconnect)             | no       | Custom disconnect   |
 
 #### SubscribeResult
 
-| Field       | Type              | Optional | Description                                                                                                                                                                                       |
+| Field       | Type              | Required | Description                                                                                                                                                                                       |
 |-------------|-------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `info`      | `JSON`            | yes      | Additional channel-specific information about connection (**valid JSON**). This information will be included in online presence data, join/leave events and into client-side channel publications |
-| `b64info`   | `string`          | yes      | An alternative to `info` – a binary connection channel information encoded in base64 format, will be decoded to raw bytes on Centrifugo before using                                              |
-| `data`      | `JSON`            | yes      | Custom data to send to the client in subscribe command reply.                                                                                                                                     |
-| `b64data`   | `string`          | yes      | Custom data to send to the client in subscribe command reply, will be decoded to raw bytes on Centrifugo side before sending to client                                                            |
-| `override`  | `Override` object | yes      | Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields)                                                       |
-| `expire_at` | `integer`         | yes      | a timestamp (Unix seconds in the future) when subscription must be considered expired. If not set or set to `0` subscription won't expire at all. Supported since Centrifugo v5.0.4               |
-| `allow`     | `array[string]`   | yes      | (**Centrifugo PRO**) channel [capabilities](../pro/capabilities.md) to grant the client for this subscription, as capability codes: `sub`, `pub`, `hst`, `prs`                                    |
-| `server_tags_filter` | `object` | yes      | (**Centrifugo PRO**) server-side tag filter applied to this subscription. See [server-side tag filtering](../pro/server_tags_filter.md)                                                          |
+| `info`      | `JSON`            | no       | Additional channel-specific information about connection (**valid JSON**). This information will be included in online presence data, join/leave events and into client-side channel publications |
+| `b64info`   | `string`          | no       | An alternative to `info` – a binary connection channel information encoded in base64 format, will be decoded to raw bytes on Centrifugo before using                                              |
+| `data`      | `JSON`            | no       | Custom data to send to the client in subscribe command reply.                                                                                                                                     |
+| `b64data`   | `string`          | no       | Custom data to send to the client in subscribe command reply, will be decoded to raw bytes on Centrifugo side before sending to client                                                            |
+| `override`  | `Override` object | no       | Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields)                                                       |
+| `expire_at` | `integer`         | no       | a timestamp (Unix seconds in the future) when subscription must be considered expired. If not set or set to `0` subscription won't expire at all. Supported since Centrifugo v5.0.4               |
+| `allow`     | `array[string]`   | no       | (**Centrifugo PRO**) channel [capabilities](../pro/capabilities.md) to grant the client for this subscription, as capability codes: `sub`, `pub`, `hst`, `prs`                                    |
+| `server_tags_filter` | `object` | no       | (**Centrifugo PRO**) server-side tag filter applied to this subscription. See [server-side tag filtering](../pro/server_tags_filter.md)                                                          |
 
 #### Override
 
-| Field                   | Type        | Optional | Description                    |
+| Field                   | Type        | Required | Description                    |
 |-------------------------|-------------|----------|--------------------------------|
-| `presence`              | `BoolValue` | yes      | Override presence              |
-| `join_leave`            | `BoolValue` | yes      | Override join_leave            |
-| `force_push_join_leave` | `BoolValue` | yes      | Override force_push_join_leave |
-| `force_positioning`     | `BoolValue` | yes      | Override force_positioning     |
-| `force_recovery`        | `BoolValue` | yes      | Override force_recovery        |
+| `presence`              | `BoolValue` | no       | Override presence              |
+| `join_leave`            | `BoolValue` | no       | Override join_leave            |
+| `force_push_join_leave` | `BoolValue` | no       | Override force_push_join_leave |
+| `force_positioning`     | `BoolValue` | no       | Override force_positioning     |
+| `force_recovery`        | `BoolValue` | no       | Override force_recovery        |
 
 #### BoolValue
 
 Is an object like this:
 
-| Field   | Type   | Optional | Description       |
+| Field   | Type   | Required | Description       |
 |---------|--------|----------|-------------------|
-| `value` | `bool` | no       | `true` or `false` |
+| `value` | `bool` | yes      | `true` or `false` |
 
 #### What if connection is not allowed to subscribe?
 
@@ -13711,39 +13711,39 @@ The expected response example if a publication is allowed:
 
 #### PublishRequest
 
-| Field       | Type     | Optional | Description                                                                                      |
+| Field       | Type     | Required | Description                                                                                      |
 |-------------|----------|----------|--------------------------------------------------------------------------------------------------|
-| `client`    | `string` | no       | unique client ID generated by Centrifugo for each incoming connection                            |
-| `transport` | `string` | no       | transport name (ex. `websocket`, `sockjs`)                                                       |
-| `protocol`  | `string` | no       | protocol type used by the client (`json` or `protobuf` at moment)                                |
-| `encoding`  | `string` | no       | protocol encoding type used (`json` or `binary` at moment)                                       |
-| `user`      | `string` | no       | a connection user ID obtained during authentication process                                      |
-| `channel`   | `string` | no       | a string channel client wants to publish to                                                      |
-| `data`      | `JSON`   | yes      | data sent by client                                                                              |
-| `b64data`   | `string` | yes      | will be set instead of `data` field for binary proxy mode                                        |
-| `meta`      | `JSON`   | yes      | a connection attached meta (off by default, enable with `"include_connection_meta": true`)       |
-| `labels`    | `JSON`   | yes      | connection labels attached during authentication (**Centrifugo PRO** only)                        |
+| `client`    | `string` | yes      | unique client ID generated by Centrifugo for each incoming connection                            |
+| `transport` | `string` | yes      | transport name (ex. `websocket`, `sockjs`)                                                       |
+| `protocol`  | `string` | yes      | protocol type used by the client (`json` or `protobuf` at moment)                                |
+| `encoding`  | `string` | yes      | protocol encoding type used (`json` or `binary` at moment)                                       |
+| `user`      | `string` | yes      | a connection user ID obtained during authentication process                                      |
+| `channel`   | `string` | yes      | a string channel client wants to publish to                                                      |
+| `data`      | `JSON`   | no       | data sent by client                                                                              |
+| `b64data`   | `string` | no       | will be set instead of `data` field for binary proxy mode                                        |
+| `meta`      | `JSON`   | no       | a connection attached meta (off by default, enable with `"include_connection_meta": true`)       |
+| `labels`    | `JSON`   | no       | connection labels attached during authentication (**Centrifugo PRO** only)                        |
 
 #### PublishResponse
 
-| Field name   | Field type                        | Optional | Description         |
+| Field name   | Field type                        | Required | Description         |
 |--------------|-----------------------------------|----------|---------------------|
-| `result`     | [`PublishResult`](#publishresult) | yes      | Result of operation |
-| `error`      | [`Error`](#error)                 | yes      | Custom error        |
-| `disconnect` | [`Disconnect`](#disconnect)       | yes      | Custom disconnect   |
+| `result`     | [`PublishResult`](#publishresult) | no       | Result of operation |
+| `error`      | [`Error`](#error)                 | no       | Custom error        |
+| `disconnect` | [`Disconnect`](#disconnect)       | no       | Custom disconnect   |
 
 #### PublishResult
 
-| Field             | Type                  | Optional | Description                                                                                                                                                                                       |
+| Field             | Type                  | Required | Description                                                                                                                                                                                       |
 |-------------------|-----------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `data`            | `JSON`                | yes      | an optional JSON data to send into a channel **instead of** original data sent by a client                                                                                                        |
-| `b64data`         | `string`              | yes      | a binary data encoded in base64 format, the meaning is the same as for data above, will be decoded to raw bytes on Centrifugo side before publishing                                              |
-| `skip_history`    | `bool`                | yes      | when set to `true` Centrifugo won't save publication to the channel history                                                                                                                       |
-| `tags`            | `map<string, string>` | yes      | Since Centrifugo v6.8.0. Server-controlled publication tags attached to the resulting publication. Useful together with [server-side publication tags filter](../pro/server_tags_filter.md) — the proxy is the natural place to stamp RBAC tags on client-originated publishes since clients cannot send tags themselves |
-| `idempotency_key` | `string`              | yes      | Since Centrifugo v6.8.0. Idempotency key for safe retries — duplicate publishes with the same key within the broker's idempotent result TTL window are suppressed                                  |
-| `delta`           | `bool`                | yes      | Since Centrifugo v6.8.0. Enable delta compression for this publication                                                                                                                            |
-| `version`         | `uint64`              | yes      | Since Centrifugo v6.8.0. Per-publication version used by Centrifugo to drop non-actual publications when publication carries the entire state                                                     |
-| `version_epoch`   | `string`              | yes      | Since Centrifugo v6.8.0. Scopes `version` — use when version may be reused (e.g. comes from a system that can lose state)                                                                         |
+| `data`            | `JSON`                | no       | an optional JSON data to send into a channel **instead of** original data sent by a client                                                                                                        |
+| `b64data`         | `string`              | no       | a binary data encoded in base64 format, the meaning is the same as for data above, will be decoded to raw bytes on Centrifugo side before publishing                                              |
+| `skip_history`    | `bool`                | no       | when set to `true` Centrifugo won't save publication to the channel history                                                                                                                       |
+| `tags`            | `map<string, string>` | no       | Since Centrifugo v6.8.0. Server-controlled publication tags attached to the resulting publication. Useful together with [server-side publication tags filter](../pro/server_tags_filter.md) — the proxy is the natural place to stamp RBAC tags on client-originated publishes since clients cannot send tags themselves |
+| `idempotency_key` | `string`              | no       | Since Centrifugo v6.8.0. Idempotency key for safe retries — duplicate publishes with the same key within the broker's idempotent result TTL window are suppressed                                  |
+| `delta`           | `bool`                | no       | Since Centrifugo v6.8.0. Enable delta compression for this publication                                                                                                                            |
+| `version`         | `uint64`              | no       | Since Centrifugo v6.8.0. Per-publication version used by Centrifugo to drop non-actual publications when publication carries the entire state                                                     |
+| `version_epoch`   | `string`              | no       | Since Centrifugo v6.8.0. Scopes `version` — use when version may be reused (e.g. comes from a system that can lose state)                                                                         |
 
 See below on how to [return an error](#return-custom-error) in case you don't want to allow publishing.
 
@@ -13848,31 +13848,31 @@ Very similar to connection-wide refresh response.
 
 #### SubRefreshRequest
 
-| Field       | Type     | Optional | Description                                                                                      |
+| Field       | Type     | Required | Description                                                                                      |
 |-------------|----------|----------|--------------------------------------------------------------------------------------------------|
-| `client`    | `string` | no       | unique client ID generated by Centrifugo for each incoming connection                            |
-| `transport` | `string` | no       | transport name (ex. `websocket`, `sockjs`, `uni_sse` etc.)                                       |
-| `protocol`  | `string` | no       | protocol type used by client (`json` or `protobuf` at moment)                                    |
-| `encoding`  | `string` | no       | protocol encoding type used (`json` or `binary` at moment)                                       |
-| `user`      | `string` | no       | a connection user ID obtained during authentication process                                      |
-| `channel`   | `string` | no       | channel for which Subscription is going to expire                                                |
-| `meta`      | `JSON`   | yes      | a connection attached meta (off by default, enable with `"include_connection_meta": true`)       |
-| `labels`    | `JSON`   | yes      | connection labels attached during authentication (**Centrifugo PRO** only)                        |
+| `client`    | `string` | yes      | unique client ID generated by Centrifugo for each incoming connection                            |
+| `transport` | `string` | yes      | transport name (ex. `websocket`, `sockjs`, `uni_sse` etc.)                                       |
+| `protocol`  | `string` | yes      | protocol type used by client (`json` or `protobuf` at moment)                                    |
+| `encoding`  | `string` | yes      | protocol encoding type used (`json` or `binary` at moment)                                       |
+| `user`      | `string` | yes      | a connection user ID obtained during authentication process                                      |
+| `channel`   | `string` | yes      | channel for which Subscription is going to expire                                                |
+| `meta`      | `JSON`   | no       | a connection attached meta (off by default, enable with `"include_connection_meta": true`)       |
+| `labels`    | `JSON`   | no       | connection labels attached during authentication (**Centrifugo PRO** only)                        |
 
 #### SubRefreshResponse
 
-| Field name | Field type                              | Optional | Description                     |
+| Field name | Field type                              | Required | Description                     |
 |------------|-----------------------------------------|----------|---------------------------------|
-| `result`   | [`SubRefreshResult`](#subrefreshresult) | no       | Result of sub refresh operation |
+| `result`   | [`SubRefreshResult`](#subrefreshresult) | yes      | Result of sub refresh operation |
 
 #### SubRefreshResult
 
-| Field       | Type      | Optional | Description                                                                                                       |
+| Field       | Type      | Required | Description                                                                                                       |
 |-------------|-----------|----------|-------------------------------------------------------------------------------------------------------------------|
-| `expired`   | `bool`    | yes      | a flag to mark the subscription as expired - the client will be disconnected                                      |
-| `expire_at` | `integer` | yes      | a timestamp in the future (Unix seconds) when subscription must be considered expired                             |
-| `info`      | `JSON`    | yes      | update channel-specific information about connection                                                              |
-| `b64info`   | `string`  | yes      | binary channel info encoded in base64 format, will be decoded to raw bytes on Centrifugo before using in messages |
+| `expired`   | `bool`    | no       | a flag to mark the subscription as expired - the client will be disconnected                                      |
+| `expire_at` | `integer` | no       | a timestamp in the future (Unix seconds) when subscription must be considered expired                             |
+| `info`      | `JSON`    | no       | update channel-specific information about connection                                                              |
+| `b64info`   | `string`  | no       | binary channel info encoded in base64 format, will be decoded to raw bytes on Centrifugo before using in messages |
 
 ### Subscribe stream proxy
 
@@ -13948,33 +13948,33 @@ See below on how to [return a custom error](#return-custom-error).
 
 #### RPCRequest
 
-| Field       | Type     | Optional | Description                                                                                      |
+| Field       | Type     | Required | Description                                                                                      |
 |-------------|----------|----------|--------------------------------------------------------------------------------------------------|
-| `client`    | `string` | no       | unique client ID generated by Centrifugo for each incoming connection                            |
-| `transport` | `string` | no       | transport name (ex. `websocket` or `sockjs`)                                                     |
-| `protocol`  | `string` | no       | protocol type used by the client (`json` or `protobuf` at moment)                                |
-| `encoding`  | `string` | no       | protocol encoding type used (`json` or `binary` at moment)                                       |
-| `user`      | `string` | no       | a connection user ID obtained during authentication process                                      |
-| `method`    | `string` | yes      | an RPC method string, if the client does not use named RPC call then method will be omitted      |
-| `data`      | `JSON`   | yes      | RPC custom data sent by client                                                                   |
-| `b64data`   | `string` | yes      | will be set instead of `data` field for binary proxy mode                                        |
-| `meta`      | `JSON`   | yes      | a connection attached meta (off by default, enable with `"include_connection_meta": true`)       |
-| `labels`    | `JSON`   | yes      | connection labels attached during authentication (**Centrifugo PRO** only)                        |
+| `client`    | `string` | yes      | unique client ID generated by Centrifugo for each incoming connection                            |
+| `transport` | `string` | yes      | transport name (ex. `websocket` or `sockjs`)                                                     |
+| `protocol`  | `string` | yes      | protocol type used by the client (`json` or `protobuf` at moment)                                |
+| `encoding`  | `string` | yes      | protocol encoding type used (`json` or `binary` at moment)                                       |
+| `user`      | `string` | yes      | a connection user ID obtained during authentication process                                      |
+| `method`    | `string` | no       | an RPC method string, if the client does not use named RPC call then method will be omitted      |
+| `data`      | `JSON`   | no       | RPC custom data sent by client                                                                   |
+| `b64data`   | `string` | no       | will be set instead of `data` field for binary proxy mode                                        |
+| `meta`      | `JSON`   | no       | a connection attached meta (off by default, enable with `"include_connection_meta": true`)       |
+| `labels`    | `JSON`   | no       | connection labels attached during authentication (**Centrifugo PRO** only)                        |
 
 #### RPCResponse
 
-| Field name   | Field type                  | Optional | Description         |
+| Field name   | Field type                  | Required | Description         |
 |--------------|-----------------------------|----------|---------------------|
-| `result`     | [`RPCResult`](#rpcresult)   | yes      | Result of operation |
-| `error`      | [`Error`](#error)           | yes      | Custom error        |
-| `disconnect` | [`Disconnect`](#disconnect) | yes      | Custom disconnect   |
+| `result`     | [`RPCResult`](#rpcresult)   | no       | Result of operation |
+| `error`      | [`Error`](#error)           | no       | Custom error        |
+| `disconnect` | [`Disconnect`](#disconnect) | no       | Custom disconnect   |
 
 #### RPCResult
 
-| Field     | Type     | Optional | Description                                                               |
+| Field     | Type     | Required | Description                                                               |
 |-----------|----------|----------|---------------------------------------------------------------------------|
-| `data`    | `JSON`   | yes      | RPC response - any valid JSON is supported                                |
-| `b64data` | `string` | yes      | can be set instead of `data` for binary response encoded in base64 format |
+| `data`    | `JSON`   | no       | RPC response - any valid JSON is supported                                |
+| `b64data` | `string` | no       | can be set instead of `data` for binary response encoded in base64 format |
 
 ## Return custom error
 
@@ -15157,10 +15157,10 @@ In response, you will also get 200 OK, but payload will contain `error` field in
 
 #### PublishResponse
 
-| Field name | Field type                        | Optional | Description         |
+| Field name | Field type                        | Required | Description         |
 |------------|-----------------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)                 | yes      | Error of operation  |
-| `result`   | [`PublishResult`](#publishresult) | yes      | Result of operation |
+| `error`    | [`Error`](#error)                 | no       | Error of operation  |
+| `result`   | [`PublishResult`](#publishresult) | no       | Result of operation |
 
 Always check whether `error` is set, otherwise consider publish successful and can use `result`.
 
@@ -15168,17 +15168,17 @@ Always check whether `error` is set, otherwise consider publish successful and c
 
 `Error` type represents Centrifugo-level API call error and it has common structure for all server API responses:
 
-| Field name | Field type | Optional | Description   |
+| Field name | Field type | Required | Description   |
 |------------|------------|----------|---------------|
-| `code`     | `integer`  | no       | Error code    |
-| `message`  | `string`   | yes      | Error message |
+| `code`     | `integer`  | yes      | Error code    |
+| `message`  | `string`   | no       | Error message |
 
 #### PublishResult
 
-| Field name | Field type | Optional | Description                             |
+| Field name | Field type | Required | Description                             |
 |------------|------------|----------|-----------------------------------------|
-| `offset`   | `integer`  | yes      | Offset of publication in history stream |
-| `epoch`    | `string`   | yes      | Epoch of current stream                 |
+| `offset`   | `integer`  | no       | Offset of publication in history stream |
+| `epoch`    | `string`   | no       | Epoch of current stream                 |
 
 ### broadcast
 
@@ -15209,18 +15209,18 @@ This command may be very useful when implementing messenger application, like we
 
 #### BroadcastResponse
 
-| Field name | Field type                            | Optional | Description         |
+| Field name | Field type                            | Required | Description         |
 |------------|---------------------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)                     | yes      | Error of operation  |
-| `result`   | [`BroadcastResult`](#broadcastresult) | yes      | Result of operation |
+| `error`    | [`Error`](#error)                     | no       | Error of operation  |
+| `result`   | [`BroadcastResult`](#broadcastresult) | no       | Result of operation |
 
 Always check whether `error` is set, otherwise consider publish successful and can use `result`.
 
 #### BroadcastResult
 
-| Field name  | Field type                                   | Optional | Description                                                                    |
+| Field name  | Field type                                   | Required | Description                                                                    |
 |-------------|----------------------------------------------|----------|--------------------------------------------------------------------------------|
-| `responses` | [`array[PublishResponse]`](#publishresponse) | no       | Responses for each individual publish (with possible error and publish result) |
+| `responses` | [`array[PublishResponse]`](#publishresponse) | yes      | Responses for each individual publish (with possible error and publish result) |
 
 ### subscribe
 
@@ -15250,13 +15250,13 @@ This is not a real-time streaming subscription request – it's just a command t
 
 #### Override object
 
-| Field                   | Type                      | Optional | Description                    |
+| Field                   | Type                      | Required | Description                    |
 |-------------------------|---------------------------|----------|--------------------------------|
-| `presence`              | [`BoolValue`](#boolvalue) | yes      | Override presence              |
-| `join_leave`            | [`BoolValue`](#boolvalue) | yes      | Override join_leave            |
-| `force_push_join_leave` | [`BoolValue`](#boolvalue) | yes      | Override force_push_join_leave |
-| `force_positioning`     | [`BoolValue`](#boolvalue) | yes      | Override force_positioning     |
-| `force_recovery`        | [`BoolValue`](#boolvalue) | yes      | Override force_recovery        |
+| `presence`              | [`BoolValue`](#boolvalue) | no       | Override presence              |
+| `join_leave`            | [`BoolValue`](#boolvalue) | no       | Override join_leave            |
+| `force_push_join_leave` | [`BoolValue`](#boolvalue) | no       | Override force_push_join_leave |
+| `force_positioning`     | [`BoolValue`](#boolvalue) | no       | Override force_positioning     |
+| `force_recovery`        | [`BoolValue`](#boolvalue) | no       | Override force_recovery        |
 
 #### BoolValue
 
@@ -15270,10 +15270,10 @@ BoolValue is an object like this:
 
 #### SubscribeResponse
 
-| Field name | Field type                            | Optional | Description         |
+| Field name | Field type                            | Required | Description         |
 |------------|---------------------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)                     | yes      | Error of operation  |
-| `result`   | [`SubscribeResult`](#subscriberesult) | yes      | Result of operation |
+| `error`    | [`Error`](#error)                     | no       | Error of operation  |
+| `result`   | [`SubscribeResult`](#subscriberesult) | no       | Result of operation |
 
 Always check whether `error` is set, otherwise consider publish successful and can use `result`.
 
@@ -15296,10 +15296,10 @@ Empty object at the moment.
 
 #### UnsubscribeResponse
 
-| Field name | Field type                                | Optional | Description         |
+| Field name | Field type                                | Required | Description         |
 |------------|-------------------------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)                         | yes      | Error of operation  |
-| `result`   | [`UnsubscribeResult`](#unsubscriberesult) | yes      | Result of operation |
+| `error`    | [`Error`](#error)                         | no       | Error of operation  |
+| `result`   | [`UnsubscribeResult`](#unsubscriberesult) | no       | Result of operation |
 
 #### UnsubscribeResult
 
@@ -15328,10 +15328,10 @@ Empty object at the moment.
 
 #### DisconnectResponse
 
-| Field name | Field type                              | Optional | Description         |
+| Field name | Field type                              | Required | Description         |
 |------------|-----------------------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)                       | yes      | Error of operation  |
-| `result`   | [`DisconnectResult`](#disconnectresult) | yes      | Result of operation |
+| `error`    | [`Error`](#error)                       | no       | Error of operation  |
+| `result`   | [`DisconnectResult`](#disconnectresult) | no       | Result of operation |
 
 #### DisconnectResult
 
@@ -15354,10 +15354,10 @@ Empty object at the moment.
 
 #### RefreshResponse
 
-| Field name | Field type                            | Optional | Description         |
+| Field name | Field type                            | Required | Description         |
 |------------|---------------------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)                     | yes      | Error of operation  |
-| `result`   | [`RefreshResult`](#refreshresult)     | yes      | Result of operation |
+| `error`    | [`Error`](#error)                     | no       | Error of operation  |
+| `result`   | [`RefreshResult`](#refreshresult)     | no       | Result of operation |
 
 #### RefreshResult
 
@@ -15407,25 +15407,25 @@ Example response:
 
 #### PresenceResponse
 
-| Field name | Field type                          | Optional | Description         |
+| Field name | Field type                          | Required | Description         |
 |------------|-------------------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)                   | yes      | Error of operation  |
-| `result`   | [`PresenceResult`](#presenceresult) | yes      | Result of operation |
+| `error`    | [`Error`](#error)                   | no       | Error of operation  |
+| `result`   | [`PresenceResult`](#presenceresult) | no       | Result of operation |
 
 #### PresenceResult
 
-| Field name | Field type              | Optional | Description                             |
+| Field name | Field type              | Required | Description                             |
 |------------|-------------------------|----------|-----------------------------------------|
-| `presence` | `map[string]ClientInfo` | no       | Offset of publication in history stream |
+| `presence` | `map[string]ClientInfo` | yes      | Offset of publication in history stream |
 
 #### ClientInfo
 
-| Field name  | Field type | Optional | Description              |
+| Field name  | Field type | Required | Description              |
 |-------------|------------|----------|--------------------------|
-| `client`    | `string`   | no       | Client ID                |
-| `user`      | `string`   | no       | User ID                  |
-| `conn_info` | `JSON`     | yes      | Optional connection info |
-| `chan_info` | `JSON`     | yes      | Optional channel info    |
+| `client`    | `string`   | yes      | Client ID                |
+| `user`      | `string`   | yes      | User ID                  |
+| `conn_info` | `JSON`     | no       | Optional connection info |
+| `chan_info` | `JSON`     | no       | Optional channel info    |
 
 ### presence_stats
 
@@ -15457,17 +15457,17 @@ Example response:
 
 #### PresenceStatsResponse
 
-| Field name | Field type                                    | Optional | Description         |
+| Field name | Field type                                    | Required | Description         |
 |------------|-----------------------------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)                             | yes      | Error of operation  |
-| `result`   | [`PresenceStatsResult`](#presencestatsresult) | yes      | Result of operation |
+| `error`    | [`Error`](#error)                             | no       | Error of operation  |
+| `result`   | [`PresenceStatsResult`](#presencestatsresult) | no       | Result of operation |
 
 #### PresenceStatsResult
 
-| Field name    | Field type | Optional | Description                             |
+| Field name    | Field type | Required | Description                             |
 |---------------|------------|----------|-----------------------------------------|
-| `num_clients` | `integer`  | no       | Total number of clients in channel      |
-| `num_users`   | `integer`  | no       | Total number of unique users in channel |
+| `num_clients` | `integer`  | yes      | Total number of clients in channel      |
+| `num_users`   | `integer`  | yes      | Total number of unique users in channel |
 
 ### history
 
@@ -15529,18 +15529,18 @@ Example response:
 
 #### HistoryResponse
 
-| Field name | Field type                        | Optional | Description         |
+| Field name | Field type                        | Required | Description         |
 |------------|-----------------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)                 | yes      | Error of operation  |
-| `result`   | [`HistoryResult`](#historyresult) | yes      | Result of operation |
+| `error`    | [`Error`](#error)                 | no       | Error of operation  |
+| `result`   | [`HistoryResult`](#historyresult) | no       | Result of operation |
 
 #### HistoryResult
 
-| Field name     | Field type           | Optional | Description                     |
+| Field name     | Field type           | Required | Description                     |
 |----------------|----------------------|----------|---------------------------------|
-| `publications` | `array[Publication]` | yes      | List of publications in channel |
-| `offset`       | `integer`            | yes      | Top offset in history stream    |
-| `epoch`        | `string`             | yes      | Epoch of current stream         |
+| `publications` | `array[Publication]` | no       | List of publications in channel |
+| `offset`       | `integer`            | no       | Top offset in history stream    |
+| `epoch`        | `string`             | no       | Epoch of current stream         |
 
 ### history_remove
 
@@ -15554,10 +15554,10 @@ Example response:
 
 ### HistoryRemoveResponse
 
-| Field name | Field type                                    | Optional | Description         |
+| Field name | Field type                                    | Required | Description         |
 |------------|-----------------------------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)                             | yes      | Error of operation  |
-| `result`   | [`HistoryRemoveResult`](#historyremoveresult) | yes      | Result of operation |
+| `error`    | [`Error`](#error)                             | no       | Error of operation  |
+| `result`   | [`HistoryRemoveResult`](#historyremoveresult) | no       | Result of operation |
 
 #### HistoryRemoveResult
 
@@ -15582,22 +15582,22 @@ curl --header "X-API-Key: <API_KEY>" \
 
 #### ChannelsResponse
 
-| Field name | Field type                          | Optional | Description         |
+| Field name | Field type                          | Required | Description         |
 |------------|-------------------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)                   | yes      | Error of operation  |
-| `result`   | [`ChannelsResult`](#channelsresult) | yes      | Result of operation |
+| `error`    | [`Error`](#error)                   | no       | Error of operation  |
+| `result`   | [`ChannelsResult`](#channelsresult) | no       | Result of operation |
 
 #### ChannelsResult
 
-| Field name | Field type               | Optional | Description                                                   |
+| Field name | Field type               | Required | Description                                                   |
 |------------|--------------------------|----------|---------------------------------------------------------------|
-| `channels` | `map[string]ChannelInfo` | no       | Map where key is channel and value is ChannelInfo (see below) |
+| `channels` | `map[string]ChannelInfo` | yes      | Map where key is channel and value is ChannelInfo (see below) |
 
 #### ChannelInfo
 
-| Field name    | Field type | Optional | Description                                                   |
+| Field name    | Field type | Required | Description                                                   |
 |---------------|------------|----------|---------------------------------------------------------------|
-| `num_clients` | `integer`  | no       | Total number of connections currently subscribed to a channel |
+| `num_clients` | `integer`  | yes      | Total number of connections currently subscribed to a channel |
 
 :::caution
 
@@ -15642,16 +15642,16 @@ Empty object at the moment.
 
 #### InfoResponse
 
-| Field name | Field type                        | Optional | Description         |
+| Field name | Field type                        | Required | Description         |
 |------------|-----------------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)                 | yes      | Error of operation  |
-| `result`   | [`InfoResult`](#inforesult)       | yes      | Result of operation |
+| `error`    | [`Error`](#error)                 | no       | Error of operation  |
+| `result`   | [`InfoResult`](#inforesult)       | no       | Result of operation |
 
 #### InfoResult
 
-| Field name | Field type    | Optional | Description                              |
+| Field name | Field type    | Required | Description                              |
 |------------|---------------|----------|------------------------------------------|
-| `nodes`    | `array[Node]` | no       | Information about all nodes in a cluster |
+| `nodes`    | `array[Node]` | yes      | Information about all nodes in a cluster |
 
 ### batch
 
@@ -23129,21 +23129,21 @@ In this configuration:
 
 | Field    | Type    | Required | Description                                                               |
 |----------|---------|----------|---------------------------------------------------------------------------|
-| enabled  | `boolean` | Yes      | Must be `true` to enable multiple JWKS providers functionality          |
-| providers | `array`  | Yes      | Array of JWKS provider configurations (see below)                        |
+| enabled  | `boolean` | yes      | Must be `true` to enable multiple JWKS providers functionality          |
+| providers | `array`  | yes      | Array of JWKS provider configurations (see below)                        |
 
 ### JWKS provider fields
 
 | Field    | Type    | Required | Description                                                               |
 |----------|---------|----------|---------------------------------------------------------------------------|
-| name     | `string`  | Yes      | Unique identifier for the provider. Must match pattern `^[a-zA-Z0-9_]{2,}$` |
-| enabled  | `boolean` | No      | Whether this provider is active (default `false`)                                       |
+| name     | `string`  | yes      | Unique identifier for the provider. Must match pattern `^[a-zA-Z0-9_]{2,}$` |
+| enabled  | `boolean` | no      | Whether this provider is active (default `false`)                                       |
 | endpoint | `string`  | Yes*     | JWKS endpoint URL (*required if enabled)                                  |
 | issuer   | `string`  | Yes*     | Expected issuer claim value (*required if enabled)                        |
-| audience | `string`  | No       | Expected audience claim value. **While optional, it's highly recommended to set this in most cases** to prevent client tokens related to other audiences issued by the same issuer from being accepted by Centrifugo. When the same issuer is used by multiple providers, each must have a different audience set to enable issuer+audience matching                                  |
-| tls      | [`TLS`](../server/configuration.md#tls-config-object) object  | No       | Custom TLS configuration for the JWKS endpoint HTTP client                            |
-| meta_from_claim      | [StringKeyValues](../server/configuration.md#stringkeyvalues-type)  | No       | Config to transform JWT claims to connection meta object. Must be explicitly set for each provider, not inherited from upper config level.                              |
-| labels_from_claim    | [StringKeyValues](../server/configuration.md#stringkeyvalues-type)  | No       | Config to transform JWT claims to [connection labels](#client-labels). Must be explicitly set for each provider, not inherited from upper config level.                  |
+| audience | `string`  | no       | Expected audience claim value. **While optional, it's highly recommended to set this in most cases** to prevent client tokens related to other audiences issued by the same issuer from being accepted by Centrifugo. When the same issuer is used by multiple providers, each must have a different audience set to enable issuer+audience matching                                  |
+| tls      | [`TLS`](../server/configuration.md#tls-config-object) object  | no       | Custom TLS configuration for the JWKS endpoint HTTP client                            |
+| meta_from_claim      | [StringKeyValues](../server/configuration.md#stringkeyvalues-type)  | no       | Config to transform JWT claims to connection meta object. Must be explicitly set for each provider, not inherited from upper config level.                              |
+| labels_from_claim    | [StringKeyValues](../server/configuration.md#stringkeyvalues-type)  | no       | Config to transform JWT claims to [connection labels](#client-labels). Must be explicitly set for each provider, not inherited from upper config level.                  |
 
 ### How It Works
 
@@ -23456,52 +23456,52 @@ At least one of `user`, `expression`, or `label_filter` must be set — the API 
 
 #### ConnectionsResult
 
-| Field name    | Field type                  | Optional | Description                                                                    |
+| Field name    | Field type                  | Required | Description                                                                    |
 |---------------|-----------------------------|----------|--------------------------------------------------------------------------------|
-| `connections` | `map[string]ConnectionInfo` | no       | active user connections map where key is client ID and value is ConnectionInfo |
+| `connections` | `map[string]ConnectionInfo` | yes      | active user connections map where key is client ID and value is ConnectionInfo |
 
 #### ConnectionInfo
 
-| Field name    | Field type          | Optional | Description                                                                            |
+| Field name    | Field type          | Required | Description                                                                            |
 |---------------|---------------------|----------|----------------------------------------------------------------------------------------|
-| `app_name`    | `string`            | yes      | client app name (if provided by client)                                                |
-| `app_version` | `string`            | yes      | client app version (if provided by client)                                             |
-| `transport`   | `string`            | no       | client connection transport                                                            |
-| `protocol`    | `string`            | no       | client connection protocol (json or protobuf)                                          |
-| `user`        | `string`            | yes      | client user ID                                                                         |
-| `state`       | `ConnectionState`   | yes      | connection state                                                                       |
-| `connected_at_ms`      | `int64`    | yes      | Unix time (in milliseconds) when the connection was established                        |
-| `ping_pong_latency_ms` | `int64`    | yes      | last measured client ping/pong round-trip latency in milliseconds (can be `-1` if not available) |
-| `labels`      | `map[string]string` | yes      | [client labels](./client_authentication.md#client-labels) attached to the connection   |
+| `app_name`    | `string`            | no       | client app name (if provided by client)                                                |
+| `app_version` | `string`            | no       | client app version (if provided by client)                                             |
+| `transport`   | `string`            | yes      | client connection transport                                                            |
+| `protocol`    | `string`            | yes      | client connection protocol (json or protobuf)                                          |
+| `user`        | `string`            | no       | client user ID                                                                         |
+| `state`       | `ConnectionState`   | no       | connection state                                                                       |
+| `connected_at_ms`      | `int64`    | no       | Unix time (in milliseconds) when the connection was established                        |
+| `ping_pong_latency_ms` | `int64`    | no       | last measured client ping/pong round-trip latency in milliseconds (can be `-1` if not available) |
+| `labels`      | `map[string]string` | no       | [client labels](./client_authentication.md#client-labels) attached to the connection   |
 
 #### ConnectionState object
 
-| Field name            | Field type                         | Optional | Description                                        |
+| Field name            | Field type                         | Required | Description                                        |
 |-----------------------|------------------------------------|----------|----------------------------------------------------|
-| `channels`            | `map[string]ChannelContext`        | yes      | Channels client subscribed to                      |
-| `connection_token`    | `ConnectionTokenInfo`              | yes      | information about connection token                 |
-| `subscription_tokens` | `map[string]SubscriptionTokenInfo` | yes      | information about channel tokens used to subscribe |
-| `meta`                | `JSON` object                      | yes      | meta information attached to a connection          |
+| `channels`            | `map[string]ChannelContext`        | no       | Channels client subscribed to                      |
+| `connection_token`    | `ConnectionTokenInfo`              | no       | information about connection token                 |
+| `subscription_tokens` | `map[string]SubscriptionTokenInfo` | no       | information about channel tokens used to subscribe |
+| `meta`                | `JSON` object                      | no       | meta information attached to a connection          |
 
 #### ChannelContext object
 
-| Field name | Field type | Optional | Description                        |
+| Field name | Field type | Required | Description                        |
 |------------|------------|----------|------------------------------------|
-| `source`   | `int`      | yes      | The source of channel subscription |
+| `source`   | `int`      | no       | The source of channel subscription |
 
 #### ConnectionTokenInfo object
 
-| Field name  | Field type | Optional | Description                               |
+| Field name  | Field type | Required | Description                               |
 |-------------|------------|----------|-------------------------------------------|
-| `uid`       | `string`   | yes      | unique token ID (jti)                     |
-| `issued_at` | `int`      | yes      | time (Unix seconds) when token was issued |
+| `uid`       | `string`   | no       | unique token ID (jti)                     |
+| `issued_at` | `int`      | no       | time (Unix seconds) when token was issued |
 
 #### SubscriptionTokenInfo object
 
-| Field name  | Field type | Optional | Description                               |
+| Field name  | Field type | Required | Description                               |
 |-------------|------------|----------|-------------------------------------------|
-| `uid`       | `string`   | yes      | unique token ID (jti)                     |
-| `issued_at` | `int`      | yes      | time (Unix seconds) when token was issued |
+| `uid`       | `string`   | no       | unique token ID (jti)                     |
+| `issued_at` | `int`      | no       | time (Unix seconds) when token was issued |
 
 ### Label filter
 
@@ -26024,21 +26024,21 @@ Registers or updates device information.
 
 | Field      | Type                | Required | Description                                                                                                                                                                                          |
 |------------|---------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `id`       | `string`            | No       | Device ID. Omit on first registration — Centrifugo generates one and returns it. Pass the stored value on re-registration to update the same device. See [Device lifecycle](#device-lifecycle-and-best-practices). |
-| `provider` | `string`            | Yes      | Provider of the device token (valid choices: `fcm`, `hms`, `apns`, `webpush`).                                                                                                                       |
-| `token`    | `string`            | Yes      | Push notification token for the device. For `webpush`, this is the browser `PushSubscription` object serialized as a JSON string.                                                                    |
-| `platform` | `string`            | Yes      | Platform of the device (valid choices: `ios`, `android`, `web`).                                                                                                                                     |
-| `user`     | `string`            | No       | User associated with the device.                                                                                                                                                                     |
-| `timezone` | `string`            | No       | Timezone of device user ([IANA time zone identifier](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones), ex. `Europe/Nicosia`). See [Timezone aware push](#timezone-aware-push)           |
-| `locale`   | `string`            | No       | Locale of device user. Must be IETF BCP 47 language tag - ex. `en-US`, `fr-CA`. See [Localizations](#localizations)                                                                                  |
-| `topics`   | `array[string]`     | No       | Device topic subscriptions. This should be a full list which replaces all the topics previously associated with the device. User topics managed by `UserTopic` model will be automatically attached. |
-| `meta`     | `map[string]string` | No       | Additional custom metadata for the device                                                                                                                                                            |
+| `id`       | `string`            | no       | Device ID. Omit on first registration — Centrifugo generates one and returns it. Pass the stored value on re-registration to update the same device. See [Device lifecycle](#device-lifecycle-and-best-practices). |
+| `provider` | `string`            | yes      | Provider of the device token (valid choices: `fcm`, `hms`, `apns`, `webpush`).                                                                                                                       |
+| `token`    | `string`            | yes      | Push notification token for the device. For `webpush`, this is the browser `PushSubscription` object serialized as a JSON string.                                                                    |
+| `platform` | `string`            | yes      | Platform of the device (valid choices: `ios`, `android`, `web`).                                                                                                                                     |
+| `user`     | `string`            | no       | User associated with the device.                                                                                                                                                                     |
+| `timezone` | `string`            | no       | Timezone of device user ([IANA time zone identifier](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones), ex. `Europe/Nicosia`). See [Timezone aware push](#timezone-aware-push)           |
+| `locale`   | `string`            | no       | Locale of device user. Must be IETF BCP 47 language tag - ex. `en-US`, `fr-CA`. See [Localizations](#localizations)                                                                                  |
+| `topics`   | `array[string]`     | no       | Device topic subscriptions. This should be a full list which replaces all the topics previously associated with the device. User topics managed by `UserTopic` model will be automatically attached. |
+| `meta`     | `map[string]string` | no       | Additional custom metadata for the device                                                                                                                                                            |
 
 #### device_register result
 
 | Field Name | Type     | Required | Description                                |
 |------------|----------|----------|--------------------------------------------|
-| `id`       | `string` | Yes      | The device ID that was registered/updated. |
+| `id`       | `string` | yes      | The device ID that was registered/updated. |
 
 ### device_update
 
@@ -26048,19 +26048,19 @@ Call this method to update a device. For example, when a user logs out of the ap
 
 | Field             | Type                   | Required | Description                        |
 |-------------------|------------------------|----------|------------------------------------|
-| `ids`             | `array[string]`        | No       | Device ids to filter               |
-| `users`           | `array[string]`        | No       | Device users filter                |
-| `user_update`     | `DeviceUserUpdate`     | No       | Optional user update object        |
-| `timezone_update` | `DeviceTimezoneUpdate` | No       | Optional timezone update object    |
-| `locale_update`   | `DeviceLocaleUpdate`   | No       | Optional locale update object      |
-| `meta_update`     | `DeviceMetaUpdate`     | No       | Optional device meta update object |
-| `topics_update`   | `DeviceTopicsUpdate`   | No       | Optional topics update object      |
+| `ids`             | `array[string]`        | no       | Device ids to filter               |
+| `users`           | `array[string]`        | no       | Device users filter                |
+| `user_update`     | `DeviceUserUpdate`     | no       | Optional user update object        |
+| `timezone_update` | `DeviceTimezoneUpdate` | no       | Optional timezone update object    |
+| `locale_update`   | `DeviceLocaleUpdate`   | no       | Optional locale update object      |
+| `meta_update`     | `DeviceMetaUpdate`     | no       | Optional device meta update object |
+| `topics_update`   | `DeviceTopicsUpdate`   | no       | Optional topics update object      |
 
 `DeviceUserUpdate`:
 
 | Field  | Type     | Required | Description |
 |--------|----------|----------|-------------|
-| `user` | `string` | Yes      | User to set |
+| `user` | `string` | yes      | User to set |
 
 :::note When to use `user_update`
 
@@ -26074,26 +26074,26 @@ To assign a device to a **different user** (e.g. a different person logs in on a
 
 | Field      | Type     | Required | Description     |
 |------------|----------|----------|-----------------|
-| `timezone` | `string` | Yes      | Timezone to set |
+| `timezone` | `string` | yes      | Timezone to set |
 
 `DeviceLocaleUpdate`:
 
 | Field    | Type     | Required | Description   |
 |----------|----------|----------|---------------|
-| `locale` | `string` | Yes      | Locale to set |
+| `locale` | `string` | yes      | Locale to set |
 
 `DeviceMetaUpdate`:
 
 | Field  | Type                 | Required | Description |
 |--------|----------------------|----------|-------------|
-| `meta` | `map[string]string` | Yes      | Meta to set |
+| `meta` | `map[string]string` | yes      | Meta to set |
 
 `DeviceTopicsUpdate`:
 
 | Field    | Type            | Required | Description                                 |
 |----------|-----------------|----------|---------------------------------------------|
-| `op`     | `string`        | Yes      | Operation to make: `add`, `remove` or `set` |
-| `topics` | `array[string]` | Yes      | Topics for the operation                    |
+| `op`     | `string`        | yes      | Operation to make: `add`, `remove` or `set` |
+| `topics` | `array[string]` | yes      | Topics for the operation                    |
 
 #### device_update result
 
@@ -26107,8 +26107,8 @@ Removes a device from storage. This may also be called when a user logs out of t
 
 | Field Name | Type            | Required | Description                                           |
 |------------|-----------------|----------|-------------------------------------------------------|
-| `ids`      | `array[string]` | No       | A list of device IDs to be removed                    |
-| `users`    | `array[string]` | No       | A list of device user IDs to filter devices to remove |
+| `ids`      | `array[string]` | no       | A list of device IDs to be removed                    |
+| `users`    | `array[string]` | no       | A list of device user IDs to filter devices to remove |
 
 #### device_remove result
 
@@ -26122,44 +26122,44 @@ Returns a paginated list of registered devices according to request filter condi
 
 | Field                 | Type           | Required | Description                                                                     |
 |-----------------------|----------------|----------|---------------------------------------------------------------------------------|
-| `filter`              | `DeviceFilter` | Yes      | How to filter results                                                           |
-| `cursor`              | `string`       | No       | Cursor for pagination (last device id in previous batch, empty for first page). |
-| `limit`               | `int32`        | No       | Maximum number of devices to retrieve.                                          |
-| `include_total_count` | `bool`         | No       | Flag indicating whether to include total count for the current filter.          |
-| `include_topics`      | `bool`         | No       | Flag indicating whether to include topics information for each device.          |
-| `include_meta`        | `bool`         | No       | Flag indicating whether to include meta information for each device.            |
-| `include_webpush_keys`| `bool`         | No       | Flag indicating whether to include `webpush_keys` for each device (webpush only).|
+| `filter`              | `DeviceFilter` | yes      | How to filter results                                                           |
+| `cursor`              | `string`       | no       | Cursor for pagination (last device id in previous batch, empty for first page). |
+| `limit`               | `int32`        | no       | Maximum number of devices to retrieve.                                          |
+| `include_total_count` | `bool`         | no       | Flag indicating whether to include total count for the current filter.          |
+| `include_topics`      | `bool`         | no       | Flag indicating whether to include topics information for each device.          |
+| `include_meta`        | `bool`         | no       | Flag indicating whether to include meta information for each device.            |
+| `include_webpush_keys`| `bool`         | no       | Flag indicating whether to include `webpush_keys` for each device (webpush only).|
 
 `DeviceFilter`:
 
 | Field       | Type            | Required | Description                                       |
 |-------------|-----------------|----------|---------------------------------------------------|
-| `ids`       | `array[string]` | No       | List of device IDs to filter results.             |
-| `providers` | `array[string]` | No       | List of device token providers to filter results. |
-| `platforms` | `array[string]` | No       | List of device platforms to filter results.       |
-| `users`     | `array[string]` | No       | List of device users to filter results.           |
-| `topics`    | `array[string]` | No       | List of topics to filter results.                 |
+| `ids`       | `array[string]` | no       | List of device IDs to filter results.             |
+| `providers` | `array[string]` | no       | List of device token providers to filter results. |
+| `platforms` | `array[string]` | no       | List of device platforms to filter results.       |
+| `users`     | `array[string]` | no       | List of device users to filter results.           |
+| `topics`    | `array[string]` | no       | List of topics to filter results.                 |
 
 #### device_list result
 
 | Field Name    | Type            | Required | Description                                                                       |
 |---------------|-----------------|----------|-----------------------------------------------------------------------------------|
-| `items`       | `array[Device]` | Yes      | A list of devices                                                                 |
-| `next_cursor` | `string`        | No       | Cursor string for retrieving the next page, if not set - then no next page exists |
-| `total_count` | `integer`       | No       | Total count value (if `include_total_count` used)                                 |
+| `items`       | `array[Device]` | yes      | A list of devices                                                                 |
+| `next_cursor` | `string`        | no       | Cursor string for retrieving the next page, if not set - then no next page exists |
+| `total_count` | `integer`       | no       | Total count value (if `include_total_count` used)                                 |
 
 `Device`:
 
 | Field Name | Type                | Required | Description                                |
 |------------|---------------------|----------|--------------------------------------------|
-| `id`       | `string`            | Yes      | The device's ID.                           |
-| `provider` | `string`            | Yes      | The device's token provider.               |
-| `token`    | `string`            | Yes      | The device's token. For `webpush` this is the subscription **endpoint** (its stable identity). |
-| `platform` | `string`            | Yes      | The device's platform.                     |
-| `user`     | `string`            | No       | The user associated with the device.       |
-| `topics`   | `array[string]`     | No       | Only included if `include_topics` was true |
-| `meta`     | `map[string]string` | No       | Only included if `include_meta` was true   |
-| `webpush_keys` | `string`        | No       | Web Push subscription keys JSON (`{p256dh, auth}`). Only included if `include_webpush_keys` was true |
+| `id`       | `string`            | yes      | The device's ID.                           |
+| `provider` | `string`            | yes      | The device's token provider.               |
+| `token`    | `string`            | yes      | The device's token. For `webpush` this is the subscription **endpoint** (its stable identity). |
+| `platform` | `string`            | yes      | The device's platform.                     |
+| `user`     | `string`            | no       | The user associated with the device.       |
+| `topics`   | `array[string]`     | no       | Only included if `include_topics` was true |
+| `meta`     | `map[string]string` | no       | Only included if `include_meta` was true   |
+| `webpush_keys` | `string`        | no       | Web Push subscription keys JSON (`{p256dh, auth}`). Only included if `include_webpush_keys` was true |
 
 ### Two kinds of topic lists
 
@@ -26182,10 +26182,10 @@ Manage mapping of device to topics.
 
 | Field       | Type            | Required | Description                |
 |-------------|-----------------|----------|----------------------------|
-| `device_id` | `string`        | Yes      | Device ID.                 |
-| `op`        | `string`        | Yes      | `add` or `remove` or `set` |
-| `topics`    | `array[string]` | No       | List of topics.            |
-| `user`      | `string`        | No       | Optional ownership guard. If set, the update is applied only if the device currently belongs to this user. If the device exists but is owned by someone else, the request fails with a `conflict` error; if the device doesn't exist, it fails with a `not found` error. Nothing is changed in either case. Use it to avoid landing one user's topics on a device that has changed hands. |
+| `device_id` | `string`        | yes      | Device ID.                 |
+| `op`        | `string`        | yes      | `add` or `remove` or `set` |
+| `topics`    | `array[string]` | no       | List of topics.            |
+| `user`      | `string`        | no       | Optional ownership guard. If set, the update is applied only if the device currently belongs to this user. If the device exists but is owned by someone else, the request fails with a `conflict` error; if the device doesn't exist, it fails with a `not found` error. Nothing is changed in either case. Use it to avoid landing one user's topics on a device that has changed hands. |
 
 #### device_topic_update result
 
@@ -26205,38 +26205,38 @@ List device to topic mapping.
 
 | Field                 | Type                | Required | Description                                                                     |
 |-----------------------|---------------------|----------|---------------------------------------------------------------------------------|
-| `filter`              | `DeviceTopicFilter` | No       | List of device IDs to filter results.                                           |
-| `cursor`              | `string`            | No       | Cursor for pagination (last device id in previous batch, empty for first page). |
-| `limit`               | `int32`             | No       | Maximum number of devices to retrieve.                                          |
-| `include_device`      | `bool`              | No       | Flag indicating whether to include Device information for each object.          |
-| `include_total_count` | `bool`              | No       | Flag indicating whether to include total count info to response.                |
+| `filter`              | `DeviceTopicFilter` | no       | List of device IDs to filter results.                                           |
+| `cursor`              | `string`            | no       | Cursor for pagination (last device id in previous batch, empty for first page). |
+| `limit`               | `int32`             | no       | Maximum number of devices to retrieve.                                          |
+| `include_device`      | `bool`              | no       | Flag indicating whether to include Device information for each object.          |
+| `include_total_count` | `bool`              | no       | Flag indicating whether to include total count info to response.                |
 
 `DeviceTopicFilter`:
 
 | Field              | Type            | Required | Description                                       |
 |--------------------|-----------------|----------|---------------------------------------------------|
-| `device_ids`       | `array[string]` | No       | List of device IDs to filter results.             |
-| `device_providers` | `array[string]` | No       | List of device token providers to filter results. |
-| `device_platforms` | `array[string]` | No       | List of device platforms to filter results.       |
-| `device_users`     | `array[string]` | No       | List of device users to filter results.           |
-| `topics`           | `array[string]` | No       | List of topics to filter results.                 |
-| `topic_prefix`     | `string`        | No       | Topic prefix to filter results.                   |
+| `device_ids`       | `array[string]` | no       | List of device IDs to filter results.             |
+| `device_providers` | `array[string]` | no       | List of device token providers to filter results. |
+| `device_platforms` | `array[string]` | no       | List of device platforms to filter results.       |
+| `device_users`     | `array[string]` | no       | List of device users to filter results.           |
+| `topics`           | `array[string]` | no       | List of topics to filter results.                 |
+| `topic_prefix`     | `string`        | no       | Topic prefix to filter results.                   |
 
 #### device_topic_list result
 
 | Field Name    | Type                 | Required | Description                                                                       |
 |---------------|----------------------|----------|-----------------------------------------------------------------------------------|
-| `items`       | `array[DeviceTopic]` | Yes      | A list of DeviceTopic objects                                                   |
-| `next_cursor` | `string`             | No       | Cursor string for retrieving the next page, if not set - then no next page exists |
-| `total_count` | `integer`            | No       | Total count value (if `include_total_count` used)                                 |
+| `items`       | `array[DeviceTopic]` | yes      | A list of DeviceTopic objects                                                   |
+| `next_cursor` | `string`             | no       | Cursor string for retrieving the next page, if not set - then no next page exists |
+| `total_count` | `integer`            | no       | Total count value (if `include_total_count` used)                                 |
 
 `DeviceTopic`:
 
 | Field       | Type     | Required | Description              |
 |-------------|----------|----------|--------------------------|
-| `id`        | `string` | Yes      | ID of DeviceTopic object |
-| `device_id` | `string` | Yes      | Device ID                |
-| `topic`     | `string` | Yes      | Topic                    |
+| `id`        | `string` | yes      | ID of DeviceTopic object |
+| `device_id` | `string` | yes      | Device ID                |
+| `topic`     | `string` | yes      | Topic                    |
 
 ### user_topic_update
 
@@ -26246,9 +26246,9 @@ Manage the per-user topic list. Updating it **immediately** applies the change t
 
 | Field    | Type            | Required | Description                |
 |----------|-----------------|----------|----------------------------|
-| `user`   | `string`        | Yes      | User ID.                   |
-| `op`     | `string`        | Yes      | `add` or `remove` or `set` |
-| `topics` | `array[string]` | No       | List of topics.            |
+| `user`   | `string`        | yes      | User ID.                   |
+| `op`     | `string`        | yes      | `add` or `remove` or `set` |
+| `topics` | `array[string]` | no       | List of topics.            |
 
 #### user_topic_update result
 
@@ -26262,34 +26262,34 @@ List user to topic mapping.
 
 | Field                 | Type              | Required | Description                                                              |
 |-----------------------|-------------------|----------|--------------------------------------------------------------------------|
-| `filter`              | `UserTopicFilter` | No       | Filter object.                                                           |
-| `cursor`              | `string`          | No       | Cursor for pagination (last id in previous batch, empty for first page). |
-| `limit`               | `int32`           | No       | Maximum number of `UserTopic` objects to retrieve.                       |
-| `include_total_count` | `bool`            | No       | Flag indicating whether to include total count info to response.         |
+| `filter`              | `UserTopicFilter` | no       | Filter object.                                                           |
+| `cursor`              | `string`          | no       | Cursor for pagination (last id in previous batch, empty for first page). |
+| `limit`               | `int32`           | no       | Maximum number of `UserTopic` objects to retrieve.                       |
+| `include_total_count` | `bool`            | no       | Flag indicating whether to include total count info to response.         |
 
 `UserTopicFilter`:
 
 | Field          | Type            | Required | Description                       |
 |----------------|-----------------|----------|-----------------------------------|
-| `users`        | `array[string]` | No       | List of users to filter results.  |
-| `topics`       | `array[string]` | No       | List of topics to filter results. |
-| `topic_prefix` | `string`        | No       | Topic prefix to filter results.   |
+| `users`        | `array[string]` | no       | List of users to filter results.  |
+| `topics`       | `array[string]` | no       | List of topics to filter results. |
+| `topic_prefix` | `string`        | no       | Topic prefix to filter results.   |
 
 #### user_topic_list result
 
 | Field Name    | Type               | Required | Description                                                                       |
 |---------------|--------------------|----------|-----------------------------------------------------------------------------------|
-| `items`       | `array[UserTopic]` | Yes      | A list of UserTopic objects                                                       |
-| `next_cursor` | `string`           | No       | Cursor string for retrieving the next page, if not set - then no next page exists |
-| `total_count` | `integer`          | No       | Total count value (if `include_total_count` used)                                 |
+| `items`       | `array[UserTopic]` | yes      | A list of UserTopic objects                                                       |
+| `next_cursor` | `string`           | no       | Cursor string for retrieving the next page, if not set - then no next page exists |
+| `total_count` | `integer`          | no       | Total count value (if `include_total_count` used)                                 |
 
 `UserTopic`:
 
 | Field   | Type     | Required | Description       |
 |---------|----------|----------|-------------------|
-| `id`    | `string` | Yes      | ID of `UserTopic` |
-| `user`  | `string` | Yes      | User ID           |
-| `topic` | `string` | Yes      | Topic             |
+| `id`    | `string` | yes      | ID of `UserTopic` |
+| `user`  | `string` | yes      | User ID           |
+| `topic` | `string` | yes      | Topic             |
 
 ### send_push_notification
 
@@ -26299,102 +26299,102 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 
 | Field name                 | Type                          | Required | Description                                                                                                                                                                |
 |----------------------------|-------------------------------|----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `recipient`                | `PushRecipient`               | Yes      | Recipient of push notification                                                                                                                                             |
-| `notification`             | `PushNotification`            | Yes      | Push notification to send                                                                                                                                                  |
-| `uid`                      | `string`                      | No       | Unique identifier for each push notification request, can be used to cancel push. We recommend using UUID v4 for it. Two different requests must have different `uid`      |
-| `send_at`                  | `int64`                       | No       | Optional Unix time in the future (in seconds) when to send push notification, push will be queued until that time.                                                         |
-| `optimize_for_reliability` | `bool`                        | No       | Makes processing heavier, but handles edge cases — for example, it avoids losing pushes that are mid-send if the queue is briefly unavailable.                            |
-| `limit_strategy`           | `PushLimitStrategy`           | No       | Can be used to set push time constraints (based on device timezone) and rate limits. Note, when it's used Centrifugo processes pushes one by one instead of batch sending |
-| `analytics_uid`            | `string`                      | No       | Identifier for push notification analytics, if not set - Centrifugo will use `uid` field.                                                                                  |
-| `localizations`            | `map[string]PushLocalization` | No       | Optional per language localizations for push notification.                                                                                                                 |
-| `use_templating`           | `bool`                        | No       | If set - Centrifugo will use templating for push notification. Note that setting localizations enables templating automatically.                                           |
-| `use_meta`                 | `bool`                        | No       | If set - Centrifugo will additionally load device meta during push sending, this meta becomes available in templating.                                                     |
+| `recipient`                | `PushRecipient`               | yes      | Recipient of push notification                                                                                                                                             |
+| `notification`             | `PushNotification`            | yes      | Push notification to send                                                                                                                                                  |
+| `uid`                      | `string`                      | no       | Unique identifier for each push notification request, can be used to cancel push. We recommend using UUID v4 for it. Two different requests must have different `uid`      |
+| `send_at`                  | `int64`                       | no       | Optional Unix time in the future (in seconds) when to send push notification, push will be queued until that time.                                                         |
+| `optimize_for_reliability` | `bool`                        | no       | Makes processing heavier, but handles edge cases — for example, it avoids losing pushes that are mid-send if the queue is briefly unavailable.                            |
+| `limit_strategy`           | `PushLimitStrategy`           | no       | Can be used to set push time constraints (based on device timezone) and rate limits. Note, when it's used Centrifugo processes pushes one by one instead of batch sending |
+| `analytics_uid`            | `string`                      | no       | Identifier for push notification analytics, if not set - Centrifugo will use `uid` field.                                                                                  |
+| `localizations`            | `map[string]PushLocalization` | no       | Optional per language localizations for push notification.                                                                                                                 |
+| `use_templating`           | `bool`                        | no       | If set - Centrifugo will use templating for push notification. Note that setting localizations enables templating automatically.                                           |
+| `use_meta`                 | `bool`                        | no       | If set - Centrifugo will additionally load device meta during push sending, this meta becomes available in templating.                                                     |
 
 `PushRecipient` (you **must set only one of the following fields**):
 
 | Field           | Type            | Required | Description                                                  |
 |-----------------|-----------------|----------|--------------------------------------------------------------|
-| `filter`        | `DeviceFilter`  | No       | Send to device IDs based on Centrifugo device storage filter |
-| `fcm_tokens`    | `array[string]` | No       | Send to a list of FCM native tokens                          |
-| `fcm_topic`     | `string`        | No       | Send to a FCM native topic                                   |
-| `fcm_condition` | `string`        | No       | Send to a FCM native condition                               |
-| `hms_tokens`    | `array[string]` | No       | Send to a list of HMS native tokens                          |
-| `hms_topic`     | `string`        | No       | Send to a HMS native topic                                   |
-| `hms_condition` | `string`        | No       | Send to a HMS native condition                               |
-| `apns_tokens`   | `array[string]` | No       | Send to a list of APNs native tokens                         |
-| `webpush_tokens`| `array[string]` | No       | Send to a list of raw Web Push subscriptions (each item is a `PushSubscription` JSON string) |
+| `filter`        | `DeviceFilter`  | no       | Send to device IDs based on Centrifugo device storage filter |
+| `fcm_tokens`    | `array[string]` | no       | Send to a list of FCM native tokens                          |
+| `fcm_topic`     | `string`        | no       | Send to a FCM native topic                                   |
+| `fcm_condition` | `string`        | no       | Send to a FCM native condition                               |
+| `hms_tokens`    | `array[string]` | no       | Send to a list of HMS native tokens                          |
+| `hms_topic`     | `string`        | no       | Send to a HMS native topic                                   |
+| `hms_condition` | `string`        | no       | Send to a HMS native condition                               |
+| `apns_tokens`   | `array[string]` | no       | Send to a list of APNs native tokens                         |
+| `webpush_tokens`| `array[string]` | no       | Send to a list of raw Web Push subscriptions (each item is a `PushSubscription` JSON string) |
 
 `PushNotification`:
 
 | Field       | Type                   | Required | Description                                                                                                                                                                                                                                                                       |
 |-------------|------------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `expire_at` | `int64`                | No       | Unix timestamp when Centrifugo stops attempting to send this notification. Note, it's Centrifugo specific and does not relate to notification TTL fields. We generally recommend to always set this to a reasonable value to protect your app from old push notifications sending |
-| `fcm`       | `FcmPushNotification`  | No       | Notification for FCM                                                                                                                                                                                                                                                              |
-| `hms`       | `HmsPushNotification`  | No       | Notification for HMS                                                                                                                                                                                                                                                              |
-| `apns`      | `ApnsPushNotification` | No       | Notification for APNs                                                                                                                                                                                                                                                             |
-| `webpush`   | `WebPushPushNotification` | No    | Notification for Web Push                                                                                                                                                                                                                                                         |
+| `expire_at` | `int64`                | no       | Unix timestamp when Centrifugo stops attempting to send this notification. Note, it's Centrifugo specific and does not relate to notification TTL fields. We generally recommend to always set this to a reasonable value to protect your app from old push notifications sending |
+| `fcm`       | `FcmPushNotification`  | no       | Notification for FCM                                                                                                                                                                                                                                                              |
+| `hms`       | `HmsPushNotification`  | no       | Notification for HMS                                                                                                                                                                                                                                                              |
+| `apns`      | `ApnsPushNotification` | no       | Notification for APNs                                                                                                                                                                                                                                                             |
+| `webpush`   | `WebPushPushNotification` | no    | Notification for Web Push                                                                                                                                                                                                                                                         |
 
 `FcmPushNotification`:
 
 | Field     | Type          | Required | Description                                                                                                            |
 |-----------|---------------|----------|------------------------------------------------------------------------------------------------------------------------|
-| `message` | `JSON` object | Yes      | FCM [Message](https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages#Message) described in FCM docs. |
+| `message` | `JSON` object | yes      | FCM [Message](https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages#Message) described in FCM docs. |
 
 `HmsPushNotification`:
 
 | Field     | Type          | Required | Description                                                                                                                                                                                             |
 |-----------|---------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `message` | `JSON` object | Yes      | HMS [Message](https://developer.huawei.com/consumer/en/doc/development/HMSCore-References/https-send-api-0000001050986197#EN-US_TOPIC_0000001134031085__p1324218481619) described in HMS Push Kit docs. |
+| `message` | `JSON` object | yes      | HMS [Message](https://developer.huawei.com/consumer/en/doc/development/HMSCore-References/https-send-api-0000001050986197#EN-US_TOPIC_0000001134031085__p1324218481619) described in HMS Push Kit docs. |
 
 `ApnsPushNotification`:
 
 | Field     | Type                | Required | Description                                                                                                                                               |
 |-----------|---------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `headers` | `map[string]string` | No       | APNs [headers](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/sending_notification_requests_to_apns) |
-| `payload` | `JSON` object       | Yes      | APNs [payload](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/generating_a_remote_notification)      |
+| `headers` | `map[string]string` | no       | APNs [headers](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/sending_notification_requests_to_apns) |
+| `payload` | `JSON` object       | yes      | APNs [payload](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/generating_a_remote_notification)      |
 
 `WebPushPushNotification`:
 
 | Field     | Type                | Required | Description                                                                                                                                               |
 |-----------|---------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `headers` | `map[string]string` | No       | Web Push HTTP headers. Recognized keys: `TTL` (seconds to retain for offline devices, default 4 weeks), `Urgency` (`very-low`/`low`/`normal`/`high`), `Topic` (collapse key) |
-| `payload` | `JSON` object       | Yes      | Arbitrary JSON payload delivered to the browser service worker (received via `event.data.json()` in the `push` event)                                     |
+| `headers` | `map[string]string` | no       | Web Push HTTP headers. Recognized keys: `TTL` (seconds to retain for offline devices, default 4 weeks), `Urgency` (`very-low`/`low`/`normal`/`high`), `Topic` (collapse key) |
+| `payload` | `JSON` object       | yes      | Arbitrary JSON payload delivered to the browser service worker (received via `event.data.json()` in the `push` event)                                     |
 
 `PushLocalization`:
 
 | Field          | Type                | Required | Description                                       |
 |----------------|---------------------|----------|---------------------------------------------------|
-| `translations` | `map[string]string` | Yes      | Variable name to value for the specific language. |
+| `translations` | `map[string]string` | yes      | Variable name to value for the specific language. |
 
 `PushLimitStrategy`:
 
 | Field        | Type                    | Required | Description             |
 |--------------|-------------------------|----------|-------------------------|
-| `rate_limit` | `PushRateLimitStrategy` | No       | Set rate limit policies |
-| `time_limit` | `PushTimeLimitStrategy` | No       | Set time limit policy   |
+| `rate_limit` | `PushRateLimitStrategy` | no       | Set rate limit policies |
+| `time_limit` | `PushTimeLimitStrategy` | no       | Set time limit policy   |
 
 `PushRateLimitStrategy`:
 
 | Field                  | Type                     | Required | Description                                                                             |
 |------------------------|--------------------------|----------|-----------------------------------------------------------------------------------------|
-| `key`                  | `string`                 | No       | Optional key for rate limit policy, supports variables (`device.id` and `device.user`). |
-| `policies`             | `array[RateLimitPolicy]` | No       | Array of rate limit policies to apply                                                   |
-| `drop_if_rate_limited` | `bool`                   | No       | Drop push if rate limited, otherwise queue for later                                    |
+| `key`                  | `string`                 | no       | Optional key for rate limit policy, supports variables (`device.id` and `device.user`). |
+| `policies`             | `array[RateLimitPolicy]` | no       | Array of rate limit policies to apply                                                   |
+| `drop_if_rate_limited` | `bool`                   | no       | Drop push if rate limited, otherwise queue for later                                    |
 
 `RateLimitPolicy`:
 
 | Field         | Type  | Required | Description                         |
 |---------------|-------|----------|-------------------------------------|
-| `rate`        | `int` | Yes      | Allowed rate                        |
-| `interval_ms` | `int` | Yes      | Interval over which rate is allowed |
+| `rate`        | `int` | yes      | Allowed rate                        |
+| `interval_ms` | `int` | yes      | Interval over which rate is allowed |
 
 `PushTimeLimitStrategy`:
 
 | Field              | Type     | Required | Description                                                                          |
 |--------------------|----------|----------|--------------------------------------------------------------------------------------|
-| `send_after_time`  | `string` | Yes      | Local time in format `HH:MM:SS` after which push must be sent                        |
-| `send_before_time` | `string` | Yes      | Local time in format `HH:MM:SS` before which push must be sent                       |
-| `no_tz_send_now`   | `bool`   | No       | If device does not have timezone send push immediately, by default - will be dropped |
+| `send_after_time`  | `string` | yes      | Local time in format `HH:MM:SS` after which push must be sent                        |
+| `send_before_time` | `string` | yes      | Local time in format `HH:MM:SS` before which push must be sent                       |
+| `no_tz_send_now`   | `bool`   | no       | If device does not have timezone send push immediately, by default - will be dropped |
 
 #### send_push_notification result
 
@@ -26410,7 +26410,7 @@ Cancel delayed push notification (which was sent with custom `send_at` value).
 
 | Field | Type     | Required | Description                          |
 |-------|----------|----------|--------------------------------------|
-| `uid` | `string` | Yes      | `uid` of push notification to cancel |
+| `uid` | `string` | yes      | `uid` of push notification to cancel |
 
 #### cancel_push result
 
@@ -26430,10 +26430,10 @@ This is part of the server API at the moment, so you need to send these requests
 
 | Field           | Type     | Required | Description                                                      |
 |-----------------|----------|----------|------------------------------------------------------------------|
-| `analytics_uid` | `string` | Yes      | `analytics_uid` from `send_push_notification`                    |
-| `status`        | `string` | Yes      | Status of push notification - `delivered` or `interacted`        |
-| `device_id`     | `string` | Yes      | Device ID                                                        |
-| `msg_id`        | `string` | No       | Optional Message ID of push notification issued by the provider |
+| `analytics_uid` | `string` | yes      | `analytics_uid` from `send_push_notification`                    |
+| `status`        | `string` | yes      | Status of push notification - `delivered` or `interacted`        |
+| `device_id`     | `string` | yes      | Device ID                                                        |
+| `msg_id`        | `string` | no       | Optional Message ID of push notification issued by the provider |
 
 #### update_push_status result
 
@@ -28815,17 +28815,17 @@ Note that Centrifugo also maintains the `online` field inside the user status ob
 
 #### GetUserStatusResult
 
-| Field name | Field type          | Optional | Description                                   |
+| Field name | Field type          | Required | Description                                   |
 |------------|---------------------|----------|-----------------------------------------------|
-| `statuses` | `array[UserStatus]` | no       | Statuses for each user in params (same order) |
+| `statuses` | `array[UserStatus]` | yes      | Statuses for each user in params (same order) |
 
 #### UserStatus
 
-| Field name   | Field type     | Optional | Description  |
+| Field name   | Field type     | Required | Description  |
 | -------------- | -------------- | ------ | ------------ |
-| user       | string  | no | User ID        |
-| active       | integer  | yes | Last active time (Unix seconds)    |
-| online       | integer  | yes | Last online time (Unix seconds)    |
+| user       | string  | yes | User ID        |
+| active       | integer  | no  | Last active time (Unix seconds)    |
+| online       | integer  | no  | Last online time (Unix seconds)    |
 
 ### delete_user_status
 
