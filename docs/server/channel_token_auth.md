@@ -100,13 +100,13 @@ This is a token unique ID. See [definition in RFC](https://datatracker.ietf.org/
 
 One more claim is `override`. This is an object which allows overriding channel options for the particular channel subscriber which comes with subscription token.
 
-| Field | Type | Optional | Description |
+| Field | Type | Required | Description |
 | ------------ | -------------- | ------------ | ---- |
-| presence     | BoolValue     | yes | override `presence` channel option        |
-| join_leave     | BoolValue     | yes | override `join_leave` channel option   |
-| force_push_join_leave         | BoolValue     | yes | override `force_push_join_leave` channel option          |
-| force_recovery      | BoolValue     | yes | override `force_recovery` channel option |
-| force_positioning       | BoolValue       | yes |  override `force_positioning` channel option  |
+| presence     | BoolValue     | no  | override `presence` channel option        |
+| join_leave     | BoolValue     | no  | override `join_leave` channel option   |
+| force_push_join_leave         | BoolValue     | no  | override `force_push_join_leave` channel option          |
+| force_recovery      | BoolValue     | no  | override `force_recovery` channel option |
+| force_positioning       | BoolValue       | no  |  override `force_positioning` channel option  |
 
 `BoolValue` is an object like this:
 

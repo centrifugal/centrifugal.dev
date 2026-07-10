@@ -162,10 +162,10 @@ In response, you will also get 200 OK, but payload will contain `error` field in
 
 #### PublishResponse
 
-| Field name | Field type                        | Optional | Description         |
+| Field name | Field type                        | Required | Description         |
 |------------|-----------------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)                 | yes      | Error of operation  |
-| `result`   | [`PublishResult`](#publishresult) | yes      | Result of operation |
+| `error`    | [`Error`](#error)                 | no       | Error of operation  |
+| `result`   | [`PublishResult`](#publishresult) | no       | Result of operation |
 
 Always check whether `error` is set, otherwise consider publish successful and can use `result`.
 
@@ -173,17 +173,17 @@ Always check whether `error` is set, otherwise consider publish successful and c
 
 `Error` type represents Centrifugo-level API call error and it has common structure for all server API responses:
 
-| Field name | Field type | Optional | Description   |
+| Field name | Field type | Required | Description   |
 |------------|------------|----------|---------------|
-| `code`     | `integer`  | no       | Error code    |
-| `message`  | `string`   | yes      | Error message |
+| `code`     | `integer`  | yes      | Error code    |
+| `message`  | `string`   | no       | Error message |
 
 #### PublishResult
 
-| Field name | Field type | Optional | Description                             |
+| Field name | Field type | Required | Description                             |
 |------------|------------|----------|-----------------------------------------|
-| `offset`   | `integer`  | yes      | Offset of publication in history stream |
-| `epoch`    | `string`   | yes      | Epoch of current stream                 |
+| `offset`   | `integer`  | no       | Offset of publication in history stream |
+| `epoch`    | `string`   | no       | Epoch of current stream                 |
 
 ### broadcast
 
@@ -214,18 +214,18 @@ This command may be very useful when implementing messenger application, like we
 
 #### BroadcastResponse
 
-| Field name | Field type                            | Optional | Description         |
+| Field name | Field type                            | Required | Description         |
 |------------|---------------------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)                     | yes      | Error of operation  |
-| `result`   | [`BroadcastResult`](#broadcastresult) | yes      | Result of operation |
+| `error`    | [`Error`](#error)                     | no       | Error of operation  |
+| `result`   | [`BroadcastResult`](#broadcastresult) | no       | Result of operation |
 
 Always check whether `error` is set, otherwise consider publish successful and can use `result`.
 
 #### BroadcastResult
 
-| Field name  | Field type                                   | Optional | Description                                                                    |
+| Field name  | Field type                                   | Required | Description                                                                    |
 |-------------|----------------------------------------------|----------|--------------------------------------------------------------------------------|
-| `responses` | [`array[PublishResponse]`](#publishresponse) | no       | Responses for each individual publish (with possible error and publish result) |
+| `responses` | [`array[PublishResponse]`](#publishresponse) | yes      | Responses for each individual publish (with possible error and publish result) |
 
 ### subscribe
 
@@ -255,13 +255,13 @@ This is not a real-time streaming subscription request – it's just a command t
 
 #### Override object
 
-| Field                   | Type                      | Optional | Description                    |
+| Field                   | Type                      | Required | Description                    |
 |-------------------------|---------------------------|----------|--------------------------------|
-| `presence`              | [`BoolValue`](#boolvalue) | yes      | Override presence              |
-| `join_leave`            | [`BoolValue`](#boolvalue) | yes      | Override join_leave            |
-| `force_push_join_leave` | [`BoolValue`](#boolvalue) | yes      | Override force_push_join_leave |
-| `force_positioning`     | [`BoolValue`](#boolvalue) | yes      | Override force_positioning     |
-| `force_recovery`        | [`BoolValue`](#boolvalue) | yes      | Override force_recovery        |
+| `presence`              | [`BoolValue`](#boolvalue) | no       | Override presence              |
+| `join_leave`            | [`BoolValue`](#boolvalue) | no       | Override join_leave            |
+| `force_push_join_leave` | [`BoolValue`](#boolvalue) | no       | Override force_push_join_leave |
+| `force_positioning`     | [`BoolValue`](#boolvalue) | no       | Override force_positioning     |
+| `force_recovery`        | [`BoolValue`](#boolvalue) | no       | Override force_recovery        |
 
 #### BoolValue
 
@@ -275,10 +275,10 @@ BoolValue is an object like this:
 
 #### SubscribeResponse
 
-| Field name | Field type                            | Optional | Description         |
+| Field name | Field type                            | Required | Description         |
 |------------|---------------------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)                     | yes      | Error of operation  |
-| `result`   | [`SubscribeResult`](#subscriberesult) | yes      | Result of operation |
+| `error`    | [`Error`](#error)                     | no       | Error of operation  |
+| `result`   | [`SubscribeResult`](#subscriberesult) | no       | Result of operation |
 
 Always check whether `error` is set, otherwise consider publish successful and can use `result`.
 
@@ -301,10 +301,10 @@ Empty object at the moment.
 
 #### UnsubscribeResponse
 
-| Field name | Field type                                | Optional | Description         |
+| Field name | Field type                                | Required | Description         |
 |------------|-------------------------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)                         | yes      | Error of operation  |
-| `result`   | [`UnsubscribeResult`](#unsubscriberesult) | yes      | Result of operation |
+| `error`    | [`Error`](#error)                         | no       | Error of operation  |
+| `result`   | [`UnsubscribeResult`](#unsubscriberesult) | no       | Result of operation |
 
 #### UnsubscribeResult
 
@@ -333,10 +333,10 @@ Empty object at the moment.
 
 #### DisconnectResponse
 
-| Field name | Field type                              | Optional | Description         |
+| Field name | Field type                              | Required | Description         |
 |------------|-----------------------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)                       | yes      | Error of operation  |
-| `result`   | [`DisconnectResult`](#disconnectresult) | yes      | Result of operation |
+| `error`    | [`Error`](#error)                       | no       | Error of operation  |
+| `result`   | [`DisconnectResult`](#disconnectresult) | no       | Result of operation |
 
 #### DisconnectResult
 
@@ -359,10 +359,10 @@ Empty object at the moment.
 
 #### RefreshResponse
 
-| Field name | Field type                            | Optional | Description         |
+| Field name | Field type                            | Required | Description         |
 |------------|---------------------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)                     | yes      | Error of operation  |
-| `result`   | [`RefreshResult`](#refreshresult)     | yes      | Result of operation |
+| `error`    | [`Error`](#error)                     | no       | Error of operation  |
+| `result`   | [`RefreshResult`](#refreshresult)     | no       | Result of operation |
 
 #### RefreshResult
 
@@ -412,25 +412,25 @@ Example response:
 
 #### PresenceResponse
 
-| Field name | Field type                          | Optional | Description         |
+| Field name | Field type                          | Required | Description         |
 |------------|-------------------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)                   | yes      | Error of operation  |
-| `result`   | [`PresenceResult`](#presenceresult) | yes      | Result of operation |
+| `error`    | [`Error`](#error)                   | no       | Error of operation  |
+| `result`   | [`PresenceResult`](#presenceresult) | no       | Result of operation |
 
 #### PresenceResult
 
-| Field name | Field type              | Optional | Description                             |
+| Field name | Field type              | Required | Description                             |
 |------------|-------------------------|----------|-----------------------------------------|
-| `presence` | `map[string]ClientInfo` | no       | Offset of publication in history stream |
+| `presence` | `map[string]ClientInfo` | yes      | Offset of publication in history stream |
 
 #### ClientInfo
 
-| Field name  | Field type | Optional | Description              |
+| Field name  | Field type | Required | Description              |
 |-------------|------------|----------|--------------------------|
-| `client`    | `string`   | no       | Client ID                |
-| `user`      | `string`   | no       | User ID                  |
-| `conn_info` | `JSON`     | yes      | Optional connection info |
-| `chan_info` | `JSON`     | yes      | Optional channel info    |
+| `client`    | `string`   | yes      | Client ID                |
+| `user`      | `string`   | yes      | User ID                  |
+| `conn_info` | `JSON`     | no       | Optional connection info |
+| `chan_info` | `JSON`     | no       | Optional channel info    |
 
 ### presence_stats
 
@@ -462,17 +462,17 @@ Example response:
 
 #### PresenceStatsResponse
 
-| Field name | Field type                                    | Optional | Description         |
+| Field name | Field type                                    | Required | Description         |
 |------------|-----------------------------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)                             | yes      | Error of operation  |
-| `result`   | [`PresenceStatsResult`](#presencestatsresult) | yes      | Result of operation |
+| `error`    | [`Error`](#error)                             | no       | Error of operation  |
+| `result`   | [`PresenceStatsResult`](#presencestatsresult) | no       | Result of operation |
 
 #### PresenceStatsResult
 
-| Field name    | Field type | Optional | Description                             |
+| Field name    | Field type | Required | Description                             |
 |---------------|------------|----------|-----------------------------------------|
-| `num_clients` | `integer`  | no       | Total number of clients in channel      |
-| `num_users`   | `integer`  | no       | Total number of unique users in channel |
+| `num_clients` | `integer`  | yes      | Total number of clients in channel      |
+| `num_users`   | `integer`  | yes      | Total number of unique users in channel |
 
 ### history
 
@@ -535,18 +535,18 @@ Example response:
 
 #### HistoryResponse
 
-| Field name | Field type                        | Optional | Description         |
+| Field name | Field type                        | Required | Description         |
 |------------|-----------------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)                 | yes      | Error of operation  |
-| `result`   | [`HistoryResult`](#historyresult) | yes      | Result of operation |
+| `error`    | [`Error`](#error)                 | no       | Error of operation  |
+| `result`   | [`HistoryResult`](#historyresult) | no       | Result of operation |
 
 #### HistoryResult
 
-| Field name     | Field type           | Optional | Description                     |
+| Field name     | Field type           | Required | Description                     |
 |----------------|----------------------|----------|---------------------------------|
-| `publications` | `array[Publication]` | yes      | List of publications in channel |
-| `offset`       | `integer`            | yes      | Top offset in history stream    |
-| `epoch`        | `string`             | yes      | Epoch of current stream         |
+| `publications` | `array[Publication]` | no       | List of publications in channel |
+| `offset`       | `integer`            | no       | Top offset in history stream    |
+| `epoch`        | `string`             | no       | Epoch of current stream         |
 
 ### history_remove
 
@@ -560,10 +560,10 @@ Example response:
 
 ### HistoryRemoveResponse
 
-| Field name | Field type                                    | Optional | Description         |
+| Field name | Field type                                    | Required | Description         |
 |------------|-----------------------------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)                             | yes      | Error of operation  |
-| `result`   | [`HistoryRemoveResult`](#historyremoveresult) | yes      | Result of operation |
+| `error`    | [`Error`](#error)                             | no       | Error of operation  |
+| `result`   | [`HistoryRemoveResult`](#historyremoveresult) | no       | Result of operation |
 
 #### HistoryRemoveResult
 
@@ -588,22 +588,22 @@ curl --header "X-API-Key: <API_KEY>" \
 
 #### ChannelsResponse
 
-| Field name | Field type                          | Optional | Description         |
+| Field name | Field type                          | Required | Description         |
 |------------|-------------------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)                   | yes      | Error of operation  |
-| `result`   | [`ChannelsResult`](#channelsresult) | yes      | Result of operation |
+| `error`    | [`Error`](#error)                   | no       | Error of operation  |
+| `result`   | [`ChannelsResult`](#channelsresult) | no       | Result of operation |
 
 #### ChannelsResult
 
-| Field name | Field type               | Optional | Description                                                   |
+| Field name | Field type               | Required | Description                                                   |
 |------------|--------------------------|----------|---------------------------------------------------------------|
-| `channels` | `map[string]ChannelInfo` | no       | Map where key is channel and value is ChannelInfo (see below) |
+| `channels` | `map[string]ChannelInfo` | yes      | Map where key is channel and value is ChannelInfo (see below) |
 
 #### ChannelInfo
 
-| Field name    | Field type | Optional | Description                                                   |
+| Field name    | Field type | Required | Description                                                   |
 |---------------|------------|----------|---------------------------------------------------------------|
-| `num_clients` | `integer`  | no       | Total number of connections currently subscribed to a channel |
+| `num_clients` | `integer`  | yes      | Total number of connections currently subscribed to a channel |
 
 :::caution
 
@@ -648,16 +648,16 @@ Empty object at the moment.
 
 #### InfoResponse
 
-| Field name | Field type                        | Optional | Description         |
+| Field name | Field type                        | Required | Description         |
 |------------|-----------------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)                 | yes      | Error of operation  |
-| `result`   | [`InfoResult`](#inforesult)       | yes      | Result of operation |
+| `error`    | [`Error`](#error)                 | no       | Error of operation  |
+| `result`   | [`InfoResult`](#inforesult)       | no       | Result of operation |
 
 #### InfoResult
 
-| Field name | Field type    | Optional | Description                              |
+| Field name | Field type    | Required | Description                              |
 |------------|---------------|----------|------------------------------------------|
-| `nodes`    | `array[Node]` | no       | Information about all nodes in a cluster |
+| `nodes`    | `array[Node]` | yes      | Information about all nodes in a cluster |
 
 ### batch
 

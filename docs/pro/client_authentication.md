@@ -352,21 +352,21 @@ In this configuration:
 
 | Field    | Type    | Required | Description                                                               |
 |----------|---------|----------|---------------------------------------------------------------------------|
-| enabled  | `boolean` | Yes      | Must be `true` to enable multiple JWKS providers functionality          |
-| providers | `array`  | Yes      | Array of JWKS provider configurations (see below)                        |
+| enabled  | `boolean` | yes      | Must be `true` to enable multiple JWKS providers functionality          |
+| providers | `array`  | yes      | Array of JWKS provider configurations (see below)                        |
 
 ### JWKS provider fields
 
 | Field    | Type    | Required | Description                                                               |
 |----------|---------|----------|---------------------------------------------------------------------------|
-| name     | `string`  | Yes      | Unique identifier for the provider. Must match pattern `^[a-zA-Z0-9_]{2,}$` |
-| enabled  | `boolean` | No      | Whether this provider is active (default `false`)                                       |
+| name     | `string`  | yes      | Unique identifier for the provider. Must match pattern `^[a-zA-Z0-9_]{2,}$` |
+| enabled  | `boolean` | no      | Whether this provider is active (default `false`)                                       |
 | endpoint | `string`  | Yes*     | JWKS endpoint URL (*required if enabled)                                  |
 | issuer   | `string`  | Yes*     | Expected issuer claim value (*required if enabled)                        |
-| audience | `string`  | No       | Expected audience claim value. **While optional, it's highly recommended to set this in most cases** to prevent client tokens related to other audiences issued by the same issuer from being accepted by Centrifugo. When the same issuer is used by multiple providers, each must have a different audience set to enable issuer+audience matching                                  |
-| tls      | [`TLS`](../server/configuration.md#tls-config-object) object  | No       | Custom TLS configuration for the JWKS endpoint HTTP client                            |
-| meta_from_claim      | [StringKeyValues](../server/configuration.md#stringkeyvalues-type)  | No       | Config to transform JWT claims to connection meta object. Must be explicitly set for each provider, not inherited from upper config level.                              |
-| labels_from_claim    | [StringKeyValues](../server/configuration.md#stringkeyvalues-type)  | No       | Config to transform JWT claims to [connection labels](#client-labels). Must be explicitly set for each provider, not inherited from upper config level.                  |
+| audience | `string`  | no       | Expected audience claim value. **While optional, it's highly recommended to set this in most cases** to prevent client tokens related to other audiences issued by the same issuer from being accepted by Centrifugo. When the same issuer is used by multiple providers, each must have a different audience set to enable issuer+audience matching                                  |
+| tls      | [`TLS`](../server/configuration.md#tls-config-object) object  | no       | Custom TLS configuration for the JWKS endpoint HTTP client                            |
+| meta_from_claim      | [StringKeyValues](../server/configuration.md#stringkeyvalues-type)  | no       | Config to transform JWT claims to connection meta object. Must be explicitly set for each provider, not inherited from upper config level.                              |
+| labels_from_claim    | [StringKeyValues](../server/configuration.md#stringkeyvalues-type)  | no       | Config to transform JWT claims to [connection labels](#client-labels). Must be explicitly set for each provider, not inherited from upper config level.                  |
 
 ### How It Works
 

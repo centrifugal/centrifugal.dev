@@ -95,52 +95,52 @@ At least one of `user`, `expression`, or `label_filter` must be set — the API 
 
 #### ConnectionsResult
 
-| Field name    | Field type                  | Optional | Description                                                                    |
+| Field name    | Field type                  | Required | Description                                                                    |
 |---------------|-----------------------------|----------|--------------------------------------------------------------------------------|
-| `connections` | `map[string]ConnectionInfo` | no       | active user connections map where key is client ID and value is ConnectionInfo |
+| `connections` | `map[string]ConnectionInfo` | yes      | active user connections map where key is client ID and value is ConnectionInfo |
 
 #### ConnectionInfo
 
-| Field name    | Field type          | Optional | Description                                                                            |
+| Field name    | Field type          | Required | Description                                                                            |
 |---------------|---------------------|----------|----------------------------------------------------------------------------------------|
-| `app_name`    | `string`            | yes      | client app name (if provided by client)                                                |
-| `app_version` | `string`            | yes      | client app version (if provided by client)                                             |
-| `transport`   | `string`            | no       | client connection transport                                                            |
-| `protocol`    | `string`            | no       | client connection protocol (json or protobuf)                                          |
-| `user`        | `string`            | yes      | client user ID                                                                         |
-| `state`       | `ConnectionState`   | yes      | connection state                                                                       |
-| `connected_at_ms`      | `int64`    | yes      | Unix time (in milliseconds) when the connection was established                        |
-| `ping_pong_latency_ms` | `int64`    | yes      | last measured client ping/pong round-trip latency in milliseconds (can be `-1` if not available) |
-| `labels`      | `map[string]string` | yes      | [client labels](./client_authentication.md#client-labels) attached to the connection   |
+| `app_name`    | `string`            | no       | client app name (if provided by client)                                                |
+| `app_version` | `string`            | no       | client app version (if provided by client)                                             |
+| `transport`   | `string`            | yes      | client connection transport                                                            |
+| `protocol`    | `string`            | yes      | client connection protocol (json or protobuf)                                          |
+| `user`        | `string`            | no       | client user ID                                                                         |
+| `state`       | `ConnectionState`   | no       | connection state                                                                       |
+| `connected_at_ms`      | `int64`    | no       | Unix time (in milliseconds) when the connection was established                        |
+| `ping_pong_latency_ms` | `int64`    | no       | last measured client ping/pong round-trip latency in milliseconds (can be `-1` if not available) |
+| `labels`      | `map[string]string` | no       | [client labels](./client_authentication.md#client-labels) attached to the connection   |
 
 #### ConnectionState object
 
-| Field name            | Field type                         | Optional | Description                                        |
+| Field name            | Field type                         | Required | Description                                        |
 |-----------------------|------------------------------------|----------|----------------------------------------------------|
-| `channels`            | `map[string]ChannelContext`        | yes      | Channels client subscribed to                      |
-| `connection_token`    | `ConnectionTokenInfo`              | yes      | information about connection token                 |
-| `subscription_tokens` | `map[string]SubscriptionTokenInfo` | yes      | information about channel tokens used to subscribe |
-| `meta`                | `JSON` object                      | yes      | meta information attached to a connection          |
+| `channels`            | `map[string]ChannelContext`        | no       | Channels client subscribed to                      |
+| `connection_token`    | `ConnectionTokenInfo`              | no       | information about connection token                 |
+| `subscription_tokens` | `map[string]SubscriptionTokenInfo` | no       | information about channel tokens used to subscribe |
+| `meta`                | `JSON` object                      | no       | meta information attached to a connection          |
 
 #### ChannelContext object
 
-| Field name | Field type | Optional | Description                        |
+| Field name | Field type | Required | Description                        |
 |------------|------------|----------|------------------------------------|
-| `source`   | `int`      | yes      | The source of channel subscription |
+| `source`   | `int`      | no       | The source of channel subscription |
 
 #### ConnectionTokenInfo object
 
-| Field name  | Field type | Optional | Description                               |
+| Field name  | Field type | Required | Description                               |
 |-------------|------------|----------|-------------------------------------------|
-| `uid`       | `string`   | yes      | unique token ID (jti)                     |
-| `issued_at` | `int`      | yes      | time (Unix seconds) when token was issued |
+| `uid`       | `string`   | no       | unique token ID (jti)                     |
+| `issued_at` | `int`      | no       | time (Unix seconds) when token was issued |
 
 #### SubscriptionTokenInfo object
 
-| Field name  | Field type | Optional | Description                               |
+| Field name  | Field type | Required | Description                               |
 |-------------|------------|----------|-------------------------------------------|
-| `uid`       | `string`   | yes      | unique token ID (jti)                     |
-| `issued_at` | `int`      | yes      | time (Unix seconds) when token was issued |
+| `uid`       | `string`   | no       | unique token ID (jti)                     |
+| `issued_at` | `int`      | no       | time (Unix seconds) when token was issued |
 
 ### Label filter
 

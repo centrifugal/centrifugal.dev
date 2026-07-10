@@ -428,29 +428,29 @@ This is what sent from Centrifugo to application backend in case of connect prox
 
 #### ConnectResponse
 
-| Field name   | Field type                        | Optional | Description         |
+| Field name   | Field type                        | Required | Description         |
 |--------------|-----------------------------------|----------|---------------------|
-| `result`     | [`ConnectResult`](#connectresult) | yes      | Result of operation |
-| `error`      | [`Error`](#error)                 | yes      | Custom error        |
-| `disconnect` | [`Disconnect`](#disconnect)       | yes      | Custom disconnect   |
+| `result`     | [`ConnectResult`](#connectresult) | no       | Result of operation |
+| `error`      | [`Error`](#error)                 | no       | Custom error        |
+| `disconnect` | [`Disconnect`](#disconnect)       | no       | Custom disconnect   |
 
 #### Error
 
 `Error` type represents Centrifugo-level API call error and it has common structure for all server API responses:
 
-| Field name | Field type | Optional | Description   |
+| Field name | Field type | Required | Description   |
 |------------|------------|----------|---------------|
-| `code`     | `integer`  | no       | Error code    |
-| `message`  | `string`   | yes      | Error message |
+| `code`     | `integer`  | yes      | Error code    |
+| `message`  | `string`   | no       | Error message |
 
 #### Disconnect
 
 `Disconnect` type represents custom disconnect code and reason to close connection with.
 
-| Field name | Field type | Optional | Description       |
+| Field name | Field type | Required | Description       |
 |------------|------------|----------|-------------------|
-| `code`     | `integer`  | no       | Disconnect code   |
-| `reason`   | `string`   | yes      | Disconnect reason |
+| `code`     | `integer`  | yes      | Disconnect code   |
+| `reason`   | `string`   | no       | Disconnect reason |
 
 #### ConnectResult
 
@@ -472,34 +472,34 @@ This is what an application returns to Centrifugo inside `result` field in of `C
 
 #### SubscribeOptions
 
-| Field      | Type                                                  | Optional | Description                                                                                                                                                                                       |
+| Field      | Type                                                  | Required | Description                                                                                                                                                                                       |
 |------------|-------------------------------------------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `info`     | `JSON` object                                         | yes      | Additional channel-specific information about connection (**valid JSON**). This information will be included in online presence data, join/leave events and into client-side channel publications |
-| `b64info`  | `string`                                              | yes      | Custom channel info in Base64 - to pass binary channel info                                                                                                                                       |
-| `data`     | `JSON` object                                         | yes      | Custom JSON data to return in subscription context inside Connect reply                                                                                                                           |
-| `b64data`  | `string`                                              | yes      | Same as `data` but in Base64 to send binary data                                                                                                                                                  |
-| `override` | [`SubscribeOptionOverride`](#subscribeoptionoverride) | yes      | Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields)                                                       |
-| `cache_recover` | `bool`                                           | yes      | (available since Centrifugo v6.8.3) Triggers cache recovery for this server-side subscription – the server-side equivalent of an empty `since` on the client. Requires recovery to be enabled for the channel and only applies in [cache recovery mode](cache_recovery.md), where it delivers the latest publication on (re)connect. Useful for unidirectional clients which can't request recovery themselves |
+| `info`     | `JSON` object                                         | no       | Additional channel-specific information about connection (**valid JSON**). This information will be included in online presence data, join/leave events and into client-side channel publications |
+| `b64info`  | `string`                                              | no       | Custom channel info in Base64 - to pass binary channel info                                                                                                                                       |
+| `data`     | `JSON` object                                         | no       | Custom JSON data to return in subscription context inside Connect reply                                                                                                                           |
+| `b64data`  | `string`                                              | no       | Same as `data` but in Base64 to send binary data                                                                                                                                                  |
+| `override` | [`SubscribeOptionOverride`](#subscribeoptionoverride) | no       | Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields)                                                       |
+| `cache_recover` | `bool`                                           | no       | (available since Centrifugo v6.8.3) Triggers cache recovery for this server-side subscription – the server-side equivalent of an empty `since` on the client. Requires recovery to be enabled for the channel and only applies in [cache recovery mode](cache_recovery.md), where it delivers the latest publication on (re)connect. Useful for unidirectional clients which can't request recovery themselves |
 
 #### SubscribeOptionOverride
 
 Allow per-connection overrides of some channel namespace options:
 
-| Field                   | Type                      | Optional | Description                                             |
+| Field                   | Type                      | Required | Description                                             |
 |-------------------------|---------------------------|----------|---------------------------------------------------------|
-| `presence`              | [`BoolValue`](#boolvalue) | yes      | Override `presence` from namespace options              |
-| `join_leave`            | [`BoolValue`](#boolvalue) | yes      | Override `join_leave` from namespace options            |
-| `force_recovery`        | [`BoolValue`](#boolvalue) | yes      | Override `force_recovery` from namespace options        |
-| `force_positioning`     | [`BoolValue`](#boolvalue) | yes      | Override `force_positioning` from namespace options     |
-| `force_push_join_leave` | [`BoolValue`](#boolvalue) | yes      | Override `force_push_join_leave` from namespace options |
+| `presence`              | [`BoolValue`](#boolvalue) | no       | Override `presence` from namespace options              |
+| `join_leave`            | [`BoolValue`](#boolvalue) | no       | Override `join_leave` from namespace options            |
+| `force_recovery`        | [`BoolValue`](#boolvalue) | no       | Override `force_recovery` from namespace options        |
+| `force_positioning`     | [`BoolValue`](#boolvalue) | no       | Override `force_positioning` from namespace options     |
+| `force_push_join_leave` | [`BoolValue`](#boolvalue) | no       | Override `force_push_join_leave` from namespace options |
 
 #### BoolValue
 
 Is an object like this:
 
-| Field   | Type   | Optional | Description       |
+| Field   | Type   | Required | Description       |
 |---------|--------|----------|-------------------|
-| `value` | `bool` | no       | `true` or `false` |
+| `value` | `bool` | yes      | `true` or `false` |
 
 #### Example
 
@@ -600,31 +600,31 @@ Where `expire_at` contains some Unix time in the future (until which connection 
 
 #### RefreshRequest
 
-| Field       | Type     | Optional | Description                                                                                |
+| Field       | Type     | Required | Description                                                                                |
 |-------------|----------|----------|--------------------------------------------------------------------------------------------|
-| `client`    | `string` | no       | unique client ID generated by Centrifugo for each incoming connection                      |
-| `transport` | `string` | no       | transport name (ex. `websocket`, `sockjs`, `uni_sse` etc.)                                 |
-| `protocol`  | `string` | no       | protocol type used by client (`json` or `protobuf` at moment)                              |
-| `encoding`  | `string` | no       | protocol encoding type used (`json` or `binary` at moment)                                 |
-| `user`      | `string` | no       | a connection user ID obtained during authentication process                                |
-| `meta`      | `JSON`   | yes      | a connection attached meta (off by default, enable with `"include_connection_meta": true`) |
+| `client`    | `string` | yes      | unique client ID generated by Centrifugo for each incoming connection                      |
+| `transport` | `string` | yes      | transport name (ex. `websocket`, `sockjs`, `uni_sse` etc.)                                 |
+| `protocol`  | `string` | yes      | protocol type used by client (`json` or `protobuf` at moment)                              |
+| `encoding`  | `string` | yes      | protocol encoding type used (`json` or `binary` at moment)                                 |
+| `user`      | `string` | yes      | a connection user ID obtained during authentication process                                |
+| `meta`      | `JSON`   | no       | a connection attached meta (off by default, enable with `"include_connection_meta": true`) |
 
 #### RefreshResponse
 
-| Field name | Field type                        | Optional | Description                 |
+| Field name | Field type                        | Required | Description                 |
 |------------|-----------------------------------|----------|-----------------------------|
-| `result`   | [`RefreshResult`](#refreshresult) | no       | Result of refresh operation |
+| `result`   | [`RefreshResult`](#refreshresult) | yes      | Result of refresh operation |
 
 #### RefreshResult
 
-| Field       | Type      | Optional | Description                                                                                                                |
+| Field       | Type      | Required | Description                                                                                                                |
 |-------------|-----------|----------|----------------------------------------------------------------------------------------------------------------------------|
-| `expired`   | `bool`    | yes      | a flag to mark the connection as expired - the client will be disconnected                                                 |
-| `expire_at` | `integer` | yes      | a timestamp in the future when connection must be considered expired                                                       |
-| `info`      | `JSON`    | yes      | update connection info JSON                                                                                                |
-| `b64info`   | `string`  | yes      | alternative to `info` - a binary connection info encoded in base64 format, will be decoded to raw bytes on Centrifugo side |
-| `meta`      | `JSON`    | yes      | update the connection's attached `meta` (server-side only, not exposed to the client)                                     |
-| `caps`      | `array`   | yes      | (**Centrifugo PRO**) refresh capability-based authorization rules for the connection. See [capabilities](../pro/capabilities.md) |
+| `expired`   | `bool`    | no       | a flag to mark the connection as expired - the client will be disconnected                                                 |
+| `expire_at` | `integer` | no       | a timestamp in the future when connection must be considered expired                                                       |
+| `info`      | `JSON`    | no       | update connection info JSON                                                                                                |
+| `b64info`   | `string`  | no       | alternative to `info` - a binary connection info encoded in base64 format, will be decoded to raw bytes on Centrifugo side |
+| `meta`      | `JSON`    | no       | update the connection's attached `meta` (server-side only, not exposed to the client)                                     |
+| `caps`      | `array`   | no       | (**Centrifugo PRO**) refresh capability-based authorization rules for the connection. See [capabilities](../pro/capabilities.md) |
 
 ## Channel-wide proxy events
 
@@ -721,58 +721,58 @@ See below on how to [return an error](#what-if-connection-is-not-allowed-to-subs
 
 #### SubscribeRequest
 
-| Field       | Type     | Optional | Description                                                                                                                |
+| Field       | Type     | Required | Description                                                                                                                |
 |-------------|----------|----------|----------------------------------------------------------------------------------------------------------------------------|
-| `client`    | `string` | no       | unique client ID generated by Centrifugo for each incoming connection                                                      |
-| `transport` | `string` | no       | transport name (ex. `websocket` or `sockjs`)                                                                               |
-| `protocol`  | `string` | no       | protocol type used by the client (`json` or `protobuf` at moment)                                                          |
-| `encoding`  | `string` | no       | protocol encoding type used (`json` or `binary` at moment)                                                                 |
-| `user`      | `string` | no       | a connection user ID obtained during authentication process                                                                |
-| `channel`   | `string` | no       | a string channel client wants to subscribe to                                                                              |
-| `token`     | `string` | yes      | subscription token (JWT) provided by the client for this channel when [subscription token authorization](channel_token_auth.md) is used — empty otherwise |
-| `meta`      | `JSON`   | yes      | a connection attached meta (off by default, enable with `"include_connection_meta": true`)                                 |
-| `data`      | `JSON`   | yes      | custom data from client sent with subscription request (this field will only be set if provided by a client on subscribe). |
-| `b64data`   | `string` | yes      | optional subscription data from the client in base64 format (if the binary proxy mode is used).                            |
-| `labels`    | `JSON`   | yes      | connection labels attached during authentication (**Centrifugo PRO** only)                                                 |
+| `client`    | `string` | yes      | unique client ID generated by Centrifugo for each incoming connection                                                      |
+| `transport` | `string` | yes      | transport name (ex. `websocket` or `sockjs`)                                                                               |
+| `protocol`  | `string` | yes      | protocol type used by the client (`json` or `protobuf` at moment)                                                          |
+| `encoding`  | `string` | yes      | protocol encoding type used (`json` or `binary` at moment)                                                                 |
+| `user`      | `string` | yes      | a connection user ID obtained during authentication process                                                                |
+| `channel`   | `string` | yes      | a string channel client wants to subscribe to                                                                              |
+| `token`     | `string` | no       | subscription token (JWT) provided by the client for this channel when [subscription token authorization](channel_token_auth.md) is used — empty otherwise |
+| `meta`      | `JSON`   | no       | a connection attached meta (off by default, enable with `"include_connection_meta": true`)                                 |
+| `data`      | `JSON`   | no       | custom data from client sent with subscription request (this field will only be set if provided by a client on subscribe). |
+| `b64data`   | `string` | no       | optional subscription data from the client in base64 format (if the binary proxy mode is used).                            |
+| `labels`    | `JSON`   | no       | connection labels attached during authentication (**Centrifugo PRO** only)                                                 |
 
 #### SubscribeResponse
 
-| Field name   | Field type                              | Optional | Description         |
+| Field name   | Field type                              | Required | Description         |
 |--------------|-----------------------------------------|----------|---------------------|
-| `result`     | [`SubscribeResult`](#subscriberesult)   | yes      | Result of operation |
-| `error`      | [`Error`](#error)                       | yes      | Custom error        |
-| `disconnect` | [`Disconnect`](#disconnect)             | yes      | Custom disconnect   |
+| `result`     | [`SubscribeResult`](#subscriberesult)   | no       | Result of operation |
+| `error`      | [`Error`](#error)                       | no       | Custom error        |
+| `disconnect` | [`Disconnect`](#disconnect)             | no       | Custom disconnect   |
 
 #### SubscribeResult
 
-| Field       | Type              | Optional | Description                                                                                                                                                                                       |
+| Field       | Type              | Required | Description                                                                                                                                                                                       |
 |-------------|-------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `info`      | `JSON`            | yes      | Additional channel-specific information about connection (**valid JSON**). This information will be included in online presence data, join/leave events and into client-side channel publications |
-| `b64info`   | `string`          | yes      | An alternative to `info` – a binary connection channel information encoded in base64 format, will be decoded to raw bytes on Centrifugo before using                                              |
-| `data`      | `JSON`            | yes      | Custom data to send to the client in subscribe command reply.                                                                                                                                     |
-| `b64data`   | `string`          | yes      | Custom data to send to the client in subscribe command reply, will be decoded to raw bytes on Centrifugo side before sending to client                                                            |
-| `override`  | `Override` object | yes      | Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields)                                                       |
-| `expire_at` | `integer`         | yes      | a timestamp (Unix seconds in the future) when subscription must be considered expired. If not set or set to `0` subscription won't expire at all. Supported since Centrifugo v5.0.4               |
-| `allow`     | `array[string]`   | yes      | (**Centrifugo PRO**) channel [capabilities](../pro/capabilities.md) to grant the client for this subscription, as capability codes: `sub`, `pub`, `hst`, `prs`                                    |
-| `server_tags_filter` | `object` | yes      | (**Centrifugo PRO**) server-side tag filter applied to this subscription. See [server-side tag filtering](../pro/server_tags_filter.md)                                                          |
+| `info`      | `JSON`            | no       | Additional channel-specific information about connection (**valid JSON**). This information will be included in online presence data, join/leave events and into client-side channel publications |
+| `b64info`   | `string`          | no       | An alternative to `info` – a binary connection channel information encoded in base64 format, will be decoded to raw bytes on Centrifugo before using                                              |
+| `data`      | `JSON`            | no       | Custom data to send to the client in subscribe command reply.                                                                                                                                     |
+| `b64data`   | `string`          | no       | Custom data to send to the client in subscribe command reply, will be decoded to raw bytes on Centrifugo side before sending to client                                                            |
+| `override`  | `Override` object | no       | Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields)                                                       |
+| `expire_at` | `integer`         | no       | a timestamp (Unix seconds in the future) when subscription must be considered expired. If not set or set to `0` subscription won't expire at all. Supported since Centrifugo v5.0.4               |
+| `allow`     | `array[string]`   | no       | (**Centrifugo PRO**) channel [capabilities](../pro/capabilities.md) to grant the client for this subscription, as capability codes: `sub`, `pub`, `hst`, `prs`                                    |
+| `server_tags_filter` | `object` | no       | (**Centrifugo PRO**) server-side tag filter applied to this subscription. See [server-side tag filtering](../pro/server_tags_filter.md)                                                          |
 
 #### Override
 
-| Field                   | Type        | Optional | Description                    |
+| Field                   | Type        | Required | Description                    |
 |-------------------------|-------------|----------|--------------------------------|
-| `presence`              | `BoolValue` | yes      | Override presence              |
-| `join_leave`            | `BoolValue` | yes      | Override join_leave            |
-| `force_push_join_leave` | `BoolValue` | yes      | Override force_push_join_leave |
-| `force_positioning`     | `BoolValue` | yes      | Override force_positioning     |
-| `force_recovery`        | `BoolValue` | yes      | Override force_recovery        |
+| `presence`              | `BoolValue` | no       | Override presence              |
+| `join_leave`            | `BoolValue` | no       | Override join_leave            |
+| `force_push_join_leave` | `BoolValue` | no       | Override force_push_join_leave |
+| `force_positioning`     | `BoolValue` | no       | Override force_positioning     |
+| `force_recovery`        | `BoolValue` | no       | Override force_recovery        |
 
 #### BoolValue
 
 Is an object like this:
 
-| Field   | Type   | Optional | Description       |
+| Field   | Type   | Required | Description       |
 |---------|--------|----------|-------------------|
-| `value` | `bool` | no       | `true` or `false` |
+| `value` | `bool` | yes      | `true` or `false` |
 
 #### What if connection is not allowed to subscribe?
 
@@ -883,39 +883,39 @@ The expected response example if a publication is allowed:
 
 #### PublishRequest
 
-| Field       | Type     | Optional | Description                                                                                      |
+| Field       | Type     | Required | Description                                                                                      |
 |-------------|----------|----------|--------------------------------------------------------------------------------------------------|
-| `client`    | `string` | no       | unique client ID generated by Centrifugo for each incoming connection                            |
-| `transport` | `string` | no       | transport name (ex. `websocket`, `sockjs`)                                                       |
-| `protocol`  | `string` | no       | protocol type used by the client (`json` or `protobuf` at moment)                                |
-| `encoding`  | `string` | no       | protocol encoding type used (`json` or `binary` at moment)                                       |
-| `user`      | `string` | no       | a connection user ID obtained during authentication process                                      |
-| `channel`   | `string` | no       | a string channel client wants to publish to                                                      |
-| `data`      | `JSON`   | yes      | data sent by client                                                                              |
-| `b64data`   | `string` | yes      | will be set instead of `data` field for binary proxy mode                                        |
-| `meta`      | `JSON`   | yes      | a connection attached meta (off by default, enable with `"include_connection_meta": true`)       |
-| `labels`    | `JSON`   | yes      | connection labels attached during authentication (**Centrifugo PRO** only)                        |
+| `client`    | `string` | yes      | unique client ID generated by Centrifugo for each incoming connection                            |
+| `transport` | `string` | yes      | transport name (ex. `websocket`, `sockjs`)                                                       |
+| `protocol`  | `string` | yes      | protocol type used by the client (`json` or `protobuf` at moment)                                |
+| `encoding`  | `string` | yes      | protocol encoding type used (`json` or `binary` at moment)                                       |
+| `user`      | `string` | yes      | a connection user ID obtained during authentication process                                      |
+| `channel`   | `string` | yes      | a string channel client wants to publish to                                                      |
+| `data`      | `JSON`   | no       | data sent by client                                                                              |
+| `b64data`   | `string` | no       | will be set instead of `data` field for binary proxy mode                                        |
+| `meta`      | `JSON`   | no       | a connection attached meta (off by default, enable with `"include_connection_meta": true`)       |
+| `labels`    | `JSON`   | no       | connection labels attached during authentication (**Centrifugo PRO** only)                        |
 
 #### PublishResponse
 
-| Field name   | Field type                        | Optional | Description         |
+| Field name   | Field type                        | Required | Description         |
 |--------------|-----------------------------------|----------|---------------------|
-| `result`     | [`PublishResult`](#publishresult) | yes      | Result of operation |
-| `error`      | [`Error`](#error)                 | yes      | Custom error        |
-| `disconnect` | [`Disconnect`](#disconnect)       | yes      | Custom disconnect   |
+| `result`     | [`PublishResult`](#publishresult) | no       | Result of operation |
+| `error`      | [`Error`](#error)                 | no       | Custom error        |
+| `disconnect` | [`Disconnect`](#disconnect)       | no       | Custom disconnect   |
 
 #### PublishResult
 
-| Field             | Type                  | Optional | Description                                                                                                                                                                                       |
+| Field             | Type                  | Required | Description                                                                                                                                                                                       |
 |-------------------|-----------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `data`            | `JSON`                | yes      | an optional JSON data to send into a channel **instead of** original data sent by a client                                                                                                        |
-| `b64data`         | `string`              | yes      | a binary data encoded in base64 format, the meaning is the same as for data above, will be decoded to raw bytes on Centrifugo side before publishing                                              |
-| `skip_history`    | `bool`                | yes      | when set to `true` Centrifugo won't save publication to the channel history                                                                                                                       |
-| `tags`            | `map<string, string>` | yes      | Since Centrifugo v6.8.0. Server-controlled publication tags attached to the resulting publication. Useful together with [server-side publication tags filter](../pro/server_tags_filter.md) — the proxy is the natural place to stamp RBAC tags on client-originated publishes since clients cannot send tags themselves |
-| `idempotency_key` | `string`              | yes      | Since Centrifugo v6.8.0. Idempotency key for safe retries — duplicate publishes with the same key within the broker's idempotent result TTL window are suppressed                                  |
-| `delta`           | `bool`                | yes      | Since Centrifugo v6.8.0. Enable delta compression for this publication                                                                                                                            |
-| `version`         | `uint64`              | yes      | Since Centrifugo v6.8.0. Per-publication version used by Centrifugo to drop non-actual publications when publication carries the entire state                                                     |
-| `version_epoch`   | `string`              | yes      | Since Centrifugo v6.8.0. Scopes `version` — use when version may be reused (e.g. comes from a system that can lose state)                                                                         |
+| `data`            | `JSON`                | no       | an optional JSON data to send into a channel **instead of** original data sent by a client                                                                                                        |
+| `b64data`         | `string`              | no       | a binary data encoded in base64 format, the meaning is the same as for data above, will be decoded to raw bytes on Centrifugo side before publishing                                              |
+| `skip_history`    | `bool`                | no       | when set to `true` Centrifugo won't save publication to the channel history                                                                                                                       |
+| `tags`            | `map<string, string>` | no       | Since Centrifugo v6.8.0. Server-controlled publication tags attached to the resulting publication. Useful together with [server-side publication tags filter](../pro/server_tags_filter.md) — the proxy is the natural place to stamp RBAC tags on client-originated publishes since clients cannot send tags themselves |
+| `idempotency_key` | `string`              | no       | Since Centrifugo v6.8.0. Idempotency key for safe retries — duplicate publishes with the same key within the broker's idempotent result TTL window are suppressed                                  |
+| `delta`           | `bool`                | no       | Since Centrifugo v6.8.0. Enable delta compression for this publication                                                                                                                            |
+| `version`         | `uint64`              | no       | Since Centrifugo v6.8.0. Per-publication version used by Centrifugo to drop non-actual publications when publication carries the entire state                                                     |
+| `version_epoch`   | `string`              | no       | Since Centrifugo v6.8.0. Scopes `version` — use when version may be reused (e.g. comes from a system that can lose state)                                                                         |
 
 See below on how to [return an error](#return-custom-error) in case you don't want to allow publishing.
 
@@ -1020,31 +1020,31 @@ Very similar to connection-wide refresh response.
 
 #### SubRefreshRequest
 
-| Field       | Type     | Optional | Description                                                                                      |
+| Field       | Type     | Required | Description                                                                                      |
 |-------------|----------|----------|--------------------------------------------------------------------------------------------------|
-| `client`    | `string` | no       | unique client ID generated by Centrifugo for each incoming connection                            |
-| `transport` | `string` | no       | transport name (ex. `websocket`, `sockjs`, `uni_sse` etc.)                                       |
-| `protocol`  | `string` | no       | protocol type used by client (`json` or `protobuf` at moment)                                    |
-| `encoding`  | `string` | no       | protocol encoding type used (`json` or `binary` at moment)                                       |
-| `user`      | `string` | no       | a connection user ID obtained during authentication process                                      |
-| `channel`   | `string` | no       | channel for which Subscription is going to expire                                                |
-| `meta`      | `JSON`   | yes      | a connection attached meta (off by default, enable with `"include_connection_meta": true`)       |
-| `labels`    | `JSON`   | yes      | connection labels attached during authentication (**Centrifugo PRO** only)                        |
+| `client`    | `string` | yes      | unique client ID generated by Centrifugo for each incoming connection                            |
+| `transport` | `string` | yes      | transport name (ex. `websocket`, `sockjs`, `uni_sse` etc.)                                       |
+| `protocol`  | `string` | yes      | protocol type used by client (`json` or `protobuf` at moment)                                    |
+| `encoding`  | `string` | yes      | protocol encoding type used (`json` or `binary` at moment)                                       |
+| `user`      | `string` | yes      | a connection user ID obtained during authentication process                                      |
+| `channel`   | `string` | yes      | channel for which Subscription is going to expire                                                |
+| `meta`      | `JSON`   | no       | a connection attached meta (off by default, enable with `"include_connection_meta": true`)       |
+| `labels`    | `JSON`   | no       | connection labels attached during authentication (**Centrifugo PRO** only)                        |
 
 #### SubRefreshResponse
 
-| Field name | Field type                              | Optional | Description                     |
+| Field name | Field type                              | Required | Description                     |
 |------------|-----------------------------------------|----------|---------------------------------|
-| `result`   | [`SubRefreshResult`](#subrefreshresult) | no       | Result of sub refresh operation |
+| `result`   | [`SubRefreshResult`](#subrefreshresult) | yes      | Result of sub refresh operation |
 
 #### SubRefreshResult
 
-| Field       | Type      | Optional | Description                                                                                                       |
+| Field       | Type      | Required | Description                                                                                                       |
 |-------------|-----------|----------|-------------------------------------------------------------------------------------------------------------------|
-| `expired`   | `bool`    | yes      | a flag to mark the subscription as expired - the client will be disconnected                                      |
-| `expire_at` | `integer` | yes      | a timestamp in the future (Unix seconds) when subscription must be considered expired                             |
-| `info`      | `JSON`    | yes      | update channel-specific information about connection                                                              |
-| `b64info`   | `string`  | yes      | binary channel info encoded in base64 format, will be decoded to raw bytes on Centrifugo before using in messages |
+| `expired`   | `bool`    | no       | a flag to mark the subscription as expired - the client will be disconnected                                      |
+| `expire_at` | `integer` | no       | a timestamp in the future (Unix seconds) when subscription must be considered expired                             |
+| `info`      | `JSON`    | no       | update channel-specific information about connection                                                              |
+| `b64info`   | `string`  | no       | binary channel info encoded in base64 format, will be decoded to raw bytes on Centrifugo before using in messages |
 
 ### Subscribe stream proxy
 
@@ -1120,33 +1120,33 @@ See below on how to [return a custom error](#return-custom-error).
 
 #### RPCRequest
 
-| Field       | Type     | Optional | Description                                                                                      |
+| Field       | Type     | Required | Description                                                                                      |
 |-------------|----------|----------|--------------------------------------------------------------------------------------------------|
-| `client`    | `string` | no       | unique client ID generated by Centrifugo for each incoming connection                            |
-| `transport` | `string` | no       | transport name (ex. `websocket` or `sockjs`)                                                     |
-| `protocol`  | `string` | no       | protocol type used by the client (`json` or `protobuf` at moment)                                |
-| `encoding`  | `string` | no       | protocol encoding type used (`json` or `binary` at moment)                                       |
-| `user`      | `string` | no       | a connection user ID obtained during authentication process                                      |
-| `method`    | `string` | yes      | an RPC method string, if the client does not use named RPC call then method will be omitted      |
-| `data`      | `JSON`   | yes      | RPC custom data sent by client                                                                   |
-| `b64data`   | `string` | yes      | will be set instead of `data` field for binary proxy mode                                        |
-| `meta`      | `JSON`   | yes      | a connection attached meta (off by default, enable with `"include_connection_meta": true`)       |
-| `labels`    | `JSON`   | yes      | connection labels attached during authentication (**Centrifugo PRO** only)                        |
+| `client`    | `string` | yes      | unique client ID generated by Centrifugo for each incoming connection                            |
+| `transport` | `string` | yes      | transport name (ex. `websocket` or `sockjs`)                                                     |
+| `protocol`  | `string` | yes      | protocol type used by the client (`json` or `protobuf` at moment)                                |
+| `encoding`  | `string` | yes      | protocol encoding type used (`json` or `binary` at moment)                                       |
+| `user`      | `string` | yes      | a connection user ID obtained during authentication process                                      |
+| `method`    | `string` | no       | an RPC method string, if the client does not use named RPC call then method will be omitted      |
+| `data`      | `JSON`   | no       | RPC custom data sent by client                                                                   |
+| `b64data`   | `string` | no       | will be set instead of `data` field for binary proxy mode                                        |
+| `meta`      | `JSON`   | no       | a connection attached meta (off by default, enable with `"include_connection_meta": true`)       |
+| `labels`    | `JSON`   | no       | connection labels attached during authentication (**Centrifugo PRO** only)                        |
 
 #### RPCResponse
 
-| Field name   | Field type                  | Optional | Description         |
+| Field name   | Field type                  | Required | Description         |
 |--------------|-----------------------------|----------|---------------------|
-| `result`     | [`RPCResult`](#rpcresult)   | yes      | Result of operation |
-| `error`      | [`Error`](#error)           | yes      | Custom error        |
-| `disconnect` | [`Disconnect`](#disconnect) | yes      | Custom disconnect   |
+| `result`     | [`RPCResult`](#rpcresult)   | no       | Result of operation |
+| `error`      | [`Error`](#error)           | no       | Custom error        |
+| `disconnect` | [`Disconnect`](#disconnect) | no       | Custom disconnect   |
 
 #### RPCResult
 
-| Field     | Type     | Optional | Description                                                               |
+| Field     | Type     | Required | Description                                                               |
 |-----------|----------|----------|---------------------------------------------------------------------------|
-| `data`    | `JSON`   | yes      | RPC response - any valid JSON is supported                                |
-| `b64data` | `string` | yes      | can be set instead of `data` for binary response encoded in base64 format |
+| `data`    | `JSON`   | no       | RPC response - any valid JSON is supported                                |
+| `b64data` | `string` | no       | can be set instead of `data` for binary response encoded in base64 format |
 
 ## Return custom error
 

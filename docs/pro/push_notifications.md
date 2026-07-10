@@ -810,21 +810,21 @@ Registers or updates device information.
 
 | Field      | Type                | Required | Description                                                                                                                                                                                          |
 |------------|---------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `id`       | `string`            | No       | Device ID. Omit on first registration — Centrifugo generates one and returns it. Pass the stored value on re-registration to update the same device. See [Device lifecycle](#device-lifecycle-and-best-practices). |
-| `provider` | `string`            | Yes      | Provider of the device token (valid choices: `fcm`, `hms`, `apns`, `webpush`).                                                                                                                       |
-| `token`    | `string`            | Yes      | Push notification token for the device. For `webpush`, this is the browser `PushSubscription` object serialized as a JSON string.                                                                    |
-| `platform` | `string`            | Yes      | Platform of the device (valid choices: `ios`, `android`, `web`).                                                                                                                                     |
-| `user`     | `string`            | No       | User associated with the device.                                                                                                                                                                     |
-| `timezone` | `string`            | No       | Timezone of device user ([IANA time zone identifier](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones), ex. `Europe/Nicosia`). See [Timezone aware push](#timezone-aware-push)           |
-| `locale`   | `string`            | No       | Locale of device user. Must be IETF BCP 47 language tag - ex. `en-US`, `fr-CA`. See [Localizations](#localizations)                                                                                  |
-| `topics`   | `array[string]`     | No       | Device topic subscriptions. This should be a full list which replaces all the topics previously associated with the device. User topics managed by `UserTopic` model will be automatically attached. |
-| `meta`     | `map[string]string` | No       | Additional custom metadata for the device                                                                                                                                                            |
+| `id`       | `string`            | no       | Device ID. Omit on first registration — Centrifugo generates one and returns it. Pass the stored value on re-registration to update the same device. See [Device lifecycle](#device-lifecycle-and-best-practices). |
+| `provider` | `string`            | yes      | Provider of the device token (valid choices: `fcm`, `hms`, `apns`, `webpush`).                                                                                                                       |
+| `token`    | `string`            | yes      | Push notification token for the device. For `webpush`, this is the browser `PushSubscription` object serialized as a JSON string.                                                                    |
+| `platform` | `string`            | yes      | Platform of the device (valid choices: `ios`, `android`, `web`).                                                                                                                                     |
+| `user`     | `string`            | no       | User associated with the device.                                                                                                                                                                     |
+| `timezone` | `string`            | no       | Timezone of device user ([IANA time zone identifier](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones), ex. `Europe/Nicosia`). See [Timezone aware push](#timezone-aware-push)           |
+| `locale`   | `string`            | no       | Locale of device user. Must be IETF BCP 47 language tag - ex. `en-US`, `fr-CA`. See [Localizations](#localizations)                                                                                  |
+| `topics`   | `array[string]`     | no       | Device topic subscriptions. This should be a full list which replaces all the topics previously associated with the device. User topics managed by `UserTopic` model will be automatically attached. |
+| `meta`     | `map[string]string` | no       | Additional custom metadata for the device                                                                                                                                                            |
 
 #### device_register result
 
 | Field Name | Type     | Required | Description                                |
 |------------|----------|----------|--------------------------------------------|
-| `id`       | `string` | Yes      | The device ID that was registered/updated. |
+| `id`       | `string` | yes      | The device ID that was registered/updated. |
 
 ### device_update
 
@@ -834,19 +834,19 @@ Call this method to update a device. For example, when a user logs out of the ap
 
 | Field             | Type                   | Required | Description                        |
 |-------------------|------------------------|----------|------------------------------------|
-| `ids`             | `array[string]`        | No       | Device ids to filter               |
-| `users`           | `array[string]`        | No       | Device users filter                |
-| `user_update`     | `DeviceUserUpdate`     | No       | Optional user update object        |
-| `timezone_update` | `DeviceTimezoneUpdate` | No       | Optional timezone update object    |
-| `locale_update`   | `DeviceLocaleUpdate`   | No       | Optional locale update object      |
-| `meta_update`     | `DeviceMetaUpdate`     | No       | Optional device meta update object |
-| `topics_update`   | `DeviceTopicsUpdate`   | No       | Optional topics update object      |
+| `ids`             | `array[string]`        | no       | Device ids to filter               |
+| `users`           | `array[string]`        | no       | Device users filter                |
+| `user_update`     | `DeviceUserUpdate`     | no       | Optional user update object        |
+| `timezone_update` | `DeviceTimezoneUpdate` | no       | Optional timezone update object    |
+| `locale_update`   | `DeviceLocaleUpdate`   | no       | Optional locale update object      |
+| `meta_update`     | `DeviceMetaUpdate`     | no       | Optional device meta update object |
+| `topics_update`   | `DeviceTopicsUpdate`   | no       | Optional topics update object      |
 
 `DeviceUserUpdate`:
 
 | Field  | Type     | Required | Description |
 |--------|----------|----------|-------------|
-| `user` | `string` | Yes      | User to set |
+| `user` | `string` | yes      | User to set |
 
 :::note When to use `user_update`
 
@@ -861,27 +861,27 @@ To assign a device to a **different user** (e.g. a different person logs in on a
 
 | Field      | Type     | Required | Description     |
 |------------|----------|----------|-----------------|
-| `timezone` | `string` | Yes      | Timezone to set |
+| `timezone` | `string` | yes      | Timezone to set |
 
 
 `DeviceLocaleUpdate`:
 
 | Field    | Type     | Required | Description   |
 |----------|----------|----------|---------------|
-| `locale` | `string` | Yes      | Locale to set |
+| `locale` | `string` | yes      | Locale to set |
 
 `DeviceMetaUpdate`:
 
 | Field  | Type                 | Required | Description |
 |--------|----------------------|----------|-------------|
-| `meta` | `map[string]string` | Yes      | Meta to set |
+| `meta` | `map[string]string` | yes      | Meta to set |
 
 `DeviceTopicsUpdate`:
 
 | Field    | Type            | Required | Description                                 |
 |----------|-----------------|----------|---------------------------------------------|
-| `op`     | `string`        | Yes      | Operation to make: `add`, `remove` or `set` |
-| `topics` | `array[string]` | Yes      | Topics for the operation                    |
+| `op`     | `string`        | yes      | Operation to make: `add`, `remove` or `set` |
+| `topics` | `array[string]` | yes      | Topics for the operation                    |
 
 #### device_update result
 
@@ -895,8 +895,8 @@ Removes a device from storage. This may also be called when a user logs out of t
 
 | Field Name | Type            | Required | Description                                           |
 |------------|-----------------|----------|-------------------------------------------------------|
-| `ids`      | `array[string]` | No       | A list of device IDs to be removed                    |
-| `users`    | `array[string]` | No       | A list of device user IDs to filter devices to remove |
+| `ids`      | `array[string]` | no       | A list of device IDs to be removed                    |
+| `users`    | `array[string]` | no       | A list of device user IDs to filter devices to remove |
 
 #### device_remove result
 
@@ -910,44 +910,44 @@ Returns a paginated list of registered devices according to request filter condi
 
 | Field                 | Type           | Required | Description                                                                     |
 |-----------------------|----------------|----------|---------------------------------------------------------------------------------|
-| `filter`              | `DeviceFilter` | Yes      | How to filter results                                                           |
-| `cursor`              | `string`       | No       | Cursor for pagination (last device id in previous batch, empty for first page). |
-| `limit`               | `int32`        | No       | Maximum number of devices to retrieve.                                          |
-| `include_total_count` | `bool`         | No       | Flag indicating whether to include total count for the current filter.          |
-| `include_topics`      | `bool`         | No       | Flag indicating whether to include topics information for each device.          |
-| `include_meta`        | `bool`         | No       | Flag indicating whether to include meta information for each device.            |
-| `include_webpush_keys`| `bool`         | No       | Flag indicating whether to include `webpush_keys` for each device (webpush only).|
+| `filter`              | `DeviceFilter` | yes      | How to filter results                                                           |
+| `cursor`              | `string`       | no       | Cursor for pagination (last device id in previous batch, empty for first page). |
+| `limit`               | `int32`        | no       | Maximum number of devices to retrieve.                                          |
+| `include_total_count` | `bool`         | no       | Flag indicating whether to include total count for the current filter.          |
+| `include_topics`      | `bool`         | no       | Flag indicating whether to include topics information for each device.          |
+| `include_meta`        | `bool`         | no       | Flag indicating whether to include meta information for each device.            |
+| `include_webpush_keys`| `bool`         | no       | Flag indicating whether to include `webpush_keys` for each device (webpush only).|
 
 `DeviceFilter`:
 
 | Field       | Type            | Required | Description                                       |
 |-------------|-----------------|----------|---------------------------------------------------|
-| `ids`       | `array[string]` | No       | List of device IDs to filter results.             |
-| `providers` | `array[string]` | No       | List of device token providers to filter results. |
-| `platforms` | `array[string]` | No       | List of device platforms to filter results.       |
-| `users`     | `array[string]` | No       | List of device users to filter results.           |
-| `topics`    | `array[string]` | No       | List of topics to filter results.                 |
+| `ids`       | `array[string]` | no       | List of device IDs to filter results.             |
+| `providers` | `array[string]` | no       | List of device token providers to filter results. |
+| `platforms` | `array[string]` | no       | List of device platforms to filter results.       |
+| `users`     | `array[string]` | no       | List of device users to filter results.           |
+| `topics`    | `array[string]` | no       | List of topics to filter results.                 |
 
 #### device_list result
 
 | Field Name    | Type            | Required | Description                                                                       |
 |---------------|-----------------|----------|-----------------------------------------------------------------------------------|
-| `items`       | `array[Device]` | Yes      | A list of devices                                                                 |
-| `next_cursor` | `string`        | No       | Cursor string for retrieving the next page, if not set - then no next page exists |
-| `total_count` | `integer`       | No       | Total count value (if `include_total_count` used)                                 |
+| `items`       | `array[Device]` | yes      | A list of devices                                                                 |
+| `next_cursor` | `string`        | no       | Cursor string for retrieving the next page, if not set - then no next page exists |
+| `total_count` | `integer`       | no       | Total count value (if `include_total_count` used)                                 |
 
 `Device`:
 
 | Field Name | Type                | Required | Description                                |
 |------------|---------------------|----------|--------------------------------------------|
-| `id`       | `string`            | Yes      | The device's ID.                           |
-| `provider` | `string`            | Yes      | The device's token provider.               |
-| `token`    | `string`            | Yes      | The device's token. For `webpush` this is the subscription **endpoint** (its stable identity). |
-| `platform` | `string`            | Yes      | The device's platform.                     |
-| `user`     | `string`            | No       | The user associated with the device.       |
-| `topics`   | `array[string]`     | No       | Only included if `include_topics` was true |
-| `meta`     | `map[string]string` | No       | Only included if `include_meta` was true   |
-| `webpush_keys` | `string`        | No       | Web Push subscription keys JSON (`{p256dh, auth}`). Only included if `include_webpush_keys` was true |
+| `id`       | `string`            | yes      | The device's ID.                           |
+| `provider` | `string`            | yes      | The device's token provider.               |
+| `token`    | `string`            | yes      | The device's token. For `webpush` this is the subscription **endpoint** (its stable identity). |
+| `platform` | `string`            | yes      | The device's platform.                     |
+| `user`     | `string`            | no       | The user associated with the device.       |
+| `topics`   | `array[string]`     | no       | Only included if `include_topics` was true |
+| `meta`     | `map[string]string` | no       | Only included if `include_meta` was true   |
+| `webpush_keys` | `string`        | no       | Web Push subscription keys JSON (`{p256dh, auth}`). Only included if `include_webpush_keys` was true |
 
 ### Two kinds of topic lists
 
@@ -970,10 +970,10 @@ Manage mapping of device to topics.
 
 | Field       | Type            | Required | Description                |
 |-------------|-----------------|----------|----------------------------|
-| `device_id` | `string`        | Yes      | Device ID.                 |
-| `op`        | `string`        | Yes      | `add` or `remove` or `set` |
-| `topics`    | `array[string]` | No       | List of topics.            |
-| `user`      | `string`        | No       | Optional ownership guard. If set, the update is applied only if the device currently belongs to this user. If the device exists but is owned by someone else, the request fails with a `conflict` error; if the device doesn't exist, it fails with a `not found` error. Nothing is changed in either case. Use it to avoid landing one user's topics on a device that has changed hands. |
+| `device_id` | `string`        | yes      | Device ID.                 |
+| `op`        | `string`        | yes      | `add` or `remove` or `set` |
+| `topics`    | `array[string]` | no       | List of topics.            |
+| `user`      | `string`        | no       | Optional ownership guard. If set, the update is applied only if the device currently belongs to this user. If the device exists but is owned by someone else, the request fails with a `conflict` error; if the device doesn't exist, it fails with a `not found` error. Nothing is changed in either case. Use it to avoid landing one user's topics on a device that has changed hands. |
 
 #### device_topic_update result
 
@@ -993,38 +993,38 @@ List device to topic mapping.
 
 | Field                 | Type                | Required | Description                                                                     |
 |-----------------------|---------------------|----------|---------------------------------------------------------------------------------|
-| `filter`              | `DeviceTopicFilter` | No       | List of device IDs to filter results.                                           |
-| `cursor`              | `string`            | No       | Cursor for pagination (last device id in previous batch, empty for first page). |
-| `limit`               | `int32`             | No       | Maximum number of devices to retrieve.                                          |
-| `include_device`      | `bool`              | No       | Flag indicating whether to include Device information for each object.          |
-| `include_total_count` | `bool`              | No       | Flag indicating whether to include total count info to response.                |
+| `filter`              | `DeviceTopicFilter` | no       | List of device IDs to filter results.                                           |
+| `cursor`              | `string`            | no       | Cursor for pagination (last device id in previous batch, empty for first page). |
+| `limit`               | `int32`             | no       | Maximum number of devices to retrieve.                                          |
+| `include_device`      | `bool`              | no       | Flag indicating whether to include Device information for each object.          |
+| `include_total_count` | `bool`              | no       | Flag indicating whether to include total count info to response.                |
 
 `DeviceTopicFilter`:
 
 | Field              | Type            | Required | Description                                       |
 |--------------------|-----------------|----------|---------------------------------------------------|
-| `device_ids`       | `array[string]` | No       | List of device IDs to filter results.             |
-| `device_providers` | `array[string]` | No       | List of device token providers to filter results. |
-| `device_platforms` | `array[string]` | No       | List of device platforms to filter results.       |
-| `device_users`     | `array[string]` | No       | List of device users to filter results.           |
-| `topics`           | `array[string]` | No       | List of topics to filter results.                 |
-| `topic_prefix`     | `string`        | No       | Topic prefix to filter results.                   |
+| `device_ids`       | `array[string]` | no       | List of device IDs to filter results.             |
+| `device_providers` | `array[string]` | no       | List of device token providers to filter results. |
+| `device_platforms` | `array[string]` | no       | List of device platforms to filter results.       |
+| `device_users`     | `array[string]` | no       | List of device users to filter results.           |
+| `topics`           | `array[string]` | no       | List of topics to filter results.                 |
+| `topic_prefix`     | `string`        | no       | Topic prefix to filter results.                   |
 
 #### device_topic_list result
 
 | Field Name    | Type                 | Required | Description                                                                       |
 |---------------|----------------------|----------|-----------------------------------------------------------------------------------|
-| `items`       | `array[DeviceTopic]` | Yes      | A list of DeviceTopic objects                                                   |
-| `next_cursor` | `string`             | No       | Cursor string for retrieving the next page, if not set - then no next page exists |
-| `total_count` | `integer`            | No       | Total count value (if `include_total_count` used)                                 |
+| `items`       | `array[DeviceTopic]` | yes      | A list of DeviceTopic objects                                                   |
+| `next_cursor` | `string`             | no       | Cursor string for retrieving the next page, if not set - then no next page exists |
+| `total_count` | `integer`            | no       | Total count value (if `include_total_count` used)                                 |
 
 `DeviceTopic`:
 
 | Field       | Type     | Required | Description              |
 |-------------|----------|----------|--------------------------|
-| `id`        | `string` | Yes      | ID of DeviceTopic object |
-| `device_id` | `string` | Yes      | Device ID                |
-| `topic`     | `string` | Yes      | Topic                    |
+| `id`        | `string` | yes      | ID of DeviceTopic object |
+| `device_id` | `string` | yes      | Device ID                |
+| `topic`     | `string` | yes      | Topic                    |
 
 ### user_topic_update
 
@@ -1034,9 +1034,9 @@ Manage the per-user topic list. Updating it **immediately** applies the change t
 
 | Field    | Type            | Required | Description                |
 |----------|-----------------|----------|----------------------------|
-| `user`   | `string`        | Yes      | User ID.                   |
-| `op`     | `string`        | Yes      | `add` or `remove` or `set` |
-| `topics` | `array[string]` | No       | List of topics.            |
+| `user`   | `string`        | yes      | User ID.                   |
+| `op`     | `string`        | yes      | `add` or `remove` or `set` |
+| `topics` | `array[string]` | no       | List of topics.            |
 
 #### user_topic_update result
 
@@ -1050,34 +1050,34 @@ List user to topic mapping.
 
 | Field                 | Type              | Required | Description                                                              |
 |-----------------------|-------------------|----------|--------------------------------------------------------------------------|
-| `filter`              | `UserTopicFilter` | No       | Filter object.                                                           |
-| `cursor`              | `string`          | No       | Cursor for pagination (last id in previous batch, empty for first page). |
-| `limit`               | `int32`           | No       | Maximum number of `UserTopic` objects to retrieve.                       |
-| `include_total_count` | `bool`            | No       | Flag indicating whether to include total count info to response.         |
+| `filter`              | `UserTopicFilter` | no       | Filter object.                                                           |
+| `cursor`              | `string`          | no       | Cursor for pagination (last id in previous batch, empty for first page). |
+| `limit`               | `int32`           | no       | Maximum number of `UserTopic` objects to retrieve.                       |
+| `include_total_count` | `bool`            | no       | Flag indicating whether to include total count info to response.         |
 
 `UserTopicFilter`:
 
 | Field          | Type            | Required | Description                       |
 |----------------|-----------------|----------|-----------------------------------|
-| `users`        | `array[string]` | No       | List of users to filter results.  |
-| `topics`       | `array[string]` | No       | List of topics to filter results. |
-| `topic_prefix` | `string`        | No       | Topic prefix to filter results.   |
+| `users`        | `array[string]` | no       | List of users to filter results.  |
+| `topics`       | `array[string]` | no       | List of topics to filter results. |
+| `topic_prefix` | `string`        | no       | Topic prefix to filter results.   |
 
 #### user_topic_list result
 
 | Field Name    | Type               | Required | Description                                                                       |
 |---------------|--------------------|----------|-----------------------------------------------------------------------------------|
-| `items`       | `array[UserTopic]` | Yes      | A list of UserTopic objects                                                       |
-| `next_cursor` | `string`           | No       | Cursor string for retrieving the next page, if not set - then no next page exists |
-| `total_count` | `integer`          | No       | Total count value (if `include_total_count` used)                                 |
+| `items`       | `array[UserTopic]` | yes      | A list of UserTopic objects                                                       |
+| `next_cursor` | `string`           | no       | Cursor string for retrieving the next page, if not set - then no next page exists |
+| `total_count` | `integer`          | no       | Total count value (if `include_total_count` used)                                 |
 
 `UserTopic`:
 
 | Field   | Type     | Required | Description       |
 |---------|----------|----------|-------------------|
-| `id`    | `string` | Yes      | ID of `UserTopic` |
-| `user`  | `string` | Yes      | User ID           |
-| `topic` | `string` | Yes      | Topic             |
+| `id`    | `string` | yes      | ID of `UserTopic` |
+| `user`  | `string` | yes      | User ID           |
+| `topic` | `string` | yes      | Topic             |
 
 ### send_push_notification
 
@@ -1087,102 +1087,102 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 
 | Field name                 | Type                          | Required | Description                                                                                                                                                                |
 |----------------------------|-------------------------------|----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `recipient`                | `PushRecipient`               | Yes      | Recipient of push notification                                                                                                                                             |
-| `notification`             | `PushNotification`            | Yes      | Push notification to send                                                                                                                                                  |
-| `uid`                      | `string`                      | No       | Unique identifier for each push notification request, can be used to cancel push. We recommend using UUID v4 for it. Two different requests must have different `uid`      |
-| `send_at`                  | `int64`                       | No       | Optional Unix time in the future (in seconds) when to send push notification, push will be queued until that time.                                                         |
-| `optimize_for_reliability` | `bool`                        | No       | Makes processing heavier, but handles edge cases — for example, it avoids losing pushes that are mid-send if the queue is briefly unavailable.                            |
-| `limit_strategy`           | `PushLimitStrategy`           | No       | Can be used to set push time constraints (based on device timezone) and rate limits. Note, when it's used Centrifugo processes pushes one by one instead of batch sending |
-| `analytics_uid`            | `string`                      | No       | Identifier for push notification analytics, if not set - Centrifugo will use `uid` field.                                                                                  |
-| `localizations`            | `map[string]PushLocalization` | No       | Optional per language localizations for push notification.                                                                                                                 |
-| `use_templating`           | `bool`                        | No       | If set - Centrifugo will use templating for push notification. Note that setting localizations enables templating automatically.                                           |
-| `use_meta`                 | `bool`                        | No       | If set - Centrifugo will additionally load device meta during push sending, this meta becomes available in templating.                                                     |
+| `recipient`                | `PushRecipient`               | yes      | Recipient of push notification                                                                                                                                             |
+| `notification`             | `PushNotification`            | yes      | Push notification to send                                                                                                                                                  |
+| `uid`                      | `string`                      | no       | Unique identifier for each push notification request, can be used to cancel push. We recommend using UUID v4 for it. Two different requests must have different `uid`      |
+| `send_at`                  | `int64`                       | no       | Optional Unix time in the future (in seconds) when to send push notification, push will be queued until that time.                                                         |
+| `optimize_for_reliability` | `bool`                        | no       | Makes processing heavier, but handles edge cases — for example, it avoids losing pushes that are mid-send if the queue is briefly unavailable.                            |
+| `limit_strategy`           | `PushLimitStrategy`           | no       | Can be used to set push time constraints (based on device timezone) and rate limits. Note, when it's used Centrifugo processes pushes one by one instead of batch sending |
+| `analytics_uid`            | `string`                      | no       | Identifier for push notification analytics, if not set - Centrifugo will use `uid` field.                                                                                  |
+| `localizations`            | `map[string]PushLocalization` | no       | Optional per language localizations for push notification.                                                                                                                 |
+| `use_templating`           | `bool`                        | no       | If set - Centrifugo will use templating for push notification. Note that setting localizations enables templating automatically.                                           |
+| `use_meta`                 | `bool`                        | no       | If set - Centrifugo will additionally load device meta during push sending, this meta becomes available in templating.                                                     |
 
 `PushRecipient` (you **must set only one of the following fields**):
 
 | Field           | Type            | Required | Description                                                  |
 |-----------------|-----------------|----------|--------------------------------------------------------------|
-| `filter`        | `DeviceFilter`  | No       | Send to device IDs based on Centrifugo device storage filter |
-| `fcm_tokens`    | `array[string]` | No       | Send to a list of FCM native tokens                          |
-| `fcm_topic`     | `string`        | No       | Send to a FCM native topic                                   |
-| `fcm_condition` | `string`        | No       | Send to a FCM native condition                               |
-| `hms_tokens`    | `array[string]` | No       | Send to a list of HMS native tokens                          |
-| `hms_topic`     | `string`        | No       | Send to a HMS native topic                                   |
-| `hms_condition` | `string`        | No       | Send to a HMS native condition                               |
-| `apns_tokens`   | `array[string]` | No       | Send to a list of APNs native tokens                         |
-| `webpush_tokens`| `array[string]` | No       | Send to a list of raw Web Push subscriptions (each item is a `PushSubscription` JSON string) |
+| `filter`        | `DeviceFilter`  | no       | Send to device IDs based on Centrifugo device storage filter |
+| `fcm_tokens`    | `array[string]` | no       | Send to a list of FCM native tokens                          |
+| `fcm_topic`     | `string`        | no       | Send to a FCM native topic                                   |
+| `fcm_condition` | `string`        | no       | Send to a FCM native condition                               |
+| `hms_tokens`    | `array[string]` | no       | Send to a list of HMS native tokens                          |
+| `hms_topic`     | `string`        | no       | Send to a HMS native topic                                   |
+| `hms_condition` | `string`        | no       | Send to a HMS native condition                               |
+| `apns_tokens`   | `array[string]` | no       | Send to a list of APNs native tokens                         |
+| `webpush_tokens`| `array[string]` | no       | Send to a list of raw Web Push subscriptions (each item is a `PushSubscription` JSON string) |
 
 `PushNotification`:
 
 | Field       | Type                   | Required | Description                                                                                                                                                                                                                                                                       |
 |-------------|------------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `expire_at` | `int64`                | No       | Unix timestamp when Centrifugo stops attempting to send this notification. Note, it's Centrifugo specific and does not relate to notification TTL fields. We generally recommend to always set this to a reasonable value to protect your app from old push notifications sending |
-| `fcm`       | `FcmPushNotification`  | No       | Notification for FCM                                                                                                                                                                                                                                                              |
-| `hms`       | `HmsPushNotification`  | No       | Notification for HMS                                                                                                                                                                                                                                                              |
-| `apns`      | `ApnsPushNotification` | No       | Notification for APNs                                                                                                                                                                                                                                                             |
-| `webpush`   | `WebPushPushNotification` | No    | Notification for Web Push                                                                                                                                                                                                                                                         |
+| `expire_at` | `int64`                | no       | Unix timestamp when Centrifugo stops attempting to send this notification. Note, it's Centrifugo specific and does not relate to notification TTL fields. We generally recommend to always set this to a reasonable value to protect your app from old push notifications sending |
+| `fcm`       | `FcmPushNotification`  | no       | Notification for FCM                                                                                                                                                                                                                                                              |
+| `hms`       | `HmsPushNotification`  | no       | Notification for HMS                                                                                                                                                                                                                                                              |
+| `apns`      | `ApnsPushNotification` | no       | Notification for APNs                                                                                                                                                                                                                                                             |
+| `webpush`   | `WebPushPushNotification` | no    | Notification for Web Push                                                                                                                                                                                                                                                         |
 
 `FcmPushNotification`:
 
 | Field     | Type          | Required | Description                                                                                                            |
 |-----------|---------------|----------|------------------------------------------------------------------------------------------------------------------------|
-| `message` | `JSON` object | Yes      | FCM [Message](https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages#Message) described in FCM docs. |
+| `message` | `JSON` object | yes      | FCM [Message](https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages#Message) described in FCM docs. |
 
 `HmsPushNotification`:
 
 | Field     | Type          | Required | Description                                                                                                                                                                                             |
 |-----------|---------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `message` | `JSON` object | Yes      | HMS [Message](https://developer.huawei.com/consumer/en/doc/development/HMSCore-References/https-send-api-0000001050986197#EN-US_TOPIC_0000001134031085__p1324218481619) described in HMS Push Kit docs. |
+| `message` | `JSON` object | yes      | HMS [Message](https://developer.huawei.com/consumer/en/doc/development/HMSCore-References/https-send-api-0000001050986197#EN-US_TOPIC_0000001134031085__p1324218481619) described in HMS Push Kit docs. |
 
 `ApnsPushNotification`:
 
 | Field     | Type                | Required | Description                                                                                                                                               |
 |-----------|---------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `headers` | `map[string]string` | No       | APNs [headers](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/sending_notification_requests_to_apns) |
-| `payload` | `JSON` object       | Yes      | APNs [payload](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/generating_a_remote_notification)      |
+| `headers` | `map[string]string` | no       | APNs [headers](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/sending_notification_requests_to_apns) |
+| `payload` | `JSON` object       | yes      | APNs [payload](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/generating_a_remote_notification)      |
 
 `WebPushPushNotification`:
 
 | Field     | Type                | Required | Description                                                                                                                                               |
 |-----------|---------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `headers` | `map[string]string` | No       | Web Push HTTP headers. Recognized keys: `TTL` (seconds to retain for offline devices, default 4 weeks), `Urgency` (`very-low`/`low`/`normal`/`high`), `Topic` (collapse key) |
-| `payload` | `JSON` object       | Yes      | Arbitrary JSON payload delivered to the browser service worker (received via `event.data.json()` in the `push` event)                                     |
+| `headers` | `map[string]string` | no       | Web Push HTTP headers. Recognized keys: `TTL` (seconds to retain for offline devices, default 4 weeks), `Urgency` (`very-low`/`low`/`normal`/`high`), `Topic` (collapse key) |
+| `payload` | `JSON` object       | yes      | Arbitrary JSON payload delivered to the browser service worker (received via `event.data.json()` in the `push` event)                                     |
 
 `PushLocalization`:
 
 | Field          | Type                | Required | Description                                       |
 |----------------|---------------------|----------|---------------------------------------------------|
-| `translations` | `map[string]string` | Yes      | Variable name to value for the specific language. |
+| `translations` | `map[string]string` | yes      | Variable name to value for the specific language. |
 
 `PushLimitStrategy`:
 
 | Field        | Type                    | Required | Description             |
 |--------------|-------------------------|----------|-------------------------|
-| `rate_limit` | `PushRateLimitStrategy` | No       | Set rate limit policies |
-| `time_limit` | `PushTimeLimitStrategy` | No       | Set time limit policy   |
+| `rate_limit` | `PushRateLimitStrategy` | no       | Set rate limit policies |
+| `time_limit` | `PushTimeLimitStrategy` | no       | Set time limit policy   |
 
 `PushRateLimitStrategy`:
 
 | Field                  | Type                     | Required | Description                                                                             |
 |------------------------|--------------------------|----------|-----------------------------------------------------------------------------------------|
-| `key`                  | `string`                 | No       | Optional key for rate limit policy, supports variables (`device.id` and `device.user`). |
-| `policies`             | `array[RateLimitPolicy]` | No       | Array of rate limit policies to apply                                                   |
-| `drop_if_rate_limited` | `bool`                   | No       | Drop push if rate limited, otherwise queue for later                                    |
+| `key`                  | `string`                 | no       | Optional key for rate limit policy, supports variables (`device.id` and `device.user`). |
+| `policies`             | `array[RateLimitPolicy]` | no       | Array of rate limit policies to apply                                                   |
+| `drop_if_rate_limited` | `bool`                   | no       | Drop push if rate limited, otherwise queue for later                                    |
 
 `RateLimitPolicy`:
 
 | Field         | Type  | Required | Description                         |
 |---------------|-------|----------|-------------------------------------|
-| `rate`        | `int` | Yes      | Allowed rate                        |
-| `interval_ms` | `int` | Yes      | Interval over which rate is allowed |
+| `rate`        | `int` | yes      | Allowed rate                        |
+| `interval_ms` | `int` | yes      | Interval over which rate is allowed |
 
 `PushTimeLimitStrategy`:
 
 | Field              | Type     | Required | Description                                                                          |
 |--------------------|----------|----------|--------------------------------------------------------------------------------------|
-| `send_after_time`  | `string` | Yes      | Local time in format `HH:MM:SS` after which push must be sent                        |
-| `send_before_time` | `string` | Yes      | Local time in format `HH:MM:SS` before which push must be sent                       |
-| `no_tz_send_now`   | `bool`   | No       | If device does not have timezone send push immediately, by default - will be dropped |
+| `send_after_time`  | `string` | yes      | Local time in format `HH:MM:SS` after which push must be sent                        |
+| `send_before_time` | `string` | yes      | Local time in format `HH:MM:SS` before which push must be sent                       |
+| `no_tz_send_now`   | `bool`   | no       | If device does not have timezone send push immediately, by default - will be dropped |
 
 #### send_push_notification result
 
@@ -1198,7 +1198,7 @@ Cancel delayed push notification (which was sent with custom `send_at` value).
 
 | Field | Type     | Required | Description                          |
 |-------|----------|----------|--------------------------------------|
-| `uid` | `string` | Yes      | `uid` of push notification to cancel |
+| `uid` | `string` | yes      | `uid` of push notification to cancel |
 
 #### cancel_push result
 
@@ -1218,10 +1218,10 @@ This is part of the server API at the moment, so you need to send these requests
 
 | Field           | Type     | Required | Description                                                      |
 |-----------------|----------|----------|------------------------------------------------------------------|
-| `analytics_uid` | `string` | Yes      | `analytics_uid` from `send_push_notification`                    |
-| `status`        | `string` | Yes      | Status of push notification - `delivered` or `interacted`        |
-| `device_id`     | `string` | Yes      | Device ID                                                        |
-| `msg_id`        | `string` | No       | Optional Message ID of push notification issued by the provider |
+| `analytics_uid` | `string` | yes      | `analytics_uid` from `send_push_notification`                    |
+| `status`        | `string` | yes      | Status of push notification - `delivered` or `interacted`        |
+| `device_id`     | `string` | yes      | Device ID                                                        |
+| `msg_id`        | `string` | no       | Optional Message ID of push notification issued by the provider |
 
 #### update_push_status result
 

@@ -207,25 +207,25 @@ Example:
 
 #### Subscribe options:
 
-| Field    | Type                      | Optional | Description                                                                                                                                 |
+| Field    | Type                      | Required | Description                                                                                                                                 |
 |----------|---------------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| info     | JSON object               | yes      | Custom channel info                                                                                                                         |
-| b64info  | string                    | yes      | Custom channel info in Base64 - to pass binary channel info                                                                                 |
-| data     | JSON object               | yes      | Custom JSON data to return in subscription context inside Connect reply                                                                     |
-| b64data  | string                    | yes      | Same as `data` but in Base64 to send binary data                                                                                            |
-| override | `SubscribeOptionOverride` | yes      | Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields) |
+| info     | JSON object               | no       | Custom channel info                                                                                                                         |
+| b64info  | string                    | no       | Custom channel info in Base64 - to pass binary channel info                                                                                 |
+| data     | JSON object               | no       | Custom JSON data to return in subscription context inside Connect reply                                                                     |
+| b64data  | string                    | no       | Same as `data` but in Base64 to send binary data                                                                                            |
+| override | `SubscribeOptionOverride` | no       | Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields) |
 
 #### SubscribeOptionOverride
 
 Allow per-connection overrides of some channel namespace options:
 
-| Field                 | Type        | Optional | Description                                             |
+| Field                 | Type        | Required | Description                                             |
 |-----------------------|-------------|----------|---------------------------------------------------------|
-| presence              | `BoolValue` | yes      | Override `presence` from namespace options              |
-| join_leave            | `BoolValue` | yes      | Override `join_leave` from namespace options            |
-| force_recovery        | `BoolValue` | yes      | Override `force_recovery` from namespace options        |
-| force_positioning     | `BoolValue` | yes      | Override `force_positioning` from namespace options     |
-| force_push_join_leave | `BoolValue` | yes      | Override `force_push_join_leave` from namespace options |
+| presence              | `BoolValue` | no       | Override `presence` from namespace options              |
+| join_leave            | `BoolValue` | no       | Override `join_leave` from namespace options            |
+| force_recovery        | `BoolValue` | no       | Override `force_recovery` from namespace options        |
+| force_positioning     | `BoolValue` | no       | Override `force_positioning` from namespace options     |
+| force_push_join_leave | `BoolValue` | no       | Override `force_push_join_leave` from namespace options |
 
 `BoolValue` is an object like this:
 

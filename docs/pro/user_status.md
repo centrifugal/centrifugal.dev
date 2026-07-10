@@ -110,17 +110,17 @@ Note that Centrifugo also maintains the `online` field inside the user status ob
 
 #### GetUserStatusResult
 
-| Field name | Field type          | Optional | Description                                   |
+| Field name | Field type          | Required | Description                                   |
 |------------|---------------------|----------|-----------------------------------------------|
-| `statuses` | `array[UserStatus]` | no       | Statuses for each user in params (same order) |
+| `statuses` | `array[UserStatus]` | yes      | Statuses for each user in params (same order) |
 
 #### UserStatus
 
-| Field name   | Field type     | Optional | Description  |
+| Field name   | Field type     | Required | Description  |
 | -------------- | -------------- | ------ | ------------ |
-| user       | string  | no | User ID        |
-| active       | integer  | yes | Last active time (Unix seconds)    |
-| online       | integer  | yes | Last online time (Unix seconds)    |
+| user       | string  | yes | User ID        |
+| active       | integer  | no  | Last active time (Unix seconds)    |
+| online       | integer  | no  | Last online time (Unix seconds)    |
 
 ### delete_user_status
 
