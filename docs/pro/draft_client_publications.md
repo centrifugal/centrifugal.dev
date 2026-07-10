@@ -1,5 +1,5 @@
 ---
-description: "Centrifugo PRO ephemeral client publications enable schema-validated messaging with jq/JS transformations, bypassing backend proxy for lower latency."
+description: "Centrifugo PRO ephemeral client publications enable schema-validated messaging with server-side tag extraction, bypassing backend proxy for lower latency."
 id: client_publications
 title: Ephemeral client publications
 sidebar_label: Ephemeral publications
@@ -12,7 +12,7 @@ Centrifugo PRO provides schema validation for client publications, enabling ephe
 The feature consists of three parts which together provide a ground for ephemeral client publications:
 
 * **Validation layer** - validate client publications based on JSON schema
-* **Transformation layer** - transform publication data and generate tags using jq or JavaScript engines
+* **Tag extraction** - attach tags to publications using JSON path or CEL rules
 * **Bandwidth optimization** - optionally exclude client info from publications to reduce message size
 
 ## Configuration
@@ -173,7 +173,7 @@ Use `client_publication.schemas` in channel or namespace configuration to apply 
   "schemas": [
     {
       "name": "typing",
-      "definition": "{\"type\":\"object\",\"properties\":{},\"additionalProperties\": false]}"
+      "definition": "{\"type\":\"object\",\"properties\":{},\"additionalProperties\": false}"
     }
   ],
   "channel": {
@@ -239,38 +239,49 @@ All schemas referenced in `client_publication.schemas` must have the same type (
 
 :::
 
-## Publication transformations
+## Tag extraction
 
-Publication transformations allow you to modify publication data, extract tags, and generate idempotency keys using either jq or JavaScript programs. Transformations are executed server-side and compiled at startup for optimal performance.
+Centrifugo PRO can attach [tags](../server/channels.md) to client publications, extracted from the publication data or the connection context at publish time — without a backend round-trip. This lets subscribers and server-side consumers filter or route on values derived from the message.
 
-### Transformation engines
+Tag rules are configured in `client_publication.tags` — a list of extraction rules. Each rule sets one tag from either a JSON **path** into the publication data, or a **CEL** expression, and may be applied conditionally. Tag extraction only **adds tags** — it does not modify the publication `data`, which is broadcast unchanged (after schema validation).
 
-Centrifugo PRO supports two transformation engines:
+### Tag field options
 
-* **jq** - JSON query language, ideal for data manipulation and filtering
-* **js** - JavaScript (via goja runtime), provides familiar syntax and flexibility
+| Field  | Type     | Description                                                                                                             |
+|--------|----------|-----------------------------------------------------------------------------------------------------------------------|
+| `key`  | `string` | Name of the tag to set.                                                                                               |
+| `path` | `string` | JSON path into the publication data (dot notation, e.g. `user.name`, `metadata.room_id`). Set either `path` or `cel`, not both. |
+| `cel`  | `string` | [CEL](./cel_expressions.md) expression computing the value, e.g. `data.emoji`. Set either `cel` or `path`, not both.  |
+| `if`   | `string` | Optional CEL condition — the tag is set only when it evaluates to `true`, e.g. `schema_name == 'reaction'`.          |
 
-Both engines receive the same input context and must return a consistent output format.
+Both `cel` and `if` expressions have access to these variables:
 
-### Configuration
+* `data` (object) - the publication data sent by the client
+* `timestamp_ms` (int) - current server timestamp in milliseconds
+* `schema_name` (string) - name of the matched schema (empty if no schemas configured)
+* `user` (string) - user ID from connection credentials
+* `client` (string) - client ID (unique connection identifier)
+* `meta` (object) - connection metadata
+* `vars` (object) - [channel pattern](./channel_patterns.md) variables
 
-Transformations are configured in the `client_publication.transform` section:
+### Example
 
 ```json title="config.json"
 {
   "channel": {
     "namespaces": [
       {
-        "name": "chat",
+        "name": "reactions",
+        "publication_data_format": "json",
         "client_publication": {
-          "transform": {
-            "enabled": true,
-            "engine": "jq",
-            "jq": {
-              "program": "{data: .data, tags: {user: .user}}"
-            }
-          }
-        }
+          "schemas": ["reaction"],
+          "tags": [
+            { "key": "emoji", "path": "emoji" },
+            { "key": "user", "cel": "user" },
+            { "key": "priority", "cel": "'high'", "if": "data.urgent == true" }
+          ]
+        },
+        "allow_publish_for_subscriber": true
       }
     ]
   }
@@ -282,337 +293,22 @@ Or in YAML for better readability:
 ```yaml title="config.yaml"
 channel:
   namespaces:
-    - name: chat
-      client_publication:
-        transform:
-          enabled: true
-          engine: jq  # or "js"
-          jq:
-            program: |
-              {
-                data: .data,
-                tags: {user: .user, priority: "high"}
-              }
-```
-
-### Input context
-
-Transform programs receive an input object with the following variables:
-
-* `data` (object) - The publication data sent by the client (always available)
-* `timestamp_ms` (int) - Current server timestamp in milliseconds
-* `user` (string) - User ID from connection credentials
-* `client` (string) - Client ID (unique connection identifier)
-* `meta` (object) - Connection metadata
-* `vars` (object) - Channel pattern variables (requires [channel patterns](./channel_patterns.md))
-* `schema_name` (string) - Name of the matched schema (empty if no schemas configured)
-
-:::note
-Only `data` is guaranteed to be present. Other variables depend on the context where the transformation is used.
-:::
-
-### Output format
-
-Transform programs must return an object with optional fields:
-
-* `data` (object) - Transformed publication data (optional)
-* `tags` (object) - Key-value pairs for publication tags (optional)
-* `idempotency_key` (string) - Deduplication key (optional)
-
-All fields are optional - you can return only the ones you need.
-
-### Using jq
-
-jq provides powerful JSON manipulation capabilities with a concise syntax.
-
-**Basic transformation:**
-
-```yaml
-transform:
-  enabled: true
-  engine: jq
-  jq:
-    program: |
-      {
-        data: {
-          message: .data.text,
-          user: .user,
-          timestamp: .timestamp_ms
-        },
-        tags: {
-          room: .vars.room_id,
-          priority: (if .data.urgent == true then "high" else "normal" end)
-        },
-        idempotency_key: (.user + ":" + (.timestamp_ms | tostring))
-      }
-```
-
-**Data restructuring:**
-
-```yaml
-transform:
-  enabled: true
-  engine: jq
-  jq:
-    program: |
-      {
-        data: (
-          .data
-          | .author = {id: .user_id, name: .user_name}
-          | del(.user_id, .user_name)
-        ),
-        tags: {source: "client"}
-      }
-```
-
-### Using JavaScript
-
-JavaScript provides familiar syntax and can handle complex logic.
-
-**Basic transformation:**
-
-```yaml
-transform:
-  enabled: true
-  engine: js
-  js:
-    program: |
-      (function(input) {
-        return {
-          data: {
-            message: input.data.text,
-            user: input.user,
-            timestamp: input.timestamp_ms
-          },
-          tags: {
-            room: input.vars.room_id,
-            priority: input.data.urgent === true ? "high" : "normal"
-          },
-          idempotency_key: input.user + ":" + input.timestamp_ms
-        };
-      })
-```
-
-**Data restructuring:**
-
-```yaml
-transform:
-  enabled: true
-  engine: js
-  js:
-    program: |
-      (function(input) {
-        var data = input.data;
-        return {
-          data: {
-            author: {
-              id: data.user_id,
-              name: data.user_name
-            },
-            content: data.content,
-            metadata: data.metadata
-          },
-          tags: {
-            source: "client"
-          }
-        };
-      })
-```
-
-### Loading programs from files
-
-For complex transformations, you can load programs from external files:
-
-**Create program files:**
-
-```jq title="transforms/chat.jq"
-{
-  data: {
-    message: .data.text,
-    author: .user,
-    timestamp: .timestamp_ms
-  },
-  tags: {
-    room: .vars.room_id,
-    priority: (if .data.urgent == true then "high" else "normal" end)
-  },
-  idempotency_key: (.user + ":" + (.timestamp_ms | tostring))
-}
-```
-
-```javascript title="transforms/chat.js"
-(function(input) {
-  return {
-    data: {
-      message: input.data.text,
-      author: input.user,
-      timestamp: input.timestamp_ms
-    },
-    tags: {
-      room: input.vars.room_id,
-      priority: input.data.urgent === true ? "high" : "normal"
-    },
-    idempotency_key: input.user + ":" + input.timestamp_ms
-  };
-})
-```
-
-**Reference in configuration:**
-
-```json title="config.json"
-{
-  "channel": {
-    "namespaces": [
-      {
-        "name": "chat",
-        "client_publication": {
-          "transform": {
-            "enabled": true,
-            "engine": "jq",
-            "jq": {
-              "program": "./transforms/chat.jq"
-            }
-          }
-        }
-      }
-    ]
-  }
-}
-```
-
-```yaml title="config.yaml"
-channel:
-  namespaces:
-    - name: chat
-      client_publication:
-        transform:
-          enabled: true
-          engine: jq
-          jq:
-            program: ./transforms/chat.jq
-```
-
-:::tip Benefits of program files
-
-- **Better IDE support** - Syntax highlighting and validation
-- **Easier testing** - Test programs independently
-- **Cleaner config** - Keep configuration files focused
-- **Reusability** - Share programs across namespaces
-
-:::
-
-### Integration with schemas
-
-Transformations work seamlessly with schema validation. The matched schema name is available in the transformation context.
-
-**With schema validation:**
-
-```yaml
-channel:
-  namespaces:
-    - name: chat
-      client_publication:
-        schemas: ["chat_message"]  # Validate before transformation
-        transform:
-          enabled: true
-          engine: jq
-          jq:
-            program: |
-              {
-                data: .data,
-                tags: {
-                  validated_schema: .schema_name,
-                  user: .user
-                }
-              }
-```
-
-### Performance considerations
-
-* **Compilation** - Programs are compiled once at startup and validated for correctness
-* **Runtime** - Only program execution happens per publication
-* **Engine choice** - Both jq and JavaScript have similar performance characteristics:
-  - jq: ~10,000 ns/op for typical transformations
-  - JavaScript: ~8,000 ns/op for typical transformations
-* **Minimal overhead** - Simple transformations add negligible latency
-
-:::info Benchmark results
-
-Internal benchmarks show:
-- Full transformation (data + tags + idempotency key): ~8-10μs per publication
-- Minimal transformation (data only): ~1-2μs per publication
-
-These are measured on modern hardware and represent worst-case scenarios. Actual performance may be better.
-
-:::
-
-### Complete transformation examples
-
-**Multi-tenant chat with data enrichment:**
-
-```yaml
-channel:
-  patterns: true
-  namespaces:
-    - name: tenant_chat
-      pattern: /tenants/:tenant_id/rooms/:room_id/messages
-      client_publication:
-        schemas: ["chat_message"]
-        transform:
-          enabled: true
-          engine: jq
-          jq:
-            program: |
-              {
-                data: {
-                  message: .data.text,
-                  author: {
-                    id: .user,
-                    role: .meta.role
-                  },
-                  room: .vars.room_id,
-                  timestamp: .timestamp_ms
-                },
-                tags: {
-                  tenant: .vars.tenant_id,
-                  room: .vars.room_id,
-                  priority: (if .meta.premium == true then "high" else "normal" end)
-                },
-                idempotency_key: (.vars.tenant_id + ":" + .user + ":" + (.timestamp_ms | tostring))
-              }
-        allow_publish_for_subscriber: true
-```
-
-**Reaction system with deduplication:**
-
-```yaml
-channel:
-  namespaces:
     - name: reactions
+      publication_data_format: json
       client_publication:
-        schemas: ["reaction"]
-        transform:
-          enabled: true
-          engine: js
-          js:
-            program: |
-              (function(input) {
-                var data = input.data;
-                return {
-                  data: {
-                    emoji: data.emoji,
-                    message_id: data.message_id,
-                    user_id: input.user
-                  },
-                  tags: {
-                    emoji_type: data.emoji,
-                    user: input.user
-                  },
-                  idempotency_key: input.user + ":" + data.message_id + ":" + data.emoji
-                };
-              })
-        allow_publish_for_subscriber: true
+        schemas: [reaction]
+        tags:
+          - key: emoji
+            path: emoji
+          - key: user
+            cel: user
+          - key: priority
+            cel: "'high'"
+            if: data.urgent == true
+      allow_publish_for_subscriber: true
 ```
+
+Tag rules are compiled and validated at startup, so a malformed `path` / `cel` / `if` fails fast rather than at publish time.
 
 ## Excluding client info
 
@@ -638,13 +334,13 @@ This prevents the `info` field from being included in publications.
 Use this option when:
 * You want to reduce bandwidth usage
 * Client identity is not needed by subscribers
-* You're using transformations to provide necessary metadata in publication data or tags
+* You're using tags to provide the necessary metadata alongside publications
 
 :::
 
 ## Complete example
 
-Here's a comprehensive example combining all features with transformations:
+Here's a comprehensive example combining all features:
 
 ```json title="config.json"
 {
@@ -664,13 +360,11 @@ Here's a comprehensive example combining all features with transformations:
         "publication_data_format": "json",
         "client_publication": {
           "schemas": ["reaction"],
-          "transform": {
-            "enabled": true,
-            "engine": "jq",
-            "jq": {
-              "program": "{data: {emoji: .data.emoji, message_id: .data.message_id, user_id: .user}, tags: {room: .vars.room_id, user: .user}, idempotency_key: (.user + \":\" + .data.message_id + \":\" + .data.emoji)}"
-            }
-          },
+          "tags": [
+            { "key": "room", "cel": "vars.room_id" },
+            { "key": "emoji", "path": "emoji" },
+            { "key": "user", "cel": "user" }
+          ],
           "exclude_client_info": true
         },
         "allow_publish_for_subscriber": true
@@ -703,23 +397,13 @@ channel:
       publication_data_format: json
       client_publication:
         schemas: [reaction]
-        transform:
-          enabled: true
-          engine: jq
-          jq:
-            program: |
-              {
-                data: {
-                  emoji: .data.emoji,
-                  message_id: .data.message_id,
-                  user_id: .user
-                },
-                tags: {
-                  room: .vars.room_id,
-                  user: .user
-                },
-                idempotency_key: (.user + ":" + .data.message_id + ":" + .data.emoji)
-              }
+        tags:
+          - key: room
+            cel: vars.room_id
+          - key: emoji
+            path: emoji
+          - key: user
+            cel: user
         exclude_client_info: true
       allow_publish_for_subscriber: true
 ```
@@ -758,19 +442,18 @@ Here's an example using `empty_binary` schema for a typing indicator:
 
 ### Schema validation
 
-* Publications are validated **before** transformation and broadcast
+* Publications are validated **before** tag extraction and broadcast
 * If validation fails, the client receives an error and the publication is rejected
 * Multiple schemas act as an OR condition - data must match at least one schema
 * Schema names must reference schemas defined in the top-level `schemas` array
-* The matched schema name is available to transformations via `schema_name` variable
+* The matched schema name is available to tag rules via the `schema_name` variable
 
-### Transformation execution
+### Tag extraction
 
-* Transformations are executed **after** schema validation (if configured)
-* Transform programs are compiled and validated at Centrifugo startup
-* If transformation fails, the client receives an error and the publication is rejected
-* Transformation output replaces the original publication data
-* Tags generated in transformations are attached to publications
+* Tags are extracted **after** schema validation (if configured)
+* Each rule sets one tag from a JSON `path` or a `cel` expression, optionally gated by an `if` condition
+* The original publication `data` is broadcast **unchanged** — tag extraction only adds tags, it does not transform the data
+* Extracted tags are attached to the publication
 
 ### Configuration validation
 
@@ -785,12 +468,10 @@ Centrifugo validates configurations at startup:
   * `empty_binary` requires `publication_data_format: "binary"`
 * All schemas referenced in `client_publication.schemas` must exist
 
-**Transformation validation:**
-* Transform programs are compiled at startup to validate syntax
-* Program `engine` must be either `jq` or `js`
-* Program `program` field can be inline code or a file path
-* If file path is used, file must exist and be readable
-* Invalid programs cause startup failure with descriptive error messages
+**Tag rule validation:**
+* Each tag rule must set exactly one of `path` or `cel`
+* `cel` and `if` expressions are compiled at startup to validate syntax
+* Invalid expressions cause startup failure with descriptive error messages
 
 ### Bottom line
 

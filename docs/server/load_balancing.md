@@ -342,7 +342,7 @@ In all the examples above TLS is terminated at the proxy, and the proxy talks
 plain HTTP to Centrifugo over a trusted internal network — this is the most
 common and simplest setup. Clients connect with `wss://` / `https://`; nothing
 changes on the Centrifugo side. If you instead want Centrifugo to terminate TLS
-itself, see [TLS configuration](./configuration.md#tls).
+itself, see [TLS configuration](./tls.md).
 
 ## The tested example
 

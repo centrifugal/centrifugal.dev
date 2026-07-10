@@ -4,6 +4,8 @@ id: proxy
 title: Proxy events to the backend
 ---
 
+import ProxyExplorer from '@site/src/components/proxy/ProxyExplorer';
+
 Due to its self-hosted nature, Centrifugo can offer an efficient way to proxy client connection events to your application backend, enabling the backend to respond to client connection requests in a customized manner. In other words, this mechanism allows Centrifugo to send (web)hooks to the backend to control the behavior of real-time connections.
 
 For example, you can authenticate connections by responding to requests from Centrifugo to your application backend, subscribe connections to a stable set of channels, refresh client sessions, and handle RPC calls sent by a client over a bidirectional real-time connection. Additionally, you can control subscription and publication permissions using these event proxy hooks.
@@ -465,6 +467,8 @@ This is what an application returns to Centrifugo inside `result` field in of `C
 | `channels`  | `array[string]`                        | no       | allows providing a list of server-side channels to subscribe connection to. See more details about [server-side subscriptions](server_subs.md)                                                  |
 | `subs`      | `map[string]SubscribeOptions`          | no       | map of channels with options to subscribe connection to. Each channel may have [SubscribeOptions](#subscribeoptions) object. See more details about [server-side subscriptions](server_subs.md) |
 | `meta`      | `JSON` object (ex. `{"key": "value"}`) | no       | a custom data to attach to connection (this **won't be exposed to client-side**)                                                                                                                |
+| `caps`      | `array`                                | no       | (**Centrifugo PRO**) capability-based authorization rules to grant the connection. See [capabilities](../pro/capabilities.md)                                                                    |
+| `labels`    | `map[string]string`                    | no       | (**Centrifugo PRO**) connection labels to attach — forwarded to later proxy requests as the `labels` field                                                                                       |
 
 #### SubscribeOptions
 
@@ -619,6 +623,8 @@ Where `expire_at` contains some Unix time in the future (until which connection 
 | `expire_at` | `integer` | yes      | a timestamp in the future when connection must be considered expired                                                       |
 | `info`      | `JSON`    | yes      | update connection info JSON                                                                                                |
 | `b64info`   | `string`  | yes      | alternative to `info` - a binary connection info encoded in base64 format, will be decoded to raw bytes on Centrifugo side |
+| `meta`      | `JSON`    | yes      | update the connection's attached `meta` (server-side only, not exposed to the client)                                     |
+| `caps`      | `array`   | yes      | (**Centrifugo PRO**) refresh capability-based authorization rules for the connection. See [capabilities](../pro/capabilities.md) |
 
 ## Channel-wide proxy events
 
@@ -723,9 +729,11 @@ See below on how to [return an error](#what-if-connection-is-not-allowed-to-subs
 | `encoding`  | `string` | no       | protocol encoding type used (`json` or `binary` at moment)                                                                 |
 | `user`      | `string` | no       | a connection user ID obtained during authentication process                                                                |
 | `channel`   | `string` | no       | a string channel client wants to subscribe to                                                                              |
+| `token`     | `string` | yes      | subscription token (JWT) provided by the client for this channel when [subscription token authorization](channel_token_auth.md) is used — empty otherwise |
 | `meta`      | `JSON`   | yes      | a connection attached meta (off by default, enable with `"include_connection_meta": true`)                                 |
 | `data`      | `JSON`   | yes      | custom data from client sent with subscription request (this field will only be set if provided by a client on subscribe). |
 | `b64data`   | `string` | yes      | optional subscription data from the client in base64 format (if the binary proxy mode is used).                            |
+| `labels`    | `JSON`   | yes      | connection labels attached during authentication (**Centrifugo PRO** only)                                                 |
 
 #### SubscribeResponse
 
@@ -745,6 +753,8 @@ See below on how to [return an error](#what-if-connection-is-not-allowed-to-subs
 | `b64data`   | `string`          | yes      | Custom data to send to the client in subscribe command reply, will be decoded to raw bytes on Centrifugo side before sending to client                                                            |
 | `override`  | `Override` object | yes      | Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields)                                                       |
 | `expire_at` | `integer`         | yes      | a timestamp (Unix seconds in the future) when subscription must be considered expired. If not set or set to `0` subscription won't expire at all. Supported since Centrifugo v5.0.4               |
+| `allow`     | `array[string]`   | yes      | (**Centrifugo PRO**) channel [capabilities](../pro/capabilities.md) to grant the client for this subscription, as capability codes: `sub`, `pub`, `hst`, `prs`                                    |
+| `server_tags_filter` | `object` | yes      | (**Centrifugo PRO**) server-side tag filter applied to this subscription. See [server-side tag filtering](../pro/server_tags_filter.md)                                                          |
 
 #### Override
 
@@ -884,6 +894,7 @@ The expected response example if a publication is allowed:
 | `data`      | `JSON`   | yes      | data sent by client                                                                              |
 | `b64data`   | `string` | yes      | will be set instead of `data` field for binary proxy mode                                        |
 | `meta`      | `JSON`   | yes      | a connection attached meta (off by default, enable with `"include_connection_meta": true`)       |
+| `labels`    | `JSON`   | yes      | connection labels attached during authentication (**Centrifugo PRO** only)                        |
 
 #### PublishResponse
 
@@ -1018,6 +1029,7 @@ Very similar to connection-wide refresh response.
 | `user`      | `string` | no       | a connection user ID obtained during authentication process                                      |
 | `channel`   | `string` | no       | channel for which Subscription is going to expire                                                |
 | `meta`      | `JSON`   | yes      | a connection attached meta (off by default, enable with `"include_connection_meta": true`)       |
+| `labels`    | `JSON`   | yes      | connection labels attached during authentication (**Centrifugo PRO** only)                        |
 
 #### SubRefreshResponse
 
@@ -1119,6 +1131,7 @@ See below on how to [return a custom error](#return-custom-error).
 | `data`      | `JSON`   | yes      | RPC custom data sent by client                                                                   |
 | `b64data`   | `string` | yes      | will be set instead of `data` field for binary proxy mode                                        |
 | `meta`      | `JSON`   | yes      | a connection attached meta (off by default, enable with `"include_connection_meta": true`)       |
+| `labels`    | `JSON`   | yes      | connection labels attached during authentication (**Centrifugo PRO** only)                        |
 
 #### RPCResponse
 
@@ -1450,3 +1463,11 @@ For unidirectional SSE/EventSource (`uni_sse`) and unidirectional HTTP-streaming
 ```
 
 While in this example codes match, there could be situations when protocol level error/disconnect codes can't match directly to HTTP codes, that's why Centrifugo requires an explicit configuration.
+
+## Interactive proxy explorer
+
+The widget below ties together everything from this chapter. Pick a proxy event to see the exact **request** Centrifugo sends, choose how your backend **responds**, and watch **what happens** — plus the matching Centrifugo **configuration** and a **backend handler** sketch (Node / Python / Go / GRPC). Toggle `binary_encoding`, `include_connection_meta`, named proxies and the backend protocol to see how each changes the payloads.
+
+<ProxyExplorer events={['connect', 'refresh', 'subscribe', 'sub_refresh', 'publish', 'rpc']} />
+
+The field names and per-event context (which events carry `client`/`user`/`meta` and forwarded headers, and which don't) are taken from Centrifugo's `proxy.proto`.

@@ -103,7 +103,7 @@ Let's describe various options available to configure Redis engine.
 
 ### `engine.redis.address`
 
-String or array of strings, default `"127.0.0.1:6379"`.
+String or array of strings, default `"redis://127.0.0.1:6379"`.
 
 Redis server address. Using a single address string it's possible to describe standalone Redis, Redis with Sentinel and Redis cluster endpoints. In most cases you will use a single address string here, but see below how passing an array of addresses allows enabling Centrifugo Redis sharding.
 
@@ -174,7 +174,7 @@ How long presence is considered valid if not confirmed by active client connecti
 
 Boolean, default `false`.
 
-By default, Centrifugo uses online presence implementation with ZSET to track expiring items. Redis 7.4 introduced a [per HASH field TTL](https://redis.io/blog/announcing-redis-community-edition-and-redis-stack-74/#:~:text=You%20can%20now%20set%20an%20expiration%20for%20hash%20fields.). Option `redis_presence_hash_field_ttl` allows configuring Centrifugo to use the feature when storing online presence. 
+By default, Centrifugo uses online presence implementation with ZSET to track expiring items. Redis 7.4 introduced a [per HASH field TTL](https://redis.io/blog/announcing-redis-community-edition-and-redis-stack-74/#:~:text=You%20can%20now%20set%20an%20expiration%20for%20hash%20fields.). Option `presence_hash_field_ttl` (under `engine.redis`) allows configuring Centrifugo to use the feature when storing online presence. 
 
 Benefits:
 
@@ -211,7 +211,7 @@ First, you should have [Redis installed and running](https://redis.io/docs/lates
 centrifugo --config=config.json --port=8000 --engine.type=redis
 ```
 
-If your Redis is on the same machine and runs on its default port you can omit `redis_address` option in the command above.
+If your Redis is on the same machine and runs on its default port you can omit `engine.redis.address` option in the command above.
 
 Then open another terminal and start another Centrifugo instance:
 
@@ -445,7 +445,7 @@ Some known options:
 * [AWS Elasticache](https://aws.amazon.com/elasticache/) – it was reported to work, but we suggest you testing the setup including failover tests and the work under load.
 * [Google Memorystore](https://cloud.google.com/memorystore) – was also reported to work, we also suggest you testing the setup including failover tests and the work under load.
 * [KeyDB](https://keydb.dev/) – should work fine with Centrifugo, no known problems at this point regarding Centrifugo compatibility.
-* [DragonflyDB](https://dragonflydb.io/) - should work fine (if you experience issues with it try enabling `redis_force_resp2` option). We have not tested a Redis Cluster emulation mode provided by DragonflyDB yet. We suggest you testing the setup including failover tests and work under load.
+* [DragonflyDB](https://dragonflydb.io/) - should work fine (if you experience issues with it try enabling `engine.redis.force_resp2` option). We have not tested a Redis Cluster emulation mode provided by DragonflyDB yet. We suggest you testing the setup including failover tests and work under load.
 * [Valkey](https://github.com/valkey-io/valkey) – should work fine since it's based on Redis v7, but no tests were performed by Centrifugal Labs.
 
 ## Separate broker and presence manager

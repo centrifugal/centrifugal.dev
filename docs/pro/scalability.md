@@ -8,7 +8,7 @@ Centrifugo PRO comes with several options to reduce load on Engine – specifica
 
 ## Singleflight
 
-Centrifugo PRO provides an additional boolean option `use_singleflight` (default `false`). When this option is enabled, Centrifugo will automatically try to merge identical requests to history, online presence, or presence stats issued at the same time into one real network request. It will do this by using an in-memory component called `singleflight`.
+Centrifugo PRO provides an additional boolean option `singleflight.enabled` (default `false`). When this option is enabled, Centrifugo will automatically try to merge identical requests to history, online presence, or presence stats issued at the same time into one real network request. It will do this by using an in-memory component called `singleflight`.
 
 ![Singleflight](/img/singleflight.png)
 
@@ -36,7 +36,7 @@ To enable:
 }
 ```
 
-Or via `CENTRIFUGO_USE_SINGLEFLIGHT` environment variable.
+Or via `CENTRIFUGO_SINGLEFLIGHT_ENABLED` environment variable.
 
 ## Shared position sync
 
@@ -106,9 +106,8 @@ For Redis Map Broker, the same option offloads PUB/SUB subscriptions to replica 
     "type": "redis",
     "redis": {
       "address": "localhost:6379",
-      "replica": {
-        "enabled": true,
-        "address": "localhost:6380"
+      "replica_client": {
+        "enabled": true
       },
       "subscribe_on_replica": true
     }

@@ -416,7 +416,7 @@ For automatic certificates from Let's Encrypt add into configuration file:
   "http_server": {
     "tls_autocert": {
       "enabled": true,
-      "host_whitelist": "www.example.com",
+      "host_whitelist": ["www.example.com"],
       "cache_dir": "/tmp/certs",
       "email": "user@example.com",
       "http": true,
@@ -428,8 +428,7 @@ For automatic certificates from Let's Encrypt add into configuration file:
 
 `http_server.tls_autocert.enabled` (boolean) says Centrifugo that you want automatic certificate handling using ACME provider.
 
-`http_server.tls_autocert.host_whitelist` (string) is a string with your app domain address. This can be comma-separated
-list. It's optional but recommended for extra security.
+`http_server.tls_autocert.host_whitelist` (array of strings) is a list of your app domain addresses ACME will be allowed to issue certificates for. It's optional but recommended for extra security.
 
 `http_server.tls_autocert.cache_dir` (string) is a path to a folder to cache issued certificate files. This is optional
 but will increase performance.
@@ -955,7 +954,7 @@ centrifuge.rpc('ping', {}).then(function() {
 })
 ```
 
-If you are not happy with method name `ping` – you can use a different one by setting `rpc.ping_method` option to a string you want:
+If you are not happy with method name `ping` – you can use a different one by setting `rpc.ping.method` option to a string you want:
 
 ```json title="config.json"
 {

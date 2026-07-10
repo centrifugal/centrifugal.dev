@@ -38,10 +38,11 @@ First, you need to create configuration for additional brokers:
 }
 ```
 
-At this point Centrifugo PRO supports two broker types:
+At this point Centrifugo PRO supports three broker types:
 
 * `redis` - inherits all the possibilities of Centrifugo [built-in Redis Engine](../server/engines.md#redis-engine)
 * `nats` –  inherits all the possibilities of Centrifugo [integration with Nats broker](../server/engines.md#nats-broker).
+* `postgres` – inherits all the possibilities of Centrifugo [PostgreSQL broker](../server/engines.md#postgresql-broker).
 
 These brokers inherit all options described in the [Engines and scalability](../server/engines.md) chapter. The only difference is that it's possible to specify which custom broker to use inside a channel namespace:
 

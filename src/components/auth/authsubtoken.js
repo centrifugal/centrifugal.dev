@@ -4,6 +4,8 @@
 // verification is out of scope. OSS only: the PRO `allow` capability claim is
 // not modeled here.
 
+import { audToString, expState, isNbfFuture } from './jwtdecode';
+
 const EXP_FUTURE = 1893456000; // 2030-01-01
 const EXP_PAST = 1577836800;   // 2020-01-01
 
@@ -69,10 +71,14 @@ export function decideSubscribe(state) {
     trace.push(step('iss', 'Issuer', 'off', 'client.token.issuer not set — issuer is not verified.'));
   }
 
-  // 3. Expiration (exp).
+  // 3. Expiration (exp) and not-before (nbf).
   if (state.exp === 'expired') {
     trace.push(step('exp', 'Expiration', 'fail', 'exp is in the past — token expired.'));
     return { accepted: false, reason: 'token expired', trace };
+  }
+  if (state.nbfFuture) {
+    trace.push(step('exp', 'Expiration', 'fail', 'nbf (not before) is in the future — the token is not valid yet.'));
+    return { accepted: false, reason: 'token not yet valid (nbf)', trace };
   }
   trace.push(step('exp', 'Expiration', 'pass', state.exp === 'none' ? 'No exp claim — the token itself never expires.' : 'exp is in the future.'));
 
@@ -107,6 +113,38 @@ export function decideSubscribe(state) {
     overrides,
   };
   return { accepted: true, trace, subscription, infoError };
+}
+
+// Map decoded JWT claims onto the state shape decideSubscribe understands. cfg
+// carries context not in the token: expected audience / issuer and the
+// connection's authenticated user (for the sub == connection user check).
+export function claimsToSubState(payload, cfg) {
+  const p = payload || {};
+  const c = cfg || {};
+  const { exp, expireAt } = expState(p);
+  const override = p.override && typeof p.override === 'object' ? p.override : {};
+  const overrides = {};
+  for (const [k, name] of OVERRIDES) {
+    const v = override[name];
+    // Source: a present BoolValue pointer (even `{}`) is an override; its
+    // zero value is false. Absent / null → no override (namespace default).
+    overrides[k] = v && typeof v === 'object' ? (v.value ? 'true' : 'false') : 'unset';
+  }
+  return {
+    userID: p.sub != null ? String(p.sub) : '',
+    anonymous: p.sub == null || p.sub === '',
+    channel: p.channel != null ? String(p.channel) : '',
+    exp,
+    expireAt,
+    nbfFuture: isNbfFuture(p),
+    infoText: p.info !== undefined ? JSON.stringify(p.info) : '',
+    overrides,
+    tokenAud: audToString(p.aud),
+    tokenIss: p.iss != null ? String(p.iss) : '',
+    cfgAudience: c.cfgAudience || '',
+    cfgIssuer: c.cfgIssuer || '',
+    connUser: c.connUser || '',
+  };
 }
 
 export function buildSubTokenPayload(state) {

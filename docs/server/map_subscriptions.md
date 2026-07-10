@@ -5,6 +5,8 @@ sidebar_label: "Map subscriptions 🔮"
 description: "Centrifugo map subscriptions deliver real-time key-value collections managed by the server — snapshot on subscribe, catch-up after disconnect, and live updates."
 ---
 
+import ProxyExplorer from '@site/src/components/proxy/ProxyExplorer';
+
 :::caution Experimental
 
 Map subscriptions is an experimental feature available since **Centrifugo v6.8.0**. All its parts — configuration options, client SDK API, server API — may change in future releases based on user feedback. At this point only `centrifuge-js` SDK supports map subscriptions on the client side.
@@ -549,6 +551,10 @@ All fields are optional. Any field left unset falls back to the value sent by th
 | `key`             | `string`              | Override the key being removed. Leave unset to approve the client-supplied key.                                                                                                                                                        |
 | `tags`            | `map<string, string>` | Tags attached to the removal publication. When unset, the broker reads the removed entry's stored tags automatically. Set explicitly only to override. |
 | `idempotency_key` | `string`              | Idempotency key for safe retries on removal.                                                                                                                                                                                           |
+
+## Interactive explorer
+
+<ProxyExplorer events={['map_publish', 'map_remove']} />
 
 ## Pagination and catch-up tuning
 

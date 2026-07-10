@@ -33,7 +33,7 @@ The main advantage is that unidirectional transports do not require special clie
 
 However, the tradeoff is that with unidirectional transports, you won't get some of Centrifugo's advanced features implemented in bidirectional SDKs, such as dynamic subscriptions/unsubscriptions, automatic message recovery on reconnect, ability to send RPC to the backend over a persistent real-time connection.
 
-At this point, unidirectional transports only support JSON format for communication.
+Most unidirectional transports use JSON. The exception is [unidirectional gRPC](./uni_grpc.md), which uses binary Protobuf. See each transport's "Supported data formats" section for details.
 
 Learn more about [unidirectional protocol](./uni_client_protocol.md) and available unidirectional transports.
 

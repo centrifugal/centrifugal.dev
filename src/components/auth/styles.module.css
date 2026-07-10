@@ -8,6 +8,7 @@
 .header {
   display: flex;
   align-items: center;
+  flex-wrap: wrap; /* title + mode toggle + badge must not overflow on narrow screens */
   gap: 0.6rem;
   padding: 0.7rem 1rem;
   border-bottom: 1px solid var(--ifm-color-emphasis-200);
@@ -133,6 +134,21 @@ html[data-theme='dark'] .tip { background: linear-gradient(135deg, rgba(0, 224, 
   cursor: pointer;
 }
 .exampleBtn:hover { background: var(--ifm-color-primary); color: #fff; }
+
+/* Inline "use the token's own value" affordance next to a hint label. */
+.useBtn {
+  font: inherit;
+  font-size: 0.68rem;
+  padding: 0 0.3rem;
+  margin-left: 0.4rem;
+  border: 1px solid var(--ifm-color-primary);
+  border-radius: 4px;
+  color: var(--ifm-color-primary);
+  background: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.useBtn:hover { background: var(--ifm-color-primary); color: #fff; }
 
 .provCard {
   margin: 0.4rem 0;

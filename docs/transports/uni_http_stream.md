@@ -37,7 +37,7 @@ JSON
 
 ## Ping
 
-Centrifugo will send different message types to a connection. Every message is JSON encoded. A special JSON value `null` is used as a PING message. You can simply ignore it on the client side upon receiving. You can ignore such messages or use them to detect broken connections (nothing received from a server for a long time).
+Centrifugo will send different message types to a connection. Every message is JSON encoded. A special empty JSON object `{}` is used as a PING message. You can simply ignore it on the client side upon receiving. You can ignore such messages or use them to detect broken connections (nothing received from a server for a long time).
 
 ## `uni_http_stream`
 
@@ -164,7 +164,7 @@ fetch('http://localhost:8000/connection/uni_http_stream', {
 
                 // Process each complete line.
                 for (const line of lines) {
-                    if (!line.trim()) continue; // Skip empty lines (e.g., ping messages could be null)
+                    if (!line.trim()) continue; // Skip empty lines (server pings arrive as `{}`)
 
                     try {
                         const message = JSON.parse(line);

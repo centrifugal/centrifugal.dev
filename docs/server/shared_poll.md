@@ -7,6 +7,7 @@ description: "Shared poll subscriptions let Centrifugo poll your backend on a sc
 
 import SharedPollDiagram from '@site/src/components/SharedPollDiagram';
 import SharedPollPublishDiagram from '@site/src/components/SharedPollPublishDiagram';
+import ProxyExplorer from '@site/src/components/proxy/ProxyExplorer';
 
 :::caution Experimental
 
@@ -570,6 +571,10 @@ Return an error to signal a problem:
 ```
 
 When an error is returned, Centrifugo skips the refresh cycle and retries on the next interval.
+
+## Interactive explorer
+
+<ProxyExplorer events={['shared_poll_refresh']} />
 
 ## Direct publish
 

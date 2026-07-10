@@ -172,7 +172,7 @@ It will automatically generate HMAC SHA-256 based subscription token for channel
 You can change token TTL with `-t` flag (number of seconds):
 
 ```
-centrifugo gentoken -c config.json -u 28282 -s channel -t 3600
+centrifugo gensubtoken -c config.json -u 28282 -s channel -t 3600
 ```
 
 This way generated token will be valid for 1 hour.

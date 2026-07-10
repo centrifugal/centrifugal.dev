@@ -52,7 +52,7 @@ Enables unidirectional GRPC endpoint.
 
 ### `uni_grpc.port`
 
-String, default `"11000"`.
+Integer, default `11000`.
 
 Port to listen on.
 

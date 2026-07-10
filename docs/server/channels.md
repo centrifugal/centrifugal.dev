@@ -75,7 +75,7 @@ User-limited channels must be enabled for a channel namespace using [allow_user_
 
 Centrifugo maintains compatibility with its previous versions which had concept of private channels. In earlier versions — specifically Centrifugo v1, v2, and v3 — only channels beginning with `$` required a subscription JWT for subscribing. With Centrifugo v4, this is no longer the case; clients can subscribe to any channel if they have a valid subscription token.
 
-However, for namespaces where the `allow_subscribe_for_client` option is activated, Centrifugo prohibits subscriptions to channels that start with the `channel_private_prefix` (which defaults to `$`) unless a subscription token is provided. This restriction is designed to facilitate a secure migration to Centrifugo v4 or later versions.
+However, for namespaces where the `allow_subscribe_for_client` option is activated, Centrifugo prohibits subscriptions to channels that start with the private channel prefix (configured via `channel.private_prefix`, which defaults to `$`) unless a subscription token is provided. This restriction is designed to facilitate a secure migration to Centrifugo v4 or later versions.
 
 ### Channel is just a string
 
@@ -91,7 +91,7 @@ Centrifugo allows configuring a list of channel namespaces. Namespaces are optio
 
 A namespace is a container for options applied to channels that start with the namespace name + `:` separator. For example, if you define a namespace named `personal` in the configuration, all channels starting with `personal:` (such as `personal:1` or `personal:2`) will inherit the options defined for the `personal` namespace. This gives you great control over channel behavior, allowing you to set different options for various real-time features in your application.
 
-Namespace has a name, and can contain all the [channel options](#channel-options). Namespace `name` is required to be set. Name of namespace must be unique, must consist of letters, numbers, underscores, or hyphens and be more than 2 symbols length i.e. satisfy regexp `^[-a-zA-Z0-9_]{2,}$`.
+Namespace has a name, and can contain all the [channel options](#channel-options). Namespace `name` is required to be set. Name of namespace must be unique, must consist of letters, numbers, underscores, or hyphens and be at least 2 symbols in length i.e. satisfy regexp `^[-a-zA-Z0-9_]{2,}$`.
 
 When you want to use specific namespace options your channel must be prefixed with namespace name and `:` separator: `public:messages`, `gossips:messages` are two channels in `public` and `gossips` namespaces.
 
@@ -313,6 +313,10 @@ If Centrifugo detects a bad position of the client (i.e. potential message loss)
 
 If positioning is not forced then client can provide a corresponding Subscription option to enable it – but it should have permissions to access channel history (by having an explicit capability or if allowed on a namespace level).
 
+### allow_positioning
+
+`allow_positioning` (boolean, default `false`) – when on clients may enable `positioned` mode themselves when subscribing to channels in a namespace, instead of it being forced for everyone via `force_positioning`. As with forced positioning, `history_size` and `history_ttl` **must be set** for the namespace since Centrifugo uses channel history to check a client's position in the stream. A client opting in also needs permission to access channel history.
+
 ### force_recovery
 
 `force_recovery` (boolean, default `false`) – when the `force_recovery` option is on Centrifugo forces all subscriptions in a namespace to be `recoverable`. When enabled Centrifugo will try to recover missed publications in channels after a client reconnects for some reason (bad internet connection for example). Also when the recovery feature is on Centrifugo automatically enables properties of the `force_positioning` option described above.
@@ -326,6 +330,10 @@ If recovery is not forced then client can provide a corresponding Subscription o
 Not all real-time events require this feature turned on so think wisely when you need this. When this option is turned on your application should be designed in a way to tolerate duplicate messages coming from a channel (currently Centrifugo returns recovered publications in order and without duplicates but this is an implementation detail that can be theoretically changed in the future). See more details about how recovery works in [special chapter](history_and_recovery.md).
 
 :::
+
+### allow_recovery
+
+`allow_recovery` (boolean, default `false`) – when on clients may enable `recoverable` mode themselves when subscribing to channels in a namespace, instead of it being forced for everyone via `force_recovery`. Like forced recovery it requires `history_size` and `history_ttl` to be set (and enabling recovery turns positioning on automatically), and a client opting in needs permission to access channel history. See more details about how recovery works in the [special chapter](history_and_recovery.md).
 
 ### force_recovery_mode
 

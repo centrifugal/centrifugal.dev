@@ -5,6 +5,8 @@ sidebar_label: Additional event hooks
 title: Additional event hooks
 ---
 
+import ProxyExplorer from '@site/src/components/proxy/ProxyExplorer';
+
 Centrifugo PRO provides additional server-to-backend event hooks beyond the [standard proxy events](../server/proxy.md). These hooks notify your backend about channel-level state changes without requiring a client connection context.
 
 ## Channel state events
@@ -237,14 +239,18 @@ Expected response example:
 
 If cache empty proxy is defined, but Centrifugo can't reach it – then subscription request which triggered the event will be rejected with the internal error.
 
-#### CacheEmptyRequest
+#### NotifyCacheEmptyRequest
 
 | Field     | Type     | Required | Description                            |
 |-----------|----------|----------|----------------------------------------|
 | `channel` | `string` | yes      | A channel in which cache miss occurred |
 
-#### CacheEmptyResult
+#### NotifyCacheEmptyResult
 
 | Field       | Type      | Required | Description                                                                                                                             |
 |-------------|-----------|----------|-----------------------------------------------------------------------------------------------------------------------------------------|
 | `populated` | `boolean` | no       | Notify Centrifugo that channel cache was populated by the app backend – in this case Centrifugo will try to recover state one more time |
+
+## Interactive explorer
+
+<ProxyExplorer events={['state', 'cache_empty']} />

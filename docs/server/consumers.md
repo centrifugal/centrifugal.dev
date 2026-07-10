@@ -181,7 +181,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER centrifugo_notify_partition_trigger
-AFTER INSERT ON chat_outbox
+AFTER INSERT ON centrifugo_outbox
 FOR EACH ROW
 EXECUTE FUNCTION centrifugo_notify_partition_change();
 ```

@@ -5,6 +5,8 @@ sidebar_label: Proxy subscription streams
 title: Proxy subscription streams
 ---
 
+import ProxyExplorer from '@site/src/components/proxy/ProxyExplorer';
+
 :::caution Experimental
 
 This is an experimental extension of Centrifugo [proxy](./proxy.md). We appreciate your feedback to make sure it's useful and solves real-world problems before marking it as stable and committing to the API.
@@ -207,7 +209,7 @@ Note we have increased `grpc.MaxConcurrentStreams` for server to handle more sim
 
 :::
 
-Centrifugo has some rules about messages in streams. Upon stream establishment, Centrifugo expects the backend to send the first message from a stream — this is a `StreamSubscribeResponse` with `SubscribeResponse` in it. Centrifugo waits for this message before replying to the client's subscription command. This way we can communicate the initial state with a client and make sure streaming is properly established with all permission checks passed. After sending the initial message you can send events (publications) as they appear in your system.
+Centrifugo has some rules about messages in streams. Upon stream establishment, the backend **must** send the first message on the stream as a `StreamSubscribeResponse` containing a `SubscribeResponse` — this is required, and Centrifugo **rejects the stream** if the first message does not carry a `SubscribeResponse`. Centrifugo waits for this message before replying to the client's subscription command. The `SubscribeResponse` accepts the subscription (via `result`) or rejects it (via `error` / `disconnect`); this way we can communicate the initial state with a client and make sure streaming is properly established with all permission checks passed. After sending the initial message you can send events (publications) as they appear in your system.
 
 Now everything should be ready to test it out from the client side: just subscribe to a channel where stream proxy is on with our SDK – and you will see your stream handler called and data streamed from it to a client. For example, with our Javascript SDK:
 
@@ -333,6 +335,10 @@ Here is an example how you can define different subscribe stream proxies for dif
   ]
 }
 ```
+
+## Interactive explorer
+
+<ProxyExplorer events={['subscribe_stream']} />
 
 ## Full example
 

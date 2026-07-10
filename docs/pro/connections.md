@@ -109,6 +109,8 @@ At least one of `user`, `expression`, or `label_filter` must be set — the API 
 | `protocol`    | `string`            | no       | client connection protocol (json or protobuf)                                          |
 | `user`        | `string`            | yes      | client user ID                                                                         |
 | `state`       | `ConnectionState`   | yes      | connection state                                                                       |
+| `connected_at_ms`      | `int64`    | yes      | Unix time (in milliseconds) when the connection was established                        |
+| `ping_pong_latency_ms` | `int64`    | yes      | last measured client ping/pong round-trip latency in milliseconds (can be `-1` if not available) |
 | `labels`      | `map[string]string` | yes      | [client labels](./client_authentication.md#client-labels) attached to the connection   |
 
 #### ConnectionState object

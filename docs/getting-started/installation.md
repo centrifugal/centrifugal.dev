@@ -13,7 +13,6 @@ For local development, you can download the prebuilt Centrifugo binary release (
 Binary releases are available on GitHub. [Download the latest release](https://github.com/centrifugal/centrifugo/releases) for your operating system, unpack it, and you are done. Centrifugo is pre-built for:
 
 * Linux 64-bit (linux_amd64)
-* Linux 32-bit (linux_386)
 * Linux ARM 64-bit (linux_arm64)
 * MacOS (darwin_amd64)
 * MacOS on Apple Silicon (darwin_arm64)

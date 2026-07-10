@@ -28,9 +28,7 @@ Add the following options to the configuration file:
 
 – to configure the proxy endpoint and timeout of the cache empty proxy event.
 
-To actually enable the proxy for desired channels you must use the `cache_empty_proxy_name` channel namespace option and point it to the name of the proxy to use, for example `unified` which we just configured. Let's enable it for channels without namespace:
-
-For example, to enable cache empty proxy for channels without namespace define `proxy_cache_empty` boolean flag on a top configuration level:
+To actually enable the proxy for desired channels, set the `cache_empty_proxy_enabled` boolean option in a channel namespace (or in `channel.without_namespace`). By default it uses the `default` cache empty proxy — the `channel.proxy.cache_empty` configured above; to use a [named proxy](../server/proxy.md#per-namespace-custom-proxies) instead, also set `cache_empty_proxy_name`. Let's enable it for channels without namespace:
 
 ```json title="config.json"
 {

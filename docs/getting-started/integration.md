@@ -28,7 +28,7 @@ The first thing you need to do is download/install the Centrifugo server. See th
 
 ## 1. Configure Centrifugo
 
-Create a basic configuration file with `token_hmac_secret_key` (or `token_rsa_public_key`) and `api_key` set, and then run Centrifugo. See [this chapter](../server/configuration.md) for details about `token_hmac_secret_key`/`token_rsa_public_key` and the [chapter about server API](../server/server_api.md) for the API description. The simplest way to do this automatically is by using the `genconfig` command:
+Create a basic configuration file with `client.token.hmac_secret_key` (or `client.token.rsa_public_key`) and `http_api.key` set, and then run Centrifugo. See [this chapter](../server/configuration.md) for details about `client.token.hmac_secret_key`/`client.token.rsa_public_key` and the [chapter about server API](../server/server_api.md) for the API description. The simplest way to do this automatically is by using the `genconfig` command:
 
 ```
 ./centrifugo genconfig

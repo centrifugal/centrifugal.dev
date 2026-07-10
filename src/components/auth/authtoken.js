@@ -5,6 +5,8 @@
 // authenticated connection becomes. OSS only: no caps / meta_from_claim /
 // labels (those are PRO).
 
+import { audToString, expState, isNbfFuture } from './jwtdecode';
+
 // Fixed, obviously-placeholder timestamps so snippets are deterministic.
 const EXP_FUTURE = 1893456000; // 2030-01-01
 const EXP_PAST = 1577836800;   // 2020-01-01
@@ -73,10 +75,14 @@ export function decideConnect(state) {
     return { accepted: false, reason: 'channel claim in connection token', trace };
   }
 
-  // 4. Expiration (exp). Absent exp = no token expiration.
+  // 4. Expiration (exp) and not-before (nbf). Absent exp = no token expiration.
   if (state.exp === 'expired') {
     trace.push(step('exp', 'Expiration', 'fail', 'exp is in the past — token expired.'));
     return { accepted: false, reason: 'token expired', trace };
+  }
+  if (state.nbfFuture) {
+    trace.push(step('exp', 'Expiration', 'fail', 'nbf (not before) is in the future — the token is not valid yet.'));
+    return { accepted: false, reason: 'token not yet valid (nbf)', trace };
   }
   trace.push(step('exp', 'Expiration', 'pass', state.exp === 'none' ? 'No exp claim — the token itself never expires.' : 'exp is in the future.'));
 
@@ -95,6 +101,37 @@ export function decideConnect(state) {
     meta: metaError ? undefined : meta.value,
   };
   return { accepted: true, trace, connection, infoError, metaError };
+}
+
+// Map decoded JWT claims onto the state shape decideConnect understands, so a
+// pasted token reuses the exact same claim-check trace as the builder. cfg
+// carries the server-side expectations that aren't in the token itself
+// (expected audience / issuer).
+export function claimsToConnectState(payload, cfg) {
+  const p = payload || {};
+  const c = cfg || {};
+  const { exp, expireAt } = expState(p);
+  // Server-side subscriptions: `subs` (map) takes precedence over `channels`
+  // (array), matching VerifyConnectToken.
+  let channelsText = '';
+  if (p.subs && typeof p.subs === 'object' && !Array.isArray(p.subs)) channelsText = Object.keys(p.subs).join(', ');
+  else if (Array.isArray(p.channels)) channelsText = p.channels.join(', ');
+  return {
+    userID: p.sub != null ? String(p.sub) : '',
+    anonymous: p.sub == null || p.sub === '',
+    exp,
+    expireAt,
+    nbfFuture: isNbfFuture(p),
+    channelsText,
+    infoText: p.info !== undefined ? JSON.stringify(p.info) : '',
+    metaText: p.meta !== undefined ? JSON.stringify(p.meta) : '',
+    tokenAud: audToString(p.aud),
+    tokenIss: p.iss != null ? String(p.iss) : '',
+    cfgAudience: c.cfgAudience || '',
+    cfgIssuer: c.cfgIssuer || '',
+    // Source rejects only a non-empty channel claim (claims.Channel != "").
+    channelClaim: p.channel != null && String(p.channel) !== '',
+  };
 }
 
 export function buildTokenPayload(state) {
