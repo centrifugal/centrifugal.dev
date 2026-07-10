@@ -685,7 +685,6 @@ For local development, you can download the prebuilt Centrifugo binary release (
 Binary releases are available on GitHub. [Download the latest release](https://github.com/centrifugal/centrifugo/releases) for your operating system, unpack it, and you are done. Centrifugo is pre-built for:
 
 * Linux 64-bit (linux_amd64)
-* Linux 32-bit (linux_386)
 * Linux ARM 64-bit (linux_arm64)
 * MacOS (darwin_amd64)
 * MacOS on Apple Silicon (darwin_arm64)
@@ -882,7 +881,7 @@ The first thing you need to do is download/install the Centrifugo server. See th
 
 ## 1. Configure Centrifugo
 
-Create a basic configuration file with `token_hmac_secret_key` (or `token_rsa_public_key`) and `api_key` set, and then run Centrifugo. See [this chapter](../server/configuration.md) for details about `token_hmac_secret_key`/`token_rsa_public_key` and the [chapter about server API](../server/server_api.md) for the API description. The simplest way to do this automatically is by using the `genconfig` command:
+Create a basic configuration file with `client.token.hmac_secret_key` (or `client.token.rsa_public_key`) and `http_api.key` set, and then run Centrifugo. See [this chapter](../server/configuration.md) for details about `client.token.hmac_secret_key`/`client.token.rsa_public_key` and the [chapter about server API](../server/server_api.md) for the API description. The simplest way to do this automatically is by using the `genconfig` command:
 
 ```
 ./centrifugo genconfig
@@ -2528,7 +2527,7 @@ The main advantage is that unidirectional transports do not require special clie
 
 However, the tradeoff is that with unidirectional transports, you won't get some of Centrifugo's advanced features implemented in bidirectional SDKs, such as dynamic subscriptions/unsubscriptions, automatic message recovery on reconnect, ability to send RPC to the backend over a persistent real-time connection.
 
-At this point, unidirectional transports only support JSON format for communication.
+Most unidirectional transports use JSON. The exception is [unidirectional gRPC](./uni_grpc.md), which uses binary Protobuf. See each transport's "Supported data formats" section for details.
 
 Learn more about [unidirectional protocol](./uni_client_protocol.md) and available unidirectional transports.
 
@@ -3049,7 +3048,7 @@ Enables unidirectional GRPC endpoint.
 
 ### `uni_grpc.port`
 
-String, default `"11000"`.
+Integer, default `11000`.
 
 Port to listen on.
 
@@ -3116,7 +3115,7 @@ JSON
 
 ## Ping
 
-Centrifugo will send different message types to a connection. Every message is JSON encoded. A special JSON value `null` is used as a PING message. You can simply ignore it on the client side upon receiving. You can ignore such messages or use them to detect broken connections (nothing received from a server for a long time).
+Centrifugo will send different message types to a connection. Every message is JSON encoded. A special empty JSON object `{}` is used as a PING message. You can simply ignore it on the client side upon receiving. You can ignore such messages or use them to detect broken connections (nothing received from a server for a long time).
 
 ## `uni_http_stream`
 
@@ -3243,7 +3242,7 @@ fetch('http://localhost:8000/connection/uni_http_stream', {
 
                 // Process each complete line.
                 for (const line of lines) {
-                    if (!line.trim()) continue; // Skip empty lines (e.g., ping messages could be null)
+                    if (!line.trim()) continue; // Skip empty lines (server pings arrive as `{}`)
 
                     try {
                         const message = JSON.parse(line);
@@ -5325,7 +5324,7 @@ User-limited channels must be enabled for a channel namespace using [allow_user_
 
 Centrifugo maintains compatibility with its previous versions which had concept of private channels. In earlier versions — specifically Centrifugo v1, v2, and v3 — only channels beginning with `$` required a subscription JWT for subscribing. With Centrifugo v4, this is no longer the case; clients can subscribe to any channel if they have a valid subscription token.
 
-However, for namespaces where the `allow_subscribe_for_client` option is activated, Centrifugo prohibits subscriptions to channels that start with the `channel_private_prefix` (which defaults to `$`) unless a subscription token is provided. This restriction is designed to facilitate a secure migration to Centrifugo v4 or later versions.
+However, for namespaces where the `allow_subscribe_for_client` option is activated, Centrifugo prohibits subscriptions to channels that start with the private channel prefix (configured via `channel.private_prefix`, which defaults to `$`) unless a subscription token is provided. This restriction is designed to facilitate a secure migration to Centrifugo v4 or later versions.
 
 ### Channel is just a string
 
@@ -5341,7 +5340,7 @@ Centrifugo allows configuring a list of channel namespaces. Namespaces are optio
 
 A namespace is a container for options applied to channels that start with the namespace name + `:` separator. For example, if you define a namespace named `personal` in the configuration, all channels starting with `personal:` (such as `personal:1` or `personal:2`) will inherit the options defined for the `personal` namespace. This gives you great control over channel behavior, allowing you to set different options for various real-time features in your application.
 
-Namespace has a name, and can contain all the [channel options](#channel-options). Namespace `name` is required to be set. Name of namespace must be unique, must consist of letters, numbers, underscores, or hyphens and be more than 2 symbols length i.e. satisfy regexp `^[-a-zA-Z0-9_]{2,}$`.
+Namespace has a name, and can contain all the [channel options](#channel-options). Namespace `name` is required to be set. Name of namespace must be unique, must consist of letters, numbers, underscores, or hyphens and be at least 2 symbols in length i.e. satisfy regexp `^[-a-zA-Z0-9_]{2,}$`.
 
 When you want to use specific namespace options your channel must be prefixed with namespace name and `:` separator: `public:messages`, `gossips:messages` are two channels in `public` and `gossips` namespaces.
 
@@ -5562,6 +5561,10 @@ If Centrifugo detects a bad position of the client (i.e. potential message loss)
 
 If positioning is not forced then client can provide a corresponding Subscription option to enable it – but it should have permissions to access channel history (by having an explicit capability or if allowed on a namespace level).
 
+### allow_positioning
+
+`allow_positioning` (boolean, default `false`) – when on clients may enable `positioned` mode themselves when subscribing to channels in a namespace, instead of it being forced for everyone via `force_positioning`. As with forced positioning, `history_size` and `history_ttl` **must be set** for the namespace since Centrifugo uses channel history to check a client's position in the stream. A client opting in also needs permission to access channel history.
+
 ### force_recovery
 
 `force_recovery` (boolean, default `false`) – when the `force_recovery` option is on Centrifugo forces all subscriptions in a namespace to be `recoverable`. When enabled Centrifugo will try to recover missed publications in channels after a client reconnects for some reason (bad internet connection for example). Also when the recovery feature is on Centrifugo automatically enables properties of the `force_positioning` option described above.
@@ -5575,6 +5578,10 @@ If recovery is not forced then client can provide a corresponding Subscription o
 Not all real-time events require this feature turned on so think wisely when you need this. When this option is turned on your application should be designed in a way to tolerate duplicate messages coming from a channel (currently Centrifugo returns recovered publications in order and without duplicates but this is an implementation detail that can be theoretically changed in the future). See more details about how recovery works in [special chapter](history_and_recovery.md).
 
 :::
+
+### allow_recovery
+
+`allow_recovery` (boolean, default `false`) – when on clients may enable `recoverable` mode themselves when subscribing to channels in a namespace, instead of it being forced for everyone via `force_recovery`. Like forced recovery it requires `history_size` and `history_ttl` to be set (and enabling recovery turns positioning on automatically), and a client opting in needs permission to access channel history. See more details about how recovery works in the [special chapter](history_and_recovery.md).
 
 ### force_recovery_mode
 
@@ -6763,7 +6770,7 @@ For automatic certificates from Let's Encrypt add into configuration file:
   "http_server": {
     "tls_autocert": {
       "enabled": true,
-      "host_whitelist": "www.example.com",
+      "host_whitelist": ["www.example.com"],
       "cache_dir": "/tmp/certs",
       "email": "user@example.com",
       "http": true,
@@ -6775,8 +6782,7 @@ For automatic certificates from Let's Encrypt add into configuration file:
 
 `http_server.tls_autocert.enabled` (boolean) says Centrifugo that you want automatic certificate handling using ACME provider.
 
-`http_server.tls_autocert.host_whitelist` (string) is a string with your app domain address. This can be comma-separated
-list. It's optional but recommended for extra security.
+`http_server.tls_autocert.host_whitelist` (array of strings) is a list of your app domain addresses ACME will be allowed to issue certificates for. It's optional but recommended for extra security.
 
 `http_server.tls_autocert.cache_dir` (string) is a path to a folder to cache issued certificate files. This is optional
 but will increase performance.
@@ -7302,7 +7308,7 @@ centrifuge.rpc('ping', {}).then(function() {
 })
 ```
 
-If you are not happy with method name `ping` – you can use a different one by setting `rpc.ping_method` option to a string you want:
+If you are not happy with method name `ping` – you can use a different one by setting `rpc.ping.method` option to a string you want:
 
 ```json title="config.json"
 {
@@ -7885,7 +7891,7 @@ It will automatically generate HMAC SHA-256 based subscription token for channel
 You can change token TTL with `-t` flag (number of seconds):
 
 ```
-centrifugo gentoken -c config.json -u 28282 -s channel -t 3600
+centrifugo gensubtoken -c config.json -u 28282 -s channel -t 3600
 ```
 
 This way generated token will be valid for 1 hour.
@@ -8102,7 +8108,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER centrifugo_notify_partition_trigger
-AFTER INSERT ON chat_outbox
+AFTER INSERT ON centrifugo_outbox
 FOR EACH ROW
 EXECUTE FUNCTION centrifugo_notify_partition_change();
 ```
@@ -9477,7 +9483,7 @@ Let's describe various options available to configure Redis engine.
 
 ### `engine.redis.address`
 
-String or array of strings, default `"127.0.0.1:6379"`.
+String or array of strings, default `"redis://127.0.0.1:6379"`.
 
 Redis server address. Using a single address string it's possible to describe standalone Redis, Redis with Sentinel and Redis cluster endpoints. In most cases you will use a single address string here, but see below how passing an array of addresses allows enabling Centrifugo Redis sharding.
 
@@ -9548,7 +9554,7 @@ How long presence is considered valid if not confirmed by active client connecti
 
 Boolean, default `false`.
 
-By default, Centrifugo uses online presence implementation with ZSET to track expiring items. Redis 7.4 introduced a [per HASH field TTL](https://redis.io/blog/announcing-redis-community-edition-and-redis-stack-74/#:~:text=You%20can%20now%20set%20an%20expiration%20for%20hash%20fields.). Option `redis_presence_hash_field_ttl` allows configuring Centrifugo to use the feature when storing online presence. 
+By default, Centrifugo uses online presence implementation with ZSET to track expiring items. Redis 7.4 introduced a [per HASH field TTL](https://redis.io/blog/announcing-redis-community-edition-and-redis-stack-74/#:~:text=You%20can%20now%20set%20an%20expiration%20for%20hash%20fields.). Option `presence_hash_field_ttl` (under `engine.redis`) allows configuring Centrifugo to use the feature when storing online presence. 
 
 Benefits:
 
@@ -9585,7 +9591,7 @@ First, you should have [Redis installed and running](https://redis.io/docs/lates
 centrifugo --config=config.json --port=8000 --engine.type=redis
 ```
 
-If your Redis is on the same machine and runs on its default port you can omit `redis_address` option in the command above.
+If your Redis is on the same machine and runs on its default port you can omit `engine.redis.address` option in the command above.
 
 Then open another terminal and start another Centrifugo instance:
 
@@ -9819,7 +9825,7 @@ Some known options:
 * [AWS Elasticache](https://aws.amazon.com/elasticache/) – it was reported to work, but we suggest you testing the setup including failover tests and the work under load.
 * [Google Memorystore](https://cloud.google.com/memorystore) – was also reported to work, we also suggest you testing the setup including failover tests and the work under load.
 * [KeyDB](https://keydb.dev/) – should work fine with Centrifugo, no known problems at this point regarding Centrifugo compatibility.
-* [DragonflyDB](https://dragonflydb.io/) - should work fine (if you experience issues with it try enabling `redis_force_resp2` option). We have not tested a Redis Cluster emulation mode provided by DragonflyDB yet. We suggest you testing the setup including failover tests and work under load.
+* [DragonflyDB](https://dragonflydb.io/) - should work fine (if you experience issues with it try enabling `engine.redis.force_resp2` option). We have not tested a Redis Cluster emulation mode provided by DragonflyDB yet. We suggest you testing the setup including failover tests and work under load.
 * [Valkey](https://github.com/valkey-io/valkey) – should work fine since it's based on Redis v7, but no tests were performed by Centrifugal Labs.
 
 ## Separate broker and presence manager
@@ -11071,7 +11077,7 @@ In all the examples above TLS is terminated at the proxy, and the proxy talks
 plain HTTP to Centrifugo over a trusted internal network — this is the most
 common and simplest setup. Clients connect with `wss://` / `https://`; nothing
 changes on the Centrifugo side. If you instead want Centrifugo to terminate TLS
-itself, see [TLS configuration](./configuration.md#tls).
+itself, see [TLS configuration](./tls.md).
 
 ## The tested example
 
@@ -11101,6 +11107,8 @@ HTTP-streaming and SSE**, on both **plaintext and TLS**.
 ---
 
 ## Map subscriptions
+
+import ProxyExplorer from '@site/src/components/proxy/ProxyExplorer';
 
 :::caution Experimental
 
@@ -11647,6 +11655,10 @@ All fields are optional. Any field left unset falls back to the value sent by th
 | `tags`            | `map<string, string>` | Tags attached to the removal publication. When unset, the broker reads the removed entry's stored tags automatically. Set explicitly only to override. |
 | `idempotency_key` | `string`              | Idempotency key for safe retries on removal.                                                                                                                                                                                           |
 
+## Interactive explorer
+
+<ProxyExplorer events={['map_publish', 'map_remove']} />
+
 ## Pagination and catch-up tuning
 
 The following options are configured per channel namespace inside the `map` block:
@@ -12041,7 +12053,7 @@ To enable automatic export to Graphite (via TCP):
 
 By default, stats will be aggregated over 10 seconds intervals inside Centrifugo and then pushed to Graphite over TCP connection.
 
-If you need to change this aggregation interval use the `graphite_interval` option (in seconds, default `10`).
+If you need to change this aggregation interval use the `graphite.interval` option (a [duration](./configuration.md#duration-type), default `"10s"`).
 
 ### Native histograms
 
@@ -12822,6 +12834,8 @@ The online presence feature of Centrifugo is a highly useful tool for real-time 
 
 ## Proxy events to the backend
 
+import ProxyExplorer from '@site/src/components/proxy/ProxyExplorer';
+
 Due to its self-hosted nature, Centrifugo can offer an efficient way to proxy client connection events to your application backend, enabling the backend to respond to client connection requests in a customized manner. In other words, this mechanism allows Centrifugo to send (web)hooks to the backend to control the behavior of real-time connections.
 
 For example, you can authenticate connections by responding to requests from Centrifugo to your application backend, subscribe connections to a stable set of channels, refresh client sessions, and handle RPC calls sent by a client over a bidirectional real-time connection. Additionally, you can control subscription and publication permissions using these event proxy hooks.
@@ -13283,6 +13297,8 @@ This is what an application returns to Centrifugo inside `result` field in of `C
 | `channels`  | `array[string]`                        | no       | allows providing a list of server-side channels to subscribe connection to. See more details about [server-side subscriptions](server_subs.md)                                                  |
 | `subs`      | `map[string]SubscribeOptions`          | no       | map of channels with options to subscribe connection to. Each channel may have [SubscribeOptions](#subscribeoptions) object. See more details about [server-side subscriptions](server_subs.md) |
 | `meta`      | `JSON` object (ex. `{"key": "value"}`) | no       | a custom data to attach to connection (this **won't be exposed to client-side**)                                                                                                                |
+| `caps`      | `array`                                | no       | (**Centrifugo PRO**) capability-based authorization rules to grant the connection. See [capabilities](../pro/capabilities.md)                                                                    |
+| `labels`    | `map[string]string`                    | no       | (**Centrifugo PRO**) connection labels to attach — forwarded to later proxy requests as the `labels` field                                                                                       |
 
 #### SubscribeOptions
 
@@ -13435,6 +13451,8 @@ Where `expire_at` contains some Unix time in the future (until which connection 
 | `expire_at` | `integer` | yes      | a timestamp in the future when connection must be considered expired                                                       |
 | `info`      | `JSON`    | yes      | update connection info JSON                                                                                                |
 | `b64info`   | `string`  | yes      | alternative to `info` - a binary connection info encoded in base64 format, will be decoded to raw bytes on Centrifugo side |
+| `meta`      | `JSON`    | yes      | update the connection's attached `meta` (server-side only, not exposed to the client)                                     |
+| `caps`      | `array`   | yes      | (**Centrifugo PRO**) refresh capability-based authorization rules for the connection. See [capabilities](../pro/capabilities.md) |
 
 ## Channel-wide proxy events
 
@@ -13539,9 +13557,11 @@ See below on how to [return an error](#what-if-connection-is-not-allowed-to-subs
 | `encoding`  | `string` | no       | protocol encoding type used (`json` or `binary` at moment)                                                                 |
 | `user`      | `string` | no       | a connection user ID obtained during authentication process                                                                |
 | `channel`   | `string` | no       | a string channel client wants to subscribe to                                                                              |
+| `token`     | `string` | yes      | subscription token (JWT) provided by the client for this channel when [subscription token authorization](channel_token_auth.md) is used — empty otherwise |
 | `meta`      | `JSON`   | yes      | a connection attached meta (off by default, enable with `"include_connection_meta": true`)                                 |
 | `data`      | `JSON`   | yes      | custom data from client sent with subscription request (this field will only be set if provided by a client on subscribe). |
 | `b64data`   | `string` | yes      | optional subscription data from the client in base64 format (if the binary proxy mode is used).                            |
+| `labels`    | `JSON`   | yes      | connection labels attached during authentication (**Centrifugo PRO** only)                                                 |
 
 #### SubscribeResponse
 
@@ -13561,6 +13581,8 @@ See below on how to [return an error](#what-if-connection-is-not-allowed-to-subs
 | `b64data`   | `string`          | yes      | Custom data to send to the client in subscribe command reply, will be decoded to raw bytes on Centrifugo side before sending to client                                                            |
 | `override`  | `Override` object | yes      | Allows dynamically override some channel options defined in Centrifugo configuration on a per-connection basis (see below available fields)                                                       |
 | `expire_at` | `integer`         | yes      | a timestamp (Unix seconds in the future) when subscription must be considered expired. If not set or set to `0` subscription won't expire at all. Supported since Centrifugo v5.0.4               |
+| `allow`     | `array[string]`   | yes      | (**Centrifugo PRO**) channel [capabilities](../pro/capabilities.md) to grant the client for this subscription, as capability codes: `sub`, `pub`, `hst`, `prs`                                    |
+| `server_tags_filter` | `object` | yes      | (**Centrifugo PRO**) server-side tag filter applied to this subscription. See [server-side tag filtering](../pro/server_tags_filter.md)                                                          |
 
 #### Override
 
@@ -13700,6 +13722,7 @@ The expected response example if a publication is allowed:
 | `data`      | `JSON`   | yes      | data sent by client                                                                              |
 | `b64data`   | `string` | yes      | will be set instead of `data` field for binary proxy mode                                        |
 | `meta`      | `JSON`   | yes      | a connection attached meta (off by default, enable with `"include_connection_meta": true`)       |
+| `labels`    | `JSON`   | yes      | connection labels attached during authentication (**Centrifugo PRO** only)                        |
 
 #### PublishResponse
 
@@ -13834,6 +13857,7 @@ Very similar to connection-wide refresh response.
 | `user`      | `string` | no       | a connection user ID obtained during authentication process                                      |
 | `channel`   | `string` | no       | channel for which Subscription is going to expire                                                |
 | `meta`      | `JSON`   | yes      | a connection attached meta (off by default, enable with `"include_connection_meta": true`)       |
+| `labels`    | `JSON`   | yes      | connection labels attached during authentication (**Centrifugo PRO** only)                        |
 
 #### SubRefreshResponse
 
@@ -13935,6 +13959,7 @@ See below on how to [return a custom error](#return-custom-error).
 | `data`      | `JSON`   | yes      | RPC custom data sent by client                                                                   |
 | `b64data`   | `string` | yes      | will be set instead of `data` field for binary proxy mode                                        |
 | `meta`      | `JSON`   | yes      | a connection attached meta (off by default, enable with `"include_connection_meta": true`)       |
+| `labels`    | `JSON`   | yes      | connection labels attached during authentication (**Centrifugo PRO** only)                        |
 
 #### RPCResponse
 
@@ -14267,9 +14292,19 @@ For unidirectional SSE/EventSource (`uni_sse`) and unidirectional HTTP-streaming
 
 While in this example codes match, there could be situations when protocol level error/disconnect codes can't match directly to HTTP codes, that's why Centrifugo requires an explicit configuration.
 
+## Interactive proxy explorer
+
+The widget below ties together everything from this chapter. Pick a proxy event to see the exact **request** Centrifugo sends, choose how your backend **responds**, and watch **what happens** — plus the matching Centrifugo **configuration** and a **backend handler** sketch (Node / Python / Go / GRPC). Toggle `binary_encoding`, `include_connection_meta`, named proxies and the backend protocol to see how each changes the payloads.
+
+<ProxyExplorer events={['connect', 'refresh', 'subscribe', 'sub_refresh', 'publish', 'rpc']} />
+
+The field names and per-event context (which events carry `client`/`user`/`meta` and forwarded headers, and which don't) are taken from Centrifugo's `proxy.proto`.
+
 ---
 
 ## Proxy subscription streams
+
+import ProxyExplorer from '@site/src/components/proxy/ProxyExplorer';
 
 :::caution Experimental
 
@@ -14473,7 +14508,7 @@ Note we have increased `grpc.MaxConcurrentStreams` for server to handle more sim
 
 :::
 
-Centrifugo has some rules about messages in streams. Upon stream establishment, Centrifugo expects the backend to send the first message from a stream — this is a `StreamSubscribeResponse` with `SubscribeResponse` in it. Centrifugo waits for this message before replying to the client's subscription command. This way we can communicate the initial state with a client and make sure streaming is properly established with all permission checks passed. After sending the initial message you can send events (publications) as they appear in your system.
+Centrifugo has some rules about messages in streams. Upon stream establishment, the backend **must** send the first message on the stream as a `StreamSubscribeResponse` containing a `SubscribeResponse` — this is required, and Centrifugo **rejects the stream** if the first message does not carry a `SubscribeResponse`. Centrifugo waits for this message before replying to the client's subscription command. The `SubscribeResponse` accepts the subscription (via `result`) or rejects it (via `error` / `disconnect`); this way we can communicate the initial state with a client and make sure streaming is properly established with all permission checks passed. After sending the initial message you can send events (publications) as they appear in your system.
 
 Now everything should be ready to test it out from the client side: just subscribe to a channel where stream proxy is on with our SDK – and you will see your stream handler called and data streamed from it to a client. For example, with our Javascript SDK:
 
@@ -14599,6 +14634,10 @@ Here is an example how you can define different subscribe stream proxies for dif
   ]
 }
 ```
+
+## Interactive explorer
+
+<ProxyExplorer events={['subscribe_stream']} />
 
 ## Full example
 
@@ -16161,6 +16200,7 @@ Centrifugo can't guarantee that other user connections will be closed – since 
 
 import SharedPollDiagram from '@site/src/components/SharedPollDiagram';
 import SharedPollPublishDiagram from '@site/src/components/SharedPollPublishDiagram';
+import ProxyExplorer from '@site/src/components/proxy/ProxyExplorer';
 
 :::caution Experimental
 
@@ -16724,6 +16764,10 @@ Return an error to signal a problem:
 ```
 
 When an error is returned, Centrifugo skips the refresh cycle and retries on the next interval.
+
+## Interactive explorer
+
+<ProxyExplorer events={['shared_poll_refresh']} />
 
 ## Direct publish
 
@@ -22415,9 +22459,7 @@ Add the following options to the configuration file:
 
 – to configure the proxy endpoint and timeout of the cache empty proxy event.
 
-To actually enable the proxy for desired channels you must use the `cache_empty_proxy_name` channel namespace option and point it to the name of the proxy to use, for example `unified` which we just configured. Let's enable it for channels without namespace:
-
-For example, to enable cache empty proxy for channels without namespace define `proxy_cache_empty` boolean flag on a top configuration level:
+To actually enable the proxy for desired channels, set the `cache_empty_proxy_enabled` boolean option in a channel namespace (or in `channel.without_namespace`). By default it uses the `default` cache empty proxy — the `channel.proxy.cache_empty` configured above; to use a [named proxy](../server/proxy.md#per-namespace-custom-proxies) instead, also set `cache_empty_proxy_name`. Let's enable it for channels without namespace:
 
 ```json title="config.json"
 {
@@ -23428,6 +23470,8 @@ At least one of `user`, `expression`, or `label_filter` must be set — the API 
 | `protocol`    | `string`            | no       | client connection protocol (json or protobuf)                                          |
 | `user`        | `string`            | yes      | client user ID                                                                         |
 | `state`       | `ConnectionState`   | yes      | connection state                                                                       |
+| `connected_at_ms`      | `int64`    | yes      | Unix time (in milliseconds) when the connection was established                        |
+| `ping_pong_latency_ms` | `int64`    | yes      | last measured client ping/pong round-trip latency in milliseconds (can be `-1` if not available) |
 | `labels`      | `map[string]string` | yes      | [client labels](./client_authentication.md#client-labels) attached to the connection   |
 
 #### ConnectionState object
@@ -23521,97 +23565,6 @@ Everything else stays the same as described in [delta compression](../server/del
 
 ---
 
-## Distributed rate limit API
-
-In addition to connection operation rate limiting features, Centrifugo PRO provides a generic high-precision rate limiting API. It may be used for custom quota management tasks not even related to real-time connections. Its distributed nature allows managing quotas across different instances of your application backend.
-
-The original reason why we decided to ship this as part of our PRO version APIs was the desire to simplify our PRO users the implementation of per-user push notification limits when using [Push Notification API](./push_notifications.md). But you are free to use the API for other custom needs as well.
-
-## Overview
-
-Centrifugo distributed rate limiting is a high-performance, zero-configuration, Redis-based token bucket with millisecond precision. Zero configuration in this case means that you don't have to preconfigure buckets in Centrifugo – bucket configuration is part of the request to check allowed limits.
-
-```bash
-curl -X POST http://localhost:8000/api/rate_limit \
--H "Authorization: apikey <KEY>" \
--d @- <<'EOF'
-
-{
-    "key": "rate_limit_test",
-    "interval": 60000,
-    "rate": 10
-}
-EOF
-```
-
-Example result:
-
-```json
-{
-    "result": {
-        "allowed": true,
-        "tokens_left": 9
-    }
-}
-```
-
-Or, when no tokens left in a bucket:
-
-```json
-{
-    "result": {
-        "allowed": false,
-        "tokens_left": 0,
-        "allowed_in": 5208,
-        "server_time": 1694627573210,
-    }
-}
-```
-
-In your app code call `rate_limit` API of Centrifugo PRO every time some action is executed and check `allowed` flag to allow or discard the action.
-
-Centrifugo PRO also returns `allowed_in` and `server_time` fields to help understand when the action will be allowed. These two fields are only appended when `tokens_left` is less than the requested `score`. `allowed_in` + `server_time` will provide you a timestamp in the future (in milliseconds) when the action can be executed. So you can delay the next action execution until that time if possible.
-
-## Configuration
-
-To enable distributed rate limiter:
-
-```json title="config.json"
-{
-  ...
-  "distributed_rate_limit": {
-    "enabled": true,
-    "redis_address": "localhost:6379"
-  }  
-}
-```
-
-Note that, just like most other features in Centrifugo, it's possible to configure Redis shards here or use Redis Cluster.
-
-## API description
-
-Now let's look at API description.
-
-### rate_limit request
-
-| Field | Type | Required | Description |
-|-------|------|----|-------------|
-| `key`   | `string` | Yes | Key for a bucket - you can construct keys whatever way you like |
-| `interval` | `integer` | Yes | Interval in milliseconds |
-| `rate` | `integer` | Yes | Allowed rate per provided interval |
-| `score` | `integer` | No | Score for the current action, if not provided the default score 1 is used |
-
-### rate_limit result
-
-| Field Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| `allowed` | `bool` | Yes | Whether desired action is allowed at this point in time |
-| `tokens_left` | `integer` | Yes | How many tokens left in a bucket |
-| `allowed_in` | `integer` | No | Milliseconds till desired score will be allowed again |
-| `server_time` | `integer` | No | Server time as Unix epoch in milliseconds used to calculate result |
-
----
-
 ## Ephemeral client publications
 
 Centrifugo PRO provides schema validation for client publications, enabling ephemeral messaging: client publications can pass through Centrifugo directly without involving backend proxy logic, reducing backend load and delivery latency. Normally the backend is required because it may validate and store messages in the main database, but for certain types of messages — such as typing notifications in a chat room — backend involvement adds unnecessary overhead. Centrifugo PRO offers an efficient way to address that.
@@ -23621,7 +23574,7 @@ Centrifugo PRO provides schema validation for client publications, enabling ephe
 The feature consists of three parts which together provide a ground for ephemeral client publications:
 
 * **Validation layer** - validate client publications based on JSON schema
-* **Transformation layer** - transform publication data and generate tags using jq or JavaScript engines
+* **Tag extraction** - attach tags to publications using JSON path or CEL rules
 * **Bandwidth optimization** - optionally exclude client info from publications to reduce message size
 
 ## Configuration
@@ -23782,7 +23735,7 @@ Use `client_publication.schemas` in channel or namespace configuration to apply 
   "schemas": [
     {
       "name": "typing",
-      "definition": "{\"type\":\"object\",\"properties\":{},\"additionalProperties\": false]}"
+      "definition": "{\"type\":\"object\",\"properties\":{},\"additionalProperties\": false}"
     }
   ],
   "channel": {
@@ -23848,38 +23801,49 @@ All schemas referenced in `client_publication.schemas` must have the same type (
 
 :::
 
-## Publication transformations
+## Tag extraction
 
-Publication transformations allow you to modify publication data, extract tags, and generate idempotency keys using either jq or JavaScript programs. Transformations are executed server-side and compiled at startup for optimal performance.
+Centrifugo PRO can attach [tags](../server/channels.md) to client publications, extracted from the publication data or the connection context at publish time — without a backend round-trip. This lets subscribers and server-side consumers filter or route on values derived from the message.
 
-### Transformation engines
+Tag rules are configured in `client_publication.tags` — a list of extraction rules. Each rule sets one tag from either a JSON **path** into the publication data, or a **CEL** expression, and may be applied conditionally. Tag extraction only **adds tags** — it does not modify the publication `data`, which is broadcast unchanged (after schema validation).
 
-Centrifugo PRO supports two transformation engines:
+### Tag field options
 
-* **jq** - JSON query language, ideal for data manipulation and filtering
-* **js** - JavaScript (via goja runtime), provides familiar syntax and flexibility
+| Field  | Type     | Description                                                                                                             |
+|--------|----------|-----------------------------------------------------------------------------------------------------------------------|
+| `key`  | `string` | Name of the tag to set.                                                                                               |
+| `path` | `string` | JSON path into the publication data (dot notation, e.g. `user.name`, `metadata.room_id`). Set either `path` or `cel`, not both. |
+| `cel`  | `string` | [CEL](./cel_expressions.md) expression computing the value, e.g. `data.emoji`. Set either `cel` or `path`, not both.  |
+| `if`   | `string` | Optional CEL condition — the tag is set only when it evaluates to `true`, e.g. `schema_name == 'reaction'`.          |
 
-Both engines receive the same input context and must return a consistent output format.
+Both `cel` and `if` expressions have access to these variables:
 
-### Configuration
+* `data` (object) - the publication data sent by the client
+* `timestamp_ms` (int) - current server timestamp in milliseconds
+* `schema_name` (string) - name of the matched schema (empty if no schemas configured)
+* `user` (string) - user ID from connection credentials
+* `client` (string) - client ID (unique connection identifier)
+* `meta` (object) - connection metadata
+* `vars` (object) - [channel pattern](./channel_patterns.md) variables
 
-Transformations are configured in the `client_publication.transform` section:
+### Example
 
 ```json title="config.json"
 {
   "channel": {
     "namespaces": [
       {
-        "name": "chat",
+        "name": "reactions",
+        "publication_data_format": "json",
         "client_publication": {
-          "transform": {
-            "enabled": true,
-            "engine": "jq",
-            "jq": {
-              "program": "{data: .data, tags: {user: .user}}"
-            }
-          }
-        }
+          "schemas": ["reaction"],
+          "tags": [
+            { "key": "emoji", "path": "emoji" },
+            { "key": "user", "cel": "user" },
+            { "key": "priority", "cel": "'high'", "if": "data.urgent == true" }
+          ]
+        },
+        "allow_publish_for_subscriber": true
       }
     ]
   }
@@ -23891,337 +23855,22 @@ Or in YAML for better readability:
 ```yaml title="config.yaml"
 channel:
   namespaces:
-    - name: chat
-      client_publication:
-        transform:
-          enabled: true
-          engine: jq  # or "js"
-          jq:
-            program: |
-              {
-                data: .data,
-                tags: {user: .user, priority: "high"}
-              }
-```
-
-### Input context
-
-Transform programs receive an input object with the following variables:
-
-* `data` (object) - The publication data sent by the client (always available)
-* `timestamp_ms` (int) - Current server timestamp in milliseconds
-* `user` (string) - User ID from connection credentials
-* `client` (string) - Client ID (unique connection identifier)
-* `meta` (object) - Connection metadata
-* `vars` (object) - Channel pattern variables (requires [channel patterns](./channel_patterns.md))
-* `schema_name` (string) - Name of the matched schema (empty if no schemas configured)
-
-:::note
-Only `data` is guaranteed to be present. Other variables depend on the context where the transformation is used.
-:::
-
-### Output format
-
-Transform programs must return an object with optional fields:
-
-* `data` (object) - Transformed publication data (optional)
-* `tags` (object) - Key-value pairs for publication tags (optional)
-* `idempotency_key` (string) - Deduplication key (optional)
-
-All fields are optional - you can return only the ones you need.
-
-### Using jq
-
-jq provides powerful JSON manipulation capabilities with a concise syntax.
-
-**Basic transformation:**
-
-```yaml
-transform:
-  enabled: true
-  engine: jq
-  jq:
-    program: |
-      {
-        data: {
-          message: .data.text,
-          user: .user,
-          timestamp: .timestamp_ms
-        },
-        tags: {
-          room: .vars.room_id,
-          priority: (if .data.urgent == true then "high" else "normal" end)
-        },
-        idempotency_key: (.user + ":" + (.timestamp_ms | tostring))
-      }
-```
-
-**Data restructuring:**
-
-```yaml
-transform:
-  enabled: true
-  engine: jq
-  jq:
-    program: |
-      {
-        data: (
-          .data
-          | .author = {id: .user_id, name: .user_name}
-          | del(.user_id, .user_name)
-        ),
-        tags: {source: "client"}
-      }
-```
-
-### Using JavaScript
-
-JavaScript provides familiar syntax and can handle complex logic.
-
-**Basic transformation:**
-
-```yaml
-transform:
-  enabled: true
-  engine: js
-  js:
-    program: |
-      (function(input) {
-        return {
-          data: {
-            message: input.data.text,
-            user: input.user,
-            timestamp: input.timestamp_ms
-          },
-          tags: {
-            room: input.vars.room_id,
-            priority: input.data.urgent === true ? "high" : "normal"
-          },
-          idempotency_key: input.user + ":" + input.timestamp_ms
-        };
-      })
-```
-
-**Data restructuring:**
-
-```yaml
-transform:
-  enabled: true
-  engine: js
-  js:
-    program: |
-      (function(input) {
-        var data = input.data;
-        return {
-          data: {
-            author: {
-              id: data.user_id,
-              name: data.user_name
-            },
-            content: data.content,
-            metadata: data.metadata
-          },
-          tags: {
-            source: "client"
-          }
-        };
-      })
-```
-
-### Loading programs from files
-
-For complex transformations, you can load programs from external files:
-
-**Create program files:**
-
-```jq title="transforms/chat.jq"
-{
-  data: {
-    message: .data.text,
-    author: .user,
-    timestamp: .timestamp_ms
-  },
-  tags: {
-    room: .vars.room_id,
-    priority: (if .data.urgent == true then "high" else "normal" end)
-  },
-  idempotency_key: (.user + ":" + (.timestamp_ms | tostring))
-}
-```
-
-```javascript title="transforms/chat.js"
-(function(input) {
-  return {
-    data: {
-      message: input.data.text,
-      author: input.user,
-      timestamp: input.timestamp_ms
-    },
-    tags: {
-      room: input.vars.room_id,
-      priority: input.data.urgent === true ? "high" : "normal"
-    },
-    idempotency_key: input.user + ":" + input.timestamp_ms
-  };
-})
-```
-
-**Reference in configuration:**
-
-```json title="config.json"
-{
-  "channel": {
-    "namespaces": [
-      {
-        "name": "chat",
-        "client_publication": {
-          "transform": {
-            "enabled": true,
-            "engine": "jq",
-            "jq": {
-              "program": "./transforms/chat.jq"
-            }
-          }
-        }
-      }
-    ]
-  }
-}
-```
-
-```yaml title="config.yaml"
-channel:
-  namespaces:
-    - name: chat
-      client_publication:
-        transform:
-          enabled: true
-          engine: jq
-          jq:
-            program: ./transforms/chat.jq
-```
-
-:::tip Benefits of program files
-
-- **Better IDE support** - Syntax highlighting and validation
-- **Easier testing** - Test programs independently
-- **Cleaner config** - Keep configuration files focused
-- **Reusability** - Share programs across namespaces
-
-:::
-
-### Integration with schemas
-
-Transformations work seamlessly with schema validation. The matched schema name is available in the transformation context.
-
-**With schema validation:**
-
-```yaml
-channel:
-  namespaces:
-    - name: chat
-      client_publication:
-        schemas: ["chat_message"]  # Validate before transformation
-        transform:
-          enabled: true
-          engine: jq
-          jq:
-            program: |
-              {
-                data: .data,
-                tags: {
-                  validated_schema: .schema_name,
-                  user: .user
-                }
-              }
-```
-
-### Performance considerations
-
-* **Compilation** - Programs are compiled once at startup and validated for correctness
-* **Runtime** - Only program execution happens per publication
-* **Engine choice** - Both jq and JavaScript have similar performance characteristics:
-  - jq: ~10,000 ns/op for typical transformations
-  - JavaScript: ~8,000 ns/op for typical transformations
-* **Minimal overhead** - Simple transformations add negligible latency
-
-:::info Benchmark results
-
-Internal benchmarks show:
-- Full transformation (data + tags + idempotency key): ~8-10μs per publication
-- Minimal transformation (data only): ~1-2μs per publication
-
-These are measured on modern hardware and represent worst-case scenarios. Actual performance may be better.
-
-:::
-
-### Complete transformation examples
-
-**Multi-tenant chat with data enrichment:**
-
-```yaml
-channel:
-  patterns: true
-  namespaces:
-    - name: tenant_chat
-      pattern: /tenants/:tenant_id/rooms/:room_id/messages
-      client_publication:
-        schemas: ["chat_message"]
-        transform:
-          enabled: true
-          engine: jq
-          jq:
-            program: |
-              {
-                data: {
-                  message: .data.text,
-                  author: {
-                    id: .user,
-                    role: .meta.role
-                  },
-                  room: .vars.room_id,
-                  timestamp: .timestamp_ms
-                },
-                tags: {
-                  tenant: .vars.tenant_id,
-                  room: .vars.room_id,
-                  priority: (if .meta.premium == true then "high" else "normal" end)
-                },
-                idempotency_key: (.vars.tenant_id + ":" + .user + ":" + (.timestamp_ms | tostring))
-              }
-        allow_publish_for_subscriber: true
-```
-
-**Reaction system with deduplication:**
-
-```yaml
-channel:
-  namespaces:
     - name: reactions
+      publication_data_format: json
       client_publication:
-        schemas: ["reaction"]
-        transform:
-          enabled: true
-          engine: js
-          js:
-            program: |
-              (function(input) {
-                var data = input.data;
-                return {
-                  data: {
-                    emoji: data.emoji,
-                    message_id: data.message_id,
-                    user_id: input.user
-                  },
-                  tags: {
-                    emoji_type: data.emoji,
-                    user: input.user
-                  },
-                  idempotency_key: input.user + ":" + data.message_id + ":" + data.emoji
-                };
-              })
-        allow_publish_for_subscriber: true
+        schemas: [reaction]
+        tags:
+          - key: emoji
+            path: emoji
+          - key: user
+            cel: user
+          - key: priority
+            cel: "'high'"
+            if: data.urgent == true
+      allow_publish_for_subscriber: true
 ```
+
+Tag rules are compiled and validated at startup, so a malformed `path` / `cel` / `if` fails fast rather than at publish time.
 
 ## Excluding client info
 
@@ -24247,13 +23896,13 @@ This prevents the `info` field from being included in publications.
 Use this option when:
 * You want to reduce bandwidth usage
 * Client identity is not needed by subscribers
-* You're using transformations to provide necessary metadata in publication data or tags
+* You're using tags to provide the necessary metadata alongside publications
 
 :::
 
 ## Complete example
 
-Here's a comprehensive example combining all features with transformations:
+Here's a comprehensive example combining all features:
 
 ```json title="config.json"
 {
@@ -24273,13 +23922,11 @@ Here's a comprehensive example combining all features with transformations:
         "publication_data_format": "json",
         "client_publication": {
           "schemas": ["reaction"],
-          "transform": {
-            "enabled": true,
-            "engine": "jq",
-            "jq": {
-              "program": "{data: {emoji: .data.emoji, message_id: .data.message_id, user_id: .user}, tags: {room: .vars.room_id, user: .user}, idempotency_key: (.user + \":\" + .data.message_id + \":\" + .data.emoji)}"
-            }
-          },
+          "tags": [
+            { "key": "room", "cel": "vars.room_id" },
+            { "key": "emoji", "path": "emoji" },
+            { "key": "user", "cel": "user" }
+          ],
           "exclude_client_info": true
         },
         "allow_publish_for_subscriber": true
@@ -24312,23 +23959,13 @@ channel:
       publication_data_format: json
       client_publication:
         schemas: [reaction]
-        transform:
-          enabled: true
-          engine: jq
-          jq:
-            program: |
-              {
-                data: {
-                  emoji: .data.emoji,
-                  message_id: .data.message_id,
-                  user_id: .user
-                },
-                tags: {
-                  room: .vars.room_id,
-                  user: .user
-                },
-                idempotency_key: (.user + ":" + .data.message_id + ":" + .data.emoji)
-              }
+        tags:
+          - key: room
+            cel: vars.room_id
+          - key: emoji
+            path: emoji
+          - key: user
+            cel: user
         exclude_client_info: true
       allow_publish_for_subscriber: true
 ```
@@ -24367,19 +24004,18 @@ Here's an example using `empty_binary` schema for a typing indicator:
 
 ### Schema validation
 
-* Publications are validated **before** transformation and broadcast
+* Publications are validated **before** tag extraction and broadcast
 * If validation fails, the client receives an error and the publication is rejected
 * Multiple schemas act as an OR condition - data must match at least one schema
 * Schema names must reference schemas defined in the top-level `schemas` array
-* The matched schema name is available to transformations via `schema_name` variable
+* The matched schema name is available to tag rules via the `schema_name` variable
 
-### Transformation execution
+### Tag extraction
 
-* Transformations are executed **after** schema validation (if configured)
-* Transform programs are compiled and validated at Centrifugo startup
-* If transformation fails, the client receives an error and the publication is rejected
-* Transformation output replaces the original publication data
-* Tags generated in transformations are attached to publications
+* Tags are extracted **after** schema validation (if configured)
+* Each rule sets one tag from a JSON `path` or a `cel` expression, optionally gated by an `if` condition
+* The original publication `data` is broadcast **unchanged** — tag extraction only adds tags, it does not transform the data
+* Extracted tags are attached to the publication
 
 ### Configuration validation
 
@@ -24394,12 +24030,10 @@ Centrifugo validates configurations at startup:
   * `empty_binary` requires `publication_data_format: "binary"`
 * All schemas referenced in `client_publication.schemas` must exist
 
-**Transformation validation:**
-* Transform programs are compiled at startup to validate syntax
-* Program `engine` must be either `jq` or `js`
-* Program `program` field can be inline code or a file path
-* If file path is used, file must exist and be readable
-* Invalid programs cause startup failure with descriptive error messages
+**Tag rule validation:**
+* Each tag rule must set exactly one of `path` or `cel`
+* `cel` and `if` expressions are compiled at startup to validate syntax
+* Invalid expressions cause startup failure with descriptive error messages
 
 ### Bottom line
 
@@ -24413,6 +24047,8 @@ Generally speaking, all the existing namespace options like recovery/positioning
 ---
 
 ## Additional event hooks
+
+import ProxyExplorer from '@site/src/components/proxy/ProxyExplorer';
 
 Centrifugo PRO provides additional server-to-backend event hooks beyond the [standard proxy events](../server/proxy.md). These hooks notify your backend about channel-level state changes without requiring a client connection context.
 
@@ -24646,17 +24282,21 @@ Expected response example:
 
 If cache empty proxy is defined, but Centrifugo can't reach it – then subscription request which triggered the event will be rejected with the internal error.
 
-#### CacheEmptyRequest
+#### NotifyCacheEmptyRequest
 
 | Field     | Type     | Required | Description                            |
 |-----------|----------|----------|----------------------------------------|
 | `channel` | `string` | yes      | A channel in which cache miss occurred |
 
-#### CacheEmptyResult
+#### NotifyCacheEmptyResult
 
 | Field       | Type      | Required | Description                                                                                                                             |
 |-------------|-----------|----------|-----------------------------------------------------------------------------------------------------------------------------------------|
 | `populated` | `boolean` | no       | Notify Centrifugo that channel cache was populated by the app backend – in this case Centrifugo will try to recover state one more time |
+
+## Interactive explorer
+
+<ProxyExplorer events={['state', 'cache_empty']} />
 
 ---
 
@@ -25044,10 +24684,11 @@ First, you need to create configuration for additional brokers:
 }
 ```
 
-At this point Centrifugo PRO supports two broker types:
+At this point Centrifugo PRO supports three broker types:
 
 * `redis` - inherits all the possibilities of Centrifugo [built-in Redis Engine](../server/engines.md#redis-engine)
 * `nats` –  inherits all the possibilities of Centrifugo [integration with Nats broker](../server/engines.md#nats-broker).
+* `postgres` – inherits all the possibilities of Centrifugo [PostgreSQL broker](../server/engines.md#postgresql-broker).
 
 These brokers inherit all options described in the [Engines and scalability](../server/engines.md) chapter. The only difference is that it's possible to specify which custom broker to use inside a channel namespace:
 
@@ -25518,12 +25159,12 @@ Centrifugo PRO has an optimized Protobuf deserialization for GRPC unidirectional
 
 ## WebSocket compression optimizations
 
-Centrifugo PRO provides an integer option `websocket.compression_prepared_message_size` (in bytes, default `0`) which when set to a value > 0 tells Centrifugo to use a cache or prepared websocket messages when working with connections with WebSocket compression negotiated.
+Centrifugo PRO provides an integer option `websocket.compression_prepared_message_cache_size` (in bytes, default `0`) which when set to a value > 0 tells Centrifugo to use a cache or prepared websocket messages when working with connections with WebSocket compression negotiated.
 
 ```json title="config.json"
 {
   "websocket": {
-    "compression_prepared_message_size": 10485760
+    "compression_prepared_message_cache_size": 10485760
   }
 }
 ```
@@ -27483,7 +27124,7 @@ Centrifugo PRO comes with several options to reduce load on Engine – specifica
 
 ## Singleflight
 
-Centrifugo PRO provides an additional boolean option `use_singleflight` (default `false`). When this option is enabled, Centrifugo will automatically try to merge identical requests to history, online presence, or presence stats issued at the same time into one real network request. It will do this by using an in-memory component called `singleflight`.
+Centrifugo PRO provides an additional boolean option `singleflight.enabled` (default `false`). When this option is enabled, Centrifugo will automatically try to merge identical requests to history, online presence, or presence stats issued at the same time into one real network request. It will do this by using an in-memory component called `singleflight`.
 
 ![Singleflight](/img/singleflight.png)
 
@@ -27511,7 +27152,7 @@ To enable:
 }
 ```
 
-Or via `CENTRIFUGO_USE_SINGLEFLIGHT` environment variable.
+Or via `CENTRIFUGO_SINGLEFLIGHT_ENABLED` environment variable.
 
 ## Shared position sync
 
@@ -27581,9 +27222,8 @@ For Redis Map Broker, the same option offloads PUB/SUB subscriptions to replica 
     "type": "redis",
     "redis": {
       "address": "localhost:6379",
-      "replica": {
-        "enabled": true,
-        "address": "localhost:6380"
+      "replica_client": {
+        "enabled": true
       },
       "subscribe_on_replica": true
     }

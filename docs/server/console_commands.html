@@ -17,9 +17,9 @@
 <link rel="search" type="application/opensearchdescription+xml" title="Centrifugo" href="/opensearch.xml">
 
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.3b07454f.css">
-<script src="/assets/js/runtime~main.5a401be4.js" defer="defer"></script>
-<script src="/assets/js/main.39992e6a.js" defer="defer"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.77b78dd3.css">
+<script src="/assets/js/runtime~main.743bdb4c.js" defer="defer"></script>
+<script src="/assets/js/main.1abb99fd.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg style="display: none;"><defs>
@@ -82,7 +82,7 @@
 <div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token plain">centrifugo gensubtoken -c config.json -u 28282 -s channel</span><br></span></code></pre></div></div>
 <p>It will automatically generate HMAC SHA-256 based subscription token for channel <code>channel</code> and user with ID <code>28282</code> (which expires in 1 week).</p>
 <p>You can change token TTL with <code>-t</code> flag (number of seconds):</p>
-<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token plain">centrifugo gentoken -c config.json -u 28282 -s channel -t 3600</span><br></span></code></pre></div></div>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token plain">centrifugo gensubtoken -c config.json -u 28282 -s channel -t 3600</span><br></span></code></pre></div></div>
 <p>This way generated token will be valid for 1 hour.</p>
 <p>If any errors happen – program will exit with error message and exit code 1.</p>
 <p>This command is mostly useful for development.</p>

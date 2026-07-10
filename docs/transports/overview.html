@@ -17,9 +17,9 @@
 <link rel="search" type="application/opensearchdescription+xml" title="Centrifugo" href="/opensearch.xml">
 
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.3b07454f.css">
-<script src="/assets/js/runtime~main.5a401be4.js" defer="defer"></script>
-<script src="/assets/js/main.39992e6a.js" defer="defer"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.77b78dd3.css">
+<script src="/assets/js/runtime~main.743bdb4c.js" defer="defer"></script>
+<script src="/assets/js/main.1abb99fd.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg style="display: none;"><defs>
@@ -40,7 +40,7 @@
 <p>Unidirectional transports suit well for use cases without dynamic subscriptions, where channels to subscribe are known at connection time.</p>
 <p>The main advantage is that unidirectional transports do not require special client connectors. Developers can use native browser APIs, such as <a class="" href="/docs/transports/uni_websocket">WebSocket</a>, <a class="" href="/docs/transports/uni_sse">Server-Sent Events (SSE)</a>, or <a class="" href="/docs/transports/uni_http_stream">HTTP-streaming</a>, as well as <a class="" href="/docs/transports/uni_grpc">gRPC</a> to receive real-time updates from Centrifugo. This eliminates the need for a client connector that abstracts bidirectional communication.</p>
 <p>However, the tradeoff is that with unidirectional transports, you won&#x27;t get some of Centrifugo&#x27;s advanced features implemented in bidirectional SDKs, such as dynamic subscriptions/unsubscriptions, automatic message recovery on reconnect, ability to send RPC to the backend over a persistent real-time connection.</p>
-<p>At this point, unidirectional transports only support JSON format for communication.</p>
+<p>Most unidirectional transports use JSON. The exception is <a class="" href="/docs/transports/uni_grpc">unidirectional gRPC</a>, which uses binary Protobuf. See each transport&#x27;s &quot;Supported data formats&quot; section for details.</p>
 <p>Learn more about <a class="" href="/docs/transports/uni_client_protocol">unidirectional protocol</a> and available unidirectional transports.</p>
 <h2 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="pingpong-behavior">PING/PONG behavior<a href="#pingpong-behavior" class="hash-link" aria-label="Direct link to PING/PONG behavior" title="Direct link to PING/PONG behavior" translate="no">​</a></h2>
 <p>Centrifugo server periodically sends pings to clients and expects pong from clients that works over bidirectional transports. Sending ping and receiving pong allows to find broken connections faster. Centrifugo sends pings on the Centrifugo client protocol level, thus it&#x27;s possible for clients to handle ping messages on the client side to make sure connection is not broken (our bidirectional SDKs do this automatically).</p>
