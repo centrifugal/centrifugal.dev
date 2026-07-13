@@ -20978,7 +20978,7 @@ This is usually not recommended, since every new user in your IDP will get acces
 
 ---
 
-## Admin UI: SSO, State Snapshots, Analytics
+## Admin UI: SSO and enhancements
 
 Admin UI of Centrifugo OSS supports only one admin user identified by the preconfigured password. For the corporate and enterprise environments Centrifugo PRO provides a way to integrate with popular User [Identity Providers](https://en.wikipedia.org/wiki/Identity_provider) (IDP), such as Okta, KeyCloak, Google Workspace, Azure and others. Most of the modern providers which support [OpenID connect](https://openid.net/specs/openid-connect-core-1_0.html) (OIDC) protocol with [Proof Key for Code Exchange](https://oauth.net/2/pkce/)
 (PKCE) and [OpenID Connect Discovery](https://openid.net/specs/openid-connect-discovery-1_0.html) are supported. This provides a way to integrate Centrifugo PRO into your existing [Single Sign-On](https://en.wikipedia.org/wiki/Single_sign-on) (SSO) infrastructure.
@@ -21100,6 +21100,18 @@ When `client_secret` is configured:
 6. All subsequent admin UI requests are authenticated by decrypting and validating the cookie
 
 The choice between PKCE and server-side flow depends on your security requirements and infrastructure. For most cases, PKCE flow (without `client_secret`) is sufficient and easier to set up.
+
+## Inspector
+
+The **Inspector** is a config-aware operational view for a single channel or user. Type a channel name or user ID and it shows how Centrifugo resolves it from your configuration, its live real-time state, and the actions available for it. Where [Tracing](./tracing.md) shows _what is flowing now_ and Snapshots/Analytics show _the whole cluster_, the Inspector answers _"what is the current state of this one channel/user, and what can I do about it"_. It uses only the existing admin API and adapts to your live configuration, so it never shows panels or actions that don't apply.
+
+![inspector](/img/admin_inspector.png)
+
+The **Channel** tab resolves a channel against your configuration (namespace, [channel patterns](./channel_patterns.md) and effective options) and shows a capability header (subscription type, enabled options, configured [proxies](./channel_events.md), `channel_regex` validation) plus compact live widgets for whatever the channel supports: **presence** (stats, expandable to subscribed clients), **history** (stream position, expandable to recent publications, with purge), and **map state** for [map subscriptions](./map_subscriptions.md). It links out to [Tracing](./tracing.md) and [Analytics](./analytics.md) for the channel.
+
+The **User** tab inspects everything Centrifugo knows about a user across the cluster: block state, [push devices](./push_notifications.md) count, active **connections** (with per-connection details and actions – trace, revoke token, reconnect, disconnect), and user-level **actions** – block/unblock (see [access revocation](./access_revoke.md)), invalidate tokens, disconnect all. Actions carry a durability badge (`in-memory` / `durable`) so you know whether the effect survives a restart, and the user's online / last-seen state is shown when [user status](./user_status.md) tracking is enabled.
+
+The Inspector requires no dedicated configuration – it's available in the admin UI automatically and adapts to what your setup enables.
 
 ## Channels and Connections Snapshots
 
@@ -24323,7 +24335,7 @@ curl -sSLf https://centrifugal.dev/install_pro.sh | sh
 Centrifugo PRO uses a different image from OSS version – [centrifugo/centrifugo-pro](https://hub.docker.com/r/centrifugo/centrifugo-pro):
 
 ```
-docker run --ulimit nofile=262144:262144 -v /host/dir/with/config/file:/centrifugo -p 8000:8000 centrifugo/centrifugo-pro:v6.9.0 centrifugo -c config.json
+docker run --ulimit nofile=262144:262144 -v /host/dir/with/config/file:/centrifugo -p 8000:8000 centrifugo/centrifugo-pro:v6.9.1 centrifugo -c config.json
 ```
 
 ### Kubernetes
@@ -24335,7 +24347,7 @@ You can use our [official Helm chart](https://github.com/centrifugal/helm-charts
 image:
   registry: docker.io
   repository: centrifugo/centrifugo-pro
-  tag: v6.9.0
+  tag: v6.9.1
 ```
 
 ### Debian and Ubuntu
@@ -24343,8 +24355,8 @@ image:
 DEB package [available in release assets](https://github.com/centrifugal/centrifugo-pro/releases).
 
 ```
-wget https://github.com/centrifugal/centrifugo-pro/releases/download/v6.9.0/centrifugo-pro_6.9.0-0_amd64.deb
-sudo dpkg -i centrifugo-pro_6.9.0-0_amd64.deb
+wget https://github.com/centrifugal/centrifugo-pro/releases/download/v6.9.1/centrifugo-pro_6.9.1-0_amd64.deb
+sudo dpkg -i centrifugo-pro_6.9.1-0_amd64.deb
 ```
 
 ### Centos
@@ -24352,8 +24364,8 @@ sudo dpkg -i centrifugo-pro_6.9.0-0_amd64.deb
 RPM package [available in release assets](https://github.com/centrifugal/centrifugo-pro/releases).
 
 ```
-wget https://github.com/centrifugal/centrifugo-pro/releases/download/v6.9.0/centrifugo-pro-6.9.0-0.x86_64.rpm
-sudo yum install centrifugo-pro-6.9.0-0.x86_64.rpm
+wget https://github.com/centrifugal/centrifugo-pro/releases/download/v6.9.1/centrifugo-pro-6.9.1-0.x86_64.rpm
+sudo yum install centrifugo-pro-6.9.1-0.x86_64.rpm
 ```
 
 ## Setting PRO license key
