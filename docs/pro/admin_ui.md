@@ -1,8 +1,8 @@
 ---
-description: "Centrifugo PRO admin UI features: SSO via OpenID Connect, a redacted configuration viewer, real-time channel and connection snapshots, analytics dashboards (trends, explorers, flight recorder), and enhanced system state monitoring."
+description: "Centrifugo PRO admin UI features: SSO via OpenID Connect, a redacted configuration viewer, real-time channel and connection snapshots, a config-aware channel and user inspector, analytics dashboards (trends, explorers, flight recorder), and enhanced system state monitoring."
 id: admin_ui
-sidebar_label: "Admin UI: SSO, Snapshots, Analytics"
-title: "Admin UI: SSO, State Snapshots, Analytics"
+sidebar_label: "Admin UI: SSO and enhancements"
+title: "Admin UI: SSO and enhancements"
 ---
 
 Admin UI of Centrifugo OSS supports only one admin user identified by the preconfigured password. For the corporate and enterprise environments Centrifugo PRO provides a way to integrate with popular User [Identity Providers](https://en.wikipedia.org/wiki/Identity_provider) (IDP), such as Okta, KeyCloak, Google Workspace, Azure and others. Most of the modern providers which support [OpenID connect](https://openid.net/specs/openid-connect-core-1_0.html) (OIDC) protocol with [Proof Key for Code Exchange](https://oauth.net/2/pkce/)
@@ -125,6 +125,18 @@ When `client_secret` is configured:
 6. All subsequent admin UI requests are authenticated by decrypting and validating the cookie
 
 The choice between PKCE and server-side flow depends on your security requirements and infrastructure. For most cases, PKCE flow (without `client_secret`) is sufficient and easier to set up.
+
+## Inspector
+
+The **Inspector** is a config-aware operational view for a single channel or user. Type a channel name or user ID and it shows how Centrifugo resolves it from your configuration, its live real-time state, and the actions available for it. Where [Tracing](./tracing.md) shows _what is flowing now_ and Snapshots/Analytics show _the whole cluster_, the Inspector answers _"what is the current state of this one channel/user, and what can I do about it"_. It uses only the existing admin API and adapts to your live configuration, so it never shows panels or actions that don't apply.
+
+![inspector](/img/admin_inspector.png)
+
+The **Channel** tab resolves a channel against your configuration (namespace, [channel patterns](./channel_patterns.md) and effective options) and shows a capability header (subscription type, enabled options, configured [proxies](./channel_events.md), `channel_regex` validation) plus compact live widgets for whatever the channel supports: **presence** (stats, expandable to subscribed clients), **history** (stream position, expandable to recent publications, with purge), and **map state** for [map subscriptions](./map_subscriptions.md). It links out to [Tracing](./tracing.md) and [Analytics](./analytics.md) for the channel.
+
+The **User** tab inspects everything Centrifugo knows about a user across the cluster: block state, [push devices](./push_notifications.md) count, active **connections** (with per-connection details and actions – trace, revoke token, reconnect, disconnect), and user-level **actions** – block/unblock (see [access revocation](./access_revoke.md)), invalidate tokens, disconnect all. Actions carry a durability badge (`in-memory` / `durable`) so you know whether the effect survives a restart, and the user's online / last-seen state is shown when [user status](./user_status.md) tracking is enabled.
+
+The Inspector requires no dedicated configuration – it's available in the admin UI automatically and adapts to what your setup enables.
 
 ## Channels and Connections Snapshots
 
