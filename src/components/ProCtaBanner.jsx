@@ -16,7 +16,7 @@ export default function ProCtaBanner() {
               Unlock the full <span className={styles.titleGradient}>power</span> of Centrifugo
             </h2>
             <p className={styles.text}>
-              Centrifugal Labs offers a PRO version of Centrifugo that includes a set of unique features, additional APIs, and enhanced performance. Ever dreamed about a self-hosted real-time messaging system combined with a push notification system? Want to benefit from analytics of real-time connections and subscriptions? Centrifugo PRO makes this all possible.
+              Centrifugal Labs offers a PRO version of Centrifugo featuring unique capabilities, additional APIs, enhanced performance. These improvements are the result of real-world experience managing large-scale concurrent connections in production environments. You gain more features, greater scalability and performance, improved observability, prioritized support for the business.
             </p>
             <div className={styles.cta}>
               <Link

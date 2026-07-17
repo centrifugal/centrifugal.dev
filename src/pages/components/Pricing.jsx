@@ -41,7 +41,7 @@ function EmailContact() {
                 <span>{parts[0]}<span style={{ display: 'none' }}>nospam</span>@{parts[1]}.{parts[2]}</span>
             </a>
             <button
-                className={`${styles.copyButton} ${copied ? styles.copyButtonCopied : ''}`}
+                className={`${styles.copyBtn} ${copied ? styles.copyBtnCopied : ''}`}
                 onClick={handleCopy}
                 aria-label="Copy email address"
                 title="Copy email address"
@@ -74,17 +74,29 @@ export default function Pricing() {
             />
             <div className={styles.overlay} />
             <div className={styles.content}>
-                <h2 className={styles.title}>Pricing</h2>
+                <div className={styles.priceHeader}>
+                    <span className={styles.eyebrow}>Pricing</span>
+                    <div className={styles.priceAnchor}>
+                        <span className={styles.priceFrom}>from</span>
+                        <span className={styles.priceAmount}>€3,500</span>
+                        <span className={styles.pricePer}>/ year</span>
+                    </div>
+                    <div className={styles.priceScale}>flat — scaling with company size</div>
+                </div>
                 <div className={styles.text}>
                     <p>
-                        We currently provide Centrifugo PRO licenses only to corporate
-                        customers. The license key allows running Centrifugo PRO without any
-                        limits for organization projects, includes 1 year of prioritized
-                        support and updates.
+                        One flat license — no per-connection fees, no per-message metering,
+                        no usage tiers. Centrifugo PRO is self-hosted, so it runs entirely on
+                        your own infrastructure and your messages and user data never leave it.
                     </p>
                     <p>
-                        Our pricing is flat, based on your company size and Centrifugo role.
-                        Share your use case and company details — we'll get back with a quote:
+                        The license unlocks every PRO feature without limits across your
+                        organization's projects and includes one year of prioritized support
+                        and updates.
+                    </p>
+                    <p>
+                        Available to corporate and business customers. Share your use case and
+                        company details to get a quote:
                     </p>
                 </div>
                 <EmailContact />

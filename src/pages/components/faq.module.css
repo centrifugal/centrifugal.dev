@@ -1,0 +1,160 @@
+.section {
+    width: 100%;
+    padding: 64px 0 88px;
+    background-color: var(--palette-background-alt);
+}
+
+html[data-theme="dark"] .section {
+    background-color: transparent;
+    background-image: linear-gradient(
+        180deg,
+        transparent,
+        rgba(255, 255, 255, 0.012) 22%,
+        rgba(255, 255, 255, 0.012) 78%,
+        transparent
+    );
+}
+
+.inner {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+.header {
+    text-align: center;
+    margin: 0 auto 40px;
+}
+
+.eyebrow {
+    display: inline-block;
+    font-family: "Nunito";
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 999px;
+    margin-bottom: 18px;
+}
+
+html[data-theme="light"] .eyebrow {
+    color: #E84C3B;
+    background: rgba(232, 76, 59, 0.08);
+    border: 1px solid rgba(232, 76, 59, 0.2);
+}
+
+html[data-theme="dark"] .eyebrow {
+    color: #fe5e5e;
+    background: rgba(254, 94, 94, 0.1);
+    border: 1px solid rgba(254, 94, 94, 0.25);
+}
+
+.heading {
+    font-family: "Nunito";
+    font-size: 2.4rem;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0;
+    color: var(--ifm-font-color-base);
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.item {
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+html[data-theme="light"] .item {
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+html[data-theme="dark"] .item {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="light"] .itemOpen {
+    border-color: rgba(232, 76, 59, 0.35);
+}
+
+html[data-theme="dark"] .itemOpen {
+    border-color: rgba(254, 94, 94, 0.4);
+}
+
+.question {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+    padding: 18px 22px;
+    font-family: "Nunito", sans-serif;
+    font-size: 1.08rem;
+    font-weight: 700;
+    text-align: left;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--ifm-font-color-base);
+    transition: color 0.2s ease;
+}
+
+html[data-theme="light"] .itemOpen .question {
+    color: #E84C3B;
+}
+
+html[data-theme="dark"] .itemOpen .question {
+    color: #fe5e5e;
+}
+
+.chevron {
+    flex-shrink: 0;
+    transition: transform 0.25s ease;
+    color: var(--ifm-color-emphasis-500);
+}
+
+.chevronExpanded {
+    transform: rotate(180deg);
+}
+
+html[data-theme="light"] .itemOpen .chevron {
+    color: #E84C3B;
+}
+
+html[data-theme="dark"] .itemOpen .chevron {
+    color: #fe5e5e;
+}
+
+.answer {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.25s ease;
+}
+
+.answerOpen {
+    grid-template-rows: 1fr;
+}
+
+.answerInner {
+    overflow: hidden;
+    padding: 0 22px;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--ifm-color-emphasis-700);
+}
+
+.answerOpen .answerInner {
+    padding: 0 22px 20px;
+}
+
+html[data-theme="dark"] .answerInner {
+    color: var(--ifm-color-emphasis-600);
+}

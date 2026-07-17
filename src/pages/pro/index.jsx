@@ -12,6 +12,7 @@ import TitleWithCatPro from '../components/TitleWithCatPro';
 import ImageRotator from '../../components/ImageRotator';
 import Pricing from '../components/Pricing';
 import ComparisonTable from '../components/ComparisonTable';
+import FAQ from '../components/FAQ';
 
 function Feature({ imageUrl, title, children }) {
     const imgUrl = useBaseUrl(imageUrl);
@@ -166,6 +167,7 @@ function Pro() {
                 <ComparisonTable />
             </main >
             <Pricing />
+            <FAQ />
         </Layout >
     );
 }
