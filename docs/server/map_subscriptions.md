@@ -38,7 +38,7 @@ That said, **map subscriptions can still be the right answer even when the data 
 |---|---|
 | Ordered events (chat, notifications, activity feeds) | Stream subscription |
 | Latest value of a single thing (with [cache recovery](/docs/server/cache_recovery)) | Stream subscription + cache recovery |
-| Real-time sync of data already in your app DB, app DB stays the only source of truth | Stream subscription + `getState` ([pattern](/blog/2026/05/24/pg-stream-broker-benefits)) |
+| Real-time sync of data already in your app DB, app DB stays the only source of truth | Stream subscription + `getState` ([pattern](/blog/2026/07/27/app-owned-state-stream-subscriptions)) |
 | A Centrifugo-managed keyed collection (cursors, presence, IoT fleet, feature flags, lobbies) | **Map subscription** |
 | Centrifugo-managed keyed collection backed by transactional PostgreSQL | **Map subscription + PostgreSQL map broker** |
 | Real-time sync of data in your app DB, where the convenience of map subscriptions outweighs the cost of mirroring entries into `cf_map_state` | **Map subscription + PostgreSQL map broker** (mirror via transactional `cf_map_publish` from your own SQL transactions) |

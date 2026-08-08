@@ -67,14 +67,24 @@ When the flag is on:
 Operational notes:
 
 - **Breaking change for dashboards relying on `{quantile="..."}` labels** on the dropped Summaries — switch to `histogram_quantile()` against the corresponding `_histogram` metric.
-- **Text-format Prometheus scrapes lose `_bucket` series** on Histograms — only `_count` and `_sum` remain visible. Configure your scrape job to use the protobuf format to receive the native histogram data:
+- **Prometheus must be told to ingest native histograms.** They travel only over the protobuf exposition format, and Prometheus recognizes them only when `scrape_native_histograms` is enabled — globally or per scrape job:
+
   ```yaml
   scrape_configs:
     - job_name: centrifugo
-      scrape_protocols: [PrometheusProto, OpenMetricsText1.0.0, PrometheusText0.0.4]
+      scrape_native_histograms: true
       # ...
   ```
-  Prometheus 2.40+ is required for native histogram ingestion.
+
+  Enabling it also switches scrape protocol negotiation to prefer `PrometheusProto`, so no separate `scrape_protocols` tweak is needed. On older Prometheus releases that predate this option, start the server with `--enable-feature=native-histograms` instead — the flag has the same effect.
+
+  :::caution
+
+  This is easy to miss. Without it Prometheus falls back to the text format, where a native histogram exposes only `_count`, `_sum` and a single `+Inf` bucket — so the metric ends up with **no usable bucket data at all** and dashboards built on `histogram_quantile()` silently go blank. If percentile panels are empty right after turning `native_histograms` on, check this first: `/api/v1/status/config` on your Prometheus shows the effective value.
+
+  :::
+
+  After ingestion, native histograms are queried by the **base metric name** — there are no `_bucket`, `_count` or `_sum` series. Use `histogram_quantile(0.99, sum by (method) (rate(metric[$__rate_interval])))` (note: no `le` label), and `histogram_count()` / `histogram_sum()` where you previously used `_count` / `_sum`.
 - Native histograms are still flagged experimental in `client_golang`. The feature is opt-in for that reason.
 
 **Why enable this in plain Prometheus setups?** Histograms aggregate correctly across multiple Centrifugo nodes — `histogram_quantile()` over fleet-wide bucket counts gives a meaningful fleet-wide p99. Summaries can't be aggregated this way (their per-node quantile estimates aren't mathematically combinable). Native histograms keep the storage cost low while providing this aggregation property. If you're scraping Centrifugo with Prometheus 2.40+, this flag gives you better percentile data for free.
@@ -86,6 +96,23 @@ If you also want to push metrics to an OpenTelemetry backend (Grafana Cloud, GCP
 Check out Centrifugo [official Grafana dashboard](https://grafana.com/grafana/dashboards/13039) for Prometheus storage. You can import that dashboard to your Grafana, point to Prometheus storage – and enjoy visualized metrics.
 
 ![](/img/grafana.jpg)
+
+The dashboard is organized into rows — Overview, connections and subscriptions, client commands and latency, real-time delivery, recovery, server API, proxy, async consumers, shared poll, node internals, the Redis / map / PostgreSQL brokers, and the Go runtime — followed by `PRO · …` rows for [Centrifugo PRO metrics](../pro/observability_enhancements.md#pro-metrics-reference). All rows below the first four are collapsed by default, so a dashboard load only queries what you actually look at.
+
+Two things worth knowing about the queries:
+
+* **No Summary metrics.** Every latency panel is built on the `_histogram` companions, so percentiles aggregate correctly across nodes and nothing breaks when the deprecated Summaries are removed in Centrifugo v7.
+* **Native histograms work out of the box.** Histogram-based panels carry two branches joined by `or` — one against classic `_bucket` series, one against the native histogram (`histogram_quantile()` / `histogram_count()` on the base series). Exactly one branch has data, so the same dashboard works with [`prometheus.native_histograms`](#native-histograms) both off and on.
+
+Scoping is driven by template variables: `job` and `instance` narrow panels to a deployment or a single node, `quantile` retunes every percentile panel at once, `channel namespace` filters the PRO namespace rows, and `filters` is an ad-hoc filter you can point at any label your setup happens to have. All of them default to matching everything, so the dashboard works untouched on a single node.
+
+:::tip Scoping several Centrifugo installations
+
+If one Prometheus scrapes more than one Centrifugo installation, whether you can isolate them with the `job` variable depends on your labels. Two installations scraped as separate jobs are easy — pick one from the `Job` dropdown. But two releases of the same Helm chart deployed into different Kubernetes namespaces usually land under the **same** `job` value and are told apart by the Kubernetes `namespace` label instead. Use the `Filters` ad-hoc variable for that: add `namespace = your-namespace` (or `cluster`, `env`, whatever separates them) and every panel is scoped.
+
+Note the dashboard's `Channel namespace` variable is the Centrifugo channel namespace, not the Kubernetes one.
+
+:::
 
 ### Exposed metrics
 
@@ -257,13 +284,6 @@ Note, this metric is disabled by default. To enable it set `prometheus.recovered
 - **Description:** Number of currently active client connections by transport type, protocol, client name, and version.
 - **Usage:** Useful for real-time monitoring of active connections, understanding the current load distribution across different transports and client types, and capacity planning.
 
-#### centrifugo_client_subscriptions_accepted
-
-- **Type:** Counter
-- **Labels:** client_name, channel_namespace (Centrifugo PRO)
-- **Description:** Count of accepted client subscriptions by client name and channel namespace.
-- **Usage:** Useful for monitoring subscription patterns, understanding which clients are subscribing to which channel namespaces, and tracking subscription volume over time.
-
 #### centrifugo_client_subscriptions_inflight
 
 - **Type:** Gauge
@@ -289,8 +309,8 @@ Note, this metric is disabled by default. To enable it set `prometheus.recovered
 
 - **Type:** Counter
 - **Labels:** transport, frame_type, channel_namespace
-- **Description:** Measures the size of messages (in bytes) sent to client connections over specific transports.
-- **Usage:** Helps in monitoring the network bandwidth usage and optimizing the data transfer.
+- **Description:** Measures the size of messages (in bytes) sent to client connections over specific transports. Sizes are **uncompressed payload bytes and exclude framing overhead**, so this is not the same as bytes on the wire.
+- **Usage:** Helps in monitoring the network bandwidth usage and optimizing the data transfer. Because compression and framing are not accounted for, treat it as a lower bound when comparing against real egress — with WebSocket compression enabled actual traffic can be substantially lower, and with many tiny frames it can be higher.
 
 #### centrifugo_transport_messages_received
 
@@ -303,7 +323,7 @@ Note, this metric is disabled by default. To enable it set `prometheus.recovered
 
 - **Type:** Counter
 - **Labels:** transport, frame_type, channel_namespace
-- **Description:** Measures the size of messages (in bytes) received from client connections over specific transports.
+- **Description:** Measures the size of messages (in bytes) received from client connections over specific transports. As with the sent counterpart, these are **uncompressed payload bytes and exclude framing overhead**.
 - **Usage:** Use this metric to monitor the incoming data size and optimize the application's performance.
 
 #### centrifugo_transport_outgoing_close_count
@@ -342,6 +362,13 @@ This Summary is deprecated and will be removed in Centrifugo v7. Use `centrifugo
 - **Description:** Counts the number of errors occurred during proxy calls.
 - **Usage:** Helps in monitoring the reliability of proxy services and ensuring error-free operations.
 
+#### centrifugo_proxy_inflight_requests
+
+- **Type:** Gauge
+- **Labels:** protocol, type, name
+- **Description:** Number of proxy requests currently in flight.
+- **Usage:** Rising inflight requests together with rising `centrifugo_proxy_duration_seconds_histogram` mean your backend is the bottleneck — proxy calls sit on the critical path of the client commands that trigger them.
+
 :::note
 
 Per-proxy ("granular") timings and errors are not separate metrics — they are exposed via the `name` label on the `centrifugo_proxy_*` metrics above, where `name` is the configured proxy name.
@@ -366,6 +393,13 @@ This Summary is deprecated and will be removed in Centrifugo v7. Use `centrifugo
 - **Description:** Same data as the Summary above, exposed in `histogram_quantile()`- and OpenTelemetry-friendly form.
 - **Usage:** Prefer this metric for percentile queries and OpenTelemetry export.
 
+#### centrifugo_api_command_errors_total
+
+- **Type:** Counter
+- **Labels:** protocol, method, error
+- **Description:** Total number of errors returned by server API commands, by error name.
+- **Usage:** The error signal for the server API — use it together with the rate derived from `centrifugo_api_command_duration_seconds_histogram_count` to get an API error ratio.
+
 #### centrifugo_api_rpc_duration_seconds
 
 :::caution Deprecated
@@ -389,7 +423,7 @@ New in Centrifugo v6.8.1
 #### centrifugo_node_pub_sub_lag_seconds
 
 - **Type:** Histogram
-- **Labels:**
+- **Labels:** channel_namespace (Centrifugo PRO)
 - **Description:** Tracks pub sub lag in seconds.
 - **Usage:** Helps in monitoring of PUB/SUB layer performance. Note, this metric may be not exact in distributed environment due to time skew (to minify effect use NTP). In this case it still may be useful to identifies growth in lag.
 
@@ -432,21 +466,21 @@ New in Centrifugo v6.8.1
 
 - **Type:** Counter
 - **Labels:** broker_name, error
-- **Description:** Number of times there was an error in Redis PUB/SUB connection of the Redis map broker (Centrifugo PRO).
+- **Description:** Number of times there was an error in Redis PUB/SUB connection of the Redis map broker.
 - **Usage:** Critical for monitoring Redis map broker health and identifying connection issues that could affect message delivery.
 
 #### centrifugo_map_broker_redis_pub_sub_dropped_messages
 
 - **Type:** Counter
 - **Labels:** broker_name, channel_type
-- **Description:** Number of dropped messages on application level in Redis PUB/SUB of the Redis map broker (Centrifugo PRO).
+- **Description:** Number of dropped messages on application level in Redis PUB/SUB of the Redis map broker.
 - **Usage:** Helps identify message loss issues in the Redis map broker, which could indicate performance problems or buffer overflows.
 
 #### centrifugo_map_broker_redis_pub_sub_buffered_messages
 
 - **Type:** Gauge
 - **Labels:** broker_name, channel_type, pub_sub_processor
-- **Description:** Number of messages buffered in Redis PUB/SUB of the Redis map broker (Centrifugo PRO).
+- **Description:** Number of messages buffered in Redis PUB/SUB of the Redis map broker.
 - **Usage:** Monitor buffer levels to detect potential bottlenecks in map broker message processing and prevent message drops.
 
 #### centrifugo_broker_publish_suppressed_count
@@ -460,70 +494,70 @@ New in Centrifugo v6.8.1
 
 - **Type:** Counter
 - **Labels:** reason, channel_namespace (Centrifugo PRO)
-- **Description:** Number of suppressed map publish operations (Centrifugo PRO).
+- **Description:** Number of suppressed map publish operations.
 - **Usage:** Monitor how often map publishes are suppressed and why.
 
 #### centrifugo_map_broker_remove_suppressed_count
 
 - **Type:** Counter
 - **Labels:** reason, channel_namespace (Centrifugo PRO)
-- **Description:** Number of suppressed map remove operations (Centrifugo PRO).
+- **Description:** Number of suppressed map remove operations.
 - **Usage:** Monitor how often map removes are suppressed and why.
 
 #### centrifugo_map_broker_cleanup_lag_seconds
 
 - **Type:** Gauge
 - **Labels:** broker_name
-- **Description:** Lag between now and the oldest expired entry awaiting cleanup in the map broker (Centrifugo PRO). 0 means caught up.
+- **Description:** Lag between now and the oldest expired entry awaiting cleanup in the map broker. 0 means caught up.
 - **Usage:** Detect when the map broker cleanup worker falls behind on pruning expired state.
 
 #### centrifugo_map_broker_cleanup_removed_count
 
 - **Type:** Counter
 - **Labels:** broker_name
-- **Description:** Total number of expired entries removed by map broker cleanup (Centrifugo PRO).
+- **Description:** Total number of expired entries removed by map broker cleanup.
 - **Usage:** Observe how much expired state the map broker is pruning over time.
 
 #### centrifugo_map_broker_cleanup_errors_count
 
 - **Type:** Counter
 - **Labels:** broker_name
-- **Description:** Total number of map broker cleanup errors (Centrifugo PRO).
+- **Description:** Total number of map broker cleanup errors.
 - **Usage:** Alert on cleanup failures that could let expired state accumulate.
 
 #### centrifugo_broker_postgres_cleanup_removed_total
 
 - **Type:** Counter
 - **Labels:** broker_name, pass
-- **Description:** Total rows removed by each PostgreSQL stream broker cleanup pass (Centrifugo PRO). The `pass` label identifies the table being cleaned.
+- **Description:** Total rows removed by each PostgreSQL stream broker cleanup pass. The `pass` label identifies the table being cleaned.
 - **Usage:** Observe how much expired data the PostgreSQL broker is pruning per cleanup pass.
 
 #### centrifugo_broker_postgres_outbox_cursor_lag_seconds
 
 - **Type:** Gauge
 - **Labels:** broker_name, shard
-- **Description:** Time between the PostgreSQL stream broker outbox cursor's row created_at and now, per shard (Centrifugo PRO).
+- **Description:** Time between the PostgreSQL stream broker outbox cursor's row created_at and now, per shard.
 - **Usage:** Detect when outbox consumption falls behind, which delays publication delivery.
 
 #### centrifugo_map_broker_postgres_outbox_cursor_lag_seconds
 
 - **Type:** Gauge
 - **Labels:** broker_name, shard
-- **Description:** Time between the PostgreSQL map broker outbox cursor's row created_at and now, per shard (Centrifugo PRO).
+- **Description:** Time between the PostgreSQL map broker outbox cursor's row created_at and now, per shard.
 - **Usage:** Detect when map broker outbox consumption falls behind.
 
 #### centrifugo_broker_postgres_partitions
 
 - **Type:** Gauge
 - **Labels:** broker_name
-- **Description:** Count of PostgreSQL stream broker stream/history table partitions (Centrifugo PRO).
+- **Description:** Count of PostgreSQL stream broker stream/history table partitions.
 - **Usage:** Monitor partition growth of the PostgreSQL broker tables.
 
 #### centrifugo_map_broker_postgres_partitions
 
 - **Type:** Gauge
 - **Labels:** broker_name
-- **Description:** Count of PostgreSQL map broker table partitions (Centrifugo PRO).
+- **Description:** Count of PostgreSQL map broker table partitions.
 - **Usage:** Monitor partition growth of the PostgreSQL map broker tables.
 
 #### centrifugo_broker_redis_node_grouped_topology_rebuild_count
@@ -555,6 +589,116 @@ New in Centrifugo v6.8.1
 - **Usage:** This is the real delivery interruption a cluster scale or reshard causes. Watch p99 to size the impact.
 
 The Redis map broker exposes the same four metrics under the `map_broker` subsystem (Centrifugo PRO): `centrifugo_map_broker_redis_node_grouped_topology_rebuild_count`, `centrifugo_map_broker_redis_node_grouped_topology_error_count`, `centrifugo_map_broker_redis_node_grouped_unknown_slot_owner_count`, and `centrifugo_map_broker_redis_node_grouped_topology_change_gap_seconds`, with the same labels and meaning for the map broker.
+
+#### centrifugo_consumers_messages_processed_total
+
+- **Type:** Counter
+- **Labels:** consumer_name
+- **Description:** Total number of messages processed by an [async consumer](./consumers.md) — Kafka, PostgreSQL outbox, Nats JetStream, Redis Stream, AWS SQS, Google Pub/Sub.
+- **Usage:** The throughput signal for event-driven publishing. A drop to zero while your application keeps producing means the consumer stalled.
+
+#### centrifugo_consumers_errors_total
+
+- **Type:** Counter
+- **Labels:** consumer_name
+- **Description:** Total number of errors while processing consumed messages.
+- **Usage:** Sustained errors mean messages are being retried or dropped depending on the consumer configuration — alert on this.
+
+#### centrifugo_node_incoming_http_requests_total
+
+- **Type:** Counter
+- **Labels:** path, method, status
+- **Description:** Number of incoming HTTP requests handled by the node.
+- **Usage:** Requires `prometheus.instrument_http_handlers` to be enabled. Gives per-endpoint request rates and status code distribution for all HTTP handlers Centrifugo serves.
+
+#### centrifugo_shared_poll_num_channels
+
+- **Type:** Gauge
+- **Description:** Number of channels currently served by the [shared poll](./shared_poll.md) subscription type.
+- **Usage:** Capacity signal for shared poll — each channel is polled on its own schedule.
+
+#### centrifugo_shared_poll_num_keys
+
+- **Type:** Gauge
+- **Description:** Number of keys tracked by shared poll across all channels.
+- **Usage:** Together with the channel count, shows how much state the shared poll layer keeps in memory.
+
+#### centrifugo_shared_poll_cycle_duration_seconds
+
+- **Type:** Histogram. Uses native (sparse, exponential) schema when [`prometheus.native_histograms`](#native-histograms) is enabled.
+- **Labels:** channel_namespace (Centrifugo PRO)
+- **Description:** Full poll cycle wall time, including the spread delay.
+- **Usage:** Overall pacing of the poll loop.
+
+#### centrifugo_shared_poll_cycle_work_duration_seconds
+
+- **Type:** Histogram. Uses native (sparse, exponential) schema when [`prometheus.native_histograms`](#native-histograms) is enabled.
+- **Labels:** channel_namespace (Centrifugo PRO)
+- **Description:** Poll cycle time minus the spread delay — the part that competes with your configured poll interval.
+- **Usage:** The key saturation signal for shared poll: if this approaches the poll interval, polling cannot keep up and updates start lagging.
+
+#### centrifugo_shared_poll_handler_duration_seconds
+
+- **Type:** Histogram. Uses native (sparse, exponential) schema when [`prometheus.native_histograms`](#native-histograms) is enabled.
+- **Labels:** trigger, channel_namespace (Centrifugo PRO)
+- **Description:** Latency of the poll handler itself, by what triggered the poll.
+- **Usage:** Isolates backend latency from the poll loop's own overhead.
+
+#### centrifugo_shared_poll_sem_wait_duration_seconds
+
+- **Type:** Histogram. Uses native (sparse, exponential) schema when [`prometheus.native_histograms`](#native-histograms) is enabled.
+- **Labels:** trigger, channel_namespace (Centrifugo PRO)
+- **Description:** Time spent waiting for a concurrency slot before a poll could run.
+- **Usage:** The contention indicator — growing wait time means the configured concurrency limit is the constraint.
+
+#### centrifugo_shared_poll_handler_error_count
+
+- **Type:** Counter
+- **Labels:** trigger, channel_namespace (Centrifugo PRO)
+- **Description:** Number of poll handler failures.
+- **Usage:** Errors here mean channel state is not being refreshed.
+
+#### centrifugo_shared_poll_items_count
+
+- **Type:** Counter
+- **Labels:** trigger, result, channel_namespace (Centrifugo PRO)
+- **Description:** Items returned by poll handlers, by result — `changed`, `unchanged` or `removed`.
+- **Usage:** A high `unchanged` share means you are polling more often than the data changes — a candidate for a longer interval or notification-driven polling.
+
+#### centrifugo_shared_poll_notify_count
+
+- **Type:** Counter
+- **Labels:** channel_namespace (Centrifugo PRO)
+- **Description:** Number of external notifications received by the shared poll layer.
+- **Usage:** Shows how much polling is driven by explicit notifications rather than the timer.
+
+#### centrifugo_shared_poll_dropped_notify_count
+
+- **Type:** Counter
+- **Labels:** channel_namespace (Centrifugo PRO)
+- **Description:** Number of notifications dropped because the poll loop was busy.
+- **Usage:** Non-zero values mean notifications are being coalesced away — updates still happen on the next cycle, but with extra latency.
+
+#### centrifugo_shared_poll_publish_count
+
+- **Type:** Counter
+- **Labels:** result, channel_namespace (Centrifugo PRO)
+- **Description:** Number of publications produced by shared poll, by result.
+- **Usage:** The output rate of the shared poll layer.
+
+#### centrifugo_shared_poll_proxy_request_items
+
+- **Type:** Histogram. Uses native (sparse, exponential) schema when [`prometheus.native_histograms`](#native-histograms) is enabled.
+- **Labels:** name
+- **Description:** Number of items per shared poll refresh proxy request, by proxy name.
+- **Usage:** Shows the batch size Centrifugo asks your backend for.
+
+#### centrifugo_shared_poll_proxy_response_items
+
+- **Type:** Histogram. Uses native (sparse, exponential) schema when [`prometheus.native_histograms`](#native-histograms) is enabled.
+- **Labels:** name
+- **Description:** Number of items per shared poll refresh proxy response.
+- **Usage:** Compare with the request items histogram to see how much of each batch the backend actually returns.
 
 ## Traces
 

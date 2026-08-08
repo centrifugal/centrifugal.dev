@@ -11,7 +11,7 @@ To add Centrifugo let's update `docker-compose.yml` file:
 
 ```yaml
 centrifugo:
-  image: centrifugo/centrifugo:v6
+  image: centrifugo/centrifugo:v6.9.1
   volumes:
     - ./centrifugo:/centrifugo
   command: centrifugo -c config.json

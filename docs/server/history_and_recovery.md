@@ -129,7 +129,7 @@ sub.on('publication', (ctx) => applyOrderUpdate(ctx.data));
 sub.subscribe();
 ```
 
-`getState` is one convenience for this, not a requirement. The broader point holds either way: when your own database is the source of truth and Centrifugo streams only the change events, you can combine the publication cache's reconnect-storm protection with a consistent view in every scenario. See [app-owned state with stream subscriptions](/blog/2026/05/24/pg-stream-broker-benefits#app-owned-state-with-stream-subscriptions) for more.
+`getState` is one convenience for this, not a requirement. The broader point holds either way: when your own database is the source of truth and Centrifugo streams only the change events, you can combine the publication cache's reconnect-storm protection with a consistent view in every scenario. See [app-owned state with stream subscriptions](/blog/2026/07/27/app-owned-state-stream-subscriptions) for more.
 
 ## Configuration recap
 
