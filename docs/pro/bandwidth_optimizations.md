@@ -268,7 +268,7 @@ The first two do the same job, so you pick one. Compaction works alongside eithe
 
 :::note Why delta compression is not in this comparison
 
-[Delta compression for at most once](#delta-compression-for-at-most-once) answers a different question. It sends only what changed since the previous publication, so it helps when consecutive messages in a channel resemble each other, and it is enabled per channel rather than for everything a connection receives. If that describes your traffic it stacks with anything below.
+[Delta compression](#delta-compression-for-at-most-once) answers a different question. It sends only what changed since the previous publication, so it helps when consecutive messages in a channel resemble each other, and it is enabled per channel rather than for everything a connection receives. If that describes your traffic it stacks with anything below.
 
 :::
 
