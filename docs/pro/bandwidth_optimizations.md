@@ -265,7 +265,7 @@ Three things on this page make messages smaller: `permessage-deflate` (which you
 We measured all of them on a 16-core Linux server, sending JSON. Three things stood out:
 
 * **Connections that aren't receiving anything cost nothing.** With 2 000 and 8 000 idle connections, every option measured the same as no compression. Turning compression on does not tax connections that are sitting quiet.
-* **What you send decides how much you save.** On a structured JSON feed a dictionary cut traffic 7.5x, where `permessage-deflate` managed 2.5x. On tiny messages it was 2.6x against 1.8x.
+* **What you send decides how much you save.** On a structured JSON feed a dictionary cut traffic 7.5x, where `permessage-deflate` managed 2.5x. On 49-byte messages it was 2.6x against 1.8x.
 * **How many subscribers share a channel decides the CPU.** With a handful of subscribers per channel a dictionary used 1.8x the CPU of no compression. With 500 subscribers on one channel it used 1.05x — practically free — because the message is compressed once and the result goes to everyone.
 
 So:
@@ -288,7 +288,40 @@ The numbers behind this follow.
 
 ### By traffic shape
 
-The same message (~600 bytes of JSON) at the message rates real applications run at. Every connection is subscribed to one channel. CPU is measured against the same load with compression off, and so is the saving.
+These runs all send the same message — 652 bytes of JSON from an operations feed, of the kind a dashboard subscribes to:
+
+```json
+{
+  "event_type": "shipment.status_changed",
+  "emitted_at": "2026-08-09T12:00:00Z",
+  "shipment": {
+    "shipment_id": "SHP-1000003",
+    "status": "at_hub",
+    "carrier": "northwind_logistics",
+    "service_level": "express",
+    "progress_percent": 96,
+    "exception_reason": "",
+    "route": {
+      "origin": { "hub_code": "FRA-3", "country": "DE" },
+      "destination": { "hub_code": "AMS-1", "country": "NL" },
+      "estimated_arrival": "2026-08-11T04:12:00Z"
+    },
+    "parcel": { "pieces": 3, "weight_kg": 36.8, "temperature": 3.7, "handling": "standard" }
+  },
+  "metadata": {
+    "producer": "tracking-service",
+    "version": "4.2.0",
+    "region": "ap-southeast-2",
+    "environment": "production",
+    "sequence": 12345,
+    "correlation_id": "996bc002-3031"
+  }
+}
+```
+
+This is a fair middle case, not a flattering one. Field names repeat in every message and several values come from small sets (`status`, `carrier`, `region`, hub codes) — that is what a dictionary feeds on. But every message also carries a fresh timestamp, sequence number and correlation id, which nothing can compress. If your messages have no repeated vocabulary at all, expect less; if they are more repetitive than this, expect more.
+
+Every connection is subscribed to one channel. CPU is measured against the same load with compression off, and so is the saving.
 
 | traffic | scheme | CPU vs none | bytes/msg | ratio |
 |---|---|---|---|---|
@@ -323,14 +356,19 @@ The admin UI reports this directly, as the split between new and returning conne
 
 ### By payload
 
-All with 2 000 connections receiving 4 messages a second each, so only the message content differs.
+All with 2 000 connections receiving 4 messages a second each, so only the message content differs. The four shapes:
+
+* **operations feed** — the 652-byte message above.
+* **telemetry** — 257 bytes, almost all numbers: `{"device_id":"dev-0016","metrics":{"cpu_percent":27.3,"memory_bytes":559139331,...},"healthy":true}`. Field names repeat, values almost never do.
+* **chat prose** — 308 bytes dominated by a sentence of free text, with a room and author around it.
+* **tiny** — 49 bytes: `{"t":1770000000000000000,"v":466,"s":"picked_up"}`. Barely bigger than the frame around it.
 
 | payload | `permessage-deflate` + cache | dictionary | dictionary + compaction |
 |---|---|---|---|
-| operations feed (~600 B, structured) | 2.47x | **7.52x** | 9.12x |
-| telemetry (mostly numbers) | 2.03x | **3.66x** | 4.73x |
-| chat prose | 2.06x | **3.47x** | 4.22x |
-| tiny (~60 B) | 1.79x | **2.55x** | 4.00x |
+| operations feed (652 B, structured) | 2.47x | **7.52x** | 9.12x |
+| telemetry (257 B, mostly numbers) | 2.03x | **3.66x** | 4.73x |
+| chat prose (308 B) | 2.06x | **3.47x** | 4.22x |
+| tiny (49 B) | 1.79x | **2.55x** | 4.00x |
 
 A dictionary helps most when your messages share field names and repeat the same values, and least when they are short or every message is genuinely different.
 
