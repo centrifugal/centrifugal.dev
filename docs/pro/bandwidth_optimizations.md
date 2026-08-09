@@ -10,7 +10,7 @@ This page covers five features. The first three make each message smaller; the l
 
 | feature | what it does |
 |---|---|
-| [Delta compression](#delta-compression-for-at-most-once) | sends what changed since the previous publication, without requiring recovery |
+| [Delta compression for at most once](#delta-compression-for-at-most-once) | sends what changed since the previous publication, without requiring recovery |
 | [Channel compaction](#channel-compaction) | replaces channel names in messages with short numeric ids |
 | [Dictionary compression](#dictionary-compression) | compresses every message against a dictionary trained on your traffic |
 | [Client publish debouncing](#client-publish-debouncing) | coalesces bursts of publications coming from a client |
@@ -266,9 +266,9 @@ Three things make messages smaller:
 
 The first two do the same job, so you pick one. Compaction works alongside either.
 
-:::note Why delta compression is not here
+:::note Why delta compression is not in this comparison
 
-[Delta compression](#delta-compression-for-at-most-once) answers a different question. It sends only what changed since the previous publication, so it helps when consecutive messages in a channel resemble each other, and it is enabled per channel rather than for everything a connection receives. If that describes your traffic it stacks with anything below.
+[Delta compression for at most once](#delta-compression-for-at-most-once) answers a different question. It sends only what changed since the previous publication, so it helps when consecutive messages in a channel resemble each other, and it is enabled per channel rather than for everything a connection receives. If that describes your traffic it stacks with anything below.
 
 :::
 
