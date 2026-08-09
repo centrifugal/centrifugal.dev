@@ -258,9 +258,11 @@ Another optimization related to bandwidth is the ability to drop intermediary pu
 
 ## Which compression to use: measured cost and benefit
 
-Three features on this page make messages smaller: `permessage-deflate` (which you may already have on), dictionary compression, and channel compaction. The first two do the same job, so you pick one. Compaction works alongside either.
+Three things on this page make messages smaller: `permessage-deflate` (which you may already have on), dictionary compression, and channel compaction. The first two do the same job, so you pick one. Compaction works alongside either.
 
-We measured all of them on a 16-core Linux server. Three things stood out:
+[Delta compression](#delta-compression-for-at-most-once) is not in this comparison because it answers a different question — it only helps when consecutive publications in a channel resemble each other, and it applies per channel rather than to every message a connection receives. If that describes your traffic, it stacks with anything here.
+
+We measured all of them on a 16-core Linux server, sending JSON. Three things stood out:
 
 * **Connections that aren't receiving anything cost nothing.** With 2 000 and 8 000 idle connections, every option measured the same as no compression. Turning compression on does not tax connections that are sitting quiet.
 * **What you send decides how much you save.** On a structured JSON feed a dictionary cut traffic 7.5x, where `permessage-deflate` managed 2.5x. On tiny messages it was 2.6x against 1.8x.
@@ -271,10 +273,16 @@ So:
 | your situation | what to use |
 |---|---|
 | metered egress, JSON payloads that share structure | **dictionary compression**, plus channel compaction if your channel names are long |
-| CPU is what you are short of | **`permessage-deflate` with the prepared message cache** — about a third of the saving, slightly less CPU, and nothing to set up |
+| CPU is what you are short of | **`permessage-deflate` with the prepared message cache** — cuts traffic by around 60% where a dictionary cuts it by around 87%, for slightly less CPU and nothing to set up |
 | messages are small but channel names are long | **channel compaction** first — it costs almost nothing and helps most exactly where compression helps least |
 | messages are binary, encrypted or already compact | none of them will help much — try one and measure before committing |
 | bandwidth is flat-rate, or traffic stays inside your network | none of them: you would spend CPU to save bytes nobody charges you for |
+
+They also differ in what they ask of you, which is not visible in any measurement:
+
+* **`permessage-deflate`** is one config option and works with every browser and SDK.
+* **Channel compaction** is one namespace option; SDKs that do not support it simply keep receiving channel names.
+* **Dictionary compression** needs PostgreSQL, a training session on live traffic, and a person to review the words that go into the dictionary before it is served. It currently works with `centrifuge-js` and `centrifuge-go`; other clients stay uncompressed, which is safe but means a mixed fleet gets mixed results.
 
 The numbers behind this follow.
 
@@ -304,6 +312,14 @@ Most applications live in the first row: lots of connections, each getting very 
 The last row is the happiest case. With 500 subscribers on a channel, the dictionary costs about the same CPU as `permessage-deflate` but saves more than twice as much, because the message is compressed once and reused for everyone.
 
 In between, a dictionary costs roughly 10-20% more CPU than `permessage-deflate` and saves three times as much. Note that at 1-4 messages per second per channel, a write delay doesn't batch anything — the next message is never waiting when the current one goes out — so each frame carries a single message. That is the hardest case for ordinary compression, and the one a dictionary is designed for.
+
+#### The one-off cost of a dictionary
+
+A dictionary has to reach the client before it can be used. In these runs that was **2.3 KB, once per connection** — after which the client caches it and reconnects cost nothing, even across restarts, because it is identified by its content.
+
+That download has to be earned back, and at ~650 bytes saved per message it takes about four messages to do so. It only matters if your connections are very short-lived: a client that reconnects every few seconds and receives one message each time will spend more than it saves. `permessage-deflate` has no equivalent cost, which is the one place it is unambiguously ahead.
+
+The admin UI reports this directly, as the split between new and returning connections and as bytes saved after subtracting downloads.
 
 ### By payload
 
