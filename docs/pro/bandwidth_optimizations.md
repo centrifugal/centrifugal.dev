@@ -258,7 +258,13 @@ Another optimization related to bandwidth is the ability to drop intermediary pu
 
 ## Which compression to use: measured cost and benefit
 
-Three things on this page make messages smaller: `permessage-deflate` (which you may already have on), dictionary compression, and channel compaction. The first two do the same job, so you pick one. Compaction works alongside either.
+Three things make messages smaller:
+
+* **`permessage-deflate`** — the standard WebSocket compression extension, available in Centrifugo OSS via [`websocket.compression`](../transports/websocket.md#websocketcompression). Every browser supports it. It compresses each message on its own, with no memory of the messages before it.
+* **[Dictionary compression](#dictionary-compression)** — compresses each message against a dictionary of your own traffic, so the repeated parts of your messages are already known and cost almost nothing to send.
+* **[Channel compaction](#channel-compaction)** — replaces the channel name in each message with a short number.
+
+The first two do the same job, so you pick one. Compaction works alongside either.
 
 [Delta compression](#delta-compression-for-at-most-once) is not in this comparison because it answers a different question — it only helps when consecutive publications in a channel resemble each other, and it applies per channel rather than to every message a connection receives. If that describes your traffic, it stacks with anything here.
 
@@ -266,17 +272,21 @@ We measured all of them on a 16-core Linux server, sending JSON. Three things st
 
 * **Connections that aren't receiving anything cost nothing.** With 2 000 and 8 000 idle connections, every option measured the same as no compression. Turning compression on does not tax connections that are sitting quiet.
 * **What you send decides how much you save.** On a structured JSON feed a dictionary cut traffic 7.5x, where `permessage-deflate` managed 2.5x. On 49-byte messages it was 2.6x against 1.8x.
-* **How many subscribers share a channel decides the CPU.** With a handful of subscribers per channel a dictionary used 1.8x the CPU of no compression. With 500 subscribers on one channel it used 1.05x — practically free — because the message is compressed once and the result goes to everyone.
+* **How many subscribers share a channel decides the CPU.** With a handful of subscribers per channel a dictionary used 1.8x the CPU of no compression. With 500 subscribers on one channel it used 1.05x — practically free — because the message is compressed once and the result is reused for everyone.
+
+To put those multiples in absolute terms: on this 16-core server, 2 000 connections receiving 4 messages a second used **0.58 of one core** with no compression and **1.05 cores** with a dictionary. The multiples below are all against numbers of that size, so "1.8x the CPU" is half a core, not half a server.
 
 So:
 
 | your situation | what to use |
 |---|---|
-| metered egress, JSON payloads that share structure | **dictionary compression**, plus channel compaction if your channel names are long |
-| CPU is what you are short of | **`permessage-deflate` with the prepared message cache** — cuts traffic by around 60% where a dictionary cuts it by around 87%, for slightly less CPU and nothing to set up |
+| you pay for outbound traffic, and your messages are JSON with repeating fields | **dictionary compression**, plus channel compaction if your channel names are long |
+| CPU is what you are short of | **`permessage-deflate`, with its [prepared message cache](./performance.md#websocket-compression-optimizations) turned on** — cuts traffic by around 60% where a dictionary cuts it by around 87%, for slightly less CPU and nothing to set up |
 | messages are small but channel names are long | **channel compaction** first — it costs almost nothing and helps most exactly where compression helps least |
 | messages are binary, encrypted or already compact | none of them will help much — try one and measure before committing |
 | bandwidth is flat-rate, or traffic stays inside your network | none of them: you would spend CPU to save bytes nobody charges you for |
+
+Whichever you try, Centrifugo tells you what it achieved on your own traffic rather than leaving you to infer it: `permessage-deflate` and dictionary compression both report bytes in and out per connection, and dictionary compression additionally reports what each dictionary saved after subtracting the cost of sending it.
 
 They also differ in what they ask of you, which is not visible in any measurement:
 
@@ -378,7 +388,7 @@ Channel compaction works the other way round. It removes the channel name from e
 
 Compression uses memory in two ways, and they behave very differently.
 
-**While a message is being compressed**, the server needs a working buffer for it — around 1 MB. Buffers are pooled and handed back, so what you hold at any moment depends on how many messages are being compressed *at the same time*, which is roughly your CPU count. It does not depend on how many connections you have. Two thousand idle connections need no buffers at all; a burst that fans out to thousands of subscribers briefly needs one per CPU busy compressing.
+**While a message is being compressed**, the server needs a working buffer for it — around 1 MB. These buffers are reused: one is borrowed for a message and handed straight back. So the memory you hold at any moment follows how many messages are being compressed *at the same instant*, which is roughly the number of CPUs doing the work — not how many connections you have. Two thousand idle connections need no buffers at all.
 
 Worth knowing: the buffer `permessage-deflate` uses is slightly **larger** than the one used with a dictionary (about 1.2 MB against 0.8 MB), so on this axis a dictionary is the lighter option.
 
@@ -387,10 +397,10 @@ Worth knowing: the buffer `permessage-deflate` uses is slightly **larger** than 
 | | size | grows with |
 |---|---|---|
 | the dictionary itself | 16 KB, shared by every connection using it | nothing |
-| dictionary's cache of recent compressed frames | about 0.4 MB by default (`frame_cache_size`) | nothing — it holds a fixed number of frames |
-| `permessage-deflate`'s prepared message cache | whatever budget you give it, e.g. 10 MB | how many *different* messages you send |
+| dictionary's cache of recently compressed messages | about 0.4 MB by default ([`frame_cache_size`](#configuration)) | nothing — it holds a fixed number of messages |
+| `permessage-deflate`'s [prepared message cache](./performance.md#websocket-compression-optimizations) | whatever budget you give it, e.g. 10 MB | how many *different* messages you send |
 
-The last row is the important one: the prepared message cache stores a compressed copy of each distinct message it has seen recently, so its usefulness depends on how repetitive your traffic is, while a dictionary is one shared copy regardless.
+The last row is the important one. Both caches exist for the same reason — when one message goes to many subscribers, you want to compress it once and send the same bytes to all of them. The difference is what they hold: the prepared message cache keeps a compressed copy of every distinct message it saw recently, so how useful it is depends on how repetitive your traffic is; a dictionary is a single shared copy of your vocabulary, and its size does not change with your traffic at all.
 
 In practice the dictionary used less memory in every workload we measured, while compressing three times harder:
 
