@@ -79,7 +79,7 @@ Dictionary compression gives the compressor that shared context up front. Centri
 
 Unlike streaming compression, a dictionary costs **no per-connection memory** — every connection shares the same immutable bytes — and one publication is compressed once for all of its subscribers.
 
-The dictionary travels in the **connect reply**, which is the last uncompressed frame of a connection; everything after it is compressed. The client caches it under a content hash and sends only that hash next time, so a returning client pays nothing for it. A dictionary is chosen at connect and never changes mid-connection.
+The dictionary travels in the **connect reply**. The client caches it under a content hash and sends only that hash next time, so a returning client pays nothing for it — and since both sides already hold the bytes, that connection's connect reply is compressed too. A client receiving a dictionary for the first time has one uncompressed frame, the reply carrying it; everything after that is compressed. Either way no compressed frame can reach a client that does not yet hold the dictionary, and every frame carries a marker saying which it is. A dictionary is chosen at connect and never changes mid-connection.
 
 **WebSocket only.** A compressed frame is arbitrary bytes, which a WebSocket connection carries natively as a binary message; text-framed transports like SSE would have to re-encode it and give the savings straight back. Connections over other transports are unaffected and stay exactly as they are today.
 
@@ -130,11 +130,11 @@ A client-declared profile cannot be verified, so anyone who can connect can clai
 
 Everything in this section happens in the **admin UI** — there is no configuration to write and no code to deploy. You start a training session over connections you select the same way you do on the **Inspector** page: by channel, user, labels or client name. No profile is needed to start, so you can find out what a dictionary would be worth before classifying anything.
 
-You choose a **duration** and whether to **collect values**. The session collects for that long and stops; you can extend or stop it early. Up to 50 connections are sampled across the cluster at once. While it runs it shows what it observed: connections sampled, distinct users, protocols seen, which frame types it did and did not see, payload parse rate, and how many new message shapes are still appearing — a flat line means the traffic has been covered.
+You choose a **duration** — between a minute and 24 hours — and whether to **collect values**. The session collects for that long and stops; you can extend or stop it early. Up to 50 connections are sampled across the cluster at once. While it runs it shows what it observed: connections sampled, distinct users, protocols seen, which frame types it did and did not see, payload parse rate, and how many new message shapes are still appearing — a flat line means the traffic has been covered.
 
-By default a session keeps **shape only**: field names, nesting and key order, with every value replaced by a placeholder before anything leaves the node. Nothing a user typed can reach a dictionary, so there is nothing to review. Enabling **collect values** additionally proposes values for a human to approve; they are filtered first — name and shape denylists, anything the application marked private, and channel names are never admitted — and what survives is ranked so the valuable entries are read first. A shape-only session still reports what values *would* have been worth, so you can judge the review workflow before agreeing to it.
+By default a session keeps **shape only**: field names, nesting and key order, with every value replaced by a placeholder before anything leaves the node. Nothing a user typed can reach a dictionary, so there is nothing to review. Enabling **collect values** additionally proposes values for a human to approve; they are filtered first — a denylist of field names (extendable with `denied_value_names`), shape rules that reject anything token-shaped or outside the allowed length, and channel names, which are never admitted — and what survives is ranked so the valuable entries are read first.
 
-When collection ends nothing happens until you ask. You build the candidates, compare them, prune any word list, pick a size from the measured curve and a destination profile, then activate — optionally staged to a percentage of new connections. Two dictionaries are generated from every approved vocabulary, one for JSON and one for Protobuf, and they activate together. Retraining can run on a schedule; it collects and stops, and activation is always an operator action.
+When collection ends nothing happens until you ask. You build the candidates, compare them, prune any word list, pick a size from the measured curve and a destination profile, then activate — optionally staged to a percentage of new connections. Two dictionaries are generated from every approved vocabulary, one for JSON and one for Protobuf, and they activate together. Retraining is starting another session over the same connections; nothing activates on its own, so a dictionary only ever changes when an operator says so.
 
 ### Withdrawal and monitoring
 
@@ -154,15 +154,16 @@ Prometheus metrics and the admin UI report, per profile and protocol: the **cold
 |---|---|---|
 | `enabled` | `false` | Make the feature available on this node. Requires `database`. |
 | `max_sampled_connections` | `50` | Fleet-wide cap on connections a training session observes at once. |
-| `session_max_duration` | `"24h"` | Upper bound on a requested training duration. |
-| `candidate_ttl` | `"168h"` | How long an unused candidate is kept before deletion. |
-| `refresh_interval` | `"20s"` | How often nodes poll the database for activation changes. Activation is picked up on a client's next reconnect anyway, so there is rarely a reason to lower it. |
+| `candidate_ttl` | `"168h"` | How long an unused candidate is kept before deletion. The per-node reports it was built from are cleared on the same schedule. |
+| `snapshot_poll_interval` | `"20s"` | How often nodes poll the database for activation changes. Activating, deactivating or editing a profile also nudges every node immediately, so this is a backstop rather than the usual path. |
+| `max_concurrent_sessions` | `3` | How many training sessions may collect at once. |
+| `denied_value_names` | `[]` | Extra field names never admitted as values, on top of the built-in denylist. |
 
 Everything else — profiles, sessions, review, activation — is managed in the admin UI and stored in the database, so it survives restarts and applies across the cluster.
 
 ### Limitations
 
-* **Application payloads must be JSON.** A training session fails fast if it finds binary, Protobuf-encoded or encrypted `data`, naming the channel. The structure dictionary still works for those profiles.
+* **Application payloads must be JSON.** Binary, Protobuf-encoded or encrypted `data` cannot be learned from: a session counts and skips those payloads rather than failing, and reports a parse rate per channel — a low rate is how you find out this traffic will not benefit. The structure dictionary still works for those profiles.
 * **No structure dictionary for Protobuf connections**, as described above.
 * **Channel names are never put into a dictionary**, since they routinely carry a user or room id. If channel names dominate your frames, [channel compaction](#channel-compaction) removes them from the wire instead — the two features are complementary.
 * **WebSocket connections only.** Other transports are unaffected.
