@@ -76,7 +76,7 @@ Dictionary compression gives the compressor that shared context up front. Centri
 | trained on your traffic, shape only | a training session; field names and nesting, no values, so nothing to review |
 | plus approved values | the same, plus reading a ranked word list |
 
-What each is worth depends on your payloads and your message rate; [the measured comparison](#choosing-between-them-measured-cost-and-benefit) below puts numbers on it.
+What each is worth depends on your payloads and your message rate; [the measured comparison](#which-compression-to-use-measured-cost-and-benefit) below puts numbers on it.
 
 Unlike streaming compression, a dictionary costs **no per-connection memory** — every connection shares the same immutable bytes — and one publication is compressed once for all of its subscribers.
 
@@ -188,9 +188,9 @@ Everything else — profiles, sessions, review, activation — is managed in the
 * **WebSocket connections only.** Other transports are unaffected.
 * **Client SDK support** is limited to `centrifuge-js` and `centrifuge-go` at the moment.
 
-## Choosing between them: measured cost and benefit
+## Which compression to use: measured cost and benefit
 
-Three features on this page reduce bytes on the wire, and they are not alternatives to each other in any simple sense. This section is the measured comparison, so the choice can be made on numbers rather than on intuition.
+`permessage-deflate`, dictionary compression and channel compaction all reduce bytes on the wire, and they are not simple alternatives to one another: the first two compress the same frame and are mutually exclusive, while compaction shortens what is in it and combines with either. This section is the measured comparison, so the choice can be made on numbers rather than on intuition.
 
 Two rules of thumb come out of it, and everything else is detail:
 
