@@ -266,7 +266,11 @@ Three things make messages smaller:
 
 The first two do the same job, so you pick one. Compaction works alongside either.
 
-[Delta compression](#delta-compression-for-at-most-once) is not in this comparison because it answers a different question — it only helps when consecutive publications in a channel resemble each other, and it applies per channel rather than to every message a connection receives. If that describes your traffic, it stacks with anything here.
+:::note Why delta compression is not here
+
+[Delta compression](#delta-compression-for-at-most-once) answers a different question. It sends only what changed since the previous publication, so it helps when consecutive messages in a channel resemble each other, and it is enabled per channel rather than for everything a connection receives. If that describes your traffic it stacks with anything below.
+
+:::
 
 We measured all of them on a 16-core Linux server, sending JSON:
 
@@ -286,15 +290,44 @@ Putting that together:
 | messages are binary, encrypted or already compact | none of them will help much — try one and measure before committing |
 | bandwidth is flat-rate, or traffic stays inside your network | none of them: you would spend CPU to save bytes nobody charges you for |
 
-Whichever you try, Centrifugo tells you what it achieved on your own traffic rather than leaving you to infer it: `permessage-deflate` and dictionary compression both report bytes in and out per connection, and dictionary compression additionally reports what each dictionary saved after subtracting the cost of sending it.
-
 They also differ in how much work they are to adopt, which no benchmark shows:
 
 * **`permessage-deflate`** is one config option and works with every browser and SDK.
 * **Channel compaction** is one namespace option; SDKs that do not support it simply keep receiving channel names.
 * **Dictionary compression** needs PostgreSQL, a training session on live traffic, and a person to review the words that go into the dictionary before it is served. It currently works with `centrifuge-js` and `centrifuge-go`; other clients stay uncompressed, which is safe but means a mixed fleet gets mixed results.
 
-The measurements follow.
+### Turning them on
+
+```json title="permessage-deflate (Centrifugo OSS, cache is PRO)"
+{
+  "websocket": {
+    "compression": true,
+    "compression_prepared_message_cache_size": 10485760
+  }
+}
+```
+
+```json title="channel compaction, per namespace"
+{
+  "channel": {
+    "namespaces": [{ "name": "example", "allow_channel_compaction": true }]
+  }
+}
+```
+
+```json title="dictionary compression — then train and activate in the admin UI"
+{
+  "dictionary_compression": { "enabled": true },
+  "database": {
+    "enabled": true,
+    "postgresql": { "dsn": "postgres://user:pass@localhost:5432/centrifugo?sslmode=disable" }
+  }
+}
+```
+
+Whichever you turn on, Centrifugo reports what it actually achieved on your traffic rather than leaving you to infer it. `permessage-deflate` and dictionary compression both count bytes in and out per connection, and dictionary compression also reports what each dictionary saved after subtracting the cost of sending it out.
+
+**On Protobuf connections**, `permessage-deflate` and channel compaction work as they do on JSON. Dictionary compression works too, but the payloads you publish must still be JSON for a dictionary to be trained from them — and the free structure dictionary is not served to Protobuf connections, since there are no repeated field names in a Protobuf frame for it to match. The measurements below are all JSON.
 
 ### By traffic shape
 
@@ -420,7 +453,9 @@ And a dictionary does not get more expensive as you add connections, because the
 
 Four times the connections, and the difference barely moved.
 
-### Two settings that matter more than the choice of scheme
+### Two settings worth getting right
+
+These two matter more than which feature you pick:
 
 * **If you use `permessage-deflate` and broadcast to many subscribers, turn on the prepared message cache** ([`websocket.compression_prepared_message_cache_size`](./performance.md#websocket-compression-optimizations)). Without it, the same message is compressed again for every single subscriber. With 500 subscribers on a channel that was the difference between 2.4x and 1.04x the CPU, and between 133 MB and 93 MB of memory. Watch the units: the setting is a size in bytes, not a number of messages, so a small value caches almost nothing.
 * **Turning up the compression level is not worth much.** Moving `permessage-deflate` from its default level to a much slower one improved the saving from 2.47x to 2.58x while costing more CPU. And the difference between the two features is not about levels: compared at the *same* level, `permessage-deflate` saved 2.58x and a dictionary 7.50x.
