@@ -56,7 +56,7 @@ To enable channel compaction, set the `allow_channel_compaction` option to `true
 
 After that, client SDKs which support channel compaction will automatically negotiate it during the subscription; no additional steps are required.
 
-At this moment only JavaScript SDK (`centrifuge-js`) supports this feature (since v5.5.0). Centrifugo PRO supports this since v6.5.0.
+Channel compaction is supported by the official SDKs — see the [client SDK feature matrix](../transports/client_sdk.md). `centrifuge-js` has it since v5.5.0. Centrifugo PRO supports it since v6.5.0. An SDK that does not negotiate it simply keeps receiving channel names, so a mixed fleet needs no coordination.
 
 ## Dictionary compression
 
@@ -140,7 +140,11 @@ When collection ends nothing happens until you ask. Building a candidate does th
 
 That selection is exactly what the dictionary will hold. A dictionary fills to its budget and stops, so a longer list of approved values does not make a bigger dictionary — it makes the same dictionary out of better material, until the budget runs out and the remainder is simply left over. Values approved but not held are the worst of both: disclosed to everyone the profile reaches, and contributing nothing. So the build settles on the set that actually lands, and the review screen ranks it so the values carrying the saving are the ones you read first.
 
-Your job in review is the one a machine cannot do: untick anything that should not be disclosed to this profile's audience. The approve dialog then measures *your* selection at the size you chose and states what you will get — the dictionary's size, its ratio, what a cold connect pays to receive it, and how many of your approved values the artifact actually had room for. That last number matters: a value that does not fit is disclosed as an approved decision and buys nothing, so the recommendation never proposes one, and the dialog says plainly when your own selection does. Then pick a destination profile and activate — optionally staged to a percentage of new connections. The size and the selection are one answer, so the approve dialog defaults to the recommended rung; moving to another size changes what the ideal selection would have been. Two dictionaries are generated from every approved vocabulary, one for JSON and one for Protobuf, and they activate together. Retraining is starting another session over the same connections; nothing activates on its own, so a dictionary only ever changes when an operator says so.
+The size is chosen at the top of the review screen rather than after it, because it decides how many values are worth approving: change the size and the ticked selection follows it to the one measured there. Every rung shows what it was measured at, how many values it holds and what a cold connect pays for it, and the recommended rung is marked.
+
+Your job in review is the one a machine cannot do: untick anything that should not be disclosed to this profile's audience. The panel measures your selection as you edit it — the dictionary you would get, its ratio, its cold-connect cost, and how many of your ticked values the artifact actually has room for. That last number matters: a value that does not fit is disclosed as an approved decision and buys nothing, so the recommendation never proposes one, and the panel says plainly when your own selection does.
+
+Then pick a destination profile and activate — optionally staged to a percentage of new connections, split by user so a client keeps its side of the split across reconnects. Two dictionaries are generated from every approved vocabulary, one for JSON and one for Protobuf, and they activate together. Building does not replace what it built before: an operator halfway through a review can rebuild without losing their decisions, and the newest set is marked current. Retraining is starting another session over the same connections; nothing activates on its own, so a dictionary only ever changes when an operator says so.
 
 ### Withdrawal and monitoring
 
@@ -152,17 +156,25 @@ Withdrawal stops distribution; it cannot un-disclose. Every client that already 
 
 :::
 
-Prometheus metrics and the admin UI report, per profile and protocol: the **cold/warm connect split** (what fraction of connects arrive with a dictionary already cached — this should settle warm), the **realized ratio** against the ratio the version was approved at (a growing gap means it is time to retrain), **bytes saved** net of delivery cost, and the **frame cache hit rate**.
+The admin UI reports delivery per **dictionary**, not per profile: one row for each tier and artifact a profile is really serving. That matters because a profile usually serves more than one at a time — connections outside a staged rollout hold the structure dictionary, and a version you just replaced stays with the connections that hold it until they reconnect. Blending those into a single ratio produces a number comparable with nothing.
+
+Each row carries the **cold/warm connect split** (what fraction of connects arrive with the dictionary already cached — this should settle warm), the **realized ratio** against the ratio that version was approved at (both measured on traffic held back from training, so a growing gap really does mean retrain), **bytes saved** net of delivery cost, and the **frame cache hit rate**. Prometheus exposes the same counters per profile and protocol.
 
 ### Configuration
 
 | Option | Default | Description |
 |---|---|---|
 | `enabled` | `false` | Make the feature available on this node. Requires `database`. |
+| `frame_cache_size` | `1024` | Compressed frames cached per dictionary. Compressing a frame costs far more than sending it, so this is what makes fan-out viable: subscribers holding the same dictionary share one compression. |
+| `max_live_codecs` | `32` | How many compression codecs a node keeps built at once, across all dictionaries. A codec holds a preset dictionary in its window, so this bounds the memory the feature can occupy however many dictionaries are served. |
 | `max_sampled_connections` | `50` | Fleet-wide cap on connections a training session observes at once. |
-| `candidate_ttl` | `"168h"` | How long an unused candidate is kept before deletion. The per-node reports it was built from are cleared on the same schedule. |
+| `frame_budget_per_second` | `14000` | Upper bound on frames a node extracts per second while training, shared across concurrent sessions. Exceeding it lowers the sample size rather than the fidelity. |
+| `size_ladder_bytes` | `[512, 2048, 4096, 8192, 16384]` | Dictionary sizes built and scored during a build, so the size curve shows what each one buys. |
 | `snapshot_poll_interval` | `"20s"` | How often nodes poll the database for activation changes. Activating, deactivating or editing a profile also nudges every node immediately, so this is a backstop rather than the usual path. |
-| `max_concurrent_sessions` | `3` | How many training sessions may collect at once. |
+| `flush_interval` | `"5s"` | How often a node writes what it observed during a training session to the database. Jittered per node. |
+| `maintenance_interval` | `"60s"` | How often a node re-checks that sampled connections still match the session filter and rotates a fraction of them. |
+| `max_concurrent_sessions` | `3` | How many training sessions may collect at once. They share the frame budget. |
+| `candidate_ttl` | `"168h"` | How long an unused candidate is kept before deletion. The per-node reports it was built from are cleared on the same schedule. |
 | `denied_value_names` | `[]` | Extra field names never admitted as values, on top of the built-in denylist. |
 
 Everything else — profiles, sessions, review, activation — is managed in the admin UI and stored in the database, so it survives restarts and applies across the cluster.
