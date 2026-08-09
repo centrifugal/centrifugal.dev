@@ -85,7 +85,7 @@ Centrifugo supports `permessage-deflate` compression for websocket messages. Che
 
 :::caution
 
-Enabling WebSocket compression may result in more CPU and memory usage by Centrifugo – depending on your load profile the increase may be notable. But it [can be still economically sufficient](/blog/2024/08/19/optimizing-websocket-compression) due to reduced bandwidth costs.
+Enabling WebSocket compression may result in more CPU and memory usage by Centrifugo – depending on your load profile the increase may be notable. But it [can be still economically sufficient](/blog/2024/08/19/optimizing-websocket-compression) due to reduced bandwidth costs. Centrifugo PRO has [measured numbers for that trade-off](../pro/bandwidth_optimizations.md#which-compression-to-use-measured-cost-and-benefit) — CPU, memory and ratio for `permessage-deflate` against the alternatives, across message rates and payload shapes.
 
 :::
 
