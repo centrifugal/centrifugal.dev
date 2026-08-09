@@ -68,14 +68,15 @@ Dictionary compression is an experimental feature. Configuration options, admin 
 
 Real-time applications send small messages, often. Compressing each one on its own finds little to work with — there is barely any repetition *inside* a single message — while the repetition *between* messages is large, since they share field names, the protocol envelope, and often a handful of values. On WebSocket connections the usual answer is the `permessage-deflate` extension, which has exactly this weakness.
 
-Dictionary compression gives the compressor that shared context up front. Centrifugo PRO trains a dictionary from real connections, sends it to a client once, and compresses every frame against it. Measured on JSON WebSocket connections:
+Dictionary compression gives the compressor that shared context up front. Centrifugo PRO trains a dictionary from real connections, sends it to a client once, and compresses every frame against it. There are three tiers, in increasing order of what they ask of you:
 
-| tier | ratio vs uncompressed | what it costs you |
-|---|---|---|
-| `permessage-deflate` today | 1.15x | — |
-| structure dictionary | 1.31-1.50x | one click in the admin UI |
-| trained on your traffic, shape only | 1.85-2.46x | a training session in the admin UI |
-| plus approved values | 4.02-5.06x | the above, plus reviewing a word list |
+| tier | what it costs you |
+|---|---|
+| structure dictionary | one click in the admin UI — a fixed artifact holding the protocol envelope, no application data |
+| trained on your traffic, shape only | a training session; field names and nesting, no values, so nothing to review |
+| plus approved values | the same, plus reading a ranked word list |
+
+What each is worth depends on your payloads and your message rate; [the measured comparison](#choosing-between-them-measured-cost-and-benefit) below puts numbers on it.
 
 Unlike streaming compression, a dictionary costs **no per-connection memory** — every connection shares the same immutable bytes — and one publication is compressed once for all of its subscribers.
 
@@ -186,6 +187,79 @@ Everything else — profiles, sessions, review, activation — is managed in the
 * **Channel names are never put into a dictionary**, since they routinely carry a user or room id. If channel names dominate your frames, [channel compaction](#channel-compaction) removes them from the wire instead — the two features are complementary.
 * **WebSocket connections only.** Other transports are unaffected.
 * **Client SDK support** is limited to `centrifuge-js` and `centrifuge-go` at the moment.
+
+## Choosing between them: measured cost and benefit
+
+Three features on this page reduce bytes on the wire, and they are not alternatives to each other in any simple sense. This section is the measured comparison, so the choice can be made on numbers rather than on intuition.
+
+Two rules of thumb come out of it, and everything else is detail:
+
+* **What you send decides the ratio.** A dictionary is worth 7.6x on a structured operations feed and 2.6x on a tiny payload, against 2.5x and 1.8x for `permessage-deflate`.
+* **How often you send decides the cost.** Compression costs nothing on a connection that is not receiving anything, and its CPU multiple *falls* as fan-out widens, because one compressed frame is reused for every subscriber holding the same dictionary.
+
+### By traffic shape
+
+The same operations-feed payload (~600 B of JSON) at the rates real deployments run at. CPU is the server process, relative to the same run with compression off; ratio is wire bytes per delivered message against that same baseline.
+
+| traffic | scheme | CPU vs none | bytes/msg | ratio |
+|---|---|---|---|---|
+| **2 000 idle connections**, no traffic | `permessage-deflate` + cache | 1.04x | — | — |
+| | dictionary | 1.04x | — | — |
+| **1 msg/s per channel**<br/>(500 channels, 2 000 conns) | `permessage-deflate` + cache | 1.70x | 303 B | 2.47x |
+| | dictionary | 3.56x | 99 B | **7.60x** |
+| | dictionary + channel compaction | 3.55x | 81 B | **9.25x** |
+| **4 msg/s per channel**<br/>(500 channels, 2 000 conns) | `permessage-deflate` + cache | 1.43x | 304 B | 2.47x |
+| | dictionary | 3.03x | 98 B | **7.61x** |
+| | dictionary + channel compaction | 3.29x | 81 B | **9.28x** |
+| **10 msg/s per channel**<br/>200 ms write delay, so frames batch | `permessage-deflate` + cache | 1.62x | 245 B | 3.06x |
+| | dictionary | 2.81x | 86 B | **8.72x** |
+| | dictionary + channel compaction | 3.07x | 73 B | **10.24x** |
+| **500 msg/s, one channel**<br/>500 subscribers, 10 ms write delay | `permessage-deflate` + cache | 1.44x | 146 B | 5.07x |
+| | dictionary | 1.73x | 59 B | **12.53x** |
+| | dictionary + channel compaction | 1.19x | 52 B | **14.17x** |
+
+The first row is the one most deployments live in. **Enabling compression on connections that are not receiving messages costs nothing measurable** — 2 000 idle connections came out at 1.04x CPU with a dictionary installed, and 8 000 at 0.99x.
+
+The last row is where the frame cache earns its keep. At a 500-subscriber fan-out the dictionary's CPU multiple drops to 1.73x while its ratio *rises* to 12.5x, because one publication is compressed once and every subscriber holding that dictionary gets the same bytes. Batching helps every scheme for the same reason a dictionary does — a frame holding several publications has repetition inside it — which is why the 10 msg/s row compresses better than the 4 msg/s row for all of them.
+
+At 1–4 msg/s per channel a write delay batches nothing: there is never a second message waiting when the first is written. That is the regime the first three rows measure, and it is where a preset dictionary is worth most relative to `permessage-deflate`, because it is the only one of the two that has any context to work with.
+
+### By payload
+
+All at 4 msg/s per channel, so only the payload differs.
+
+| payload | `permessage-deflate` + cache | dictionary | dictionary + compaction |
+|---|---|---|---|
+| operations feed (~600 B, structured) | 2.52x | **7.60x** | 9.26x |
+| telemetry (mostly numbers) | 2.03x | **3.68x** | 4.76x |
+| chat prose | 2.08x | **3.51x** | 4.31x |
+| tiny (~60 B) | 1.82x | **2.64x** | 4.24x |
+
+A dictionary is worth most where messages share structure and vocabulary and least where they are short or genuinely novel. Channel compaction moves in the opposite direction — it removes a fixed number of bytes per push, so it matters most when the payload is small: on the tiny payload it is worth 1.57x on its own and lifts the dictionary from 2.64x to 4.24x.
+
+### What this costs in memory
+
+A dictionary is shared by every connection that holds it, so its memory does not scale with connection count:
+
+| idle connections | RSS without | RSS with a dictionary | difference |
+|---|---|---|---|
+| 2 000 | 77.6 MB | 82.1 MB | +4.5 MB |
+| 8 000 | 239.6 MB | 246.7 MB | +7.1 MB |
+
+Four times the connections, and the difference grows 1.6x rather than 4x — one artifact, plus the codecs a node keeps built (`max_live_codecs`), plus small per-connection bookkeeping. Under load both schemes add tens of MB of pooled compressor state, which tracks concurrent compressions rather than connections.
+
+### Two settings that matter more than the choice of scheme
+
+* **If you run `permessage-deflate` on fan-out, turn on the prepared message cache** ([`websocket.compression_prepared_message_cache_size`](./performance.md#websocket-compression-optimizations)). Without it, every subscriber compresses the same frame again: at the 500-subscriber fan-out it cost 3.48x CPU against 1.44x with the cache, and it could not sustain delivery. The dictionary has the equivalent switch on by default (`frame_cache_size`); turning it off cost 4.5x CPU instead of 3.2x at 4 msg/s.
+* **Compression level is not the lever it looks like.** Raising `permessage-deflate` from level 1 to level 6 bought 2.47x → 2.57x. The dictionary codec is pinned at level 6 and cannot go lower: Go's DEFLATE switches to a fast encoder at level 1 that accepts a preset dictionary and then ignores it, so a lower level would pay to carry a dictionary it never consults. The gap between the two schemes is therefore not a level difference — at the same level 6, `permessage-deflate` gives 2.57x and a dictionary 7.6x.
+
+:::note How this was measured
+
+Two processes on one machine (macOS, 10 cores), server and load generator separate, native — no containers. Every arm ran interleaved with the others and repeated three times; CPU is paired against the baseline **from the same round**, because absolute CPU on a laptop drifted up to 40% over an hour and taking medians across rounds would report that drift as a difference between settings. Bytes are counted at the client socket, so they include WebSocket framing and whatever compression actually negotiated. Ratios reproduced to within 1% across rounds; CPU multiples carry roughly ±20%.
+
+Your numbers will differ — the point of the tables is the shape, not the digits. One regime is missing because it could not be measured honestly here: a 500-subscriber fan-out with batching off saturated the load generator rather than the server, so those runs are excluded rather than reported.
+
+:::
 
 ## Client publish debouncing
 
