@@ -159,7 +159,7 @@ The size is chosen at the top of the review screen rather than after it, because
 
 Your job in review is the part no machine can do: untick anything that should not be shown to everyone this profile reaches. As you edit, the panel measures what you have ticked and shows the dictionary you would get — its size, how much it saves, what a new connection pays to download it, and how many of your ticked values actually fit inside it.
 
-That last number matters. A dictionary fills up and stops, so a value that does not fit is approved — and therefore disclosed — without ever being used. The recommendation never suggests one, and the panel tells you plainly if your own choices do.
+Pay attention to that last number. A dictionary fills up and stops, so a value that does not fit still counts as approved — and therefore disclosed — without ever being used. Centrifugo never recommends such a value, and the panel warns you if your own choices include one.
 
 Then pick a destination profile and activate — optionally staged to a percentage of new connections, split by user so a client keeps its side of the split across reconnects. Two dictionaries are generated from every approved vocabulary, one for JSON and one for Protobuf, and they activate together. Building does not replace what it built before: an operator halfway through a review can rebuild without losing their decisions, and the newest set is marked current. Retraining is starting another session over the same connections; nothing activates on its own, so a dictionary only ever changes when an operator says so.
 
@@ -268,7 +268,7 @@ The first two do the same job, so you pick one. Compaction works alongside eithe
 
 [Delta compression](#delta-compression-for-at-most-once) is not in this comparison because it answers a different question — it only helps when consecutive publications in a channel resemble each other, and it applies per channel rather than to every message a connection receives. If that describes your traffic, it stacks with anything here.
 
-We measured all of them on a 16-core Linux server, sending JSON. Three things stood out:
+We measured all of them on a 16-core Linux server, sending JSON:
 
 * **Connections that aren't receiving anything cost nothing.** With 2 000 and 8 000 idle connections, every option measured the same as no compression. Turning compression on does not tax connections that are sitting quiet.
 * **What you send decides how much you save.** On a structured JSON feed a dictionary cut traffic 7.5x, where `permessage-deflate` managed 2.5x. On 49-byte messages it was 2.6x against 1.8x.
@@ -276,7 +276,7 @@ We measured all of them on a 16-core Linux server, sending JSON. Three things st
 
 To put those multiples in absolute terms: on this 16-core server, 2 000 connections receiving 4 messages a second used **0.58 of one core** with no compression and **1.05 cores** with a dictionary. The multiples below are all against numbers of that size, so "1.8x the CPU" is half a core, not half a server.
 
-So:
+Putting that together:
 
 | your situation | what to use |
 |---|---|
@@ -288,13 +288,13 @@ So:
 
 Whichever you try, Centrifugo tells you what it achieved on your own traffic rather than leaving you to infer it: `permessage-deflate` and dictionary compression both report bytes in and out per connection, and dictionary compression additionally reports what each dictionary saved after subtracting the cost of sending it.
 
-They also differ in what they ask of you, which is not visible in any measurement:
+They also differ in how much work they are to adopt, which no benchmark shows:
 
 * **`permessage-deflate`** is one config option and works with every browser and SDK.
 * **Channel compaction** is one namespace option; SDKs that do not support it simply keep receiving channel names.
 * **Dictionary compression** needs PostgreSQL, a training session on live traffic, and a person to review the words that go into the dictionary before it is served. It currently works with `centrifuge-js` and `centrifuge-go`; other clients stay uncompressed, which is safe but means a mixed fleet gets mixed results.
 
-The numbers behind this follow.
+The measurements follow.
 
 ### By traffic shape
 
@@ -329,7 +329,7 @@ These runs all send the same message — 652 bytes of JSON from an operations fe
 }
 ```
 
-This is a fair middle case, not a flattering one. Field names repeat in every message and several values come from small sets (`status`, `carrier`, `region`, hub codes) — that is what a dictionary feeds on. But every message also carries a fresh timestamp, sequence number and correlation id, which nothing can compress. If your messages have no repeated vocabulary at all, expect less; if they are more repetitive than this, expect more.
+We picked a middle-of-the-road message rather than a flattering one. Field names repeat in every message, and several values come from small sets — `status`, `carrier`, `region`, the hub codes — which is what a dictionary lives on. But each message also carries a fresh timestamp, sequence number and correlation id that nothing can compress. Expect less if your messages have no repeated vocabulary, more if they are more repetitive than this.
 
 Every connection is subscribed to one channel. CPU is measured against the same load with compression off, and so is the saving.
 
@@ -360,7 +360,7 @@ In between, a dictionary costs roughly 10-20% more CPU than `permessage-deflate`
 
 A dictionary has to reach the client before it can be used. In these runs that was **2.3 KB, once per connection** — after which the client caches it and reconnects cost nothing, even across restarts, because it is identified by its content.
 
-That download has to be earned back, and at ~650 bytes saved per message it takes about four messages to do so. It only matters if your connections are very short-lived: a client that reconnects every few seconds and receives one message each time will spend more than it saves. `permessage-deflate` has no equivalent cost, which is the one place it is unambiguously ahead.
+At roughly 650 bytes saved per message, that download pays for itself after about four messages. So it only becomes a problem with very short-lived connections — a client that reconnects every few seconds to receive a single message will spend more than it saves. `permessage-deflate` has no such cost, and this is the one place where it clearly wins.
 
 The admin UI reports this directly, as the split between new and returning connections and as bytes saved after subtracting downloads.
 
@@ -386,13 +386,13 @@ Channel compaction works the other way round. It removes the channel name from e
 
 ### Memory
 
-Compression uses memory in two ways, and they behave very differently.
+Compression needs memory for two things: a working buffer while it compresses a message, and whatever it keeps between messages.
 
-**While a message is being compressed**, the server needs a working buffer for it — around 1 MB. These buffers are reused: one is borrowed for a message and handed straight back. So the memory you hold at any moment follows how many messages are being compressed *at the same instant*, which is roughly the number of CPUs doing the work — not how many connections you have. Two thousand idle connections need no buffers at all.
+The working buffer is about 1 MB. Buffers get reused — one is borrowed to compress a message and handed straight back — so the memory in use at any moment tracks how many messages are being compressed at that instant, roughly the number of CPUs doing the work. It has nothing to do with how many connections you have: 2 000 idle connections use no buffers at all.
 
-Worth knowing: the buffer `permessage-deflate` uses is slightly **larger** than the one used with a dictionary (about 1.2 MB against 0.8 MB), so on this axis a dictionary is the lighter option.
+Incidentally, `permessage-deflate` uses a slightly bigger buffer than a dictionary does (about 1.2 MB against 0.8 MB), so a dictionary is the lighter of the two here.
 
-**Between messages**, each feature keeps something:
+What each keeps between messages:
 
 | | size | grows with |
 |---|---|---|
@@ -400,9 +400,9 @@ Worth knowing: the buffer `permessage-deflate` uses is slightly **larger** than 
 | dictionary's cache of recently compressed messages | about 0.4 MB by default ([`frame_cache_size`](#configuration)) | nothing — it holds a fixed number of messages |
 | `permessage-deflate`'s [prepared message cache](./performance.md#websocket-compression-optimizations) | whatever budget you give it, e.g. 10 MB | how many *different* messages you send |
 
-The last row is the important one. Both caches exist for the same reason — when one message goes to many subscribers, you want to compress it once and send the same bytes to all of them. The difference is what they hold: the prepared message cache keeps a compressed copy of every distinct message it saw recently, so how useful it is depends on how repetitive your traffic is; a dictionary is a single shared copy of your vocabulary, and its size does not change with your traffic at all.
+Both caches exist for the same reason: when one message goes to many subscribers, you want to compress it once and send the same bytes to everyone. They differ in what they keep. The prepared message cache keeps a compressed copy of each distinct message it has seen lately, so how much it helps depends on how repetitive your traffic is. A dictionary is a single shared copy of your vocabulary, and its size never changes with your traffic.
 
-In practice the dictionary used less memory in every workload we measured, while compressing three times harder:
+The dictionary used less memory than `permessage-deflate` in every case we measured, while compressing three times as hard:
 
 | traffic | `permessage-deflate` + cache | dictionary |
 |---|---|---|
