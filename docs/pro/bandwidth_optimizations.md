@@ -40,22 +40,22 @@ The numbers behind this follow.
 
 ### By traffic shape
 
-The same message (~600 bytes of JSON) at the message rates real applications run at. CPU is measured against the same load with compression off, and so is the saving.
+The same message (~600 bytes of JSON) at the message rates real applications run at. Every connection is subscribed to one channel. CPU is measured against the same load with compression off, and so is the saving.
 
 | traffic | scheme | CPU vs none | bytes/msg | ratio |
 |---|---|---|---|---|
 | **2 000 idle connections**, no traffic | `permessage-deflate` + cache | 1.00x | — | — |
 | | dictionary | 0.99x | — | — |
-| **1 msg/s per channel**<br/>500 channels, 2 000 conns | `permessage-deflate` + cache | 1.37x | 304 B | 2.47x |
+| **2 000 connections, 1 msg/s each**<br/>500 channels, 4 subscribers each → 2 000 msg/s delivered | `permessage-deflate` + cache | 1.37x | 304 B | 2.47x |
 | | dictionary | 1.45x | 100 B | **7.49x** |
 | | dictionary + channel compaction | 1.42x | 82 B | **9.10x** |
-| **4 msg/s per channel**<br/>500 channels, 2 000 conns | `permessage-deflate` + cache | 1.65x | 302 B | 2.48x |
+| **2 000 connections, 4 msg/s each**<br/>500 channels, 4 subscribers each → 8 000 msg/s delivered | `permessage-deflate` + cache | 1.65x | 302 B | 2.48x |
 | | dictionary | 1.84x | 100 B | **7.50x** |
 | | dictionary + channel compaction | 1.81x | 82 B | **9.13x** |
-| **10 msg/s per channel**<br/>200 ms write delay, so frames batch | `permessage-deflate` + cache | 1.69x | 300 B | 2.50x |
+| **2 000 connections, 10 msg/s each**<br/>200 ms write delay, so messages batch → 18 000 msg/s delivered | `permessage-deflate` + cache | 1.69x | 300 B | 2.50x |
 | | dictionary | 1.80x | 98 B | **7.64x** |
 | | dictionary + channel compaction | 1.77x | 81 B | **9.25x** |
-| **500 msg/s, one channel**<br/>500 subscribers, 10 ms write delay | `permessage-deflate` + cache | 1.04x | 147 B | 5.02x |
+| **500 connections on one channel**<br/>500 msg/s published → 250 000 msg/s delivered | `permessage-deflate` + cache | 1.04x | 147 B | 5.02x |
 | | dictionary | 1.05x | 61 B | **12.18x** |
 | | dictionary + channel compaction | 1.09x | 55 B | **13.35x** |
 
@@ -67,7 +67,7 @@ In between, a dictionary costs roughly 10-20% more CPU than `permessage-deflate`
 
 ### By payload
 
-All at 4 messages per second per channel, so only the message content differs.
+All with 2 000 connections receiving 4 messages a second each, so only the message content differs.
 
 | payload | `permessage-deflate` + cache | dictionary | dictionary + compaction |
 |---|---|---|---|
