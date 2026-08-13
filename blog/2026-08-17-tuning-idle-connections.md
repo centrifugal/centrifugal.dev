@@ -1,11 +1,11 @@
 ---
 title: "Tuning Centrifugo PRO for large WebSocket connection pools"
 tags: [centrifugo, websocket, performance]
-description: "An idle WebSocket connection is not free — it costs CPU and memory even when no messages flow. We hold 200,000 idle connections on a single node and measure five Centrifugo options that cut that per-connection overhead — one targeting CPU, four targeting memory — for 52% less CPU and 60% less memory, then hold a million idle connections on the same node."
+description: "An idle WebSocket connection costs CPU and memory even when no messages flow. We start with 200k idle connections on a single node, cut the overhead with five Centrifugo PRO options. Then hold a million idle connections on the same node."
 author: Alexander Emelin
 authorTitle: Founder of Centrifugal Labs
 authorImageURL: /img/alexander_emelin.jpeg
-date: 2026-07-17T10:00:00
+image: /img/blog_ws_idle.jpg
 hide_table_of_contents: false
 ---
 

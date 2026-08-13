@@ -1,11 +1,11 @@
 ---
 title: App-owned state with stream subscriptions
 tags: [centrifugo, websocket, docsync]
-description: When the data already lives in your own database, Centrifugo only has to deliver change events. The hard part is the seam between loading the state and going live. The getState callback on stream subscriptions closes that seam — capture the position first, load the data, and let the SDK handle every reconnect after that. With two worked examples — a Kafka aggregator and per-tenant kitchen orders.
+description: Describing the getState callback on stream subscriptions — capture the stream position first, load the data, and let the SDK handle every reconnect after that. With two worked examples — a Kafka aggregator and per-tenant kitchen orders.
 author: Alexander Emelin
 authorTitle: Founder of Centrifugal Labs
 authorImageURL: /img/alexander_emelin.jpeg
-image: /img/docsync_cover.jpg
+image: /img/blog_get_state.jpg
 hide_table_of_contents: false
 ---
 
