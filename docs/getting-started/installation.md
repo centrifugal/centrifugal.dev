@@ -138,7 +138,13 @@ docker-compose up
 
 ## Kubernetes Helm chart
 
-See our [official Kubernetes Helm chart](https://github.com/centrifugal/helm-charts). Follow instructions in a Centrifugo chart README to bootstrap Centrifugo inside your Kubernetes cluster.
+See our [official Kubernetes Helm chart](https://github.com/centrifugal/helm-charts) to run Centrifugo inside a Kubernetes cluster. The [chart README](https://github.com/centrifugal/helm-charts/tree/master/charts/centrifugo) takes you from a local trial to a production deployment and covers, among other things:
+
+* **Quick local start** with Minikube to try the chart in a few commands.
+* **Production deployment tutorials** with step-by-step guides for [Google Kubernetes Engine (GKE)](https://github.com/centrifugal/helm-charts/blob/master/charts/centrifugo/tutorial.md) and [Amazon EKS](https://github.com/centrifugal/helm-charts/blob/master/charts/centrifugo/tutorial.md) – covering high availability with multiple replicas, Redis for horizontal scaling, TLS with managed certificates, ingress, and Prometheus monitoring.
+* **Ingress examples** for NGINX, HAProxy, [AWS ALB (EKS)](https://github.com/centrifugal/helm-charts/blob/master/charts/centrifugo/README.md#aws-alb-ingress-eks) and [GCP GKE](https://github.com/centrifugal/helm-charts/blob/master/charts/centrifugo/README.md#gcp-gke-ingress), plus Gateway API (HTTPRoute).
+* **[Service mesh (Istio) support](https://github.com/centrifugal/helm-charts/blob/master/charts/centrifugo/README.md#service-mesh-istio) out of the box** – WebSocket, HTTP-streaming/SSE, emulation and the HTTP/gRPC APIs all work through the mesh with no extra configuration, because every Service port declares its L7 protocol via the standard `appProtocol` field.
+* **Scaling** with the Redis engine (supports all Centrifugo features) or the NATS broker.
 
 ## RPM and DEB packages for Linux
 

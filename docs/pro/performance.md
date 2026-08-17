@@ -46,6 +46,22 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 Of course the ratio is highly dependent on the Centrifugo-specific setup load profile and usage scenarios.
 
+New in Centrifugo v6.9.2
+
+Another option which helps to hold large pools of mostly idle WebSocket connections is `websocket.process_commands_off_read_loop` (boolean, by default `false`):
+
+```json title="config.json"
+{
+  "websocket": {
+    "process_commands_off_read_loop": true
+  }
+}
+```
+
+A WebSocket connection processes each incoming command on its read loop goroutine, and that goroutine's stack grows to the deepest call it ever makes (even just the initial `connect`) and is never given back while the connection lives. When this option is enabled, each command is processed on a short-lived goroutine instead, so the read loop itself stays shallow — the deep stack returns to the Go runtime's stack pool and is reused by the next connection that needs it, rather than being pinned to a connection that then spends its life idle. This roughly halves the read goroutine's stack (around 4 KB less per connection).
+
+The option is off by default and adds a small per-command latency that becomes negligible once many connections are active, so it's most useful for large pools of mostly idle connections. See the [Tuning Centrifugo PRO for large WebSocket connection pools](/blog/2026/08/17/tuning-idle-connections) blog post for measurements and how it combines with the other options here.
+
 ## Faster HTTP API
 
 Centrifugo PRO has an optimized JSON serialization/deserialization for HTTP API.

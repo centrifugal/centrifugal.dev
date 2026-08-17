@@ -30,7 +30,7 @@ After configuring, restart Centrifugo and go to [http://localhost:8000](http://l
 
 :::tip
 
-Although there is a password based authentication a good advice is to protect web interface by firewall rules in production.
+Although there is a password based authentication, a good advice is to also protect the admin endpoint at the infrastructure level in production – for example with firewall rules, by keeping it on a private network, or behind an authenticating reverse proxy. Centrifugo additionally throttles repeated failed password attempts per client IP as a best-effort defense against brute-force (a valid login is not affected, even during an attack), but this is defense in depth and not a substitute for restricting access to the endpoint.
 
 :::
 
