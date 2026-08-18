@@ -39573,29 +39573,29 @@ Thank you for your attention!
 
 ## App-owned state with stream subscriptions
 
-Most real-time features start from data that already exists. Orders in an `orders` table, notifications, a document, a ticket queue. The browser needs two things: the current state, and every change from that moment on. The state usually comes from an HTTP endpoint, the changes come from a WebSocket subscription.
+Most real-time features start from data that already exists somewhere — orders in an `orders` table, notifications, a document, a ticket queue. To show it live, the browser needs two things: the current state, and every change that happens after. In a typical app the state comes from an HTTP endpoint and the changes come from a WebSocket subscription.
 
-Each step is simple on its own. The seam between them is where the bugs live — and that seam is the same in every app that owns its state.
+Each part is easy on its own. The hard part is joining them correctly, and it turns out to be hard in the same way in every application that keeps state in its own database.
 
 <!--truncate-->
 
-## Where the seam is
+## What goes wrong
 
-Load the state, then subscribe, and three things can go wrong.
+The natural approach is to load the state first and subscribe after. Three problems hide in this sequence.
 
-**A gap in time.** Between the HTTP response and the subscribe command, updates keep happening. They are not in the loaded snapshot, and the subscription started too late to see them. The component stays wrong until the page is reloaded.
+The first is a gap in time. Between the moment the HTTP response was produced and the moment the subscription becomes active, updates keep happening. They are not in the loaded snapshot, and the subscription started too late to catch them, so they are simply lost. The component shows stale data until the user reloads the page.
 
-**Lost stream continuity.** After a reconnect the SDK asks Centrifugo to replay missed publications. Usually it can. Sometimes it can't — the history window has moved on, or the stream epoch changed. Then the subscription reports `recovered: false`, and the application has to reload from the backend. While that reload is in flight, new publications keep arriving — the same race as on first load, now on every reconnect.
+The second one shows up later, on reconnects. After a network drop the SDK asks Centrifugo to replay the publications the client missed. Usually it can. But sometimes it can't — the client was offline longer than the history retention, or the stream epoch changed. The subscription then reports `recovered: false` and the application has to reload state from the backend. While that reload is in flight, new publications keep arriving — the same race as on the first load, except now it can happen on any reconnect.
 
-**Ordering between the two sources.** A publication that arrives while a fetch is running has to be applied after the fetch result, not before, or the fresh value gets overwritten by the older one.
+The third is ordering between the two sources. If a publication arrives while the state fetch is still running, it has to be applied on top of the fetch result, not before it — otherwise a fresh value gets overwritten by an older one.
 
-None of this is Centrifugo-specific: any system that combines "fetch a snapshot" with "subscribe to a feed" has to answer it. [Proper real-time document state synchronization](/blog/2024/06/03/real-time-document-state-sync) walked through solving it by hand — buffering publications during the fetch, tracking versions, re-syncing on lost continuity. It works, and it is a fair amount of code to write in every client.
+None of this is specific to Centrifugo: any system that combines "fetch a snapshot" with "subscribe to a feed" runs into the same three problems. [Proper real-time document state synchronization](/blog/2024/06/03/real-time-document-state-sync) showed how to solve them by hand — buffer publications during the fetch, track versions, re-sync when continuity is lost. It works, but it's a fair amount of code to repeat in every client.
 
-Stream subscriptions now have this built in.
+Stream subscriptions now have this logic built in.
 
 ## The getState callback
 
-`getState` is an option on a stream subscription. The SDK calls it before subscribing. The callback loads the application state and returns the stream position that state corresponds to:
+`getState` is an option on a stream subscription. The SDK calls it before subscribing. Inside the callback the application loads its state and returns the stream position that state corresponds to:
 
 ```javascript
 const sub = client.newSubscription('orders:user_42', {
@@ -39617,7 +39617,7 @@ sub.on('publication', (ctx) => {
 sub.subscribe();
 ```
 
-That is the whole integration. The application answers one question — "what is my state, and at which stream position was it taken?" — and the SDK does the rest.
+This is the entire integration. The application answers one question — what is the current state, and at which stream position was it taken — and the SDK takes care of everything else.
 
 ```
    getState()                    subscribe(recover from pos)
@@ -39634,35 +39634,35 @@ That is the whole integration. The application answers one question — "what is
 
 ## What the SDK does with it
 
-The behaviour is worth spelling out, because it decides how much the application has to handle.
+It's worth walking through the behaviour case by case, because it defines how much the application still has to handle on its own.
 
-**On the first subscribe**, `getState` runs, and the SDK subscribes with recovery from the returned position. Everything published after that position arrives through the normal `publication` handler — the catch-up and the live stream look identical to the application.
+On the first subscribe, the SDK runs `getState` and subscribes with recovery from the returned position. Everything published after that position arrives through the normal `publication` handler, so catch-up publications and live ones look identical to the application.
 
-**On a normal reconnect**, `getState` is *not* called. The SDK already holds a valid position and lets the server replay the gap from channel history. This is the point of recovery in the first place: a mass reconnect is absorbed by the broker instead of turning into a thundering herd on the application database.
+On a normal reconnect, `getState` is not called. The SDK already holds a valid position, so it lets the server replay the missed publications from channel history. This is exactly what recovery exists for: when thousands of clients reconnect at once, the broker absorbs the load instead of the application database.
 
-**When recovery is impossible**, `getState` runs again. This is the part that removes the manual re-sync path. A subscription with `getState` asks the server to *reject* a subscribe it cannot recover, instead of accepting it and reporting `recovered: false`. The server answers with the `unrecoverable position` error, the SDK drops its saved position, and the next subscribe attempt calls `getState` again — fresh state, fresh position, recovery from there. There is no window where the subscription is live but the state under it is stale.
+When recovery turns out impossible, `getState` runs again — and this is the part that replaces the manual re-sync code. A subscription with `getState` asks the server to reject a subscribe it cannot recover, instead of accepting it with `recovered: false`. The server responds with the `unrecoverable position` error, the SDK drops its saved position, and the next subscribe attempt calls `getState` again: fresh state, fresh position, recovery from there. At no point is the subscription live while the state under it is stale.
 
-**When `getState` itself fails** — network error, database timeout — the SDK emits a subscription error and retries with the usual backoff. A failing state load never leaves a half-subscribed component behind.
+And if `getState` itself fails — a network error, a database timeout — the SDK emits a subscription error and retries with the usual backoff, so a failed state load never leaves a component half-subscribed.
 
 ## Read the position first
 
-The order inside the callback matters, and it is the one rule the application has to get right: **read the stream position before reading the data**.
+There is one rule the application has to get right inside the callback: read the stream position before reading the data.
 
-Doing it in that order makes the position a lower bound. Anything committed between the two reads shows up twice: once inside the loaded data, once again as a catch-up publication. Overlap is harmless, a gap is not — and reading the data first would produce exactly that gap.
+In this order the position becomes a lower bound. Anything committed between the two reads shows up twice — once in the loaded data, and once more as a catch-up publication. Seeing an update twice is harmless, missing one is not, and reading the data first would produce exactly the kind of gap this whole mechanism exists to close.
 
-So the application must tolerate replay. Most update shapes do this naturally:
+Since duplicates are possible, the application must be able to apply the same update twice. Most update shapes already can:
 
 - **Absolute values.** "Status is `shipped`", "price is 42.17". Applying it twice changes nothing.
 - **Keyed upserts with a version or timestamp.** Apply by `id`, keep the newer `updated_at`. Last write wins.
-- **Offset-based dedup.** Store the offset the state was loaded at and drop publications at or below it. Needed when updates are deltas — "add 3 items" is not safe to apply twice.
+- **Offset-based dedup.** Store the offset the state was loaded at and drop publications at or below it. This one is needed when updates are deltas — "add 3 items" is not safe to apply twice.
 
-There is also a way to remove the overlap entirely if the data source is a single relational database: wrap both reads in one `REPEATABLE READ` transaction. Both statements then see the same MVCC snapshot, so the returned position is the exact watermark of the loaded data, and catch-up delivers only what was committed strictly after it. Nothing to reconcile, at the cost of a transaction on the read path.
+And when the data source is a single relational database, the overlap can be removed entirely: wrap both reads in one `REPEATABLE READ` transaction. Both statements then see the same MVCC snapshot, the returned position is the exact watermark of the loaded data, and catch-up delivers only what was committed strictly after it. Nothing left to reconcile, at the cost of a transaction on the read path.
 
 ## Where the position comes from
 
-`getState` needs an `offset` and an `epoch` for the channel. Two ways to get them.
+`getState` must return an `offset` and an `epoch` for the channel. There are two ways to get them.
 
-**Any broker — the server API.** A `history` call without a `limit` returns just the current stream position, no publications:
+With any broker, the server API works: a `history` call without a `limit` returns just the current stream position, without publications:
 
 ```bash
 curl -X POST http://localhost:8000/api/history \
@@ -39676,7 +39676,7 @@ curl -X POST http://localhost:8000/api/history \
 
 The application's own endpoint calls this, then reads its data, then returns both to the client. Clients never talk to the Centrifugo API directly.
 
-**PostgreSQL broker — a SQL function.** With the [PostgreSQL stream broker](/docs/server/engines#postgresql-broker) the position lives in the same database as the data, so both reads happen in one place — and, if wanted, in one transaction:
+With the [PostgreSQL stream broker](/docs/server/engines#postgresql-broker), the position lives in the same database as the data, so both reads happen in one place — and, if needed, in one transaction:
 
 ```sql
 SELECT * FROM cf_stream_top_position('orders:user_42');
@@ -39684,7 +39684,7 @@ SELECT * FROM cf_stream_top_position('orders:user_42');
 SELECT id, status, updated_at FROM orders WHERE user_id = 42;
 ```
 
-This is what makes the PostgreSQL broker a natural fit for app-owned state: the position and the rows share a transaction boundary, so the `REPEATABLE READ` trick above becomes a two-line change. The write side has the same property — `cf_stream_publish` commits the publication together with the row it announces, which is the subject of [Transactional publishing for stream subscriptions with PostgreSQL](/blog/2026/05/24/pg-stream-broker-benefits).
+This is what makes the PostgreSQL broker such a natural fit for app-owned state: the position and the rows share a transaction boundary, so the `REPEATABLE READ` trick above becomes a two-line change. The write side has the same property — `cf_stream_publish` commits the publication together with the row it announces, which was the subject of [Transactional publishing for stream subscriptions with PostgreSQL](/blog/2026/05/24/pg-stream-broker-benefits).
 
 ## Server configuration
 
@@ -39705,21 +39705,21 @@ This is what makes the PostgreSQL broker a natural fit for app-owned state: the 
 }
 ```
 
-The history window only has to cover the reconnect gap, not the data's lifetime. Anything longer than that is served by `getState` reloading from the application database — which is the correct division of labour, since channel history is a bounded cache and the application database is the source of truth.
+Note that the history window only has to cover the reconnect gap, not the lifetime of the data. Anything longer than that is served by `getState` reloading from the application database — which is the right split: channel history is a bounded cache, the application database is the source of truth.
 
 Alternatively use [`allow_recovery`](/docs/server/channels#allow_recovery) and let clients opt in per subscription with the `recoverable` option.
 
-## Two worked shapes
+## Two examples
 
-The rules above are short. Two examples show how they land in real systems. Both use the PostgreSQL stream broker, so the write side is transactional too — but the read side is the same with any broker.
+The rules above are short, so here are two examples showing how they play out in real systems. Both use the PostgreSQL stream broker, which makes the write side transactional too — but the read side works the same with any broker.
 
 ### An upstream feed shaped into stored views
 
-The first is a service that consumes a Kafka topic and maintains aggregated views in PostgreSQL — say, a price board built from a market-data topic. The browser needs the current aggregate, then live updates.
+The first one is a service that consumes a Kafka topic and maintains aggregated views in PostgreSQL — say, a price board built from a market-data topic. The browser needs the current aggregate, then live updates.
 
-The obvious wiring is to point Centrifugo at the same Kafka topic and let it fan events out to subscribers in parallel with the aggregator. That works, but it leaves two unrelated offset spaces to bridge: the snapshot row stores a Kafka offset, the live subscription speaks Centrifugo offsets, and the client has to subscribe with a recent stream position and discard everything older than the snapshot's Kafka offset. The bridging logic is awkward and easy to get subtly wrong.
+The obvious wiring is to point Centrifugo at the same Kafka topic and let it fan events out to subscribers in parallel with the aggregator. That works, but it leaves two unrelated offset spaces to bridge: the snapshot row stores a Kafka offset, the live subscription speaks Centrifugo offsets, and the client has to subscribe with a recent stream position and throw away everything older than the snapshot's Kafka offset. This bridging logic is awkward and easy to get subtly wrong.
 
-Making the aggregator the publisher collapses the bridge. For each Kafka batch it processes, the aggregator does both things in one PostgreSQL transaction: the snapshot `UPDATE` and a `cf_stream_publish(...)` for the new events. The stored aggregate and the change stream can never disagree about what has been observed, and the snapshot row stays minimal — just the aggregate, no offset bookkeeping.
+There is a simpler wiring: make the aggregator the publisher. For each Kafka batch it processes, it does both things in one PostgreSQL transaction — updates the snapshot and calls `cf_stream_publish(...)` for the new events. Now the stored aggregate and the change stream can never disagree about what has been observed, and the snapshot row stays minimal: just the aggregate, no offset bookkeeping.
 
 ```
 ─── Write path (single PG txn ties snapshot + publish) ───────────
@@ -39762,15 +39762,15 @@ Making the aggregator the publisher collapses the bridge. For each Kafka batch i
               arrive here; idempotent apply reconciles)
 ```
 
-The read path is the recipe from earlier: `cf_stream_top_position` first, then the snapshot, then return the captured position. Events committed between the two reads arrive as catch-up on top of the snapshot. For a price board that reconciles itself — each event carries an absolute price, not a delta. If the events were deltas instead, the `REPEATABLE READ` variant removes the overlap and the need for dedup.
+The read path is the recipe from the previous sections: `cf_stream_top_position` first, then the snapshot, then return the captured position. Events committed between the two reads arrive as catch-up on top of the snapshot. A price board reconciles this on its own, since each event carries an absolute price rather than a delta. If the events were deltas, the `REPEATABLE READ` variant would remove the overlap along with the need for dedup.
 
-This shape fits any upstream feed being turned into stored views — Kafka, NATS, CDC, a polling worker. One process owns both the stored aggregate and the change stream, so there is no cross-system offset bridge left to maintain.
+The same shape fits any upstream feed being turned into stored views — Kafka, NATS, CDC, a polling worker. One process owns both the stored aggregate and the change stream, so there is no cross-system offset bridge to maintain.
 
 ### Internal writes partitioned by tenant
 
-The second flavour is more common still: one shared table, many independent consumers. The [kitchen-orders demo](/blog/2026/05/24/pg-stream-broker-benefits#a-concrete-example-per-tenant-channels) is a clean example — a single `orders` table across all restaurants, one channel per restaurant (`kitchen:{restaurant_id}`), and each kitchen display subscribed to its own. On the write side the rule is short: every code path that mutates a row for restaurant X publishes on `kitchen:X` in the same transaction.
+The second example is even more common: one shared table, many independent consumers. The [kitchen-orders demo](/blog/2026/05/24/pg-stream-broker-benefits#a-concrete-example-per-tenant-channels) shows it well — a single `orders` table across all restaurants, one channel per restaurant (`kitchen:{restaurant_id}`), and each kitchen display subscribed to its own channel. The write side follows one rule: every code path that changes a row for restaurant X publishes on `kitchen:X` in the same transaction.
 
-The read side behind `getState` is the position-first recipe, with the data filtered by restaurant:
+The read side behind `getState` is the position-first recipe, with data filtered by restaurant:
 
 ```sql
 SELECT * FROM cf_stream_top_position('kitchen:42');
@@ -39781,17 +39781,17 @@ WHERE restaurant_id = 42
   AND status IN ('received','preparing','ready');
 ```
 
-Events carry `order_id` and `updated_at`, so the client applies them as upserts with last-write-wins — the keyed-upsert case from the overlap rules, which makes catch-up replay harmless. No offsets stored in the application schema, no dedup bookkeeping: the position is captured at read time and handed to the SDK.
+Events carry `order_id` and `updated_at`, so the client applies them as upserts with last-write-wins — the keyed-upsert case from the list above, which makes catch-up replay harmless. There are no offsets stored in the application schema and no dedup bookkeeping: the position is captured at read time and handed to the SDK.
 
-The same client code serves every restaurant. Only the channel name and the `WHERE` clause change — which is what makes this shape scale to thousands of tenants without any per-tenant machinery.
+The same client code serves every restaurant — only the channel name and the `WHERE` clause change. That's what lets this shape scale to thousands of tenants without any per-tenant machinery.
 
-## When app-owned state is the wrong shape
+## When this pattern doesn't fit
 
-This pattern assumes the data has a home in the application's schema. Plenty of real-time data does not: cursors that exist for a few seconds, presence sets, lobby members, device telemetry, feature flags. Building a table, a snapshot endpoint, and a change feed for each of those is a lot of machinery for state that is disposable by nature.
+The pattern assumes the data has a home in the application's schema. Plenty of real-time data does not: cursors that live for a few seconds, presence sets, lobby members, device telemetry, feature flags. Building a table, a snapshot endpoint and a change feed for each of those is a lot of machinery for state that is disposable by nature.
 
-For those, the broker can be the store instead — see [map subscriptions](/docs/server/map_subscriptions) for keyed collections, and [cache recovery mode](/docs/server/cache_recovery) when a channel only ever needs its latest value.
+For such data the broker can act as the store instead — see [map subscriptions](/docs/server/map_subscriptions) for keyed collections, and [cache recovery mode](/docs/server/cache_recovery) when a channel only ever needs its latest value.
 
-The rule of thumb: if a `SELECT` in your own database can already answer "what is the current state", `getState` on a stream subscription is the smaller design. If it can't, look at the state-carrying subscription types.
+A simple rule of thumb: if a `SELECT` in your own database can already answer "what is the current state", then `getState` on a stream subscription is the smaller design. If it can't, look at the state-carrying subscription types.
 
 ## Availability
 
@@ -39803,17 +39803,17 @@ See the [Subscription getState](/docs/transports/client_api#subscription-getstat
 
 ## Tuning Centrifugo PRO for large number of idle WebSocket connections
 
-A lot of real-time systems spend most of their time doing nothing. Think about a notifications service, a presence dashboard, a "new message" badge — the connections sit open for hours, and messages arrive rarely. The interesting scaling question there is not throughput. It's this: **how cheaply can a single node just hold a large pool of connections that are mostly idle?**
+A lot of real-time systems spend most of their time doing nothing. Think about a notifications service, a presence dashboard, a "new message" badge — the connections sit open for hours, and messages arrive rarely. The interesting scaling question for such systems is not throughput, but how cheaply a single node can hold a large pool of connections that are mostly idle.
 
-An idle connection is not free. Even with no application traffic, every connection costs a bit of CPU (Centrifugo runs periodic per-connection work — an application-level ping, presence refresh, subscription checks) and a bit of memory (goroutines, buffers, protocol state). Multiply that by hundreds of thousands and the constant, do-nothing overhead becomes the thing that decides how many connections fit on a node.
+An idle connection still isn't free: even with no application traffic, every connection costs a bit of CPU (Centrifugo runs periodic per-connection work — an application-level ping, presence refresh, subscription checks) and a bit of memory (goroutines, buffers, protocol state). Multiply that by hundreds of thousands and the constant, do-nothing overhead becomes the thing that decides how many connections fit on a node.
 
-This post measures that overhead and shows how four Centrifugo PRO options reduce it. One cuts CPU. The other three cut memory — and, as we'll see, almost every byte they save turns out to be a single, specific thing.
+This post measures that overhead and shows how five Centrifugo PRO options reduce it. One cuts CPU, the other four cut memory — and almost every byte they save turns out to come from a specific piece of the connection: a stack or a buffer.
 
 <!--truncate-->
 
 ## The benchmark
 
-We hold **200,000 real WebSocket connections** open against a single Centrifugo node and leave them idle. "Idle" here means the connections do nothing but stay alive — the server sends its application-level ping every 25 seconds (the default), the clients answer it, and that is the only traffic. Then we measure the server process: CPU (in cores) and resident memory (RSS).
+We hold 200,000 real WebSocket connections open against a single Centrifugo node and leave them idle. "Idle" here means the connections do nothing but stay alive — the server sends its application-level ping every 25 seconds (the default), the clients answer it, and that is the only traffic. Then we measure the server process: CPU (in cores) and resident memory (RSS).
 
 * Node: one Centrifugo instance on a 16 vCPU cloud VM (AMD EPYC-Genoa, KVM), 30 GB RAM, Ubuntu Linux.
 * Connections: 200,000 bidirectional WebSocket, protocol v2, **no subscriptions**.
@@ -39822,11 +39822,11 @@ We hold **200,000 real WebSocket connections** open against a single Centrifugo 
 
 We measure the Centrifugo process specifically — CPU as the process's own user + system time over a steady-state window well after the connection ramp, memory as its RSS after a forced GC — so the numbers are the server's own consumption, not the whole machine's.
 
-One thing RSS does not include, and which matters when you size a machine: **the kernel keeps its own structures for every socket** — the `tcp_sock`, an inode, a dentry, a file — and charges them to slab, not to your process. We measured about **4 KB per socket**, and it shows up in neither `ps`, nor `top`'s RSS column, nor Go's runtime memory stats. It is real memory and cgroup v2 does count it against a container limit, so add it to every per-connection figure below when planning capacity.
+One thing RSS does not include, and which matters when you size a machine: the kernel keeps its own structures for every socket — the `tcp_sock`, an inode, a dentry, a file — and charges them to slab, not to your process. We measured about 4 KB per socket, and it shows up in neither `ps`, nor `top`'s RSS column, nor Go's runtime memory stats. It is real memory and cgroup v2 does count it against a container limit, so add it to every per-connection figure below when planning capacity.
 
 At these connection counts the server uses well under one core out of sixteen, so it's the per-connection overhead we're isolating, not saturation.
 
-Everything below is the **server** cost — the number that decides how many connections your node holds.
+Everything below is the server's own cost — the number that decides how many connections a node holds.
 
 ## Baseline
 
@@ -39848,7 +39848,7 @@ It's worth splitting that ~27 KB, because it explains everything that follows:
 | Heap (buffers, protocol state, client struct) | ~12.7 KB |
 | Runtime overhead | ~2 KB |
 
-**Nearly half of an idle connection is goroutine stacks.** That is not an accident of measurement — it's the shape of the problem, and three of the four options below are, underneath, ways of making that number smaller.
+Nearly half of an idle connection is goroutine stacks. Keep that number in mind: two of the memory options below are, underneath, different ways of making it smaller, and the other two go after the heap half.
 
 ## Cutting CPU: `batch_periodic_events`
 
@@ -39871,13 +39871,13 @@ The effect on the same 200,000 idle connections:
 | CPU | ~0.94 cores | **~0.41 cores** |
 | Memory (RSS) | ~5.4 GB | ~5.4 GB |
 
-**Over 2× less CPU** to hold the same pool — down to ~2.0 µs/s per connection. Memory is unchanged to within a rounding error: this option is purely about how periodic timers are scheduled.
+That's over 2× less CPU to hold the same pool — down to ~2.0 µs/s per connection. Memory is unchanged to within a rounding error: this option is purely about how periodic timers are scheduled.
 
 ## Cutting memory, part 1: the writer goroutine
 
 By default every connection has a dedicated goroutine that owns writes to its socket and blocks waiting for something to send. For an idle connection that goroutine does nothing almost all the time — but it still exists, and a parked goroutine still costs a stack.
 
-`write_delay` batches outgoing messages: instead of writing each message immediately, the connection waits a short delay to coalesce whatever arrives into a single write, which reduces system calls under load. `write_with_timer` changes *how* that batching waits — it uses a shared timer to trigger the flush instead of a dedicated per-connection writer goroutine. The side effect at rest is the interesting part: **idle connections stop each holding a writer goroutine.**
+`write_delay` batches outgoing messages: instead of writing each message immediately, the connection waits a short delay to coalesce whatever arrives into a single write, which reduces system calls under load. `write_with_timer` changes *how* that batching waits — it uses a shared timer to trigger the flush instead of a dedicated per-connection writer goroutine. For this post the interesting part is the side effect at rest: idle connections no longer each hold a writer goroutine.
 
 ```json title="config.json"
 {
@@ -39943,12 +39943,12 @@ The last piece isn't a goroutine at all. Every WebSocket connection holds a writ
 | Memory (RSS) | ~27 KB/conn | **~24.0 KB/conn** |
 | Heap | ~12.7 KB/conn | **~8.6 KB/conn** |
 
-Another ~4 KB per connection, this time out of the heap rather than the stacks. Under sustained write load the pool sees more contention than a per-connection buffer, so this is squarely an option for pools that are idle most of the time.
+Another ~4 KB per connection, this time out of the heap rather than the stacks. Under sustained write load the pool sees more contention than a per-connection buffer, so this option is meant for pools that are idle most of the time.
 
 ## Cutting memory, part 4: `read_buffer_size`
 
-With the write buffer pooled, a heap profile of the tuned server says something
-blunt: **the WebSocket read buffer is now 47% of everything left**. Each
+With the write buffer pooled, a heap profile of the tuned server shows that the
+WebSocket read buffer is now 47% of everything left. Each
 connection holds one, and by default it takes the 4 KB buffer that `net/http`
 allocated for the request it was upgraded from.
 
@@ -39969,8 +39969,8 @@ a pong — so 4 KB is far more than a mostly-idle connection needs.
 | Memory (RSS) | 15.3 KB/conn | **10.9 KB/conn** |
 | Heap | 8.3 KB/conn | **5.1 KB/conn** |
 
-**−4.4 KB per connection, and CPU does not move.** It is the largest single
-memory saving of the four, and the cheapest.
+That's another 4.4 KB per connection, and CPU does not move — the largest
+single memory saving in this post, and the cheapest.
 
 Dropping to 512 bytes saves only another 0.5 KB, so 1024 is the sweet spot. The
 tradeoff is that a client sending messages larger than the buffer needs more
@@ -39979,7 +39979,7 @@ about if your clients push large payloads.
 
 ## Everything together
 
-The four options target different costs, so they stack cleanly:
+The five options target different costs, so they stack cleanly:
 
 | Configuration | CPU | RSS/conn | Stacks/conn | Heap/conn |
 |---|---|---|---|---|
@@ -39988,18 +39988,18 @@ The four options target different costs, so they stack cleanly:
 | `write_with_timer` | 0.98 cores | 22.4 KB | 8.2 KB | 12.3 KB |
 | `process_commands_off_read_loop` | 0.96 cores | 22.9 KB | 8.2 KB | 12.8 KB |
 | `use_write_buffer_pool` | 0.92 cores | 24.0 KB | 12.3 KB | 8.6 KB |
-| **All four** | **0.46 cores** | **15.3 KB** | **4.2 KB** | **8.3 KB** |
-| **All four + `read_buffer_size: 1024`** | **0.45 cores** | **10.9 KB** | **4.2 KB** | **5.1 KB** |
+| **First four together** | **0.46 cores** | **15.3 KB** | **4.2 KB** | **8.3 KB** |
+| **All five (+ `read_buffer_size: 1024`)** | **0.45 cores** | **10.9 KB** | **4.2 KB** | **5.1 KB** |
 
-With everything enabled, one node holds 200,000 idle connections for **~0.45 cores and ~2.2 GB** — **52% less CPU and 60% less memory** than the default. Per connection that's roughly **2.2 µs/s of CPU and ~11 KB of RAM**.
+With everything enabled, one node holds 200,000 idle connections for ~0.45 cores and ~2.2 GB — 52% less CPU and 60% less memory than the default. Per connection that's roughly 2.2 µs/s of CPU and ~11 KB of RAM.
 
-The memory column is worth reading twice. The default 27 KB is 12.3 KB of stacks and 12.7 KB of heap; tuned it is 4.2 KB and 5.1 KB. Four separate options, and each one removes roughly 4 KB — one goroutine stack, one goroutine's *worth* of stack, one write buffer, and most of a read buffer.
+Look at where the memory went. The default 27 KB was 12.3 KB of stacks and 12.7 KB of heap; tuned, those are 4.2 KB and 5.1 KB. The four memory options each removed roughly 4 KB — one goroutine stack, one goroutine's *worth* of stack, one write buffer, and most of a read buffer.
 
-One honest note on CPU: the three memory options are not quite free. Individually they cost between 2% and 7% CPU, and together around 12%. `batch_periodic_events` more than pays for all of it, which is why the combined figure is still less than half the default — but if you enable only the memory options, expect CPU to tick up slightly.
+A note on CPU: the memory options are not entirely free. The first three individually cost between 2% and 7% CPU and together around 12%, while `read_buffer_size` costs nothing measurable. `batch_periodic_events` more than pays for all of it, which is why the combined figure is still less than half the default — but if you enable only the memory options, expect CPU to tick up slightly.
 
 ## When this matters
 
-These options shine for the workload we benchmarked: **large pools of mostly-idle connections**. Notifications, presence, live badges, dashboards that update occasionally — anywhere the connection count is high and the message rate per connection is low.
+These options shine for the workload we benchmarked: large pools of mostly-idle connections. Notifications, presence, live badges, dashboards that update occasionally — anywhere the connection count is high and the message rate per connection is low.
 
 They matter less for high-throughput workloads. If every connection is receiving a steady stream of messages, the cost moves from the idle overhead we optimized here into the actual message fan-out and socket writes, which is a different benchmark. (`write_delay` still helps there — batching writes cuts system calls under load — but that's a throughput story, not the idle-pool story of this post.)
 
@@ -40016,7 +40016,7 @@ practical to run. But once the tuned configuration was in hand, the obvious
 question was how far the same machine goes.
 
 We pointed the load generator at the same 16 vCPU / 30 GB node with every option
-from this post enabled, and asked it for **1,000,000 connections**:
+from this post enabled, and asked it for 1,000,000 connections:
 
 | Metric | Value | Per connection |
 |---|---|---|
@@ -40028,21 +40028,21 @@ from this post enabled, and asked it for **1,000,000 connections**:
 | — of which heap | ~5.2 GB | ~5.2 KB |
 
 Add the kernel's own per-socket structures — about 4 KB each, so roughly 4.2 GB
-for a million sockets — and the true cost of the node is closer to **15.5 GB**.
-Still half the machine.
+for a million sockets — and the true cost of the node is closer to 15.5 GB,
+still only half the machine.
 
 Two and a third cores and 11 GB of process memory, on one node, for a million
 idle WebSocket connections. The per-connection cost is only slightly above the 200k figure —
 ~11.6 KB against ~10.9 KB — so the tuning holds its shape at five times the
 scale rather than degrading.
 
-It is worth stating what this run is and is not. It is a single run of one
-configuration, not the two-round matrix the rest of the post is built on, and
-the connections are idle: they connect, answer pings, and nothing else. Real
-traffic is a different budget entirely.
+To be clear about what this run is: a single run of one configuration, not the
+two-round matrix the rest of the post is built on, and the connections are
+idle — they connect, answer pings, and nothing else. Real traffic adds its own
+budget on top.
 
-And one number that is not in the table, because we could not measure it: **the
-default configuration cannot hold a million connections on this machine.** At
+And one number that is not in the table, because we could not measure it: the
+default configuration simply cannot hold a million connections on this machine. At
 the ~27 KB per connection we measured at 200k, a million of them would need
 around 27 GB of process memory on a 30 GB box — before the kernel's own
 per-socket structures, which add roughly 4 KB per socket on top. The tuned
@@ -40052,18 +40052,18 @@ configuration does it in 11.3 GB and leaves half the machine idle.
 
 An idle connection costs CPU (periodic per-connection timers) and memory — and that memory is mostly goroutine stacks and buffers held by connections that are doing nothing. Centrifugo PRO gives you a knob for each:
 
-* **`client.batch_periodic_events`** batches the periodic timers → over 2× less CPU.
-* **`client.write_delay` + `write_with_timer`** drops the per-connection writer goroutine → ~4 KB less per connection.
-* **`websocket.process_commands_off_read_loop`** halves the read goroutine's stack → another ~4 KB.
-* **`websocket.use_write_buffer_pool`** shares write buffers between connections → another ~4 KB.
-* **`websocket.read_buffer_size`** sizes the read buffer to what commands actually need → another ~4.4 KB, the largest of the four.
+* **`client.batch_periodic_events`** batches the periodic timers — over 2× less CPU.
+* **`client.write_delay` + `write_with_timer`** drops the per-connection writer goroutine — ~4 KB less per connection.
+* **`websocket.process_commands_off_read_loop`** halves the read goroutine's stack — another ~4 KB.
+* **`websocket.use_write_buffer_pool`** shares write buffers between connections — another ~4 KB.
+* **`websocket.read_buffer_size`** sizes the read buffer to what commands actually need — another ~4.4 KB, the largest saving of them all.
 
 The split between the `client` and `websocket` sections is not cosmetic — it is
 also the split between what helps everywhere and what does not.
 
 The two `client` options act on the connection object itself, which every
-transport builds the same way, so **`batch_periodic_events` and `write_delay` +
-`write_with_timer` help SSE and HTTP-streaming connections too**: the periodic
+transport builds the same way, so `batch_periodic_events` and `write_delay` +
+`write_with_timer` help SSE and HTTP-streaming connections too: the periodic
 timers and the per-connection writer goroutine exist regardless of how the
 connection was established.
 
