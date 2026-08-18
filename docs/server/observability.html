@@ -18,8 +18,8 @@
 
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.d6ef435d.css">
-<script src="/assets/js/runtime~main.9fbe2a85.js" defer="defer"></script>
-<script src="/assets/js/main.c2f21bd6.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.42a56017.js" defer="defer"></script>
+<script src="/assets/js/main.91dca78e.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg style="display: none;"><defs>
@@ -49,17 +49,33 @@
 </ul>
 <p>Operational notes:</p>
 <ul>
-<li class=""><strong>Breaking change for dashboards relying on <code>{quantile=&quot;...&quot;}</code> labels</strong> on the dropped Summaries — switch to <code>histogram_quantile()</code> against the corresponding <code>_histogram</code> metric.</li>
-<li class=""><strong>Text-format Prometheus scrapes lose <code>_bucket</code> series</strong> on Histograms — only <code>_count</code> and <code>_sum</code> remain visible. Configure your scrape job to use the protobuf format to receive the native histogram data:<!-- -->
-<div class="language-yaml codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-yaml codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token key atrule">scrape_configs</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  </span><span class="token punctuation" style="color:rgb(199, 146, 234)">-</span><span class="token plain"> </span><span class="token key atrule">job_name</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> centrifugo</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">    </span><span class="token key atrule">scrape_protocols</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> </span><span class="token punctuation" style="color:rgb(199, 146, 234)">[</span><span class="token plain">PrometheusProto</span><span class="token punctuation" style="color:rgb(199, 146, 234)">,</span><span class="token plain"> OpenMetricsText1.0.0</span><span class="token punctuation" style="color:rgb(199, 146, 234)">,</span><span class="token plain"> PrometheusText0.0.4</span><span class="token punctuation" style="color:rgb(199, 146, 234)">]</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">    </span><span class="token comment" style="color:rgb(105, 112, 152);font-style:italic"># ...</span><br></span></code></pre></div></div>
-<!-- -->Prometheus 2.40+ is required for native histogram ingestion.</li>
-<li class="">Native histograms are still flagged experimental in <code>client_golang</code>. The feature is opt-in for that reason.</li>
+<li class="">
+<p><strong>Breaking change for dashboards relying on <code>{quantile=&quot;...&quot;}</code> labels</strong> on the dropped Summaries — switch to <code>histogram_quantile()</code> against the corresponding <code>_histogram</code> metric.</p>
+</li>
+<li class="">
+<p><strong>Prometheus must be told to ingest native histograms.</strong> They travel only over the protobuf exposition format, and Prometheus recognizes them only when <code>scrape_native_histograms</code> is enabled — globally or per scrape job:</p>
+<div class="language-yaml codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-yaml codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token key atrule">scrape_configs</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  </span><span class="token punctuation" style="color:rgb(199, 146, 234)">-</span><span class="token plain"> </span><span class="token key atrule">job_name</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> centrifugo</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">    </span><span class="token key atrule">scrape_native_histograms</span><span class="token punctuation" style="color:rgb(199, 146, 234)">:</span><span class="token plain"> </span><span class="token boolean important" style="color:rgb(255, 88, 116)">true</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">    </span><span class="token comment" style="color:rgb(105, 112, 152);font-style:italic"># ...</span><br></span></code></pre></div></div>
+<p>Enabling it also switches scrape protocol negotiation to prefer <code>PrometheusProto</code>, so no separate <code>scrape_protocols</code> tweak is needed. On older Prometheus releases that predate this option, start the server with <code>--enable-feature=native-histograms</code> instead — the flag has the same effect.</p>
+<div class="theme-admonition theme-admonition-caution admonition_xJq3 alert alert--warning"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z"></path></svg></span>caution</div><div class="admonitionContent_BuS1"><p>This is easy to miss. Without it Prometheus falls back to the text format, where a native histogram exposes only <code>_count</code>, <code>_sum</code> and a single <code>+Inf</code> bucket — so the metric ends up with <strong>no usable bucket data at all</strong> and dashboards built on <code>histogram_quantile()</code> silently go blank. If percentile panels are empty right after turning <code>native_histograms</code> on, check this first: <code>/api/v1/status/config</code> on your Prometheus shows the effective value.</p></div></div>
+<p>After ingestion, native histograms are queried by the <strong>base metric name</strong> — there are no <code>_bucket</code>, <code>_count</code> or <code>_sum</code> series. Use <code>histogram_quantile(0.99, sum by (method) (rate(metric[$__rate_interval])))</code> (note: no <code>le</code> label), and <code>histogram_count()</code> / <code>histogram_sum()</code> where you previously used <code>_count</code> / <code>_sum</code>.</p>
+</li>
+<li class="">
+<p>Native histograms are still flagged experimental in <code>client_golang</code>. The feature is opt-in for that reason.</p>
+</li>
 </ul>
 <p><strong>Why enable this in plain Prometheus setups?</strong> Histograms aggregate correctly across multiple Centrifugo nodes — <code>histogram_quantile()</code> over fleet-wide bucket counts gives a meaningful fleet-wide p99. Summaries can&#x27;t be aggregated this way (their per-node quantile estimates aren&#x27;t mathematically combinable). Native histograms keep the storage cost low while providing this aggregation property. If you&#x27;re scraping Centrifugo with Prometheus 2.40+, this flag gives you better percentile data for free.</p>
 <p>If you also want to push metrics to an OpenTelemetry backend (Grafana Cloud, GCP, Datadog via OTLP, etc.) without running a Prometheus sidecar, Centrifugo PRO adds a built-in bridge that translates the in-process Prometheus registry to OTLP — see <a class="" href="/docs/pro/observability_enhancements#opentelemetry-metrics-export">OpenTelemetry metrics export</a>. With native histograms enabled, the bridge produces high-fidelity OTel <code>ExponentialHistogram</code> data points.</p>
 <h3 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="grafana-dashboard">Grafana dashboard<a href="#grafana-dashboard" class="hash-link" aria-label="Direct link to Grafana dashboard" title="Direct link to Grafana dashboard" translate="no">​</a></h3>
 <p>Check out Centrifugo <a href="https://grafana.com/grafana/dashboards/13039" target="_blank" rel="noopener noreferrer" class="">official Grafana dashboard</a> for Prometheus storage. You can import that dashboard to your Grafana, point to Prometheus storage – and enjoy visualized metrics.</p>
 <p><img decoding="async" loading="lazy" src="/assets/images/grafana-60e3752feb2b89948665543a4c2d9661.jpg" width="2818" height="1432" class="img_ev3q"></p>
+<p>The dashboard is organized into rows — Overview, connections and subscriptions, client commands and latency, real-time delivery, recovery, server API, proxy, async consumers, shared poll, node internals, the Redis / map / PostgreSQL brokers, and the Go runtime — followed by <code>PRO · …</code> rows for <a class="" href="/docs/pro/observability_enhancements#pro-metrics-reference">Centrifugo PRO metrics</a>. All rows below the first four are collapsed by default, so a dashboard load only queries what you actually look at.</p>
+<p>Two things worth knowing about the queries:</p>
+<ul>
+<li class=""><strong>No Summary metrics.</strong> Every latency panel is built on the <code>_histogram</code> companions, so percentiles aggregate correctly across nodes and nothing breaks when the deprecated Summaries are removed in Centrifugo v7.</li>
+<li class=""><strong>Native histograms work out of the box.</strong> Histogram-based panels carry two branches joined by <code>or</code> — one against classic <code>_bucket</code> series, one against the native histogram (<code>histogram_quantile()</code> / <code>histogram_count()</code> on the base series). Exactly one branch has data, so the same dashboard works with <a href="#native-histograms" class=""><code>prometheus.native_histograms</code></a> both off and on.</li>
+</ul>
+<p>Scoping is driven by template variables: <code>job</code> and <code>instance</code> narrow panels to a deployment or a single node, <code>quantile</code> retunes every percentile panel at once, <code>channel namespace</code> filters the PRO namespace rows, and <code>filters</code> is an ad-hoc filter you can point at any label your setup happens to have. All of them default to matching everything, so the dashboard works untouched on a single node.</p>
+<div class="theme-admonition theme-admonition-tip admonition_xJq3 alert alert--success"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 12 16"><path fill-rule="evenodd" d="M6.5 0C3.48 0 1 2.19 1 5c0 .92.55 2.25 1 3 1.34 2.25 1.78 2.78 2 4v1h5v-1c.22-1.22.66-1.75 2-4 .45-.75 1-2.08 1-3 0-2.81-2.48-5-5.5-5zm3.64 7.48c-.25.44-.47.8-.67 1.11-.86 1.41-1.25 2.06-1.45 3.23-.02.05-.02.11-.02.17H5c0-.06 0-.13-.02-.17-.2-1.17-.59-1.83-1.45-3.23-.2-.31-.42-.67-.67-1.11C2.44 6.78 2 5.65 2 5c0-2.2 2.02-4 4.5-4 1.22 0 2.36.42 3.22 1.19C10.55 2.94 11 3.94 11 5c0 .66-.44 1.78-.86 2.48zM4 14h5c-.23 1.14-1.3 2-2.5 2s-2.27-.86-2.5-2z"></path></svg></span>Scoping several Centrifugo installations</div><div class="admonitionContent_BuS1"><p>If one Prometheus scrapes more than one Centrifugo installation, whether you can isolate them with the <code>job</code> variable depends on your labels. Two installations scraped as separate jobs are easy — pick one from the <code>Job</code> dropdown. But two releases of the same Helm chart deployed into different Kubernetes namespaces usually land under the <strong>same</strong> <code>job</code> value and are told apart by the Kubernetes <code>namespace</code> label instead. Use the <code>Filters</code> ad-hoc variable for that: add <code>namespace = your-namespace</code> (or <code>cluster</code>, <code>env</code>, whatever separates them) and every panel is scoped.</p><p>Note the dashboard&#x27;s <code>Channel namespace</code> variable is the Centrifugo channel namespace, not the Kubernetes one.</p></div></div>
 <h3 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="exposed-metrics">Exposed metrics<a href="#exposed-metrics" class="hash-link" aria-label="Direct link to Exposed metrics" title="Direct link to Exposed metrics" translate="no">​</a></h3>
 <p>Here is a description of various metrics exposed by Centrifugo.</p>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_node_messages_sent_count">centrifugo_node_messages_sent_count<a href="#centrifugo_node_messages_sent_count" class="hash-link" aria-label="Direct link to centrifugo_node_messages_sent_count" title="Direct link to centrifugo_node_messages_sent_count" translate="no">​</a></h4>
@@ -211,13 +227,6 @@
 <li class=""><strong>Description:</strong> Number of currently active client connections by transport type, protocol, client name, and version.</li>
 <li class=""><strong>Usage:</strong> Useful for real-time monitoring of active connections, understanding the current load distribution across different transports and client types, and capacity planning.</li>
 </ul>
-<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_client_subscriptions_accepted">centrifugo_client_subscriptions_accepted<a href="#centrifugo_client_subscriptions_accepted" class="hash-link" aria-label="Direct link to centrifugo_client_subscriptions_accepted" title="Direct link to centrifugo_client_subscriptions_accepted" translate="no">​</a></h4>
-<ul>
-<li class=""><strong>Type:</strong> Counter</li>
-<li class=""><strong>Labels:</strong> client_name, channel_namespace (Centrifugo PRO)</li>
-<li class=""><strong>Description:</strong> Count of accepted client subscriptions by client name and channel namespace.</li>
-<li class=""><strong>Usage:</strong> Useful for monitoring subscription patterns, understanding which clients are subscribing to which channel namespaces, and tracking subscription volume over time.</li>
-</ul>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_client_subscriptions_inflight">centrifugo_client_subscriptions_inflight<a href="#centrifugo_client_subscriptions_inflight" class="hash-link" aria-label="Direct link to centrifugo_client_subscriptions_inflight" title="Direct link to centrifugo_client_subscriptions_inflight" translate="no">​</a></h4>
 <ul>
 <li class=""><strong>Type:</strong> Gauge</li>
@@ -243,8 +252,8 @@
 <ul>
 <li class=""><strong>Type:</strong> Counter</li>
 <li class=""><strong>Labels:</strong> transport, frame_type, channel_namespace</li>
-<li class=""><strong>Description:</strong> Measures the size of messages (in bytes) sent to client connections over specific transports.</li>
-<li class=""><strong>Usage:</strong> Helps in monitoring the network bandwidth usage and optimizing the data transfer.</li>
+<li class=""><strong>Description:</strong> Measures the size of messages (in bytes) sent to client connections over specific transports. Sizes are <strong>uncompressed payload bytes and exclude framing overhead</strong>, so this is not the same as bytes on the wire.</li>
+<li class=""><strong>Usage:</strong> Helps in monitoring the network bandwidth usage and optimizing the data transfer. Because compression and framing are not accounted for, treat it as a lower bound when comparing against real egress — with WebSocket compression enabled actual traffic can be substantially lower, and with many tiny frames it can be higher.</li>
 </ul>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_transport_messages_received">centrifugo_transport_messages_received<a href="#centrifugo_transport_messages_received" class="hash-link" aria-label="Direct link to centrifugo_transport_messages_received" title="Direct link to centrifugo_transport_messages_received" translate="no">​</a></h4>
 <ul>
@@ -257,7 +266,7 @@
 <ul>
 <li class=""><strong>Type:</strong> Counter</li>
 <li class=""><strong>Labels:</strong> transport, frame_type, channel_namespace</li>
-<li class=""><strong>Description:</strong> Measures the size of messages (in bytes) received from client connections over specific transports.</li>
+<li class=""><strong>Description:</strong> Measures the size of messages (in bytes) received from client connections over specific transports. As with the sent counterpart, these are <strong>uncompressed payload bytes and exclude framing overhead</strong>.</li>
 <li class=""><strong>Usage:</strong> Use this metric to monitor the incoming data size and optimize the application&#x27;s performance.</li>
 </ul>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_transport_outgoing_close_count">centrifugo_transport_outgoing_close_count<a href="#centrifugo_transport_outgoing_close_count" class="hash-link" aria-label="Direct link to centrifugo_transport_outgoing_close_count" title="Direct link to centrifugo_transport_outgoing_close_count" translate="no">​</a></h4>
@@ -291,6 +300,13 @@
 <li class=""><strong>Description:</strong> Counts the number of errors occurred during proxy calls.</li>
 <li class=""><strong>Usage:</strong> Helps in monitoring the reliability of proxy services and ensuring error-free operations.</li>
 </ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_proxy_inflight_requests">centrifugo_proxy_inflight_requests<a href="#centrifugo_proxy_inflight_requests" class="hash-link" aria-label="Direct link to centrifugo_proxy_inflight_requests" title="Direct link to centrifugo_proxy_inflight_requests" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Gauge</li>
+<li class=""><strong>Labels:</strong> protocol, type, name</li>
+<li class=""><strong>Description:</strong> Number of proxy requests currently in flight.</li>
+<li class=""><strong>Usage:</strong> Rising inflight requests together with rising <code>centrifugo_proxy_duration_seconds_histogram</code> mean your backend is the bottleneck — proxy calls sit on the critical path of the client commands that trigger them.</li>
+</ul>
 <div class="theme-admonition theme-admonition-note admonition_xJq3 alert alert--secondary"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 14 16"><path fill-rule="evenodd" d="M6.3 5.69a.942.942 0 0 1-.28-.7c0-.28.09-.52.28-.7.19-.18.42-.28.7-.28.28 0 .52.09.7.28.18.19.28.42.28.7 0 .28-.09.52-.28.7a1 1 0 0 1-.7.3c-.28 0-.52-.11-.7-.3zM8 7.99c-.02-.25-.11-.48-.31-.69-.2-.19-.42-.3-.69-.31H6c-.27.02-.48.13-.69.31-.2.2-.3.44-.31.69h1v3c.02.27.11.5.31.69.2.2.42.31.69.31h1c.27 0 .48-.11.69-.31.2-.19.3-.42.31-.69H8V7.98v.01zM7 2.3c-3.14 0-5.7 2.54-5.7 5.68 0 3.14 2.56 5.7 5.7 5.7s5.7-2.55 5.7-5.7c0-3.15-2.56-5.69-5.7-5.69v.01zM7 .98c3.86 0 7 3.14 7 7s-3.14 7-7 7-7-3.12-7-7 3.14-7 7-7z"></path></svg></span>note</div><div class="admonitionContent_BuS1"><p>Per-proxy (&quot;granular&quot;) timings and errors are not separate metrics — they are exposed via the <code>name</code> label on the <code>centrifugo_proxy_*</code> metrics above, where <code>name</code> is the configured proxy name.</p></div></div>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_api_command_duration_seconds">centrifugo_api_command_duration_seconds<a href="#centrifugo_api_command_duration_seconds" class="hash-link" aria-label="Direct link to centrifugo_api_command_duration_seconds" title="Direct link to centrifugo_api_command_duration_seconds" translate="no">​</a></h4>
 <div class="theme-admonition theme-admonition-caution admonition_xJq3 alert alert--warning"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z"></path></svg></span>Deprecated</div><div class="admonitionContent_BuS1"><p>This Summary is deprecated and will be removed in Centrifugo v7. Use <code>centrifugo_api_command_duration_seconds_histogram</code> (below). Not exposed when <a href="#native-histograms" class=""><code>prometheus.native_histograms</code></a> is enabled.</p></div></div>
@@ -306,6 +322,13 @@
 <li class=""><strong>Labels:</strong> protocol, method</li>
 <li class=""><strong>Description:</strong> Same data as the Summary above, exposed in <code>histogram_quantile()</code>- and OpenTelemetry-friendly form.</li>
 <li class=""><strong>Usage:</strong> Prefer this metric for percentile queries and OpenTelemetry export.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_api_command_errors_total">centrifugo_api_command_errors_total<a href="#centrifugo_api_command_errors_total" class="hash-link" aria-label="Direct link to centrifugo_api_command_errors_total" title="Direct link to centrifugo_api_command_errors_total" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> protocol, method, error</li>
+<li class=""><strong>Description:</strong> Total number of errors returned by server API commands, by error name.</li>
+<li class=""><strong>Usage:</strong> The error signal for the server API — use it together with the rate derived from <code>centrifugo_api_command_duration_seconds_histogram_count</code> to get an API error ratio.</li>
 </ul>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_api_rpc_duration_seconds">centrifugo_api_rpc_duration_seconds<a href="#centrifugo_api_rpc_duration_seconds" class="hash-link" aria-label="Direct link to centrifugo_api_rpc_duration_seconds" title="Direct link to centrifugo_api_rpc_duration_seconds" translate="no">​</a></h4>
 <div class="theme-admonition theme-admonition-caution admonition_xJq3 alert alert--warning"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z"></path></svg></span>Deprecated</div><div class="admonitionContent_BuS1"><p>This Summary is deprecated and will be removed in Centrifugo v7. Use <code>centrifugo_api_rpc_duration_seconds_histogram</code> (below). Not exposed when <a href="#native-histograms" class=""><code>prometheus.native_histograms</code></a> is enabled.</p></div></div>
@@ -326,7 +349,7 @@
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_node_pub_sub_lag_seconds">centrifugo_node_pub_sub_lag_seconds<a href="#centrifugo_node_pub_sub_lag_seconds" class="hash-link" aria-label="Direct link to centrifugo_node_pub_sub_lag_seconds" title="Direct link to centrifugo_node_pub_sub_lag_seconds" translate="no">​</a></h4>
 <ul>
 <li class=""><strong>Type:</strong> Histogram</li>
-<li class=""><strong>Labels:</strong></li>
+<li class=""><strong>Labels:</strong> channel_namespace (Centrifugo PRO)</li>
 <li class=""><strong>Description:</strong> Tracks pub sub lag in seconds.</li>
 <li class=""><strong>Usage:</strong> Helps in monitoring of PUB/SUB layer performance. Note, this metric may be not exact in distributed environment due to time skew (to minify effect use NTP). In this case it still may be useful to identifies growth in lag.</li>
 </ul>
@@ -369,21 +392,21 @@
 <ul>
 <li class=""><strong>Type:</strong> Counter</li>
 <li class=""><strong>Labels:</strong> broker_name, error</li>
-<li class=""><strong>Description:</strong> Number of times there was an error in Redis PUB/SUB connection of the Redis map broker (Centrifugo PRO).</li>
+<li class=""><strong>Description:</strong> Number of times there was an error in Redis PUB/SUB connection of the Redis map broker.</li>
 <li class=""><strong>Usage:</strong> Critical for monitoring Redis map broker health and identifying connection issues that could affect message delivery.</li>
 </ul>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_map_broker_redis_pub_sub_dropped_messages">centrifugo_map_broker_redis_pub_sub_dropped_messages<a href="#centrifugo_map_broker_redis_pub_sub_dropped_messages" class="hash-link" aria-label="Direct link to centrifugo_map_broker_redis_pub_sub_dropped_messages" title="Direct link to centrifugo_map_broker_redis_pub_sub_dropped_messages" translate="no">​</a></h4>
 <ul>
 <li class=""><strong>Type:</strong> Counter</li>
 <li class=""><strong>Labels:</strong> broker_name, channel_type</li>
-<li class=""><strong>Description:</strong> Number of dropped messages on application level in Redis PUB/SUB of the Redis map broker (Centrifugo PRO).</li>
+<li class=""><strong>Description:</strong> Number of dropped messages on application level in Redis PUB/SUB of the Redis map broker.</li>
 <li class=""><strong>Usage:</strong> Helps identify message loss issues in the Redis map broker, which could indicate performance problems or buffer overflows.</li>
 </ul>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_map_broker_redis_pub_sub_buffered_messages">centrifugo_map_broker_redis_pub_sub_buffered_messages<a href="#centrifugo_map_broker_redis_pub_sub_buffered_messages" class="hash-link" aria-label="Direct link to centrifugo_map_broker_redis_pub_sub_buffered_messages" title="Direct link to centrifugo_map_broker_redis_pub_sub_buffered_messages" translate="no">​</a></h4>
 <ul>
 <li class=""><strong>Type:</strong> Gauge</li>
 <li class=""><strong>Labels:</strong> broker_name, channel_type, pub_sub_processor</li>
-<li class=""><strong>Description:</strong> Number of messages buffered in Redis PUB/SUB of the Redis map broker (Centrifugo PRO).</li>
+<li class=""><strong>Description:</strong> Number of messages buffered in Redis PUB/SUB of the Redis map broker.</li>
 <li class=""><strong>Usage:</strong> Monitor buffer levels to detect potential bottlenecks in map broker message processing and prevent message drops.</li>
 </ul>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_broker_publish_suppressed_count">centrifugo_broker_publish_suppressed_count<a href="#centrifugo_broker_publish_suppressed_count" class="hash-link" aria-label="Direct link to centrifugo_broker_publish_suppressed_count" title="Direct link to centrifugo_broker_publish_suppressed_count" translate="no">​</a></h4>
@@ -397,70 +420,70 @@
 <ul>
 <li class=""><strong>Type:</strong> Counter</li>
 <li class=""><strong>Labels:</strong> reason, channel_namespace (Centrifugo PRO)</li>
-<li class=""><strong>Description:</strong> Number of suppressed map publish operations (Centrifugo PRO).</li>
+<li class=""><strong>Description:</strong> Number of suppressed map publish operations.</li>
 <li class=""><strong>Usage:</strong> Monitor how often map publishes are suppressed and why.</li>
 </ul>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_map_broker_remove_suppressed_count">centrifugo_map_broker_remove_suppressed_count<a href="#centrifugo_map_broker_remove_suppressed_count" class="hash-link" aria-label="Direct link to centrifugo_map_broker_remove_suppressed_count" title="Direct link to centrifugo_map_broker_remove_suppressed_count" translate="no">​</a></h4>
 <ul>
 <li class=""><strong>Type:</strong> Counter</li>
 <li class=""><strong>Labels:</strong> reason, channel_namespace (Centrifugo PRO)</li>
-<li class=""><strong>Description:</strong> Number of suppressed map remove operations (Centrifugo PRO).</li>
+<li class=""><strong>Description:</strong> Number of suppressed map remove operations.</li>
 <li class=""><strong>Usage:</strong> Monitor how often map removes are suppressed and why.</li>
 </ul>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_map_broker_cleanup_lag_seconds">centrifugo_map_broker_cleanup_lag_seconds<a href="#centrifugo_map_broker_cleanup_lag_seconds" class="hash-link" aria-label="Direct link to centrifugo_map_broker_cleanup_lag_seconds" title="Direct link to centrifugo_map_broker_cleanup_lag_seconds" translate="no">​</a></h4>
 <ul>
 <li class=""><strong>Type:</strong> Gauge</li>
 <li class=""><strong>Labels:</strong> broker_name</li>
-<li class=""><strong>Description:</strong> Lag between now and the oldest expired entry awaiting cleanup in the map broker (Centrifugo PRO). 0 means caught up.</li>
+<li class=""><strong>Description:</strong> Lag between now and the oldest expired entry awaiting cleanup in the map broker. 0 means caught up.</li>
 <li class=""><strong>Usage:</strong> Detect when the map broker cleanup worker falls behind on pruning expired state.</li>
 </ul>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_map_broker_cleanup_removed_count">centrifugo_map_broker_cleanup_removed_count<a href="#centrifugo_map_broker_cleanup_removed_count" class="hash-link" aria-label="Direct link to centrifugo_map_broker_cleanup_removed_count" title="Direct link to centrifugo_map_broker_cleanup_removed_count" translate="no">​</a></h4>
 <ul>
 <li class=""><strong>Type:</strong> Counter</li>
 <li class=""><strong>Labels:</strong> broker_name</li>
-<li class=""><strong>Description:</strong> Total number of expired entries removed by map broker cleanup (Centrifugo PRO).</li>
+<li class=""><strong>Description:</strong> Total number of expired entries removed by map broker cleanup.</li>
 <li class=""><strong>Usage:</strong> Observe how much expired state the map broker is pruning over time.</li>
 </ul>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_map_broker_cleanup_errors_count">centrifugo_map_broker_cleanup_errors_count<a href="#centrifugo_map_broker_cleanup_errors_count" class="hash-link" aria-label="Direct link to centrifugo_map_broker_cleanup_errors_count" title="Direct link to centrifugo_map_broker_cleanup_errors_count" translate="no">​</a></h4>
 <ul>
 <li class=""><strong>Type:</strong> Counter</li>
 <li class=""><strong>Labels:</strong> broker_name</li>
-<li class=""><strong>Description:</strong> Total number of map broker cleanup errors (Centrifugo PRO).</li>
+<li class=""><strong>Description:</strong> Total number of map broker cleanup errors.</li>
 <li class=""><strong>Usage:</strong> Alert on cleanup failures that could let expired state accumulate.</li>
 </ul>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_broker_postgres_cleanup_removed_total">centrifugo_broker_postgres_cleanup_removed_total<a href="#centrifugo_broker_postgres_cleanup_removed_total" class="hash-link" aria-label="Direct link to centrifugo_broker_postgres_cleanup_removed_total" title="Direct link to centrifugo_broker_postgres_cleanup_removed_total" translate="no">​</a></h4>
 <ul>
 <li class=""><strong>Type:</strong> Counter</li>
 <li class=""><strong>Labels:</strong> broker_name, pass</li>
-<li class=""><strong>Description:</strong> Total rows removed by each PostgreSQL stream broker cleanup pass (Centrifugo PRO). The <code>pass</code> label identifies the table being cleaned.</li>
+<li class=""><strong>Description:</strong> Total rows removed by each PostgreSQL stream broker cleanup pass. The <code>pass</code> label identifies the table being cleaned.</li>
 <li class=""><strong>Usage:</strong> Observe how much expired data the PostgreSQL broker is pruning per cleanup pass.</li>
 </ul>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_broker_postgres_outbox_cursor_lag_seconds">centrifugo_broker_postgres_outbox_cursor_lag_seconds<a href="#centrifugo_broker_postgres_outbox_cursor_lag_seconds" class="hash-link" aria-label="Direct link to centrifugo_broker_postgres_outbox_cursor_lag_seconds" title="Direct link to centrifugo_broker_postgres_outbox_cursor_lag_seconds" translate="no">​</a></h4>
 <ul>
 <li class=""><strong>Type:</strong> Gauge</li>
 <li class=""><strong>Labels:</strong> broker_name, shard</li>
-<li class=""><strong>Description:</strong> Time between the PostgreSQL stream broker outbox cursor&#x27;s row created_at and now, per shard (Centrifugo PRO).</li>
+<li class=""><strong>Description:</strong> Time between the PostgreSQL stream broker outbox cursor&#x27;s row created_at and now, per shard.</li>
 <li class=""><strong>Usage:</strong> Detect when outbox consumption falls behind, which delays publication delivery.</li>
 </ul>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_map_broker_postgres_outbox_cursor_lag_seconds">centrifugo_map_broker_postgres_outbox_cursor_lag_seconds<a href="#centrifugo_map_broker_postgres_outbox_cursor_lag_seconds" class="hash-link" aria-label="Direct link to centrifugo_map_broker_postgres_outbox_cursor_lag_seconds" title="Direct link to centrifugo_map_broker_postgres_outbox_cursor_lag_seconds" translate="no">​</a></h4>
 <ul>
 <li class=""><strong>Type:</strong> Gauge</li>
 <li class=""><strong>Labels:</strong> broker_name, shard</li>
-<li class=""><strong>Description:</strong> Time between the PostgreSQL map broker outbox cursor&#x27;s row created_at and now, per shard (Centrifugo PRO).</li>
+<li class=""><strong>Description:</strong> Time between the PostgreSQL map broker outbox cursor&#x27;s row created_at and now, per shard.</li>
 <li class=""><strong>Usage:</strong> Detect when map broker outbox consumption falls behind.</li>
 </ul>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_broker_postgres_partitions">centrifugo_broker_postgres_partitions<a href="#centrifugo_broker_postgres_partitions" class="hash-link" aria-label="Direct link to centrifugo_broker_postgres_partitions" title="Direct link to centrifugo_broker_postgres_partitions" translate="no">​</a></h4>
 <ul>
 <li class=""><strong>Type:</strong> Gauge</li>
 <li class=""><strong>Labels:</strong> broker_name</li>
-<li class=""><strong>Description:</strong> Count of PostgreSQL stream broker stream/history table partitions (Centrifugo PRO).</li>
+<li class=""><strong>Description:</strong> Count of PostgreSQL stream broker stream/history table partitions.</li>
 <li class=""><strong>Usage:</strong> Monitor partition growth of the PostgreSQL broker tables.</li>
 </ul>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_map_broker_postgres_partitions">centrifugo_map_broker_postgres_partitions<a href="#centrifugo_map_broker_postgres_partitions" class="hash-link" aria-label="Direct link to centrifugo_map_broker_postgres_partitions" title="Direct link to centrifugo_map_broker_postgres_partitions" translate="no">​</a></h4>
 <ul>
 <li class=""><strong>Type:</strong> Gauge</li>
 <li class=""><strong>Labels:</strong> broker_name</li>
-<li class=""><strong>Description:</strong> Count of PostgreSQL map broker table partitions (Centrifugo PRO).</li>
+<li class=""><strong>Description:</strong> Count of PostgreSQL map broker table partitions.</li>
 <li class=""><strong>Usage:</strong> Monitor partition growth of the PostgreSQL map broker tables.</li>
 </ul>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_broker_redis_node_grouped_topology_rebuild_count">centrifugo_broker_redis_node_grouped_topology_rebuild_count<a href="#centrifugo_broker_redis_node_grouped_topology_rebuild_count" class="hash-link" aria-label="Direct link to centrifugo_broker_redis_node_grouped_topology_rebuild_count" title="Direct link to centrifugo_broker_redis_node_grouped_topology_rebuild_count" translate="no">​</a></h4>
@@ -492,6 +515,116 @@
 <li class=""><strong>Usage:</strong> This is the real delivery interruption a cluster scale or reshard causes. Watch p99 to size the impact.</li>
 </ul>
 <p>The Redis map broker exposes the same four metrics under the <code>map_broker</code> subsystem (Centrifugo PRO): <code>centrifugo_map_broker_redis_node_grouped_topology_rebuild_count</code>, <code>centrifugo_map_broker_redis_node_grouped_topology_error_count</code>, <code>centrifugo_map_broker_redis_node_grouped_unknown_slot_owner_count</code>, and <code>centrifugo_map_broker_redis_node_grouped_topology_change_gap_seconds</code>, with the same labels and meaning for the map broker.</p>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_consumers_messages_processed_total">centrifugo_consumers_messages_processed_total<a href="#centrifugo_consumers_messages_processed_total" class="hash-link" aria-label="Direct link to centrifugo_consumers_messages_processed_total" title="Direct link to centrifugo_consumers_messages_processed_total" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> consumer_name</li>
+<li class=""><strong>Description:</strong> Total number of messages processed by an <a class="" href="/docs/server/consumers">async consumer</a> — Kafka, PostgreSQL outbox, Nats JetStream, Redis Stream, AWS SQS, Google Pub/Sub.</li>
+<li class=""><strong>Usage:</strong> The throughput signal for event-driven publishing. A drop to zero while your application keeps producing means the consumer stalled.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_consumers_errors_total">centrifugo_consumers_errors_total<a href="#centrifugo_consumers_errors_total" class="hash-link" aria-label="Direct link to centrifugo_consumers_errors_total" title="Direct link to centrifugo_consumers_errors_total" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> consumer_name</li>
+<li class=""><strong>Description:</strong> Total number of errors while processing consumed messages.</li>
+<li class=""><strong>Usage:</strong> Sustained errors mean messages are being retried or dropped depending on the consumer configuration — alert on this.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_node_incoming_http_requests_total">centrifugo_node_incoming_http_requests_total<a href="#centrifugo_node_incoming_http_requests_total" class="hash-link" aria-label="Direct link to centrifugo_node_incoming_http_requests_total" title="Direct link to centrifugo_node_incoming_http_requests_total" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> path, method, status</li>
+<li class=""><strong>Description:</strong> Number of incoming HTTP requests handled by the node.</li>
+<li class=""><strong>Usage:</strong> Requires <code>prometheus.instrument_http_handlers</code> to be enabled. Gives per-endpoint request rates and status code distribution for all HTTP handlers Centrifugo serves.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_shared_poll_num_channels">centrifugo_shared_poll_num_channels<a href="#centrifugo_shared_poll_num_channels" class="hash-link" aria-label="Direct link to centrifugo_shared_poll_num_channels" title="Direct link to centrifugo_shared_poll_num_channels" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Gauge</li>
+<li class=""><strong>Description:</strong> Number of channels currently served by the <a class="" href="/docs/server/shared_poll">shared poll</a> subscription type.</li>
+<li class=""><strong>Usage:</strong> Capacity signal for shared poll — each channel is polled on its own schedule.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_shared_poll_num_keys">centrifugo_shared_poll_num_keys<a href="#centrifugo_shared_poll_num_keys" class="hash-link" aria-label="Direct link to centrifugo_shared_poll_num_keys" title="Direct link to centrifugo_shared_poll_num_keys" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Gauge</li>
+<li class=""><strong>Description:</strong> Number of keys tracked by shared poll across all channels.</li>
+<li class=""><strong>Usage:</strong> Together with the channel count, shows how much state the shared poll layer keeps in memory.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_shared_poll_cycle_duration_seconds">centrifugo_shared_poll_cycle_duration_seconds<a href="#centrifugo_shared_poll_cycle_duration_seconds" class="hash-link" aria-label="Direct link to centrifugo_shared_poll_cycle_duration_seconds" title="Direct link to centrifugo_shared_poll_cycle_duration_seconds" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Histogram. Uses native (sparse, exponential) schema when <a href="#native-histograms" class=""><code>prometheus.native_histograms</code></a> is enabled.</li>
+<li class=""><strong>Labels:</strong> channel_namespace (Centrifugo PRO)</li>
+<li class=""><strong>Description:</strong> Full poll cycle wall time, including the spread delay.</li>
+<li class=""><strong>Usage:</strong> Overall pacing of the poll loop.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_shared_poll_cycle_work_duration_seconds">centrifugo_shared_poll_cycle_work_duration_seconds<a href="#centrifugo_shared_poll_cycle_work_duration_seconds" class="hash-link" aria-label="Direct link to centrifugo_shared_poll_cycle_work_duration_seconds" title="Direct link to centrifugo_shared_poll_cycle_work_duration_seconds" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Histogram. Uses native (sparse, exponential) schema when <a href="#native-histograms" class=""><code>prometheus.native_histograms</code></a> is enabled.</li>
+<li class=""><strong>Labels:</strong> channel_namespace (Centrifugo PRO)</li>
+<li class=""><strong>Description:</strong> Poll cycle time minus the spread delay — the part that competes with your configured poll interval.</li>
+<li class=""><strong>Usage:</strong> The key saturation signal for shared poll: if this approaches the poll interval, polling cannot keep up and updates start lagging.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_shared_poll_handler_duration_seconds">centrifugo_shared_poll_handler_duration_seconds<a href="#centrifugo_shared_poll_handler_duration_seconds" class="hash-link" aria-label="Direct link to centrifugo_shared_poll_handler_duration_seconds" title="Direct link to centrifugo_shared_poll_handler_duration_seconds" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Histogram. Uses native (sparse, exponential) schema when <a href="#native-histograms" class=""><code>prometheus.native_histograms</code></a> is enabled.</li>
+<li class=""><strong>Labels:</strong> trigger, channel_namespace (Centrifugo PRO)</li>
+<li class=""><strong>Description:</strong> Latency of the poll handler itself, by what triggered the poll.</li>
+<li class=""><strong>Usage:</strong> Isolates backend latency from the poll loop&#x27;s own overhead.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_shared_poll_sem_wait_duration_seconds">centrifugo_shared_poll_sem_wait_duration_seconds<a href="#centrifugo_shared_poll_sem_wait_duration_seconds" class="hash-link" aria-label="Direct link to centrifugo_shared_poll_sem_wait_duration_seconds" title="Direct link to centrifugo_shared_poll_sem_wait_duration_seconds" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Histogram. Uses native (sparse, exponential) schema when <a href="#native-histograms" class=""><code>prometheus.native_histograms</code></a> is enabled.</li>
+<li class=""><strong>Labels:</strong> trigger, channel_namespace (Centrifugo PRO)</li>
+<li class=""><strong>Description:</strong> Time spent waiting for a concurrency slot before a poll could run.</li>
+<li class=""><strong>Usage:</strong> The contention indicator — growing wait time means the configured concurrency limit is the constraint.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_shared_poll_handler_error_count">centrifugo_shared_poll_handler_error_count<a href="#centrifugo_shared_poll_handler_error_count" class="hash-link" aria-label="Direct link to centrifugo_shared_poll_handler_error_count" title="Direct link to centrifugo_shared_poll_handler_error_count" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> trigger, channel_namespace (Centrifugo PRO)</li>
+<li class=""><strong>Description:</strong> Number of poll handler failures.</li>
+<li class=""><strong>Usage:</strong> Errors here mean channel state is not being refreshed.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_shared_poll_items_count">centrifugo_shared_poll_items_count<a href="#centrifugo_shared_poll_items_count" class="hash-link" aria-label="Direct link to centrifugo_shared_poll_items_count" title="Direct link to centrifugo_shared_poll_items_count" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> trigger, result, channel_namespace (Centrifugo PRO)</li>
+<li class=""><strong>Description:</strong> Items returned by poll handlers, by result — <code>changed</code>, <code>unchanged</code> or <code>removed</code>.</li>
+<li class=""><strong>Usage:</strong> A high <code>unchanged</code> share means you are polling more often than the data changes — a candidate for a longer interval or notification-driven polling.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_shared_poll_notify_count">centrifugo_shared_poll_notify_count<a href="#centrifugo_shared_poll_notify_count" class="hash-link" aria-label="Direct link to centrifugo_shared_poll_notify_count" title="Direct link to centrifugo_shared_poll_notify_count" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> channel_namespace (Centrifugo PRO)</li>
+<li class=""><strong>Description:</strong> Number of external notifications received by the shared poll layer.</li>
+<li class=""><strong>Usage:</strong> Shows how much polling is driven by explicit notifications rather than the timer.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_shared_poll_dropped_notify_count">centrifugo_shared_poll_dropped_notify_count<a href="#centrifugo_shared_poll_dropped_notify_count" class="hash-link" aria-label="Direct link to centrifugo_shared_poll_dropped_notify_count" title="Direct link to centrifugo_shared_poll_dropped_notify_count" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> channel_namespace (Centrifugo PRO)</li>
+<li class=""><strong>Description:</strong> Number of notifications dropped because the poll loop was busy.</li>
+<li class=""><strong>Usage:</strong> Non-zero values mean notifications are being coalesced away — updates still happen on the next cycle, but with extra latency.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_shared_poll_publish_count">centrifugo_shared_poll_publish_count<a href="#centrifugo_shared_poll_publish_count" class="hash-link" aria-label="Direct link to centrifugo_shared_poll_publish_count" title="Direct link to centrifugo_shared_poll_publish_count" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> result, channel_namespace (Centrifugo PRO)</li>
+<li class=""><strong>Description:</strong> Number of publications produced by shared poll, by result.</li>
+<li class=""><strong>Usage:</strong> The output rate of the shared poll layer.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_shared_poll_proxy_request_items">centrifugo_shared_poll_proxy_request_items<a href="#centrifugo_shared_poll_proxy_request_items" class="hash-link" aria-label="Direct link to centrifugo_shared_poll_proxy_request_items" title="Direct link to centrifugo_shared_poll_proxy_request_items" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Histogram. Uses native (sparse, exponential) schema when <a href="#native-histograms" class=""><code>prometheus.native_histograms</code></a> is enabled.</li>
+<li class=""><strong>Labels:</strong> name</li>
+<li class=""><strong>Description:</strong> Number of items per shared poll refresh proxy request, by proxy name.</li>
+<li class=""><strong>Usage:</strong> Shows the batch size Centrifugo asks your backend for.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_shared_poll_proxy_response_items">centrifugo_shared_poll_proxy_response_items<a href="#centrifugo_shared_poll_proxy_response_items" class="hash-link" aria-label="Direct link to centrifugo_shared_poll_proxy_response_items" title="Direct link to centrifugo_shared_poll_proxy_response_items" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Histogram. Uses native (sparse, exponential) schema when <a href="#native-histograms" class=""><code>prometheus.native_histograms</code></a> is enabled.</li>
+<li class=""><strong>Labels:</strong> name</li>
+<li class=""><strong>Description:</strong> Number of items per shared poll refresh proxy response.</li>
+<li class=""><strong>Usage:</strong> Compare with the request items histogram to see how much of each batch the backend actually returns.</li>
+</ul>
 <h2 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="traces">Traces<a href="#traces" class="hash-link" aria-label="Direct link to Traces" title="Direct link to Traces" translate="no">​</a></h2>
 <h3 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="opentelemetry">OpenTelemetry<a href="#opentelemetry" class="hash-link" aria-label="Direct link to OpenTelemetry" title="Direct link to OpenTelemetry" translate="no">​</a></h3>
 <p>At this point Centrifugo can export traces for HTTP and GRPC server API requests in OpenTelemetry format.</p>

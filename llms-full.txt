@@ -810,7 +810,13 @@ docker-compose up
 
 ## Kubernetes Helm chart
 
-See our [official Kubernetes Helm chart](https://github.com/centrifugal/helm-charts). Follow instructions in a Centrifugo chart README to bootstrap Centrifugo inside your Kubernetes cluster.
+See our [official Kubernetes Helm chart](https://github.com/centrifugal/helm-charts) to run Centrifugo inside a Kubernetes cluster. The [chart README](https://github.com/centrifugal/helm-charts/tree/master/charts/centrifugo) takes you from a local trial to a production deployment and covers, among other things:
+
+* **Quick local start** with Minikube to try the chart in a few commands.
+* **Production deployment tutorials** with step-by-step guides for [Google Kubernetes Engine (GKE)](https://github.com/centrifugal/helm-charts/blob/master/charts/centrifugo/tutorial.md) and [Amazon EKS](https://github.com/centrifugal/helm-charts/blob/master/charts/centrifugo/tutorial.md) – covering high availability with multiple replicas, Redis for horizontal scaling, TLS with managed certificates, ingress, and Prometheus monitoring.
+* **Ingress examples** for NGINX, HAProxy, [AWS ALB (EKS)](https://github.com/centrifugal/helm-charts/blob/master/charts/centrifugo/README.md#aws-alb-ingress-eks) and [GCP GKE](https://github.com/centrifugal/helm-charts/blob/master/charts/centrifugo/README.md#gcp-gke-ingress), plus Gateway API (HTTPRoute).
+* **[Service mesh (Istio) support](https://github.com/centrifugal/helm-charts/blob/master/charts/centrifugo/README.md#service-mesh-istio) out of the box** – WebSocket, HTTP-streaming/SSE, emulation and the HTTP/gRPC APIs all work through the mesh with no extra configuration, because every Service port declares its L7 protocol via the standard `appProtocol` field.
+* Centrifugo dependencies is up to the user – point to your own Redis, Nats, PostgreSQL, Kafka, ClickHouse setups or to managed services.
 
 ## RPM and DEB packages for Linux
 
@@ -3845,7 +3851,7 @@ After configuring, restart Centrifugo and go to [http://localhost:8000](http://l
 
 :::tip
 
-Although there is a password based authentication a good advice is to protect web interface by firewall rules in production.
+Although there is a password based authentication, a good advice is to also protect the admin endpoint at the infrastructure level in production – for example with firewall rules, by keeping it on a private network, or behind an authenticating reverse proxy. Centrifugo additionally throttles repeated failed password attempts per client IP as a best-effort defense against brute-force (a valid login is not affected, even during an attack), but this is defense in depth and not a substitute for restricting access to the endpoint.
 
 :::
 
@@ -9289,7 +9295,7 @@ The diff is calculated using [Fossil](https://fossil-scm.org/home/doc/tip/www/de
 
 :::tip
 
-At this point delta compression is only available for bidirectional client-side subscriptions and supported by Centrifugo Javascript SDK [centrifuge-js](https://github.com/centrifugal/centrifuge-js), Java SDK [centrifuge-java](https://github.com/centrifugal/centrifuge-java), Python SDK [centrifuge-python](https://github.com/centrifugal/centrifuge-python). There is also [unfinished PR](https://github.com/centrifugal/centrifuge-swift/pull/104) to Swift SDK. See also [SDK feature matrix](../transports/client_sdk.md#sdk-feature-matrix).
+At this point delta compression is supported by all official Centrifugo SDKs. See [SDK feature matrix](../transports/client_sdk.md#sdk-feature-matrix).
 
 :::
 
@@ -10536,7 +10542,7 @@ sub.on('publication', (ctx) => applyOrderUpdate(ctx.data));
 sub.subscribe();
 ```
 
-`getState` is one convenience for this, not a requirement. The broader point holds either way: when your own database is the source of truth and Centrifugo streams only the change events, you can combine the publication cache's reconnect-storm protection with a consistent view in every scenario. See [app-owned state with stream subscriptions](/blog/2026/05/24/pg-stream-broker-benefits#app-owned-state-with-stream-subscriptions) for more.
+`getState` is one convenience for this, not a requirement. The broader point holds either way: when your own database is the source of truth and Centrifugo streams only the change events, you can combine the publication cache's reconnect-storm protection with a consistent view in every scenario. See [app-owned state with stream subscriptions](/blog/2026/07/27/app-owned-state-stream-subscriptions) for more.
 
 ## Configuration recap
 
@@ -11141,7 +11147,7 @@ That said, **map subscriptions can still be the right answer even when the data 
 |---|---|
 | Ordered events (chat, notifications, activity feeds) | Stream subscription |
 | Latest value of a single thing (with [cache recovery](/docs/server/cache_recovery)) | Stream subscription + cache recovery |
-| Real-time sync of data already in your app DB, app DB stays the only source of truth | Stream subscription + `getState` ([pattern](/blog/2026/05/24/pg-stream-broker-benefits)) |
+| Real-time sync of data already in your app DB, app DB stays the only source of truth | Stream subscription + `getState` ([pattern](/blog/2026/07/27/app-owned-state-stream-subscriptions)) |
 | A Centrifugo-managed keyed collection (cursors, presence, IoT fleet, feature flags, lobbies) | **Map subscription** |
 | Centrifugo-managed keyed collection backed by transactional PostgreSQL | **Map subscription + PostgreSQL map broker** |
 | Real-time sync of data in your app DB, where the convenience of map subscriptions outweighs the cost of mirroring entries into `cf_map_state` | **Map subscription + PostgreSQL map broker** (mirror via transactional `cf_map_publish` from your own SQL transactions) |
@@ -12082,14 +12088,24 @@ When the flag is on:
 Operational notes:
 
 - **Breaking change for dashboards relying on `{quantile="..."}` labels** on the dropped Summaries — switch to `histogram_quantile()` against the corresponding `_histogram` metric.
-- **Text-format Prometheus scrapes lose `_bucket` series** on Histograms — only `_count` and `_sum` remain visible. Configure your scrape job to use the protobuf format to receive the native histogram data:
+- **Prometheus must be told to ingest native histograms.** They travel only over the protobuf exposition format, and Prometheus recognizes them only when `scrape_native_histograms` is enabled — globally or per scrape job:
+
   ```yaml
   scrape_configs:
     - job_name: centrifugo
-      scrape_protocols: [PrometheusProto, OpenMetricsText1.0.0, PrometheusText0.0.4]
+      scrape_native_histograms: true
       # ...
   ```
-  Prometheus 2.40+ is required for native histogram ingestion.
+
+  Enabling it also switches scrape protocol negotiation to prefer `PrometheusProto`, so no separate `scrape_protocols` tweak is needed. On older Prometheus releases that predate this option, start the server with `--enable-feature=native-histograms` instead — the flag has the same effect.
+
+  :::caution
+
+  This is easy to miss. Without it Prometheus falls back to the text format, where a native histogram exposes only `_count`, `_sum` and a single `+Inf` bucket — so the metric ends up with **no usable bucket data at all** and dashboards built on `histogram_quantile()` silently go blank. If percentile panels are empty right after turning `native_histograms` on, check this first: `/api/v1/status/config` on your Prometheus shows the effective value.
+
+  :::
+
+  After ingestion, native histograms are queried by the **base metric name** — there are no `_bucket`, `_count` or `_sum` series. Use `histogram_quantile(0.99, sum by (method) (rate(metric[$__rate_interval])))` (note: no `le` label), and `histogram_count()` / `histogram_sum()` where you previously used `_count` / `_sum`.
 - Native histograms are still flagged experimental in `client_golang`. The feature is opt-in for that reason.
 
 **Why enable this in plain Prometheus setups?** Histograms aggregate correctly across multiple Centrifugo nodes — `histogram_quantile()` over fleet-wide bucket counts gives a meaningful fleet-wide p99. Summaries can't be aggregated this way (their per-node quantile estimates aren't mathematically combinable). Native histograms keep the storage cost low while providing this aggregation property. If you're scraping Centrifugo with Prometheus 2.40+, this flag gives you better percentile data for free.
@@ -12101,6 +12117,23 @@ If you also want to push metrics to an OpenTelemetry backend (Grafana Cloud, GCP
 Check out Centrifugo [official Grafana dashboard](https://grafana.com/grafana/dashboards/13039) for Prometheus storage. You can import that dashboard to your Grafana, point to Prometheus storage – and enjoy visualized metrics.
 
 ![](/img/grafana.jpg)
+
+The dashboard is organized into rows — Overview, connections and subscriptions, client commands and latency, real-time delivery, recovery, server API, proxy, async consumers, shared poll, node internals, the Redis / map / PostgreSQL brokers, and the Go runtime — followed by `PRO · …` rows for [Centrifugo PRO metrics](../pro/observability_enhancements.md#pro-metrics-reference). All rows below the first four are collapsed by default, so a dashboard load only queries what you actually look at.
+
+Two things worth knowing about the queries:
+
+* **No Summary metrics.** Every latency panel is built on the `_histogram` companions, so percentiles aggregate correctly across nodes and nothing breaks when the deprecated Summaries are removed in Centrifugo v7.
+* **Native histograms work out of the box.** Histogram-based panels carry two branches joined by `or` — one against classic `_bucket` series, one against the native histogram (`histogram_quantile()` / `histogram_count()` on the base series). Exactly one branch has data, so the same dashboard works with [`prometheus.native_histograms`](#native-histograms) both off and on.
+
+Scoping is driven by template variables: `job` and `instance` narrow panels to a deployment or a single node, `quantile` retunes every percentile panel at once, `channel namespace` filters the PRO namespace rows, and `filters` is an ad-hoc filter you can point at any label your setup happens to have. All of them default to matching everything, so the dashboard works untouched on a single node.
+
+:::tip Scoping several Centrifugo installations
+
+If one Prometheus scrapes more than one Centrifugo installation, whether you can isolate them with the `job` variable depends on your labels. Two installations scraped as separate jobs are easy — pick one from the `Job` dropdown. But two releases of the same Helm chart deployed into different Kubernetes namespaces usually land under the **same** `job` value and are told apart by the Kubernetes `namespace` label instead. Use the `Filters` ad-hoc variable for that: add `namespace = your-namespace` (or `cluster`, `env`, whatever separates them) and every panel is scoped.
+
+Note the dashboard's `Channel namespace` variable is the Centrifugo channel namespace, not the Kubernetes one.
+
+:::
 
 ### Exposed metrics
 
@@ -12272,13 +12305,6 @@ Note, this metric is disabled by default. To enable it set `prometheus.recovered
 - **Description:** Number of currently active client connections by transport type, protocol, client name, and version.
 - **Usage:** Useful for real-time monitoring of active connections, understanding the current load distribution across different transports and client types, and capacity planning.
 
-#### centrifugo_client_subscriptions_accepted
-
-- **Type:** Counter
-- **Labels:** client_name, channel_namespace (Centrifugo PRO)
-- **Description:** Count of accepted client subscriptions by client name and channel namespace.
-- **Usage:** Useful for monitoring subscription patterns, understanding which clients are subscribing to which channel namespaces, and tracking subscription volume over time.
-
 #### centrifugo_client_subscriptions_inflight
 
 - **Type:** Gauge
@@ -12304,8 +12330,8 @@ Note, this metric is disabled by default. To enable it set `prometheus.recovered
 
 - **Type:** Counter
 - **Labels:** transport, frame_type, channel_namespace
-- **Description:** Measures the size of messages (in bytes) sent to client connections over specific transports.
-- **Usage:** Helps in monitoring the network bandwidth usage and optimizing the data transfer.
+- **Description:** Measures the size of messages (in bytes) sent to client connections over specific transports. Sizes are **uncompressed payload bytes and exclude framing overhead**, so this is not the same as bytes on the wire.
+- **Usage:** Helps in monitoring the network bandwidth usage and optimizing the data transfer. Because compression and framing are not accounted for, treat it as a lower bound when comparing against real egress — with WebSocket compression enabled actual traffic can be substantially lower, and with many tiny frames it can be higher.
 
 #### centrifugo_transport_messages_received
 
@@ -12318,7 +12344,7 @@ Note, this metric is disabled by default. To enable it set `prometheus.recovered
 
 - **Type:** Counter
 - **Labels:** transport, frame_type, channel_namespace
-- **Description:** Measures the size of messages (in bytes) received from client connections over specific transports.
+- **Description:** Measures the size of messages (in bytes) received from client connections over specific transports. As with the sent counterpart, these are **uncompressed payload bytes and exclude framing overhead**.
 - **Usage:** Use this metric to monitor the incoming data size and optimize the application's performance.
 
 #### centrifugo_transport_outgoing_close_count
@@ -12357,6 +12383,13 @@ This Summary is deprecated and will be removed in Centrifugo v7. Use `centrifugo
 - **Description:** Counts the number of errors occurred during proxy calls.
 - **Usage:** Helps in monitoring the reliability of proxy services and ensuring error-free operations.
 
+#### centrifugo_proxy_inflight_requests
+
+- **Type:** Gauge
+- **Labels:** protocol, type, name
+- **Description:** Number of proxy requests currently in flight.
+- **Usage:** Rising inflight requests together with rising `centrifugo_proxy_duration_seconds_histogram` mean your backend is the bottleneck — proxy calls sit on the critical path of the client commands that trigger them.
+
 :::note
 
 Per-proxy ("granular") timings and errors are not separate metrics — they are exposed via the `name` label on the `centrifugo_proxy_*` metrics above, where `name` is the configured proxy name.
@@ -12381,6 +12414,13 @@ This Summary is deprecated and will be removed in Centrifugo v7. Use `centrifugo
 - **Description:** Same data as the Summary above, exposed in `histogram_quantile()`- and OpenTelemetry-friendly form.
 - **Usage:** Prefer this metric for percentile queries and OpenTelemetry export.
 
+#### centrifugo_api_command_errors_total
+
+- **Type:** Counter
+- **Labels:** protocol, method, error
+- **Description:** Total number of errors returned by server API commands, by error name.
+- **Usage:** The error signal for the server API — use it together with the rate derived from `centrifugo_api_command_duration_seconds_histogram_count` to get an API error ratio.
+
 #### centrifugo_api_rpc_duration_seconds
 
 :::caution Deprecated
@@ -12404,7 +12444,7 @@ New in Centrifugo v6.8.1
 #### centrifugo_node_pub_sub_lag_seconds
 
 - **Type:** Histogram
-- **Labels:**
+- **Labels:** channel_namespace (Centrifugo PRO)
 - **Description:** Tracks pub sub lag in seconds.
 - **Usage:** Helps in monitoring of PUB/SUB layer performance. Note, this metric may be not exact in distributed environment due to time skew (to minify effect use NTP). In this case it still may be useful to identifies growth in lag.
 
@@ -12447,21 +12487,21 @@ New in Centrifugo v6.8.1
 
 - **Type:** Counter
 - **Labels:** broker_name, error
-- **Description:** Number of times there was an error in Redis PUB/SUB connection of the Redis map broker (Centrifugo PRO).
+- **Description:** Number of times there was an error in Redis PUB/SUB connection of the Redis map broker.
 - **Usage:** Critical for monitoring Redis map broker health and identifying connection issues that could affect message delivery.
 
 #### centrifugo_map_broker_redis_pub_sub_dropped_messages
 
 - **Type:** Counter
 - **Labels:** broker_name, channel_type
-- **Description:** Number of dropped messages on application level in Redis PUB/SUB of the Redis map broker (Centrifugo PRO).
+- **Description:** Number of dropped messages on application level in Redis PUB/SUB of the Redis map broker.
 - **Usage:** Helps identify message loss issues in the Redis map broker, which could indicate performance problems or buffer overflows.
 
 #### centrifugo_map_broker_redis_pub_sub_buffered_messages
 
 - **Type:** Gauge
 - **Labels:** broker_name, channel_type, pub_sub_processor
-- **Description:** Number of messages buffered in Redis PUB/SUB of the Redis map broker (Centrifugo PRO).
+- **Description:** Number of messages buffered in Redis PUB/SUB of the Redis map broker.
 - **Usage:** Monitor buffer levels to detect potential bottlenecks in map broker message processing and prevent message drops.
 
 #### centrifugo_broker_publish_suppressed_count
@@ -12475,70 +12515,70 @@ New in Centrifugo v6.8.1
 
 - **Type:** Counter
 - **Labels:** reason, channel_namespace (Centrifugo PRO)
-- **Description:** Number of suppressed map publish operations (Centrifugo PRO).
+- **Description:** Number of suppressed map publish operations.
 - **Usage:** Monitor how often map publishes are suppressed and why.
 
 #### centrifugo_map_broker_remove_suppressed_count
 
 - **Type:** Counter
 - **Labels:** reason, channel_namespace (Centrifugo PRO)
-- **Description:** Number of suppressed map remove operations (Centrifugo PRO).
+- **Description:** Number of suppressed map remove operations.
 - **Usage:** Monitor how often map removes are suppressed and why.
 
 #### centrifugo_map_broker_cleanup_lag_seconds
 
 - **Type:** Gauge
 - **Labels:** broker_name
-- **Description:** Lag between now and the oldest expired entry awaiting cleanup in the map broker (Centrifugo PRO). 0 means caught up.
+- **Description:** Lag between now and the oldest expired entry awaiting cleanup in the map broker. 0 means caught up.
 - **Usage:** Detect when the map broker cleanup worker falls behind on pruning expired state.
 
 #### centrifugo_map_broker_cleanup_removed_count
 
 - **Type:** Counter
 - **Labels:** broker_name
-- **Description:** Total number of expired entries removed by map broker cleanup (Centrifugo PRO).
+- **Description:** Total number of expired entries removed by map broker cleanup.
 - **Usage:** Observe how much expired state the map broker is pruning over time.
 
 #### centrifugo_map_broker_cleanup_errors_count
 
 - **Type:** Counter
 - **Labels:** broker_name
-- **Description:** Total number of map broker cleanup errors (Centrifugo PRO).
+- **Description:** Total number of map broker cleanup errors.
 - **Usage:** Alert on cleanup failures that could let expired state accumulate.
 
 #### centrifugo_broker_postgres_cleanup_removed_total
 
 - **Type:** Counter
 - **Labels:** broker_name, pass
-- **Description:** Total rows removed by each PostgreSQL stream broker cleanup pass (Centrifugo PRO). The `pass` label identifies the table being cleaned.
+- **Description:** Total rows removed by each PostgreSQL stream broker cleanup pass. The `pass` label identifies the table being cleaned.
 - **Usage:** Observe how much expired data the PostgreSQL broker is pruning per cleanup pass.
 
 #### centrifugo_broker_postgres_outbox_cursor_lag_seconds
 
 - **Type:** Gauge
 - **Labels:** broker_name, shard
-- **Description:** Time between the PostgreSQL stream broker outbox cursor's row created_at and now, per shard (Centrifugo PRO).
+- **Description:** Time between the PostgreSQL stream broker outbox cursor's row created_at and now, per shard.
 - **Usage:** Detect when outbox consumption falls behind, which delays publication delivery.
 
 #### centrifugo_map_broker_postgres_outbox_cursor_lag_seconds
 
 - **Type:** Gauge
 - **Labels:** broker_name, shard
-- **Description:** Time between the PostgreSQL map broker outbox cursor's row created_at and now, per shard (Centrifugo PRO).
+- **Description:** Time between the PostgreSQL map broker outbox cursor's row created_at and now, per shard.
 - **Usage:** Detect when map broker outbox consumption falls behind.
 
 #### centrifugo_broker_postgres_partitions
 
 - **Type:** Gauge
 - **Labels:** broker_name
-- **Description:** Count of PostgreSQL stream broker stream/history table partitions (Centrifugo PRO).
+- **Description:** Count of PostgreSQL stream broker stream/history table partitions.
 - **Usage:** Monitor partition growth of the PostgreSQL broker tables.
 
 #### centrifugo_map_broker_postgres_partitions
 
 - **Type:** Gauge
 - **Labels:** broker_name
-- **Description:** Count of PostgreSQL map broker table partitions (Centrifugo PRO).
+- **Description:** Count of PostgreSQL map broker table partitions.
 - **Usage:** Monitor partition growth of the PostgreSQL map broker tables.
 
 #### centrifugo_broker_redis_node_grouped_topology_rebuild_count
@@ -12570,6 +12610,116 @@ New in Centrifugo v6.8.1
 - **Usage:** This is the real delivery interruption a cluster scale or reshard causes. Watch p99 to size the impact.
 
 The Redis map broker exposes the same four metrics under the `map_broker` subsystem (Centrifugo PRO): `centrifugo_map_broker_redis_node_grouped_topology_rebuild_count`, `centrifugo_map_broker_redis_node_grouped_topology_error_count`, `centrifugo_map_broker_redis_node_grouped_unknown_slot_owner_count`, and `centrifugo_map_broker_redis_node_grouped_topology_change_gap_seconds`, with the same labels and meaning for the map broker.
+
+#### centrifugo_consumers_messages_processed_total
+
+- **Type:** Counter
+- **Labels:** consumer_name
+- **Description:** Total number of messages processed by an [async consumer](./consumers.md) — Kafka, PostgreSQL outbox, Nats JetStream, Redis Stream, AWS SQS, Google Pub/Sub.
+- **Usage:** The throughput signal for event-driven publishing. A drop to zero while your application keeps producing means the consumer stalled.
+
+#### centrifugo_consumers_errors_total
+
+- **Type:** Counter
+- **Labels:** consumer_name
+- **Description:** Total number of errors while processing consumed messages.
+- **Usage:** Sustained errors mean messages are being retried or dropped depending on the consumer configuration — alert on this.
+
+#### centrifugo_node_incoming_http_requests_total
+
+- **Type:** Counter
+- **Labels:** path, method, status
+- **Description:** Number of incoming HTTP requests handled by the node.
+- **Usage:** Requires `prometheus.instrument_http_handlers` to be enabled. Gives per-endpoint request rates and status code distribution for all HTTP handlers Centrifugo serves.
+
+#### centrifugo_shared_poll_num_channels
+
+- **Type:** Gauge
+- **Description:** Number of channels currently served by the [shared poll](./shared_poll.md) subscription type.
+- **Usage:** Capacity signal for shared poll — each channel is polled on its own schedule.
+
+#### centrifugo_shared_poll_num_keys
+
+- **Type:** Gauge
+- **Description:** Number of keys tracked by shared poll across all channels.
+- **Usage:** Together with the channel count, shows how much state the shared poll layer keeps in memory.
+
+#### centrifugo_shared_poll_cycle_duration_seconds
+
+- **Type:** Histogram. Uses native (sparse, exponential) schema when [`prometheus.native_histograms`](#native-histograms) is enabled.
+- **Labels:** channel_namespace (Centrifugo PRO)
+- **Description:** Full poll cycle wall time, including the spread delay.
+- **Usage:** Overall pacing of the poll loop.
+
+#### centrifugo_shared_poll_cycle_work_duration_seconds
+
+- **Type:** Histogram. Uses native (sparse, exponential) schema when [`prometheus.native_histograms`](#native-histograms) is enabled.
+- **Labels:** channel_namespace (Centrifugo PRO)
+- **Description:** Poll cycle time minus the spread delay — the part that competes with your configured poll interval.
+- **Usage:** The key saturation signal for shared poll: if this approaches the poll interval, polling cannot keep up and updates start lagging.
+
+#### centrifugo_shared_poll_handler_duration_seconds
+
+- **Type:** Histogram. Uses native (sparse, exponential) schema when [`prometheus.native_histograms`](#native-histograms) is enabled.
+- **Labels:** trigger, channel_namespace (Centrifugo PRO)
+- **Description:** Latency of the poll handler itself, by what triggered the poll.
+- **Usage:** Isolates backend latency from the poll loop's own overhead.
+
+#### centrifugo_shared_poll_sem_wait_duration_seconds
+
+- **Type:** Histogram. Uses native (sparse, exponential) schema when [`prometheus.native_histograms`](#native-histograms) is enabled.
+- **Labels:** trigger, channel_namespace (Centrifugo PRO)
+- **Description:** Time spent waiting for a concurrency slot before a poll could run.
+- **Usage:** The contention indicator — growing wait time means the configured concurrency limit is the constraint.
+
+#### centrifugo_shared_poll_handler_error_count
+
+- **Type:** Counter
+- **Labels:** trigger, channel_namespace (Centrifugo PRO)
+- **Description:** Number of poll handler failures.
+- **Usage:** Errors here mean channel state is not being refreshed.
+
+#### centrifugo_shared_poll_items_count
+
+- **Type:** Counter
+- **Labels:** trigger, result, channel_namespace (Centrifugo PRO)
+- **Description:** Items returned by poll handlers, by result — `changed`, `unchanged` or `removed`.
+- **Usage:** A high `unchanged` share means you are polling more often than the data changes — a candidate for a longer interval or notification-driven polling.
+
+#### centrifugo_shared_poll_notify_count
+
+- **Type:** Counter
+- **Labels:** channel_namespace (Centrifugo PRO)
+- **Description:** Number of external notifications received by the shared poll layer.
+- **Usage:** Shows how much polling is driven by explicit notifications rather than the timer.
+
+#### centrifugo_shared_poll_dropped_notify_count
+
+- **Type:** Counter
+- **Labels:** channel_namespace (Centrifugo PRO)
+- **Description:** Number of notifications dropped because the poll loop was busy.
+- **Usage:** Non-zero values mean notifications are being coalesced away — updates still happen on the next cycle, but with extra latency.
+
+#### centrifugo_shared_poll_publish_count
+
+- **Type:** Counter
+- **Labels:** result, channel_namespace (Centrifugo PRO)
+- **Description:** Number of publications produced by shared poll, by result.
+- **Usage:** The output rate of the shared poll layer.
+
+#### centrifugo_shared_poll_proxy_request_items
+
+- **Type:** Histogram. Uses native (sparse, exponential) schema when [`prometheus.native_histograms`](#native-histograms) is enabled.
+- **Labels:** name
+- **Description:** Number of items per shared poll refresh proxy request, by proxy name.
+- **Usage:** Shows the batch size Centrifugo asks your backend for.
+
+#### centrifugo_shared_poll_proxy_response_items
+
+- **Type:** Histogram. Uses native (sparse, exponential) schema when [`prometheus.native_histograms`](#native-histograms) is enabled.
+- **Labels:** name
+- **Description:** Number of items per shared poll refresh proxy response.
+- **Usage:** Compare with the request items histogram to see how much of each batch the backend actually returns.
 
 ## Traces
 
@@ -17801,7 +17951,7 @@ To add Centrifugo let's update `docker-compose.yml` file:
 
 ```yaml
 centrifugo:
-  image: centrifugo/centrifugo:v6
+  image: centrifugo/centrifugo:v6.9.1
   volumes:
     - ./centrifugo:/centrifugo
   command: centrifugo -c config.json
@@ -19206,12 +19356,14 @@ The first step would be adding Prometheus service to our `docker-compose.yml` fi
 ```yaml title="docker-compose.yml"
   prometheus:
     image: prom/prometheus:v3.12.0
+    depends_on:
+      - centrifugo
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
     ports:
-      - 9090:9090
+      - "9090:9090"
 ```
 
 We also need to create a `prometheus.yml` file in the `prometheus` directory of our project. Here is how it looks like:
@@ -19230,7 +19382,7 @@ This configuration tells Prometheus to scrape metrics from Centrifugo container 
 
 In Centrifugo configuration we also need to enable Prometheus metrics endpoint. Here is how it looks like:
 
-```json title="config.json"
+```json title="centrifugo/config.json"
 {
     ...
     "prometheus": {
@@ -19241,9 +19393,11 @@ In Centrifugo configuration we also need to enable Prometheus metrics endpoint. 
 }
 ```
 
-Besides enabling the metrics endpoint, we turn on two extra options: `instrument_http_handlers` adds metrics for Centrifugo's HTTP API handlers, and `channel_namespace_resolution` labels channel metrics by namespace – so on the dashboard you can see activity broken down per namespace (e.g. our `personal` namespace).
+Besides enabling the metrics endpoint, we turn on two extra options. `instrument_http_handlers` adds metrics for Centrifugo's HTTP API handlers. `channel_namespace_resolution` asks Centrifugo to label channel metrics with the channel namespace, so activity can be broken down per namespace (e.g. our `personal` namespace) – note this one is a [Centrifugo PRO](../pro/observability_enhancements.md#channel-namespace-resolution-for-metrics) feature: on Centrifugo OSS the option is accepted but the `channel_namespace` label stays empty. We keep it in the config so the namespace breakdowns light up immediately if you run this tutorial against PRO.
 
 Now once you start the app with `docker compose up` you can open Prometheus UI at [http://localhost:9090](http://localhost:9090) and see Centrifugo metrics.
+
+If you have not used Prometheus before, two pages are worth knowing. [http://localhost:9090/targets](http://localhost:9090/targets) lists what Prometheus is scraping – the `centrifugo` target should be `UP`, and if it is not, nothing else will work. On [http://localhost:9090/query](http://localhost:9090/query) you can type a metric name, say `centrifugo_node_num_clients`, and see its value. Every metric Centrifugo exposes is listed in the [metrics reference](../server/observability.md#exposed-metrics).
 
 ## Grafana
 
@@ -19261,12 +19415,14 @@ Many users prefer to use [Grafana](https://grafana.com/) for visualizing metrics
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
-      # Mount local provisioning directory to automatically configure Prometheus as a datasource
+      # Mount local provisioning directory to automatically configure Prometheus as a
+      # datasource and to load the official Centrifugo dashboard
       - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
       - grafana-data:/var/lib/grafana
 ```
 
-We also need to create a `datasource.yml` file in the `grafana/provisioning/datasources` directory. Here is how it looks like:
+Two small provisioning files go with it, so that Grafana comes up already configured – no clicking through the UI. The first one points Grafana at Prometheus:
 
 ```yaml title="grafana/provisioning/datasources/datasource.yml"
 apiVersion: 1
@@ -19281,13 +19437,49 @@ datasources:
 
 This configuration tells Grafana to use Prometheus as a default datasource.
 
-Now once you start the app with `docker compose up` you can open Grafana UI at [http://localhost:3000](http://localhost:3000) and login with `admin`/`admin` credentials.
+The second one tells Grafana to load dashboards from a directory on disk, so we don't have to import anything by hand:
 
-Then you can simply import Centrifugo [official Grafana dashboard](https://grafana.com/grafana/dashboards/13039). To import a dashboard in Grafana go to http://localhost:3000/dashboards, click on the `New` button in the top-right corner and select `Import`. Then you need to put the dashboard ID (`13039`) into the form and click `Load`. After that **select Prometheus as a datasource** for the dashboard and click `Import`. And enjoy visualized metrics:
+```yaml title="grafana/provisioning/dashboards/dashboards.yml"
+apiVersion: 1
+
+providers:
+  - name: Centrifugo
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false
+```
+
+The directory it points at is the one we mounted above. Put the JSON of Centrifugo [official Grafana dashboard](https://grafana.com/grafana/dashboards/13039) there as `grafana/dashboards/centrifugo.json` – it's already committed in the tutorial repository, so there is nothing to download.
+
+Now once you start the app with `docker compose up` you can open Grafana UI at [http://localhost:3000](http://localhost:3000), login with `admin`/`admin` credentials, and the Centrifugo dashboard is already there:
 
 ![](/img/grafana.jpg)
 
 That's it! Now you have Centrifugo metrics visualized in the application. You can even use Grafana alerting feature to notify you over tons of supported communication channels (Slack, email, and so on) in case of metric changes.
+
+:::tip Panels look empty?
+
+That is expected on a freshly started stack – metrics only appear once something happens. Open the app at [http://localhost:9000](http://localhost:9000), log in as `alice` and send a few messages the way we did in the earlier chapters, then come back to Grafana. Connections, commands and delivery panels fill up within a few seconds. It also helps to set the dashboard time range (top right) to something short like *Last 15 minutes* while you experiment.
+
+:::
+
+Most of the dashboard's rows are collapsed by default — expand the ones you need. The first four rows cover what this tutorial actually exercises: connections, client commands, latency and real-time delivery. Rows prefixed with `PRO ·` cover [Centrifugo PRO metrics](../pro/observability_enhancements.md#pro-metrics-reference) and stay empty here, as do rows for features this setup does not use — there is no proxy configured, and the tutorial runs the memory engine rather than Redis, so the Proxy and broker rows have nothing to show.
+
+### Importing the dashboard instead of provisioning it
+
+Provisioning from disk suits a Docker Compose stack, where the dashboard travels with the repository and is there on the first `docker compose up`. It is not the only way, and often not the right one: if you are adding Centrifugo to a Grafana you don't own the filesystem of – a managed instance, or one someone else operates – import the dashboard from the [Grafana dashboard registry](https://grafana.com/grafana/dashboards/13039) instead.
+
+In the Grafana UI go to `Dashboards`, press `New` → `Import`, put the dashboard ID `13039` into the form and press `Load`. Then **select your Prometheus as a datasource** and press `Import`. The same dashboard, without any file mounts or provisioning config.
+
+The two approaches do the same thing by different means, so pick one. If you import while the provisioning above is also active you simply end up with two copies of the dashboard – harmless, but confusing.
+
+One difference worth knowing: a provisioned dashboard is read-only in the UI unless the provider sets `allowUiUpdates: true`, which the config above does – so in this tutorial you can edit it. Even then, edits live only in Grafana's database and the file on disk stays the source of truth, so re-provisioning can overwrite them. If you plan to adapt the dashboard heavily, either edit `grafana/dashboards/centrifugo.json` in the repository, or import it and keep your copy in Grafana.
 
 ## We did it again
 
@@ -19295,7 +19487,7 @@ Here we showed how to add Prometheus and Grafana to our messenger application to
 
 In real-world applications the way of Prometheus and Grafana setup can be different, but the core idea is the same. For example, in Kubernetes you can use Helm charts to deploy Prometheus and Grafana stack and use k8s service discovery to find Centrifugo instances.
 
-For the convenience we've included Prometheus and Grafana support to [the source code](https://github.com/centrifugal/grand-chat-tutorial) of our tutorial, so it works out of the box, but you need to import Grafana dashboard manually in a way described above.
+For the convenience we've included Prometheus and Grafana support to [the source code](https://github.com/centrifugal/grand-chat-tutorial) of our tutorial, together with the provisioned Centrifugo dashboard – so it all works out of the box.
 
 ---
 
@@ -24335,7 +24527,7 @@ curl -sSLf https://centrifugal.dev/install_pro.sh | sh
 Centrifugo PRO uses a different image from OSS version – [centrifugo/centrifugo-pro](https://hub.docker.com/r/centrifugo/centrifugo-pro):
 
 ```
-docker run --ulimit nofile=262144:262144 -v /host/dir/with/config/file:/centrifugo -p 8000:8000 centrifugo/centrifugo-pro:v6.9.1 centrifugo -c config.json
+docker run --ulimit nofile=262144:262144 -v /host/dir/with/config/file:/centrifugo -p 8000:8000 centrifugo/centrifugo-pro:v6.9.2 centrifugo -c config.json
 ```
 
 ### Kubernetes
@@ -24347,7 +24539,7 @@ You can use our [official Helm chart](https://github.com/centrifugal/helm-charts
 image:
   registry: docker.io
   repository: centrifugo/centrifugo-pro
-  tag: v6.9.1
+  tag: v6.9.2
 ```
 
 ### Debian and Ubuntu
@@ -24355,8 +24547,8 @@ image:
 DEB package [available in release assets](https://github.com/centrifugal/centrifugo-pro/releases).
 
 ```
-wget https://github.com/centrifugal/centrifugo-pro/releases/download/v6.9.1/centrifugo-pro_6.9.1-0_amd64.deb
-sudo dpkg -i centrifugo-pro_6.9.1-0_amd64.deb
+wget https://github.com/centrifugal/centrifugo-pro/releases/download/v6.9.2/centrifugo-pro_6.9.2-0_amd64.deb
+sudo dpkg -i centrifugo-pro_6.9.2-0_amd64.deb
 ```
 
 ### Centos
@@ -24364,8 +24556,8 @@ sudo dpkg -i centrifugo-pro_6.9.1-0_amd64.deb
 RPM package [available in release assets](https://github.com/centrifugal/centrifugo-pro/releases).
 
 ```
-wget https://github.com/centrifugal/centrifugo-pro/releases/download/v6.9.1/centrifugo-pro-6.9.1-0.x86_64.rpm
-sudo yum install centrifugo-pro-6.9.1-0.x86_64.rpm
+wget https://github.com/centrifugal/centrifugo-pro/releases/download/v6.9.2/centrifugo-pro-6.9.2-0.x86_64.rpm
+sudo yum install centrifugo-pro-6.9.2-0.x86_64.rpm
 ```
 
 ## Setting PRO license key
@@ -24986,6 +25178,264 @@ The pro-only Summary metrics deprecated by the same migration are: `centrifugo_p
 
 **Why Summaries are being removed**: in a clustered Centrifugo deployment (multiple nodes), Summary's pre-computed quantile estimates cannot be aggregated across instances — there's no mathematically valid way to combine per-node p99s into a fleet-wide p99. Histograms solve this by aggregating bucket counts across nodes, then computing percentiles with `histogram_quantile()`. For any multi-node deployment the Summary quantile data is, at best, misleading.
 
+## PRO metrics reference
+
+Beyond the enhanced labels described above, Centrifugo PRO exposes its own metrics. They follow the same conventions as the [OSS metrics reference](../server/observability.md#exposed-metrics): the `centrifugo_` namespace, Histograms that switch to native schema when [`prometheus.native_histograms`](../server/observability.md#native-histograms) is on, and deprecated Summaries that disappear in that mode.
+
+All of them are visualized by the `PRO · …` rows of the [official Grafana dashboard](https://grafana.com/grafana/dashboards/13039).
+
+One family of PRO-only metrics is described in the OSS reference rather than here, because it sits next to closely related OSS metrics: the `*_redis_node_grouped_*` Redis Cluster metrics, which only the PRO node-grouped sharded PUB/SUB path can fill. They are marked as PRO there and are not registered at all in Centrifugo OSS.
+
+Note that the map broker and the PostgreSQL broker are **not** PRO features — both ship in Centrifugo OSS, so their metrics (`centrifugo_map_broker_*`, `centrifugo_broker_postgres_*`) belong to the OSS reference. What PRO adds on top is described in [map subscriptions](./map_subscriptions.md) — per-namespace map brokers and sharded PUB/SUB among them.
+
+### Push notifications
+
+#### centrifugo_push_notification_count
+
+- **Type:** Counter
+- **Labels:** provider, recipient_type, platform, success, err_code
+- **Description:** Count of push notifications sent, split by provider (`fcm`, `apns`, `hms`), recipient type, platform, whether the provider accepted it, and the provider error code when it did not.
+- **Usage:** Build a delivery success ratio from `success="true"` over the total. Codes such as `unregistered` are normal device-token churn; authentication errors are not.
+
+#### centrifugo_push_scheduled_request_count
+
+- **Type:** Counter
+- **Labels:** recipient_type
+- **Description:** Count of push notification requests accepted for later execution.
+- **Usage:** Shows how much of your push volume is scheduled rather than immediate.
+
+#### centrifugo_push_queue_consuming_lag
+
+- **Type:** Gauge
+- **Labels:** provider, queue
+- **Description:** Number of push jobs waiting to be consumed — pending entries of the Redis stream for the consumer group, or rows in the `push_jobs` table whose `run_at` is already due. Despite the name this is a **job count, not a duration**, and it is a Gauge — take its current value, do not wrap it in `rate()`.
+- **Usage:** Sustained growth means push workers cannot keep up with the send rate.
+
+#### centrifugo_push_consuming_inflight_jobs
+
+- **Type:** Gauge
+- **Labels:** provider, queue
+- **Description:** Number of push jobs currently being processed.
+- **Usage:** Shows worker utilization per queue.
+
+#### centrifugo_push_job_duration_seconds
+
+:::caution Deprecated
+This Summary is deprecated and will be removed in Centrifugo v7. Use `centrifugo_push_job_duration_seconds_histogram`. Not exposed when [`prometheus.native_histograms`](../server/observability.md#native-histograms) is enabled.
+:::
+
+- **Type:** Summary
+- **Labels:** provider, recipient_type
+- **Description:** Duration of a push processing job.
+
+#### centrifugo_push_job_duration_seconds_histogram
+
+- **Type:** Histogram. Uses native (sparse, exponential) schema when [`prometheus.native_histograms`](../server/observability.md#native-histograms) is enabled.
+- **Labels:** provider, recipient_type
+- **Description:** Same data as the Summary above, in `histogram_quantile()`- and OpenTelemetry-friendly form.
+- **Usage:** Prefer this metric for percentile queries. Its `_count` also gives you the push job rate.
+
+### Analytics (ClickHouse)
+
+#### centrifugo_clickhouse_analytics_flush_duration_seconds
+
+:::caution Deprecated
+Deprecated Summary — use `centrifugo_clickhouse_analytics_flush_duration_seconds_histogram`. Not exposed when native histograms are enabled.
+:::
+
+- **Type:** Summary
+- **Labels:** type, retries, result
+- **Description:** Duration of a ClickHouse data flush.
+
+#### centrifugo_clickhouse_analytics_flush_duration_seconds_histogram
+
+- **Type:** Histogram. Uses native schema when native histograms are enabled.
+- **Labels:** type, retries, result
+- **Description:** Time to write one batch to ClickHouse, by data type, retry count and outcome.
+- **Usage:** Rising flush latency is the leading indicator of analytics drops — the buffer fills while writes are slow.
+
+#### centrifugo_clickhouse_analytics_batch_size
+
+:::caution Deprecated
+Deprecated Summary — use `centrifugo_clickhouse_analytics_batch_size_histogram`. Not exposed when native histograms are enabled.
+:::
+
+- **Type:** Summary
+- **Labels:** type
+- **Description:** ClickHouse flush batch size distribution.
+
+#### centrifugo_clickhouse_analytics_batch_size_histogram
+
+- **Type:** Histogram. Uses native schema when native histograms are enabled.
+- **Labels:** type
+- **Description:** Rows per flush, by data type.
+- **Usage:** Batches pinned at the configured maximum mean Centrifugo is flushing as fast as it can — the next thing to give is the buffer.
+
+#### centrifugo_clickhouse_analytics_drop_count
+
+- **Type:** Counter
+- **Labels:** type
+- **Description:** Number of analytics events discarded because the buffer was full.
+- **Usage:** Direct analytics data loss. Alert on any sustained non-zero rate.
+
+### PostgreSQL connection pool
+
+These metrics describe the pgx connection pool Centrifugo PRO uses for PostgreSQL-backed features. The `pool` label separates pools when more than one is configured.
+
+#### centrifugo_database_pool_max_conns
+
+- **Type:** Gauge
+- **Labels:** pool
+- **Description:** Maximum size of the PostgreSQL connection pool.
+
+#### centrifugo_database_pool_total_conns
+
+- **Type:** Gauge
+- **Labels:** pool
+- **Description:** Current number of connections in the pool (idle + acquired + constructing).
+
+#### centrifugo_database_pool_idle_conns
+
+- **Type:** Gauge
+- **Labels:** pool
+- **Description:** Current number of idle connections.
+
+#### centrifugo_database_pool_acquired_conns
+
+- **Type:** Gauge
+- **Labels:** pool
+- **Description:** Connections currently checked out of the pool.
+- **Usage:** Riding at `pool_max_conns` means the pool is saturated — the queries below start queueing.
+
+#### centrifugo_database_pool_acquires_total
+
+- **Type:** Counter
+- **Labels:** pool
+- **Description:** Total successful connection acquires.
+
+#### centrifugo_database_pool_empty_acquires_total
+
+- **Type:** Counter
+- **Labels:** pool
+- **Description:** Acquires that had to wait for a connection to become free.
+- **Usage:** The clearest saturation signal for the pool — a growing rate here means raising `max_conns` (or reducing query time) will help.
+
+#### centrifugo_database_pool_canceled_acquires_total
+
+- **Type:** Counter
+- **Labels:** pool
+- **Description:** Acquires abandoned by context cancellation while waiting.
+- **Usage:** These are requests that gave up — usually visible to clients as errors or timeouts.
+
+#### centrifugo_database_pool_acquire_wait_seconds_total
+
+- **Type:** Counter
+- **Labels:** pool
+- **Description:** Total time spent waiting on connection acquires.
+- **Usage:** Divide its rate by the rate of `pool_acquires_total` to get the mean acquire wait time.
+
+### Bus, rate limiting and channel state
+
+#### centrifugo_bus_messages_processed_total
+
+- **Type:** Counter
+- **Labels:** name
+- **Description:** Total number of messages processed by a PRO bus consumer.
+
+#### centrifugo_bus_errors_total
+
+- **Type:** Counter
+- **Labels:** name
+- **Description:** Total number of errors while processing bus messages.
+
+#### centrifugo_rate_limit_hits_over_limit
+
+- **Type:** Counter
+- **Description:** Number of requests rejected by PRO [rate limiting](./rate_limiting.md).
+- **Usage:** Expect a non-zero baseline when limits are tuned tightly; alert on step changes rather than on any non-zero value.
+
+#### centrifugo_channel_state_events_queue_consuming_lag_milliseconds
+
+- **Type:** Gauge
+- **Labels:** name, partition
+- **Description:** Consuming lag of the channel state events queue, per partition, in milliseconds.
+- **Usage:** A single lagging partition usually points at an unbalanced key distribution rather than at overall throughput.
+
+### Shared poll relay
+
+Metrics of the PRO [shared poll relay](./shared_poll.md), which offloads polling to a dedicated relay instead of polling per node.
+
+#### centrifugo_shared_poll_relay_poll_cycles_total
+
+- **Type:** Counter
+- **Labels:** namespace
+- **Description:** Total number of completed relay poll cycles.
+
+#### centrifugo_shared_poll_relay_backend_requests_total
+
+- **Type:** Counter
+- **Labels:** proxy_name
+- **Description:** Total number of backend refresh requests issued by the relay.
+
+#### centrifugo_shared_poll_relay_backend_errors_total
+
+- **Type:** Counter
+- **Labels:** proxy_name
+- **Description:** Total number of failed backend refresh calls.
+
+#### centrifugo_shared_poll_relay_backend_duration_seconds
+
+:::caution Deprecated
+Deprecated Summary — use `centrifugo_shared_poll_relay_backend_duration_seconds_histogram`. Not exposed when native histograms are enabled.
+:::
+
+- **Type:** Summary
+- **Labels:** proxy_name
+- **Description:** Duration of backend refresh calls.
+
+#### centrifugo_shared_poll_relay_backend_duration_seconds_histogram
+
+- **Type:** Histogram. Uses native schema when native histograms are enabled.
+- **Labels:** proxy_name
+- **Description:** Backend refresh latency in `histogram_quantile()`-friendly form.
+
+#### centrifugo_shared_poll_relay_cycle_duration_seconds
+
+- **Type:** Histogram. Uses native schema when native histograms are enabled.
+- **Labels:** namespace
+- **Description:** Full poll cycle wall time.
+
+#### centrifugo_shared_poll_relay_cycle_work_duration_seconds
+
+- **Type:** Histogram. Uses native schema when native histograms are enabled.
+- **Labels:** namespace
+- **Description:** Poll cycle work time, minus the spread delay.
+- **Usage:** Compare against your configured poll interval — approaching it means the relay cannot keep up.
+
+#### centrifugo_shared_poll_relay_sem_wait_duration_seconds
+
+- **Type:** Histogram. Uses native schema when native histograms are enabled.
+- **Labels:** proxy_name
+- **Description:** Semaphore wait duration — the contention indicator for relay concurrency limits.
+
+#### centrifugo_shared_poll_relay_active_channels
+
+- **Type:** Gauge
+- **Description:** Number of channels currently polled by the relay.
+
+#### centrifugo_shared_poll_relay_tracked_keys
+
+- **Type:** Gauge
+- **Labels:** namespace
+- **Description:** Number of keys tracked by the relay, per namespace.
+
+#### centrifugo_shared_poll_relay_items_count
+
+- **Type:** Counter
+- **Labels:** namespace, result
+- **Description:** Items returned per cycle, by result — `changed`, `unchanged` or `removed`.
+- **Usage:** A dominant `unchanged` share means the poll interval is shorter than it needs to be.
+
 ## Sentry integration
 
 Centrifugo PRO comes with an integration with [Sentry](https://sentry.io/). Just a couple of lines in the configuration:
@@ -25114,6 +25564,22 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
   
 
 Of course the ratio is highly dependent on the Centrifugo-specific setup load profile and usage scenarios.
+
+New in Centrifugo v6.9.2
+
+Another option which helps to hold large pools of mostly idle WebSocket connections is `websocket.process_commands_off_read_loop` (boolean, by default `false`):
+
+```json title="config.json"
+{
+  "websocket": {
+    "process_commands_off_read_loop": true
+  }
+}
+```
+
+A WebSocket connection processes each incoming command on its read loop goroutine, and that goroutine's stack grows to the deepest call it ever makes (even just the initial `connect`) and is never given back while the connection lives. When this option is enabled, each command is processed on a short-lived goroutine instead, so the read loop itself stays shallow — the deep stack returns to the Go runtime's stack pool and is reused by the next connection that needs it, rather than being pinned to a connection that then spends its life idle. This roughly halves the read goroutine's stack (around 4 KB less per connection).
+
+The option is off by default and adds a small per-command latency that becomes negligible once many connections are active, so it's most useful for large pools of mostly idle connections. See the [Tuning Centrifugo PRO for large WebSocket connection pools](/blog/2026/08/17/tuning-idle-connections) blog post for measurements and how it combines with the other options here.
 
 ## Faster HTTP API
 
@@ -38647,8 +39113,8 @@ Available in Centrifugo v6.8.0+. The PostgreSQL stream broker is a recent additi
 
 - Call `cf_stream_publish(...)` inside the same SQL transaction as your row write — both commit atomically. No outbox table to manage in your app, no CDC pipeline, no dual-write gap.
 - The broker shares its outbox infrastructure with the [PG map broker](/blog/2026/05/23/map-subscriptions-part-2) — partitioned table, `LISTEN/NOTIFY` for low-latency wakeup, vacuum-free retention.
-- Pairs with a `getState` callback in the SDK: load app-owned state plus a stream position in one shot; the SDK subscribes from there and recovers automatically on reconnect.
-- Two concrete shapes worked through below: an aggregator-as-publisher fronting a Kafka feed, and per-tenant channels (one per restaurant) over a shared `orders` table.
+- Worked through below: per-tenant channels — one per restaurant over a shared `orders` table — with a runnable kitchen-orders demo.
+- The client side of this (loading app-owned state, staying in sync across reconnects via the SDK's `getState` callback) is covered in [App-owned state with stream subscriptions](/blog/2026/07/27/app-owned-state-stream-subscriptions).
 
 :::
 
@@ -38656,7 +39122,7 @@ Available in Centrifugo v6.8.0+. The PostgreSQL stream broker is a recent additi
 
 Integrating a real-time system with a relational database creates the same gap: the backend writes to the database, then publishes to the real-time layer as a separate operation. If the process crashes between them — or if the publish fails — the database and subscribers fall out of sync. Users see stale data until they refresh.
 
-We [covered this in depth](/blog/2026/05/23/map-subscriptions-part-2#the-dual-write-problem) for map subscriptions. The same problem applies — even more broadly — to stream subscriptions. Every notification system, every audit trail, every order-status feed has the same shape: write a row to your database, then announce the change over WebSocket. The PostgreSQL stream broker lets you combine both into one transaction.
+We [covered this in depth](/blog/2026/05/23/map-subscriptions-part-2) for map subscriptions. The same problem applies — even more broadly — to stream subscriptions. Every notification system, every audit trail, every order-status feed has the same shape: write a row to your database, then announce the change over WebSocket. The PostgreSQL stream broker lets you combine both into one transaction.
 
 ## Publishing inside your transaction
 
@@ -38680,100 +39146,13 @@ If the transaction rolls back, the real-time update never happened. No outbox ta
 
 The transactional guarantee applies to **callers using the SQL function path** — i.e. your backend code calling `cf_stream_publish` directly inside its own SQL transaction alongside the row write. Publishes that go through Centrifugo's HTTP/GRPC API remain a separate operation from your DB write (the historic dual-write shape) — same as before. The SQL function path is what removes that gap; it's an additional integration option, not a change to existing publish APIs.
 
-## App-owned state with stream subscriptions
+## A concrete example: per-tenant channels
 
-For applications where the data already lives in your own tables — orders, notifications, activity feeds, chat — the stream broker is enough on its own. No duplicate state table, no broker-managed snapshot. Your app database is the source of truth; Centrifugo streams only the change events. The stream broker keeps a thin bridging window in `cf_stream` (the partition retention window) while your app DB owns historical data.
-
-The client SDK now supports a `getState` callback for stream subscriptions that automates this pattern. We [previously described](/blog/2024/06/03/real-time-document-state-sync) the challenge of keeping document state loaded from a REST API in sync with a real-time subscription — the race window between the HTTP response and the subscription start, the need to handle `recovered: false` on reconnects, the manual position tracking. The `getState` callback solves all of this natively:
-
-```javascript
-const sub = client.newSubscription('orders:user_42', {
-  getState: async () => {
-    // 1. Capture stream position FIRST
-    const pos = await api.getStreamPosition('orders:user_42');
-    // 2. Then load your data
-    const orders = await api.getOrders(42);
-    renderOrders(orders);
-    // 3. Return the position — SDK recovers from here
-    return { offset: pos.offset, epoch: pos.epoch };
-  },
-});
-
-sub.on('publication', (ctx) => {
-  // Incremental updates — applied after getState on initial load,
-  // and after each reconnect where recovery succeeds.
-  applyOrderUpdate(ctx.data);
-});
-
-sub.subscribe();
-```
-
-The callback is called on initial subscribe and when recovery fails after a reconnect. On normal reconnects where the server successfully recovers missed publications, `getState` is not called — recovered publications simply arrive as `publication` events. When recovery fails (history expired, epoch changed), the SDK calls `getState` again automatically: the app refreshes from its source of truth, and the SDK resubscribes from the fresh position.
-
-The position should come from `cf_stream_top_position`, called inside the same transaction (or before) your data read. Reading position first ensures it's a lower bound — recovered publications may overlap with your loaded data, but you'll never have gaps. This works correctly when updates are idempotent (e.g. "set status to shipped"). For non-idempotent updates, deduplicate by publication offset — the same caveat we described in [Proper real-time document state synchronization](/blog/2024/06/03/real-time-document-state-sync), but now handled by the SDK rather than application code.
-
-On error (network failure, database timeout), the SDK emits an error event and retries with backoff.
-
-## A concrete example: Kafka aggregator + live snapshot
-
-One concrete integration pattern this design handles particularly well: a service that consumes a Kafka topic and maintains aggregated views in PostgreSQL — say, a price board built from a market-data topic. The browser client needs to fetch the current aggregate and then receive live updates. With Centrifugo as a separate Kafka consumer fanning the same topic out to WebSocket subscribers, you end up bridging two unrelated offset spaces — the snapshot row stores a Kafka offset, the live subscription speaks Centrifugo offsets, and the client has to subscribe with a recent stream position and discard everything older than the snapshot's Kafka offset. It works, but the bridging logic is awkward and easy to get subtly wrong.
-
-```
-─── Write path (single PG txn ties snapshot + publish) ───────────
-
-   Kafka topic
-       │ batch
-       ▼
-  ┌────────────┐
-  │ Aggregator │
-  └─────┬──────┘
-        │   BEGIN
-        │     UPDATE snapshot SET aggregate = ...
-        │     cf_stream_publish(p_channel := ch, p_data := evt)
-        │   COMMIT              ← both land atomically
-        ▼
-  ┌──────────────────────────────┐
-  │          PostgreSQL          │
-  │   ┌──────────┐ ┌──────────┐  │
-  │   │ snapshot │ │cf_stream │  │
-  │   │   row    │ │  outbox  │  │
-  │   └──────────┘ └────┬─────┘  │
-  └────────────────────┬┴────────┘
-                       │ LISTEN/NOTIFY + poll
-                       ▼
-                 ┌──────────────┐
-                 │  Centrifugo  │
-                 │ (PG broker)  │
-                 └──────────────┘
-
-─── Read path (position first; catch-up applied idempotently) ────
-
-  Browser ──1. GET /state──► App server
-                                 │ pos  = cf_stream_top_position(ch)
-                                 │ snap = SELECT aggregate FROM ...
-  Browser ◄──── (snap, pos) ─────┘
-
-  Browser ──2. subscribe(ch, since=pos)──► Centrifugo
-  Browser ◄─── catch-up from pos → live ──┘
-             (events committed between the two reads
-              arrive here; idempotent apply reconciles)
-```
-
-The PG stream broker collapses this if you make the aggregator the publisher to Centrifugo (instead of Centrifugo reading Kafka in parallel). For each Kafka batch the aggregator processes, it does — in one PG transaction — both the snapshot UPDATE *and* a `cf_stream_publish(...)` for the new event(s). Snapshot mutation and broker publish commit together; they can never disagree about what's been observed. The snapshot row stays minimal — just the aggregate, no offset bookkeeping.
-
-The client's `getState` follows the same recipe shown earlier: read `cf_stream_top_position` first, then read the snapshot, return the captured position. Position first makes it a lower bound — events committed between the two reads arrive as stream catch-up on top of the snapshot, and the application applies them idempotently (the same assumption `getState` requires in general). For a price-board aggregate this is natural: each event is an absolute price, not a delta.
-
-If you'd rather eliminate that replay window entirely — for example, when events are non-idempotent deltas and you don't want to add offset-based dedup — wrap both reads in a single `REPEATABLE READ` transaction. Both reads then see the same MVCC snapshot: the returned position is the exact watermark baked into the snapshot, and catch-up delivers only events committed strictly after it — no overlap to reconcile at all.
-
-This shape — aggregator-as-publisher, single-tx atomicity for the snapshot update + the publish — is the natural fit whenever you have an upstream feed (Kafka, NATS, CDC, anything else) being shaped into stored views. The PG stream broker removes the cross-system offset bridge by making one process responsible for both the stored aggregate and the change stream.
-
-## A second shape: per-tenant channels
-
-The Kafka example is one flavor — an upstream feed shaped into a single aggregate. A second, very common flavor is internal writes partitioned by tenant: one shared table, many independent consumers. A kitchen-orders system is a clean example — a single `orders` table across all restaurants, but each restaurant's kitchen display only cares about its own channel. The demo below is runnable from the [pg_stream_broker example](https://github.com/centrifugal/examples/tree/master/v6/pg_stream_broker) on GitHub:
+A kitchen-orders system shows the shape well: a single `orders` table shared by all restaurants, and one channel per restaurant — `kitchen:{restaurant_id}` — so each kitchen display only sees its own. The demo below is runnable from the [pg_stream_broker example](https://github.com/centrifugal/examples/tree/master/v6/pg_stream_broker) on GitHub:
 
 <video width="100%" loop={true} autoPlay="autoplay" muted controls="" src="/img/demo_kitchen.mp4"></video>
 
-The channel shape is `kitchen:{restaurant_id}`. Every write to a restaurant's orders commits atomically with a publish on that restaurant's channel:
+Every write to a restaurant's orders commits atomically with a publish on that restaurant's channel:
 
 ```sql
 BEGIN;
@@ -38787,20 +39166,15 @@ BEGIN;
 COMMIT;
 ```
 
-Status transitions (`received` → `preparing` → `ready` → `served`) do the same — `UPDATE orders` + `cf_stream_publish(p_channel := 'kitchen:42', …)` in one transaction. The application must follow one rule: every code path that mutates a row for restaurant X emits the publish for `kitchen:X` in the same transaction.
+Status transitions (`received` → `preparing` → `ready` → `served`) do the same — `UPDATE orders` plus `cf_stream_publish(p_channel := 'kitchen:42', …)` in one transaction. The application follows one rule: every code path that mutates a row for restaurant X emits the publish for `kitchen:X` in the same transaction.
 
-The read path is the position-first recipe from earlier, with the snapshot filtered by restaurant:
+Each channel has its own meta row and its own top offset; writes on `kitchen:99` never block or interfere with `kitchen:42`. This scales to thousands of tenants on a single PostgreSQL — each channel is an independent append-only stream, and the shared `cf_stream` partitioned table absorbs the union.
 
-```sql
-SELECT * FROM cf_stream_top_position('kitchen:42');
+## App-owned state with stream subscriptions
 
-SELECT id, status, items, updated_at
-FROM orders
-WHERE restaurant_id = 42
-  AND status IN ('received','preparing','ready');
-```
+The kitchen demo has a property worth naming: the `orders` table is the only source of truth. There's no duplicate state table and no broker-managed snapshot — Centrifugo streams the change events, and the stream broker keeps just a thin bridging window in `cf_stream` (the partition retention window) while the app database owns everything historical.
 
-Each channel has its own meta row and its own `top_offset`; writes on `kitchen:99` never block or interfere with `kitchen:42`. This scales naturally to thousands of tenants on a single PostgreSQL — each channel is an independent append-only stream, and the shared `cf_stream` partitioned table just absorbs the union. For the kitchen scenario, events carry `order_id` plus `updated_at`, so the client applies them as upserts with last-write-wins — any catch-up replay between the two reads is reconciled automatically.
+The client side of that pattern — loading the current orders and staying in sync across reconnects — is handled by the SDK's `getState` callback for stream subscriptions, and it is a topic of its own. [App-owned state with stream subscriptions](/blog/2026/07/27/app-owned-state-stream-subscriptions) walks through it, including the read path of this kitchen demo and a second shape where an aggregator fronts a Kafka feed.
 
 ## Performance
 
@@ -39194,3 +39568,513 @@ None of this is a recipe for endless scale. What it gives is a good state to gro
 Pub/Sub is not the only load an application generates. You usually also have plain GET/SET operations, which scale well in Redis Cluster without extra engineering. It's often worth running Pub/Sub and GET/SET on separate Redis setups, so each one can be tuned independently.
 
 Thank you for your attention!
+
+---
+
+## App-owned state with stream subscriptions
+
+Most real-time features start from data that already exists. Orders in an `orders` table, notifications, a document, a ticket queue. The browser needs two things: the current state, and every change from that moment on. The state usually comes from an HTTP endpoint, the changes come from a WebSocket subscription.
+
+Each step is simple on its own. The seam between them is where the bugs live — and that seam is the same in every app that owns its state.
+
+<!--truncate-->
+
+## Where the seam is
+
+Load the state, then subscribe, and three things can go wrong.
+
+**A gap in time.** Between the HTTP response and the subscribe command, updates keep happening. They are not in the loaded snapshot, and the subscription started too late to see them. The component stays wrong until the page is reloaded.
+
+**Lost stream continuity.** After a reconnect the SDK asks Centrifugo to replay missed publications. Usually it can. Sometimes it can't — the history window has moved on, or the stream epoch changed. Then the subscription reports `recovered: false`, and the application has to reload from the backend. While that reload is in flight, new publications keep arriving — the same race as on first load, now on every reconnect.
+
+**Ordering between the two sources.** A publication that arrives while a fetch is running has to be applied after the fetch result, not before, or the fresh value gets overwritten by the older one.
+
+None of this is Centrifugo-specific: any system that combines "fetch a snapshot" with "subscribe to a feed" has to answer it. [Proper real-time document state synchronization](/blog/2024/06/03/real-time-document-state-sync) walked through solving it by hand — buffering publications during the fetch, tracking versions, re-syncing on lost continuity. It works, and it is a fair amount of code to write in every client.
+
+Stream subscriptions now have this built in.
+
+## The getState callback
+
+`getState` is an option on a stream subscription. The SDK calls it before subscribing. The callback loads the application state and returns the stream position that state corresponds to:
+
+```javascript
+const sub = client.newSubscription('orders:user_42', {
+  getState: async () => {
+    // 1. Capture the stream position FIRST.
+    const pos = await api.getStreamPosition('orders:user_42');
+    // 2. Then load and render your data.
+    renderOrders(await api.getOrders(42));
+    // 3. Return the position — the SDK subscribes from exactly here.
+    return { offset: pos.offset, epoch: pos.epoch };
+  },
+});
+
+sub.on('publication', (ctx) => {
+  // Incremental updates: catch-up first, then live.
+  applyOrderUpdate(ctx.data);
+});
+
+sub.subscribe();
+```
+
+That is the whole integration. The application answers one question — "what is my state, and at which stream position was it taken?" — and the SDK does the rest.
+
+```
+   getState()                    subscribe(recover from pos)
+       │                                    │
+       ▼                                    ▼
+  ┌─────────┐   pos          ┌───────────────────────────┐
+  │ App API │ ─────────────► │  catch-up publications    │──► live
+  │  + DB   │   state        │  (offset > pos.offset)    │
+  └─────────┘                └───────────────────────────┘
+       ▲                                                     │
+       │        recovery impossible — reload from scratch     │
+       └─────────────────────────────────────────────────────┘
+```
+
+## What the SDK does with it
+
+The behaviour is worth spelling out, because it decides how much the application has to handle.
+
+**On the first subscribe**, `getState` runs, and the SDK subscribes with recovery from the returned position. Everything published after that position arrives through the normal `publication` handler — the catch-up and the live stream look identical to the application.
+
+**On a normal reconnect**, `getState` is *not* called. The SDK already holds a valid position and lets the server replay the gap from channel history. This is the point of recovery in the first place: a mass reconnect is absorbed by the broker instead of turning into a thundering herd on the application database.
+
+**When recovery is impossible**, `getState` runs again. This is the part that removes the manual re-sync path. A subscription with `getState` asks the server to *reject* a subscribe it cannot recover, instead of accepting it and reporting `recovered: false`. The server answers with the `unrecoverable position` error, the SDK drops its saved position, and the next subscribe attempt calls `getState` again — fresh state, fresh position, recovery from there. There is no window where the subscription is live but the state under it is stale.
+
+**When `getState` itself fails** — network error, database timeout — the SDK emits a subscription error and retries with the usual backoff. A failing state load never leaves a half-subscribed component behind.
+
+## Read the position first
+
+The order inside the callback matters, and it is the one rule the application has to get right: **read the stream position before reading the data**.
+
+Doing it in that order makes the position a lower bound. Anything committed between the two reads shows up twice: once inside the loaded data, once again as a catch-up publication. Overlap is harmless, a gap is not — and reading the data first would produce exactly that gap.
+
+So the application must tolerate replay. Most update shapes do this naturally:
+
+- **Absolute values.** "Status is `shipped`", "price is 42.17". Applying it twice changes nothing.
+- **Keyed upserts with a version or timestamp.** Apply by `id`, keep the newer `updated_at`. Last write wins.
+- **Offset-based dedup.** Store the offset the state was loaded at and drop publications at or below it. Needed when updates are deltas — "add 3 items" is not safe to apply twice.
+
+There is also a way to remove the overlap entirely if the data source is a single relational database: wrap both reads in one `REPEATABLE READ` transaction. Both statements then see the same MVCC snapshot, so the returned position is the exact watermark of the loaded data, and catch-up delivers only what was committed strictly after it. Nothing to reconcile, at the cost of a transaction on the read path.
+
+## Where the position comes from
+
+`getState` needs an `offset` and an `epoch` for the channel. Two ways to get them.
+
+**Any broker — the server API.** A `history` call without a `limit` returns just the current stream position, no publications:
+
+```bash
+curl -X POST http://localhost:8000/api/history \
+  -H "X-API-Key: <key>" \
+  -d '{"channel": "orders:user_42"}'
+```
+
+```json
+{"result": {"offset": 174, "epoch": "xcf4"}}
+```
+
+The application's own endpoint calls this, then reads its data, then returns both to the client. Clients never talk to the Centrifugo API directly.
+
+**PostgreSQL broker — a SQL function.** With the [PostgreSQL stream broker](/docs/server/engines#postgresql-broker) the position lives in the same database as the data, so both reads happen in one place — and, if wanted, in one transaction:
+
+```sql
+SELECT * FROM cf_stream_top_position('orders:user_42');
+
+SELECT id, status, updated_at FROM orders WHERE user_id = 42;
+```
+
+This is what makes the PostgreSQL broker a natural fit for app-owned state: the position and the rows share a transaction boundary, so the `REPEATABLE READ` trick above becomes a two-line change. The write side has the same property — `cf_stream_publish` commits the publication together with the row it announces, which is the subject of [Transactional publishing for stream subscriptions with PostgreSQL](/blog/2026/05/24/pg-stream-broker-benefits).
+
+## Server configuration
+
+`getState` builds on standard [history and recovery](/docs/server/history_and_recovery), so the channel namespace needs history and recovery enabled:
+
+```json title="config.json"
+{
+  "channel": {
+    "namespaces": [
+      {
+        "name": "orders",
+        "history_size": 100,
+        "history_ttl": "300s",
+        "force_recovery": true
+      }
+    ]
+  }
+}
+```
+
+The history window only has to cover the reconnect gap, not the data's lifetime. Anything longer than that is served by `getState` reloading from the application database — which is the correct division of labour, since channel history is a bounded cache and the application database is the source of truth.
+
+Alternatively use [`allow_recovery`](/docs/server/channels#allow_recovery) and let clients opt in per subscription with the `recoverable` option.
+
+## Two worked shapes
+
+The rules above are short. Two examples show how they land in real systems. Both use the PostgreSQL stream broker, so the write side is transactional too — but the read side is the same with any broker.
+
+### An upstream feed shaped into stored views
+
+The first is a service that consumes a Kafka topic and maintains aggregated views in PostgreSQL — say, a price board built from a market-data topic. The browser needs the current aggregate, then live updates.
+
+The obvious wiring is to point Centrifugo at the same Kafka topic and let it fan events out to subscribers in parallel with the aggregator. That works, but it leaves two unrelated offset spaces to bridge: the snapshot row stores a Kafka offset, the live subscription speaks Centrifugo offsets, and the client has to subscribe with a recent stream position and discard everything older than the snapshot's Kafka offset. The bridging logic is awkward and easy to get subtly wrong.
+
+Making the aggregator the publisher collapses the bridge. For each Kafka batch it processes, the aggregator does both things in one PostgreSQL transaction: the snapshot `UPDATE` and a `cf_stream_publish(...)` for the new events. The stored aggregate and the change stream can never disagree about what has been observed, and the snapshot row stays minimal — just the aggregate, no offset bookkeeping.
+
+```
+─── Write path (single PG txn ties snapshot + publish) ───────────
+
+   Kafka topic
+       │ batch
+       ▼
+  ┌────────────┐
+  │ Aggregator │
+  └─────┬──────┘
+        │   BEGIN
+        │     UPDATE snapshot SET aggregate = ...
+        │     cf_stream_publish(p_channel := ch, p_data := evt)
+        │   COMMIT              ← both land atomically
+        ▼
+  ┌──────────────────────────────┐
+  │          PostgreSQL          │
+  │   ┌──────────┐ ┌──────────┐  │
+  │   │ snapshot │ │cf_stream │  │
+  │   │   row    │ │  outbox  │  │
+  │   └──────────┘ └────┬─────┘  │
+  └────────────────────┬┴────────┘
+                       │ LISTEN/NOTIFY + poll
+                       ▼
+                 ┌──────────────┐
+                 │  Centrifugo  │
+                 │ (PG broker)  │
+                 └──────────────┘
+
+─── Read path (position first; catch-up applied idempotently) ────
+
+  Browser ──1. GET /state──► App server
+                                 │ pos  = cf_stream_top_position(ch)
+                                 │ snap = SELECT aggregate FROM ...
+  Browser ◄──── (snap, pos) ─────┘
+
+  Browser ──2. subscribe(ch, since=pos)──► Centrifugo
+  Browser ◄─── catch-up from pos → live ──┘
+             (events committed between the two reads
+              arrive here; idempotent apply reconciles)
+```
+
+The read path is the recipe from earlier: `cf_stream_top_position` first, then the snapshot, then return the captured position. Events committed between the two reads arrive as catch-up on top of the snapshot. For a price board that reconciles itself — each event carries an absolute price, not a delta. If the events were deltas instead, the `REPEATABLE READ` variant removes the overlap and the need for dedup.
+
+This shape fits any upstream feed being turned into stored views — Kafka, NATS, CDC, a polling worker. One process owns both the stored aggregate and the change stream, so there is no cross-system offset bridge left to maintain.
+
+### Internal writes partitioned by tenant
+
+The second flavour is more common still: one shared table, many independent consumers. The [kitchen-orders demo](/blog/2026/05/24/pg-stream-broker-benefits#a-concrete-example-per-tenant-channels) is a clean example — a single `orders` table across all restaurants, one channel per restaurant (`kitchen:{restaurant_id}`), and each kitchen display subscribed to its own. On the write side the rule is short: every code path that mutates a row for restaurant X publishes on `kitchen:X` in the same transaction.
+
+The read side behind `getState` is the position-first recipe, with the data filtered by restaurant:
+
+```sql
+SELECT * FROM cf_stream_top_position('kitchen:42');
+
+SELECT id, status, items, updated_at
+FROM orders
+WHERE restaurant_id = 42
+  AND status IN ('received','preparing','ready');
+```
+
+Events carry `order_id` and `updated_at`, so the client applies them as upserts with last-write-wins — the keyed-upsert case from the overlap rules, which makes catch-up replay harmless. No offsets stored in the application schema, no dedup bookkeeping: the position is captured at read time and handed to the SDK.
+
+The same client code serves every restaurant. Only the channel name and the `WHERE` clause change — which is what makes this shape scale to thousands of tenants without any per-tenant machinery.
+
+## When app-owned state is the wrong shape
+
+This pattern assumes the data has a home in the application's schema. Plenty of real-time data does not: cursors that exist for a few seconds, presence sets, lobby members, device telemetry, feature flags. Building a table, a snapshot endpoint, and a change feed for each of those is a lot of machinery for state that is disposable by nature.
+
+For those, the broker can be the store instead — see [map subscriptions](/docs/server/map_subscriptions) for keyed collections, and [cache recovery mode](/docs/server/cache_recovery) when a channel only ever needs its latest value.
+
+The rule of thumb: if a `SELECT` in your own database can already answer "what is the current state", `getState` on a stream subscription is the smaller design. If it can't, look at the state-carrying subscription types.
+
+## Availability
+
+The `getState` callback is available in Centrifugo v6.8.0+ and is supported by all bidirectional SDKs — [JavaScript](https://github.com/centrifugal/centrifuge-js), [Dart](https://github.com/centrifugal/centrifuge-dart), [Swift](https://github.com/centrifugal/centrifuge-swift), [Go](https://github.com/centrifugal/centrifuge-go), [Java](https://github.com/centrifugal/centrifuge-java), [Python](https://github.com/centrifugal/centrifuge-python).
+
+See the [Subscription getState](/docs/transports/client_api#subscription-getstate) API reference for the option details, and the [pg_stream_broker example](https://github.com/centrifugal/examples/tree/master/v6/pg_stream_broker) for a runnable app built on this pattern.
+
+---
+
+## Tuning Centrifugo PRO for large number of idle WebSocket connections
+
+A lot of real-time systems spend most of their time doing nothing. Think about a notifications service, a presence dashboard, a "new message" badge — the connections sit open for hours, and messages arrive rarely. The interesting scaling question there is not throughput. It's this: **how cheaply can a single node just hold a large pool of connections that are mostly idle?**
+
+An idle connection is not free. Even with no application traffic, every connection costs a bit of CPU (Centrifugo runs periodic per-connection work — an application-level ping, presence refresh, subscription checks) and a bit of memory (goroutines, buffers, protocol state). Multiply that by hundreds of thousands and the constant, do-nothing overhead becomes the thing that decides how many connections fit on a node.
+
+This post measures that overhead and shows how four Centrifugo PRO options reduce it. One cuts CPU. The other three cut memory — and, as we'll see, almost every byte they save turns out to be a single, specific thing.
+
+<!--truncate-->
+
+## The benchmark
+
+We hold **200,000 real WebSocket connections** open against a single Centrifugo node and leave them idle. "Idle" here means the connections do nothing but stay alive — the server sends its application-level ping every 25 seconds (the default), the clients answer it, and that is the only traffic. Then we measure the server process: CPU (in cores) and resident memory (RSS).
+
+* Node: one Centrifugo instance on a 16 vCPU cloud VM (AMD EPYC-Genoa, KVM), 30 GB RAM, Ubuntu Linux.
+* Connections: 200,000 bidirectional WebSocket, protocol v2, **no subscriptions**.
+* Ping interval: 25s (default). Everything else at defaults unless stated.
+* Every figure below is the mean of two independent full runs of the whole matrix; the two rounds agreed within ~3% on CPU and ~0.5% on memory.
+
+We measure the Centrifugo process specifically — CPU as the process's own user + system time over a steady-state window well after the connection ramp, memory as its RSS after a forced GC — so the numbers are the server's own consumption, not the whole machine's.
+
+One thing RSS does not include, and which matters when you size a machine: **the kernel keeps its own structures for every socket** — the `tcp_sock`, an inode, a dentry, a file — and charges them to slab, not to your process. We measured about **4 KB per socket**, and it shows up in neither `ps`, nor `top`'s RSS column, nor Go's runtime memory stats. It is real memory and cgroup v2 does count it against a container limit, so add it to every per-connection figure below when planning capacity.
+
+At these connection counts the server uses well under one core out of sixteen, so it's the per-connection overhead we're isolating, not saturation.
+
+Everything below is the **server** cost — the number that decides how many connections your node holds.
+
+## Baseline
+
+With default settings, holding 200,000 idle connections costs:
+
+| Metric | Value | Per connection |
+|---|---|---|
+| CPU | ~0.94 cores | ~4.7 µs/s |
+| Memory (RSS) | ~5.4 GB | ~27 KB |
+| Goroutines | ~400,000 | 2 |
+
+Two goroutines per connection: one reads from the socket, one owns writes to it. The CPU is almost entirely the machinery of the periodic per-connection timers — for 200k connections that is a lot of independent timers for the Go runtime to track and fire.
+
+It's worth splitting that ~27 KB, because it explains everything that follows:
+
+| Component | Per connection |
+|---|---|
+| Goroutine stacks | ~12.3 KB |
+| Heap (buffers, protocol state, client struct) | ~12.7 KB |
+| Runtime overhead | ~2 KB |
+
+**Nearly half of an idle connection is goroutine stacks.** That is not an accident of measurement — it's the shape of the problem, and three of the four options below are, underneath, ways of making that number smaller.
+
+## Cutting CPU: `batch_periodic_events`
+
+Each connection runs several periodic tasks — the keepalive ping, presence updates, subscription expiration checks. By default each is an independent timer. With many connections, the Go runtime spends real CPU maintaining all of them and waking a goroutine every time one fires.
+
+`batch_periodic_events` groups these per-connection events onto a shared timing wheel instead of scheduling each one independently. The periodic work still happens on schedule; it's just dispatched in batches rather than as hundreds of thousands of separate timer wakeups.
+
+```json title="config.json"
+{
+  "client": {
+    "batch_periodic_events": true
+  }
+}
+```
+
+The effect on the same 200,000 idle connections:
+
+| Metric | Default | `batch_periodic_events` |
+|---|---|---|
+| CPU | ~0.94 cores | **~0.41 cores** |
+| Memory (RSS) | ~5.4 GB | ~5.4 GB |
+
+**Over 2× less CPU** to hold the same pool — down to ~2.0 µs/s per connection. Memory is unchanged to within a rounding error: this option is purely about how periodic timers are scheduled.
+
+## Cutting memory, part 1: the writer goroutine
+
+By default every connection has a dedicated goroutine that owns writes to its socket and blocks waiting for something to send. For an idle connection that goroutine does nothing almost all the time — but it still exists, and a parked goroutine still costs a stack.
+
+`write_delay` batches outgoing messages: instead of writing each message immediately, the connection waits a short delay to coalesce whatever arrives into a single write, which reduces system calls under load. `write_with_timer` changes *how* that batching waits — it uses a shared timer to trigger the flush instead of a dedicated per-connection writer goroutine. The side effect at rest is the interesting part: **idle connections stop each holding a writer goroutine.**
+
+```json title="config.json"
+{
+  "client": {
+    "write_delay": "100ms",
+    "write_with_timer": true
+  }
+}
+```
+
+| Metric | Default | `write_with_timer` |
+|---|---|---|
+| Goroutines | ~400,000 | **~200,000** |
+| Memory (RSS) | ~27 KB/conn | **~22.4 KB/conn** |
+| Goroutine stacks | ~12.3 KB/conn | **~8.2 KB/conn** |
+
+One goroutine per connection instead of two, and the saving is exactly one 4 KB goroutine stack.
+
+The tradeoff to be aware of: `write_delay` adds latency equal to the delay (100 ms here) before a message is flushed, because the connection waits that long to batch. For notification-style workloads that is usually invisible; for latency-sensitive request/reply it may not be what you want. Tune the delay, or leave it off, accordingly.
+
+## Cutting memory, part 2: the read goroutine's stack
+
+That leaves one goroutine per connection — the one reading the socket. It can't be removed the same way; something has to wait for the client's next message. But it turns out most of what it costs isn't the goroutine. It's the *size* of its stack.
+
+Go grows a goroutine's stack on demand, doubling it whenever a call chain doesn't fit, and — this is the part that matters — a long-lived goroutine never really gives that space back. So the stack grows to the deepest call the goroutine has ever made, and stays there.
+
+A connection's read loop reads a frame and then processes the command inline: the event handler, the broker, the broadcast fan-out. That is a deep call chain, and it only has to happen **once** — even just the initial `connect` command — for the read goroutine to grow to 8 KB and hold it for the entire life of the connection, however idle it then becomes.
+
+`process_commands_off_read_loop` moves command processing to a short-lived goroutine that exits when the frame is done. The read loop itself stays shallow. The deep stack still gets used, but it goes back to the Go runtime's stack pool and is reused by the next connection that needs it, instead of being pinned to a connection that spends its life waiting.
+
+```json title="config.json"
+{
+  "websocket": {
+    "process_commands_off_read_loop": true
+  }
+}
+```
+
+| Metric | Default | `process_commands_off_read_loop` |
+|---|---|---|
+| Goroutines | ~400,000 | ~400,000 (unchanged) |
+| Memory (RSS) | ~27 KB/conn | **~23 KB/conn** |
+| Goroutine stacks | ~12.3 KB/conn | **~8.2 KB/conn** |
+
+Same saving as removing the writer goroutine — around 4 KB per connection — but by a completely different route: the goroutine count doesn't change at all, its stack just halves from 8 KB to 4 KB. The two options are independent, and they stack.
+
+The tradeoff: handing each frame to another goroutine costs a goroutine start and two scheduler handoffs. For a connection that is genuinely busy, that shows up as a small increase in per-command latency. For a large pool of mostly-idle connections — the case this whole post is about — you are trading an operation that almost never happens for memory you pay for constantly.
+
+## Cutting memory, part 3: `use_write_buffer_pool`
+
+The last piece isn't a goroutine at all. Every WebSocket connection holds a write buffer — 4 KB by default — whether or not it is writing anything. `use_write_buffer_pool` makes connections share a pool of write buffers instead, so a buffer is held only while a write is actually in flight.
+
+```json title="config.json"
+{
+  "websocket": {
+    "use_write_buffer_pool": true
+  }
+}
+```
+
+| Metric | Default | `use_write_buffer_pool` |
+|---|---|---|
+| Memory (RSS) | ~27 KB/conn | **~24.0 KB/conn** |
+| Heap | ~12.7 KB/conn | **~8.6 KB/conn** |
+
+Another ~4 KB per connection, this time out of the heap rather than the stacks. Under sustained write load the pool sees more contention than a per-connection buffer, so this is squarely an option for pools that are idle most of the time.
+
+## Cutting memory, part 4: `read_buffer_size`
+
+With the write buffer pooled, a heap profile of the tuned server says something
+blunt: **the WebSocket read buffer is now 47% of everything left**. Each
+connection holds one, and by default it takes the 4 KB buffer that `net/http`
+allocated for the request it was upgraded from.
+
+Centrifugo lets you size it. A client command is small — a subscribe, a publish,
+a pong — so 4 KB is far more than a mostly-idle connection needs.
+
+```json title="config.json"
+{
+  "websocket": {
+    "read_buffer_size": 1024
+  }
+}
+```
+
+| Metric | All previous options | `+ read_buffer_size: 1024` |
+|---|---|---|
+| CPU | 0.46 cores | **0.45 cores** |
+| Memory (RSS) | 15.3 KB/conn | **10.9 KB/conn** |
+| Heap | 8.3 KB/conn | **5.1 KB/conn** |
+
+**−4.4 KB per connection, and CPU does not move.** It is the largest single
+memory saving of the four, and the cheapest.
+
+Dropping to 512 bytes saves only another 0.5 KB, so 1024 is the sweet spot. The
+tradeoff is that a client sending messages larger than the buffer needs more
+read syscalls to pull them in — irrelevant for command traffic, worth thinking
+about if your clients push large payloads.
+
+## Everything together
+
+The four options target different costs, so they stack cleanly:
+
+| Configuration | CPU | RSS/conn | Stacks/conn | Heap/conn |
+|---|---|---|---|---|
+| Default | 0.94 cores | 27.0 KB | 12.3 KB | 12.7 KB |
+| `batch_periodic_events` | **0.41 cores** | 26.9 KB | 12.3 KB | 12.6 KB |
+| `write_with_timer` | 0.98 cores | 22.4 KB | 8.2 KB | 12.3 KB |
+| `process_commands_off_read_loop` | 0.96 cores | 22.9 KB | 8.2 KB | 12.8 KB |
+| `use_write_buffer_pool` | 0.92 cores | 24.0 KB | 12.3 KB | 8.6 KB |
+| **All four** | **0.46 cores** | **15.3 KB** | **4.2 KB** | **8.3 KB** |
+| **All four + `read_buffer_size: 1024`** | **0.45 cores** | **10.9 KB** | **4.2 KB** | **5.1 KB** |
+
+With everything enabled, one node holds 200,000 idle connections for **~0.45 cores and ~2.2 GB** — **52% less CPU and 60% less memory** than the default. Per connection that's roughly **2.2 µs/s of CPU and ~11 KB of RAM**.
+
+The memory column is worth reading twice. The default 27 KB is 12.3 KB of stacks and 12.7 KB of heap; tuned it is 4.2 KB and 5.1 KB. Four separate options, and each one removes roughly 4 KB — one goroutine stack, one goroutine's *worth* of stack, one write buffer, and most of a read buffer.
+
+One honest note on CPU: the three memory options are not quite free. Individually they cost between 2% and 7% CPU, and together around 12%. `batch_periodic_events` more than pays for all of it, which is why the combined figure is still less than half the default — but if you enable only the memory options, expect CPU to tick up slightly.
+
+## When this matters
+
+These options shine for the workload we benchmarked: **large pools of mostly-idle connections**. Notifications, presence, live badges, dashboards that update occasionally — anywhere the connection count is high and the message rate per connection is low.
+
+They matter less for high-throughput workloads. If every connection is receiving a steady stream of messages, the cost moves from the idle overhead we optimized here into the actual message fan-out and socket writes, which is a different benchmark. (`write_delay` still helps there — batching writes cuts system calls under load — but that's a throughput story, not the idle-pool story of this post.)
+
+A couple of practical notes:
+
+* `batch_periodic_events` is currently marked experimental. It's a scheduling change with no effect on delivery semantics, but the flag reflects that it's a newer option.
+* `write_with_timer` only applies when `write_delay` is set — the timer-based flush is meaningless without a delay to flush against.
+* `process_commands_off_read_loop` and `use_write_buffer_pool` are WebSocket-transport options, so they live under `websocket` rather than `client`. They do not affect SSE or HTTP-streaming connections, which don't hold a persistent read loop in the same way.
+
+## One more thing: a million connections
+
+Everything above is measured at 200,000, which is where the full comparison is
+practical to run. But once the tuned configuration was in hand, the obvious
+question was how far the same machine goes.
+
+We pointed the load generator at the same 16 vCPU / 30 GB node with every option
+from this post enabled, and asked it for **1,000,000 connections**:
+
+| Metric | Value | Per connection |
+|---|---|---|
+| Connections | 1,000,000 | |
+| CPU | ~2.33 cores | ~2.3 µs/s |
+| Memory (RSS) | ~11.3 GB | ~11.6 KB |
+| Goroutines | 1,000,163 | 1.00 |
+| — of which stacks | ~4.1 GB | ~4.1 KB |
+| — of which heap | ~5.2 GB | ~5.2 KB |
+
+Add the kernel's own per-socket structures — about 4 KB each, so roughly 4.2 GB
+for a million sockets — and the true cost of the node is closer to **15.5 GB**.
+Still half the machine.
+
+Two and a third cores and 11 GB of process memory, on one node, for a million
+idle WebSocket connections. The per-connection cost is only slightly above the 200k figure —
+~11.6 KB against ~10.9 KB — so the tuning holds its shape at five times the
+scale rather than degrading.
+
+It is worth stating what this run is and is not. It is a single run of one
+configuration, not the two-round matrix the rest of the post is built on, and
+the connections are idle: they connect, answer pings, and nothing else. Real
+traffic is a different budget entirely.
+
+And one number that is not in the table, because we could not measure it: **the
+default configuration cannot hold a million connections on this machine.** At
+the ~27 KB per connection we measured at 200k, a million of them would need
+around 27 GB of process memory on a 30 GB box — before the kernel's own
+per-socket structures, which add roughly 4 KB per socket on top. The tuned
+configuration does it in 11.3 GB and leaves half the machine idle.
+
+## Summing up
+
+An idle connection costs CPU (periodic per-connection timers) and memory — and that memory is mostly goroutine stacks and buffers held by connections that are doing nothing. Centrifugo PRO gives you a knob for each:
+
+* **`client.batch_periodic_events`** batches the periodic timers → over 2× less CPU.
+* **`client.write_delay` + `write_with_timer`** drops the per-connection writer goroutine → ~4 KB less per connection.
+* **`websocket.process_commands_off_read_loop`** halves the read goroutine's stack → another ~4 KB.
+* **`websocket.use_write_buffer_pool`** shares write buffers between connections → another ~4 KB.
+* **`websocket.read_buffer_size`** sizes the read buffer to what commands actually need → another ~4.4 KB, the largest of the four.
+
+The split between the `client` and `websocket` sections is not cosmetic — it is
+also the split between what helps everywhere and what does not.
+
+The two `client` options act on the connection object itself, which every
+transport builds the same way, so **`batch_periodic_events` and `write_delay` +
+`write_with_timer` help SSE and HTTP-streaming connections too**: the periodic
+timers and the per-connection writer goroutine exist regardless of how the
+connection was established.
+
+The three `websocket` options do not. Two of them size buffers that belong to
+the WebSocket connection, and `process_commands_off_read_loop` only means
+anything where there is a long-lived read loop to keep shallow — SSE and
+HTTP-streaming receive client commands over ordinary HTTP requests, whose
+goroutines are released when the request ends, so there is no persistent stack
+to shrink.
+
+So if your fleet is not WebSocket, the CPU win and one of the four memory wins
+still apply.
+
+Together they roughly halve the CPU and cut the memory of a large idle connection pool by 60% — enough to hold a million idle connections on a single 16-core node with half its RAM to spare. If your workload is a lot of connections that mostly wait, they're worth turning on.

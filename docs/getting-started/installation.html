@@ -18,8 +18,8 @@
 
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.d6ef435d.css">
-<script src="/assets/js/runtime~main.9fbe2a85.js" defer="defer"></script>
-<script src="/assets/js/main.c2f21bd6.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.42a56017.js" defer="defer"></script>
+<script src="/assets/js/main.91dca78e.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg style="display: none;"><defs>
@@ -69,7 +69,14 @@
 <p>Run with:</p>
 <div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token plain">docker-compose up</span><br></span></code></pre></div></div>
 <h2 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="kubernetes-helm-chart">Kubernetes Helm chart<a href="#kubernetes-helm-chart" class="hash-link" aria-label="Direct link to Kubernetes Helm chart" title="Direct link to Kubernetes Helm chart" translate="no">​</a></h2>
-<p>See our <a href="https://github.com/centrifugal/helm-charts" target="_blank" rel="noopener noreferrer" class="">official Kubernetes Helm chart</a>. Follow instructions in a Centrifugo chart README to bootstrap Centrifugo inside your Kubernetes cluster.</p>
+<p>See our <a href="https://github.com/centrifugal/helm-charts" target="_blank" rel="noopener noreferrer" class="">official Kubernetes Helm chart</a> to run Centrifugo inside a Kubernetes cluster. The <a href="https://github.com/centrifugal/helm-charts/tree/master/charts/centrifugo" target="_blank" rel="noopener noreferrer" class="">chart README</a> takes you from a local trial to a production deployment and covers, among other things:</p>
+<ul>
+<li class=""><strong>Quick local start</strong> with Minikube to try the chart in a few commands.</li>
+<li class=""><strong>Production deployment tutorials</strong> with step-by-step guides for <a href="https://github.com/centrifugal/helm-charts/blob/master/charts/centrifugo/tutorial.md" target="_blank" rel="noopener noreferrer" class="">Google Kubernetes Engine (GKE)</a> and <a href="https://github.com/centrifugal/helm-charts/blob/master/charts/centrifugo/tutorial.md" target="_blank" rel="noopener noreferrer" class="">Amazon EKS</a> – covering high availability with multiple replicas, Redis for horizontal scaling, TLS with managed certificates, ingress, and Prometheus monitoring.</li>
+<li class=""><strong>Ingress examples</strong> for NGINX, HAProxy, <a href="https://github.com/centrifugal/helm-charts/blob/master/charts/centrifugo/README.md#aws-alb-ingress-eks" target="_blank" rel="noopener noreferrer" class="">AWS ALB (EKS)</a> and <a href="https://github.com/centrifugal/helm-charts/blob/master/charts/centrifugo/README.md#gcp-gke-ingress" target="_blank" rel="noopener noreferrer" class="">GCP GKE</a>, plus Gateway API (HTTPRoute).</li>
+<li class=""><strong><a href="https://github.com/centrifugal/helm-charts/blob/master/charts/centrifugo/README.md#service-mesh-istio" target="_blank" rel="noopener noreferrer" class="">Service mesh (Istio) support</a> out of the box</strong> – WebSocket, HTTP-streaming/SSE, emulation and the HTTP/gRPC APIs all work through the mesh with no extra configuration, because every Service port declares its L7 protocol via the standard <code>appProtocol</code> field.</li>
+<li class="">Centrifugo dependencies is up to the user – point to your own Redis, Nats, PostgreSQL, Kafka, ClickHouse setups or to managed services.</li>
+</ul>
 <h2 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="rpm-and-deb-packages-for-linux">RPM and DEB packages for Linux<a href="#rpm-and-deb-packages-for-linux" class="hash-link" aria-label="Direct link to RPM and DEB packages for Linux" title="Direct link to RPM and DEB packages for Linux" translate="no">​</a></h2>
 <p>Every time we make a new Centrifugo release we upload rpm and deb packages for popular Linux distributions on <a href="https://packagecloud.io/FZambia/centrifugo" target="_blank" rel="noopener noreferrer" class="">packagecloud.io</a>.</p>
 <p>At the moment, we support versions of the following distributions:</p>

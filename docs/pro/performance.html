@@ -18,8 +18,8 @@
 
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.d6ef435d.css">
-<script src="/assets/js/runtime~main.9fbe2a85.js" defer="defer"></script>
-<script src="/assets/js/main.c2f21bd6.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.42a56017.js" defer="defer"></script>
+<script src="/assets/js/main.91dca78e.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg style="display: none;"><defs>
@@ -36,6 +36,11 @@
 <!-- -->
 <div style="display:flex;flex-wrap:wrap"><img src="/img/cpu_idle_oss.jpg" alt="OSS" style="width:50%;object-fit:contain"><img src="/img/cpu_idle_pro.jpg" alt="Pro" style="width:50%;object-fit:contain"></div>
 <p>Of course the ratio is highly dependent on the Centrifugo-specific setup load profile and usage scenarios.</p>
+<p>New in Centrifugo v6.9.2</p>
+<p>Another option which helps to hold large pools of mostly idle WebSocket connections is <code>websocket.process_commands_off_read_loop</code> (boolean, by default <code>false</code>):</p>
+<div class="language-json codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockTitle_OeMC">config.json</div><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-json codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token punctuation" style="color:rgb(199, 146, 234)">{</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  </span><span class="token property">&quot;websocket&quot;</span><span class="token operator" style="color:rgb(137, 221, 255)">:</span><span class="token plain"> </span><span class="token punctuation" style="color:rgb(199, 146, 234)">{</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">    </span><span class="token property">&quot;process_commands_off_read_loop&quot;</span><span class="token operator" style="color:rgb(137, 221, 255)">:</span><span class="token plain"> </span><span class="token boolean" style="color:rgb(255, 88, 116)">true</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  </span><span class="token punctuation" style="color:rgb(199, 146, 234)">}</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain"></span><span class="token punctuation" style="color:rgb(199, 146, 234)">}</span><br></span></code></pre></div></div>
+<p>A WebSocket connection processes each incoming command on its read loop goroutine, and that goroutine&#x27;s stack grows to the deepest call it ever makes (even just the initial <code>connect</code>) and is never given back while the connection lives. When this option is enabled, each command is processed on a short-lived goroutine instead, so the read loop itself stays shallow — the deep stack returns to the Go runtime&#x27;s stack pool and is reused by the next connection that needs it, rather than being pinned to a connection that then spends its life idle. This roughly halves the read goroutine&#x27;s stack (around 4 KB less per connection).</p>
+<p>The option is off by default and adds a small per-command latency that becomes negligible once many connections are active, so it&#x27;s most useful for large pools of mostly idle connections. See the <a class="" href="/blog/2026/08/17/tuning-idle-connections">Tuning Centrifugo PRO for large WebSocket connection pools</a> blog post for measurements and how it combines with the other options here.</p>
 <h2 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="faster-http-api">Faster HTTP API<a href="#faster-http-api" class="hash-link" aria-label="Direct link to Faster HTTP API" title="Direct link to Faster HTTP API" translate="no">​</a></h2>
 <p>Centrifugo PRO has an optimized JSON serialization/deserialization for HTTP API.</p>
 <p>The effect can be noticeable under load. The exact numbers heavily depend on usage scenario. According to our benchmarks you can expect 10-15% more requests/sec for small message publications over HTTP API, and up to several times throughput boost when you are frequently get lots of messages from a history, see a couple of examples below.</p>

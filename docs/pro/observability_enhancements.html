@@ -18,8 +18,8 @@
 
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.d6ef435d.css">
-<script src="/assets/js/runtime~main.9fbe2a85.js" defer="defer"></script>
-<script src="/assets/js/main.c2f21bd6.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.42a56017.js" defer="defer"></script>
+<script src="/assets/js/main.91dca78e.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg style="display: none;"><defs>
@@ -102,6 +102,240 @@
 <p>If you leave <code>prometheus.native_histograms</code> off but still enable <code>opentelemetry.metrics</code>, Centrifugo&#x27;s Summary metrics will be translated to OTel&#x27;s legacy <code>Summary</code> data point shape, which most OTel-native backends treat as second-class data or drop at ingest. Use the corresponding <code>_histogram</code> companion metrics in your OTel dashboards in that mode, or — strongly recommended — enable native histograms and get the clean pipeline.</p>
 <p>The pro-only Summary metrics deprecated by the same migration are: <code>centrifugo_push_job_duration_seconds</code>, <code>centrifugo_clickhouse_analytics_flush_duration_seconds</code>, <code>centrifugo_clickhouse_analytics_batch_size</code>, and <code>centrifugo_shared_poll_relay_backend_duration_seconds</code>. Each has an <code>_histogram</code> companion (added in v6.8.1) that becomes the canonical instrument when native histograms is enabled.</p>
 <p><strong>Why Summaries are being removed</strong>: in a clustered Centrifugo deployment (multiple nodes), Summary&#x27;s pre-computed quantile estimates cannot be aggregated across instances — there&#x27;s no mathematically valid way to combine per-node p99s into a fleet-wide p99. Histograms solve this by aggregating bucket counts across nodes, then computing percentiles with <code>histogram_quantile()</code>. For any multi-node deployment the Summary quantile data is, at best, misleading.</p>
+<h2 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="pro-metrics-reference">PRO metrics reference<a href="#pro-metrics-reference" class="hash-link" aria-label="Direct link to PRO metrics reference" title="Direct link to PRO metrics reference" translate="no">​</a></h2>
+<p>Beyond the enhanced labels described above, Centrifugo PRO exposes its own metrics. They follow the same conventions as the <a class="" href="/docs/server/observability#exposed-metrics">OSS metrics reference</a>: the <code>centrifugo_</code> namespace, Histograms that switch to native schema when <a class="" href="/docs/server/observability#native-histograms"><code>prometheus.native_histograms</code></a> is on, and deprecated Summaries that disappear in that mode.</p>
+<p>All of them are visualized by the <code>PRO · …</code> rows of the <a href="https://grafana.com/grafana/dashboards/13039" target="_blank" rel="noopener noreferrer" class="">official Grafana dashboard</a>.</p>
+<p>One family of PRO-only metrics is described in the OSS reference rather than here, because it sits next to closely related OSS metrics: the <code>*_redis_node_grouped_*</code> Redis Cluster metrics, which only the PRO node-grouped sharded PUB/SUB path can fill. They are marked as PRO there and are not registered at all in Centrifugo OSS.</p>
+<p>Note that the map broker and the PostgreSQL broker are <strong>not</strong> PRO features — both ship in Centrifugo OSS, so their metrics (<code>centrifugo_map_broker_*</code>, <code>centrifugo_broker_postgres_*</code>) belong to the OSS reference. What PRO adds on top is described in <a class="" href="/docs/pro/map_subscriptions">map subscriptions</a> — per-namespace map brokers and sharded PUB/SUB among them.</p>
+<h3 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="push-notifications">Push notifications<a href="#push-notifications" class="hash-link" aria-label="Direct link to Push notifications" title="Direct link to Push notifications" translate="no">​</a></h3>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_push_notification_count">centrifugo_push_notification_count<a href="#centrifugo_push_notification_count" class="hash-link" aria-label="Direct link to centrifugo_push_notification_count" title="Direct link to centrifugo_push_notification_count" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> provider, recipient_type, platform, success, err_code</li>
+<li class=""><strong>Description:</strong> Count of push notifications sent, split by provider (<code>fcm</code>, <code>apns</code>, <code>hms</code>), recipient type, platform, whether the provider accepted it, and the provider error code when it did not.</li>
+<li class=""><strong>Usage:</strong> Build a delivery success ratio from <code>success=&quot;true&quot;</code> over the total. Codes such as <code>unregistered</code> are normal device-token churn; authentication errors are not.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_push_scheduled_request_count">centrifugo_push_scheduled_request_count<a href="#centrifugo_push_scheduled_request_count" class="hash-link" aria-label="Direct link to centrifugo_push_scheduled_request_count" title="Direct link to centrifugo_push_scheduled_request_count" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> recipient_type</li>
+<li class=""><strong>Description:</strong> Count of push notification requests accepted for later execution.</li>
+<li class=""><strong>Usage:</strong> Shows how much of your push volume is scheduled rather than immediate.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_push_queue_consuming_lag">centrifugo_push_queue_consuming_lag<a href="#centrifugo_push_queue_consuming_lag" class="hash-link" aria-label="Direct link to centrifugo_push_queue_consuming_lag" title="Direct link to centrifugo_push_queue_consuming_lag" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Gauge</li>
+<li class=""><strong>Labels:</strong> provider, queue</li>
+<li class=""><strong>Description:</strong> Number of push jobs waiting to be consumed — pending entries of the Redis stream for the consumer group, or rows in the <code>push_jobs</code> table whose <code>run_at</code> is already due. Despite the name this is a <strong>job count, not a duration</strong>, and it is a Gauge — take its current value, do not wrap it in <code>rate()</code>.</li>
+<li class=""><strong>Usage:</strong> Sustained growth means push workers cannot keep up with the send rate.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_push_consuming_inflight_jobs">centrifugo_push_consuming_inflight_jobs<a href="#centrifugo_push_consuming_inflight_jobs" class="hash-link" aria-label="Direct link to centrifugo_push_consuming_inflight_jobs" title="Direct link to centrifugo_push_consuming_inflight_jobs" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Gauge</li>
+<li class=""><strong>Labels:</strong> provider, queue</li>
+<li class=""><strong>Description:</strong> Number of push jobs currently being processed.</li>
+<li class=""><strong>Usage:</strong> Shows worker utilization per queue.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_push_job_duration_seconds">centrifugo_push_job_duration_seconds<a href="#centrifugo_push_job_duration_seconds" class="hash-link" aria-label="Direct link to centrifugo_push_job_duration_seconds" title="Direct link to centrifugo_push_job_duration_seconds" translate="no">​</a></h4>
+<div class="theme-admonition theme-admonition-caution admonition_xJq3 alert alert--warning"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z"></path></svg></span>Deprecated</div><div class="admonitionContent_BuS1"><p>This Summary is deprecated and will be removed in Centrifugo v7. Use <code>centrifugo_push_job_duration_seconds_histogram</code>. Not exposed when <a class="" href="/docs/server/observability#native-histograms"><code>prometheus.native_histograms</code></a> is enabled.</p></div></div>
+<ul>
+<li class=""><strong>Type:</strong> Summary</li>
+<li class=""><strong>Labels:</strong> provider, recipient_type</li>
+<li class=""><strong>Description:</strong> Duration of a push processing job.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_push_job_duration_seconds_histogram">centrifugo_push_job_duration_seconds_histogram<a href="#centrifugo_push_job_duration_seconds_histogram" class="hash-link" aria-label="Direct link to centrifugo_push_job_duration_seconds_histogram" title="Direct link to centrifugo_push_job_duration_seconds_histogram" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Histogram. Uses native (sparse, exponential) schema when <a class="" href="/docs/server/observability#native-histograms"><code>prometheus.native_histograms</code></a> is enabled.</li>
+<li class=""><strong>Labels:</strong> provider, recipient_type</li>
+<li class=""><strong>Description:</strong> Same data as the Summary above, in <code>histogram_quantile()</code>- and OpenTelemetry-friendly form.</li>
+<li class=""><strong>Usage:</strong> Prefer this metric for percentile queries. Its <code>_count</code> also gives you the push job rate.</li>
+</ul>
+<h3 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="analytics-clickhouse">Analytics (ClickHouse)<a href="#analytics-clickhouse" class="hash-link" aria-label="Direct link to Analytics (ClickHouse)" title="Direct link to Analytics (ClickHouse)" translate="no">​</a></h3>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_clickhouse_analytics_flush_duration_seconds">centrifugo_clickhouse_analytics_flush_duration_seconds<a href="#centrifugo_clickhouse_analytics_flush_duration_seconds" class="hash-link" aria-label="Direct link to centrifugo_clickhouse_analytics_flush_duration_seconds" title="Direct link to centrifugo_clickhouse_analytics_flush_duration_seconds" translate="no">​</a></h4>
+<div class="theme-admonition theme-admonition-caution admonition_xJq3 alert alert--warning"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z"></path></svg></span>Deprecated</div><div class="admonitionContent_BuS1"><p>Deprecated Summary — use <code>centrifugo_clickhouse_analytics_flush_duration_seconds_histogram</code>. Not exposed when native histograms are enabled.</p></div></div>
+<ul>
+<li class=""><strong>Type:</strong> Summary</li>
+<li class=""><strong>Labels:</strong> type, retries, result</li>
+<li class=""><strong>Description:</strong> Duration of a ClickHouse data flush.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_clickhouse_analytics_flush_duration_seconds_histogram">centrifugo_clickhouse_analytics_flush_duration_seconds_histogram<a href="#centrifugo_clickhouse_analytics_flush_duration_seconds_histogram" class="hash-link" aria-label="Direct link to centrifugo_clickhouse_analytics_flush_duration_seconds_histogram" title="Direct link to centrifugo_clickhouse_analytics_flush_duration_seconds_histogram" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Histogram. Uses native schema when native histograms are enabled.</li>
+<li class=""><strong>Labels:</strong> type, retries, result</li>
+<li class=""><strong>Description:</strong> Time to write one batch to ClickHouse, by data type, retry count and outcome.</li>
+<li class=""><strong>Usage:</strong> Rising flush latency is the leading indicator of analytics drops — the buffer fills while writes are slow.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_clickhouse_analytics_batch_size">centrifugo_clickhouse_analytics_batch_size<a href="#centrifugo_clickhouse_analytics_batch_size" class="hash-link" aria-label="Direct link to centrifugo_clickhouse_analytics_batch_size" title="Direct link to centrifugo_clickhouse_analytics_batch_size" translate="no">​</a></h4>
+<div class="theme-admonition theme-admonition-caution admonition_xJq3 alert alert--warning"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z"></path></svg></span>Deprecated</div><div class="admonitionContent_BuS1"><p>Deprecated Summary — use <code>centrifugo_clickhouse_analytics_batch_size_histogram</code>. Not exposed when native histograms are enabled.</p></div></div>
+<ul>
+<li class=""><strong>Type:</strong> Summary</li>
+<li class=""><strong>Labels:</strong> type</li>
+<li class=""><strong>Description:</strong> ClickHouse flush batch size distribution.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_clickhouse_analytics_batch_size_histogram">centrifugo_clickhouse_analytics_batch_size_histogram<a href="#centrifugo_clickhouse_analytics_batch_size_histogram" class="hash-link" aria-label="Direct link to centrifugo_clickhouse_analytics_batch_size_histogram" title="Direct link to centrifugo_clickhouse_analytics_batch_size_histogram" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Histogram. Uses native schema when native histograms are enabled.</li>
+<li class=""><strong>Labels:</strong> type</li>
+<li class=""><strong>Description:</strong> Rows per flush, by data type.</li>
+<li class=""><strong>Usage:</strong> Batches pinned at the configured maximum mean Centrifugo is flushing as fast as it can — the next thing to give is the buffer.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_clickhouse_analytics_drop_count">centrifugo_clickhouse_analytics_drop_count<a href="#centrifugo_clickhouse_analytics_drop_count" class="hash-link" aria-label="Direct link to centrifugo_clickhouse_analytics_drop_count" title="Direct link to centrifugo_clickhouse_analytics_drop_count" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> type</li>
+<li class=""><strong>Description:</strong> Number of analytics events discarded because the buffer was full.</li>
+<li class=""><strong>Usage:</strong> Direct analytics data loss. Alert on any sustained non-zero rate.</li>
+</ul>
+<h3 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="postgresql-connection-pool">PostgreSQL connection pool<a href="#postgresql-connection-pool" class="hash-link" aria-label="Direct link to PostgreSQL connection pool" title="Direct link to PostgreSQL connection pool" translate="no">​</a></h3>
+<p>These metrics describe the pgx connection pool Centrifugo PRO uses for PostgreSQL-backed features. The <code>pool</code> label separates pools when more than one is configured.</p>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_database_pool_max_conns">centrifugo_database_pool_max_conns<a href="#centrifugo_database_pool_max_conns" class="hash-link" aria-label="Direct link to centrifugo_database_pool_max_conns" title="Direct link to centrifugo_database_pool_max_conns" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Gauge</li>
+<li class=""><strong>Labels:</strong> pool</li>
+<li class=""><strong>Description:</strong> Maximum size of the PostgreSQL connection pool.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_database_pool_total_conns">centrifugo_database_pool_total_conns<a href="#centrifugo_database_pool_total_conns" class="hash-link" aria-label="Direct link to centrifugo_database_pool_total_conns" title="Direct link to centrifugo_database_pool_total_conns" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Gauge</li>
+<li class=""><strong>Labels:</strong> pool</li>
+<li class=""><strong>Description:</strong> Current number of connections in the pool (idle + acquired + constructing).</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_database_pool_idle_conns">centrifugo_database_pool_idle_conns<a href="#centrifugo_database_pool_idle_conns" class="hash-link" aria-label="Direct link to centrifugo_database_pool_idle_conns" title="Direct link to centrifugo_database_pool_idle_conns" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Gauge</li>
+<li class=""><strong>Labels:</strong> pool</li>
+<li class=""><strong>Description:</strong> Current number of idle connections.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_database_pool_acquired_conns">centrifugo_database_pool_acquired_conns<a href="#centrifugo_database_pool_acquired_conns" class="hash-link" aria-label="Direct link to centrifugo_database_pool_acquired_conns" title="Direct link to centrifugo_database_pool_acquired_conns" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Gauge</li>
+<li class=""><strong>Labels:</strong> pool</li>
+<li class=""><strong>Description:</strong> Connections currently checked out of the pool.</li>
+<li class=""><strong>Usage:</strong> Riding at <code>pool_max_conns</code> means the pool is saturated — the queries below start queueing.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_database_pool_acquires_total">centrifugo_database_pool_acquires_total<a href="#centrifugo_database_pool_acquires_total" class="hash-link" aria-label="Direct link to centrifugo_database_pool_acquires_total" title="Direct link to centrifugo_database_pool_acquires_total" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> pool</li>
+<li class=""><strong>Description:</strong> Total successful connection acquires.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_database_pool_empty_acquires_total">centrifugo_database_pool_empty_acquires_total<a href="#centrifugo_database_pool_empty_acquires_total" class="hash-link" aria-label="Direct link to centrifugo_database_pool_empty_acquires_total" title="Direct link to centrifugo_database_pool_empty_acquires_total" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> pool</li>
+<li class=""><strong>Description:</strong> Acquires that had to wait for a connection to become free.</li>
+<li class=""><strong>Usage:</strong> The clearest saturation signal for the pool — a growing rate here means raising <code>max_conns</code> (or reducing query time) will help.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_database_pool_canceled_acquires_total">centrifugo_database_pool_canceled_acquires_total<a href="#centrifugo_database_pool_canceled_acquires_total" class="hash-link" aria-label="Direct link to centrifugo_database_pool_canceled_acquires_total" title="Direct link to centrifugo_database_pool_canceled_acquires_total" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> pool</li>
+<li class=""><strong>Description:</strong> Acquires abandoned by context cancellation while waiting.</li>
+<li class=""><strong>Usage:</strong> These are requests that gave up — usually visible to clients as errors or timeouts.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_database_pool_acquire_wait_seconds_total">centrifugo_database_pool_acquire_wait_seconds_total<a href="#centrifugo_database_pool_acquire_wait_seconds_total" class="hash-link" aria-label="Direct link to centrifugo_database_pool_acquire_wait_seconds_total" title="Direct link to centrifugo_database_pool_acquire_wait_seconds_total" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> pool</li>
+<li class=""><strong>Description:</strong> Total time spent waiting on connection acquires.</li>
+<li class=""><strong>Usage:</strong> Divide its rate by the rate of <code>pool_acquires_total</code> to get the mean acquire wait time.</li>
+</ul>
+<h3 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="bus-rate-limiting-and-channel-state">Bus, rate limiting and channel state<a href="#bus-rate-limiting-and-channel-state" class="hash-link" aria-label="Direct link to Bus, rate limiting and channel state" title="Direct link to Bus, rate limiting and channel state" translate="no">​</a></h3>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_bus_messages_processed_total">centrifugo_bus_messages_processed_total<a href="#centrifugo_bus_messages_processed_total" class="hash-link" aria-label="Direct link to centrifugo_bus_messages_processed_total" title="Direct link to centrifugo_bus_messages_processed_total" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> name</li>
+<li class=""><strong>Description:</strong> Total number of messages processed by a PRO bus consumer.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_bus_errors_total">centrifugo_bus_errors_total<a href="#centrifugo_bus_errors_total" class="hash-link" aria-label="Direct link to centrifugo_bus_errors_total" title="Direct link to centrifugo_bus_errors_total" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> name</li>
+<li class=""><strong>Description:</strong> Total number of errors while processing bus messages.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_rate_limit_hits_over_limit">centrifugo_rate_limit_hits_over_limit<a href="#centrifugo_rate_limit_hits_over_limit" class="hash-link" aria-label="Direct link to centrifugo_rate_limit_hits_over_limit" title="Direct link to centrifugo_rate_limit_hits_over_limit" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Description:</strong> Number of requests rejected by PRO <a class="" href="/docs/pro/rate_limiting">rate limiting</a>.</li>
+<li class=""><strong>Usage:</strong> Expect a non-zero baseline when limits are tuned tightly; alert on step changes rather than on any non-zero value.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_channel_state_events_queue_consuming_lag_milliseconds">centrifugo_channel_state_events_queue_consuming_lag_milliseconds<a href="#centrifugo_channel_state_events_queue_consuming_lag_milliseconds" class="hash-link" aria-label="Direct link to centrifugo_channel_state_events_queue_consuming_lag_milliseconds" title="Direct link to centrifugo_channel_state_events_queue_consuming_lag_milliseconds" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Gauge</li>
+<li class=""><strong>Labels:</strong> name, partition</li>
+<li class=""><strong>Description:</strong> Consuming lag of the channel state events queue, per partition, in milliseconds.</li>
+<li class=""><strong>Usage:</strong> A single lagging partition usually points at an unbalanced key distribution rather than at overall throughput.</li>
+</ul>
+<h3 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="shared-poll-relay">Shared poll relay<a href="#shared-poll-relay" class="hash-link" aria-label="Direct link to Shared poll relay" title="Direct link to Shared poll relay" translate="no">​</a></h3>
+<p>Metrics of the PRO <a class="" href="/docs/pro/shared_poll">shared poll relay</a>, which offloads polling to a dedicated relay instead of polling per node.</p>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_shared_poll_relay_poll_cycles_total">centrifugo_shared_poll_relay_poll_cycles_total<a href="#centrifugo_shared_poll_relay_poll_cycles_total" class="hash-link" aria-label="Direct link to centrifugo_shared_poll_relay_poll_cycles_total" title="Direct link to centrifugo_shared_poll_relay_poll_cycles_total" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> namespace</li>
+<li class=""><strong>Description:</strong> Total number of completed relay poll cycles.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_shared_poll_relay_backend_requests_total">centrifugo_shared_poll_relay_backend_requests_total<a href="#centrifugo_shared_poll_relay_backend_requests_total" class="hash-link" aria-label="Direct link to centrifugo_shared_poll_relay_backend_requests_total" title="Direct link to centrifugo_shared_poll_relay_backend_requests_total" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> proxy_name</li>
+<li class=""><strong>Description:</strong> Total number of backend refresh requests issued by the relay.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_shared_poll_relay_backend_errors_total">centrifugo_shared_poll_relay_backend_errors_total<a href="#centrifugo_shared_poll_relay_backend_errors_total" class="hash-link" aria-label="Direct link to centrifugo_shared_poll_relay_backend_errors_total" title="Direct link to centrifugo_shared_poll_relay_backend_errors_total" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> proxy_name</li>
+<li class=""><strong>Description:</strong> Total number of failed backend refresh calls.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_shared_poll_relay_backend_duration_seconds">centrifugo_shared_poll_relay_backend_duration_seconds<a href="#centrifugo_shared_poll_relay_backend_duration_seconds" class="hash-link" aria-label="Direct link to centrifugo_shared_poll_relay_backend_duration_seconds" title="Direct link to centrifugo_shared_poll_relay_backend_duration_seconds" translate="no">​</a></h4>
+<div class="theme-admonition theme-admonition-caution admonition_xJq3 alert alert--warning"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z"></path></svg></span>Deprecated</div><div class="admonitionContent_BuS1"><p>Deprecated Summary — use <code>centrifugo_shared_poll_relay_backend_duration_seconds_histogram</code>. Not exposed when native histograms are enabled.</p></div></div>
+<ul>
+<li class=""><strong>Type:</strong> Summary</li>
+<li class=""><strong>Labels:</strong> proxy_name</li>
+<li class=""><strong>Description:</strong> Duration of backend refresh calls.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_shared_poll_relay_backend_duration_seconds_histogram">centrifugo_shared_poll_relay_backend_duration_seconds_histogram<a href="#centrifugo_shared_poll_relay_backend_duration_seconds_histogram" class="hash-link" aria-label="Direct link to centrifugo_shared_poll_relay_backend_duration_seconds_histogram" title="Direct link to centrifugo_shared_poll_relay_backend_duration_seconds_histogram" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Histogram. Uses native schema when native histograms are enabled.</li>
+<li class=""><strong>Labels:</strong> proxy_name</li>
+<li class=""><strong>Description:</strong> Backend refresh latency in <code>histogram_quantile()</code>-friendly form.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_shared_poll_relay_cycle_duration_seconds">centrifugo_shared_poll_relay_cycle_duration_seconds<a href="#centrifugo_shared_poll_relay_cycle_duration_seconds" class="hash-link" aria-label="Direct link to centrifugo_shared_poll_relay_cycle_duration_seconds" title="Direct link to centrifugo_shared_poll_relay_cycle_duration_seconds" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Histogram. Uses native schema when native histograms are enabled.</li>
+<li class=""><strong>Labels:</strong> namespace</li>
+<li class=""><strong>Description:</strong> Full poll cycle wall time.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_shared_poll_relay_cycle_work_duration_seconds">centrifugo_shared_poll_relay_cycle_work_duration_seconds<a href="#centrifugo_shared_poll_relay_cycle_work_duration_seconds" class="hash-link" aria-label="Direct link to centrifugo_shared_poll_relay_cycle_work_duration_seconds" title="Direct link to centrifugo_shared_poll_relay_cycle_work_duration_seconds" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Histogram. Uses native schema when native histograms are enabled.</li>
+<li class=""><strong>Labels:</strong> namespace</li>
+<li class=""><strong>Description:</strong> Poll cycle work time, minus the spread delay.</li>
+<li class=""><strong>Usage:</strong> Compare against your configured poll interval — approaching it means the relay cannot keep up.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_shared_poll_relay_sem_wait_duration_seconds">centrifugo_shared_poll_relay_sem_wait_duration_seconds<a href="#centrifugo_shared_poll_relay_sem_wait_duration_seconds" class="hash-link" aria-label="Direct link to centrifugo_shared_poll_relay_sem_wait_duration_seconds" title="Direct link to centrifugo_shared_poll_relay_sem_wait_duration_seconds" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Histogram. Uses native schema when native histograms are enabled.</li>
+<li class=""><strong>Labels:</strong> proxy_name</li>
+<li class=""><strong>Description:</strong> Semaphore wait duration — the contention indicator for relay concurrency limits.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_shared_poll_relay_active_channels">centrifugo_shared_poll_relay_active_channels<a href="#centrifugo_shared_poll_relay_active_channels" class="hash-link" aria-label="Direct link to centrifugo_shared_poll_relay_active_channels" title="Direct link to centrifugo_shared_poll_relay_active_channels" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Gauge</li>
+<li class=""><strong>Description:</strong> Number of channels currently polled by the relay.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_shared_poll_relay_tracked_keys">centrifugo_shared_poll_relay_tracked_keys<a href="#centrifugo_shared_poll_relay_tracked_keys" class="hash-link" aria-label="Direct link to centrifugo_shared_poll_relay_tracked_keys" title="Direct link to centrifugo_shared_poll_relay_tracked_keys" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Gauge</li>
+<li class=""><strong>Labels:</strong> namespace</li>
+<li class=""><strong>Description:</strong> Number of keys tracked by the relay, per namespace.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_shared_poll_relay_items_count">centrifugo_shared_poll_relay_items_count<a href="#centrifugo_shared_poll_relay_items_count" class="hash-link" aria-label="Direct link to centrifugo_shared_poll_relay_items_count" title="Direct link to centrifugo_shared_poll_relay_items_count" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> namespace, result</li>
+<li class=""><strong>Description:</strong> Items returned per cycle, by result — <code>changed</code>, <code>unchanged</code> or <code>removed</code>.</li>
+<li class=""><strong>Usage:</strong> A dominant <code>unchanged</code> share means the poll interval is shorter than it needs to be.</li>
+</ul>
 <h2 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="sentry-integration">Sentry integration<a href="#sentry-integration" class="hash-link" aria-label="Direct link to Sentry integration" title="Direct link to Sentry integration" translate="no">​</a></h2>
 <p>Centrifugo PRO comes with an integration with <a href="https://sentry.io/" target="_blank" rel="noopener noreferrer" class="">Sentry</a>. Just a couple of lines in the configuration:</p>
 <div class="language-json codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-json codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token punctuation" style="color:rgb(199, 146, 234)">{</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  ...</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  </span><span class="token property">&quot;sentry&quot;</span><span class="token operator" style="color:rgb(137, 221, 255)">:</span><span class="token plain"> </span><span class="token punctuation" style="color:rgb(199, 146, 234)">{</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">    </span><span class="token property">&quot;enabled&quot;</span><span class="token operator" style="color:rgb(137, 221, 255)">:</span><span class="token plain"> </span><span class="token boolean" style="color:rgb(255, 88, 116)">true</span><span class="token punctuation" style="color:rgb(199, 146, 234)">,</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">    </span><span class="token property">&quot;dsn&quot;</span><span class="token operator" style="color:rgb(137, 221, 255)">:</span><span class="token plain"> </span><span class="token string" style="color:rgb(195, 232, 141)">&quot;your-project-public-dsn&quot;</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  </span><span class="token punctuation" style="color:rgb(199, 146, 234)">}</span><span class="token plain"></span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain"></span><span class="token punctuation" style="color:rgb(199, 146, 234)">}</span><br></span></code></pre></div></div>
@@ -115,6 +349,6 @@
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="sentryenvironment">sentry.environment<a href="#sentryenvironment" class="hash-link" aria-label="Direct link to sentry.environment" title="Direct link to sentry.environment" translate="no">​</a></h4>
 <p>Environment name to set for Sentry events.</p>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="sentrysample_rate">sentry.sample_rate<a href="#sentrysample_rate" class="hash-link" aria-label="Direct link to sentry.sample_rate" title="Direct link to sentry.sample_rate" translate="no">​</a></h4>
-<p>Sample rate to set for Sentry events. By default, all events are sent to Sentry. You can set a sample rate to send only a fraction of events to Sentry. For example, to send 1/10 of events set this to <code>0.1</code>.</p></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href="https://github.com/centrifugal/centrifugal.dev/edit/main/docs/pro/observability_enhancements.md" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_Z9Sw" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/docs/pro/client_message_batching"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Message batching control</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/docs/pro/server_tags_filter"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Server-side publication tags filter</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#client-name-resolution-in-metrics" class="table-of-contents__link toc-highlight">Client name resolution in metrics</a></li><li><a href="#channel-namespace-resolution-for-metrics" class="table-of-contents__link toc-highlight">Channel namespace resolution for metrics</a></li><li><a href="#transport-accept-protocol-resolution" class="table-of-contents__link toc-highlight">Transport accept protocol resolution</a></li><li><a href="#client-labels-as-prometheus-dimensions" class="table-of-contents__link toc-highlight">Client labels as Prometheus dimensions</a></li><li><a href="#opentelemetry-metrics-export" class="table-of-contents__link toc-highlight">OpenTelemetry metrics export</a><ul><li><a href="#export-to-google-cloud-adc" class="table-of-contents__link toc-highlight">Export to Google Cloud (ADC)</a></li><li><a href="#cloud-resource-detectors" class="table-of-contents__link toc-highlight">Cloud resource detectors</a></li><li><a href="#pair-with-native-histograms-for-full-fidelity" class="table-of-contents__link toc-highlight">Pair with native histograms for full fidelity</a></li><li><a href="#summary-instruments-are-deprecated" class="table-of-contents__link toc-highlight">Summary instruments are deprecated</a></li></ul></li><li><a href="#sentry-integration" class="table-of-contents__link toc-highlight">Sentry integration</a><ul><li><a href="#sentry-options" class="table-of-contents__link toc-highlight">Sentry options</a></li></ul></li></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Contacts</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/company">About us</a></li><li class="footer__item"><a href="mailto:hello@centrifugal.dev" target="_blank" rel="noopener noreferrer" class="footer__link-item">Send e-mail</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Community</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://t.me/joinchat/U57MI8Lam9mhpuhd" target="_blank" rel="noopener noreferrer" class="footer__link-item">Telegram<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li><li class="footer__item"><a href="https://discord.gg/tYgADKx" target="_blank" rel="noopener noreferrer" class="footer__link-item">Discord<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li><li class="footer__item"><a href="https://twitter.com/centrifugalabs" target="_blank" rel="noopener noreferrer" class="footer__link-item">Twitter<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">More</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/docs/attributions">Attributions</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 Centrifugal Labs LTD</div></div></div></footer></div>
+<p>Sample rate to set for Sentry events. By default, all events are sent to Sentry. You can set a sample rate to send only a fraction of events to Sentry. For example, to send 1/10 of events set this to <code>0.1</code>.</p></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href="https://github.com/centrifugal/centrifugal.dev/edit/main/docs/pro/observability_enhancements.md" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_Z9Sw" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/docs/pro/client_message_batching"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Message batching control</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/docs/pro/server_tags_filter"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Server-side publication tags filter</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#client-name-resolution-in-metrics" class="table-of-contents__link toc-highlight">Client name resolution in metrics</a></li><li><a href="#channel-namespace-resolution-for-metrics" class="table-of-contents__link toc-highlight">Channel namespace resolution for metrics</a></li><li><a href="#transport-accept-protocol-resolution" class="table-of-contents__link toc-highlight">Transport accept protocol resolution</a></li><li><a href="#client-labels-as-prometheus-dimensions" class="table-of-contents__link toc-highlight">Client labels as Prometheus dimensions</a></li><li><a href="#opentelemetry-metrics-export" class="table-of-contents__link toc-highlight">OpenTelemetry metrics export</a><ul><li><a href="#export-to-google-cloud-adc" class="table-of-contents__link toc-highlight">Export to Google Cloud (ADC)</a></li><li><a href="#cloud-resource-detectors" class="table-of-contents__link toc-highlight">Cloud resource detectors</a></li><li><a href="#pair-with-native-histograms-for-full-fidelity" class="table-of-contents__link toc-highlight">Pair with native histograms for full fidelity</a></li><li><a href="#summary-instruments-are-deprecated" class="table-of-contents__link toc-highlight">Summary instruments are deprecated</a></li></ul></li><li><a href="#pro-metrics-reference" class="table-of-contents__link toc-highlight">PRO metrics reference</a><ul><li><a href="#push-notifications" class="table-of-contents__link toc-highlight">Push notifications</a></li><li><a href="#analytics-clickhouse" class="table-of-contents__link toc-highlight">Analytics (ClickHouse)</a></li><li><a href="#postgresql-connection-pool" class="table-of-contents__link toc-highlight">PostgreSQL connection pool</a></li><li><a href="#bus-rate-limiting-and-channel-state" class="table-of-contents__link toc-highlight">Bus, rate limiting and channel state</a></li><li><a href="#shared-poll-relay" class="table-of-contents__link toc-highlight">Shared poll relay</a></li></ul></li><li><a href="#sentry-integration" class="table-of-contents__link toc-highlight">Sentry integration</a><ul><li><a href="#sentry-options" class="table-of-contents__link toc-highlight">Sentry options</a></li></ul></li></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Contacts</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/company">About us</a></li><li class="footer__item"><a href="mailto:hello@centrifugal.dev" target="_blank" rel="noopener noreferrer" class="footer__link-item">Send e-mail</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Community</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://t.me/joinchat/U57MI8Lam9mhpuhd" target="_blank" rel="noopener noreferrer" class="footer__link-item">Telegram<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li><li class="footer__item"><a href="https://discord.gg/tYgADKx" target="_blank" rel="noopener noreferrer" class="footer__link-item">Discord<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li><li class="footer__item"><a href="https://twitter.com/centrifugalabs" target="_blank" rel="noopener noreferrer" class="footer__link-item">Twitter<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">More</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/docs/attributions">Attributions</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 Centrifugal Labs LTD</div></div></div></footer></div>
 </body>
 </html>
