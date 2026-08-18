@@ -1,7 +1,7 @@
 ---
 title: "Tuning Centrifugo PRO for large number of idle WebSocket connections"
 tags: [centrifugo, websocket, performance]
-description: "An idle WebSocket connection costs CPU and memory even when no messages flow. We start with 200k idle connections on a single node, cut the overhead with five Centrifugo PRO options. Then hold a million idle connections on the same node."
+description: "An idle WebSocket connection costs CPU and memory even when no messages flow. The post starts with 200k idle connections on a single node, cuts the overhead with five Centrifugo PRO options, then holds a million idle connections on the same node."
 author: Alexander Emelin
 authorTitle: Founder of Centrifugal Labs
 authorImageURL: /img/alexander_emelin.jpeg
@@ -9,17 +9,17 @@ image: /img/blog_ws_idle.jpg
 hide_table_of_contents: false
 ---
 
-A lot of real-time systems spend most of their time doing nothing. Think about a notifications service, a presence dashboard, a "new message" badge — the connections sit open for hours, and messages arrive rarely. The interesting scaling question there is not throughput. It's this: **how cheaply can a single node just hold a large pool of connections that are mostly idle?**
+A lot of real-time systems spend most of their time doing nothing. Think about a notifications service, a presence dashboard, a "new message" badge — the connections sit open for hours, and messages arrive rarely. The interesting scaling question for such systems is not throughput, but how cheaply a single node can hold a large pool of connections that are mostly idle.
 
-An idle connection is not free. Even with no application traffic, every connection costs a bit of CPU (Centrifugo runs periodic per-connection work — an application-level ping, presence refresh, subscription checks) and a bit of memory (goroutines, buffers, protocol state). Multiply that by hundreds of thousands and the constant, do-nothing overhead becomes the thing that decides how many connections fit on a node.
+An idle connection still isn't free: even with no application traffic, every connection costs a bit of CPU (Centrifugo runs periodic per-connection work — an application-level ping, presence refresh, subscription checks) and a bit of memory (goroutines, buffers, protocol state). Multiply that by hundreds of thousands and the constant, do-nothing overhead becomes the thing that decides how many connections fit on a node.
 
-This post measures that overhead and shows how four Centrifugo PRO options reduce it. One cuts CPU. The other three cut memory — and, as we'll see, almost every byte they save turns out to be a single, specific thing.
+This post measures that overhead and shows how five Centrifugo PRO options reduce it. One cuts CPU, the other four cut memory — and almost every byte they save turns out to come from a specific piece of the connection: a stack or a buffer.
 
 <!--truncate-->
 
 ## The benchmark
 
-We hold **200,000 real WebSocket connections** open against a single Centrifugo node and leave them idle. "Idle" here means the connections do nothing but stay alive — the server sends its application-level ping every 25 seconds (the default), the clients answer it, and that is the only traffic. Then we measure the server process: CPU (in cores) and resident memory (RSS).
+We hold 200,000 real WebSocket connections open against a single Centrifugo node and leave them idle. "Idle" here means the connections do nothing but stay alive — the server sends its application-level ping every 25 seconds (the default), the clients answer it, and that is the only traffic. Then we measure the server process: CPU (in cores) and resident memory (RSS).
 
 * Node: one Centrifugo instance on a 16 vCPU cloud VM (AMD EPYC-Genoa, KVM), 30 GB RAM, Ubuntu Linux.
 * Connections: 200,000 bidirectional WebSocket, protocol v2, **no subscriptions**.
@@ -28,11 +28,11 @@ We hold **200,000 real WebSocket connections** open against a single Centrifugo 
 
 We measure the Centrifugo process specifically — CPU as the process's own user + system time over a steady-state window well after the connection ramp, memory as its RSS after a forced GC — so the numbers are the server's own consumption, not the whole machine's.
 
-One thing RSS does not include, and which matters when you size a machine: **the kernel keeps its own structures for every socket** — the `tcp_sock`, an inode, a dentry, a file — and charges them to slab, not to your process. We measured about **4 KB per socket**, and it shows up in neither `ps`, nor `top`'s RSS column, nor Go's runtime memory stats. It is real memory and cgroup v2 does count it against a container limit, so add it to every per-connection figure below when planning capacity.
+One thing RSS does not include, and which matters when you size a machine: the kernel keeps its own structures for every socket — the `tcp_sock`, an inode, a dentry, a file — and charges them to slab, not to your process. We measured about 4 KB per socket, and it shows up in neither `ps`, nor `top`'s RSS column, nor Go's runtime memory stats. It is real memory and cgroup v2 does count it against a container limit, so add it to every per-connection figure below when planning capacity.
 
 At these connection counts the server uses well under one core out of sixteen, so it's the per-connection overhead we're isolating, not saturation.
 
-Everything below is the **server** cost — the number that decides how many connections your node holds.
+Everything below is the server's own cost — the number that decides how many connections a node holds.
 
 ## Baseline
 
@@ -54,7 +54,7 @@ It's worth splitting that ~27 KB, because it explains everything that follows:
 | Heap (buffers, protocol state, client struct) | ~12.7 KB |
 | Runtime overhead | ~2 KB |
 
-**Nearly half of an idle connection is goroutine stacks.** That is not an accident of measurement — it's the shape of the problem, and three of the four options below are, underneath, ways of making that number smaller.
+Nearly half of an idle connection is goroutine stacks. Keep that number in mind: two of the memory options below are, underneath, different ways of making it smaller, and the other two go after the heap half.
 
 ## Cutting CPU: `batch_periodic_events`
 
@@ -77,13 +77,13 @@ The effect on the same 200,000 idle connections:
 | CPU | ~0.94 cores | **~0.41 cores** |
 | Memory (RSS) | ~5.4 GB | ~5.4 GB |
 
-**Over 2× less CPU** to hold the same pool — down to ~2.0 µs/s per connection. Memory is unchanged to within a rounding error: this option is purely about how periodic timers are scheduled.
+That's over 2× less CPU to hold the same pool — down to ~2.0 µs/s per connection. Memory is unchanged to within a rounding error: this option is purely about how periodic timers are scheduled.
 
 ## Cutting memory, part 1: the writer goroutine
 
 By default every connection has a dedicated goroutine that owns writes to its socket and blocks waiting for something to send. For an idle connection that goroutine does nothing almost all the time — but it still exists, and a parked goroutine still costs a stack.
 
-`write_delay` batches outgoing messages: instead of writing each message immediately, the connection waits a short delay to coalesce whatever arrives into a single write, which reduces system calls under load. `write_with_timer` changes *how* that batching waits — it uses a shared timer to trigger the flush instead of a dedicated per-connection writer goroutine. The side effect at rest is the interesting part: **idle connections stop each holding a writer goroutine.**
+`write_delay` batches outgoing messages: instead of writing each message immediately, the connection waits a short delay to coalesce whatever arrives into a single write, which reduces system calls under load. `write_with_timer` changes *how* that batching waits — it uses a shared timer to trigger the flush instead of a dedicated per-connection writer goroutine. For this post the interesting part is the side effect at rest: idle connections no longer each hold a writer goroutine.
 
 ```json title="config.json"
 {
@@ -149,12 +149,12 @@ The last piece isn't a goroutine at all. Every WebSocket connection holds a writ
 | Memory (RSS) | ~27 KB/conn | **~24.0 KB/conn** |
 | Heap | ~12.7 KB/conn | **~8.6 KB/conn** |
 
-Another ~4 KB per connection, this time out of the heap rather than the stacks. Under sustained write load the pool sees more contention than a per-connection buffer, so this is squarely an option for pools that are idle most of the time.
+Another ~4 KB per connection, this time out of the heap rather than the stacks. Under sustained write load the pool sees more contention than a per-connection buffer, so this option is meant for pools that are idle most of the time.
 
 ## Cutting memory, part 4: `read_buffer_size`
 
-With the write buffer pooled, a heap profile of the tuned server says something
-blunt: **the WebSocket read buffer is now 47% of everything left**. Each
+With the write buffer pooled, a heap profile of the tuned server shows that the
+WebSocket read buffer is now 47% of everything left. Each
 connection holds one, and by default it takes the 4 KB buffer that `net/http`
 allocated for the request it was upgraded from.
 
@@ -175,8 +175,8 @@ a pong — so 4 KB is far more than a mostly-idle connection needs.
 | Memory (RSS) | 15.3 KB/conn | **10.9 KB/conn** |
 | Heap | 8.3 KB/conn | **5.1 KB/conn** |
 
-**−4.4 KB per connection, and CPU does not move.** It is the largest single
-memory saving of the four, and the cheapest.
+That's another 4.4 KB per connection, and CPU does not move — the largest
+single memory saving in this post, and the cheapest.
 
 Dropping to 512 bytes saves only another 0.5 KB, so 1024 is the sweet spot. The
 tradeoff is that a client sending messages larger than the buffer needs more
@@ -185,7 +185,7 @@ about if your clients push large payloads.
 
 ## Everything together
 
-The four options target different costs, so they stack cleanly:
+The five options target different costs, so they stack cleanly:
 
 | Configuration | CPU | RSS/conn | Stacks/conn | Heap/conn |
 |---|---|---|---|---|
@@ -194,18 +194,18 @@ The four options target different costs, so they stack cleanly:
 | `write_with_timer` | 0.98 cores | 22.4 KB | 8.2 KB | 12.3 KB |
 | `process_commands_off_read_loop` | 0.96 cores | 22.9 KB | 8.2 KB | 12.8 KB |
 | `use_write_buffer_pool` | 0.92 cores | 24.0 KB | 12.3 KB | 8.6 KB |
-| **All four** | **0.46 cores** | **15.3 KB** | **4.2 KB** | **8.3 KB** |
-| **All four + `read_buffer_size: 1024`** | **0.45 cores** | **10.9 KB** | **4.2 KB** | **5.1 KB** |
+| **First four together** | **0.46 cores** | **15.3 KB** | **4.2 KB** | **8.3 KB** |
+| **All five (+ `read_buffer_size: 1024`)** | **0.45 cores** | **10.9 KB** | **4.2 KB** | **5.1 KB** |
 
-With everything enabled, one node holds 200,000 idle connections for **~0.45 cores and ~2.2 GB** — **52% less CPU and 60% less memory** than the default. Per connection that's roughly **2.2 µs/s of CPU and ~11 KB of RAM**.
+With everything enabled, one node holds 200,000 idle connections for ~0.45 cores and ~2.2 GB — 52% less CPU and 60% less memory than the default. Per connection that's roughly 2.2 µs/s of CPU and ~11 KB of RAM.
 
-The memory column is worth reading twice. The default 27 KB is 12.3 KB of stacks and 12.7 KB of heap; tuned it is 4.2 KB and 5.1 KB. Four separate options, and each one removes roughly 4 KB — one goroutine stack, one goroutine's *worth* of stack, one write buffer, and most of a read buffer.
+Look at where the memory went. The default 27 KB was 12.3 KB of stacks and 12.7 KB of heap; tuned, those are 4.2 KB and 5.1 KB. The four memory options each removed roughly 4 KB — one goroutine stack, one goroutine's *worth* of stack, one write buffer, and most of a read buffer.
 
-One honest note on CPU: the three memory options are not quite free. Individually they cost between 2% and 7% CPU, and together around 12%. `batch_periodic_events` more than pays for all of it, which is why the combined figure is still less than half the default — but if you enable only the memory options, expect CPU to tick up slightly.
+A note on CPU: the memory options are not entirely free. The first three individually cost between 2% and 7% CPU and together around 12%, while `read_buffer_size` costs nothing measurable. `batch_periodic_events` more than pays for all of it, which is why the combined figure is still less than half the default — but if you enable only the memory options, expect CPU to tick up slightly.
 
 ## When this matters
 
-These options shine for the workload we benchmarked: **large pools of mostly-idle connections**. Notifications, presence, live badges, dashboards that update occasionally — anywhere the connection count is high and the message rate per connection is low.
+These options shine for the workload we benchmarked: large pools of mostly-idle connections. Notifications, presence, live badges, dashboards that update occasionally — anywhere the connection count is high and the message rate per connection is low.
 
 They matter less for high-throughput workloads. If every connection is receiving a steady stream of messages, the cost moves from the idle overhead we optimized here into the actual message fan-out and socket writes, which is a different benchmark. (`write_delay` still helps there — batching writes cuts system calls under load — but that's a throughput story, not the idle-pool story of this post.)
 
@@ -222,7 +222,7 @@ practical to run. But once the tuned configuration was in hand, the obvious
 question was how far the same machine goes.
 
 We pointed the load generator at the same 16 vCPU / 30 GB node with every option
-from this post enabled, and asked it for **1,000,000 connections**:
+from this post enabled, and asked it for 1,000,000 connections:
 
 | Metric | Value | Per connection |
 |---|---|---|
@@ -234,21 +234,21 @@ from this post enabled, and asked it for **1,000,000 connections**:
 | — of which heap | ~5.2 GB | ~5.2 KB |
 
 Add the kernel's own per-socket structures — about 4 KB each, so roughly 4.2 GB
-for a million sockets — and the true cost of the node is closer to **15.5 GB**.
-Still half the machine.
+for a million sockets — and the true cost of the node is closer to 15.5 GB,
+still only half the machine.
 
 Two and a third cores and 11 GB of process memory, on one node, for a million
 idle WebSocket connections. The per-connection cost is only slightly above the 200k figure —
 ~11.6 KB against ~10.9 KB — so the tuning holds its shape at five times the
 scale rather than degrading.
 
-It is worth stating what this run is and is not. It is a single run of one
-configuration, not the two-round matrix the rest of the post is built on, and
-the connections are idle: they connect, answer pings, and nothing else. Real
-traffic is a different budget entirely.
+To be clear about what this run is: a single run of one configuration, not the
+two-round matrix the rest of the post is built on, and the connections are
+idle — they connect, answer pings, and nothing else. Real traffic adds its own
+budget on top.
 
-And one number that is not in the table, because we could not measure it: **the
-default configuration cannot hold a million connections on this machine.** At
+And one number that is not in the table, because we could not measure it: the
+default configuration simply cannot hold a million connections on this machine. At
 the ~27 KB per connection we measured at 200k, a million of them would need
 around 27 GB of process memory on a 30 GB box — before the kernel's own
 per-socket structures, which add roughly 4 KB per socket on top. The tuned
@@ -258,18 +258,18 @@ configuration does it in 11.3 GB and leaves half the machine idle.
 
 An idle connection costs CPU (periodic per-connection timers) and memory — and that memory is mostly goroutine stacks and buffers held by connections that are doing nothing. Centrifugo PRO gives you a knob for each:
 
-* **`client.batch_periodic_events`** batches the periodic timers → over 2× less CPU.
-* **`client.write_delay` + `write_with_timer`** drops the per-connection writer goroutine → ~4 KB less per connection.
-* **`websocket.process_commands_off_read_loop`** halves the read goroutine's stack → another ~4 KB.
-* **`websocket.use_write_buffer_pool`** shares write buffers between connections → another ~4 KB.
-* **`websocket.read_buffer_size`** sizes the read buffer to what commands actually need → another ~4.4 KB, the largest of the four.
+* **`client.batch_periodic_events`** batches the periodic timers — over 2× less CPU.
+* **`client.write_delay` + `write_with_timer`** drops the per-connection writer goroutine — ~4 KB less per connection.
+* **`websocket.process_commands_off_read_loop`** halves the read goroutine's stack — another ~4 KB.
+* **`websocket.use_write_buffer_pool`** shares write buffers between connections — another ~4 KB.
+* **`websocket.read_buffer_size`** sizes the read buffer to what commands actually need — another ~4.4 KB, the largest saving of them all.
 
 The split between the `client` and `websocket` sections is not cosmetic — it is
 also the split between what helps everywhere and what does not.
 
 The two `client` options act on the connection object itself, which every
-transport builds the same way, so **`batch_periodic_events` and `write_delay` +
-`write_with_timer` help SSE and HTTP-streaming connections too**: the periodic
+transport builds the same way, so `batch_periodic_events` and `write_delay` +
+`write_with_timer` help SSE and HTTP-streaming connections too: the periodic
 timers and the per-connection writer goroutine exist regardless of how the
 connection was established.
 
