@@ -737,6 +737,8 @@ The order matters: read the stream position **before** loading data. This ensure
 
 Without `getState`, a failed recovery results in a `subscribed` event with `recovered: false`, and the application must handle the gap manually. With `getState`, the SDK handles it automatically — the application just reloads its state and the SDK re-subscribes from the correct position.
 
+See the [App-owned state with stream subscriptions](/blog/2026/07/27/app-owned-state-stream-subscriptions) blog post for the reasoning behind the callback and two worked examples — a Kafka aggregator and per-tenant kitchen orders.
+
 ## Server-side subscriptions
 
 We encourage using client-side subscriptions where possible as they provide a better control and isolation from connection. But in some cases you may want to use server-side subscriptions (i.e. subscriptions created by server upon connection establishment).

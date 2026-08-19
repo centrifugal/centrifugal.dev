@@ -26,6 +26,7 @@ import ProBanner from '../components/ProBanner';
 import ImageRotator from '../components/ImageRotator';
 import ProCtaBanner from '../components/ProCtaBanner';
 import RecentBlogPosts from '../components/RecentBlogPosts';
+import DemoShowcase from '../components/demos/DemoShowcase';
 import AIStreaming from '../components/AIStreaming';
 import SubscriptionTypes from '../components/SubscriptionTypes';
 import GitHubStarButton from '../components/GitHubStarButton';
@@ -99,6 +100,8 @@ function Home() {
                 "sameAs": [
                   "https://github.com/centrifugal",
                   "https://twitter.com/centrifugalabs",
+                  "https://www.linkedin.com/company/centrifugalabs",
+                  "https://www.youtube.com/channel/UCdQmdbYM5pzqrrRFmt6KA1Q",
                   "https://discord.gg/tYgADKx"
                 ]
               },
@@ -395,6 +398,7 @@ function Home() {
         <AIStreaming />
         <ProCtaBanner />
         <RecentBlogPosts />
+        <DemoShowcase />
         </main >
       </div>
     </Layout >

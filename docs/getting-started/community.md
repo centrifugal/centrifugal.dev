@@ -1,5 +1,5 @@
 ---
-description: "Join the Centrifugo community on Telegram and Discord. Find help, share ideas, and stay updated via Twitter/X, YouTube, and announcement channels."
+description: "Join the Centrifugo community on Telegram and Discord. Find help, share ideas, and stay updated via Twitter/X, LinkedIn, YouTube, and announcement channels."
 id: community
 title: Join community
 ---
@@ -16,5 +16,6 @@ We also have:
 * [Twitter/X account](https://x.com/centrifugalabs) with announcements and sharing interesting insights.
 * [Telegram channel](https://t.me/centrifugalabs) with announcements and insights about the project.
 * [YouTube channel](https://www.youtube.com/channel/UCdQmdbYM5pzqrrRFmt6KA1Q).
+* [LinkedIn page](https://www.linkedin.com/company/centrifugalabs) of Centrifugal Labs.
 
 See you there!

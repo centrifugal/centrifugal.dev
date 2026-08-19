@@ -10,6 +10,14 @@ Centrifugo PRO has performance improvements for several server parts. These impr
 
 ## Faster connections runtime
 
+:::tip
+
+The [Tuning Centrifugo PRO for large number of idle WebSocket connections](/blog/2026/08/17/tuning-idle-connections) blog post measures the options below on a single node — it starts at 200k idle connections and ends up holding a million on the same machine.
+
+:::
+
+### client.batch_periodic_events
+
 New in Centrifugo v6.2.0
 
 EXPERIMENTAL option on `client` level is `client.batch_periodic_events` (boolean, by default, `false`). To enable:
@@ -46,6 +54,8 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 Of course the ratio is highly dependent on the Centrifugo-specific setup load profile and usage scenarios.
 
+### websocket.process_commands_off_read_loop
+
 New in Centrifugo v6.9.2
 
 Another option which helps to hold large pools of mostly idle WebSocket connections is `websocket.process_commands_off_read_loop` (boolean, by default `false`):
@@ -60,7 +70,7 @@ Another option which helps to hold large pools of mostly idle WebSocket connecti
 
 A WebSocket connection processes each incoming command on its read loop goroutine, and that goroutine's stack grows to the deepest call it ever makes (even just the initial `connect`) and is never given back while the connection lives. When this option is enabled, each command is processed on a short-lived goroutine instead, so the read loop itself stays shallow — the deep stack returns to the Go runtime's stack pool and is reused by the next connection that needs it, rather than being pinned to a connection that then spends its life idle. This roughly halves the read goroutine's stack (around 4 KB less per connection).
 
-The option is off by default and adds a small per-command latency that becomes negligible once many connections are active, so it's most useful for large pools of mostly idle connections. See the [Tuning Centrifugo PRO for large WebSocket connection pools](/blog/2026/08/17/tuning-idle-connections) blog post for measurements and how it combines with the other options here.
+The option is off by default and adds a small per-command latency that becomes negligible once many connections are active, so it's most useful for large pools of mostly idle connections.
 
 ## Faster HTTP API
 
@@ -139,25 +149,3 @@ Centrifugo PRO also provides other optimizations which can significantly affect 
 * [Scalability optimizations](./scalability.md)
 * [Bandwidth optimizations](./bandwidth_optimizations.md)
 * [Message batching control](./client_msg_batching.md)
-
-## Examples
-
-Let's look at quick live comparisons of Centrifugo OSS and Centrifugo PRO regarding HTTP API performance.
-
-### Publish HTTP API
-
-<video width="100%" controls>
-  <source src="/img/pro_api_publish_perf.mp4" type="video/mp4" />
-  Sorry, your browser doesn't support embedded video.
-</video>
-
-In this video you can see a 13% speed up for publish operation. But for more complex API calls with larger payloads the difference can be much bigger. See next example that demonstrates this.
-
-### History HTTP API
-
-<video width="100%" controls>
-  <source src="/img/pro_api_history_perf.mp4" type="video/mp4" />
-  Sorry, your browser doesn't support embedded video.
-</video>
-
-In this video you can see an almost 2x overall speed up while asking 100 messages from Centrifugo history API.

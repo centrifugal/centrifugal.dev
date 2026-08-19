@@ -73,4 +73,5 @@ Typical usage: your application backend publishes events to channels via the Cen
 - [Migration to v6](https://centrifugal.dev/docs/getting-started/migration-v6): upgrade guide for the latest major version.
 - [FAQ](https://centrifugal.dev/docs/faq): frequently asked questions.
 - [Flow diagrams](https://centrifugal.dev/docs/flow_diagrams): visual diagrams of Centrifugo message flows.
+- [Demos](https://centrifugal.dev/demos): gallery of recorded demo apps (state sync, presence, dashboards, chat, AI streaming) with links to their source code.
 - [Full documentation corpus](https://centrifugal.dev/llms-full.txt): the complete docs content concatenated for ingestion.

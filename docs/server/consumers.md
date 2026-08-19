@@ -5,11 +5,17 @@ sidebar_label: Async consumers
 title: Built-in API command async consumers
 ---
 
+import ConsumersDiagram from '@site/src/components/ConsumersDiagram';
+
 In [server API](./server_api.md) chapter we've shown how to execute various Centrifugo server API commands (publish, broadcast, etc.) over HTTP or GRPC. In many cases you will call those APIs from your application business logic synchronously. But to deal with temporary network and availability issues, and achieve reliable execution of API commands upon changes in your primary application database you may want to use queuing techniques and call Centrifugo API asynchronously.
 
 Asynchronous delivery of real-time events upon changes in primary database may be done is several ways. Some companies use transactional outbox pattern, some using techniques like Kafka Connect with CDC (Change Data Capture) approach. The fact Centrifugo provides API allows users to implement any of those techniques and build worker which will send API commands to Centrifugo reliably.
 
 But Centrifugo also provides some built-in asynchronous consumers to simplify the integration process.
+
+<ConsumersDiagram />
+
+The application writes an API command to a queue, a stream or an outbox table instead of calling Centrifugo over HTTP. Centrifugo consumes it and executes the command with the same handlers the synchronous API uses.
 
 ## Supported consumers
 
