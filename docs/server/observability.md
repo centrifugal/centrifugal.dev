@@ -339,6 +339,8 @@ Exposed for WebSocket and unidirectional WebSocket.
 
 #### centrifugo_transport_frame_size
 
+Available since v6.9.4
+
 - **Type:** Histogram
 - **Labels:** transport
 - **Description:** Distribution of protocol frame sizes (in bytes) received from client connections. A frame is not the same thing as a command: the protocol supports batching, and SDKs use it — `centrifuge-js` puts the `connect` command and every subscribe into a single frame on each transport open. So this is not derivable from `centrifugo_transport_messages_received_size`, which counts individual commands. As with those counters, sizes are uncompressed payload bytes and exclude framing overhead.
