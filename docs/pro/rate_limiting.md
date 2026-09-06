@@ -411,7 +411,44 @@ This is deliberate, and it is about load rather than leniency. Both commands exi
 
 Protection is not lost, because these commands still consume tokens — including from `total`, and unlike enforced commands they consume it even when their own bucket is empty. A flood of unsubscribes therefore drains the connection's overall budget, and the commands that *do* ask the server to do work (`publish`, `history`, `presence`, `rpc`, `subscribe`) start being rejected instead. Rejection still happens; it happens where an SDK handles it sanely.
 
-Their buckets remain useful as a **detection** signal. Configure `unsubscribe` at a rate no real client should reach and alert on the metric:
+That covers an attacker who wants to do something else. It does **not** cover one that sends nothing but `unsubscribe` — see below.
+
+### Disconnecting a client that floods them
+
+Charging `total` protects the commands an attacker is *not* sending. It does nothing about a client that sends nothing but `unsubscribe`: that command is always allowed, always succeeds, and produces no error for the error limit to count, so no other layer sees it either.
+
+Measured against a real server at 1M unsubscribe frames/s offered, with every other limit enabled: **0.1% of the flood was stopped**, server CPU was unchanged, and legitimate users' p99 round trip was **377ms**. The same load as `publish` was 99.8% stopped.
+
+`disconnect_on_accounted_limit` closes a connection that keeps exceeding these buckets:
+
+```json title="config.json"
+{
+  "client": {
+    "rate_limit": {
+      "client_command": {
+        "enabled": true,
+        "disconnect_on_accounted_limit": true,
+        "unsubscribe": {
+          "enabled": true,
+          "buckets": [{"interval": "1s", "rate": 50}]
+        },
+        "untrack": {
+          "enabled": true,
+          "buckets": [{"interval": "1s", "rate": 50}]
+        }
+      }
+    }
+  }
+}
+```
+
+With it, the same flood is 99.8% stopped, server CPU drops from 5.8s to 530ms, and legitimate p99 returns to **744µs**.
+
+Disconnecting is not the same as refusing. The disconnect code is in the range that tells SDKs not to reconnect, so it sheds the load rather than converting it into a reconnect — which is exactly what refusing the command did.
+
+It is off by default, and worth sizing carefully: a client doing legitimate rapid channel churn must not be cut off by a bucket set too tight. Run with `dry_run: true` first and watch the metric before enabling it. The decision is made per connection — the per-user layer never disconnects, since one abusive session must not take down a user's other sessions.
+
+Their buckets are also useful as a pure **detection** signal. Configure `unsubscribe` at a rate no real client should reach and alert on the metric:
 
 ```json title="config.json"
 {
