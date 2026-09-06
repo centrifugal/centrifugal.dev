@@ -591,6 +591,55 @@ Two readings are worth alerting on:
 * Sustained hits with `dry_run="false"` mean real traffic is being rejected — either an attack, or a limit set too low.
 * Hits on `command="unsubscribe"` or `command="untrack"` mean a connection is behaving abnormally, since those commands are never actually rejected.
 
+## Limiting bytes, not just commands
+
+Command buckets count frames. The transport bounds bytes per frame. Their product is the real limit, and it is wide: at the default 64KB `websocket.message_size_limit`, a connection allowed 100 commands/s may push over 6 MB/s **without breaking a single rule**.
+
+Measured — four connections at 90 frames/s each, inside a 100/s budget, zero rejections:
+
+| | small frames | 60KB frames |
+|---|---:|---:|
+| frames delivered/s | 346 | 341 |
+| bytes/s ingested | 20.8k | **20.95M** |
+| rate limit rejections | 0 | **0** |
+| server CPU | 60ms | 230ms |
+
+A `bytes` bucket meters incoming command bytes instead, with `rate` read as bytes per interval:
+
+```json title="config.json"
+{
+  "client": {
+    "rate_limit": {
+      "client_command": {
+        "enabled": true,
+        "total": {"enabled": true, "buckets": [{"interval": "1s", "rate": 100}]},
+        "bytes": {"enabled": true, "buckets": [{"interval": "1s", "rate": 1048576}]}
+      }
+    }
+  }
+}
+```
+
+Set the rate to at least `message_size_limit`, or a single largest-allowed frame drains the whole bucket. Over-limit frames are refused with `ErrorTooManyRequests`, except `unsubscribe` and `untrack`, which are never refused for the reasons above — their bytes are still charged, so they spend the budget the commands around them need.
+
+:::caution What this does and does not protect
+
+**It bounds what large payloads cost downstream — the broker, and any backend fanout. It does not reduce the cost of receiving them.**
+
+A frame's size is only known once it has been read and decoded, so refusing it saves nothing on the way in. Measured against the same workload:
+
+| reaction | admitted bytes/s | server CPU |
+|---|---:|---:|
+| no byte budget | 20.95M | 230ms |
+| refuse over budget | **10.58M** | 360ms |
+| disconnect over budget | 10.58M | 520ms |
+
+59% less reaches the broker, and ingest costs somewhat more rather than less. Disconnecting instead is worse again: a client only a few times over its budget is cut off constantly, and the reconnect churn costs more than the frames did.
+
+This limit is therefore in the same category as the command buckets — it protects what is behind Centrifugo, not Centrifugo itself. For the node's own CPU, the layers that matter are [`client_error`](#disconnecting-abusive-or-misbehaving-connections) and [`ip_connect`](#per-ip-connect-rate-limit).
+
+:::
+
 ## Channel namespace overrides
 
 Centrifugo PRO allows defining rate limit overrides on a per-namespace basis for channel operations. A namespace override **completely replaces** the base command bucket for channels in that namespace — the base bucket is not checked alongside the override, only the override buckets are used. This means overrides can both relax and tighten limits relative to the base.
