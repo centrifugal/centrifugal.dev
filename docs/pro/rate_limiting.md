@@ -75,6 +75,12 @@ From this baseline you can tighten specific commands by adding explicit buckets 
 
 ## Recommended baseline
 
+:::info Version
+
+`dry_run`, `ip_connect` (with `max_concurrent_per_ip`) and `disconnect_on_accounted_limit` are available since Centrifugo v6.9.5. The `centrifugo_transport_frame_size` metric referenced below is available since v6.9.4.
+
+:::
+
 Command limits govern how much work a connection may ask the server to do. Two further layers govern the connections themselves, and the three are designed to be used together:
 
 ```json title="config.json"
@@ -593,7 +599,7 @@ Size the limit against your **largest reconnect frame**, not a typical publish, 
 
 ### Choosing a value
 
-`centrifugo_transport_frame_size` (available since Centrifugo v6.9.0) is a histogram of received frame sizes. Set the limit from an observed high quantile:
+`centrifugo_transport_frame_size` (available since Centrifugo v6.9.4) is a histogram of received frame sizes. Set the limit from an observed high quantile:
 
 ```
 histogram_quantile(0.99, sum(rate(centrifugo_transport_frame_size_bucket[5m])) by (le, transport))
