@@ -620,21 +620,49 @@ The cost is in ingest, and only something that stops the bytes *arriving* can av
 
 ### What to do instead
 
-**Lower `websocket.message_size_limit`.** This is the first thing to check and usually the only thing needed. It is already in Centrifugo, costs nothing, and 64KB → 4KB shrinks the whole amplification 16×:
+**Bound it upstream, carefully.**
 
-```json title="config.json"
-{
-  "websocket": {
-    "message_size_limit": 4096
-  }
-}
+#### `websocket.message_size_limit` — useful, but read this first
+
+Lowering the message size limit shrinks the amplification directly. It is also the single easiest way to break your application, for two reasons that are easy to miss.
+
+**One frame carries many commands.** Centrifugo's protocol batches, and the SDKs use it: on every transport open, `centrifuge-js` puts the `connect` command *and every subscribe* into a single frame. A client subscribed to 50 channels with subscription tokens of a few hundred bytes each sends a 25KB+ frame every time it reconnects. The limit applies to that whole frame, not to individual commands.
+
+**Exceeding it closes the connection.** The limit is enforced as a transport read limit, so an oversized frame is not a refused command — the connection is dropped with a bad-request disconnect. For a client whose reconnect frame is over the limit, that is not throttling, it is a permanent outage: every reconnect attempt fails the same way.
+
+So a limit that looks fine in steady state can still make your heaviest users unable to connect at all. Size it against your **largest reconnect frame**, not against a typical publish, and leave generous headroom.
+
+#### Estimating what you actually need
+
+There is no metric for frame size — see the note below. You can estimate the important frame from the per-command metrics that do exist:
+
+```
+avg subscribe command size =
+  rate(centrifugo_transport_messages_received_size{frame_type="subscribe"}[5m])
+  / rate(centrifugo_transport_messages_received{frame_type="subscribe"}[5m])
 ```
 
-Size it against the largest message your application legitimately sends. If clients only publish small JSON, there is no reason to accept 64KB frames.
+Then, for your heaviest connections:
 
-**Shape bandwidth at the proxy** if you need a byte rate rather than a size cap. This is strictly better than doing it in Centrifugo, for two reasons: the bytes never arrive, so the ingest cost is genuinely avoided; and bandwidth shaping applies backpressure — the client's writes simply slow down, with no error and no reconnect, which is the reaction you actually want for bytes.
+```
+reconnect frame ≈ avg connect size + (channels per connection × avg subscribe size)
+```
 
-Note that not every proxy can do this. Rate limiting in nginx and Cloudflare acts on HTTP requests, and after the WebSocket upgrade the connection is an opaque byte stream to them, so their request-based rules do not apply to frames. HAProxy provides bandwidth limitation filters (`filter bwlim-in` / `bwlim-out`) that operate on the byte stream — verify the behaviour with your version and your tunnelling configuration before relying on it.
+Take the *maximum* channels per connection you support, not the average — the outlier is the connection that breaks. Then double it.
+
+:::note Observability gap
+
+Centrifugo exposes `transport_messages_received` and `transport_messages_received_size` as counters, per **command**. Dividing them gives an average command size. There is currently **no metric for frame size or for commands per frame**, which are what `message_size_limit` actually bounds — so the estimate above is the best available, and it is an estimate.
+
+A histogram of bytes per frame, and of commands per frame, would let this be sized from data instead of arithmetic. That belongs in the `centrifuge` library rather than in Centrifugo PRO, since the frame boundary is only visible inside the transport read loop.
+
+:::
+
+#### Shaping bandwidth at the proxy
+
+If you need a byte *rate* rather than a size cap, this is strictly better than doing it in Centrifugo: the bytes never arrive, so the ingest cost is genuinely avoided, and bandwidth shaping applies backpressure — the client's writes simply slow down, with no error and no disconnect. That is the reaction bytes actually want, and one Centrifugo has no way to produce.
+
+Not every proxy can do it. Rate limiting in nginx and Cloudflare acts on HTTP requests, and after the WebSocket upgrade the connection is an opaque byte stream to them, so their request-based rules never see frames. HAProxy provides bandwidth limitation filters (`filter bwlim-in` / `bwlim-out`) that operate on the byte stream — verify the behaviour with your version and your tunnelling configuration before relying on it.
 
 :::tip
 
