@@ -626,7 +626,9 @@ The cost is in ingest, and only something that stops the bytes *arriving* can av
 
 Lowering the message size limit shrinks the amplification directly. It is also the single easiest way to break your application, for two reasons that are easy to miss.
 
-**One frame carries many commands.** Centrifugo's protocol batches, and the SDKs use it: on every transport open, `centrifuge-js` puts the `connect` command *and every subscribe* into a single frame. A client subscribed to 50 channels with subscription tokens of a few hundred bytes each sends a 25KB+ frame every time it reconnects. The limit applies to that whole frame, not to individual commands.
+**One frame carries many commands.** Centrifugo's protocol batches, and the SDKs use it: on every transport open, `centrifuge-js` puts the `connect` command *and every subscribe* into a single frame. A client subscribed to 50 channels with subscription tokens of a few hundred bytes each sends a 25KB+ frame every time it reconnects.
+
+`message_size_limit` does double duty here. It bounds each individual **command** (the decoder rejects anything larger), and on WebSocket it also bounds the whole **frame** — it is applied as the transport read limit. The frame bound is the one that bites, because it is the one the batch has to fit inside. WebTransport has no frame bound, only the per-command one, so batching does not have the same cliff there.
 
 **Exceeding it closes the connection.** The limit is enforced as a transport read limit, so an oversized frame is not a refused command — the connection is dropped with a bad-request disconnect. For a client whose reconnect frame is over the limit, that is not throttling, it is a permanent outage: every reconnect attempt fails the same way.
 
