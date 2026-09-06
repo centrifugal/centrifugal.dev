@@ -337,6 +337,21 @@ Available since v6.8.4
 
 Exposed for WebSocket and unidirectional WebSocket.
 
+#### centrifugo_transport_frame_size
+
+- **Type:** Histogram
+- **Labels:** transport
+- **Description:** Distribution of protocol frame sizes (in bytes) received from client connections. A frame is not the same thing as a command: the protocol supports batching, and SDKs use it — `centrifuge-js` puts the `connect` command and every subscribe into a single frame on each transport open. So this is not derivable from `centrifugo_transport_messages_received_size`, which counts individual commands. As with those counters, sizes are uncompressed payload bytes and exclude framing overhead.
+- **Usage:** Use it to size `websocket.message_size_limit`. That option is applied as a transport read limit, so it bounds the whole frame — a client whose batched reconnect frame exceeds it is closed with WebSocket code 1009 on every attempt, and because frame size grows with the number of subscriptions, the users on the most channels hit it first. Set the limit from an observed high quantile, with headroom:
+
+```
+histogram_quantile(0.99, sum(rate(centrifugo_transport_frame_size_bucket[5m])) by (le, transport))
+```
+
+`centrifugo_transport_outgoing_close_count{code="1009"}` tells you the limit is already being hit; this histogram tells you what to set it to. Dividing `centrifugo_transport_messages_received` by `centrifugo_transport_frame_size_count` additionally gives the mean number of commands per frame, which is how much batching your clients actually do.
+
+Exposed for WebSocket, SSE, HTTP streaming and the emulation endpoint — every transport that reads discrete frames. WebTransport decodes from a continuous stream and has no frame boundary to record.
+
 #### centrifugo_proxy_duration_seconds
 
 :::caution Deprecated
