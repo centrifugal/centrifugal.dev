@@ -591,52 +591,54 @@ Two readings are worth alerting on:
 * Sustained hits with `dry_run="false"` mean real traffic is being rejected — either an attack, or a limit set too low.
 * Hits on `command="unsubscribe"` or `command="untrack"` mean a connection is behaving abnormally, since those commands are never actually rejected.
 
-## Limiting bytes, not just commands
+## Large payloads: bound them before Centrifugo
 
 Command buckets count frames. The transport bounds bytes per frame. Their product is the real limit, and it is wide: at the default 64KB `websocket.message_size_limit`, a connection allowed 100 commands/s may push over 6 MB/s **without breaking a single rule**.
 
-Measured — four connections at 90 frames/s each, inside a 100/s budget, zero rejections:
+Measured — four connections at 90 frames/s each, inside a 100/s budget:
 
 | | small frames | 60KB frames |
 |---|---:|---:|
-| frames delivered/s | 346 | 341 |
-| bytes/s ingested | 20.8k | **20.95M** |
-| rate limit rejections | 0 | **0** |
-| server CPU | 60ms | 230ms |
+| frames delivered/s | 353 | 351 |
+| bytes/s ingested | 21.2k | **21.59M** |
+| rate limit rejections | **0** | **0** |
+| server CPU | 70ms | **330ms** |
 
-A `bytes` bucket meters incoming command bytes instead, with `rate` read as bytes per interval:
+Same frame rate, same limits, zero rejections, 1024× the bytes and 4.4× the CPU.
+
+**The fix for this is not another limit inside Centrifugo.** A byte budget was built and measured, and it does not pay for itself:
+
+| reaction | admitted bytes/s | server CPU |
+|---|---:|---:|
+| no byte budget | 21.0M | 230ms |
+| refuse over budget | 10.6M | **360ms** |
+| disconnect over budget | 10.6M | **520ms** |
+
+A frame's size is only known once it has been read and decoded, so refusing it saves nothing on the way in — it adds an error reply on top of work already done. Disconnecting is worse again: a client only a few times over its budget is cut off constantly, and the reconnect churn costs more than the frames did.
+
+The cost is in ingest, and only something that stops the bytes *arriving* can avoid it. That is upstream of Centrifugo.
+
+### What to do instead
+
+**Lower `websocket.message_size_limit`.** This is the first thing to check and usually the only thing needed. It is already in Centrifugo, costs nothing, and 64KB → 4KB shrinks the whole amplification 16×:
 
 ```json title="config.json"
 {
-  "client": {
-    "rate_limit": {
-      "client_command": {
-        "enabled": true,
-        "total": {"enabled": true, "buckets": [{"interval": "1s", "rate": 100}]},
-        "bytes": {"enabled": true, "buckets": [{"interval": "1s", "rate": 1048576}]}
-      }
-    }
+  "websocket": {
+    "message_size_limit": 4096
   }
 }
 ```
 
-Set the rate to at least `message_size_limit`, or a single largest-allowed frame drains the whole bucket. Over-limit frames are refused with `ErrorTooManyRequests`, except `unsubscribe` and `untrack`, which are never refused for the reasons above — their bytes are still charged, so they spend the budget the commands around them need.
+Size it against the largest message your application legitimately sends. If clients only publish small JSON, there is no reason to accept 64KB frames.
 
-:::caution What this does and does not protect
+**Shape bandwidth at the proxy** if you need a byte rate rather than a size cap. This is strictly better than doing it in Centrifugo, for two reasons: the bytes never arrive, so the ingest cost is genuinely avoided; and bandwidth shaping applies backpressure — the client's writes simply slow down, with no error and no reconnect, which is the reaction you actually want for bytes.
 
-**It bounds what large payloads cost downstream — the broker, and any backend fanout. It does not reduce the cost of receiving them.**
+Note that not every proxy can do this. Rate limiting in nginx and Cloudflare acts on HTTP requests, and after the WebSocket upgrade the connection is an opaque byte stream to them, so their request-based rules do not apply to frames. HAProxy provides bandwidth limitation filters (`filter bwlim-in` / `bwlim-out`) that operate on the byte stream — verify the behaviour with your version and your tunnelling configuration before relying on it.
 
-A frame's size is only known once it has been read and decoded, so refusing it saves nothing on the way in. Measured against the same workload:
+:::tip
 
-| reaction | admitted bytes/s | server CPU |
-|---|---:|---:|
-| no byte budget | 20.95M | 230ms |
-| refuse over budget | **10.58M** | 360ms |
-| disconnect over budget | 10.58M | 520ms |
-
-59% less reaches the broker, and ingest costs somewhat more rather than less. Disconnecting instead is worse again: a client only a few times over its budget is cut off constantly, and the reconnect churn costs more than the frames did.
-
-This limit is therefore in the same category as the command buckets — it protects what is behind Centrifugo, not Centrifugo itself. For the node's own CPU, the layers that matter are [`client_error`](#disconnecting-abusive-or-misbehaving-connections) and [`ip_connect`](#per-ip-connect-rate-limit).
+Rate limits inside Centrifugo are best at what only Centrifugo knows: which command it is, which channel and namespace, which user, and which connection. Bytes on the wire are not in that category, and are better handled by the layer that owns the wire.
 
 :::
 
