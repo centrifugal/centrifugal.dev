@@ -6,7 +6,9 @@ title: Operation rate limits
 
 The rate limit feature allows limiting the number of operations each connection or user can issue during a configured time interval. This is useful to protect the system from misuse, and for detecting and disconnecting abusive or broken (due to a bug in the frontend application) clients that add unwanted load on a server.
 
-With rate limit properly configured, you can protect your Centrifugo installation to some degree without a sophisticated third-party solution. Centrifugo PRO protection works best in combination with protection at the infrastructure level though.
+Centrifugo PRO applies these limits with knowledge no network layer has: which command was issued, on which channel and namespace, by which user, on which connection. That is what makes it possible to allow a user their normal subscribe and publish rate while bounding the operations that cost the most.
+
+Infrastructure-level protection remains worthwhile alongside it, and the two are complementary rather than alternatives: a proxy or CDN bounds request and connection volume before it reaches the server, while Centrifugo bounds what an established, authenticated connection may do. Configure both where you can — the [recommended baseline](#recommended-baseline) below covers the Centrifugo side.
 
 ![Throttling](/img/throttling.png)
 
