@@ -524,7 +524,40 @@ Options:
 * `enabled` – turns the layer on. Off by default.
 * `buckets` – token buckets, same format as everywhere else. All listed buckets must allow the attempt.
 * `dry_run` – evaluate and report without rejecting. Strongly recommended for the first rollout: this layer sits in front of every connection, so a number that is too low locks users out.
+* `max_concurrent_per_ip` – how many connections one address may hold open at once. Zero (default) means no limit. **This is a different limit from the buckets above**, and both are needed — see below.
 * `max_tracked_ips` – how many addresses are tracked at once, default `100000`. Once reached, addresses that are not already tracked are **allowed through** rather than evicting live entries. Failing open is deliberate: rejecting unknown addresses at capacity would let an attacker fill the table with junk and deny service to everybody else.
+
+### Rate is not enough: cap concurrent connections too
+
+The buckets above bound how *fast* an address acquires connections. They do not bound how many it *holds*.
+
+Per-connection rate limits are per connection. An attacker that acquires slowly enough to stay under the rate limit and simply keeps the connections open multiplies its allowed command budget by the number it holds — without ever breaking a rule. Measured, acquiring at 4/s against a 5/s connect limit:
+
+| | no per-IP layer | rate + `max_concurrent_per_ip: 4` |
+|---|---:|---:|
+| connections held | 12 | **4** |
+| connect attempts refused | 0 | 12 |
+| effective command budget | **7.4×** the per-connection limit | **1.5×** |
+| server CPU | 5.74s | **140ms** |
+| legitimate p99 | 4.17ms | **406µs** |
+
+Scaled up, this is also how a single address exhausts `client.connection_limit` and denies service to everybody else. Set both:
+
+```json title="config.json"
+{
+  "client": {
+    "rate_limit": {
+      "ip_connect": {
+        "enabled": true,
+        "buckets": [{"interval": "1s", "rate": 10}],
+        "max_concurrent_per_ip": 20
+      }
+    }
+  }
+}
+```
+
+Size `max_concurrent_per_ip` against your own users, not against attackers: several browser tabs, a mobile app reconnecting while the old socket is still closing, and users sharing an office NAT all legitimately hold more than one connection. If you terminate at a proxy that does not forward the client address, every user appears as one address and this limit is not usable — leave it at zero.
 
 :::note
 
