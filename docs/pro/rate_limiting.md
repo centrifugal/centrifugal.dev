@@ -448,6 +448,24 @@ Disconnecting is not the same as refusing. The disconnect code is in the range t
 
 It is off by default, and worth sizing carefully: a client doing legitimate rapid channel churn must not be cut off by a bucket set too tight. Run with `dry_run: true` first and watch the metric before enabling it. The decision is made per connection — the per-user layer never disconnects, since one abusive session must not take down a user's other sessions.
 
+:::caution Requires a connect rate limit
+
+**Disconnecting only works if something meters how fast the client is allowed back.** An attacker does not use an SDK, so it ignores the advice not to reconnect — and every reconnect gives it a new client ID and therefore a fresh set of per-connection buckets.
+
+Measured at 1M unsubscribe frames/s from a client that always reconnects:
+
+| | no limits | disconnect only | disconnect + `ip_connect` |
+|---|---:|---:|---:|
+| frames delivered/s | 499.4k | 420.1k | **1.1k** |
+| reconnects won | 8 | 1547 | 14 |
+| server CPU | 5.46s | 5.31s | **710ms** |
+| legitimate p99 | 359ms | 10.07ms | **707µs** |
+| flood stopped | — | **15.9%** | **99.8%** |
+
+Enable [`ip_connect`](#per-ip-connect-rate-limit) alongside it, or enforce a per-IP connection rate in your infrastructure. Centrifugo logs a warning at startup if `disconnect_on_accounted_limit` is set without `ip_connect` configured.
+
+:::
+
 Their buckets are also useful as a pure **detection** signal. Configure `unsubscribe` at a rate no real client should reach and alert on the metric:
 
 ```json title="config.json"
