@@ -18,7 +18,7 @@
 
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.0be39b2d.css">
-<script src="/assets/js/runtime~main.839e1cbd.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.50a26fba.js" defer="defer"></script>
 <script src="/assets/js/main.211d347d.js" defer="defer"></script>
 </head>
 <body>
@@ -278,6 +278,17 @@
 <li class=""><strong>Usage:</strong> Helps in monitoring why and how often the server closes client connections over specific transports.</li>
 </ul>
 <p>Exposed for WebSocket and unidirectional WebSocket.</p>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_transport_frame_size">centrifugo_transport_frame_size<a href="#centrifugo_transport_frame_size" class="hash-link" aria-label="Direct link to centrifugo_transport_frame_size" title="Direct link to centrifugo_transport_frame_size" translate="no">​</a></h4>
+<p>Available since v6.9.4</p>
+<ul>
+<li class=""><strong>Type:</strong> Histogram</li>
+<li class=""><strong>Labels:</strong> transport</li>
+<li class=""><strong>Description:</strong> Distribution of protocol frame sizes (in bytes) received from client connections. A frame is not the same thing as a command: the protocol supports batching, and SDKs use it — <code>centrifuge-js</code> puts the <code>connect</code> command and every subscribe into a single frame on each transport open. So this is not derivable from <code>centrifugo_transport_messages_received_size</code>, which counts individual commands. As with those counters, sizes are uncompressed payload bytes and exclude framing overhead.</li>
+<li class=""><strong>Usage:</strong> Use it to size <code>websocket.message_size_limit</code>. That option is applied as a transport read limit, so it bounds the whole frame — a client whose batched reconnect frame exceeds it is closed with WebSocket code 1009 on every attempt, and because frame size grows with the number of subscriptions, the users on the most channels hit it first. Set the limit from an observed high quantile, with headroom:</li>
+</ul>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">histogram_quantile(0.99, sum(rate(centrifugo_transport_frame_size_bucket[5m])) by (le, transport))</span><br></div></code></pre></div></div>
+<p><code>centrifugo_transport_outgoing_close_count{code=&quot;1009&quot;}</code> tells you the limit is already being hit; this histogram tells you what to set it to. Dividing <code>centrifugo_transport_messages_received</code> by <code>centrifugo_transport_frame_size_count</code> additionally gives the mean number of commands per frame, which is how much batching your clients actually do.</p>
+<p>Exposed for WebSocket, SSE, HTTP streaming and the emulation endpoint — every transport that reads discrete frames. WebTransport decodes from a continuous stream and has no frame boundary to record.</p>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_proxy_duration_seconds">centrifugo_proxy_duration_seconds<a href="#centrifugo_proxy_duration_seconds" class="hash-link" aria-label="Direct link to centrifugo_proxy_duration_seconds" title="Direct link to centrifugo_proxy_duration_seconds" translate="no">​</a></h4>
 <div class="theme-admonition theme-admonition-caution admonition_xJq3 alert alert--warning"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z"></path></svg></span>Deprecated</div><div class="admonitionContent_BuS1"><p>This Summary is deprecated and will be removed in Centrifugo v7. Use <code>centrifugo_proxy_duration_seconds_histogram</code> (below). Not exposed when <a href="#native-histograms" class=""><code>prometheus.native_histograms</code></a> is enabled.</p></div></div>
 <ul>
