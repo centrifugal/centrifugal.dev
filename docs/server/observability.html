@@ -18,7 +18,7 @@
 
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.0be39b2d.css">
-<script src="/assets/js/runtime~main.50a26fba.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.cde3cc2b.js" defer="defer"></script>
 <script src="/assets/js/main.211d347d.js" defer="defer"></script>
 </head>
 <body>
@@ -67,7 +67,7 @@
 <p>If you also want to push metrics to an OpenTelemetry backend (Grafana Cloud, GCP, Datadog via OTLP, etc.) without running a Prometheus sidecar, Centrifugo PRO adds a built-in bridge that translates the in-process Prometheus registry to OTLP — see <a class="" href="/docs/pro/observability_enhancements#opentelemetry-metrics-export">OpenTelemetry metrics export</a>. With native histograms enabled, the bridge produces high-fidelity OTel <code>ExponentialHistogram</code> data points.</p>
 <h3 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="grafana-dashboard">Grafana dashboard<a href="#grafana-dashboard" class="hash-link" aria-label="Direct link to Grafana dashboard" title="Direct link to Grafana dashboard" translate="no">​</a></h3>
 <p>Check out Centrifugo <a href="https://grafana.com/grafana/dashboards/13039" target="_blank" rel="noopener noreferrer" class="">official Grafana dashboard</a> for Prometheus storage. You can import that dashboard to your Grafana, point to Prometheus storage – and enjoy visualized metrics.</p>
-<p><img decoding="async" loading="lazy" src="/assets/images/grafana-60e3752feb2b89948665543a4c2d9661.jpg" width="2818" height="1432" class="img_ev3q"></p>
+<p><img decoding="async" loading="lazy" src="/assets/images/grafana-d0df6a116fe95e2b01619936a228d530.png" width="3104" height="1920" class="img_ev3q"></p>
 <p>The dashboard is organized into rows — Overview, connections and subscriptions, client commands and latency, real-time delivery, recovery, server API, proxy, async consumers, shared poll, node internals, the Redis / map / PostgreSQL brokers, and the Go runtime — followed by <code>PRO · …</code> rows for <a class="" href="/docs/pro/observability_enhancements#pro-metrics-reference">Centrifugo PRO metrics</a>. All rows below the first four are collapsed by default, so a dashboard load only queries what you actually look at.</p>
 <p>Two things worth knowing about the queries:</p>
 <ul>
