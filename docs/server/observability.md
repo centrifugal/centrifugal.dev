@@ -95,7 +95,7 @@ If you also want to push metrics to an OpenTelemetry backend (Grafana Cloud, GCP
 
 Check out Centrifugo [official Grafana dashboard](https://grafana.com/grafana/dashboards/13039) for Prometheus storage. You can import that dashboard to your Grafana, point to Prometheus storage – and enjoy visualized metrics.
 
-![](/img/grafana.jpg)
+![](/img/grafana.png)
 
 The dashboard is organized into rows — Overview, connections and subscriptions, client commands and latency, real-time delivery, recovery, server API, proxy, async consumers, shared poll, node internals, the Redis / map / PostgreSQL brokers, and the Go runtime — followed by `PRO · …` rows for [Centrifugo PRO metrics](../pro/observability_enhancements.md#pro-metrics-reference). All rows below the first four are collapsed by default, so a dashboard load only queries what you actually look at.
 

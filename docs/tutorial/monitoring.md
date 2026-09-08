@@ -119,7 +119,7 @@ The directory it points at is the one we mounted above. Put the JSON of Centrifu
 
 Now once you start the app with `docker compose up` you can open Grafana UI at [http://localhost:3000](http://localhost:3000), login with `admin`/`admin` credentials, and the Centrifugo dashboard is already there:
 
-![](/img/grafana.jpg)
+![](/img/grafana.png)
 
 That's it! Now you have Centrifugo metrics visualized in the application. You can even use Grafana alerting feature to notify you over tons of supported communication channels (Slack, email, and so on) in case of metric changes.
 
