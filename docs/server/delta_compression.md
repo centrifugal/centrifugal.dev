@@ -104,6 +104,12 @@ For example, this means that to automatically use delta calculation for all publ
 
 Again – subscribers which support delta compression and do not support it can co-exist in one channel.
 
+:::caution
+
+The `skip_history` option of publish and broadcast can't be used in channels with delta compression: subscribers fail to apply the delta of the publication following a publication not saved to history.
+
+:::
+
 ### Example and further reading
 
 * [Delta compression example](https://github.com/centrifugal/examples/tree/master/v6/delta_compression) - just `docker compose up` and then open https://localhost:8080
