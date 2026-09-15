@@ -136,6 +136,15 @@ Run with:
 docker-compose up
 ```
 
+## Easypanel
+
+Centrifugo has an official one-click template on [Easypanel](https://easypanel.io), a self-hosted Docker deployment platform: https://easypanel.io/templates/centrifugo
+
+[![Deploy on Easypanel][easypanel-btn]][easypanel-deploy]
+
+[easypanel-btn]: https://easypanel.io/img/deploy-on-easypanel-40.svg
+[easypanel-deploy]: https://easypanel.io/templates/centrifugo
+
 ## Kubernetes Helm chart
 
 See our [official Kubernetes Helm chart](https://github.com/centrifugal/helm-charts) to run Centrifugo inside a Kubernetes cluster. The [chart README](https://github.com/centrifugal/helm-charts/tree/master/charts/centrifugo) takes you from a local trial to a production deployment and covers, among other things:
