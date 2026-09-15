@@ -28,4 +28,5 @@ All you need to do is enable `keep_latest_publication` for the desired namespace
 Everything else stays the same as described in [delta compression](../server/delta_compression.md) chapter:
 
 * clients need to negotiate delta compression when subscribing
+* delta compression is not negotiated for subscriptions using a [tags filter](../server/publication_filtering.md) – client-side or [server-side](./server_tags_filter.md)
 * publishers need to indicate the desire to use delta compression by using API `delta` field, or by using `delta_publish` channel namespace option.
