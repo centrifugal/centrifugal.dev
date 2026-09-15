@@ -138,7 +138,7 @@ docker-compose up
 
 ## Easypanel
 
-Centrifugo has an official one-click template on [Easypanel](https://easypanel.io), a self-hosted Docker deployment platform: https://easypanel.io/templates/centrifugo
+Centrifugo has a one-click deployment template on [Easypanel](https://easypanel.io), a self-hosted Docker deployment platform: https://easypanel.io/templates/centrifugo
 
 [![Deploy on Easypanel][easypanel-btn]][easypanel-deploy]
 
