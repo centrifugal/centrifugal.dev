@@ -206,7 +206,7 @@ The server tags filter can be updated for an active subscription in two ways.
 
 When the subscription token refresh handler (proxy or JWT) returns a new `server_tags_filter`, Centrifugo compares it with the current filter:
 
-- **Stream subscriptions** — the filter is hot-swapped. Future publications use the new filter immediately, no interruption. The exception is a stream subscription which negotiated delta compression: the client is unsubscribed with the insufficient state code (`2500`) and re-subscribes – without delta compression, see [limitations](#limitations).
+- **Stream subscriptions** — the filter is hot-swapped. Future publications use the new filter immediately, no interruption.
 - **Map subscriptions** — the client is automatically unsubscribed and re-subscribes to get a full state re-sync matching the new filter. The SDK handles this transparently.
 
 If the refresh handler returns no filter (`nil`), the existing filter is left unchanged.
@@ -217,4 +217,4 @@ Use the [`invalidate_user_tokens`](/docs/pro/access_revoke#invalidate_user_token
 
 ## Limitations
 
-- **Delta compression** is incompatible with the server-side publication filter (same constraint as the client-side tags filter). Delta compression is not negotiated for a subscription with a server-side filter, such a subscriber receives publications with the full payload. If a subscription token refresh sets a new filter for a stream subscription which negotiated delta compression, the subscription is re-subscribed without delta compression.
+- **Delta compression** is incompatible with the server-side publication filter (same constraint as the client-side tags filter): delta compression is not negotiated for such subscriptions.
