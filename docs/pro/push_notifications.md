@@ -910,7 +910,7 @@ Returns a paginated list of registered devices according to request filter condi
 
 | Field                 | Type           | Required | Description                                                                     |
 |-----------------------|----------------|----------|---------------------------------------------------------------------------------|
-| `filter`              | `DeviceFilter` | yes      | How to filter results                                                           |
+| `filter`              | `DeviceFilter` | no       | How to filter results                                                           |
 | `cursor`              | `string`       | no       | Cursor for pagination (last device id in previous batch, empty for first page). |
 | `limit`               | `int32`        | no       | Maximum number of devices to retrieve.                                          |
 | `include_total_count` | `bool`         | no       | Flag indicating whether to include total count for the current filter.          |
@@ -945,6 +945,10 @@ Returns a paginated list of registered devices according to request filter condi
 | `token`    | `string`            | yes      | The device's token. For `webpush` this is the subscription **endpoint** (its stable identity). |
 | `platform` | `string`            | yes      | The device's platform.                     |
 | `user`     | `string`            | no       | The user associated with the device.       |
+| `timezone` | `string`            | no       | Timezone of device user.                   |
+| `locale`   | `string`            | no       | Locale of device user.                     |
+| `created_at` | `integer`         | yes      | Time the device was created (Unix milliseconds). |
+| `updated_at` | `integer`         | yes      | Time the device was last updated (Unix milliseconds). |
 | `topics`   | `array[string]`     | no       | Only included if `include_topics` was true |
 | `meta`     | `map[string]string` | no       | Only included if `include_meta` was true   |
 | `webpush_keys` | `string`        | no       | Web Push subscription keys JSON (`{p256dh, auth}`). Only included if `include_webpush_keys` was true |
@@ -993,7 +997,7 @@ List device to topic mapping.
 
 | Field                 | Type                | Required | Description                                                                     |
 |-----------------------|---------------------|----------|---------------------------------------------------------------------------------|
-| `filter`              | `DeviceTopicFilter` | no       | List of device IDs to filter results.                                           |
+| `filter`              | `DeviceTopicFilter` | no       | How to filter results                                                           |
 | `cursor`              | `string`            | no       | Cursor for pagination (last device id in previous batch, empty for first page). |
 | `limit`               | `int32`             | no       | Maximum number of devices to retrieve.                                          |
 | `include_device`      | `bool`              | no       | Flag indicating whether to include Device information for each object.          |
@@ -1020,11 +1024,11 @@ List device to topic mapping.
 
 `DeviceTopic`:
 
-| Field       | Type     | Required | Description              |
-|-------------|----------|----------|--------------------------|
-| `id`        | `string` | yes      | ID of DeviceTopic object |
-| `device_id` | `string` | yes      | Device ID                |
-| `topic`     | `string` | yes      | Topic                    |
+| Field    | Type                | Required | Description                                                                                                         |
+|----------|---------------------|----------|---------------------------------------------------------------------------------------------------------------------|
+| `id`     | `string`            | yes      | ID of DeviceTopic object                                                                                            |
+| `topic`  | `string`            | yes      | Topic                                                                                                               |
+| `device` | [`Device`](#device_list-result) | no | Only included if `include_device` was true. Contains `id`, `provider`, `token`, `platform` and `user` of the device |
 
 ### user_topic_update
 

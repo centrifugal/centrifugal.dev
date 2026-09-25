@@ -198,6 +198,8 @@ curl --header "X-API-Key: <API_KEY>" \
 
 This command may be very useful when implementing messenger application, like we show in [Grand Tutorial](../tutorial/intro.md).
 
+In Centrifugo PRO, `broadcast` sends the publications for all channels to the broker together (no option is needed), which makes broadcasting to many channels considerably cheaper.
+
 #### BroadcastRequest
 
 | Field name        | Field type          | Required | Description                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -241,7 +243,7 @@ This is not a real-time streaming subscription request – it's just a command t
 
 | Field name      | Field type                          | Required | Description                                                                                                                   |
 |-----------------|-------------------------------------|----------|-------------------------------------------------------------------------------------------------------------------------------|
-| `user`          | `string`                            | yes      | User ID to subscribe                                                                                                          |
+| `user`          | `string`                            | yes      | User ID to subscribe (may be empty when `all_users` is set in Centrifugo PRO)                                                 |
 | `channel`       | `string`                            | yes      | Name of channel to subscribe user to                                                                                          |
 | `info`          | any `JSON`                          | no       | Attach custom data to subscription (will be used in presence and join/leave messages)                                         |
 | `b64info`       | `string`                            | no       | info in base64 for binary mode (will be decoded by Centrifugo)                                                                |
@@ -252,6 +254,8 @@ This is not a real-time streaming subscription request – it's just a command t
 | `recover_since` | [`StreamPosition`](#streamposition) | no       | Stream position to recover from                                                                                               |
 | `expire_at`     | `int`                               | no       | Unix time (in seconds) in the future when the subscription will expire                                                        |
 | `override`      | [`Override`](#override-object)      | no       | Allows dynamically override some channel options defined in Centrifugo configuration (see below available fields)             |
+| `label_filter`  | `FilterNode`                        | no       | (**Centrifugo PRO**) Only act on connections whose [client labels](../pro/client_authentication.md#client-labels) match this filter. See [targeted ops by client labels](../pro/server_api_enhancements.md#targeted-ops-by-client-labels) |
+| `all_users`     | `bool`                              | no       | (**Centrifugo PRO**) When `user` is empty, target every connection on every node instead of anonymous connections only. No effect when `user` is set. See [targeted ops by client labels](../pro/server_api_enhancements.md#targeted-ops-by-client-labels) |
 
 #### Override object
 
@@ -294,10 +298,12 @@ Empty object at the moment.
 
 | Field name | Field type | Required | Description                                                            |
 |------------|------------|----------|------------------------------------------------------------------------|
-| `user`     | `string`   | yes      | User ID to unsubscribe                                                 |
+| `user`     | `string`   | yes      | User ID to unsubscribe (may be empty when `all_users` is set in Centrifugo PRO) |
 | `channel`  | `string`   | yes      | Name of channel to unsubscribe user to                                 |
 | `client`   | `string`   | no       | Specific client ID to unsubscribe (user still required to be set)      |
 | `session`  | `string`   | no       | Specific client session to disconnect (user still required to be set). |
+| `label_filter` | `FilterNode` | no   | (**Centrifugo PRO**) Only act on connections whose [client labels](../pro/client_authentication.md#client-labels) match this filter. See [targeted ops by client labels](../pro/server_api_enhancements.md#targeted-ops-by-client-labels) |
+| `all_users` | `bool`    | no       | (**Centrifugo PRO**) When `user` is empty, target every connection on every node instead of anonymous connections only. No effect when `user` is set. See [targeted ops by client labels](../pro/server_api_enhancements.md#targeted-ops-by-client-labels) |
 
 #### UnsubscribeResponse
 
@@ -318,11 +324,13 @@ Empty object at the moment.
 
 | Field name   | Field type                         | Required | Description                                                            |
 |--------------|------------------------------------|----------|------------------------------------------------------------------------|
-| `user`       | `string`                           | yes      | User ID to disconnect                                                  |
+| `user`       | `string`                           | yes      | User ID to disconnect (may be empty when `all_users` is set in Centrifugo PRO) |
 | `client`     | `string`                           | no       | Specific client ID to disconnect (user still required to be set)       |
 | `session`    | `string`                           | no       | Specific client session to disconnect (user still required to be set). |
 | `whitelist`  | `array[string]`                    | no       | Array of client IDs to keep                                            |
 | `disconnect` | [`Disconnect`](#disconnect-object) | no       | Provide custom disconnect object, see below                            |
+| `label_filter` | `FilterNode`                     | no       | (**Centrifugo PRO**) Only act on connections whose [client labels](../pro/client_authentication.md#client-labels) match this filter. See [targeted ops by client labels](../pro/server_api_enhancements.md#targeted-ops-by-client-labels) |
+| `all_users`  | `bool`                             | no       | (**Centrifugo PRO**) When `user` is empty, target every connection on every node instead of anonymous connections only. No effect when `user` is set. See [targeted ops by client labels](../pro/server_api_enhancements.md#targeted-ops-by-client-labels) |
 
 #### Disconnect object
 
@@ -346,16 +354,24 @@ Empty object at the moment.
 
 `refresh` allows refreshing user connection (mostly useful when unidirectional transports are used).
 
+:::caution
+
+A `refresh` without `expire_at` (and without `expired`) makes the matched connections non-expiring: their previous expiration time is cleared.
+
+:::
+
 #### RefreshRequest
 
 | Field name  | Field type | Required | Description                                                          |
 |-------------|------------|----------|----------------------------------------------------------------------|
-| `user`      | `string`   | yes      | User ID to refresh                                                   |
+| `user`      | `string`   | yes      | User ID to refresh (may be empty when `all_users` is set in Centrifugo PRO) |
 | `client`    | `string`   | no       | Client ID to refresh  (user still required to be set)                |
 | `session`   | `string`   | no       | Specific client session to refresh (user still required to be set).  |
 | `expired`   | `bool`     | no       | Mark connection as expired and close with Disconnect Expired reason  |
-| `expire_at` | `int`      | no       | Unix time (in seconds) in the future when the connection will expire |
+| `expire_at` | `int`      | no       | Unix time (in seconds) in the future when the connection will expire. If not set, the connection becomes non-expiring |
 | `info`      | any `JSON` | no       | Attach/replace connection info on refresh                            |
+| `label_filter` | `FilterNode` | no    | (**Centrifugo PRO**) Only act on connections whose [client labels](../pro/client_authentication.md#client-labels) match this filter. See [targeted ops by client labels](../pro/server_api_enhancements.md#targeted-ops-by-client-labels) |
+| `all_users` | `bool`     | no       | (**Centrifugo PRO**) When `user` is empty, target every connection on every node instead of anonymous connections only. No effect when `user` is set. See [targeted ops by client labels](../pro/server_api_enhancements.md#targeted-ops-by-client-labels) |
 
 #### RefreshResponse
 
@@ -421,7 +437,7 @@ Example response:
 
 | Field name | Field type              | Required | Description                             |
 |------------|-------------------------|----------|-----------------------------------------|
-| `presence` | `map[string]ClientInfo` | yes      | Offset of publication in history stream |
+| `presence` | `map[string]ClientInfo` | yes      | Map where key is client ID and value is [`ClientInfo`](#clientinfo) |
 
 #### ClientInfo
 
@@ -657,7 +673,68 @@ Empty object at the moment.
 
 | Field name | Field type    | Required | Description                              |
 |------------|---------------|----------|------------------------------------------|
-| `nodes`    | `array[Node]` | yes      | Information about all nodes in a cluster |
+| `nodes`    | [`array[Node]`](#node) | yes      | Information about all nodes in a cluster |
+
+#### Node
+
+| Field name     | Field type              | Required | Description                                                                                  |
+|----------------|-------------------------|----------|----------------------------------------------------------------------------------------------|
+| `uid`          | `string`                | yes      | Unique ID of the node                                                                        |
+| `name`         | `string`                | yes      | Node name                                                                                    |
+| `version`      | `string`                | yes      | Centrifugo version of the node                                                               |
+| `num_clients`  | `integer`               | yes      | Number of clients connected to the node                                                      |
+| `num_users`    | `integer`               | yes      | Number of unique users connected to the node                                                 |
+| `num_subs`     | `integer`               | yes      | Number of subscriptions on the node                                                          |
+| `num_channels` | `integer`               | yes      | Number of active channels on the node                                                        |
+| `uptime`       | `integer`               | yes      | Node uptime in seconds                                                                       |
+| `metrics`      | [`Metrics`](#metrics)   | no       | Node metrics aggregated over the `node.info_metrics_aggregate_interval` (60s by default)     |
+| `process`      | [`Process`](#process)   | no       | (**Centrifugo PRO**) CPU and memory usage of the node process                                |
+
+#### Metrics
+
+| Field name | Field type           | Required | Description                                                  |
+|------------|----------------------|----------|--------------------------------------------------------------|
+| `interval` | `float`              | yes      | Aggregation interval in seconds                              |
+| `items`    | `map[string]float`   | yes      | Map where key is a metric name and value is the metric value |
+
+#### Process
+
+Centrifugo PRO only.
+
+| Field name | Field type | Required | Description                                  |
+|------------|------------|----------|----------------------------------------------|
+| `cpu`      | `float`    | yes      | CPU usage of the process in percent          |
+| `rss`      | `integer`  | yes      | Resident set size of the process in bytes    |
+
+### rpc
+
+`rpc` calls a custom server API method registered inside Centrifugo as an RPC extension. It does not call the [client RPC proxy](./proxy.md#client-rpc-proxy) – that proxy only handles RPC calls from client connections.
+
+:::note
+
+Centrifugo does not register any server API RPC extensions at the moment, so `rpc` returns error `104` (not found) for any `method`, or `107` (bad request) when `method` is empty.
+
+:::
+
+#### RPCRequest
+
+| Field name | Field type | Required | Description                 |
+|------------|------------|----------|-----------------------------|
+| `method`   | `string`   | yes      | Name of the method to call  |
+| `params`   | any `JSON` | no       | Method parameters           |
+
+#### RPCResponse
+
+| Field name | Field type                  | Required | Description         |
+|------------|-----------------------------|----------|---------------------|
+| `error`    | [`Error`](#error)           | no       | Error of operation  |
+| `result`   | [`RPCResult`](#rpcresult)   | no       | Result of operation |
+
+#### RPCResult
+
+| Field name | Field type | Required | Description                     |
+|------------|------------|----------|---------------------------------|
+| `data`     | any `JSON` | no       | Data returned by the method     |
 
 ### batch
 
@@ -683,6 +760,31 @@ Example response:
 }
 ```
 It's also possible to pass `"parallel": true` on `batch` data top level to make batch commands processing parallel on Centrifugo side. This may provide reduced latency (especially in case of using Redis engine).
+
+#### BatchRequest
+
+| Field name           | Field type       | Required | Description                                                                                                                  |
+|----------------------|------------------|----------|------------------------------------------------------------------------------------------------------------------------------|
+| `commands`           | `array[Command]` | yes      | Commands to execute. Each command is an object with one method name key (like `publish`) and the method request as value     |
+| `parallel`           | `bool`           | no       | Process commands concurrently instead of one after another. No ordering guarantee between commands in this case              |
+| `group_publications` | `bool`           | no       | (**Centrifugo PRO**) Send the publish commands of the batch to the broker together, see below. Ignored by Centrifugo OSS       |
+
+#### BatchResponse
+
+| Field name | Field type     | Required | Description                                                       |
+|------------|----------------|----------|-------------------------------------------------------------------|
+| `replies`  | `array[Reply]` | yes      | Replies to the commands, in the same order as in `commands`       |
+
+#### group_publications
+
+In Centrifugo PRO, `"group_publications": true` makes Centrifugo send the publications of a batch to the broker together instead of one by one. This may reduce latency and CPU usage considerably for batches with many publish commands. It applies with or without `parallel`. Grouping changes two things an application may rely on:
+
+* **Order between channels.** Publications of one channel still take effect in the order they were written in the batch. But publications to different channels may take effect in a different order – even in a sequential batch. In a sequential batch, a command which is not `publish` still runs only after the publications written before it.
+* **What an error means.** An error of a grouped broker call is reported in the reply of every publication in that group – including ones whose own channel was fine and ones which were already published. So an error in a reply no longer means that this publication alone failed. Use `idempotency_key` to make retries safe.
+
+In a sequential batch only adjacent publish commands are grouped together.
+
+Without `group_publications`, publish commands of a batch are processed exactly as separate `publish` calls.
 
 ## HTTP API libraries
 
