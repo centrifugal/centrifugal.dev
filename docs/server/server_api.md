@@ -706,36 +706,6 @@ Centrifugo PRO only.
 | `cpu`      | `float`    | yes      | CPU usage of the process in percent          |
 | `rss`      | `integer`  | yes      | Resident set size of the process in bytes    |
 
-### rpc
-
-`rpc` calls a custom server API method registered inside Centrifugo as an RPC extension. It does not call the [client RPC proxy](./proxy.md#client-rpc-proxy) – that proxy only handles RPC calls from client connections.
-
-:::note
-
-Centrifugo does not register any server API RPC extensions at the moment, so `rpc` returns error `104` (not found) for any `method`, or `107` (bad request) when `method` is empty.
-
-:::
-
-#### RPCRequest
-
-| Field name | Field type | Required | Description                 |
-|------------|------------|----------|-----------------------------|
-| `method`   | `string`   | yes      | Name of the method to call  |
-| `params`   | any `JSON` | no       | Method parameters           |
-
-#### RPCResponse
-
-| Field name | Field type                  | Required | Description         |
-|------------|-----------------------------|----------|---------------------|
-| `error`    | [`Error`](#error)           | no       | Error of operation  |
-| `result`   | [`RPCResult`](#rpcresult)   | no       | Result of operation |
-
-#### RPCResult
-
-| Field name | Field type | Required | Description                     |
-|------------|------------|----------|---------------------------------|
-| `data`     | any `JSON` | no       | Data returned by the method     |
-
 ### batch
 
 Batch allows sending many commands in one request. Commands processed sequentially by Centrifugo, users should check individual error in each returned reply. Useful to avoid RTT latency penalty for each command sent, this is an analogue of pipelining.
