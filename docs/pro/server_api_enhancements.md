@@ -382,6 +382,8 @@ The [`connections`](./connections.md) admin API supports `label_filter` as a fle
 
 ## Grouped publications
 
+New in Centrifugo PRO v6.9.7
+
 Centrifugo PRO can send many publications to the broker together, instead of one by one. This applies to two server API methods:
 
 * [`broadcast`](../server/server_api.md#broadcast) – always, no option is needed. Centrifugo PRO also does not start a separate goroutine for each channel of a broadcast.

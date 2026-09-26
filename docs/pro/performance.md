@@ -84,6 +84,8 @@ Centrifugo PRO has an optimized Protobuf serialization/deserialization for GRPC 
 
 ## Faster broadcast and batch publishing
 
+New in Centrifugo PRO v6.9.7
+
 Centrifugo PRO sends publications of a [`broadcast`](../server/server_api.md#broadcast) call to the broker together instead of one by one, and does not start a separate goroutine for each channel. A [`batch`](../server/server_api.md#batch) call does the same for its publish commands when `group_publications` is set. See [Grouped publications](./server_api_enhancements.md#grouped-publications) for details and for the behavior changes of `group_publications`.
 
 Depending on the load profile, this may give:
