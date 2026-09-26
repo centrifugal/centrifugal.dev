@@ -162,7 +162,11 @@ Boolean, default `false`. If set to true it forces using RESP2 protocol for comm
 
 ### `engine.redis.history_use_lists`
 
-Boolean, default `false` – turns on using Redis Lists instead of Stream data structure for keeping history (not recommended, keeping this for backwards compatibility mostly).
+:::caution Deprecated
+This option is deprecated and may be removed in a future Centrifugo release. Keep history in Redis Streams – the default.
+:::
+
+Boolean, default `false` – turns on using Redis Lists instead of Stream data structure for keeping history. Lists do not support reverse-order history retrieval and [delta compression](./delta_compression.md).
 
 ### `engine.redis.presence_ttl`
 
