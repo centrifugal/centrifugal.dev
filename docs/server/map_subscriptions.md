@@ -620,7 +620,6 @@ Options:
 - `cursor` — pagination cursor returned by the previous page, empty for the first page
 - `limit` — maximum number of entries per page: `-1` means no limit, `0` returns only the stream position
 - `key` — read a single entry by exact key (`cursor` and `limit` are ignored)
-- `asc` — sort ordered state by score ascending instead of descending (ignored for unordered channels)
 - `revision_offset` / `revision_epoch` — stream position from a previous state read; if the epoch changed since then the call fails with an unrecoverable position error (code `112`) – restart reading from the first page in this case
 
 Result fields: `entries` — array of [map entries](#map-entry) of this page; `offset` and `epoch` — current stream position; `cursor` — cursor of the next page, empty when there are no more entries.

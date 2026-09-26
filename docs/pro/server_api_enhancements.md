@@ -1,5 +1,5 @@
 ---
-description: "Centrifugo PRO server API enhancements: JWKS-based authentication for HTTP and GRPC server APIs, and client-label-based filtering for targeted server-API operations and connection listings."
+description: "Centrifugo PRO server API enhancements: JWKS-based authentication for HTTP and GRPC server APIs, client-label-based filtering for targeted server-API operations and connection listings, and grouped publications for broadcast and batch."
 id: server_api_enhancements
 sidebar_label: Server API enhancements
 title: Server API enhancements
@@ -379,6 +379,50 @@ Cluster behavior: a fleet-wide op is fanned out via the control protocol — eve
 ### Connections listing with `label_filter`
 
 The [`connections`](./connections.md) admin API supports `label_filter` as a fleet-wide selector without needing `all_users`. Listings go through a per-node survey across the entire hub. The snapshot creation endpoint also accepts `label_filter` and applies it at gather time — see [Connections API](./connections.md) for the details.
+
+## Grouped publications
+
+Centrifugo PRO can send many publications to the broker together, instead of one by one. This applies to two server API methods:
+
+* [`broadcast`](../server/server_api.md#broadcast) – always, no option is needed. Centrifugo PRO also does not start a separate goroutine for each channel of a broadcast.
+* [`batch`](../server/server_api.md#batch) – when `"group_publications": true` is set in the request. It works for both sequential and parallel batches.
+
+A single `publish` call, and a `batch` without `group_publications`, work the same way as in Centrifugo OSS.
+
+Grouping may reduce CPU and memory usage of Centrifugo, the number of goroutines, the latency of batch requests and the CPU usage of Redis. See [Faster broadcast and batch publishing](./performance.md#faster-broadcast-and-batch-publishing) for more details.
+
+### group_publications in batch
+
+For a batch, grouping is not enabled by default because it changes two things an application may rely on:
+
+* **Order between channels.** Publications of one channel still take effect in the order they were written in the batch. But publications to different channels may take effect in a different order – even in a sequential batch. In a sequential batch, a command which is not `publish` still runs only after the publications written before it.
+* **What an error means.** An error of a grouped broker call is reported in the reply of every publication in that group – including ones whose own channel was fine and ones which were already published. So an error in a reply no longer means that this publication alone failed. Use `idempotency_key` to make retries safe: publications which were already published are recognized and not repeated.
+
+In a sequential batch, only adjacent publish commands are grouped together. So a batch which alternates `publish` and other commands does not benefit from grouping.
+
+Example:
+
+```bash
+curl --header "X-API-Key: <API_KEY>" \
+  --request POST \
+  --data '{
+    "group_publications": true,
+    "commands": [
+      {"publish": {"channel": "news:1", "data": {"text": "hello"}, "idempotency_key": "n1"}},
+      {"publish": {"channel": "news:2", "data": {"text": "hello"}, "idempotency_key": "n2"}}
+    ]
+  }' \
+  http://localhost:8000/api/batch
+```
+
+### How much gets grouped
+
+This depends on the broker setup:
+
+* A single Redis instance groups all publications of a call.
+* Redis Cluster with [sharded PUB/SUB](./scalability.md#redis-cluster-sharded-pubsub) groups publications within each partition.
+* Redis Cluster without sharded PUB/SUB can not group publications – they are published one by one, as before.
+* Redis history based on lists ([`history_use_lists`](../server/engines.md#engineredishistory_use_lists)) is not grouped – such publications are sent one by one, as before.
 
 ## See also
 

@@ -1,5 +1,5 @@
 ---
-description: "Centrifugo PRO delivers faster HTTP/GRPC API, optimized proxy, faster JWT decoding, and WebSocket compression improvements to reduce CPU and latency."
+description: "Centrifugo PRO delivers faster HTTP/GRPC API, faster broadcast and batch publishing, optimized proxy, faster JWT decoding, and WebSocket compression improvements to reduce CPU and latency."
 id: performance
 title: Faster performance
 ---
@@ -81,6 +81,19 @@ The effect can be noticeable under load. The exact numbers heavily depend on usa
 ## Faster GRPC API
 
 Centrifugo PRO has an optimized Protobuf serialization/deserialization for GRPC API. The effect can be noticeable under load. The exact numbers heavily depend on usage scenario.
+
+## Faster broadcast and batch publishing
+
+Centrifugo PRO sends publications of a [`broadcast`](../server/server_api.md#broadcast) call to the broker together instead of one by one, and does not start a separate goroutine for each channel. A [`batch`](../server/server_api.md#batch) call does the same for its publish commands when `group_publications` is set. See [Grouped publications](./server_api_enhancements.md#grouped-publications) for details and for the behavior changes of `group_publications`.
+
+Depending on the load profile, this may give:
+
+* lower CPU usage of Centrifugo
+* lower memory usage and fewer goroutines during large broadcasts
+* lower latency of batch requests with many publish commands
+* lower CPU usage of Redis and less traffic between Centrifugo and Redis
+
+The effect is larger when a call carries many publications. It also depends on the broker setup – for example, Redis Cluster without sharded PUB/SUB can not group publications. The latency of a broadcast may slightly increase, since one broker call carrying many channels takes longer than a single publish. With the Memory engine, a grouped batch to channels without subscribers may use a bit more CPU than before – the gain comes when there are subscribers to deliver publications to.
 
 ## Faster HTTP proxy
 

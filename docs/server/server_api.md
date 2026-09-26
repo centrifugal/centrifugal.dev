@@ -198,7 +198,7 @@ curl --header "X-API-Key: <API_KEY>" \
 
 This command may be very useful when implementing messenger application, like we show in [Grand Tutorial](../tutorial/intro.md).
 
-In Centrifugo PRO, `broadcast` sends the publications for all channels to the broker together (no option is needed), which makes broadcasting to many channels considerably cheaper.
+Centrifugo PRO sends the publications of a broadcast to the broker together, which makes broadcasting to many channels cheaper. See [grouped publications](../pro/server_api_enhancements.md#grouped-publications).
 
 #### BroadcastRequest
 
@@ -737,24 +737,13 @@ It's also possible to pass `"parallel": true` on `batch` data top level to make 
 |----------------------|------------------|----------|------------------------------------------------------------------------------------------------------------------------------|
 | `commands`           | `array[Command]` | yes      | Commands to execute. Each command is an object with one method name key (like `publish`) and the method request as value     |
 | `parallel`           | `bool`           | no       | Process commands concurrently instead of one after another. No ordering guarantee between commands in this case              |
-| `group_publications` | `bool`           | no       | (**Centrifugo PRO**) Send the publish commands of the batch to the broker together, see below. Ignored by Centrifugo OSS       |
+| `group_publications` | `bool`           | no       | (**Centrifugo PRO**) Send the publish commands of the batch to the broker together, see [grouped publications](../pro/server_api_enhancements.md#grouped-publications). Ignored by Centrifugo OSS |
 
 #### BatchResponse
 
 | Field name | Field type     | Required | Description                                                       |
 |------------|----------------|----------|-------------------------------------------------------------------|
 | `replies`  | `array[Reply]` | yes      | Replies to the commands, in the same order as in `commands`       |
-
-#### group_publications
-
-In Centrifugo PRO, `"group_publications": true` makes Centrifugo send the publications of a batch to the broker together instead of one by one. This may reduce latency and CPU usage considerably for batches with many publish commands. It applies with or without `parallel`. Grouping changes two things an application may rely on:
-
-* **Order between channels.** Publications of one channel still take effect in the order they were written in the batch. But publications to different channels may take effect in a different order – even in a sequential batch. In a sequential batch, a command which is not `publish` still runs only after the publications written before it.
-* **What an error means.** An error of a grouped broker call is reported in the reply of every publication in that group – including ones whose own channel was fine and ones which were already published. So an error in a reply no longer means that this publication alone failed. Use `idempotency_key` to make retries safe.
-
-In a sequential batch only adjacent publish commands are grouped together.
-
-Without `group_publications`, publish commands of a batch are processed exactly as separate `publish` calls.
 
 ## HTTP API libraries
 

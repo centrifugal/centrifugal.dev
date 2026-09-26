@@ -49,7 +49,6 @@ curl --header "Content-Type: application/json" \
 | Parameter name | Parameter type  | Required | Description                        |
 |----------------|-----------------|----------|------------------------------------|
 | `users`        | `array[string]` | yes      | List of users to update status for |
-| `state`        | `string`        | no       | Custom state to store in user status (see [Custom state](#custom-state)). If not set, previously stored state is kept |
 
 #### UpdateUserStatusResult
 
@@ -122,7 +121,6 @@ Note that Centrifugo also maintains the `online` field inside the user status ob
 | user       | string  | yes | User ID        |
 | active       | integer  | no  | Last active time (Unix seconds)    |
 | online       | integer  | no  | Last online time (Unix seconds)    |
-| state        | string   | no  | Custom state, if set with `update_user_status` (see [Custom state](#custom-state)) |
 
 ### delete_user_status
 
@@ -191,24 +189,4 @@ In this case the Redis active status will simply connect to Redis instances conf
     "expire_interval": "24h"        
   }
 }
-```
-
-### Custom state
-
-`update_user_status` may also store a custom string `state` for users (for example, `away` or `busy`), returned as `state` in `get_user_status`. Once set, the state is kept until another state is set or user status expires or is deleted.
-
-`state_regex` option restricts state values: a state which does not match the regex is rejected with a bad request error. From the server API, any state is accepted when `state_regex` is not set. From the client side, passing state is only allowed when `state_regex` is set:
-
-```json title="config.json"
-{
-  ...
-  "user_status": {
-    ...
-    "state_regex": "^(away|busy)$"
-  }
-}
-```
-
-```javascript
-await centrifuge.rpc('update_user_status', {"state": "busy"});
 ```
