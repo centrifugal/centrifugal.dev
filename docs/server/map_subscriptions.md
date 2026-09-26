@@ -590,7 +590,7 @@ Options:
 - `delta` — enable delta compression
 - `b64data` — data encoded in base64, for binary payloads over HTTP API
 
-Result fields: `offset` and `epoch` — stream position of the publication; `suppressed` — `true` if the publish was not applied; `suppress_reason` — why it was suppressed: `idempotency`, `version`, `key_exists` or `key_not_found`.
+Result fields: `offset` and `epoch` — stream position after the operation; `suppressed` — `true` if the publish was not applied; `suppress_reason` — why it was suppressed: `idempotency`, `version`, `key_exists` or `key_not_found`.
 
 ### map_remove
 
@@ -644,6 +644,8 @@ Options: `since_offset` / `since_epoch` (read from position), `limit` (`-1` mean
 
 Result fields: `entries` — array of [map entries](#map-entry); `offset` and `epoch` — top stream position.
 
+If entries after `since_offset` are no longer in the stream, the call fails with an unrecoverable position error (code `112`).
+
 ### Map entry
 
 Entries returned by `map_read_state` and `map_read_stream` have these fields:
@@ -654,7 +656,6 @@ Entries returned by `map_read_state` and `map_read_stream` have these fields:
 | `data`    | `JSON`                | Entry data                                                     |
 | `tags`    | `map<string, string>` | Entry tags                                                     |
 | `offset`  | `integer`             | Offset of the entry in the channel stream                      |
-| `score`   | `integer`             | Sort value of the entry in ordered map channels                |
 | `removed` | `bool`                | `true` for a removal event                                     |
 | `time`    | `integer`             | Time of the publication (Unix milliseconds), if known          |
 

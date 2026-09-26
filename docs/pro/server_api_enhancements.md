@@ -386,7 +386,7 @@ New in Centrifugo PRO v6.9.7
 
 Centrifugo PRO can send many publications to the broker together, instead of one by one. This applies to two server API methods:
 
-* [`broadcast`](../server/server_api.md#broadcast) – always, no option is needed. Centrifugo PRO also does not start a separate goroutine for each channel of a broadcast.
+* [`broadcast`](../server/server_api.md#broadcast) – always, no option is needed. With Redis and Memory engines, Centrifugo PRO also does not start a separate goroutine for each channel of a broadcast. As with a grouped batch (see below), an error in one channel's response may come from a grouped broker call, so it does not always mean that this channel alone failed.
 * [`batch`](../server/server_api.md#batch) – when `"group_publications": true` is set in the request. It works for both sequential and parallel batches.
 
 A single `publish` call, and a `batch` without `group_publications`, work the same way as in Centrifugo OSS.
@@ -398,7 +398,7 @@ Grouping may reduce CPU and memory usage of Centrifugo, the number of goroutines
 For a batch, grouping is not enabled by default because it changes two things an application may rely on:
 
 * **Order between channels.** Publications of one channel still take effect in the order they were written in the batch. But publications to different channels may take effect in a different order – even in a sequential batch. In a sequential batch, a command which is not `publish` still runs only after the publications written before it.
-* **What an error means.** An error of a grouped broker call is reported in the reply of every publication in that group – including ones whose own channel was fine and ones which were already published. So an error in a reply no longer means that this publication alone failed. Use `idempotency_key` to make retries safe: publications which were already published are recognized and not repeated.
+* **What an error means.** With Redis, an error of a grouped broker call is reported in the reply of every publication in that group – including ones whose own channel was fine and ones which were already published. So an error in a reply no longer means that this publication alone failed. Use `idempotency_key` to make retries safe: publications which were already published are recognized and not repeated.
 
 In a sequential batch, only adjacent publish commands are grouped together. So a batch which alternates `publish` and other commands does not benefit from grouping.
 
@@ -419,12 +419,14 @@ curl --header "X-API-Key: <API_KEY>" \
 
 ### How much gets grouped
 
-This depends on the broker setup:
+With Redis, publications are always sent to Redis in a pipeline. How many publications may share a single Redis call depends on the setup:
 
-* A single Redis instance groups all publications of a call.
-* Redis Cluster with [sharded PUB/SUB](./scalability.md#redis-cluster-sharded-pubsub) groups publications within each partition.
-* Redis Cluster without sharded PUB/SUB can not group publications – they are published one by one, as before.
-* Redis history based on lists ([`history_use_lists`](../server/engines.md#engineredishistory_use_lists)) is not grouped – such publications are sent one by one, as before.
+* A single Redis instance: publications to many channels may share a call.
+* Redis Cluster with [sharded PUB/SUB](./scalability.md#redis-cluster-sharded-pubsub): publications to channels of the same partition may share a call.
+* Redis Cluster without sharded PUB/SUB: a call only carries publications of one channel, so the gain is smaller.
+* Redis history based on lists ([`history_use_lists`](../server/engines.md#engineredishistory_use_lists)): each publication with history is a separate call.
+
+Grouping in the broker is implemented for Redis and Memory engines. Other brokers (like NATS or PostgreSQL) receive grouped publications as concurrent single publishes: the ordering change of `group_publications` still applies, but there is little performance gain.
 
 ## See also
 

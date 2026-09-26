@@ -998,8 +998,8 @@ List device to topic mapping.
 | Field                 | Type                | Required | Description                                                                     |
 |-----------------------|---------------------|----------|---------------------------------------------------------------------------------|
 | `filter`              | `DeviceTopicFilter` | no       | How to filter results                                                           |
-| `cursor`              | `string`            | no       | Cursor for pagination (last device id in previous batch, empty for first page). |
-| `limit`               | `int32`             | no       | Maximum number of devices to retrieve.                                          |
+| `cursor`              | `string`            | no       | Cursor for pagination (`next_cursor` from the previous response, empty for first page). |
+| `limit`               | `int32`             | no       | Maximum number of DeviceTopic objects to retrieve.                              |
 | `include_device`      | `bool`              | no       | Flag indicating whether to include Device information for each object.          |
 | `include_total_count` | `bool`              | no       | Flag indicating whether to include total count info to response.                |
 
@@ -1028,7 +1028,7 @@ List device to topic mapping.
 |----------|---------------------|----------|---------------------------------------------------------------------------------------------------------------------|
 | `id`     | `string`            | yes      | ID of DeviceTopic object                                                                                            |
 | `topic`  | `string`            | yes      | Topic                                                                                                               |
-| `device` | [`Device`](#device_list-result) | no | Only included if `include_device` was true. Contains `id`, `provider`, `token`, `platform` and `user` of the device |
+| `device` | [`Device`](#device_list-result) | no | Only included if `include_device` was true. Contains `id`, `provider`, `token`, `platform` and `user` (if set) of the device |
 
 ### user_topic_update
 
