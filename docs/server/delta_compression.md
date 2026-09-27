@@ -104,6 +104,8 @@ For example, this means that to automatically use delta calculation for all publ
 
 Again – subscribers which support delta compression and do not support it can co-exist in one channel.
 
+In Centrifugo PRO, a namespace with `allowed_delta_types` can not use [`batch_flush_latest`](../pro/client_msg_batching.md#batch_flush_latest): skipping publications would leave subscribers applying deltas to data they never received.
+
 ### Example and further reading
 
 * [Delta compression example](https://github.com/centrifugal/examples/tree/master/v6/delta_compression) - just `docker compose up` and then open https://localhost:8080
