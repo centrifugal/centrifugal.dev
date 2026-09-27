@@ -104,7 +104,7 @@ The effect is larger when a call carries many publications, and for single publi
 
 ## Faster HTTP proxy
 
-Centrifugo PRO encodes proxy requests and decodes proxy responses with faster JSON libraries, 2-3 times faster than the standard ones. The saving is small compared to the cost of the HTTP call to your backend.
+Centrifugo PRO encodes proxy requests and decodes proxy responses with faster JSON libraries, about 2 times faster than the standard ones. The saving is small compared to the cost of the HTTP call to your backend.
 
 ### Faster HTTP proxy client
 
