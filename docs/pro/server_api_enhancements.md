@@ -1,5 +1,5 @@
 ---
-description: "Centrifugo PRO server API enhancements: JWKS-based authentication for HTTP and GRPC server APIs, client-label-based filtering for targeted server-API operations and connection listings, and grouped publications for broadcast and batch."
+description: "Centrifugo PRO server API enhancements: JWKS-based authentication for HTTP and GRPC server APIs, client-label-based filtering for targeted server-API operations and connection listings, and grouped publications."
 id: server_api_enhancements
 sidebar_label: Server API enhancements
 title: Server API enhancements
@@ -384,38 +384,60 @@ The [`connections`](./connections.md) admin API supports `label_filter` as a fle
 
 New in Centrifugo PRO v6.9.7
 
-Centrifugo PRO can send many publications to the broker together, instead of one by one. This applies to two server API methods:
+Centrifugo PRO sends publications to the broker in groups instead of one by one. This works with Redis and Memory engines and is enabled by default.
 
-* [`broadcast`](../server/server_api.md#broadcast) – always, no option is needed. With Redis and Memory engines, Centrifugo PRO also does not start a separate goroutine for each channel of a broadcast. As with a grouped batch (see below), an error in one channel's response may come from a grouped broker call, so it does not always mean that this channel alone failed.
-* [`batch`](../server/server_api.md#batch) – when `"group_publications": true` is set in the request. It works for both sequential and parallel batches.
+* **Single publications** – server API [`publish`](../server/server_api.md#publish) over HTTP and GRPC, publications from [async consumers](../server/consumers.md), client-side publications (including ones going through the publish proxy), and [`broadcast`](../server/server_api.md#broadcast) into one channel. When Centrifugo is not busy, each publication goes to the broker right away, as before. Under load, when two sends to the broker are already in progress, a new publication waits for one of them to finish, and all publications waiting by then go out together. A publication waits for this no longer than 250 microseconds.
+* **Server API requests with many publications** – [`broadcast`](../server/server_api.md#broadcast) into several channels and [`batch`](../server/server_api.md#batch), sequential or parallel. The request hands its publications to the broker together, without waiting for other requests. With Redis, they reach Redis in a few pipelined calls, each covering many publications, instead of one command per publication. In a batch, only publish commands next to each other are handed over together: another command between them splits them, and runs only after the publications written before it. For a broadcast, Centrifugo PRO also does not start a separate goroutine for each channel.
 
-A single `publish` call, and a `batch` without `group_publications`, work the same way as in Centrifugo OSS.
+Each call returns after its own publication is sent, so publications made one after another keep their order.
 
-Grouping may reduce CPU and memory usage of Centrifugo, the number of goroutines, the latency of batch requests and the CPU usage of Redis. See [Faster broadcast and batch publishing](./performance.md#faster-broadcast-and-batch-publishing) for more details.
+Grouping reduces CPU usage of Centrifugo and Redis, and the latency of batch requests. See [Faster publishing](./performance.md#faster-publishing) for more details.
 
-### group_publications in batch
+### What changes for applications
 
-For a batch, grouping is not enabled by default because it changes two things an application may rely on:
+**Order between channels.** Publications of one channel always take effect in the order they were written. A sequential batch no longer waits for one publication before starting the next, so publications to different channels may be applied in another order. Centrifugo never guaranteed that order to subscribers: with Redis, publications coming back from Redis are processed concurrently, spread by channel name, so a client subscribed to both channels could receive them in another order even before.
 
-* **Order between channels.** Publications of one channel still take effect in the order they were written in the batch. But publications to different channels may take effect in a different order – even in a sequential batch. In a sequential batch, a command which is not `publish` still runs only after the publications written before it.
-* **What an error means.** With Redis, an error of a grouped broker call is reported in the reply of every publication in that group – including ones whose own channel was fine and ones which were already published. So an error in a reply no longer means that this publication alone failed. Use `idempotency_key` to make retries safe: publications which were already published are recognized and not repeated.
+**Errors.** Mostly unchanged: as before, an error may come after a publication was written, so use `idempotency_key` to make retries safe. Publications which share one Redis call share its outcome, so a problem with one channel's Redis keys may fail the other publications in that call too.
 
-In a sequential batch, only adjacent publish commands are grouped together. So a batch which alternates `publish` and other commands does not benefit from grouping.
+To get the previous behavior back for a namespace, use `publication_grouping_disabled` described below.
 
-Example:
+### publication_grouping_disabled
 
-```bash
-curl --header "X-API-Key: <API_KEY>" \
-  --request POST \
-  --data '{
-    "group_publications": true,
-    "commands": [
-      {"publish": {"channel": "news:1", "data": {"text": "hello"}, "idempotency_key": "n1"}},
-      {"publish": {"channel": "news:2", "data": {"text": "hello"}, "idempotency_key": "n2"}}
+A [channel namespace](../server/channels.md#channel-options) option. When `true`, every publication into channels of the namespace is sent to the broker on its own, whichever API it comes from – as before grouping existed. In a sequential batch such a command is published alone and in its place, so publications are written to Redis in the order of the batch. In a broadcast such channels are published one by one, each with its own result.
+
+```json title="config.json"
+{
+  "channel": {
+    "namespaces": [
+      {
+        "name": "ledger",
+        "publication_grouping_disabled": true
+      }
     ]
-  }' \
-  http://localhost:8000/api/batch
+  }
+}
 ```
+
+### publication_grouping_max_delay
+
+A [channel namespace](../server/channels.md#channel-options) option, a duration, zero by default. When set, a single publication into the namespace waits up to this long for other publications to join it, or until the group is full. This groups more publications at moderate load and saves more CPU of Centrifugo and Redis, at the cost of latency: every single publication waits up to the delay. A few hundred microseconds, like `250us`, is a reasonable start.
+
+```json title="config.json"
+{
+  "channel": {
+    "namespaces": [
+      {
+        "name": "chat",
+        "publication_grouping_max_delay": "250us"
+      }
+    ]
+  }
+}
+```
+
+The delay applies to single publications only: batches, and broadcasts into several channels, never wait. It can be set only for namespaces using Redis or Memory engines, and can not be combined with `publication_grouping_disabled`.
+
+Client commands of one connection are processed one by one unless [`client.concurrency`](../server/configuration.md#clientconcurrency) is set, so with the delay a client's next command waits for its delayed publication.
 
 ### How much gets grouped
 
@@ -426,7 +448,7 @@ With Redis, publications are always sent to Redis in a pipeline. How many public
 * Redis Cluster without sharded PUB/SUB: a call only carries publications of one channel, so the gain is smaller.
 * Redis history based on lists ([`history_use_lists`](../server/engines.md#engineredishistory_use_lists)): each publication with history is a separate call.
 
-Grouping in the broker is implemented for Redis and Memory engines. Other brokers (like NATS or PostgreSQL) receive grouped publications as concurrent single publishes: the ordering change of `group_publications` still applies, but there is little performance gain.
+Other brokers (like NATS or PostgreSQL) do not group publications: single publications are sent one by one, and publications of a batch or a broadcast are sent as concurrent single publishes – so the note about order between channels still applies to them, with little performance gain.
 
 ## See also
 

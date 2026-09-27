@@ -146,6 +146,8 @@ In response, you will also get 200 OK, but payload will contain `error` field in
 
 `error` object contains error code and message - this is also the same for other commands described below.
 
+Since v6.9.7, Centrifugo PRO may send a publication to the broker together with concurrent ones when under load, which makes publishing cheaper. See [grouped publications](../pro/server_api_enhancements.md#grouped-publications).
+
 #### PublishRequest
 
 | Field name        | Field type          | Required | Description                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -710,6 +712,10 @@ Centrifugo PRO only.
 
 Batch allows sending many commands in one request. Commands processed sequentially by Centrifugo, users should check individual error in each returned reply. Useful to avoid RTT latency penalty for each command sent, this is an analogue of pipelining.
 
+Sequential processing describes the order in which commands are processed, not a delivery guarantee. Publications to one channel keep their order, but subscribers of different channels may receive publications in a different order than they appear in the batch.
+
+Since v6.9.7, Centrifugo PRO sends the publish commands of a batch to the broker together, see [grouped publications](../pro/server_api_enhancements.md#grouped-publications).
+
 Example with two publications in one request:
 
 ```bash
@@ -737,7 +743,6 @@ It's also possible to pass `"parallel": true` on `batch` data top level to make 
 |----------------------|------------------|----------|------------------------------------------------------------------------------------------------------------------------------|
 | `commands`           | `array[Command]` | yes      | Commands to execute. Each command is an object with one method name key (like `publish`) and the method request as value     |
 | `parallel`           | `bool`           | no       | Process commands concurrently instead of one after another. No ordering guarantee between commands in this case              |
-| `group_publications` | `bool`           | no       | (**Centrifugo PRO**, since v6.9.7) Send the publish commands of the batch to the broker together, see [grouped publications](../pro/server_api_enhancements.md#grouped-publications). Ignored by Centrifugo OSS |
 
 #### BatchResponse
 

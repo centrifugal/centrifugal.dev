@@ -82,20 +82,21 @@ The effect can be noticeable under load. The exact numbers heavily depend on usa
 
 Centrifugo PRO has an optimized Protobuf serialization/deserialization for GRPC API. The effect can be noticeable under load. The exact numbers heavily depend on usage scenario.
 
-## Faster broadcast and batch publishing
+## Faster publishing
 
 New in Centrifugo PRO v6.9.7
 
-Centrifugo PRO sends publications of a [`broadcast`](../server/server_api.md#broadcast) call to the broker together instead of one by one, and, with Redis and Memory engines, does not start a separate goroutine for each channel. A [`batch`](../server/server_api.md#batch) call does the same for its publish commands when `group_publications` is set. See [Grouped publications](./server_api_enhancements.md#grouped-publications) for details and for the behavior changes of `group_publications`.
+Centrifugo PRO sends publications to the broker in groups instead of one by one: single publications arriving under load are sent together, and the publications of a [`broadcast`](../server/server_api.md#broadcast) or [`batch`](../server/server_api.md#batch) call are handed to the broker together. With Redis and Memory engines, a broadcast also does not start a separate goroutine for each channel. See [Grouped publications](./server_api_enhancements.md#grouped-publications) for how it works, what it changes for applications, and the options.
 
 Depending on the load profile, this may give:
 
 * lower CPU usage of Centrifugo
-* lower memory usage and fewer goroutines during large broadcasts
-* lower latency of batch requests with many publish commands (with Redis)
 * lower CPU usage of Redis and less traffic between Centrifugo and Redis
+* lower latency of batch requests with many publish commands (with Redis)
+* lower memory usage and fewer goroutines during large broadcasts
+* higher throughput of single publications under heavy load
 
-The effect is larger when a call carries many publications. It also depends on the broker setup – for example, with Redis Cluster without sharded PUB/SUB the gain is smaller, since publications to different channels can not share one Redis call. With Redis, the latency of a broadcast may slightly increase, since one broker call carrying many channels takes longer than a single publish. With the Memory engine, a grouped batch to channels without subscribers may use a bit more CPU than before – the gain comes when there are subscribers to deliver publications to.
+The effect is larger when a call carries many publications, and for single publications it grows with load. It also depends on the broker setup – for example, with Redis Cluster without sharded PUB/SUB the gain is smaller, since publications to different channels can not share one Redis call. Under load, a single publication may wait a little for others, which adds up to 250 microseconds to its latency; the latency of a broadcast with history may also increase slightly, since one broker call carrying many channels takes Redis longer than a single publish.
 
 ## Faster HTTP proxy
 
