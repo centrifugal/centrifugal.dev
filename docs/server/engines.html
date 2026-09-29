@@ -18,7 +18,7 @@
 
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.0be39b2d.css">
-<script src="/assets/js/runtime~main.cde3cc2b.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.00a9718d.js" defer="defer"></script>
 <script src="/assets/js/main.211d347d.js" defer="defer"></script>
 </head>
 <body>
@@ -93,7 +93,8 @@
 <h3 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="engineredisforce_resp2"><code>engine.redis.force_resp2</code><a href="#engineredisforce_resp2" class="hash-link" aria-label="Direct link to engineredisforce_resp2" title="Direct link to engineredisforce_resp2" translate="no">​</a></h3>
 <p>Boolean, default <code>false</code>. If set to true it forces using RESP2 protocol for communicating with Redis. By default, Redis client used by Centrifugo tries to detect supported Redis protocol automatically trying RESP3 first.</p>
 <h3 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="engineredishistory_use_lists"><code>engine.redis.history_use_lists</code><a href="#engineredishistory_use_lists" class="hash-link" aria-label="Direct link to engineredishistory_use_lists" title="Direct link to engineredishistory_use_lists" translate="no">​</a></h3>
-<p>Boolean, default <code>false</code> – turns on using Redis Lists instead of Stream data structure for keeping history (not recommended, keeping this for backwards compatibility mostly).</p>
+<div class="theme-admonition theme-admonition-caution admonition_xJq3 alert alert--warning"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z"></path></svg></span>Deprecated</div><div class="admonitionContent_BuS1"><p>This option is deprecated and may be removed in a future Centrifugo release. Keep history in Redis Streams – the default.</p></div></div>
+<p>Boolean, default <code>false</code> – turns on using Redis Lists instead of Stream data structure for keeping history. Lists do not support reverse-order history retrieval and <a class="" href="/docs/server/delta_compression">delta compression</a>.</p>
 <h3 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="engineredispresence_ttl"><code>engine.redis.presence_ttl</code><a href="#engineredispresence_ttl" class="hash-link" aria-label="Direct link to engineredispresence_ttl" title="Direct link to engineredispresence_ttl" translate="no">​</a></h3>
 <p>Duration, default <code>&quot;60s&quot;</code>.</p>
 <p>How long presence is considered valid if not confirmed by active client connection.</p>

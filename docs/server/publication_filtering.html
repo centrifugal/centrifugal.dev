@@ -18,7 +18,7 @@
 
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.0be39b2d.css">
-<script src="/assets/js/runtime~main.cde3cc2b.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.00a9718d.js" defer="defer"></script>
 <script src="/assets/js/main.211d347d.js" defer="defer"></script>
 </head>
 <body>
@@ -34,7 +34,7 @@
 <ul>
 <li class="">Publication filtering works only with client-side subscriptions at this point.</li>
 <li class="">Publication filtering is only supported by <code>centrifuge-js</code> for now, <a href="#usage-in-real-time-sdk" class="">see below the examples</a></li>
-<li class="">Publication filtering cannot be used together with <a class="" href="/docs/server/delta_compression">delta compression</a> in the same channel – both features serve as alternative approaches for bandwidth optimization and are mutually exclusive in Centrifugo.</li>
+<li class="">Publication filtering cannot be used together with <a class="" href="/docs/server/delta_compression">delta compression</a> – both features serve as alternative approaches for bandwidth optimization and are mutually exclusive in Centrifugo: delta compression is not negotiated for a subscription with a tags filter.</li>
 <li class="">It is recommended to avoid the design where a single subscriber to channel can not keep up with all the messages in the channel if filter is not used. Filter should be used as a bandwidth optimization, mostly in scenarios where client already skips some messages received from the channel. Or at least make sure that you don&#x27;t have scenarios in the app where a subscriber is overwhelmed with messages from the channel – this results into bad UX and disconnections with <code>slow</code> reason. Remember – Centrifugo is a client-facing PUB/SUB system, where each channel publication is processed by each subscriber. It&#x27;s a pattern completely different from &quot;Queue&quot; where large volume of messages in topic may be shared over many consumers thus each consumer only processes a fraction of messages achieving high throughput in terms of a single topic.</li>
 <li class="">Publication filtering works seamlessly with Centrifugo&#x27;s automatic recovery mechanisms: in case of successful recovery, only publications matching the filter are returned during <a class="" href="/docs/server/history_and_recovery#how-recovery-works">stream recovery</a>, and only the latest matching publication is returned when using <a class="" href="/docs/server/cache_recovery">cache recovery mode</a>.</li>
 <li class="">Centrifugo tag filters designed to be zero-allocation during publication broadcast towards many subscribers, the CPU overhead of using filter must be negligible for most setups. Having filters adds memory overhead for each subscription since Centrifugo needs to keep them during the entire lifetime of the connection.</li>

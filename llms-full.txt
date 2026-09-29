@@ -9320,8 +9320,9 @@ To successfully negotiate delta compression for a subscriber several conditions 
 
 * subscriber provides `delta: "fossil"` option when creating a client-side Subscription
 * server uses `"allowed_delta_types": ["fossil"]` for a channel namespace a client subscribes to
-* server uses history for a channel
+* server uses history for a channel (with Redis engine, history must be kept in Streams – the default, delta compression is not supported with [`history_use_lists`](./engines.md#engineredishistory_use_lists))
 * positioning or recovery are used for channel subscription
+* subscription does not use a [tags filter](./publication_filtering.md) – client-side or server-side
 
 Example of subscription creation on the client side:
 
@@ -9388,6 +9389,14 @@ For example, this means that to automatically use delta calculation for all publ
 ```
 
 Again – subscribers which support delta compression and do not support it can co-exist in one channel.
+
+In Centrifugo PRO, a namespace with `allowed_delta_types` can not use [`batch_flush_latest`](../pro/client_msg_batching.md#batch_flush_latest): skipping publications would leave subscribers applying deltas to data they never received.
+
+:::caution
+
+The `skip_history` option of publish and broadcast can't be used in channels with delta compression: subscribers fail to apply the delta of the publication following a publication not saved to history.
+
+:::
 
 ### Example and further reading
 
@@ -9557,7 +9566,11 @@ Boolean, default `false`. If set to true it forces using RESP2 protocol for comm
 
 ### `engine.redis.history_use_lists`
 
-Boolean, default `false` – turns on using Redis Lists instead of Stream data structure for keeping history (not recommended, keeping this for backwards compatibility mostly).
+:::caution Deprecated
+This option is deprecated and may be removed in a future Centrifugo release. Keep history in Redis Streams – the default.
+:::
+
+Boolean, default `false` – turns on using Redis Lists instead of Stream data structure for keeping history. Lists do not support reverse-order history retrieval and [delta compression](./delta_compression.md).
 
 ### `engine.redis.presence_ttl`
 
@@ -11706,6 +11719,9 @@ Options:
 - `tags` — key-value metadata for filtering
 - `version` / `version_epoch` — per-key version for ordering
 - `delta` — enable delta compression
+- `b64data` — data encoded in base64, for binary payloads over HTTP API
+
+Result fields: `offset` and `epoch` — stream position after the operation; `suppressed` — `true` if the publish was not applied; `suppress_reason` — why it was suppressed: `idempotency`, `version`, `key_exists` or `key_not_found`.
 
 ### map_remove
 
@@ -11717,6 +11733,10 @@ curl -X POST http://localhost:8000/api/map_remove \
   -d '{"channel": "scoreboard:main", "key": "player1"}'
 ```
 
+Options: `idempotency_key` — duplicate detection key.
+
+Result fields are the same as for `map_publish`: `offset`, `epoch`, `suppressed`, `suppress_reason` (`idempotency` or `key_not_found`).
+
 ### map_read_state
 
 Read the current state with optional pagination.
@@ -11727,7 +11747,13 @@ curl -X POST http://localhost:8000/api/map_read_state \
   -d '{"channel": "scoreboard:main", "limit": 100}'
 ```
 
-Options: `cursor` (pagination), `limit`, `key` (filter to single key).
+Options:
+- `cursor` — pagination cursor returned by the previous page, empty for the first page
+- `limit` — maximum number of entries per page: `-1` means no limit, `0` returns only the stream position
+- `key` — read a single entry by exact key (`cursor` and `limit` are ignored)
+- `revision_offset` / `revision_epoch` — stream position from a previous state read; if the epoch changed since then the call fails with an unrecoverable position error (code `112`) – restart reading from the first page in this case
+
+Result fields: `entries` — array of [map entries](#map-entry) of this page; `offset` and `epoch` — current stream position; `cursor` — cursor of the next page, empty when there are no more entries.
 
 :::note Redis map broker: page sizes may vary
 
@@ -11745,7 +11771,24 @@ curl -X POST http://localhost:8000/api/map_read_stream \
   -d '{"channel": "scoreboard:main", "limit": 100}'
 ```
 
-Options: `since_offset` / `since_epoch` (read from position), `limit`, `reverse`.
+Options: `since_offset` / `since_epoch` (read from position), `limit` (`-1` means no limit, `0` returns only the stream position), `reverse`.
+
+Result fields: `entries` — array of [map entries](#map-entry); `offset` and `epoch` — top stream position.
+
+If entries after `since_offset` are no longer in the stream, the call fails with an unrecoverable position error (code `112`).
+
+### Map entry
+
+Entries returned by `map_read_state` and `map_read_stream` have these fields:
+
+| Field     | Type                  | Description                                                    |
+|-----------|-----------------------|----------------------------------------------------------------|
+| `key`     | `string`              | Entry key                                                      |
+| `data`    | `JSON`                | Entry data                                                     |
+| `tags`    | `map<string, string>` | Entry tags                                                     |
+| `offset`  | `integer`             | Offset of the entry in the channel stream                      |
+| `removed` | `bool`                | `true` for a removal event                                     |
+| `time`    | `integer`             | Time of the publication (Unix milliseconds), if known          |
 
 ### map_stats
 
@@ -13914,7 +13957,7 @@ The expected response example if a publication is allowed:
 |-------------------|-----------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `data`            | `JSON`                | no       | an optional JSON data to send into a channel **instead of** original data sent by a client                                                                                                        |
 | `b64data`         | `string`              | no       | a binary data encoded in base64 format, the meaning is the same as for data above, will be decoded to raw bytes on Centrifugo side before publishing                                              |
-| `skip_history`    | `bool`                | no       | when set to `true` Centrifugo won't save publication to the channel history                                                                                                                       |
+| `skip_history`    | `bool`                | no       | when set to `true` Centrifugo won't save publication to the channel history. Can't be used in channels with [delta compression](./delta_compression.md)                                                                                                                       |
 | `tags`            | `map<string, string>` | no       | Since Centrifugo v6.8.0. Server-controlled publication tags attached to the resulting publication. Useful together with [server-side publication tags filter](../pro/server_tags_filter.md) — the proxy is the natural place to stamp RBAC tags on client-originated publishes since clients cannot send tags themselves |
 | `idempotency_key` | `string`              | no       | Since Centrifugo v6.8.0. Idempotency key for safe retries — duplicate publishes with the same key within the broker's idempotent result TTL window are suppressed                                  |
 | `delta`           | `bool`                | no       | Since Centrifugo v6.8.0. Enable delta compression for this publication                                                                                                                            |
@@ -14847,7 +14890,7 @@ When combined with channels that publish messages with data tags, publication fi
 
 - Publication filtering works only with client-side subscriptions at this point.
 - Publication filtering is only supported by `centrifuge-js` for now, [see below the examples](#usage-in-real-time-sdk)
-- Publication filtering cannot be used together with [delta compression](./delta_compression.md) in the same channel – both features serve as alternative approaches for bandwidth optimization and are mutually exclusive in Centrifugo.
+- Publication filtering cannot be used together with [delta compression](./delta_compression.md) – both features serve as alternative approaches for bandwidth optimization and are mutually exclusive in Centrifugo: delta compression is not negotiated for a subscription with a tags filter.
 - It is recommended to avoid the design where a single subscriber to channel can not keep up with all the messages in the channel if filter is not used. Filter should be used as a bandwidth optimization, mostly in scenarios where client already skips some messages received from the channel. Or at least make sure that you don't have scenarios in the app where a subscriber is overwhelmed with messages from the channel – this results into bad UX and disconnections with `slow` reason. Remember – Centrifugo is a client-facing PUB/SUB system, where each channel publication is processed by each subscriber. It's a pattern completely different from "Queue" where large volume of messages in topic may be shared over many consumers thus each consumer only processes a fraction of messages achieving high throughput in terms of a single topic.
 - Publication filtering works seamlessly with Centrifugo's automatic recovery mechanisms: in case of successful recovery, only publications matching the filter are returned during [stream recovery](./history_and_recovery.md#how-recovery-works), and only the latest matching publication is returned when using [cache recovery mode](./cache_recovery.md).
 - Centrifugo tag filters designed to be zero-allocation during publication broadcast towards many subscribers, the CPU overhead of using filter must be negligible for most setups. Having filters adds memory overhead for each subscription since Centrifugo needs to keep them during the entire lifetime of the connection.
@@ -15317,13 +15360,15 @@ In response, you will also get 200 OK, but payload will contain `error` field in
 
 `error` object contains error code and message - this is also the same for other commands described below.
 
+Since v6.9.7, Centrifugo PRO may send a publication to the broker together with concurrent ones when under load, which makes publishing cheaper. See [grouped publications](../pro/server_api_enhancements.md#grouped-publications).
+
 #### PublishRequest
 
 | Field name        | Field type          | Required | Description                                                                                                                                                                                                                                                                                                                                                                                                                  |
 |-------------------|---------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `channel`         | `string`            | yes      | Name of channel to publish                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `data`            | any `JSON`          | yes      | Custom JSON data to publish into a channel                                                                                                                                                                                                                                                                                                                                                                                   |
-| `skip_history`    | `bool`              | no       | Skip adding publication to history for this request                                                                                                                                                                                                                                                                                                                                                                          |
+| `skip_history`    | `bool`              | no       | Skip adding publication to history for this request. Can't be used in channels with [delta compression](./delta_compression.md)                                                                                                                                                                                                                                                                                                                                                                          |
 | `tags`            | `map[string]string` | no       | Publication tags - map with arbitrary string keys and values which is attached to publication and will be delivered to clients                                                                                                                                                                                                                                                                                               |
 | `b64data`         | `string`            | no       | Custom binary data to publish into a channel encoded to base64 so it's possible to use HTTP API to send binary to clients. Centrifugo will decode it from base64 before publishing. In case of GRPC you can publish binary using `data` field.                                                                                                                                                                               |
 | `idempotency_key` | `string`            | no       | Optional idempotency key to drop duplicate publications upon retries. It acts per channel. Centrifugo currently keeps the cache of idempotent publish results during 5 minutes window. Supported only by Memory and Redis engines                                                                                                                                                                                            |
@@ -15369,13 +15414,15 @@ curl --header "X-API-Key: <API_KEY>" \
 
 This command may be very useful when implementing messenger application, like we show in [Grand Tutorial](../tutorial/intro.md).
 
+Since v6.9.7, Centrifugo PRO sends the publications of a broadcast to the broker together, which makes broadcasting to many channels cheaper. See [grouped publications](../pro/server_api_enhancements.md#grouped-publications).
+
 #### BroadcastRequest
 
 | Field name        | Field type          | Required | Description                                                                                                                                                                                                                                                                                                                                                                                                                  |
 |-------------------|---------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `channels`        | `array[string]`     | yes      | List of channels to publish data to                                                                                                                                                                                                                                                                                                                                                                                          |
 | `data`            | any `JSON`          | yes      | Custom JSON data to publish into each channel                                                                                                                                                                                                                                                                                                                                                                                |
-| `skip_history`    | `bool`              | no       | Skip adding publications to channels' history for this request                                                                                                                                                                                                                                                                                                                                                               |
+| `skip_history`    | `bool`              | no       | Skip adding publications to channels' history for this request. Can't be used in channels with [delta compression](./delta_compression.md)                                                                                                                                                                                                                                                                                                                                                               |
 | `tags`            | `map[string]string` | no       | Publication tags - map with arbitrary string keys and values which is attached to publication and will be delivered to clients                                                                                                                                                                                                                                                                                               |
 | `b64data`         | `string`            | no       | Custom binary data to publish into a channel encoded to base64 so it's possible to use HTTP API to send binary to clients. Centrifugo will decode it from base64 before publishing. In case of GRPC you can publish binary using `data` field.                                                                                                                                                                               |
 | `idempotency_key` | `string`            | no       | Optional idempotency key to drop duplicate publications upon retries. It acts per channel. Centrifugo currently keeps the cache of idempotent publish results during 5 minutes window.                                                                                                                                                                                                                                       |
@@ -15412,7 +15459,7 @@ This is not a real-time streaming subscription request – it's just a command t
 
 | Field name      | Field type                          | Required | Description                                                                                                                   |
 |-----------------|-------------------------------------|----------|-------------------------------------------------------------------------------------------------------------------------------|
-| `user`          | `string`                            | yes      | User ID to subscribe                                                                                                          |
+| `user`          | `string`                            | yes      | User ID to subscribe. Empty `user` targets anonymous connections (or every connection when `all_users` is set in Centrifugo PRO)                                                 |
 | `channel`       | `string`                            | yes      | Name of channel to subscribe user to                                                                                          |
 | `info`          | any `JSON`                          | no       | Attach custom data to subscription (will be used in presence and join/leave messages)                                         |
 | `b64info`       | `string`                            | no       | info in base64 for binary mode (will be decoded by Centrifugo)                                                                |
@@ -15423,6 +15470,8 @@ This is not a real-time streaming subscription request – it's just a command t
 | `recover_since` | [`StreamPosition`](#streamposition) | no       | Stream position to recover from                                                                                               |
 | `expire_at`     | `int`                               | no       | Unix time (in seconds) in the future when the subscription will expire                                                        |
 | `override`      | [`Override`](#override-object)      | no       | Allows dynamically override some channel options defined in Centrifugo configuration (see below available fields)             |
+| `label_filter`  | `FilterNode`                        | no       | (**Centrifugo PRO**) Only act on connections whose [client labels](../pro/client_authentication.md#client-labels) match this filter. See [targeted ops by client labels](../pro/server_api_enhancements.md#targeted-ops-by-client-labels) |
+| `all_users`     | `bool`                              | no       | (**Centrifugo PRO**) When `user` is empty, target every connection on every node instead of anonymous connections only. No effect when `user` is set. See [targeted ops by client labels](../pro/server_api_enhancements.md#targeted-ops-by-client-labels) |
 
 #### Override object
 
@@ -15465,10 +15514,12 @@ Empty object at the moment.
 
 | Field name | Field type | Required | Description                                                            |
 |------------|------------|----------|------------------------------------------------------------------------|
-| `user`     | `string`   | yes      | User ID to unsubscribe                                                 |
+| `user`     | `string`   | yes      | User ID to unsubscribe. Empty `user` targets anonymous connections (or every connection when `all_users` is set in Centrifugo PRO) |
 | `channel`  | `string`   | yes      | Name of channel to unsubscribe user to                                 |
 | `client`   | `string`   | no       | Specific client ID to unsubscribe (user still required to be set)      |
 | `session`  | `string`   | no       | Specific client session to disconnect (user still required to be set). |
+| `label_filter` | `FilterNode` | no   | (**Centrifugo PRO**) Only act on connections whose [client labels](../pro/client_authentication.md#client-labels) match this filter. See [targeted ops by client labels](../pro/server_api_enhancements.md#targeted-ops-by-client-labels) |
+| `all_users` | `bool`    | no       | (**Centrifugo PRO**) When `user` is empty, target every connection on every node instead of anonymous connections only. No effect when `user` is set. See [targeted ops by client labels](../pro/server_api_enhancements.md#targeted-ops-by-client-labels) |
 
 #### UnsubscribeResponse
 
@@ -15489,11 +15540,13 @@ Empty object at the moment.
 
 | Field name   | Field type                         | Required | Description                                                            |
 |--------------|------------------------------------|----------|------------------------------------------------------------------------|
-| `user`       | `string`                           | yes      | User ID to disconnect                                                  |
+| `user`       | `string`                           | yes      | User ID to disconnect. Empty `user` targets anonymous connections (or every connection when `all_users` is set in Centrifugo PRO) |
 | `client`     | `string`                           | no       | Specific client ID to disconnect (user still required to be set)       |
 | `session`    | `string`                           | no       | Specific client session to disconnect (user still required to be set). |
 | `whitelist`  | `array[string]`                    | no       | Array of client IDs to keep                                            |
 | `disconnect` | [`Disconnect`](#disconnect-object) | no       | Provide custom disconnect object, see below                            |
+| `label_filter` | `FilterNode`                     | no       | (**Centrifugo PRO**) Only act on connections whose [client labels](../pro/client_authentication.md#client-labels) match this filter. See [targeted ops by client labels](../pro/server_api_enhancements.md#targeted-ops-by-client-labels) |
+| `all_users`  | `bool`                             | no       | (**Centrifugo PRO**) When `user` is empty, target every connection on every node instead of anonymous connections only. No effect when `user` is set. See [targeted ops by client labels](../pro/server_api_enhancements.md#targeted-ops-by-client-labels) |
 
 #### Disconnect object
 
@@ -15517,16 +15570,24 @@ Empty object at the moment.
 
 `refresh` allows refreshing user connection (mostly useful when unidirectional transports are used).
 
+:::caution
+
+A `refresh` without `expire_at` (and without `expired`) makes the matched connections non-expiring: their previous expiration time is cleared.
+
+:::
+
 #### RefreshRequest
 
 | Field name  | Field type | Required | Description                                                          |
 |-------------|------------|----------|----------------------------------------------------------------------|
-| `user`      | `string`   | yes      | User ID to refresh                                                   |
+| `user`      | `string`   | yes      | User ID to refresh. Empty `user` targets anonymous connections (or every connection when `all_users` is set in Centrifugo PRO) |
 | `client`    | `string`   | no       | Client ID to refresh  (user still required to be set)                |
 | `session`   | `string`   | no       | Specific client session to refresh (user still required to be set).  |
 | `expired`   | `bool`     | no       | Mark connection as expired and close with Disconnect Expired reason  |
-| `expire_at` | `int`      | no       | Unix time (in seconds) in the future when the connection will expire |
-| `info`      | any `JSON` | no       | Attach/replace connection info on refresh                            |
+| `expire_at` | `int`      | no       | Unix time (in seconds) in the future when the connection will expire. If not set, the connection becomes non-expiring. If in the past, the connection is disconnected as expired |
+| `info`      | any `JSON` | no       | Attach/replace connection info on refresh. Only applied together with `expire_at` in the future |
+| `label_filter` | `FilterNode` | no    | (**Centrifugo PRO**) Only act on connections whose [client labels](../pro/client_authentication.md#client-labels) match this filter. See [targeted ops by client labels](../pro/server_api_enhancements.md#targeted-ops-by-client-labels) |
+| `all_users` | `bool`     | no       | (**Centrifugo PRO**) When `user` is empty, target every connection on every node instead of anonymous connections only. No effect when `user` is set. See [targeted ops by client labels](../pro/server_api_enhancements.md#targeted-ops-by-client-labels) |
 
 #### RefreshResponse
 
@@ -15592,7 +15653,7 @@ Example response:
 
 | Field name | Field type              | Required | Description                             |
 |------------|-------------------------|----------|-----------------------------------------|
-| `presence` | `map[string]ClientInfo` | yes      | Offset of publication in history stream |
+| `presence` | `map[string]ClientInfo` | yes      | Map where key is client ID and value is [`ClientInfo`](#clientinfo) |
 
 #### ClientInfo
 
@@ -15827,11 +15888,46 @@ Empty object at the moment.
 
 | Field name | Field type    | Required | Description                              |
 |------------|---------------|----------|------------------------------------------|
-| `nodes`    | `array[Node]` | yes      | Information about all nodes in a cluster |
+| `nodes`    | [`array[Node]`](#node) | yes      | Information about all nodes in a cluster |
+
+#### Node
+
+| Field name     | Field type              | Required | Description                                                                                  |
+|----------------|-------------------------|----------|----------------------------------------------------------------------------------------------|
+| `uid`          | `string`                | yes      | Unique ID of the node                                                                        |
+| `name`         | `string`                | yes      | Node name                                                                                    |
+| `version`      | `string`                | yes      | Centrifugo version of the node                                                               |
+| `num_clients`  | `integer`               | yes      | Number of clients connected to the node                                                      |
+| `num_users`    | `integer`               | yes      | Number of unique users connected to the node                                                 |
+| `num_subs`     | `integer`               | yes      | Number of subscriptions on the node                                                          |
+| `num_channels` | `integer`               | yes      | Number of active channels on the node                                                        |
+| `uptime`       | `integer`               | no       | Node uptime in seconds (omitted when 0)                                                                      |
+| `metrics`      | [`Metrics`](#metrics)   | no       | Node metrics aggregated over the `node.info_metrics_aggregate_interval` (60s by default)     |
+| `process`      | [`Process`](#process)   | no       | (**Centrifugo PRO**) CPU and memory usage of the node process                                |
+
+#### Metrics
+
+| Field name | Field type           | Required | Description                                                  |
+|------------|----------------------|----------|--------------------------------------------------------------|
+| `interval` | `float`              | yes      | Aggregation interval in seconds                              |
+| `items`    | `map[string]float`   | yes      | Map where key is a metric name and value is the metric value |
+
+#### Process
+
+Centrifugo PRO only.
+
+| Field name | Field type | Required | Description                                  |
+|------------|------------|----------|----------------------------------------------|
+| `cpu`      | `float`    | yes      | CPU usage of the process in percent          |
+| `rss`      | `integer`  | yes      | Resident set size of the process in bytes    |
 
 ### batch
 
 Batch allows sending many commands in one request. Commands processed sequentially by Centrifugo, users should check individual error in each returned reply. Useful to avoid RTT latency penalty for each command sent, this is an analogue of pipelining.
+
+Sequential processing describes the order in which commands are processed, not a delivery guarantee. Publications to one channel keep their order, but subscribers of different channels may receive publications in a different order than they appear in the batch.
+
+Since v6.9.7, Centrifugo PRO sends the publish commands of a batch to the broker together, see [grouped publications](../pro/server_api_enhancements.md#grouped-publications).
 
 Example with two publications in one request:
 
@@ -15853,6 +15949,19 @@ Example response:
 }
 ```
 It's also possible to pass `"parallel": true` on `batch` data top level to make batch commands processing parallel on Centrifugo side. This may provide reduced latency (especially in case of using Redis engine).
+
+#### BatchRequest
+
+| Field name           | Field type       | Required | Description                                                                                                                  |
+|----------------------|------------------|----------|------------------------------------------------------------------------------------------------------------------------------|
+| `commands`           | `array[Command]` | yes      | Commands to execute. Each command is an object with one method name key (like `publish`) and the method request as value     |
+| `parallel`           | `bool`           | no       | Process commands concurrently instead of one after another. No ordering guarantee between commands in this case              |
+
+#### BatchResponse
+
+| Field name | Field type     | Required | Description                                                       |
+|------------|----------------|----------|-------------------------------------------------------------------|
+| `replies`  | `array[Reply]` | yes      | Replies to the commands, in the same order as in `commands`       |
 
 ## HTTP API libraries
 
@@ -21033,6 +21142,7 @@ curl --header "Content-Type: application/json" \
 | `user`          | `string`       | yes      | User ID to invalidate tokens for                                                                                                                                                                                                                                                                                                                              |
 | `issued_before` | `int`          | no       | All tokens issued before this Unix time will be considered revoked (in case of JWT this requires `iat` to be properly set in the JWT); if not provided the server uses current time                                                                                                                                                                          |
 | `expire_at`     | `int`          | no       | Unix time in the future when revocation information should expire (Unix seconds). While optional **we recommend to use a reasonably small expiration time (matching the expiration time of your JWTs)** to keep working set of revocations small (since Centrifugo nodes periodically load all entries from the database table to construct in-memory cache). |
+| `channel`       | `string`       | no       | If set, only subscription tokens for this channel are invalidated: connections keep working, and subscriptions to the channel made with an invalidated token are unsubscribed on the next periodic check (with a token expired code, so the client can resubscribe with a new token). If not set, connection tokens are invalidated (subscription tokens are not affected). |
 
 #### InvalidateUserTokensResult
 
@@ -23591,6 +23701,12 @@ Example of configuration:
 }
 ```
 
+:::caution
+
+`batch_flush_latest` can not be used in a namespace with [`allowed_delta_types`](../server/delta_compression.md). A delta is computed against the previous publication of a channel, and a subscriber would get deltas against publications `batch_flush_latest` skipped. Centrifugo does not start with a config which sets both in one namespace.
+
+:::
+
 ---
 
 ## Connections API
@@ -25619,21 +25735,41 @@ The option is off by default and adds a small per-command latency that becomes n
 
 ## Faster HTTP API
 
-Centrifugo PRO has an optimized JSON serialization/deserialization for HTTP API.
+Centrifugo PRO decodes HTTP API requests and encodes responses with faster JSON libraries – 2-4 times faster than the standard ones Centrifugo OSS uses.
 
-The effect can be noticeable under load. The exact numbers heavily depend on usage scenario. According to our benchmarks you can expect 10-15% more requests/sec for small message publications over HTTP API, and up to several times throughput boost when you are frequently get lots of messages from a history, see a couple of examples below.
+How much this saves depends on how much JSON a request carries. For small requests, like a single publication, the difference is not noticeable: JSON is a tiny part of the work Centrifugo does for such a request. The gain shows for requests and responses with a lot of data. In our measurements of the same server with the two JSON implementations:
+
+* a `history` request returning 100 publications took 40% less CPU, and the server handled 1.3 times more such requests per second
+* a `batch` of 100 `publish` commands took 15% less CPU
+* a `broadcast` into 1000 channels took 10% less CPU
 
 ## Faster GRPC API
 
-Centrifugo PRO has an optimized Protobuf serialization/deserialization for GRPC API. The effect can be noticeable under load. The exact numbers heavily depend on usage scenario.
+Centrifugo PRO encodes and decodes GRPC API messages with generated code which is about 2 times faster than the default Protobuf implementation. As with the HTTP API, the effect grows with the size of messages and is small for small ones.
+
+## Faster publishing
+
+New in Centrifugo PRO v6.9.7
+
+Centrifugo PRO sends publications to the broker in groups instead of one by one: single publications arriving under load are sent together, and the publications of a [`broadcast`](../server/server_api.md#broadcast) or [`batch`](../server/server_api.md#batch) call are handed to the broker together. With Redis and Memory engines, a broadcast also does not start a separate goroutine for each channel. See [Grouped publications](./server_api_enhancements.md#grouped-publications) for how it works, what it changes for applications, and the options.
+
+Depending on the load profile, this may give:
+
+* lower CPU usage of Centrifugo
+* lower CPU usage of Redis and less traffic between Centrifugo and Redis
+* lower latency of batch requests with many publish commands (with Redis)
+* lower memory usage and fewer goroutines during large broadcasts
+* higher throughput of single publications under heavy load
+
+The effect is larger when a call carries many publications, and for single publications it grows with load. It also depends on the broker setup – for example, with Redis Cluster without sharded PUB/SUB the gain is smaller, since publications to different channels can not share one Redis call. Under load, a single publication may wait a little for others, which adds up to 250 microseconds to its latency; the latency of a broadcast with history may also increase slightly, since one broker call carrying many channels takes Redis longer than a single publish.
 
 ## Faster HTTP proxy
 
-Centrifugo PRO has an optimized JSON serialization/deserialization for HTTP proxy. The effect can be noticeable under load. The exact numbers heavily depend on usage scenario.
+Centrifugo PRO encodes proxy requests and decodes proxy responses with faster JSON libraries, about 2 times faster than the standard ones. The saving is small compared to the cost of the HTTP call to your backend.
 
 ### Faster HTTP proxy client
 
-Centrifugo PRO adds a boolean option `use_fast_client` which enables using a fast optimized HTTP client for proxy requests. In the benchmarks we did, the effect was up to 2x more request throughput for HTTP proxy and 10 times fewer allocations for each request. This will result in significant CPU and latency reductions under load.
+Centrifugo PRO adds a boolean option `use_fast_client` which enables using a fast optimized HTTP client for proxy requests. In our benchmark of connect proxy calls it made about 10 times fewer memory allocations per call and took about 20% less time per call. Fewer allocations mean less CPU spent on garbage collection under load; how much faster calls get depends on your backend.
 
 The option may be defined inside `http` section of proxy object. For example, to enable it for a connect proxy:
 
@@ -25657,19 +25793,19 @@ This is a separate option because the optimized version only supports HTTP 1.1, 
 
 ## Faster GRPC proxy
 
-Centrifugo PRO has an optimized Protobuf serialization/deserialization for GRPC API. The effect can be noticeable under load. The exact numbers heavily depend on usage scenario.
+Centrifugo PRO encodes and decodes GRPC proxy messages with the same faster Protobuf code as the GRPC API. The saving is small compared to the cost of the call to your backend.
 
 ## Faster async consumers
 
-When asynchronous consumers are used and the payload represents an encoded request type, Centrifugo PRO leverages an optimized JSON decoder.
+When asynchronous consumers are used and the payload represents an encoded request type, Centrifugo PRO decodes it with a faster JSON library. As with the HTTP API, this matters for large payloads and is not noticeable for small ones.
 
 ## Faster JWT decoding
 
-Centrifugo PRO has an optimized decoding of JWT claims.
+Centrifugo PRO decodes JWT claims with a faster JSON library.
 
 ## Faster GRPC unidirectional stream
 
-Centrifugo PRO has an optimized Protobuf deserialization for GRPC unidirectional stream. This only affects deserialization of initial connect command.
+Centrifugo PRO decodes the connect command of a GRPC unidirectional stream with faster Protobuf code. This only affects the initial connect command.
 
 ## WebSocket compression optimizations
 
@@ -26614,7 +26750,7 @@ Returns a paginated list of registered devices according to request filter condi
 
 | Field                 | Type           | Required | Description                                                                     |
 |-----------------------|----------------|----------|---------------------------------------------------------------------------------|
-| `filter`              | `DeviceFilter` | yes      | How to filter results                                                           |
+| `filter`              | `DeviceFilter` | no       | How to filter results                                                           |
 | `cursor`              | `string`       | no       | Cursor for pagination (last device id in previous batch, empty for first page). |
 | `limit`               | `int32`        | no       | Maximum number of devices to retrieve.                                          |
 | `include_total_count` | `bool`         | no       | Flag indicating whether to include total count for the current filter.          |
@@ -26649,6 +26785,10 @@ Returns a paginated list of registered devices according to request filter condi
 | `token`    | `string`            | yes      | The device's token. For `webpush` this is the subscription **endpoint** (its stable identity). |
 | `platform` | `string`            | yes      | The device's platform.                     |
 | `user`     | `string`            | no       | The user associated with the device.       |
+| `timezone` | `string`            | no       | Timezone of device user.                   |
+| `locale`   | `string`            | no       | Locale of device user.                     |
+| `created_at` | `integer`         | yes      | Time the device was created (Unix milliseconds). |
+| `updated_at` | `integer`         | yes      | Time the device was last updated (Unix milliseconds). |
 | `topics`   | `array[string]`     | no       | Only included if `include_topics` was true |
 | `meta`     | `map[string]string` | no       | Only included if `include_meta` was true   |
 | `webpush_keys` | `string`        | no       | Web Push subscription keys JSON (`{p256dh, auth}`). Only included if `include_webpush_keys` was true |
@@ -26697,9 +26837,9 @@ List device to topic mapping.
 
 | Field                 | Type                | Required | Description                                                                     |
 |-----------------------|---------------------|----------|---------------------------------------------------------------------------------|
-| `filter`              | `DeviceTopicFilter` | no       | List of device IDs to filter results.                                           |
-| `cursor`              | `string`            | no       | Cursor for pagination (last device id in previous batch, empty for first page). |
-| `limit`               | `int32`             | no       | Maximum number of devices to retrieve.                                          |
+| `filter`              | `DeviceTopicFilter` | no       | How to filter results                                                           |
+| `cursor`              | `string`            | no       | Cursor for pagination (`next_cursor` from the previous response, empty for first page). |
+| `limit`               | `int32`             | no       | Maximum number of DeviceTopic objects to retrieve.                              |
 | `include_device`      | `bool`              | no       | Flag indicating whether to include Device information for each object.          |
 | `include_total_count` | `bool`              | no       | Flag indicating whether to include total count info to response.                |
 
@@ -26724,11 +26864,11 @@ List device to topic mapping.
 
 `DeviceTopic`:
 
-| Field       | Type     | Required | Description              |
-|-------------|----------|----------|--------------------------|
-| `id`        | `string` | yes      | ID of DeviceTopic object |
-| `device_id` | `string` | yes      | Device ID                |
-| `topic`     | `string` | yes      | Topic                    |
+| Field    | Type                | Required | Description                                                                                                         |
+|----------|---------------------|----------|---------------------------------------------------------------------------------------------------------------------|
+| `id`     | `string`            | yes      | ID of DeviceTopic object                                                                                            |
+| `topic`  | `string`            | yes      | Topic                                                                                                               |
+| `device` | [`Device`](#device_list-result) | no | Only included if `include_device` was true. Contains `id`, `provider`, `token`, `platform` and `user` (if set) of the device |
 
 ### user_topic_update
 
@@ -28397,6 +28537,76 @@ Cluster behavior: a fleet-wide op is fanned out via the control protocol — eve
 
 The [`connections`](./connections.md) admin API supports `label_filter` as a fleet-wide selector without needing `all_users`. Listings go through a per-node survey across the entire hub. The snapshot creation endpoint also accepts `label_filter` and applies it at gather time — see [Connections API](./connections.md) for the details.
 
+## Grouped publications
+
+New in Centrifugo PRO v6.9.7
+
+Centrifugo PRO sends publications to the broker in groups instead of one by one. This works with Redis and Memory engines and is enabled by default.
+
+* **Single publications** – server API [`publish`](../server/server_api.md#publish) over HTTP and GRPC, publications from [async consumers](../server/consumers.md), client-side publications (including ones going through the publish proxy), and [`broadcast`](../server/server_api.md#broadcast) into one channel. When Centrifugo is not busy, each publication goes to the broker right away, as before. Under load, when two sends to the broker are already in progress, a new publication waits for one of them to finish, and all publications waiting by then go out together. A publication waits for this no longer than 250 microseconds.
+* **Server API requests with many publications** – [`broadcast`](../server/server_api.md#broadcast) into several channels and [`batch`](../server/server_api.md#batch), sequential or parallel. The request hands its publications to the broker together, without waiting for other requests. With Redis, they reach Redis in a few pipelined calls, each covering many publications, instead of one command per publication. In a batch, only publish commands next to each other are handed over together: another command between them splits them, and runs only after the publications written before it. For a broadcast, Centrifugo PRO also does not start a separate goroutine for each channel.
+
+Each call returns after its own publication is sent, so publications made one after another keep their order.
+
+Grouping reduces CPU usage of Centrifugo and Redis, and the latency of batch requests. See [Faster publishing](./performance.md#faster-publishing) for more details.
+
+### What changes for applications
+
+**Order between channels.** Publications of one channel always take effect in the order they were written. A sequential batch no longer waits for one publication before starting the next, so publications to different channels may be applied in another order. Centrifugo never guaranteed that order to subscribers: with Redis, publications coming back from Redis are processed concurrently, spread by channel name, so a client subscribed to both channels could receive them in another order even before.
+
+**Errors.** Mostly unchanged: as before, an error may come after a publication was written, so use `idempotency_key` to make retries safe. Publications which share one Redis call share its outcome, so a problem with one channel's Redis keys may fail the other publications in that call too.
+
+To get the previous behavior back for a namespace, use `publication_grouping_disabled` described below.
+
+### publication_grouping_disabled
+
+A [channel namespace](../server/channels.md#channel-options) option. When `true`, every publication into channels of the namespace is sent to the broker on its own, whichever API it comes from – as before grouping existed. In a sequential batch such a command is published alone and in its place, so publications are written to Redis in the order of the batch. In a broadcast such channels are published one by one, each with its own result.
+
+```json title="config.json"
+{
+  "channel": {
+    "namespaces": [
+      {
+        "name": "ledger",
+        "publication_grouping_disabled": true
+      }
+    ]
+  }
+}
+```
+
+### publication_grouping_max_delay
+
+A [channel namespace](../server/channels.md#channel-options) option, a duration, zero by default. When set, a single publication into the namespace waits up to this long for other publications to join it, or until the group is full. This groups more publications at moderate load and saves more CPU of Centrifugo and Redis, at the cost of latency: every single publication waits up to the delay. A few hundred microseconds, like `250us`, is a reasonable start.
+
+```json title="config.json"
+{
+  "channel": {
+    "namespaces": [
+      {
+        "name": "chat",
+        "publication_grouping_max_delay": "250us"
+      }
+    ]
+  }
+}
+```
+
+The delay applies to single publications only: batches, and broadcasts into several channels, never wait. It can be set only for namespaces using Redis or Memory engines, and can not be combined with `publication_grouping_disabled`.
+
+Client commands of one connection are processed one by one unless [`client.concurrency`](../server/configuration.md#clientconcurrency) is set, so with the delay a client's next command waits for its delayed publication.
+
+### How much gets grouped
+
+With Redis, publications are always sent to Redis in a pipeline. How many publications may share a single Redis call depends on the setup:
+
+* A single Redis instance: publications to many channels may share a call.
+* Redis Cluster with [sharded PUB/SUB](./scalability.md#redis-cluster-sharded-pubsub): publications to channels of the same partition may share a call.
+* Redis Cluster without sharded PUB/SUB: a call only carries publications of one channel, so the gain is smaller.
+* Redis history based on lists ([`history_use_lists`](../server/engines.md#engineredishistory_use_lists)): each publication with history is a separate call.
+
+Other brokers (like NATS or PostgreSQL) do not group publications: single publications are sent one by one, and publications of a batch or a broadcast are sent as concurrent single publishes – so the note about order between channels still applies to them, with little performance gain.
+
 ## See also
 
 - [Client labels](./client_authentication.md#client-labels) — how to attach labels via JWT or connect proxy.
@@ -28620,7 +28830,7 @@ Use the [`invalidate_user_tokens`](/docs/pro/access_revoke#invalidate_user_token
 
 ## Limitations
 
-- **Delta compression** is incompatible with the server-side publication filter (same constraint as the client-side tags filter).
+- **Delta compression** is incompatible with the server-side publication filter (same constraint as the client-side tags filter): delta compression is not negotiated for such subscriptions.
 
 ---
 
