@@ -217,4 +217,4 @@ Use the [`invalidate_user_tokens`](/docs/pro/access_revoke#invalidate_user_token
 
 ## Limitations
 
-- **Delta compression** is incompatible with the server-side publication filter (same constraint as the client-side tags filter).
+- **Delta compression** is incompatible with the server-side publication filter (same constraint as the client-side tags filter): delta compression is not negotiated for such subscriptions.

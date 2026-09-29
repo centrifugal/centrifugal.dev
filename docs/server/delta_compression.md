@@ -37,6 +37,7 @@ To successfully negotiate delta compression for a subscriber several conditions 
 * server uses `"allowed_delta_types": ["fossil"]` for a channel namespace a client subscribes to
 * server uses history for a channel (with Redis engine, history must be kept in Streams – the default, delta compression is not supported with [`history_use_lists`](./engines.md#engineredishistory_use_lists))
 * positioning or recovery are used for channel subscription
+* subscription does not use a [tags filter](./publication_filtering.md) – client-side or server-side
 
 Example of subscription creation on the client side:
 
