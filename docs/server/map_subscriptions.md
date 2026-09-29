@@ -588,6 +588,9 @@ Options:
 - `tags` — key-value metadata for filtering
 - `version` / `version_epoch` — per-key version for ordering
 - `delta` — enable delta compression
+- `b64data` — data encoded in base64, for binary payloads over HTTP API
+
+Result fields: `offset` and `epoch` — stream position after the operation; `suppressed` — `true` if the publish was not applied; `suppress_reason` — why it was suppressed: `idempotency`, `version`, `key_exists` or `key_not_found`.
 
 ### map_remove
 
@@ -599,6 +602,10 @@ curl -X POST http://localhost:8000/api/map_remove \
   -d '{"channel": "scoreboard:main", "key": "player1"}'
 ```
 
+Options: `idempotency_key` — duplicate detection key.
+
+Result fields are the same as for `map_publish`: `offset`, `epoch`, `suppressed`, `suppress_reason` (`idempotency` or `key_not_found`).
+
 ### map_read_state
 
 Read the current state with optional pagination.
@@ -609,7 +616,13 @@ curl -X POST http://localhost:8000/api/map_read_state \
   -d '{"channel": "scoreboard:main", "limit": 100}'
 ```
 
-Options: `cursor` (pagination), `limit`, `key` (filter to single key).
+Options:
+- `cursor` — pagination cursor returned by the previous page, empty for the first page
+- `limit` — maximum number of entries per page: `-1` means no limit, `0` returns only the stream position
+- `key` — read a single entry by exact key (`cursor` and `limit` are ignored)
+- `revision_offset` / `revision_epoch` — stream position from a previous state read; if the epoch changed since then the call fails with an unrecoverable position error (code `112`) – restart reading from the first page in this case
+
+Result fields: `entries` — array of [map entries](#map-entry) of this page; `offset` and `epoch` — current stream position; `cursor` — cursor of the next page, empty when there are no more entries.
 
 :::note Redis map broker: page sizes may vary
 
@@ -627,7 +640,24 @@ curl -X POST http://localhost:8000/api/map_read_stream \
   -d '{"channel": "scoreboard:main", "limit": 100}'
 ```
 
-Options: `since_offset` / `since_epoch` (read from position), `limit`, `reverse`.
+Options: `since_offset` / `since_epoch` (read from position), `limit` (`-1` means no limit, `0` returns only the stream position), `reverse`.
+
+Result fields: `entries` — array of [map entries](#map-entry); `offset` and `epoch` — top stream position.
+
+If entries after `since_offset` are no longer in the stream, the call fails with an unrecoverable position error (code `112`).
+
+### Map entry
+
+Entries returned by `map_read_state` and `map_read_stream` have these fields:
+
+| Field     | Type                  | Description                                                    |
+|-----------|-----------------------|----------------------------------------------------------------|
+| `key`     | `string`              | Entry key                                                      |
+| `data`    | `JSON`                | Entry data                                                     |
+| `tags`    | `map<string, string>` | Entry tags                                                     |
+| `offset`  | `integer`             | Offset of the entry in the channel stream                      |
+| `removed` | `bool`                | `true` for a removal event                                     |
+| `time`    | `integer`             | Time of the publication (Unix milliseconds), if known          |
 
 ### map_stats
 

@@ -156,3 +156,9 @@ Example of configuration:
   }
 }
 ```
+
+:::caution
+
+`batch_flush_latest` can not be used in a namespace with [`allowed_delta_types`](../server/delta_compression.md). A delta is computed against the previous publication of a channel, and a subscriber would get deltas against publications `batch_flush_latest` skipped. Centrifugo does not start with a config which sets both in one namespace.
+
+:::

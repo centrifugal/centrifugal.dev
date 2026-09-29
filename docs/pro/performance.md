@@ -1,5 +1,5 @@
 ---
-description: "Centrifugo PRO delivers faster HTTP/GRPC API, optimized proxy, faster JWT decoding, and WebSocket compression improvements to reduce CPU and latency."
+description: "Centrifugo PRO delivers faster HTTP/GRPC API, faster broadcast and batch publishing, optimized proxy, faster JWT decoding, and WebSocket compression improvements to reduce CPU and latency."
 id: performance
 title: Faster performance
 ---
@@ -74,21 +74,41 @@ The option is off by default and adds a small per-command latency that becomes n
 
 ## Faster HTTP API
 
-Centrifugo PRO has an optimized JSON serialization/deserialization for HTTP API.
+Centrifugo PRO decodes HTTP API requests and encodes responses with faster JSON libraries – 2-4 times faster than the standard ones Centrifugo OSS uses.
 
-The effect can be noticeable under load. The exact numbers heavily depend on usage scenario. According to our benchmarks you can expect 10-15% more requests/sec for small message publications over HTTP API, and up to several times throughput boost when you are frequently get lots of messages from a history, see a couple of examples below.
+How much this saves depends on how much JSON a request carries. For small requests, like a single publication, the difference is not noticeable: JSON is a tiny part of the work Centrifugo does for such a request. The gain shows for requests and responses with a lot of data. In our measurements of the same server with the two JSON implementations:
+
+* a `history` request returning 100 publications took 40% less CPU, and the server handled 1.3 times more such requests per second
+* a `batch` of 100 `publish` commands took 15% less CPU
+* a `broadcast` into 1000 channels took 10% less CPU
 
 ## Faster GRPC API
 
-Centrifugo PRO has an optimized Protobuf serialization/deserialization for GRPC API. The effect can be noticeable under load. The exact numbers heavily depend on usage scenario.
+Centrifugo PRO encodes and decodes GRPC API messages with generated code which is about 2 times faster than the default Protobuf implementation. As with the HTTP API, the effect grows with the size of messages and is small for small ones.
+
+## Faster publishing
+
+New in Centrifugo PRO v6.9.7
+
+Centrifugo PRO sends publications to the broker in groups instead of one by one: single publications arriving under load are sent together, and the publications of a [`broadcast`](../server/server_api.md#broadcast) or [`batch`](../server/server_api.md#batch) call are handed to the broker together. With Redis and Memory engines, a broadcast also does not start a separate goroutine for each channel. See [Grouped publications](./server_api_enhancements.md#grouped-publications) for how it works, what it changes for applications, and the options.
+
+Depending on the load profile, this may give:
+
+* lower CPU usage of Centrifugo
+* lower CPU usage of Redis and less traffic between Centrifugo and Redis
+* lower latency of batch requests with many publish commands (with Redis)
+* lower memory usage and fewer goroutines during large broadcasts
+* higher throughput of single publications under heavy load
+
+The effect is larger when a call carries many publications, and for single publications it grows with load. It also depends on the broker setup – for example, with Redis Cluster without sharded PUB/SUB the gain is smaller, since publications to different channels can not share one Redis call. Under load, a single publication may wait a little for others, which adds up to 250 microseconds to its latency; the latency of a broadcast with history may also increase slightly, since one broker call carrying many channels takes Redis longer than a single publish.
 
 ## Faster HTTP proxy
 
-Centrifugo PRO has an optimized JSON serialization/deserialization for HTTP proxy. The effect can be noticeable under load. The exact numbers heavily depend on usage scenario.
+Centrifugo PRO encodes proxy requests and decodes proxy responses with faster JSON libraries, about 2 times faster than the standard ones. The saving is small compared to the cost of the HTTP call to your backend.
 
 ### Faster HTTP proxy client
 
-Centrifugo PRO adds a boolean option `use_fast_client` which enables using a fast optimized HTTP client for proxy requests. In the benchmarks we did, the effect was up to 2x more request throughput for HTTP proxy and 10 times fewer allocations for each request. This will result in significant CPU and latency reductions under load.
+Centrifugo PRO adds a boolean option `use_fast_client` which enables using a fast optimized HTTP client for proxy requests. In our benchmark of connect proxy calls it made about 10 times fewer memory allocations per call and took about 20% less time per call. Fewer allocations mean less CPU spent on garbage collection under load; how much faster calls get depends on your backend.
 
 The option may be defined inside `http` section of proxy object. For example, to enable it for a connect proxy:
 
@@ -112,19 +132,19 @@ This is a separate option because the optimized version only supports HTTP 1.1, 
 
 ## Faster GRPC proxy
 
-Centrifugo PRO has an optimized Protobuf serialization/deserialization for GRPC API. The effect can be noticeable under load. The exact numbers heavily depend on usage scenario.
+Centrifugo PRO encodes and decodes GRPC proxy messages with the same faster Protobuf code as the GRPC API. The saving is small compared to the cost of the call to your backend.
 
 ## Faster async consumers
 
-When asynchronous consumers are used and the payload represents an encoded request type, Centrifugo PRO leverages an optimized JSON decoder.
+When asynchronous consumers are used and the payload represents an encoded request type, Centrifugo PRO decodes it with a faster JSON library. As with the HTTP API, this matters for large payloads and is not noticeable for small ones.
 
 ## Faster JWT decoding
 
-Centrifugo PRO has an optimized decoding of JWT claims.
+Centrifugo PRO decodes JWT claims with a faster JSON library.
 
 ## Faster GRPC unidirectional stream
 
-Centrifugo PRO has an optimized Protobuf deserialization for GRPC unidirectional stream. This only affects deserialization of initial connect command.
+Centrifugo PRO decodes the connect command of a GRPC unidirectional stream with faster Protobuf code. This only affects the initial connect command.
 
 ## WebSocket compression optimizations
 
