@@ -60,7 +60,7 @@ To enable:
 }
 ```
 
-When enabled, the following metrics will include the `accept_protocol` label:
+The following metrics have the `accept_protocol` label, filled in only when the option is enabled:
 - `centrifugo_client_connections_accepted` - counter of accepted connections
 - `centrifugo_client_connections_inflight` - gauge of current connections
 
@@ -68,6 +68,10 @@ The `accept_protocol` label can have the following values:
 - `h1` - HTTP/1.1
 - `h2` - HTTP/2
 - `h3` - HTTP/3
+- `unknown` - the HTTP version could not be determined
+- `mem` - internal connections of the admin UI channel tracing
+
+For the GRPC unidirectional transport the value is always `h2`. When `expose_transport_accept_protocol` is not enabled, the label is still present but empty.
 
 This helps in understanding the protocol distribution across your infrastructure and can be useful for performance analysis and infrastructure planning.
 
@@ -248,7 +252,7 @@ Note that the map broker and the PostgreSQL broker are **not** PRO features — 
 
 - **Type:** Counter
 - **Labels:** provider, recipient_type, platform, success, err_code
-- **Description:** Count of push notifications sent, split by provider (`fcm`, `apns`, `hms`), recipient type, platform, whether the provider accepted it, and the provider error code when it did not.
+- **Description:** Count of push notifications sent, split by provider (`fcm`, `apns`, `hms`, `webpush`), recipient type, platform, whether the provider accepted it, and the provider error code when it did not. `platform` is the device platform for sends to devices (`filter`) through FCM, APNs and Web Push, `na` for HMS sends and for FCM topic and condition sends which reached the provider, and empty for sends to raw tokens. When ClickHouse analytics is enabled, pushes dropped after a failed re-queue are counted too, with the device platform for `filter` sends and an empty platform otherwise.
 - **Usage:** Build a delivery success ratio from `success="true"` over the total. Codes such as `unregistered` are normal device-token churn; authentication errors are not.
 
 #### centrifugo_push_scheduled_request_count
@@ -262,7 +266,7 @@ Note that the map broker and the PostgreSQL broker are **not** PRO features — 
 
 - **Type:** Gauge
 - **Labels:** provider, queue
-- **Description:** Number of push jobs waiting to be consumed — pending entries of the Redis stream for the consumer group, or rows in the `push_jobs` table whose `run_at` is already due. Despite the name this is a **job count, not a duration**, and it is a Gauge — take its current value, do not wrap it in `rate()`.
+- **Description:** Number of push jobs waiting to be consumed — the consumer group lag of the Redis stream (entries not yet delivered to consumers), or rows in the `push_jobs` table whose `run_at` is already due. Despite the name this is a **job count, not a duration**, and it is a Gauge — take its current value, do not wrap it in `rate()`.
 - **Usage:** Sustained growth means push workers cannot keep up with the send rate.
 
 #### centrifugo_push_consuming_inflight_jobs
@@ -305,7 +309,7 @@ Deprecated Summary — use `centrifugo_clickhouse_analytics_flush_duration_secon
 
 - **Type:** Histogram. Uses native schema when native histograms are enabled.
 - **Labels:** type, retries, result
-- **Description:** Time to write one batch to ClickHouse, by data type, retry count and outcome.
+- **Description:** Time to write one batch to ClickHouse, by data type, attempt count and outcome. For successful flushes the `retries` label holds the number of attempts made (`1` means no retry); failed flushes are always labelled `1`.
 - **Usage:** Rising flush latency is the leading indicator of analytics drops — the buffer fills while writes are slow.
 
 #### centrifugo_clickhouse_analytics_batch_size
@@ -405,7 +409,7 @@ These metrics describe the pgx connection pool Centrifugo PRO uses for PostgreSQ
 #### centrifugo_rate_limit_hits_over_limit
 
 - **Type:** Counter
-- **Description:** Number of requests rejected by PRO [rate limiting](./rate_limiting.md).
+- **Description:** Number of distributed rate limiter (`distributed_rate_limit`, used for example by [push notification](./push_notifications.md) rate limit strategies) evaluations in Redis which exceeded the limit, dry runs included. Repeated rejections served from the node's local cache are not counted, and neither are rejections by client command [rate limiting](./rate_limiting.md) (`client.rate_limit`).
 - **Usage:** Expect a non-zero baseline when limits are tuned tightly; alert on step changes rather than on any non-zero value.
 
 #### centrifugo_channel_state_events_queue_consuming_lag_milliseconds

@@ -93,8 +93,8 @@ Edit the `caps` array and the target channel below to see the resulting per-oper
 If at some point you need to revoke some capability from a client:
 
 * Simplest way is to wait for a connection expiration, then upon refresh:
-    * if using proxy – provide new caps in refresh proxy result, Centrifugo will update caps and unsubscribe a client from channels it does not have permissions anymore (**only those obtained due to previous connection-wide capabilities**).
-    * if JWT auth - provide new caps in connection token, Centrifugo will update caps and unsubscribe a client from channels it does not have permissions anymore (**only those obtained due to previous connection-wide capabilities**).
+    * if using proxy – provide new caps in refresh proxy result. If caps differ from the current ones, Centrifugo disconnects the client with a reconnect code, and new caps are applied upon reconnection. A successful refresh proxy result without `caps` means no caps – so the refresh proxy must return caps on every refresh to keep them (otherwise a connection which had caps will be reconnected).
+    * if JWT auth - provide new caps in connection token. If caps differ from the current ones, Centrifugo disconnects the client with a reconnect code, and new caps are applied upon reconnection.
 * In the case of using connect proxy – you can disconnect a user (or client) with a reconnect code. New capabilities will be requested upon reconnection.
 * In the case of using token auth – revoke the token (Centrifugo PRO feature) and disconnect the user (or client) with a reconnect code. Upon reconnection the user will receive an error that the token was revoked and will try to load a new one.
 
@@ -128,7 +128,7 @@ Or regex:
 {
     "caps": [
         {
-            "channels": ["^posts_[\d]+$"],
+            "channels": ["^posts_[\\d]+$"],
             "match": "regex",
             "allow": ["sub"]
         }
@@ -144,7 +144,7 @@ Of course it's possible to combine different types of match inside one `caps` ar
 {
     "caps": [
         {
-            "channels": ["^posts_[\d]+$"],
+            "channels": ["^posts_[\\d]+$"],
             "match": "regex",
             "allow": ["sub"]
         },

@@ -277,7 +277,7 @@ The admin UI includes a **Config** page that shows the effective configuration o
 
 ![Admin config viewer](/img/admin_config.png)
 
-The view is read-only and safe to expose to admins: secret values and credentials in URLs/DSNs are masked on the server and never sent to the browser.
+The view is read-only and safe to expose to admins: secret values and credentials in URLs/DSNs are masked on the server before being sent to the browser. Masking is partial: a few leading (and for secrets, trailing) characters of a long enough value stay visible to help identify it.
 
 ## More data in admin UI
 

@@ -130,6 +130,8 @@ The option may be defined inside `http` section of proxy object. For example, to
 
 This is a separate option because the optimized version only supports HTTP 1.1, so we try to avoid unexpected side effects when migrating from Centrifugo OSS to Centrifugo PRO.
 
+The option is not applied to map publish, map remove and shared poll refresh proxies – these always use the standard HTTP client.
+
 ## Faster GRPC proxy
 
 Centrifugo PRO encodes and decodes GRPC proxy messages with the same faster Protobuf code as the GRPC API. The saving is small compared to the cost of the call to your backend.

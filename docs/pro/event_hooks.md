@@ -61,14 +61,14 @@ The proxy endpoint is an extension of [Centrifugo OSS proxy](../server/proxy.md)
 ```json
 {
     "events": [
-        {"channel": "chat:index", "type": "occupied", "time_ms": 1697206286533},
+        {"channel": "chat:index", "type": "occupied", "time_ms": 1697206286533}
     ]
 }
 ```
 
-The payload may contain a batch of events, that's why `events` is an array – this is important for achieving high event throughput. Your backend must be fast enough to keep up with the events rate and volume, otherwise event queues will grow and eventually new events will be dropped by Centrifugo PRO.
+The payload may contain a batch of events, that's why `events` is an array – this is important for achieving high event throughput. Your backend must be fast enough to keep up with the events rate and volume, otherwise event queues will grow. Events are kept in Redis streams (one per partition), each trimmed to approximately the latest 100000 entries – if more than that are waiting for delivery in a partition, the oldest undelivered events are trimmed (lost), while new events are still accepted.
 
-Respond with an empty result object, without an `error` object set, to let Centrifugo PRO know that events were processed successfully. If the request to the backend fails or the response contains an `error` object, Centrifugo PRO will retry sending events with exponential backoff (from 100ms up to 20s).
+Respond with an empty result object, without an `error` object set, to let Centrifugo PRO know that events were processed successfully. If the request to the backend fails or the response contains an `error` object, Centrifugo PRO will retry sending events with exponential backoff and jitter (the first retry happens after 200–400ms, the delay is capped at 20s).
 
 Here is an example of an HTTP handler for processing channel state events using Flask:
 
@@ -157,6 +157,8 @@ For example, to use a dedicated Redis instance for presence with channel state e
 }
 ```
 
+When a separate presence manager is enabled, `channel_state` options are read from `presence_manager.redis.channel_state` instead of `engine.redis.channel_state`.
+
 Centrifugo PRO does the best effort delivering channel state events, making retries when the backend endpoint is unavailable (with exponential backoff), also survives cases when Centrifugo node dies unexpectedly. But there are scenarios when events may be lost — some of them are described above (Redis eviction, configuration changes). Even as best-effort notifications, channel state events can be very useful for applications — for example, to lazily clean up resources or update external state when channels become empty. For cases where stronger consistency is required, we recommend periodically syncing state by querying channel presence information using the server API.
 
 ## Cache empty events
@@ -237,7 +239,7 @@ Expected response example:
 }
 ```
 
-If cache empty proxy is defined, but Centrifugo can't reach it – then subscription request which triggered the event will be rejected with the internal error.
+If cache empty proxy is defined, but the request to it fails – then the client which triggered the event will be disconnected with code `3004` (server error) and will reconnect, instead of receiving an error reply to the subscribe request.
 
 #### NotifyCacheEmptyRequest
 

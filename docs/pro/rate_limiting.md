@@ -12,7 +12,7 @@ With rate limit properly configured, you can protect your Centrifugo installatio
 
 ## Simple configuration
 
-If you just want to protect the server from abusive clients without fine-tuning per-command limits, configure a `default` bucket under `client_command`. The `default` bucket applies to every command that does not have its own explicit bucket — which means it covers everything:
+If you just want to protect the server from abusive clients without fine-tuning per-command limits, configure a `default` bucket under `client_command`. The `default` bucket applies to every command that does not have its own explicit bucket. Each command type gets its own limiter built from the `default` buckets:
 
 ```json title="config.json"
 {
@@ -35,9 +35,9 @@ If you just want to protect the server from abusive clients without fine-tuning 
 }
 ```
 
-This single setting caps every connection to 100 commands per second across all command types — a reasonable starting point that allows normal interactive usage while cutting off clients that loop or misbehave.
+This single setting caps every connection to 100 commands per second for each command type (e.g. 100 publishes and 100 history calls per second) — a reasonable starting point that allows normal interactive usage while cutting off clients that loop or misbehave.
 
-Add a `total` bucket alongside `default` if you want a hard cap on the combined rate regardless of which commands are called:
+`default` is not a combined cap. Add a `total` bucket alongside `default` if you want a hard cap on the combined rate regardless of which commands are called:
 
 ```json title="config.json"
 {
@@ -93,8 +93,8 @@ The list of operations which can be rate limited on a per-connection level is:
 
 In addition, Centrifugo allows defining two special buckets containers:
 
-* `total` – define it to cap the combined rate of all commands from a connection. Total buckets are checked after the per-command (or `default`) check passes — only allowed commands consume a token from `total`. Rejected commands do not count against `total`. Note: `connect` is not subject to `total` in `client_command` (connect is not throttled at the per-connection level at all).
-* `default` - define it if you don't want to configure some command buckets explicitly, default buckets will be used in case command buckets is not configured explicitly.
+* `total` – define it to cap the combined rate of all commands from a connection. Total buckets are checked after the per-command (or `default`) check passes — only allowed commands consume a token from `total`. Rejected commands do not count against `total` of the same limiter. When both `client_command` and user-level limiters (`user_command`, `redis_user_command`) are enabled, `client_command` is checked first – a command it allows has already consumed tokens from its buckets (including `total`) even if a user-level limiter then rejects it. Note: `connect` is not subject to `total` in `client_command` (connect is not throttled at the per-connection level at all).
+* `default` - define it if you don't want to configure some command buckets explicitly, default buckets will be used in case command buckets is not configured explicitly. `default` buckets apply per command type – each command gets a separate limiter, so `default` does not cap the combined rate (use `total` for that).
 
 ```json title="config.json"
 {
@@ -446,7 +446,7 @@ When a channel operation is performed, Centrifugo:
 4. Otherwise, falls back to the base operation buckets (or `default` if no base is configured)
 
 :::note
-A namespace override with `enabled: true` but no `buckets` array specified is treated the same as no override — Centrifugo falls back to `default` buckets if configured.
+A namespace override (or RPC method override) with `enabled: true` but no `buckets` array specified uses the `default` buckets, not the base command buckets. If `default` is not configured either, no per-command limit applies to that namespace (or method) – only `total`, if configured.
 :::
 
 :::note

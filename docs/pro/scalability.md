@@ -105,7 +105,8 @@ For Redis Map Broker, the same option offloads PUB/SUB subscriptions to replica 
   "map_broker": {
     "type": "redis",
     "redis": {
-      "address": "localhost:6379",
+      "address": "redis+cluster://localhost:7000",
+      "sharded_pub_sub_partitions": 16,
       "replica_client": {
         "enabled": true
       },
@@ -115,11 +116,11 @@ For Redis Map Broker, the same option offloads PUB/SUB subscriptions to replica 
 }
 ```
 
-Works with both standalone Redis (with a replica) and Redis Cluster setups.
+Requires Redis Cluster or Redis Sentinel setup – the replica client can not be enabled for a standalone Redis, Centrifugo does not start in that case.
 
 ### Read presence from replica
 
-To read presence information from replica you need to enable `replica_client` in Redis configuration and set `presence_read_from_replica` boolean option:
+To read presence information from replica you need to enable `replica_client` in Redis configuration and set `presence_read_from_replica` boolean option. It also requires `presence_hash_field_ttl` to be enabled (Redis 7.4+) – Centrifugo does not start otherwise:
 
 ```json title="config.json"
 {
@@ -130,6 +131,7 @@ To read presence information from replica you need to enable `replica_client` in
       "replica_client": {
         "enabled": true
       },
+      "presence_hash_field_ttl": true,
       "presence_read_from_replica": true
     }
   }
@@ -158,7 +160,7 @@ Without this partitioning, each Centrifugo node could potentially create up to 1
 
 :::caution
 
-This means that enabling sharded PUB/SUB changes the key names Centrifugo uses in Redis, so any existing data (history, presence, result cache) is effectively lost on the switch. In many cases Centrifugo data is ephemeral, so if your application is built idiomatically connected subscribers should survive the change without issues.
+This means that enabling sharded PUB/SUB changes the key names Centrifugo uses in Redis, so any existing data (history, result cache) is effectively lost on the switch. In many cases Centrifugo data is ephemeral, so if your application is built idiomatically connected subscribers should survive the change without issues.
 
 :::
 
@@ -209,7 +211,7 @@ The option also applies to Redis Map Broker (set it inside `map_broker.redis`) a
 
 :::caution
 
-Enabling `use_precomputed_partition_tags` changes the key names Centrifugo uses in Redis, so any existing data (history, presence, result cache) is effectively lost on the switch. In many cases Centrifugo data is ephemeral, so if your application is built idiomatically connected subscribers should survive the change without issues.
+Enabling `use_precomputed_partition_tags` changes the key names Centrifugo uses in Redis, so any existing data (history, result cache) is effectively lost on the switch. In many cases Centrifugo data is ephemeral, so if your application is built idiomatically connected subscribers should survive the change without issues.
 
 :::
 

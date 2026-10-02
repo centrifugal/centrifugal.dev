@@ -55,7 +55,7 @@ client.connect();
 Some implementation restrictions and details to know about:
 
 * When using the channel patterns feature, the `:` symbol in a namespace pattern defines a variable part. The entire channel starting with `/` is matched against the configured channel patterns; the namespace name does not participate in matching at all.
-* Centrifugo only allows explicit channel pattern matching that does not result in channel pattern conflicts at runtime; this is checked during configuration validation on server start. Explicitly defined static patterns (without variables) take precedence over patterns with variables.
+* Overlapping patterns are allowed (for example, `/a/:x/b` and `/a/c/:y`). A channel matching several patterns resolves deterministically: at each segment a static segment takes precedence over a variable, and if it leads to no full match the variable is tried (with `/a/c/d` and `/a/:x/e` defined, `/a/c/e` matches `/a/:x/e`). Only patterns of the same shape (like `/users/:name` and `/users/:id`) conflict – such conflicts are rejected during configuration validation on server start.
 * There is no analogue of a top-level namespace (like we have for standard namespace configuration) for channels starting with `/`. If a channel starting with `/` does not match any explicitly defined pattern, Centrifugo returns the `102: unknown channel` error. Centrifugo also prohibits defining a pattern for channels without a namespace (i.e. inside the `channel.without_namespace` section).
 * If you define `channel_regex` inside channel pattern options – then the regex matches over the entire channel (since variable parts are located in the namespace name in this case).
 * Channel pattern must only contain ASCII characters.
