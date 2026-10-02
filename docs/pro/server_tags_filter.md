@@ -16,7 +16,7 @@ The feature works for both **stream subscriptions** and **map subscriptions**.
 
 ## Setting the filter
 
-The filter is set per subscriber at subscribe time — via the subscribe proxy response, JWT subscription token, or connection token.
+The filter is set per subscriber at subscribe time — via the subscribe proxy response, JWT subscription token, connection token or connect proxy response (the last two for server-side subscriptions).
 
 ### Via subscribe proxy
 
