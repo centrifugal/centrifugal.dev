@@ -38,15 +38,15 @@ Key options:
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `max_channels` | `10000` | Maximum number of channels cached per node, `0` means unlimited |
-| `idle_timeout` | `"5m"` | Evict channels not accessed for this duration, `0` means no idle eviction |
+| `max_channels` | `10000` | Maximum number of channels cached per node, `-1` means unlimited |
+| `idle_timeout` | `"5m"` | Evict channels not accessed for this duration, at least `"1s"`; a negative duration (`"-1s"`) means no idle eviction |
 | `sync_interval` | `"30s"` | How often to sync cache with the backend |
 | `sync_concurrency` | `64` | Number of parallel sync workers |
 | `sync_batch_size` | `1000` | Max entries per sync batch |
 | `load_timeout` | `"5s"` | Timeout for loading a channel from backend on first subscribe |
-| `stream_size` | `1000` | Max stream entries to keep in cache (used when the namespace does not set its own `stream_size`) |
+| `stream_size` | `1000` | Max stream entries to keep in cache (used when the namespace does not set its own `stream_size`), must not be negative |
 
-The defaults for `max_channels`, `idle_timeout` and `stream_size` apply only when none of these three options is set. If you set any of them, the unset ones are `0`.
+Each option left unset (or `0`) gets its default.
 
 The cache is filled from the backend — both local and remote writes arrive via PUB/SUB, so the cache reflects changes in near real-time. This ensures stream offsets in the cache match the order in which they were written in the main storage, keeping incremental recovery correct. The `sync_interval` acts as a safety net, periodically polling the backend to catch any publications that may have been missed due to transient PUB/SUB failures.
 
@@ -60,7 +60,7 @@ This is especially efficient for Centrifugo-owned collections where clients publ
 
 #### Configuration
 
-Set `full_state_channel_prefix` on the map namespace. You also need a stream namespace for the derived channel with delta compression enabled. The map namespace in the example uses a [named map broker](#per-namespace-map-brokers) with the cache layer enabled:
+Set `full_state_channel_prefix` on the map namespace (or on channels without namespace). Each namespace needs its own prefix, and no prefix may start with another one – Centrifugo does not start otherwise. You also need a stream namespace for the derived channel with delta compression enabled. The map namespace in the example uses a [named map broker](#per-namespace-map-brokers) with the cache layer enabled – the default `map_broker` with the cache enabled works too:
 
 ```json title="config.json"
 {
@@ -158,14 +158,14 @@ The feature works best for small-to-medium collections (up to a few thousand ent
 
 #### Limitations
 
-- Requires the [in-memory cache layer](#in-memory-cache-layer) — the cache is the source of the full state. It must be a [named map broker](#per-namespace-map-brokers) with the cache enabled: the cache of the default `map_broker` is not used for full-state channels
+- Requires the [in-memory cache layer](#in-memory-cache-layer) — the cache is the source of the full state. The namespace's map broker must have the cache enabled: the default `map_broker` (with `map_broker.cache`) or a [named map broker](#per-namespace-map-brokers). Centrifugo does not start otherwise
 - No per-subscriber filtering — all subscribers receive the same state (unlike [server-side tags filter](./server_tags_filter.md) on per-key subscriptions)
 - No stream recovery on the derived channel — on reconnect, the subscriber receives a fresh full state snapshot in the subscribe result
 - Channels with active full-state tickers are exempt from cache eviction (`max_channels` and `idle_timeout`)
 
 ## PostgreSQL enhancements
 
-The following PostgreSQL scaling features apply to the map broker (`map_broker.postgres`).
+The following PostgreSQL scaling features apply to both the map broker (`map_broker.postgres`) and the [stream broker](../server/engines.md#postgresql-broker) (`broker.postgres`). Configuration examples below use the map broker; substitute `broker` for the stream broker.
 
 ### Read replicas
 
@@ -189,7 +189,7 @@ Distribute read load across PostgreSQL replicas:
 }
 ```
 
-Reads from subscribers are spread across replicas by channel. When the [in-memory cache layer](#in-memory-cache-layer) is enabled, cache loads and syncs read from the primary, not from replicas.
+Replicas are used when `replica.enabled` is `true` and `replica.dsn` lists them – Centrifugo does not start when only one of the two is set. Reads from subscribers are spread across replicas by channel: a channel is read from the replica its live updates are delivered from, so reads include at least what subscribers already received. With replicas, Centrifugo checks on start that the database hashes channels the same way it does, and logs an error if not (a big-endian server, or a connection converting channels to another encoding) or if the check can't be run. The stream broker reads history from replicas for every history call, including server API ones – as replicas lag behind the primary, a publication may be missing from history read right after it was published. When the [in-memory cache layer](#in-memory-cache-layer) is enabled, cache loads and syncs read from the primary, not from replicas.
 
 ### Broker fan-out
 
@@ -213,7 +213,7 @@ By default, every Centrifugo node polls the PostgreSQL outbox independently. Wit
 }
 ```
 
-Shard leadership is coordinated through PostgreSQL advisory locks — only one node per shard holds the lock and processes outbox entries.
+Shard leadership is coordinated through PostgreSQL advisory locks — only one node per shard holds the lock and processes outbox entries. Lock IDs are `broker_fanout.advisory_lock_base_id` plus the shard number, so brokers with fan-out in the same database need lock ranges which don't overlap: the default base is the same for all map brokers, and for all stream brokers. Centrifugo does not start when brokers with the same `dsn` have overlapping ranges – the same database reached through different DSNs is not checked.
 
 :::tip
 Automatic daily partitioning with configurable retention is built into the open-source PostgreSQL broker via the `partition_retention_days` and `partition_lookahead_days` settings — see [PostgreSQL map broker configuration](/docs/server/map_subscriptions#postgresql).

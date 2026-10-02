@@ -252,7 +252,7 @@ Note that the map broker and the PostgreSQL broker are **not** PRO features — 
 
 - **Type:** Counter
 - **Labels:** provider, recipient_type, platform, success, err_code
-- **Description:** Count of push notifications sent, split by provider (`fcm`, `apns`, `hms`, `webpush`), recipient type, platform, whether the provider accepted it, and the provider error code when it did not. `platform` is the device platform for sends to devices (`filter`) through FCM, APNs and Web Push, `na` for HMS sends and for FCM topic and condition sends which reached the provider, and empty for sends to raw tokens. When ClickHouse analytics is enabled, pushes dropped after a failed re-queue are counted too, with the device platform for `filter` sends and an empty platform otherwise.
+- **Description:** Count of push notifications sent, split by provider (`fcm`, `apns`, `hms`, `webpush`), recipient type, platform, whether the provider accepted it, and the provider error code when it did not. `platform` is the device platform for sends to devices (`filter`) through FCM, APNs and Web Push, `na` for HMS sends and for FCM topic and condition sends which reached the provider, and empty for sends to raw tokens. When ClickHouse analytics is enabled, pushes dropped after a failed re-queue are counted too, with the device platform for `filter` sends, `na` for topic and condition sends, and an empty platform for raw tokens.
 - **Usage:** Build a delivery success ratio from `success="true"` over the total. Codes such as `unregistered` are normal device-token churn; authentication errors are not.
 
 #### centrifugo_push_scheduled_request_count

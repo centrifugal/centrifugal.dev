@@ -132,6 +132,14 @@ For stream subscriptions, the server publication filter applies to:
 - **History recovery** — on reconnect, only matching publications are included in the recovery result.
 - **Cache recovery** — only the latest matching publication is returned.
 
+History API calls from a client are not filtered, so a client can't call `history` for a channel it is subscribed to with a server filter – such calls are refused with a permission denied error. Recovery on subscribe (above) still works, since it is filtered.
+
+:::caution
+
+The server filter is a property of the subscription. A client which calls `history` without being subscribed to the channel is checked by the usual history permissions and receives unfiltered history. Don't give clients history access to channels which rely on a server filter to hide publications.
+
+:::
+
 ### Publishing with tags
 
 Include tags when publishing via the [server API](/docs/server/server_api#publishrequest):
@@ -204,16 +212,18 @@ The server tags filter can be updated for an active subscription in two ways.
 
 ### Via subscription token refresh
 
-When the subscription token refresh handler (proxy or JWT) returns a new `server_tags_filter`, Centrifugo compares it with the current filter:
+When the subscription refresh handler returns a new `server_tags_filter` – the [sub refresh proxy](../server/proxy.md#sub-refresh-proxy) in its result, or a refreshed subscription token in its claims – Centrifugo compares it with the current filter:
 
-- **Stream subscriptions** — the filter is hot-swapped. Future publications use the new filter immediately, no interruption.
+- **Stream subscriptions** — the filter is hot-swapped. Future publications use the new filter immediately, no interruption. A subscription using delta compression is an exception: as delta compression is not used together with the filter, it is resubscribed without delta (a server-side subscription reconnects instead).
 - **Map subscriptions** — the client is automatically unsubscribed and re-subscribes to get a full state re-sync matching the new filter. The SDK handles this transparently.
 
-If the refresh handler returns no filter (`nil`), the existing filter is left unchanged.
+Return the new filter wherever the subscription gets its filter on subscribe too – the subscribe proxy or the subscription token, or, for server-side subscriptions, the connect proxy or the connection token. Otherwise a resubscribed or reconnected subscription starts with the old filter, or without one.
+
+If the refresh handler returns no filter, the existing filter is left unchanged – a filter can't be removed by refresh, resubscribe for that.
 
 ### Via token revocation
 
-Use the [`invalidate_user_tokens`](/docs/pro/access_revoke#invalidate_user_tokens) or [`revoke_token`](/docs/pro/access_revoke#revoke_token) API to force the client to reconnect with a fresh token carrying the updated filter. This affects the entire connection, not just a single subscription.
+Use the [`invalidate_user_tokens`](/docs/pro/access_revoke#invalidate_user_tokens) or [`revoke_token`](/docs/pro/access_revoke#revoke_token) API to make the client load a fresh token carrying the updated filter. Revoking or invalidating a connection token reconnects the whole connection. Revoking a subscription token, or invalidating with `channel`, affects only that subscription: it is unsubscribed, its resubscribe gets a token expired error, and the client loads a new subscription token.
 
 ## Limitations
 

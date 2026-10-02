@@ -686,7 +686,7 @@ FCM (Firebase Cloud Messaging) provider configuration object.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `credentials_file` | string | | **Required.** Path to Firebase service account credentials JSON file |
-| `tokens_batch_size` | int | `500` | Maximum number of tokens in a single batch request to FCM. FCM accepts at most 500 tokens per batch, so don't set it higher |
+| `tokens_batch_size` | int | `500` | Maximum number of tokens in a single batch request to FCM. FCM accepts at most 500 tokens per batch – Centrifugo does not start with a higher value |
 
 ### push_notifications.hms
 
@@ -1164,7 +1164,7 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 
 | Field        | Type                    | Required | Description             |
 |--------------|-------------------------|----------|-------------------------|
-| `rate_limit` | `PushRateLimitStrategy` | no       | Set rate limit policies. Requires `distributed_rate_limit.enabled` in the configuration |
+| `rate_limit` | `PushRateLimitStrategy` | no       | Set rate limit policies. Requires `distributed_rate_limit.enabled` in the configuration, otherwise the request is rejected with bad request error |
 | `time_limit` | `PushTimeLimitStrategy` | no       | Set time limit policy   |
 
 `PushRateLimitStrategy`:
@@ -1323,7 +1323,7 @@ Several metrics are available to monitor the state of Centrifugo push worker sys
 
 - **Type:** Counter
 - **Labels:** provider, recipient_type, platform, success, err_code
-- **Description:** Total count of push notifications. The `platform` label is the device platform for sends to devices (`filter`) through FCM, APNs and Web Push, `na` for HMS sends and for FCM topic and condition sends which reached the provider, and empty for sends to raw tokens. When ClickHouse analytics is enabled, pushes dropped after a failed re-queue are counted too, with the device platform for `filter` sends and an empty platform otherwise.
+- **Description:** Total count of push notifications. The `platform` label is the device platform for sends to devices (`filter`) through FCM, APNs and Web Push, `na` for HMS sends and for FCM topic and condition sends which reached the provider, and empty for sends to raw tokens. When ClickHouse analytics is enabled, pushes dropped after a failed re-queue are counted too, with the device platform for `filter` sends, `na` for topic and condition sends, and an empty platform for raw tokens.
 - **Usage:** Helps in tracking the number and success rate of push notifications sent, providing insights for optimization and troubleshooting.
 
 #### centrifugo_push_queue_consuming_lag
