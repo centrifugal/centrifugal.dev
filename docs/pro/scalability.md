@@ -54,6 +54,8 @@ To enable in the specific channel namespace use boolean channel option `shared_p
     "namespaces": [
       {
         "name": "example",
+        "history_size": 100,
+        "history_ttl": "300s",
         "force_recovery": true,
         "shared_position_sync": true
       }
