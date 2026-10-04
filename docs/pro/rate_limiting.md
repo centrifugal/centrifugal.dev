@@ -526,9 +526,9 @@ An address over the limit gets an HTTP `429` before any connect work happens. Un
 Options:
 
 * `enabled` – turns the layer on. Off by default.
-* `buckets` – token buckets, same format as everywhere else. All listed buckets must allow the attempt.
-* `dry_run` – evaluate and report without rejecting. Strongly recommended for the first rollout: this layer sits in front of every connection, so a number that is too low locks users out.
-* `max_concurrent_per_ip` – how many connections one address may hold open at once. Zero (default) means no limit. **This is a different limit from the buckets above**, and both are needed — see below.
+* `buckets` – token buckets, same format and validation as everywhere else (an interval between `1s` and `1h`, a non-zero rate). All listed buckets must allow the attempt.
+* `dry_run` – evaluate and report without rejecting, for the buckets and for `max_concurrent_per_ip` alike. Strongly recommended for the first rollout: this layer sits in front of every connection, so a number that is too low locks users out.
+* `max_concurrent_per_ip` – how many connections one address may hold open at once. Zero (default) means no limit. **This is a different limit from the buckets above**, and both are needed — see below. It also works without buckets.
 * `max_tracked_ips` – how many addresses are tracked at once, default `100000`. Once reached, addresses that are not already tracked are **allowed through** rather than evicting live entries. Failing open is deliberate: refusing untracked addresses at capacity could deny service to legitimate clients, so the cap bounds memory rather than admission.
 
 ### Cap concurrent connections as well as their rate
@@ -574,7 +574,7 @@ centrifugo_rate_limit_client_over_limit_count{layer, command, namespace, dry_run
 ```
 
 * `layer` – `client_command`, `user_command`, `redis_user_command`, `client_error` or `ip_connect`.
-* `command` – the command that exceeded its bucket (`publish`, `subscribe`, `rpc.my_method`, `connect` for `ip_connect`, `error` for `client_error`).
+* `command` – the command that exceeded its bucket (`publish`, `subscribe`, `rpc.my_method`, `connect` for `ip_connect` buckets, `connect_concurrent` for `ip_connect` attempts over `max_concurrent_per_ip`, `error` for `client_error`).
 * `namespace` – the channel namespace, populated only when `prometheus.channel_namespace_resolution` is enabled, empty otherwise. It is the name of a configured namespace (empty for channels without a namespace), or `?` for a channel whose namespace is not configured, so cardinality stays bounded by the number of configured namespaces whatever channel names clients send.
 * `dry_run` – `true` when the layer is in dry run, so hits recorded while sizing a limit are never confused with traffic that was actually rejected.
 
