@@ -132,7 +132,7 @@ For stream subscriptions, the server publication filter applies to:
 - **History recovery** — on reconnect, only matching publications are included in the recovery result.
 - **Cache recovery** — only the latest matching publication is returned.
 
-History API calls from a client are not filtered, so a client can't call `history` for a channel it is subscribed to with a server filter – such calls are refused with a permission denied error. Recovery on subscribe (above) still works, since it is filtered.
+History API calls from a client are not filtered, so a client can't call `history` for a channel it is subscribed to with a server filter – since Centrifugo v6.10.0 such calls are refused with a permission denied error (before, they returned unfiltered history). Recovery on subscribe (above) still works, since it is filtered.
 
 :::caution
 
@@ -208,7 +208,7 @@ Subscribers with the old filter see the removal. Subscribers with the new filter
 
 ## Updating the filter
 
-The server tags filter can be updated for an active subscription in two ways.
+The server tags filter can be updated for an active subscription in two ways. Updating it on refresh works since Centrifugo v6.10.0.
 
 ### Via subscription token refresh
 

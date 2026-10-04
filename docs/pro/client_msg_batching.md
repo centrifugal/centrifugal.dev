@@ -25,7 +25,7 @@ Note, this is only useful when you have lots of messages per client. This specif
 
 The `client.write_delay` is a duration option, it is a time Centrifugo will try to collect messages inside each connection message write loop before sending them towards the connection.
 
-Enabling `client.write_delay` may reduce CPU usage of both server and client in case of high message rate inside individual connections. The reduction happens due to the lesser number of system calls to execute. Enabling `client.write_delay` does not limit message throughput towards the connection: when enough messages to fill a frame (`client.max_messages_in_frame`, 16 by default) are already queued, the frame is written without waiting for `client.write_delay` (with `client.write_with_timer`, the first frame after an idle period still waits for it).
+Enabling `client.write_delay` may reduce CPU usage of both server and client in case of high message rate inside individual connections. The reduction happens due to the lesser number of system calls to execute. Enabling `client.write_delay` does not limit message throughput towards the connection: when enough messages to fill a frame (`client.max_messages_in_frame`, 16 by default) are already queued, the frame is written without waiting for `client.write_delay` (with `client.write_with_timer`, a frame is written early only when the previous write left at least `client.max_messages_in_frame` messages queued; otherwise it waits for `client.write_delay`).
 
 Example:
 

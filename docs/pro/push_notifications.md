@@ -1311,7 +1311,7 @@ To do this, use the `rate_limit` field of `PushLimitStrategy`. For example, you 
 
 :::tip
 
-Push rate limits only work with requests where `DeviceFilter` is used for sending – i.e. when Centrifugo iterates over devices in the database. If you send using raw tokens and want to inherit possibility to use rate limits - reach out to us, this may be supported.
+Push limit strategies (rate limits and time limits) only work with requests where `DeviceFilter` is used for sending – i.e. when Centrifugo iterates over devices in the database. A request with `limit_strategy` sent to raw tokens, a topic or a condition is rejected with a bad request error. If you send using raw tokens and want to inherit possibility to use rate limits - reach out to us, this may be supported.
 
 :::
 
@@ -1323,7 +1323,7 @@ Several metrics are available to monitor the state of Centrifugo push worker sys
 
 - **Type:** Counter
 - **Labels:** provider, recipient_type, platform, success, err_code
-- **Description:** Total count of push notifications. The `platform` label is the device platform for sends to devices (`filter`) through FCM, APNs and Web Push, `na` for HMS sends and for FCM topic and condition sends which reached the provider, and empty for sends to raw tokens. When ClickHouse analytics is enabled, pushes dropped after a failed re-queue are counted too, with the device platform for `filter` sends, `na` for topic and condition sends, and an empty platform for raw tokens.
+- **Description:** Total count of push notifications. The `platform` label is the device platform for sends to devices (`filter`) through FCM, APNs and Web Push, `na` for HMS sends (raw tokens included) and for FCM topic and condition sends which reached the provider, and empty for FCM, APNs and Web Push sends to raw tokens. When ClickHouse analytics is enabled, pushes dropped after a failed re-queue are counted too, with the device platform for `filter` sends, `na` for topic and condition sends, and an empty platform for raw tokens.
 - **Usage:** Helps in tracking the number and success rate of push notifications sent, providing insights for optimization and troubleshooting.
 
 #### centrifugo_push_queue_consuming_lag

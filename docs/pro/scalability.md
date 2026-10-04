@@ -118,7 +118,7 @@ For Redis Map Broker, the same option offloads PUB/SUB subscriptions to replica 
 }
 ```
 
-Requires Redis Cluster or Redis Sentinel setup – the replica client can not be enabled for a standalone Redis, Centrifugo does not start in that case.
+Requires Redis Cluster or Redis Sentinel setup – the replica client can not be enabled for a standalone Redis, Centrifugo does not start in that case. Examples on this page use a plain `address`: Centrifugo detects Redis Cluster automatically, so the address of any cluster node works without the `redis+cluster://` scheme.
 
 ### Read presence from replica
 

@@ -41,7 +41,7 @@ Async consumers only process commands which modify state – such as [publish](.
 
 Centrifugo **only supports JSON payloads for asynchronous commands coming to consumers for now**. If you need binary format – reach out with your use case.
 
-If Centrifugo encounters an error while processing consumed messages – then [temporary errors](./server_api.md#error) (internal error 100 and too many requests 111) will be retried, all other errors logged on `error` level – and the message will be marked as processed. Errors which retrying can not fix, such as bad request 107, are not retried. The processing logic for [broadcast](./server_api.md#broadcast) API is special: if any of the publications to any channel from broadcast `channels` array failed with a temporary error – then the entire broadcast command will be retried. To prevent duplicate messages being published during such retries – consider using `idempotency_key` in the broadcast command.
+If Centrifugo encounters an error while processing consumed messages – then [temporary errors](./server_api.md#error) (internal error 100 and, since v6.10.0, too many requests 111) will be retried, all other errors logged on `error` level – and the message will be marked as processed. Errors which retrying can not fix, such as bad request 107, are not retried. The processing logic for [broadcast](./server_api.md#broadcast) API is special: if any of the publications to any channel from broadcast `channels` array failed with a temporary error – then the entire broadcast command will be retried. To prevent duplicate messages being published during such retries – consider using `idempotency_key` in the broadcast command.
 
 :::tip
 
