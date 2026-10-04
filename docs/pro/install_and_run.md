@@ -74,6 +74,6 @@ Once you have installed a PRO version and have a license key, you can set it in 
 
 :::tip
 
-If the license is properly set, then on Centrifugo PRO start you should see license information in logs: owner, status and expiration date. The warning about sandbox mode in logs on server start should disappear. Note that sandbox mode does not lock PRO features – it only enforces limits on the number of connections, nodes and server API requests per second, and refuses to join a cluster with Centrifugo OSS nodes. With a license, these limits come from the license.
+If the license is properly set, then on Centrifugo PRO start you should see license information in logs: owner, license type and expiration date. All PRO features should be unlocked at this point. The warning about sandbox mode in logs on server start should disappear.
 
 :::
