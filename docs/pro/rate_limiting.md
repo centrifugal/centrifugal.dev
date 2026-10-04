@@ -77,7 +77,7 @@ From this baseline you can tighten specific commands by adding explicit buckets 
 
 :::info Version
 
-`dry_run`, `ip_connect` (with `max_concurrent_per_ip`) and `disconnect_on_accounted_limit` are available since Centrifugo v6.9.5. The `centrifugo_transport_frame_size` metric referenced below is available since v6.9.4.
+`dry_run`, `ip_connect` (with `max_concurrent_per_ip`) and `disconnect_on_accounted_limit` are available since Centrifugo v6.10.0. The `centrifugo_transport_frame_size` metric referenced below is available since v6.9.4.
 
 :::
 
@@ -492,7 +492,7 @@ These buckets are also a useful signal on their own. Configured at a rate no nor
 
 :::note
 
-For the same reason, `unsubscribe` and `untrack` are not evaluated by the `redis_user_command` layer. That layer has no `total` bucket and does not refuse these commands, so a Redis round trip for them would add latency without changing any outcome. They are charged by the two in-memory layers.
+For the same reason, `unsubscribe` and `untrack` are not evaluated by the `redis_user_command` layer. That layer has no `total` bucket and does not refuse these commands, so a Redis round trip for them would add latency without changing any outcome. They are charged by the two in-memory layers. Since v6.10.0 configuring `unsubscribe` or `untrack` in `redis_user_command` is a configuration error, as such buckets would never have an effect.
 
 :::
 
@@ -575,7 +575,7 @@ centrifugo_rate_limit_client_over_limit_count{layer, command, namespace, dry_run
 
 * `layer` – `client_command`, `user_command`, `redis_user_command`, `client_error` or `ip_connect`.
 * `command` – the command that exceeded its bucket (`publish`, `subscribe`, `rpc.my_method`, `connect` for `ip_connect`, `error` for `client_error`).
-* `namespace` – the channel namespace, populated only when `prometheus.channel_namespace_resolution` is enabled, empty otherwise. This reuses the existing switch so cardinality stays bounded by the number of configured namespaces.
+* `namespace` – the channel namespace, populated only when `prometheus.channel_namespace_resolution` is enabled, empty otherwise. It is the name of a configured namespace (empty for channels without a namespace), or `?` for a channel whose namespace is not configured, so cardinality stays bounded by the number of configured namespaces whatever channel names clients send.
 * `dry_run` – `true` when the layer is in dry run, so hits recorded while sizing a limit are never confused with traffic that was actually rejected.
 
 The counter is incremented **only** when a bucket denies. Commands that pass their buckets do no metric work at all, so the normal path costs nothing.
@@ -748,7 +748,7 @@ If a client will have more than 20 protocol errors per 5 second – it will be d
 
 ## Upgrade notes
 
-Three behaviours changed in the rate limit subsystem. All of them are safe by default — no new limit starts enforcing on upgrade — but two are worth checking if you already have limits configured.
+In Centrifugo v6.10.0 three behaviours changed in the rate limit subsystem. All of them are safe by default — no new limit starts enforcing on upgrade — but two are worth checking if you already have limits configured.
 
 **`unsubscribe` and `untrack` are no longer refused.** Previously an over-limit `unsubscribe` returned an error, which SDKs treat as fatal and follow with a reconnect. They are now charged and reported but always completed — see [Commands that are counted but never rejected](#commands-that-are-counted-but-never-rejected). Their buckets still limit the connection through `total`, and [`disconnect_on_accounted_limit`](#disconnecting-a-client-that-exceeds-them) is available where a firmer response is wanted. This change only reduces the number of refused commands, so it cannot break a working deployment.
 
@@ -756,7 +756,10 @@ Three behaviours changed in the rate limit subsystem. All of them are safe by de
 
 **Refresh limits now apply only to client-sent commands.** `refresh` and `sub_refresh` buckets previously also counted Centrifugo's own subscription and connection expiry refreshes. They now count only refreshes a client asked for, so these buckets can be sized against client behaviour alone. If you had raised them to leave room for server-initiated refreshes, they can be lowered again.
 
-Nothing in the configuration format changed incompatibly: `dry_run` defaults to `false` on every layer, and `ip_connect` is disabled unless configured.
+Nothing in the configuration format changed incompatibly: `dry_run` defaults to `false` on every layer, and `ip_connect` is disabled unless configured. Two configurations which used to be accepted now refuse to start, both because the settings in them had no effect or an invalid one:
+
+* Buckets of every channel command – including `map_publish`, `map_remove`, `track`, `unsubscribe` and `untrack` – are validated in `client_command`, `user_command` and `redis_user_command` like the others: an interval between `1s` and `1h`, a non-zero rate, and a `namespace_name` in every namespace override. They are validated even when the layer is disabled.
+* `unsubscribe` and `untrack` set in `redis_user_command` (see the note in [Commands that are counted but never rejected](#commands-that-are-counted-but-never-rejected)).
 
 ## RPC method overrides format change
 
