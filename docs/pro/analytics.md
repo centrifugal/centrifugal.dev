@@ -74,7 +74,7 @@ You also need to set a ClickHouse cluster name (`clickhouse_analytics.clickhouse
 
 `clickhouse_analytics.skip_schema_initialization` - boolean, default `false`. By default Centrifugo tries to initialize table schema on start (if not exists). This flag allows skipping initialization process.
 
-`clickhouse_analytics.skip_ping_on_start` - boolean, default `false`. Centrifugo pings ClickHouse servers by default on start; if any server is unavailable – Centrifugo fails to start. This option allows skipping only this ping. Schema initialization and the check of required table columns still query ClickHouse on start, so Centrifugo still fails to start when ClickHouse is unavailable – unless `skip_schema_initialization` is also enabled and none of the connections, subscriptions, operations and publications exports nor snapshots are enabled (e.g. only the notifications export is).
+`clickhouse_analytics.skip_ping_on_start` - boolean, default `false`. Centrifugo pings ClickHouse servers by default on start; if any server is unavailable – Centrifugo fails to start. This option allows skipping only this ping – Centrifugo may still query ClickHouse on start (for example, for schema initialization), so it can still fail to start when ClickHouse is unavailable.
 
 `clickhouse_analytics.tls` - [TLS object](../server/configuration.md#tls-config-object) (available since v6.6.4). By default, no TLS is used. When enabled, TLS is applied to both data export and query connections to ClickHouse.
 

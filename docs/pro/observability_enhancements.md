@@ -409,7 +409,7 @@ These metrics describe the pgx connection pool Centrifugo PRO uses for PostgreSQ
 #### centrifugo_rate_limit_hits_over_limit
 
 - **Type:** Counter
-- **Description:** Number of distributed rate limiter (`distributed_rate_limit`, used for example by [push notification](./push_notifications.md) rate limit strategies) evaluations in Redis which exceeded the limit, dry runs included. Repeated rejections served from the node's local cache are not counted, and neither are rejections by client command [rate limiting](./rate_limiting.md) (`client.rate_limit`).
+- **Description:** Number of distributed rate limiter (`distributed_rate_limit`, used for example by [push notification](./push_notifications.md) rate limit strategies) evaluations in Redis which exceeded the limit, dry runs included. Rejections by client command [rate limiting](./rate_limiting.md) (`client.rate_limit`) are not counted here.
 - **Usage:** Expect a non-zero baseline when limits are tuned tightly; alert on step changes rather than on any non-zero value.
 
 #### centrifugo_channel_state_events_queue_consuming_lag_milliseconds

@@ -58,9 +58,9 @@ The proxy endpoint is an extension of [Centrifugo OSS proxy](../server/proxy.md)
 }
 ```
 
-The payload may contain a batch of events, that's why `events` is an array – this is important for achieving high event throughput. Your backend must be fast enough to keep up with the events rate and volume, otherwise event queues will grow. Events are kept in Redis streams (one per partition), each trimmed to approximately the latest 100000 entries – if more than that are waiting for delivery in a partition, the oldest undelivered events are trimmed (lost), while new events are still accepted.
+The payload may contain a batch of events, that's why `events` is an array – this is important for achieving high event throughput. Your backend must be fast enough to keep up with the events rate and volume, otherwise event queues will grow. Event queues are bounded – if too many events are waiting for delivery, the oldest undelivered events are dropped, while new events are still accepted.
 
-Respond with an empty result object, without an `error` object set, to let Centrifugo PRO know that events were processed successfully. If the request to the backend fails or the response contains an `error` object, Centrifugo PRO will retry sending events with exponential backoff and jitter (the first retry happens after 200–400ms, the delay is capped at 20s).
+Respond with an empty result object, without an `error` object set, to let Centrifugo PRO know that events were processed successfully. If the request to the backend fails or the response contains an `error` object, Centrifugo PRO will retry sending events with exponential backoff and jitter (the delay is capped at 20s).
 
 Here is an example of an HTTP handler for processing channel state events using Flask:
 

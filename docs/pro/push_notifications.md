@@ -709,7 +709,7 @@ APNs (Apple Push Notification service) provider configuration object.
 | `endpoint` | string | `"development"` | APNs endpoint: `"development"`, `"production"`, or custom `https://` URL |
 | `bundle_id` | string | | **Required.** iOS application bundle identifier |
 | `auth_type` | string | | **Required.** Authentication method: `"token"` or `"cert"` |
-| `tokens_batch_size` | int | `100` | Maximum number of tokens processed in one job. Not a concurrency setting: sends to APNs run with a fixed concurrency of 100 |
+| `tokens_batch_size` | int | `100` | Maximum number of tokens processed in one job. Not a concurrency setting |
 
 **Token-based authentication (`auth_type: "token"`, recommended):**
 
@@ -737,7 +737,7 @@ Web Push (VAPID) provider configuration object.
 | `vapid_public_key` | string | | **Required.** base64url-encoded VAPID public (application server) key. Must match the `applicationServerKey` used on the frontend |
 | `vapid_private_key` | string | | **Required.** base64url-encoded VAPID private key. Keep it secret |
 | `subject` | string | | **Required.** VAPID subject (JWT `sub` claim) — a `mailto:` or `https:` URL identifying the application server contact |
-| `tokens_batch_size` | int | `100` | Maximum number of subscriptions processed in one job. Not a concurrency setting: sends run with a fixed concurrency of 100 |
+| `tokens_batch_size` | int | `100` | Maximum number of subscriptions processed in one job. Not a concurrency setting |
 | `allowed_endpoint_origins` | array[string] | built-in list | Allowed push service origins (glob patterns, same syntax as `client.allowed_origins`). When **empty**, a built-in list of the mainstream browser push services is used; when **set**, it **replaces** that list. Use `*` to allow any origin. See [Endpoint SSRF protection](#web-push-endpoint-ssrf-protection) |
 | `extra_allowed_endpoint_origins` | array[string] | `[]` | Origins (same glob syntax) **added on top of** `allowed_endpoint_origins` (or the built-in defaults when it is unset). Use it to allow a self-hosted push service while keeping the defaults |
 
@@ -1104,7 +1104,7 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 | `use_templating`           | `bool`                        | no       | If set - Centrifugo will use templating for push notification. Note that setting localizations enables templating automatically.                                           |
 | `use_meta`                 | `bool`                        | no       | If set - Centrifugo will additionally load device meta during push sending, this meta becomes available in templating.                                                     |
 
-`PushRecipient` (you **must set only one of the following fields** – if several are set, Centrifugo uses the first non-empty one in this order: `fcm_tokens`, `fcm_topic`, `fcm_condition`, `hms_tokens`, `hms_topic`, `hms_condition`, `apns_tokens`, `webpush_tokens`, `filter` – and ignores the rest):
+`PushRecipient` (you **must set only one of the following fields**):
 
 | Field           | Type            | Required | Description                                                  |
 |-----------------|-----------------|----------|--------------------------------------------------------------|
@@ -1152,7 +1152,7 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 | Field     | Type                | Required | Description                                                                                                                                               |
 |-----------|---------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `headers` | `map[string]string` | no       | Web Push HTTP headers. Recognized keys: `TTL` (seconds to retain for offline devices, default 4 weeks), `Urgency` (`very-low`/`low`/`normal`/`high`), `Topic` (collapse key) |
-| `payload` | `JSON` object       | yes      | Arbitrary JSON payload delivered to the browser service worker (received via `event.data.json()` in the `push` event). At most 3993 bytes                   |
+| `payload` | `JSON` object       | yes      | Arbitrary JSON payload delivered to the browser service worker (received via `event.data.json()` in the `push` event). Must fit the Web Push message size limit                   |
 
 `PushLocalization`:
 
