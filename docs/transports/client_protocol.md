@@ -142,6 +142,8 @@ The two encodings pack messages differently, but the idea is identical:
 
 * **Protobuf** — each message is length-prefixed with a `varint`, then concatenated. The reader peels off one length-delimited message at a time until the buffer is drained.
 
+Since Centrifugo v6.10.0 the server decodes JSON commands strictly per RFC 8259: keys must match the field names exactly (letter case included), and a key given twice, invalid UTF-8 or anything after the command on its line is an error. In Protobuf, string fields must be valid UTF-8. A command which can't be decoded makes the server close the connection with `3501` (bad request). The official SDKs produce such commands; this matters for custom clients.
+
 Here is exactly how the JavaScript SDK encodes and decodes the JSON form — note how small it is:
 
 ```javascript

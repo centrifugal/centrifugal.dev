@@ -655,6 +655,8 @@ When using Nats raw mode join/leave feature of Centrifugo can't be used.
 
 :::
 
+Since Centrifugo v6.10.0 messages consumed in raw mode are checked against the channel's [publication_data_format](./channels.md#publication_data_format): when it is `json` or `json_object`, a message which does not match is logged and not delivered. Channels without such a format are not affected.
+
 Here is how raw mode may be enabled:
 
 ```json
