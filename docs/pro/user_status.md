@@ -30,8 +30,6 @@ Don't forget to debounce these method calls on the client side to avoid triggeri
 
 This RPC call sets the user's last active (and online) time value in Redis (with sharding and Cluster support). Information about active status will be kept in Redis for a configured time interval, then expire. For anonymous connections the call does nothing.
 
-The client may also pass a custom `state` string, e.g. `{"state": "busy"}`. From the client side this is only allowed when [`state_regex`](#configuration) is configured and the value matches it – otherwise the call fails with a bad request error.
-
 ## Server API methods
 
 ### update_user_status
@@ -51,7 +49,6 @@ curl --header "Content-Type: application/json" \
 | Parameter name | Parameter type  | Required | Description                        |
 |----------------|-----------------|----------|------------------------------------|
 | `users`        | `array[string]` | yes      | List of users to update status for |
-| `state`        | `string`        | no       | Custom state to store in the user status. If `state_regex` is set, the value must match it |
 
 #### UpdateUserStatusResult
 
@@ -124,7 +121,6 @@ Note that Centrifugo also maintains the `online` field inside the user status ob
 | user       | string  | yes | User ID        |
 | active       | integer  | no  | Last active time (Unix seconds)    |
 | online       | integer  | no  | Last online time (Unix seconds)    |
-| state       | string  | no  | Custom state set with `update_user_status`, if any    |
 
 ### delete_user_status
 
@@ -196,7 +192,5 @@ In this case the Redis active status will simply connect to Redis instances conf
 ```
 
 `storage_type` – storage backend for user status. Only `redis` (default) is supported at the moment.
-
-`state_regex` – a regular expression (Go syntax, not anchored – use `^...$` to match the whole value) the custom `state` must match. If set, `update_user_status` calls (client-side and server API) with a non-matching state are rejected with a bad request error. If not set, the server API accepts any state, while the client-side RPC rejects calls with a non-empty state.
 
 `disable_for_client` – boolean, when `true` the client-side `update_user_status` RPC returns a not available error, so status can only be updated over the server API.
