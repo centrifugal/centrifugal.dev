@@ -84,7 +84,7 @@ You need to enable `replica_client` in Redis configuration and set `subscribe_on
   "engine": {
     "type": "redis",
     "redis": {
-      "address": "redis+cluster://localhost:7000",
+      "address": "localhost:6379",
       "replica_client": {
         "enabled": true
       },
@@ -105,7 +105,7 @@ For Redis Map Broker, the same option offloads PUB/SUB subscriptions to replica 
   "map_broker": {
     "type": "redis",
     "redis": {
-      "address": "redis+cluster://localhost:7000",
+      "address": "localhost:6379",
       "sharded_pub_sub_partitions": 16,
       "replica_client": {
         "enabled": true
@@ -127,7 +127,7 @@ To read presence information from replica you need to enable `replica_client` in
   "engine": {
     "type": "redis",
     "redis": {
-      "address": "redis+cluster://localhost:7000",
+      "address": "localhost:6379",
       "replica_client": {
         "enabled": true
       },
@@ -171,7 +171,7 @@ Here is how to enable sharded PUB/SUB in Centrifugo PRO:
   "engine": {
     "type": "redis",
     "redis": {
-      "address": "redis+cluster://localhost:7000",
+      "address": "localhost:6379",
       "sharded_pub_sub_partitions": 64
     }
   }
@@ -197,7 +197,7 @@ Setting `use_precomputed_partition_tags` to `true` switches partition hash tags 
   "engine": {
     "type": "redis",
     "redis": {
-      "address": "redis+cluster://localhost:7000",
+      "address": "localhost:6379",
       "use_precomputed_partition_tags": true,
       "sharded_pub_sub_partitions": 128
     }
@@ -240,7 +240,7 @@ The per-Redis-node view is usually the constraint that bites first: at ~4k conne
   "engine": {
     "type": "redis",
     "redis": {
-      "address": "redis+cluster://localhost:7000",
+      "address": "localhost:6379",
       "group_sharded_pub_sub_by_node": true,
       "sharded_pub_sub_partitions": 128
     }
