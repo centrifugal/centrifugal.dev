@@ -500,7 +500,7 @@ For the same reason, `unsubscribe` and `untrack` are not evaluated by the `redis
 
 Every layer above keys on a client ID or a user ID, which means none of them can act until a connection exists and — for the per-user layers — until it has authenticated. Two things fall outside that:
 
-* **Anonymous connections.** With `client.allow_anonymous` there is no user ID, so `user_command` and `redis_user_command` have no key to aggregate on. `client_command` applies per connection, and `ip_connect` bounds how many connections an address may open and hold — which is what makes the per-connection budget meaningful in aggregate.
+* **Anonymous connections.** With `client.allow_anonymous_connect_without_token` there is no user ID, so `user_command` and `redis_user_command` have no key to aggregate on. `client_command` applies per connection, and `ip_connect` bounds how many connections an address may open and hold — which is what makes the per-connection budget meaningful in aggregate.
 * **Connect-time work.** A connect attempt verifies a JWT and, when the connect proxy is configured, makes an HTTP call to your backend. Both happen before there is any user ID to rate limit on, so `ip_connect` is what bounds how often an address can trigger them.
 
 `ip_connect` closes both. It runs in HTTP middleware, before the connection handler, keyed on the client's address:
