@@ -751,7 +751,7 @@ docker run --rm -it --name jaeger \
 Then start Centrifugo:
 
 ```bash
-OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4318" CENTRIFUGO_OPENTELEMETRY=1 CENTRIFUGO_OPENTELEMETRY_API=1 ./centrifugo
+OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4318" CENTRIFUGO_OPENTELEMETRY_ENABLED=1 CENTRIFUGO_OPENTELEMETRY_API=1 ./centrifugo
 ```
 
 Send some API requests - and open [http://localhost:16686](http://localhost:16686) to see traces in Jaeger UI.
@@ -782,7 +782,7 @@ The option works with both exporter protocols — over `grpc` the ADC token is a
 OTEL_EXPORTER_OTLP_ENDPOINT="https://telemetry.googleapis.com" \
 OTEL_EXPORTER_OTLP_PROTOCOL="grpc" \
 OTEL_RESOURCE_ATTRIBUTES="gcp.project_id=YOUR_PROJECT_ID" \
-CENTRIFUGO_OPENTELEMETRY=1 CENTRIFUGO_OPENTELEMETRY_API=1 CENTRIFUGO_OPENTELEMETRY_GOOGLE_CLOUD_ADC_AUTH=1 ./centrifugo
+CENTRIFUGO_OPENTELEMETRY_ENABLED=1 CENTRIFUGO_OPENTELEMETRY_API=1 CENTRIFUGO_OPENTELEMETRY_GOOGLE_CLOUD_ADC_AUTH=1 ./centrifugo
 ```
 
 :::tip

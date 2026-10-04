@@ -413,7 +413,7 @@ To enable publication data mode:
         "consumer_group": "centrifugo",
         "publication_data_mode": {
           "enabled": true,
-          "channels_header": "x-centrifugo-channels"
+          "channels_header": "x-centrifugo-channels",
           "idempotency_key_header": "x-centrifugo-idempotency-key"
         }
       }

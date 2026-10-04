@@ -549,7 +549,7 @@ Available since Centrifugo v6.4.0.
 
 ### subscribe_proxy_name
 
-`subscribe_proxy_name` (string, default `""`) – allows setting custom subscribe proxy to use by name. More info in [proxy chapter](proxy.md).
+`subscribe_proxy_name` (string, default `"default"`, the proxy configured under `channel.proxy`) – allows setting custom subscribe proxy to use by name. More info in [proxy chapter](proxy.md).
 
 ### publish_proxy_enabled
 
@@ -557,7 +557,7 @@ Available since Centrifugo v6.4.0.
 
 ### publish_proxy_name
 
-`publish_proxy_name` (string, default `""`) – allows setting custom publish proxy to use by name. More info in [proxy chapter](proxy.md).
+`publish_proxy_name` (string, default `"default"`, the proxy configured under `channel.proxy`) – allows setting custom publish proxy to use by name. More info in [proxy chapter](proxy.md).
 
 ### sub_refresh_proxy_enabled
 
@@ -565,7 +565,7 @@ Available since Centrifugo v6.4.0.
 
 ### sub_refresh_proxy_name
 
-`sub_refresh_proxy_name` (string, default `""`) – allows setting custom sub refresh proxy to use by name. More info in [proxy chapter](proxy.md).
+`sub_refresh_proxy_name` (string, default `"default"`, the proxy configured under `channel.proxy`) – allows setting custom sub refresh proxy to use by name. More info in [proxy chapter](proxy.md).
 
 ### subscribe_stream_proxy_enabled
 
@@ -573,7 +573,7 @@ Available since Centrifugo v6.4.0.
 
 ### subscribe_stream_proxy_name
 
-`subscribe_stream_proxy_name` (string, default `""`) – allows setting custom subscribe stream proxy to use by name. See [subscription streams](./proxy_streams.md).
+`subscribe_stream_proxy_name` (string, default `"default"`, the proxy configured under `channel.proxy`) – allows setting custom subscribe stream proxy to use by name. See [subscription streams](./proxy_streams.md).
 
 ### subscribe_stream_proxy_bidirectional
 
@@ -585,7 +585,7 @@ Available since Centrifugo v6.4.0.
 
 ### cache_empty_proxy_name
 
-`cache_empty_proxy_name` (string, default `""`, Centrifugo PRO only) – allows setting custom cache empty proxy to use by name.
+`cache_empty_proxy_name` (string, default `"default"`, Centrifugo PRO only) – allows setting custom cache empty proxy to use by name.
 
 ### state_proxy_enabled
 

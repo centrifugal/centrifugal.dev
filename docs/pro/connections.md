@@ -29,7 +29,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MiIsImV4cCI6MTYyNzcxMzMzNX0.s3e
 Run Centrifugo with `uni_http_stream` transport enabled (it will allow us connecting from the terminal with `curl`):
 
 ```
-CENTRIFUGO_UNI_HTTP_STREAM=1 centrifugo -c config.json
+CENTRIFUGO_UNI_HTTP_STREAM_ENABLED=1 centrifugo -c config.json
 ```
 
 Create new terminal window and run:
