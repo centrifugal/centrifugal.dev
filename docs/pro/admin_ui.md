@@ -281,7 +281,7 @@ The view is read-only and safe to expose to admins: secret values and credential
 
 ## More data in admin UI
 
-* the license of the node serving the admin UI on the status page – its owner and expiration dates, highlighted when expiration is close or passed
+* the license of the node serving the admin UI on the status page – its owner (an email is shown masked), limits and expiration dates, highlighted when expiration is close or passed
 * an ability to show CPU and RSS memory usage of each node, updated in near real-time
 * show aggregations over `node.info_metrics_aggregate_interval` for each node:
 * Distribution by client name

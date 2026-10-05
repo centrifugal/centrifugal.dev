@@ -26,7 +26,7 @@ Schemas are defined at the top level of Centrifugo configuration. Centrifugo sup
 
 :::info Security Default
 
-For JSON schemas, Centrifugo rejects properties which are not declared in the schema, in every object the schema describes – nested objects and objects inside arrays included. Properties declared via `$ref`, `allOf`, `anyOf` or `oneOf` count as declared. This prevents clients from injecting unexpected fields into validated data. To allow extra fields in some object, set `"additionalProperties"` or `"unevaluatedProperties"` for that object explicitly.
+For JSON schemas, Centrifugo rejects properties which are not declared in the schema, in every object the schema describes – nested objects and objects inside arrays included. Properties declared via `$ref`, `allOf`, `anyOf` or `oneOf` count as declared. This prevents clients from injecting unexpected fields into validated data. To allow extra fields in some object, set `"additionalProperties": true` (or `"unevaluatedProperties": true`) on that object.
 
 :::
 
@@ -160,7 +160,7 @@ schemas:
 
 :::info
 
-Undeclared properties are rejected in every object by default (Centrifugo adds `"unevaluatedProperties": false` to object schemas). Set `"additionalProperties": true` (or `"unevaluatedProperties": true`) on an object schema in your schema file if you need to allow extra fields in that object.
+Undeclared properties are rejected by default in every object the schema describes (Centrifugo adds `"unevaluatedProperties": false` to object schemas). Set `"additionalProperties": true` (or `"unevaluatedProperties": true`) on an object schema in your schema file if you need to allow extra fields in that object.
 
 :::
 
@@ -445,7 +445,7 @@ Here's an example using `empty_binary` schema for a typing indicator:
 
 * Publications are validated **before** tag extraction and broadcast
 * If validation fails, the client receives an error and the publication is rejected
-* Data which can't be decoded – a key repeated in a JSON object, invalid UTF-8 – is rejected with `107: bad request` by schema validation and by `cel`/`if` expressions reading `data` (in a `binary` namespace, any data which is not JSON)
+* Data which can't be decoded – a key repeated in a JSON object, invalid UTF-8 – is rejected with `107: bad request` by schema validation and by `cel`/`if` expressions reading `data` (outside `json` namespaces, also any data which is not JSON)
 * Multiple schemas act as an OR condition - data must match at least one schema
 * Schema names must reference schemas defined in the top-level `schemas` array
 * The matched schema name is available to tag rules via the `schema_name` variable
@@ -456,7 +456,7 @@ Here's an example using `empty_binary` schema for a typing indicator:
 * Each rule sets one tag from a JSON `path` or a `cel` expression, optionally gated by an `if` condition
 * The original publication `data` is broadcast **unchanged** — tag extraction only adds tags, it does not transform the data
 * Extracted tags are attached to the publication
-* Empty publication data (allowed with `publication_data_format: "binary"`) is accepted: rules which don't read `data` apply as usual, expressions see `data` as `null` – a `path` rule or an expression like `data.emoji` sets no tag
+* Empty publication data (allowed with `publication_data_format: "binary"`) is accepted. Rules which don't read `data` apply as usual; expressions see `data` as `null`, so a `path` rule or an expression like `data.emoji` sets no tag
 
 ### Configuration validation
 
