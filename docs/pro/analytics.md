@@ -112,7 +112,7 @@ Examples:
 
 Each export type (connections, subscriptions, operations, publications, notifications) supports the following tuning options:
 
-* `max_buffer_size` – maximum number of events to buffer in memory, default `1000000`. Events are dropped when the buffer is full – also while ClickHouse is unavailable, so a long outage does not grow memory beyond this limit. Dropped events are counted in [`centrifugo_clickhouse_analytics_drop_count`](./observability_enhancements.md#centrifugo_clickhouse_analytics_drop_count).
+* `max_buffer_size` – maximum number of events to buffer in memory, default `1000000`. Events are dropped when the buffer is full – also while ClickHouse is unavailable, so the buffer stays within this limit during a long outage. Dropped events are counted in [`centrifugo_clickhouse_analytics_drop_count`](./observability_enhancements.md#centrifugo_clickhouse_analytics_drop_count).
 * `flush_interval` – interval between flush attempts, default `"10s"`.
 * `flush_size` – maximum batch size per flush, default `100000`.
 * `ttl` – ClickHouse table TTL for the `time` column, default `"7 DAY"`.
