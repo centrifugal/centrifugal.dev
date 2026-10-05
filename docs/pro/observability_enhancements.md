@@ -406,6 +406,13 @@ These metrics describe the pgx connection pool Centrifugo PRO uses for PostgreSQ
 - **Labels:** name
 - **Description:** Total number of errors while processing bus messages.
 
+#### centrifugo_rate_limit_client_over_limit_count
+
+- **Type:** Counter
+- **Labels:** layer, command, namespace, dry_run
+- **Description:** Since Centrifugo v6.10.0. Number of client operations which exceeded a [rate limit](./rate_limiting.md#metrics) of `client.rate_limit`. `layer` is `client_command`, `user_command`, `redis_user_command` or `client_error`; `command` is the command which exceeded its bucket (`publish`, `subscribe`, `rpc.<method>`, `error` for `client_error`, …); `namespace` is filled only with `prometheus.channel_namespace_resolution` enabled. `dry_run` is `true` for hits of a layer in [dry run](./rate_limiting.md#try-limits-before-enforcing-them) – counted, but nothing was rejected – and `false` for operations which were actually refused (or, for `unsubscribe` and `untrack`, only counted).
+- **Usage:** Size limits with `dry_run="true"` before enforcing them; alert on sustained `dry_run="false"` hits, which mean traffic is being refused.
+
 #### centrifugo_rate_limit_hits_over_limit
 
 - **Type:** Counter
