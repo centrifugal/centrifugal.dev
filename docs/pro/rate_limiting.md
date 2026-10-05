@@ -77,17 +77,16 @@ From there you can tighten specific commands by adding explicit buckets — for 
 
 :::info Version
 
-`dry_run`, `ip_connect` (with `max_concurrent_per_ip`) and `disconnect_on_accounted_limit` are available since Centrifugo v6.10.0. The `centrifugo_transport_frame_size` metric referenced below is available since v6.9.4.
+`dry_run` and `disconnect_on_accounted_limit` are available since Centrifugo v6.10.0. The `centrifugo_transport_frame_size` metric referenced below is available since v6.9.4.
 
 :::
 
-Command limits govern how much work a connection may ask the server to do. Two further layers govern the connections themselves:
+Rate limits are applied in layers:
 
 * [`client_command`](#in-memory-per-connection-rate-limit) (and the per-user layers) bound the operations a connection or a user may perform.
 * [`client_error`](#disconnecting-abusive-or-misbehaving-connections) closes a connection that keeps producing protocol errors, so a misbehaving client stops consuming resources rather than being refused one command at a time.
-* [`ip_connect`](#per-ip-connect-rate-limit) bounds connection attempts and concurrent connections per address, which is what applies before a connection is authenticated.
 
-Each is described in detail below. There are no universal values for them: start with [dry run](#try-limits-before-enforcing-them) and size the limits against your own traffic.
+Each is described in detail below. Connection attempts per client address are best limited in your infrastructure (load balancer or reverse proxy), in front of Centrifugo. There are no universal values for them: start with [dry run](#try-limits-before-enforcing-them) and size the limits against your own traffic.
 
 ### How limits affect a deployment
 
@@ -95,10 +94,8 @@ Every limit which is enforced can affect legitimate users, not only abusive ones
 
 * **Refused commands.** A command over its limit gets the `111` (too many requests) error. SDKs retry a refused subscribe as a temporary error, while for publish, RPC, history and presence the error reaches your application code, which has to handle it.
 * **Disconnects.** `client_error` and `disconnect_on_accounted_limit` close the connection with a code which tells SDKs not to reconnect. A legitimate client caught by a limit set too tight stays disconnected until the application reconnects it.
-* **Shared addresses.** `ip_connect` counts per client address. Users behind a corporate NAT, a mobile carrier gateway or a VPN share one address and therefore one budget – several browser tabs and reconnecting mobile apps add to it. An over-limit connection attempt gets HTTP `429`, and SDKs retry with backoff, so users see slower connects or no connection at all.
-* **Mass reconnects.** After a Centrifugo restart, a deploy or a network incident, many clients reconnect at once. Connection limits slow this recovery down, especially for users sharing an address.
+* **Mass reconnects.** After a Centrifugo restart, a deploy or a network incident, many clients reconnect at once. Connection rate limits slow this recovery down – users behind a shared address (a corporate NAT, a mobile carrier gateway, a VPN) are affected first by limits applied per address.
 * **Shared user budgets.** `user_command` and `redis_user_command` limit a user across all their connections – tabs and devices of one user draw from the same buckets.
-* **Client address behind a proxy.** `ip_connect` needs the real client address, see [the note on address derivation](#per-ip-connect-rate-limit) below.
 
 ## Try limits before enforcing them
 
@@ -132,7 +129,7 @@ That makes the rollout a measurement rather than a bet:
 
 Because dry run drains the same buckets, the counter reports precisely what enforcement would have rejected — switching it off changes the verdict, not the accounting.
 
-`dry_run` is available on `client_command`, `user_command`, `redis_user_command`, `client_error` and `ip_connect`, and can be set per layer. It defaults to `false`, so existing configurations keep enforcing.
+`dry_run` is available on `client_command`, `user_command`, `redis_user_command` and `client_error`, and can be set per layer. It defaults to `false`, so existing configurations keep enforcing.
 
 ## In-memory per connection rate limit
 
@@ -158,7 +155,7 @@ The list of operations which can be rate limited on a per-connection level is:
 
 In addition, Centrifugo allows defining two special buckets containers:
 
-* `total` – define it to cap the combined rate of all commands from a connection. Total buckets are checked after the per-command (or `default`) check passes — only allowed commands consume a token from `total`. Rejected commands do not count against `total` of the same limiter. When both `client_command` and user-level limiters (`user_command`, `redis_user_command`) are enabled, `client_command` is checked first – a command it allows has already consumed tokens from its buckets (including `total`) even if a user-level limiter then rejects it. Note: `connect` is not subject to `total` in `client_command` (connect is not throttled at the per-connection level at all; see [Per-IP connect rate limit](#per-ip-connect-rate-limit)). `unsubscribe` and `untrack` are always allowed and therefore always consume `total` — see [Commands that are counted but never rejected](#commands-that-are-counted-but-never-rejected).
+* `total` – define it to cap the combined rate of all commands from a connection. Total buckets are checked after the per-command (or `default`) check passes — only allowed commands consume a token from `total`. Rejected commands do not count against `total` of the same limiter. When both `client_command` and user-level limiters (`user_command`, `redis_user_command`) are enabled, `client_command` is checked first – a command it allows has already consumed tokens from its buckets (including `total`) even if a user-level limiter then rejects it. Note: `connect` is not subject to `total` in `client_command` (connect is not throttled at the per-connection level at all). `unsubscribe` and `untrack` are always allowed and therefore always consume `total` — see [Commands that are counted but never rejected](#commands-that-are-counted-but-never-rejected).
 * `default` - define it if you don't want to configure some command buckets explicitly, default buckets will be used in case command buckets is not configured explicitly. `default` buckets apply per command type – each command gets a separate limiter, so `default` does not cap the combined rate (use `total` for that).
 
 ```json title="config.json"
@@ -231,7 +228,7 @@ Centrifugo real-time SDKs are written in a way that if a client receives an erro
 
 Another type of rate limit in Centrifugo PRO is a per-user-ID in-memory rate limit. Like the per-client rate limit, this one is also very efficient since it also uses in-memory token buckets. The difference is that instead of rate limiting per individual client, this type of rate limit takes the user ID into account.
 
-This type of rate limit only checks commands coming from authenticated users – i.e. with a non-empty user ID set. Requests from anonymous users can't be rate limited with it, since there is no user ID to aggregate on. Anonymous connections are covered per connection by `client_command`, and bounded in aggregate by [Per-IP connect rate limit](#per-ip-connect-rate-limit).
+This type of rate limit only checks commands coming from authenticated users – i.e. with a non-empty user ID set. Requests from anonymous users can't be rate limited with it, since there is no user ID to aggregate on. Anonymous connections are covered per connection by `client_command`.
 
 The list of operations which can be rate limited is similar to the in-memory rate limit described above. But with **additional** `connect` method:
 
@@ -309,7 +306,7 @@ The configuration is very similar:
 
 The next type of rate limit in Centrifugo PRO is a distributed per-user-ID rate limit with Redis as a bucket state storage. In this case, limits are global for the entire Centrifugo cluster. If one user executed two commands on different Centrifugo nodes, Centrifugo consumes two tokens from the same bucket kept in Redis. Since this rate limit goes to Redis to check limits, it adds some latency to command processing. Our implementation tries to provide good throughput characteristics though – in our tests a single Redis instance can handle more than 100k limit check requests per second. And it's possible to scale Redis in the same ways as for the Centrifugo Redis Engine.
 
-This type of rate limit only checks commands coming from authenticated users – i.e. with a non-empty user ID set. Requests from anonymous users can't be rate limited with it; see [Per-IP connect rate limit](#per-ip-connect-rate-limit) for the layer that does cover them. The implementation also uses the [token bucket](https://en.wikipedia.org/wiki/Token_bucket) algorithm internally.
+This type of rate limit only checks commands coming from authenticated users – i.e. with a non-empty user ID set. Requests from anonymous users can't be rate limited with it. The implementation also uses the [token bucket](https://en.wikipedia.org/wiki/Token_bucket) algorithm internally.
 
 The list of operations which can be rate limited is similar to the in-memory user command rate limit described above. But **without** special bucket `total`, and without `unsubscribe` and `untrack` (see [Commands that are counted but never rejected](#commands-that-are-counted-but-never-rejected)):
 
@@ -411,8 +408,6 @@ In this case the rate limit will simply connect to Redis instances configured fo
 
 **In-memory throttlers** (`client_command` and `user_command`) check token buckets entirely in memory without allocations. Their cost is small compared to processing the command itself, and with rate limits switched off there is practically no overhead.
 
-**Per-IP connect limit** (`ip_connect`) is an in-memory check per connection *attempt* and does not touch the per-command path.
-
 **Redis throttler** (`redis_user_command`) executes one Lua script call to Redis per command, so it adds a Redis round trip to each limited command. Centrifugo supports the same Redis scaling options as for the engine (Sentinel, Cluster, client-side sharding).
 
 :::tip
@@ -467,9 +462,9 @@ For clients that persistently exceed these buckets, `disconnect_on_accounted_lim
 
 Disconnecting is not the same as refusing a command. The disconnect code is in the range that instructs SDKs not to reconnect, so the connection is released rather than re-established.
 
-:::tip Configure `ip_connect` alongside it
+:::tip Limit connection rate as well
 
-Closing a connection is effective when combined with a limit on how quickly a client may open a new one. Enable [`ip_connect`](#per-ip-connect-rate-limit) together with this option, or apply a per-IP connection rate limit in your infrastructure. Centrifugo logs a warning at startup if `disconnect_on_accounted_limit` is set without `ip_connect` configured.
+Closing a connection is effective when combined with a limit on how quickly a client may open a new one: apply a per-IP connection rate limit in your infrastructure. Centrifugo logs a warning at startup when `disconnect_on_accounted_limit` is set, as a reminder.
 
 :::
 
@@ -483,75 +478,6 @@ For the same reason, `unsubscribe` and `untrack` are not evaluated by the `redis
 
 :::
 
-## Per-IP connect rate limit
-
-Every layer above keys on a client ID or a user ID, which means none of them can act until a connection exists and — for the per-user layers — until it has authenticated. Two things fall outside that:
-
-* **Anonymous connections.** With `client.allow_anonymous_connect_without_token` there is no user ID, so `user_command` and `redis_user_command` have no key to aggregate on. `client_command` applies per connection, and `ip_connect` bounds how many connections an address may open and hold — which is what makes the per-connection budget meaningful in aggregate.
-* **Connect-time work.** A connect attempt verifies a JWT and, when the connect proxy is configured, makes an HTTP call to your backend. Both happen before there is any user ID to rate limit on, so `ip_connect` is what bounds how often an address can trigger them.
-
-`ip_connect` closes both. It runs in HTTP middleware, before the connection handler, keyed on the client's address:
-
-```json title="config.json"
-{
-  "client": {
-    "rate_limit": {
-      "ip_connect": {
-        "enabled": true,
-        "buckets": [
-          {"interval": "1s", "rate": 10},
-          {"interval": "1m", "rate": 200}
-        ]
-      }
-    }
-  }
-}
-```
-
-An address over the limit gets an HTTP `429` before any connect work happens. Unlike a rejection inside the protocol, this is a response to a *connection attempt*, so SDKs apply their normal connect backoff rather than tearing down an established session.
-
-Options:
-
-* `enabled` – turns the layer on. Off by default.
-* `buckets` – token buckets, same format and validation as everywhere else (an interval between `1s` and `1h`, a non-zero rate). All listed buckets must allow the attempt.
-* `dry_run` – evaluate and report without rejecting, for the buckets and for `max_concurrent_per_ip` alike. Strongly recommended for the first rollout: this layer sits in front of every connection, so a number that is too low locks users out.
-* `max_concurrent_per_ip` – how many connections one address may hold open at once. Zero (default) means no limit. **This is a different limit from the buckets above**, and both are needed — see below. It also works without buckets.
-* `max_tracked_ips` – how many addresses are tracked at once, default `100000`. It bounds the memory used by this layer.
-
-### Cap concurrent connections as well as their rate
-
-The `buckets` above govern how quickly an address may open connections. `max_concurrent_per_ip` governs how many it may hold at once:
-
-```json title="config.json"
-{
-  "client": {
-    "rate_limit": {
-      "ip_connect": {
-        "enabled": true,
-        "buckets": [{"interval": "1s", "rate": 10}],
-        "max_concurrent_per_ip": 20
-      }
-    }
-  }
-}
-```
-
-Both matter, because per-connection rate limits apply per connection: the budget available to an address is its per-connection budget multiplied by the number of connections it holds. A connection rate limit alone does not bound that number, and neither does `client.connection_limit`, which is a node-wide cap rather than a per-address one.
-
-Size `max_concurrent_per_ip` against your own users rather than against a worst case: several browser tabs, a mobile app reconnecting while the previous socket is still closing, and users sharing an office NAT all legitimately hold more than one connection. If you terminate at a proxy that does not forward the client address, every user appears as a single address and this limit is not usable — leave it at zero.
-
-:::note
-
-The client address is taken from the connection, or – when the immediate peer is a loopback or private address, i.e. a local reverse proxy or load balancer – from the `X-Real-IP` or `X-Forwarded-For` header. Your proxy must set these headers itself and overwrite any values the client sent: set `X-Real-IP` to the client address, and don't pass a client-supplied `X-Forwarded-For` through. Otherwise a client can choose the address it is counted under. If your proxy does not forward the client address at all, every client is counted under the proxy's address.
-
-:::
-
-:::tip
-
-`ip_connect` complements the existing `client.connection_rate_limit`, which caps new connections per node *in aggregate*. An aggregate cap treats all callers alike, so a single busy source can consume the whole budget. A per-IP limit accounts for each address separately. Using both is reasonable: per-IP for fairness between clients, aggregate as a node-level backstop.
-
-:::
-
 ## Metrics
 
 Rate limit decisions are exported so you can see whether limits fire, which layer fired, and for which command:
@@ -560,8 +486,8 @@ Rate limit decisions are exported so you can see whether limits fire, which laye
 centrifugo_rate_limit_client_over_limit_count{layer, command, namespace, dry_run}
 ```
 
-* `layer` – `client_command`, `user_command`, `redis_user_command`, `client_error` or `ip_connect`.
-* `command` – the command that exceeded its bucket (`publish`, `subscribe`, `rpc.my_method`, `connect` for `ip_connect` buckets, `connect_concurrent` for `ip_connect` attempts over `max_concurrent_per_ip`, `error` for `client_error`).
+* `layer` – `client_command`, `user_command`, `redis_user_command` or `client_error`.
+* `command` – the command that exceeded its bucket (`publish`, `subscribe`, `rpc.my_method`, `error` for `client_error`).
 * `namespace` – the channel namespace, populated only when `prometheus.channel_namespace_resolution` is enabled, empty otherwise. It is the name of a configured namespace (empty for channels without a namespace), or `?` for a channel whose namespace is not configured, so cardinality stays bounded by the number of configured namespaces whatever channel names clients send.
 * `dry_run` – `true` when the layer is in dry run, so hits recorded while sizing a limit are never confused with traffic that was actually rejected.
 
@@ -741,7 +667,7 @@ Changes in Centrifugo v6.10.0:
 * **`unsubscribe` and `untrack` are now limited in `user_command` too**, so they draw from the per-user `total` and `default` buckets. If those are tight, check with `dry_run` first.
 * **Stricter validation.** Centrifugo does not start when a bucket of any channel command (including `map_publish`, `map_remove`, `track`, `unsubscribe`, `untrack`) is invalid – an interval outside `1s`–`1h`, a zero rate, a namespace override without `namespace_name` – even when the layer is disabled, or when `unsubscribe` or `untrack` are set in `redis_user_command`.
 
-New options (`dry_run`, `ip_connect`, `disconnect_on_accounted_limit`) are off by default.
+New options (`dry_run`, `disconnect_on_accounted_limit`) are off by default.
 
 ## RPC method overrides format change
 
