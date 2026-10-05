@@ -108,7 +108,6 @@ For Redis Map Broker, the same option offloads PUB/SUB subscriptions to replica 
     "type": "redis",
     "redis": {
       "address": "localhost:6379",
-      "sharded_pub_sub_partitions": 16,
       "replica_client": {
         "enabled": true
       },
@@ -118,7 +117,7 @@ For Redis Map Broker, the same option offloads PUB/SUB subscriptions to replica 
 }
 ```
 
-Requires Redis Cluster or Redis Sentinel setup – the replica client can not be enabled for a standalone Redis, Centrifugo does not start in that case. Examples on this page use a plain `address`: Centrifugo detects Redis Cluster automatically, so the address of any cluster node works without the `redis+cluster://` scheme.
+Requires Redis Cluster or Redis Sentinel setup – the replica client can not be enabled for a standalone Redis, Centrifugo does not start in that case. With Redis Cluster the map broker also needs [sharded PUB/SUB](#redis-cluster-sharded-pubsub): set `sharded_pub_sub_partitions` to a non-zero value (the default `0` is for Sentinel). Examples on this page use a plain `address`: Centrifugo detects Redis Cluster automatically, so the address of any cluster node works without the `redis+cluster://` scheme.
 
 ### Read presence from replica
 
