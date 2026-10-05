@@ -595,7 +595,7 @@ Several metrics are exposed to monitor export process health:
 
 - **Type:** Summary
 - **Labels:** type, retries, result
-- **Description:** Duration of ClickHouse data flush in seconds. For successful flushes the `retries` label holds the number of attempts made (`1` means no retry); failed flushes are always labelled `1`.
+- **Description:** Duration of ClickHouse data flush in seconds. The `result` label is `ok` or `error`. Despite its name, the `retries` label of a successful flush (`result="ok"`) is the number of attempts it took: `1` means it succeeded on the first attempt, `2` that it needed one retry, and so on. For failed flushes (`result="error"`) the `retries` label carries no information.
 - **Usage:** Helps in monitoring the performance of data flush operations in ClickHouse, aiding in performance tuning and issue resolution.
 
 #### centrifugo_clickhouse_analytics_batch_size

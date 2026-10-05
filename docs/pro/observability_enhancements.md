@@ -309,7 +309,7 @@ Deprecated Summary — use `centrifugo_clickhouse_analytics_flush_duration_secon
 
 - **Type:** Histogram. Uses native schema when native histograms are enabled.
 - **Labels:** type, retries, result
-- **Description:** Time to write one batch to ClickHouse, by data type, attempt count and outcome. For successful flushes the `retries` label holds the number of attempts made (`1` means no retry); failed flushes are always labelled `1`.
+- **Description:** Time to write one batch to ClickHouse, by data type, attempt count and outcome. The `result` label is `ok` or `error`. Despite its name, the `retries` label of a successful flush (`result="ok"`) is the number of attempts it took: `1` means it succeeded on the first attempt, `2` that it needed one retry, and so on. For failed flushes (`result="error"`) the `retries` label carries no information.
 - **Usage:** Rising flush latency is the leading indicator of analytics drops — the buffer fills while writes are slow.
 
 #### centrifugo_clickhouse_analytics_batch_size
