@@ -426,6 +426,21 @@ These metrics describe the pgx connection pool Centrifugo PRO uses for PostgreSQ
 - **Description:** Consuming lag of the channel state events queue, per partition, in milliseconds.
 - **Usage:** A single lagging partition usually points at an unbalanced key distribution rather than at overall throughput.
 
+### License
+
+#### centrifugo_license_expiration_timestamp_seconds
+
+- **Type:** Gauge
+- **Labels:** effect
+- **Description:** Unix time (seconds) when the license key expires, by what happens after that date. `effect="no_start"` – Centrifugo PRO does not start with this key anymore (expiration of a trial key, or an enforced expiration). `effect="no_updates"` – Centrifugo PRO versions released after this date do not start with this key, versions released before keep working (expiration of a regular license key). A date which does not apply to the key has no series; there are no series without a license key or for a key without expiration.
+- **Usage:** Alert ahead of the date, for example 30 days before:
+
+```promql
+centrifugo_license_expiration_timestamp_seconds - time() < 30 * 24 * 3600
+```
+
+Alerting on `effect="no_start"` with higher urgency makes sense: after that date a restarted node does not come back.
+
 ### Shared poll relay
 
 Metrics of the PRO [shared poll relay](./shared_poll.md), which offloads polling to a dedicated relay instead of polling per node.
