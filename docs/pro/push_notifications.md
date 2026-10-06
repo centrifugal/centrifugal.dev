@@ -1190,6 +1190,34 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 | `send_before_time` | `string` | yes      | Local time in format `HH:MM:SS` before which push must be sent. Must not be earlier than `send_after_time` – windows crossing midnight are rejected |
 | `no_tz_send_now`   | `bool`   | no       | If device does not have timezone send push immediately, by default - will be dropped |
 
+Example `notification` objects for each provider (one request may contain several of them – each device gets the one for its provider):
+
+```json
+{
+  "fcm": {
+    "message": {
+      "notification": {"title": "Hello", "body": "How are you?"}
+    }
+  },
+  "hms": {
+    "message": {
+      "notification": {"title": "Hello", "body": "How are you?"},
+      "android": {"notification": {"click_action": {"type": 3}}}
+    }
+  },
+  "apns": {
+    "payload": {
+      "aps": {"alert": {"title": "Hello", "body": "How are you?"}}
+    }
+  },
+  "webpush": {
+    "payload": {"title": "Hello", "body": "How are you?"}
+  }
+}
+```
+
+Do not set target fields (`token`, `topic`, `condition`) inside FCM and HMS messages – Centrifugo sets them from `recipient`. An FCM or HMS message which the provider SDK considers invalid is dropped by the push worker (with an error in logs), so check messages against provider docs. For APNs, Centrifugo sets the `apns-push-type` header to `alert` unless you pass it in `headers`. The Web Push payload format is up to your service worker.
+
 #### send_push_notification result
 
 | Field Name | Type     | Description                                                 |
@@ -1253,8 +1281,17 @@ It's possible to use templating in the content of your push notification payload
 
 ```json
 {
-  ..
-  "title": "Hello {{.device.meta.first_name}}"
+  "recipient": {"filter": {"topics": ["news"]}},
+  "use_templating": true,
+  "use_meta": true,
+  "notification": {
+    "fcm": {
+      "message": {
+        "notification": {"title": "Hello {{.device.meta.first_name}}", "body": "How are you?"}
+      }
+    }
+  }
+}
 ```
 
 To access device meta content in a push template (as shown above), additionally set the `use_meta` flag to `true` in the send push notification request. Without `use_meta` you only have access to `.device.id` and `.device.user` variables.
@@ -1296,12 +1333,14 @@ In push payload you can then use templating and `l10n` object will be set to a p
 ```json
 {
   ..
-  "title": "{{default [[hello]] .l10n.greeting}}! {{ default [[How is it going]] .l10n.question }} ?"
+  "title": "{{default [[Hello]] .l10n.greeting}}! {{default [[How is it going]] .l10n.question}}?"
 ```
 
 So that a device with `pt-BR` locale will get a push notification with title `Olá! Como tá indo?`.
 
 Note, it's required to set a default value here (we used English in the example) for cases when no locale is found for the device, or no translations for the device language are provided in the request.
+
+Template string literals are written as `[[...]]` instead of `"..."`, so they don't break the JSON of the payload: inside `{{ }}` Centrifugo turns `[[` and `]]` into double quotes before executing the template.
 
 ## Push rate limits
 
