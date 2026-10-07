@@ -168,7 +168,7 @@ This is intentional: declaring the full state (especially the owner) on every re
 
 **2. Re-registration — pass the stored `id` with the full device state.** On app start, and **especially when the provider rotates the push token**, call `device_register` again with the **stored `id`** plus the complete state (`provider`, `token`, `platform`, `user`, and `timezone`/`locale`/`topics` if you use them — see the full-replace note above). This updates the same device. The behavior to understand:
 
-- Re-register **with** the stored `id` (token same or refreshed) → the existing device is updated. No duplicate. ✅ Recommended.
+- Re-register **with** the stored `id` (token same or refreshed) → the existing device is updated. No duplicate. If another device record already holds the token (e.g. one created by an earlier registration without `id` after a token rotation), that record is removed and the token moves to the device with the stored `id`. ✅ Recommended.
 - Re-register **without** `id`, token **unchanged** → Centrifugo recognizes the token (`provider` + `token` is unique) and returns the same device. Also fine.
 - Re-register **without** `id`, token **changed** → Centrifugo can't match the old device and creates a **new** one; the old token sticks around until its next push fails and is removed automatically. Passing the stored `id` avoids this temporary duplicate.
 
@@ -976,7 +976,7 @@ Manage mapping of device to topics.
 
 | Field       | Type            | Required | Description                |
 |-------------|-----------------|----------|----------------------------|
-| `device_id` | `string`        | yes      | Device ID.                 |
+| `device_id` | `string`        | yes      | Device ID. `add` and `set` for a device which doesn't exist fail with a `not found` error, `remove` succeeds (there is nothing to remove) unless `user` is set |
 | `op`        | `string`        | yes      | `add` or `remove` or `set` |
 | `topics`    | `array[string]` | no       | List of topics.            |
 | `user`      | `string`        | no       | Optional ownership guard. If set, the update is applied only if the device currently belongs to this user. If the device exists but is owned by someone else, the request fails with a `conflict` error; if the device doesn't exist, it fails with a `not found` error. Nothing is changed in either case. Use it to avoid landing one user's topics on a device that has changed hands. |
