@@ -734,8 +734,8 @@ Web Push (VAPID) provider configuration object.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `vapid_public_key` | string | | **Required.** base64url-encoded VAPID public (application server) key. Must match the `applicationServerKey` used on the frontend |
-| `vapid_private_key` | string | | **Required.** base64url-encoded VAPID private key. Keep it secret |
+| `vapid_public_key` | string | | **Required.** base64url-encoded (standard base64 is accepted too) VAPID public (application server) key. Must match the `applicationServerKey` used on the frontend, and the private key – Centrifugo does not start otherwise |
+| `vapid_private_key` | string | | **Required.** base64url-encoded (standard base64 is accepted too) VAPID private key. Keep it secret |
 | `subject` | string | | **Required.** VAPID subject (JWT `sub` claim) — a `mailto:` or `https:` URL identifying the application server contact |
 | `tokens_batch_size` | int | `100` | Maximum number of subscriptions processed in one job. Not a concurrency setting |
 | `allowed_endpoint_origins` | array[string] | built-in list | Allowed push service origins (glob patterns, same syntax as `client.allowed_origins`). When **empty**, a built-in list of the mainstream browser push services is used; when **set**, it **replaces** that list. Use `*` to allow any origin. See [Endpoint SSRF protection](#web-push-endpoint-ssrf-protection) |
@@ -1098,7 +1098,7 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 | `uid`                      | `string`                      | no       | Unique identifier for each push notification request, can be used to cancel push. We recommend using UUID v4 for it. Two different requests must have different `uid`      |
 | `send_at`                  | `int64`                       | no       | Optional Unix time in the future (in seconds) when to send push notification, push will be queued until that time.                                                         |
 | `optimize_for_reliability` | `bool`                        | no       | Makes processing heavier, but handles edge cases — for example, it avoids losing pushes that are mid-send if the queue is briefly unavailable.                            |
-| `limit_strategy`           | `PushLimitStrategy`           | no       | Can be used to set push time constraints (based on device timezone) and rate limits. Note, when it's used Centrifugo processes pushes one by one instead of batch sending. Requires `notification.expire_at` to be set |
+| `limit_strategy`           | `PushLimitStrategy`           | no       | Can be used to set push time constraints (based on device timezone) and rate limits. Limits are applied to each device separately. Devices delayed by limits are sent in groups, so a delayed push may be sent slightly later than the limits allow – never earlier, and never outside the device time window. Requires `notification.expire_at` to be set |
 | `analytics_uid`            | `string`                      | no       | Identifier for push notification analytics, if not set - Centrifugo will use `uid` field.                                                                                  |
 | `localizations`            | `map[string]PushLocalization` | no       | Optional per language localizations for push notification.                                                                                                                 |
 | `use_templating`           | `bool`                        | no       | If set - Centrifugo will use templating for push notification. Note that setting localizations enables templating automatically.                                           |
@@ -1122,7 +1122,7 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 
 | Field       | Type                   | Required | Description                                                                                                                                                                                                                                                                       |
 |-------------|------------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `expire_at` | `int64`                | no       | Unix timestamp when Centrifugo stops attempting to send this notification. Note, it's Centrifugo specific and does not relate to notification TTL fields. We generally recommend to always set this to a reasonable value to protect your app from old push notifications sending |
+| `expire_at` | `int64`                | no       | Unix timestamp when Centrifugo stops attempting to send this notification (including retries after provider errors). Note, it's Centrifugo specific and does not relate to notification TTL fields. Without it, Centrifugo stops attempting to send a notification 24 hours after it was queued. We generally recommend to always set this to a reasonable value to protect your app from old push notifications sending |
 | `fcm`       | `FcmPushNotification`  | no       | Notification for FCM                                                                                                                                                                                                                                                              |
 | `hms`       | `HmsPushNotification`  | no       | Notification for HMS                                                                                                                                                                                                                                                              |
 | `apns`      | `ApnsPushNotification` | no       | Notification for APNs                                                                                                                                                                                                                                                             |
@@ -1187,7 +1187,7 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 | Field              | Type     | Required | Description                                                                          |
 |--------------------|----------|----------|--------------------------------------------------------------------------------------|
 | `send_after_time`  | `string` | yes      | Local time in format `HH:MM:SS` after which push must be sent                        |
-| `send_before_time` | `string` | yes      | Local time in format `HH:MM:SS` before which push must be sent. Must not be earlier than `send_after_time` – windows crossing midnight are rejected |
+| `send_before_time` | `string` | yes      | Local time in format `HH:MM:SS` before which push must be sent. Must not be earlier than `send_after_time` – windows crossing midnight are rejected. Make the window at least a minute long: a push delayed to the window is sent at a random time in it, a little after the scheduled time, so a shorter window may be missed |
 | `no_tz_send_now`   | `bool`   | no       | If device does not have timezone send push immediately, by default - will be dropped |
 
 Example `notification` objects for each provider (one request may contain several of them – each device gets the one for its provider):
@@ -1362,8 +1362,22 @@ Several metrics are available to monitor the state of Centrifugo push worker sys
 
 - **Type:** Counter
 - **Labels:** provider, recipient_type, platform, success, err_code
-- **Description:** Total count of push notifications. The `platform` label is the device platform for sends to devices (`filter`) through FCM, APNs and Web Push, `na` for HMS sends (raw tokens included) and for FCM topic and condition sends which reached the provider, and empty for FCM, APNs and Web Push sends to raw tokens. When ClickHouse analytics is enabled, pushes dropped after a failed re-queue are counted too, with the device platform for `filter` sends, `na` for topic and condition sends, and an empty platform for raw tokens.
+- **Description:** Total count of push notifications. The `platform` label is the device platform for sends to devices (`filter`) through FCM, APNs and Web Push, `na` for HMS sends (raw tokens included) and for FCM topic and condition sends which reached the provider, and empty for FCM, APNs and Web Push sends to raw tokens. Pushes dropped without a send attempt (for example after a failed re-queue, a template error, or when a push to a device would be sent after `expire_at`) are counted with `err_code` `dropped`, with the device platform for `filter` sends, `na` for topic and condition sends, and an empty platform for raw tokens. A batch retried later (see `centrifugo_push_deferred_batch_count`) is counted by the attempt which sends it.
 - **Usage:** Helps in tracking the number and success rate of push notifications sent, providing insights for optimization and troubleshooting.
+
+#### centrifugo_push_deferred_batch_count
+
+- **Type:** Counter
+- **Labels:** provider, reason
+- **Description:** Count of push batches handed over to a later attempt instead of being sent. `reason` is `retry_later` when the batch failed with retryable provider errors (provider unavailable or throttling), `send_time_budget` when the job ran out of time before sending the whole batch, `error` for other errors. Counted once per batch.
+- **Usage:** Grows during provider outages, when `centrifugo_push_notification_count` may stay flat because nothing is sent – a good signal to alert on.
+
+#### centrifugo_push_dropped_job_count
+
+- **Type:** Counter
+- **Labels:** provider, reason
+- **Description:** Count of push jobs dropped without being processed. `reason` is `expired` when the notification `expire_at` passed, `retry_period_exceeded` when a push without `expire_at` was queued more than 24 hours ago.
+- **Usage:** Shows pushes which could not be delivered in time, for example after a long provider outage or queue backlog.
 
 #### centrifugo_push_queue_consuming_lag
 
