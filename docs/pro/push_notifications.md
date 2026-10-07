@@ -1228,6 +1228,8 @@ Do not set target fields (`token`, `topic`, `condition`) inside FCM and HMS mess
 
 Cancel delayed push notification (which was sent with custom `send_at` value).
 
+Canceling works until Centrifugo starts processing the push at its `send_at` time. A push already being processed is not stopped, and the result is the same empty object whether the push was canceled or not (for example, when it was already sent or the `uid` is unknown). Devices delayed by a [limit strategy](#send_push_notification-request) (time limits, rate limits) and retries are scheduled separately and can't be canceled with the original `uid`.
+
 #### cancel_push request
 
 | Field | Type     | Required | Description                          |
