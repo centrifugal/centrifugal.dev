@@ -266,7 +266,7 @@ Note that the map broker and the PostgreSQL broker are **not** PRO features — 
 
 - **Type:** Gauge
 - **Labels:** provider, queue
-- **Description:** Number of push jobs waiting to be consumed — the consumer group lag of the Redis stream (entries not yet delivered to consumers), or rows in the `push_jobs` table whose `run_at` is already due. Despite the name this is a **job count, not a duration**, and it is a Gauge — take its current value, do not wrap it in `rate()`.
+- **Description:** Approximate number of push jobs waiting to be consumed. Despite the name this is a **job count, not a duration**, and it is a Gauge — take its current value, do not wrap it in `rate()`.
 - **Usage:** Sustained growth means push workers cannot keep up with the send rate.
 
 #### centrifugo_push_consuming_inflight_jobs
