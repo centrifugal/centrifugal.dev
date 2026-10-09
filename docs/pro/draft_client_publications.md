@@ -160,7 +160,7 @@ schemas:
 
 :::info
 
-Undeclared properties are rejected by default in every object the schema describes (Centrifugo adds `"unevaluatedProperties": false` to object schemas). Set `"additionalProperties": true` (or `"unevaluatedProperties": true`) on an object schema in your schema file if you need to allow extra fields in that object.
+Undeclared properties are rejected by default in every object the schema describes. Set `"additionalProperties": true` (or `"unevaluatedProperties": true`) on an object schema in your schema file if you need to allow extra fields in that object.
 
 :::
 

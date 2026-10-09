@@ -185,7 +185,7 @@ Always check whether `error` is set, otherwise consider publish successful and c
 
 A temporary error does not mean nothing was done: a publication may have happened despite the error. Retry a publication with the same `idempotency_key`, so it is not published twice.
 
-Since Centrifugo v6.10.0 an error returned for a request which can never succeed is reported with its meaning, not as the internal error 100. For example, a publication into a channel the broker refuses (a channel starting with `}` in Redis Cluster) returns 107 bad request, and a call for which no presence manager or map broker is configured returns 108 not available.
+Since Centrifugo v6.10.0 an error returned for a request which can never succeed is reported with its meaning, not as the internal error 100. For example, a publication into a channel name the broker can't accept returns 107 bad request, and a call for which no presence manager or map broker is configured returns 108 not available.
 
 #### PublishResult
 

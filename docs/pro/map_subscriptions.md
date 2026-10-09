@@ -189,7 +189,7 @@ Distribute read load across PostgreSQL replicas:
 }
 ```
 
-Replicas are used when `replica.enabled` is `true` and `replica.dsn` lists them – Centrifugo does not start when only one of the two is set. Reads from subscribers are spread across replicas by channel: a channel is read from the replica its live updates are delivered from, so reads include at least what subscribers already received. With replicas, Centrifugo checks on start that the database hashes channels the same way it does, and logs an error if not (a big-endian server, or a connection converting channels to another encoding) or if the check can't be run. The stream broker reads history from replicas for every history call, including server API ones – as replicas lag behind the primary, a publication may be missing from history read right after it was published. When the [in-memory cache layer](#in-memory-cache-layer) is enabled, cache loads and syncs read from the primary, not from replicas.
+Replicas are used when `replica.enabled` is `true` and `replica.dsn` lists them – Centrifugo does not start when only one of the two is set. Reads from subscribers are spread across replicas, and a subscriber's read includes at least what it already received in live updates. With replicas, Centrifugo checks on start that the database is compatible with this, and logs an error if it is not or if the check can't be run. The stream broker reads history from replicas for every history call, including server API ones – as replicas lag behind the primary, a publication may be missing from history read right after it was published. When the [in-memory cache layer](#in-memory-cache-layer) is enabled, cache loads and syncs read from the primary, not from replicas.
 
 ### Broker fan-out
 

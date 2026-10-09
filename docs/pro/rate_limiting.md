@@ -406,17 +406,17 @@ In this case the rate limit will simply connect to Redis instances configured fo
 
 ## Performance
 
-**In-memory throttlers** (`client_command` and `user_command`) check token buckets entirely in memory without allocations. Their cost is small compared to processing the command itself, and with rate limits switched off there is practically no overhead.
+**In-memory throttlers** (`client_command` and `user_command`) check token buckets in memory. Their cost is small compared to processing the command itself, and with rate limits switched off there is practically no overhead.
 
-**Redis throttler** (`redis_user_command`) executes one Lua script call to Redis per command, so it adds a Redis round trip to each limited command. Centrifugo supports the same Redis scaling options as for the engine (Sentinel, Cluster, client-side sharding).
+**Redis throttler** (`redis_user_command`) adds a Redis round trip to each limited command. Centrifugo supports the same Redis scaling options as for the engine (Sentinel, Cluster, client-side sharding).
 
 :::tip
 
-Use a dedicated Redis instance for rate limiting rather than reusing the engine Redis via `reuse_from_engine`. The rate limit workload (frequent small Lua script calls) competes with the engine's pub/sub and presence traffic on the same connection pool. A separate Redis instance isolates the two workloads and keeps latency predictable for both.
+Use a dedicated Redis instance for rate limiting rather than reusing the engine Redis via `reuse_from_engine`. The rate limit workload competes with the engine's pub/sub and presence traffic on the same connection pool. A separate Redis instance isolates the two workloads and keeps latency predictable for both.
 
 :::
 
-When all three throttler layers are active they run in sequence, short-circuiting on the first denial. The in-memory layers add little; the Redis layer adds a Redis round trip. Use the in-memory throttlers alone when per-node limits are sufficient, and add the Redis throttler when limits must be consistent across the Centrifugo cluster.
+When several layers are active, a command is rejected if any of them denies it, and the in-memory layers are checked before the Redis layer. The in-memory layers add little; the Redis layer adds a Redis round trip. Use the in-memory throttlers alone when per-node limits are sufficient, and add the Redis throttler when limits must be consistent across the Centrifugo cluster.
 
 :::tip
 
@@ -430,7 +430,7 @@ Use `user_command` as a cheap front-end filter for `redis_user_command`. Because
 
 This is deliberate. Both commands exist for a client to release state it no longer needs — leaving a channel, dropping a tracked key — so completing them reduces server-side work. Refusing them does not:
 
-* Centrifugo SDKs treat an error reply to `unsubscribe` as fatal and reconnect. Refusing one inexpensive command therefore produces a full reconnect instead: a new transport, a connect handshake, token verification, a connect proxy call if configured, and a resubscribe to every channel.
+* An SDK may handle an error reply to `unsubscribe` by reconnecting. Refusing one inexpensive command could then produce a full reconnect instead: a new transport, a connect handshake, token verification, a connect proxy call if configured, and a resubscribe to every channel.
 * A refused `untrack` leaves the server tracking a key the client has already released, so it keeps broadcasting updates that are no longer wanted.
 
 Their buckets remain fully effective. These commands consume tokens like any other — including from `total`, and unlike enforced commands they consume it even when their own bucket is empty. A connection issuing them at a high rate therefore draws down its overall budget, and the commands that ask the server to perform work are limited accordingly.
@@ -464,7 +464,7 @@ Disconnecting is not the same as refusing a command. The disconnect code is in t
 
 :::tip Limit connection rate as well
 
-Closing a connection is effective when combined with a limit on how quickly a client may open a new one: apply a per-IP connection rate limit in your infrastructure. Centrifugo logs a warning at startup when `disconnect_on_accounted_limit` is set, as a reminder.
+Closing a connection is effective when combined with a limit on how quickly a client may open a new one: apply a per-IP connection rate limit in your infrastructure.
 
 :::
 
@@ -491,7 +491,7 @@ centrifugo_rate_limit_client_over_limit_count{layer, command, namespace, dry_run
 * `namespace` – the channel namespace, populated only when `prometheus.channel_namespace_resolution` is enabled, empty otherwise. It is the name of a configured namespace (empty for channels without a namespace), or `?` for a channel whose namespace is not configured, so cardinality stays bounded by the number of configured namespaces whatever channel names clients send.
 * `dry_run` – `true` when the layer is in dry run, so hits recorded while sizing a limit are never confused with traffic that was actually rejected.
 
-The counter is incremented **only** when a bucket denies. Commands that pass their buckets do no metric work at all, so the normal path costs nothing.
+The counter is incremented only when a bucket denies.
 
 Two readings are worth alerting on:
 
@@ -504,7 +504,7 @@ Command buckets count operations. The size of each command is bounded separately
 
 If your application sends small messages, lowering the size limit is a straightforward way to reduce the volume a single connection can transfer. It needs care, though, for two reasons.
 
-**The limit applies to a whole frame.** Centrifugo's protocol supports batching, and the SDKs use it: on every transport open, `centrifuge-js` sends the `connect` command and every subscribe in a single frame. A client subscribed to many channels with subscription tokens therefore sends a large frame each time it connects. `message_size_limit` is applied as a transport read limit, so it bounds that whole frame — while the protocol decoder additionally bounds each individual command.
+**The limit applies to a whole frame.** Centrifugo's protocol supports batching, and SDKs may use it: on connect, an SDK may send the `connect` command and subscribe commands together in a single frame. A client subscribed to many channels with subscription tokens may therefore send a large frame each time it connects. `message_size_limit` bounds that whole frame.
 
 **A frame over the limit ends the connection.** It is not a refused command: the connection is closed with WebSocket code 1009, which SDKs report as a message size limit error and do not retry. A client whose reconnect frame exceeds the limit is therefore unable to connect at all, and because frame size grows with subscription count, this affects the users on the most channels first.
 
@@ -527,7 +527,7 @@ Two companion signals are useful alongside it:
 
 If you need to limit throughput as a byte rate rather than a per-message size, this is best applied at the proxy in front of Centrifugo. Bandwidth shaping there applies backpressure — a client's writes slow down, without an error or a disconnect — and the traffic is bounded before it reaches the server.
 
-Note that not every proxy can do this for WebSocket. Rate limiting in nginx and Cloudflare acts on HTTP requests, and after the WebSocket upgrade the connection is an opaque byte stream to them, so their request-based rules do not apply to individual frames. HAProxy provides bandwidth limitation filters (`filter bwlim-in` / `bwlim-out`) that operate on the byte stream — verify the behaviour with your version and tunnelling configuration.
+Note that not every proxy can do this for WebSocket: request-based rate limiting rules do not apply to individual frames of an upgraded WebSocket connection. Check that your proxy supports bandwidth limits on the byte stream of a WebSocket connection.
 
 ## Channel namespace overrides
 

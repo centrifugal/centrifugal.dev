@@ -374,7 +374,7 @@ curl --header "X-API-Key: <API_KEY>" \
 
 Fleet-wide ops iterate every shard's full connection table on every node. For deployments with tens of thousands of connections per node, this is O(N) work per call — single call site, no label index. Prefer narrower scoping (`user`, or per-tenant channels) when the same query can be expressed that way. Reach for `all_users` + `label_filter` when label-based targeting is the genuine intent or for one-shot operational actions.
 
-Cluster behavior: a fleet-wide op is fanned out via the control protocol — every receiving node runs the same hub-iteration filter locally. Mixed-version clusters (during rolling upgrade) safely degrade: older nodes that don't know `all_users` interpret it as `false` and run the anonymous-only path on their share. `label_filter` is also carried in a control message field which older nodes ignore – so during a rolling upgrade older nodes apply an operation filtered by labels to every connection of the targeted user (or, for a fleet-wide op, to every anonymous connection). Bump every node before relying on fleet-wide semantics in production.
+Cluster behavior: a fleet-wide op is applied on every node. Mixed-version clusters (during rolling upgrade) safely degrade: older nodes that don't know `all_users` interpret it as `false` and apply the operation to anonymous connections only. `label_filter` is also carried in a control message field which older nodes ignore – so during a rolling upgrade older nodes apply an operation filtered by labels to every connection of the targeted user (or, for a fleet-wide op, to every anonymous connection). Bump every node before relying on fleet-wide semantics in production.
 
 ### Connections listing with `label_filter`
 

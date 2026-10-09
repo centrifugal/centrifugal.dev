@@ -677,7 +677,7 @@ PostgreSQL queue configuration object. Supports DSN, replica DSN, and TLS config
 | `reuse_from_database` | bool | `false` | Reuse PostgreSQL connection from the database configuration |
 | `consumer_concurrency` | int | `16` | Number of concurrent consumer workers |
 | `scheduler_consumer_concurrency` | int | `16` | Number of concurrent scheduler consumer workers for delayed pushes |
-| `prefix` | string | `""` | Prefix for queue names. The jobs table is always `push_jobs` |
+| `prefix` | string | `""` | Prefix for queue names |
 
 ### push_notifications.fcm
 
@@ -1098,7 +1098,7 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 | `uid`                      | `string`                      | no       | Unique identifier for each push notification request, can be used to cancel push. We recommend using UUID v4 for it. Two different requests must have different `uid`      |
 | `send_at`                  | `int64`                       | no       | Optional Unix time in the future (in seconds) when to send push notification, push will be queued until that time.                                                         |
 | `optimize_for_reliability` | `bool`                        | no       | Makes processing heavier, but handles edge cases — for example, it avoids losing pushes that are mid-send if the queue is briefly unavailable.                            |
-| `limit_strategy`           | `PushLimitStrategy`           | no       | Can be used to set push time constraints (based on device timezone) and rate limits. Limits are applied to each device separately. Devices delayed by limits are sent in groups, so a delayed push may be sent slightly later than the limits allow – never earlier, and never outside the device time window. Requires `notification.expire_at` to be set |
+| `limit_strategy`           | `PushLimitStrategy`           | no       | Can be used to set push time constraints (based on device timezone) and rate limits. Limits are applied to each device separately. A push delayed by limits may be sent slightly later than the limits allow – never earlier, and never outside the device time window. Requires `notification.expire_at` to be set |
 | `analytics_uid`            | `string`                      | no       | Identifier for push notification analytics, if not set - Centrifugo will use `uid` field.                                                                                  |
 | `localizations`            | `map[string]PushLocalization` | no       | Optional per language localizations for push notification.                                                                                                                 |
 | `use_templating`           | `bool`                        | no       | If set - Centrifugo will use templating for push notification. Note that setting localizations enables templating automatically.                                           |
@@ -1187,7 +1187,7 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 | Field              | Type     | Required | Description                                                                          |
 |--------------------|----------|----------|--------------------------------------------------------------------------------------|
 | `send_after_time`  | `string` | yes      | Local time in format `HH:MM:SS` after which push must be sent                        |
-| `send_before_time` | `string` | yes      | Local time in format `HH:MM:SS` before which push must be sent. Must not be earlier than `send_after_time` – windows crossing midnight are rejected. Make the window at least a minute long: a push delayed to the window is sent at a random time in it, a little after the scheduled time, so a shorter window may be missed |
+| `send_before_time` | `string` | yes      | Local time in format `HH:MM:SS` before which push must be sent. Must not be earlier than `send_after_time` – windows crossing midnight are rejected. Make the window at least a minute long: a push delayed to the window may be sent slightly after the scheduled time, so a shorter window may be missed |
 | `no_tz_send_now`   | `bool`   | no       | If device does not have timezone send push immediately, by default - will be dropped |
 
 Example `notification` objects for each provider (one request may contain several of them – each device gets the one for its provider):
@@ -1216,7 +1216,7 @@ Example `notification` objects for each provider (one request may contain severa
 }
 ```
 
-Do not set target fields (`token`, `topic`, `condition`) inside FCM and HMS messages – Centrifugo sets them from `recipient`. An FCM or HMS message which the provider SDK considers invalid is dropped by the push worker (with an error in logs), so check messages against provider docs. For APNs, Centrifugo sets the `apns-push-type` header to `alert` unless you pass it in `headers`. The Web Push payload format is up to your service worker.
+Do not set target fields (`token`, `topic`, `condition`) inside FCM and HMS messages – Centrifugo sets them from `recipient`. An FCM or HMS message which the provider SDK considers invalid is not sent (with an error in logs), so check messages against provider docs. For APNs, Centrifugo sets the `apns-push-type` header to `alert` unless you pass it in `headers`. The Web Push payload format is up to your service worker.
 
 #### send_push_notification result
 
@@ -1385,7 +1385,7 @@ Several metrics are available to monitor the state of Centrifugo push worker sys
 
 - **Type:** Gauge
 - **Labels:** provider, queue
-- **Description:** Number of jobs waiting to be consumed (not seconds): the Redis Stream consumer group lag (entries not yet delivered to the group) or the number of due jobs in PostgreSQL queue.
+- **Description:** Approximate number of jobs waiting to be consumed (not seconds).
 - **Usage:** Useful for monitoring the delay in processing jobs from the queue, helping identify potential bottlenecks and ensuring timely processing.
 
 #### centrifugo_push_consuming_inflight_jobs
