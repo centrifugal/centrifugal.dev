@@ -431,9 +431,9 @@ These metrics describe the pgx connection pool Centrifugo PRO uses for PostgreSQ
 #### centrifugo_license_expiration_timestamp_seconds
 
 - **Type:** Gauge
-- **Labels:** effect
-- **Description:** Since Centrifugo v6.10.0. Unix time (seconds) of the license key expiration dates, one series per effect. `effect="no_start"` – after this date Centrifugo PRO does not start with this key (expiration of a trial key, or an enforced expiration). `effect="no_updates"` – Centrifugo PRO versions released after this date do not start with this key, versions released before keep working (expiration of a regular license key). A date which does not apply to the key has no series; there are no series without a license key or for a key without expiration. Not shown on the Grafana dashboard – it is meant for alerting.
-- **Usage:** Alert ahead of the date, for example 30 days before: `centrifugo_license_expiration_timestamp_seconds - time() < 30 * 24 * 3600`. Give `effect="no_start"` a higher urgency – after that date a restarted node does not come back. A passed `effect="no_updates"` date keeps the alert firing while the running version keeps working – until a renewed license key is configured and nodes are restarted.
+- **Labels:** none
+- **Description:** Since Centrifugo v6.10.0. Unix time (seconds) of the license key expiration. There is no series without a license key or for a key without expiration. Not shown on the Grafana dashboard – it is meant for alerting.
+- **Usage:** Alert ahead of the expiration, for example 30 days before: `centrifugo_license_expiration_timestamp_seconds - time() < 30 * 24 * 3600`. The alert keeps firing after the date until a renewed license key is configured and nodes are restarted.
 
 ### Shared poll relay
 
