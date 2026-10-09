@@ -639,7 +639,7 @@ Maximum time interval to keep a device without updates. Devices inactive longer 
 
 ### push_notifications.read_from_replica
 
-When true, Centrifugo will use PostgreSQL replicas for read operations where possible. Replicas are configured with `database.postgresql.replica_dsn` – if no replicas are configured, reads silently go to the primary.
+When true, Centrifugo will use PostgreSQL replicas for read operations where possible. Replicas are configured with `database.postgresql.replica_dsn`.
 
 - **Type:** `bool`
 - **Default:** `false`
