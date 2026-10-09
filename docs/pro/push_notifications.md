@@ -698,7 +698,7 @@ HMS (Huawei Messaging Service) provider configuration object.
 | `app_secret` | string | | **Required.** Your HMS application secret |
 | `auth_endpoint` | string | | Custom HMS authentication endpoint. Uses HMS default if not set |
 | `push_endpoint` | string | | Custom HMS push endpoint. Uses HMS default if not set |
-| `tokens_batch_size` | int | `1000` | Maximum number of tokens in a single batch request to HMS |
+| `tokens_batch_size` | int | `1000` | Maximum number of tokens in a single batch request to HMS. HMS accepts at most 1000 tokens per batch – Centrifugo does not start with a higher value |
 
 ### push_notifications.apns
 
@@ -709,7 +709,7 @@ APNs (Apple Push Notification service) provider configuration object.
 | `endpoint` | string | `"development"` | APNs endpoint: `"development"`, `"production"`, or custom `https://` URL |
 | `bundle_id` | string | | **Required.** iOS application bundle identifier |
 | `auth_type` | string | | **Required.** Authentication method: `"token"` or `"cert"` |
-| `tokens_batch_size` | int | `100` | Maximum number of tokens processed in one job. Not a concurrency setting |
+| `tokens_batch_size` | int | `100` | Maximum number of device tokens Centrifugo handles together when sending a notification. APNs has no batch requests – every token still gets its own request |
 
 **Token-based authentication (`auth_type: "token"`, recommended):**
 
@@ -737,7 +737,7 @@ Web Push (VAPID) provider configuration object.
 | `vapid_public_key` | string | | **Required.** base64url-encoded (standard base64 is accepted too) VAPID public (application server) key. Must match the `applicationServerKey` used on the frontend, and the private key – Centrifugo does not start otherwise |
 | `vapid_private_key` | string | | **Required.** base64url-encoded (standard base64 is accepted too) VAPID private key. Keep it secret |
 | `subject` | string | | **Required.** VAPID subject (JWT `sub` claim) — a `mailto:` or `https:` URL identifying the application server contact |
-| `tokens_batch_size` | int | `100` | Maximum number of subscriptions processed in one job. Not a concurrency setting |
+| `tokens_batch_size` | int | `100` | Maximum number of subscriptions Centrifugo handles together when sending a notification. Web Push has no batch requests – every subscription still gets its own request |
 | `allowed_endpoint_origins` | array[string] | built-in list | Allowed push service origins (glob patterns, same syntax as `client.allowed_origins`). When **empty**, a built-in list of the mainstream browser push services is used; when **set**, it **replaces** that list. Use `*` to allow any origin. See [Endpoint SSRF protection](#web-push-endpoint-ssrf-protection) |
 | `extra_allowed_endpoint_origins` | array[string] | `[]` | Origins (same glob syntax) **added on top of** `allowed_endpoint_origins` (or the built-in defaults when it is unset). Use it to allow a self-hosted push service while keeping the defaults |
 
