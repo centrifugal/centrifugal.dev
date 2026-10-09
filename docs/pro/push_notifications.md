@@ -734,8 +734,8 @@ Web Push (VAPID) provider configuration object.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `vapid_public_key` | string | | **Required.** base64url-encoded (standard base64 is accepted too) VAPID public (application server) key. Must match the `applicationServerKey` used on the frontend, and the private key – Centrifugo does not start otherwise |
-| `vapid_private_key` | string | | **Required.** base64url-encoded (standard base64 is accepted too) VAPID private key. Keep it secret |
+| `vapid_public_key` | string | | **Required.** base64url-encoded VAPID public (application server) key. Must match the `applicationServerKey` used on the frontend, and the private key – Centrifugo does not start otherwise |
+| `vapid_private_key` | string | | **Required.** base64url-encoded VAPID private key. Keep it secret |
 | `subject` | string | | **Required.** VAPID subject (JWT `sub` claim) — a `mailto:` or `https:` URL identifying the application server contact |
 | `tokens_batch_size` | int | `100` | Maximum number of subscriptions Centrifugo handles together when sending a notification. Web Push has no batch requests – every subscription still gets its own request |
 | `allowed_endpoint_origins` | array[string] | built-in list | Allowed push service origins (glob patterns, same syntax as `client.allowed_origins`). When **empty**, a built-in list of the mainstream browser push services is used; when **set**, it **replaces** that list. Use `*` to allow any origin. See [Endpoint SSRF protection](#web-push-endpoint-ssrf-protection) |
