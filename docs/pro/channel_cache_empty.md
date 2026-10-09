@@ -81,15 +81,15 @@ Expected response example:
 }
 ```
 
-If cache empty proxy is defined, but Centrifugo can't reach it – then subscription request which triggered the event will be rejected with the internal error.
+If cache empty proxy is defined, but the request to it fails – then the client which triggered the event will be disconnected with code `3004` (server error) and will reconnect, instead of receiving an error reply to the subscribe request.
 
-#### CacheEmptyRequest
+#### NotifyCacheEmptyRequest
 
 | Field     | Type     | Required | Description                            |
 |-----------|----------|----------|----------------------------------------|
 | `channel` | `string` | yes      | A channel in which cache miss occurred |
 
-#### CacheEmptyResult
+#### NotifyCacheEmptyResult
 
 | Field       | Type      | Required | Description                                                                                                                             |
 |-------------|-----------|----------|-----------------------------------------------------------------------------------------------------------------------------------------|

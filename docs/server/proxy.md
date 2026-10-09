@@ -1045,6 +1045,7 @@ Very similar to connection-wide refresh response.
 | `expire_at` | `integer` | no       | a timestamp in the future (Unix seconds) when subscription must be considered expired                             |
 | `info`      | `JSON`    | no       | update channel-specific information about connection                                                              |
 | `b64info`   | `string`  | no       | binary channel info encoded in base64 format, will be decoded to raw bytes on Centrifugo before using in messages |
+| `server_tags_filter` | `object` | no | (**Centrifugo PRO**, since v6.10.0) new server-side tag filter for the subscription, the current one is kept when not set. See [server-side tag filtering](../pro/server_tags_filter.md#updating-the-filter) |
 
 ### Subscribe stream proxy
 

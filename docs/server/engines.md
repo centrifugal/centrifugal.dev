@@ -212,7 +212,7 @@ Let's see how to start several Centrifugo nodes using the Redis Engine. We will 
 First, you should have [Redis installed and running](https://redis.io/docs/latest/operate/oss_and_stack/install/install-redis/). As soon as it's running - we can launch 3 Centrifugo instances. Open your terminal and start the first one:
 
 ```
-centrifugo --config=config.json --port=8000 --engine.type=redis
+centrifugo --config=config.json --http_server.port=8000 --engine.type=redis
 ```
 
 If your Redis is on the same machine and runs on its default port you can omit `engine.redis.address` option in the command above.
@@ -220,7 +220,7 @@ If your Redis is on the same machine and runs on its default port you can omit `
 Then open another terminal and start another Centrifugo instance:
 
 ```
-centrifugo --config=config.json --port=8001 --engine.type=redis
+centrifugo --config=config.json --http_server.port=8001 --engine.type=redis
 ```
 
 Note that we use another port number (`8001`) as port 8000 is already busy by our first Centrifugo instance. If you are starting Centrifugo instances on different machines then you most probably can use
@@ -229,7 +229,7 @@ the same port number (`8000` or whatever you want) for all instances.
 And finally, let's start the third instance:
 
 ```
-centrifugo --config=config.json --port=8002 --engine.type=redis
+centrifugo --config=config.json --http_server.port=8002 --engine.type=redis
 ```
 
 Now you have 3 Centrifugo instances running on ports 8000, 8001, 8002 all connected to Redis on `localhost:6379` (default used by Centrifugo) and clients can connect to any of them. You can also send API requests to any of those nodes – as all nodes connected over Redis PUB/SUB message will be delivered to all interested clients on all nodes.
@@ -655,6 +655,8 @@ When using Nats raw mode join/leave feature of Centrifugo can't be used.
 
 :::
 
+Since Centrifugo v6.10.0 messages consumed in raw mode are checked against the channel's [publication_data_format](./channels.md#publication_data_format): when it is `json` or `json_object`, a message which does not match is logged and not delivered. Channels without such a format are not affected.
+
 Here is how raw mode may be enabled:
 
 ```json
@@ -940,7 +942,7 @@ Centrifugo automatically manages the required database schema (tables, functions
 
 ### Read replica support
 
-The controller supports routing read operations (outbox polling) to a PostgreSQL replica while keeping writes on the primary:
+[Centrifugo PRO](../pro/overview.md) lets the controller route read operations (outbox polling) to a PostgreSQL replica while keeping writes on the primary. In Centrifugo OSS `replica` is not a known option:
 
 ```json title="config.json"
 {

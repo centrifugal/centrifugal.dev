@@ -64,7 +64,7 @@ Centrifugo PRO provides two ways to revoke tokens:
 1. Revoke token by ID: based on [jti](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.7) claim in the case of JWT.
 1. Revoke all user's tokens issued before certain time: based on [iat](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.6) in the case of JWT.
 
-When a token is revoked, the client with such a token will be disconnected from Centrifugo shortly. An attempt to connect with a revoked token won't succeed.
+When a token is revoked, the client with such a token will be disconnected from Centrifugo shortly. An attempt to connect with a revoked token won't succeed, and refreshing a connection with it counts as an expired token: the client is disconnected with a reconnect code and loads a new token. The same applies to subscription tokens: a subscription made with a revoked subscription token (or one invalidated with `channel`) is unsubscribed shortly, subscribing with such a token is refused with a token expired error, and refreshing a subscription with it disconnects the client with a reconnect code (`3006`) – after reconnecting, its resubscribe gets the token expired error, so the client loads a new token.
 
 Token revocation features (both revocation by token ID and user token invalidation by issue time) are enabled by default in Centrifugo PRO (as soon as your JWTs have `jti` and `iat` claims you will be able to use revocation APIs). By default revocation information is kept in process memory. To persist it, configure a storage engine – see [persistence configuration](#persistence-configuration) below.
 
@@ -126,7 +126,7 @@ curl --header "Content-Type: application/json" \
 | `user`          | `string`       | yes      | User ID to invalidate tokens for                                                                                                                                                                                                                                                                                                                              |
 | `issued_before` | `int`          | no       | All tokens issued before this Unix time will be considered revoked (in case of JWT this requires `iat` to be properly set in the JWT); if not provided the server uses current time                                                                                                                                                                          |
 | `expire_at`     | `int`          | no       | Unix time in the future when revocation information should expire (Unix seconds). While optional **we recommend to use a reasonably small expiration time (matching the expiration time of your JWTs)** to keep working set of revocations small (since Centrifugo nodes periodically load all entries from the database table to construct in-memory cache). |
-| `channel`       | `string`       | no       | If set, only subscription tokens for this channel are invalidated: connections keep working, and subscriptions to the channel made with an invalidated token are unsubscribed on the next periodic check (with a token expired code, so the client can resubscribe with a new token). If not set, connection tokens are invalidated (subscription tokens are not affected). |
+| `channel`       | `string`       | no       | If set, only subscription tokens for this channel are invalidated: connections keep working, and subscriptions to the channel made with an invalidated token are unsubscribed on the next periodic check (with a token expired code, so the client can resubscribe with a new token), subscribe with such a token is refused with a token expired error, and subscription refresh with it disconnects the client with a reconnect code. If not set, connection tokens are invalidated (subscription tokens are not affected). |
 
 #### InvalidateUserTokensResult
 
@@ -134,7 +134,7 @@ Empty object.
 
 ## Persistence configuration
 
-By default both user blocking and token revocation data is kept in process memory and will be lost on restart. To persist this data, configure a storage engine.
+By default both user blocking and token revocation data is kept in process memory and will be lost on restart. Entries stop applying once their `expire_at` is reached and are periodically removed from memory. To persist this data, configure a storage engine.
 
 Two persistent engines are supported:
 

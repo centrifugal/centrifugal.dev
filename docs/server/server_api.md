@@ -40,6 +40,8 @@ You can just use one of our [available HTTP API libraries](../server/server_api.
 
 :::
 
+Request keys are matched without regard to letter case. In Centrifugo PRO since v6.10.0 request bodies of `/api/<method>` endpoints are otherwise decoded strictly per RFC 8259: a key given twice, invalid UTF-8 or data after the JSON value make the request a bad request. The same applies to proxy responses and to JWT claims in PRO.
+
 Below we look at all aspects of Centrifugo HTTP API in detail, starting with information about authorization.
 
 ## HTTP API authorization
@@ -175,10 +177,15 @@ Always check whether `error` is set, otherwise consider publish successful and c
 
 `Error` type represents Centrifugo-level API call error and it has common structure for all server API responses:
 
-| Field name | Field type | Required | Description   |
-|------------|------------|----------|---------------|
-| `code`     | `integer`  | yes      | Error code    |
-| `message`  | `string`   | no       | Error message |
+| Field name  | Field type | Required | Description   |
+|-------------|------------|----------|---------------|
+| `code`      | `integer`  | yes      | Error code: 100 (internal error), 102 (unknown channel), 104 (not found), 107 (bad request), 108 (not available), 111 (too many requests), 112 (unrecoverable position) or 113 (conflict) |
+| `message`   | `string`   | no       | Error message |
+| `temporary` | `bool`     | no       | Since Centrifugo v6.10.0. `true` when the same request may succeed if retried later: the error came from a temporary condition, such as a broker being unavailable or a rate limit, not from the request itself. Omitted when `false`. Currently set for 100 and 111 (111 since v6.10.0) |
+
+A temporary error does not mean nothing was done: a publication may have happened despite the error. Retry a publication with the same `idempotency_key`, so it is not published twice.
+
+Since Centrifugo v6.10.0 an error returned for a request which can never succeed is reported with its meaning, not as the internal error 100. For example, a publication into a channel name the broker can't accept returns 107 bad request, and a call for which no presence manager or map broker is configured returns 108 not available.
 
 #### PublishResult
 
@@ -1144,6 +1151,8 @@ func MapErrorToHTTPCode(err *Error) int {
 		return http.StatusNotFound
 	case ErrorBadRequest.Code, ErrorNotAvailable.Code: // 107, 108 -> HTTP 400
 		return http.StatusBadRequest
+	case ErrorTooManyRequests.Code: // 111 -> HTTP 429 (since v6.10.0)
+		return http.StatusTooManyRequests
 	case ErrorUnrecoverablePosition.Code: // 112 -> HTTP 416
 		return http.StatusRequestedRangeNotSatisfiable
 	case ErrorConflict.Code: // 113 -> HTTP 409
@@ -1167,6 +1176,8 @@ func MapErrorToGRPCCode(err *Error) codes.Code {
 		return codes.NotFound
 	case ErrorBadRequest.Code, ErrorNotAvailable.Code: // 107, 108
 		return codes.InvalidArgument
+	case ErrorTooManyRequests.Code: // 111 (since v6.10.0)
+		return codes.ResourceExhausted
 	case ErrorUnrecoverablePosition.Code: // 112
 		return codes.OutOfRange
 	case ErrorConflict.Code: // 113

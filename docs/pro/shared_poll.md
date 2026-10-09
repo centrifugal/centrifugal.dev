@@ -365,7 +365,7 @@ Example: interval=1s, 10 batches, dispatch delay=100ms between batches
 
  wall time ≈ 1400ms, spread delay = 900ms
  work time = 500ms
- utilization = 500ms / 1s = 50%  →  borderline, slight increase
+ utilization = 500ms / 1s = 50%  →  borderline, interval unchanged
 
 
 ── Overloaded backend (2s/batch) ─────────────────────────────

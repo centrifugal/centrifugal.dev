@@ -277,10 +277,11 @@ The admin UI includes a **Config** page that shows the effective configuration o
 
 ![Admin config viewer](/img/admin_config.png)
 
-The view is read-only and safe to expose to admins: secret values and credentials in URLs/DSNs are masked on the server and never sent to the browser.
+The view is read-only: secret values and credentials in URLs/DSNs are masked before being sent to the browser.
 
 ## More data in admin UI
 
+* the license of the node serving the admin UI on the status page – its owner (an email is shown masked), limits and expiration dates, highlighted when expiration is close or passed
 * an ability to show CPU and RSS memory usage of each node, updated in near real-time
 * show aggregations over `node.info_metrics_aggregate_interval` for each node:
 * Distribution by client name

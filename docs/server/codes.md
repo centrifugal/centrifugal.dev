@@ -194,6 +194,15 @@ Reason: "subscription expired"
 
 UnsubscribeCodeExpired is sent when client subscription expired. We expect client to re-subscribe with updated subscription token.
 
+### UnsubscribeCodeStateInvalidated
+
+```
+Code:   2502
+Reason: "server tags filter changed"
+```
+
+UnsubscribeCodeStateInvalidated is sent when the state a subscription holds is no longer valid. Currently it is sent to a [map subscription](./map_subscriptions.md) whose [server tags filter](../pro/server_tags_filter.md#updating-the-filter) changed on refresh (Centrifugo PRO, since v6.10.0): the map state the client holds was built with the old filter. The client is expected to drop the subscription token and its cached map state, then resubscribe and load the full state again. Our SDKs supporting map subscriptions handle this.
+
 ## Client disconnect codes
 
 Client can be disconnected by a Centrifugo server with custom code and string reason. Here is the list of Centrifugo built-in disconnect codes (with proxy feature you have a way to use custom disconnect codes).

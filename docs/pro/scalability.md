@@ -54,6 +54,8 @@ To enable in the specific channel namespace use boolean channel option `shared_p
     "namespaces": [
       {
         "name": "example",
+        "history_size": 100,
+        "history_ttl": "300s",
         "force_recovery": true,
         "shared_position_sync": true
       }
@@ -84,7 +86,7 @@ You need to enable `replica_client` in Redis configuration and set `subscribe_on
   "engine": {
     "type": "redis",
     "redis": {
-      "address": "redis+cluster://localhost:7000",
+      "address": "localhost:6379",
       "replica_client": {
         "enabled": true
       },
@@ -115,21 +117,22 @@ For Redis Map Broker, the same option offloads PUB/SUB subscriptions to replica 
 }
 ```
 
-Works with both standalone Redis (with a replica) and Redis Cluster setups.
+Requires Redis Cluster or Redis Sentinel setup – the replica client can not be enabled for a standalone Redis, Centrifugo does not start in that case. With Redis Cluster the map broker also needs [sharded PUB/SUB](#redis-cluster-sharded-pubsub): set `sharded_pub_sub_partitions` to a non-zero value (the default `0` is for Sentinel). Examples on this page use a plain `address`: Centrifugo detects Redis Cluster automatically, so the address of any cluster node works without the `redis+cluster://` scheme.
 
 ### Read presence from replica
 
-To read presence information from replica you need to enable `replica_client` in Redis configuration and set `presence_read_from_replica` boolean option:
+To read presence information from replica you need to enable `replica_client` in Redis configuration and set `presence_read_from_replica` boolean option. It also requires `presence_hash_field_ttl` to be enabled (Redis 7.4+) – Centrifugo does not start otherwise:
 
 ```json title="config.json"
 {
   "engine": {
     "type": "redis",
     "redis": {
-      "address": "redis+cluster://localhost:7000",
+      "address": "localhost:6379",
       "replica_client": {
         "enabled": true
       },
+      "presence_hash_field_ttl": true,
       "presence_read_from_replica": true
     }
   }
@@ -158,7 +161,7 @@ Without this partitioning, each Centrifugo node could potentially create up to 1
 
 :::caution
 
-This means that enabling sharded PUB/SUB changes the key names Centrifugo uses in Redis, so any existing data (history, presence, result cache) is effectively lost on the switch. In many cases Centrifugo data is ephemeral, so if your application is built idiomatically connected subscribers should survive the change without issues.
+This means that enabling sharded PUB/SUB changes the key names Centrifugo uses in Redis, so any existing data (history, result cache) is effectively lost on the switch. In many cases Centrifugo data is ephemeral, so if your application is built idiomatically connected subscribers should survive the change without issues.
 
 :::
 
@@ -169,7 +172,7 @@ Here is how to enable sharded PUB/SUB in Centrifugo PRO:
   "engine": {
     "type": "redis",
     "redis": {
-      "address": "redis+cluster://localhost:7000",
+      "address": "localhost:6379",
       "sharded_pub_sub_partitions": 64
     }
   }
@@ -195,7 +198,7 @@ Setting `use_precomputed_partition_tags` to `true` switches partition hash tags 
   "engine": {
     "type": "redis",
     "redis": {
-      "address": "redis+cluster://localhost:7000",
+      "address": "localhost:6379",
       "use_precomputed_partition_tags": true,
       "sharded_pub_sub_partitions": 128
     }
@@ -209,7 +212,7 @@ The option also applies to Redis Map Broker (set it inside `map_broker.redis`) a
 
 :::caution
 
-Enabling `use_precomputed_partition_tags` changes the key names Centrifugo uses in Redis, so any existing data (history, presence, result cache) is effectively lost on the switch. In many cases Centrifugo data is ephemeral, so if your application is built idiomatically connected subscribers should survive the change without issues.
+Enabling `use_precomputed_partition_tags` changes the key names Centrifugo uses in Redis, so any existing data (history, result cache) is effectively lost on the switch. In many cases Centrifugo data is ephemeral, so if your application is built idiomatically connected subscribers should survive the change without issues.
 
 :::
 
@@ -238,7 +241,7 @@ The per-Redis-node view is usually the constraint that bites first: at ~4k conne
   "engine": {
     "type": "redis",
     "redis": {
-      "address": "redis+cluster://localhost:7000",
+      "address": "localhost:6379",
       "group_sharded_pub_sub_by_node": true,
       "sharded_pub_sub_partitions": 128
     }

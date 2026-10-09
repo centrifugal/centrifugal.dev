@@ -74,7 +74,7 @@ You also need to set a ClickHouse cluster name (`clickhouse_analytics.clickhouse
 
 `clickhouse_analytics.skip_schema_initialization` - boolean, default `false`. By default Centrifugo tries to initialize table schema on start (if not exists). This flag allows skipping initialization process.
 
-`clickhouse_analytics.skip_ping_on_start` - boolean, default `false`. Centrifugo pings ClickHouse servers by default on start; if any server is unavailable – Centrifugo fails to start. This option allows skipping this check, so Centrifugo is able to start even if the ClickHouse cluster is not working correctly.
+`clickhouse_analytics.skip_ping_on_start` - boolean, default `false`. Centrifugo pings ClickHouse servers by default on start; if any server is unavailable – Centrifugo fails to start. This option allows skipping only this ping – Centrifugo may still query ClickHouse on start (for example, for schema initialization), so it can still fail to start when ClickHouse is unavailable.
 
 `clickhouse_analytics.tls` - [TLS object](../server/configuration.md#tls-config-object) (available since v6.6.4). By default, no TLS is used. When enabled, TLS is applied to both data export and query connections to ClickHouse.
 
@@ -88,8 +88,8 @@ The `export` section allows configuring which data to export to ClickHouse:
 
 Additionally:
 
-* `clickhouse_analytics.export.connections.http_headers` is a list of HTTP headers to export for connection information.
-* `clickhouse_analytics.export.connections.grpc_metadata` is a list of metadata keys to export for connection information for GRPC unidirectional transport.
+* `clickhouse_analytics.export.connections.http_headers` is a list of HTTP headers to export for connection information. Header names are matched case-insensitively.
+* `clickhouse_analytics.export.connections.grpc_metadata` is a list of metadata keys to export for connection information for GRPC unidirectional transport. Metadata keys are matched in lowercase, so configure them in lowercase.
 * `clickhouse_analytics.export.connections.export_users` - list of strings. Option `export_users` is a list of users for which Centrifugo will export connections data to ClickHouse. If not set, all users will be exported. Allows enabling ClickHouse analytics for a subset of users which is generally simpler/safer/more effective than enabling connections analytics for all users.
 * `clickhouse_analytics.export.subscriptions.export_users` - list of strings. Option `export_users` is a list of users for which Centrifugo will export subscriptions data to ClickHouse. If not set, all users will be exported. Allows enabling ClickHouse analytics for a subset of users which is generally simpler/safer/more effective than enabling subscriptions analytics for all users.
 * `clickhouse_analytics.export.operations.export_users` - list of strings. Option `export_users` is a list of users for which Centrifugo will export operations data to ClickHouse. If not set, all users will be exported. Allows enabling ClickHouse analytics for a subset of users which is generally simpler/safer/more effective than enabling operations analytics for all users.
@@ -112,7 +112,7 @@ Examples:
 
 Each export type (connections, subscriptions, operations, publications, notifications) supports the following tuning options:
 
-* `max_buffer_size` – maximum number of events to buffer in memory, default `1000000`. Events are dropped when the buffer is full.
+* `max_buffer_size` – maximum number of events to buffer in memory, default `1000000`. Events are dropped when the buffer is full – also while ClickHouse is unavailable, so the buffer stays within this limit during a long outage. Dropped events are counted in [`centrifugo_clickhouse_analytics_drop_count`](#centrifugo_clickhouse_analytics_drop_count).
 * `flush_interval` – interval between flush attempts, default `"10s"`.
 * `flush_size` – maximum batch size per flush, default `100000`.
 * `ttl` – ClickHouse table TTL for the `time` column, default `"7 DAY"`.
@@ -595,7 +595,7 @@ Several metrics are exposed to monitor export process health:
 
 - **Type:** Summary
 - **Labels:** type, retries, result
-- **Description:** Duration of ClickHouse data flush in seconds.
+- **Description:** Duration of ClickHouse data flush in seconds. The `result` label is `ok` or `error`. Despite its name, the `retries` label of a successful flush (`result="ok"`) is the number of attempts it took: `1` means it succeeded on the first attempt, `2` that it needed one retry, and so on. For failed flushes (`result="error"`) the `retries` label carries no information.
 - **Usage:** Helps in monitoring the performance of data flush operations in ClickHouse, aiding in performance tuning and issue resolution.
 
 #### centrifugo_clickhouse_analytics_batch_size

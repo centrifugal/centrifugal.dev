@@ -60,7 +60,7 @@ To enable:
 }
 ```
 
-When enabled, the following metrics will include the `accept_protocol` label:
+The following metrics have the `accept_protocol` label, filled in only when the option is enabled:
 - `centrifugo_client_connections_accepted` - counter of accepted connections
 - `centrifugo_client_connections_inflight` - gauge of current connections
 
@@ -68,6 +68,10 @@ The `accept_protocol` label can have the following values:
 - `h1` - HTTP/1.1
 - `h2` - HTTP/2
 - `h3` - HTTP/3
+- `unknown` - the HTTP version could not be determined
+- `mem` - internal connections of the admin UI channel tracing
+
+For the GRPC unidirectional transport the value is always `h2`. When `expose_transport_accept_protocol` is not enabled, the label is still present but empty.
 
 This helps in understanding the protocol distribution across your infrastructure and can be useful for performance analysis and infrastructure planning.
 
@@ -236,7 +240,7 @@ The pro-only Summary metrics deprecated by the same migration are: `centrifugo_p
 
 Beyond the enhanced labels described above, Centrifugo PRO exposes its own metrics. They follow the same conventions as the [OSS metrics reference](../server/observability.md#exposed-metrics): the `centrifugo_` namespace, Histograms that switch to native schema when [`prometheus.native_histograms`](../server/observability.md#native-histograms) is on, and deprecated Summaries that disappear in that mode.
 
-All of them are visualized by the `PRO · …` rows of the [official Grafana dashboard](https://grafana.com/grafana/dashboards/13039).
+All of them, except the license expiration metric meant for alerting, are visualized by the `PRO · …` rows of the [official Grafana dashboard](https://grafana.com/grafana/dashboards/13039).
 
 One family of PRO-only metrics is described in the OSS reference rather than here, because it sits next to closely related OSS metrics: the `*_redis_node_grouped_*` Redis Cluster metrics, which only the PRO node-grouped sharded PUB/SUB path can fill. They are marked as PRO there and are not registered at all in Centrifugo OSS.
 
@@ -248,7 +252,7 @@ Note that the map broker and the PostgreSQL broker are **not** PRO features — 
 
 - **Type:** Counter
 - **Labels:** provider, recipient_type, platform, success, err_code
-- **Description:** Count of push notifications sent, split by provider (`fcm`, `apns`, `hms`), recipient type, platform, whether the provider accepted it, and the provider error code when it did not.
+- **Description:** Count of push notifications sent, split by provider (`fcm`, `apns`, `hms`, `webpush`), recipient type, platform, whether the provider accepted it, and the provider error code when it did not. `platform` is the device platform for sends to devices (`filter`) through FCM, APNs and Web Push, `na` for HMS sends (raw tokens included) and for FCM topic and condition sends which reached the provider, and empty for FCM, APNs and Web Push sends to raw tokens. When ClickHouse analytics is enabled, pushes dropped after a failed re-queue are counted too, with the device platform for `filter` sends, `na` for topic and condition sends, and an empty platform for raw tokens.
 - **Usage:** Build a delivery success ratio from `success="true"` over the total. Codes such as `unregistered` are normal device-token churn; authentication errors are not.
 
 #### centrifugo_push_scheduled_request_count
@@ -262,7 +266,7 @@ Note that the map broker and the PostgreSQL broker are **not** PRO features — 
 
 - **Type:** Gauge
 - **Labels:** provider, queue
-- **Description:** Number of push jobs waiting to be consumed — pending entries of the Redis stream for the consumer group, or rows in the `push_jobs` table whose `run_at` is already due. Despite the name this is a **job count, not a duration**, and it is a Gauge — take its current value, do not wrap it in `rate()`.
+- **Description:** Number of push jobs waiting to be consumed — the consumer group lag of the Redis stream (entries not yet delivered to consumers), or rows in the `push_jobs` table whose `run_at` is already due. Despite the name this is a **job count, not a duration**, and it is a Gauge — take its current value, do not wrap it in `rate()`.
 - **Usage:** Sustained growth means push workers cannot keep up with the send rate.
 
 #### centrifugo_push_consuming_inflight_jobs
@@ -305,7 +309,7 @@ Deprecated Summary — use `centrifugo_clickhouse_analytics_flush_duration_secon
 
 - **Type:** Histogram. Uses native schema when native histograms are enabled.
 - **Labels:** type, retries, result
-- **Description:** Time to write one batch to ClickHouse, by data type, retry count and outcome.
+- **Description:** Time to write one batch to ClickHouse, by data type, attempt count and outcome. The `result` label is `ok` or `error`. Despite its name, the `retries` label of a successful flush (`result="ok"`) is the number of attempts it took: `1` means it succeeded on the first attempt, `2` that it needed one retry, and so on. For failed flushes (`result="error"`) the `retries` label carries no information.
 - **Usage:** Rising flush latency is the leading indicator of analytics drops — the buffer fills while writes are slow.
 
 #### centrifugo_clickhouse_analytics_batch_size
@@ -402,10 +406,17 @@ These metrics describe the pgx connection pool Centrifugo PRO uses for PostgreSQ
 - **Labels:** name
 - **Description:** Total number of errors while processing bus messages.
 
+#### centrifugo_rate_limit_client_over_limit_count
+
+- **Type:** Counter
+- **Labels:** layer, command, namespace, dry_run
+- **Description:** Since Centrifugo v6.10.0. Number of client operations which exceeded a [rate limit](./rate_limiting.md#metrics) of `client.rate_limit`. `layer` is `client_command`, `user_command`, `redis_user_command` or `client_error`; `command` is the command which exceeded its bucket (`publish`, `subscribe`, `rpc.<method>`, `error` for `client_error`, …); `namespace` is filled only with `prometheus.channel_namespace_resolution` enabled. `dry_run` is `true` for hits of a layer in [dry run](./rate_limiting.md#try-limits-before-enforcing-them) – counted, but nothing was rejected – and `false` for operations which were actually refused (or, for `unsubscribe` and `untrack`, only counted).
+- **Usage:** Size limits with `dry_run="true"` before enforcing them; alert on sustained `dry_run="false"` hits, which mean traffic is being refused.
+
 #### centrifugo_rate_limit_hits_over_limit
 
 - **Type:** Counter
-- **Description:** Number of requests rejected by PRO [rate limiting](./rate_limiting.md).
+- **Description:** Number of distributed rate limiter (`distributed_rate_limit`, used for example by [push notification](./push_notifications.md) rate limit strategies) evaluations in Redis which exceeded the limit, dry runs included. Rejections by client command [rate limiting](./rate_limiting.md) (`client.rate_limit`) are not counted here.
 - **Usage:** Expect a non-zero baseline when limits are tuned tightly; alert on step changes rather than on any non-zero value.
 
 #### centrifugo_channel_state_events_queue_consuming_lag_milliseconds
@@ -414,6 +425,15 @@ These metrics describe the pgx connection pool Centrifugo PRO uses for PostgreSQ
 - **Labels:** name, partition
 - **Description:** Consuming lag of the channel state events queue, per partition, in milliseconds.
 - **Usage:** A single lagging partition usually points at an unbalanced key distribution rather than at overall throughput.
+
+### License
+
+#### centrifugo_license_expiration_timestamp_seconds
+
+- **Type:** Gauge
+- **Labels:** none
+- **Description:** Since Centrifugo v6.10.0. Unix time (seconds) of the license key expiration. There is no series without a license key or for a key without expiration. Not shown on the Grafana dashboard – it is meant for alerting.
+- **Usage:** Alert ahead of the expiration, for example 30 days before: `centrifugo_license_expiration_timestamp_seconds - time() < 30 * 24 * 3600`. The alert keeps firing after the date until a renewed license key is configured and nodes are restarted.
 
 ### Shared poll relay
 

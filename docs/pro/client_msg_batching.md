@@ -25,7 +25,7 @@ Note, this is only useful when you have lots of messages per client. This specif
 
 The `client.write_delay` is a duration option, it is a time Centrifugo will try to collect messages inside each connection message write loop before sending them towards the connection.
 
-Enabling `client.write_delay` may reduce CPU usage of both server and client in case of high message rate inside individual connections. The reduction happens due to the lesser number of system calls to execute. Enabling `client.write_delay` limits the maximum throughput of messages towards the connection which may be achieved. For example, if `client.write_delay` is 100ms then the max throughput per second will be `(1000 / 100) * client.max_messages_in_frame` (16 by default), i.e. 160 messages per second. Though this should be more than enough for target Centrifugo use cases (frontend apps).
+Enabling `client.write_delay` may reduce CPU usage of both server and client in case of high message rate inside individual connections. The reduction happens due to the lesser number of system calls to execute. Enabling `client.write_delay` does not limit message throughput towards the connection: when enough messages to fill a frame (`client.max_messages_in_frame`, 16 by default) are already queued, the frame may be written without waiting for `client.write_delay`.
 
 Example:
 
@@ -39,7 +39,7 @@ Example:
 
 ### `client.write_with_timer`
 
-The `client.write_with_timer` is a boolean option that enables using timer-based flush for writing messages to the client. This option only applies when `client.write_delay` is set. By default, `false`.
+The `client.write_with_timer` is a boolean option that enables using timer-based flush for writing messages to the client. This option requires `client.write_delay` to be set – Centrifugo does not start otherwise. By default, `false`.
 
 When enabled, Centrifugo uses a timer-based approach to trigger message writes, which can potentially reduce memory and CPU usage in certain scenarios. In this mode there is no dedicated writer goroutine so many setups can expect reduced memory usage.
 
@@ -56,9 +56,9 @@ Example:
 
 ### `client.queue_shrink_delay`
 
-The `client.queue_shrink_delay` is a duration option that sets the delay for queue shrinking after a message batch is sent to the client. This option only works when `client.write_delay` is set.
+The `client.queue_shrink_delay` is a duration option that sets the delay for queue shrinking after a message batch is sent to the client. A positive value requires `client.write_delay` to be set – Centrifugo does not start otherwise.
 
-By default, Centrifugo may shrink the client's message queue immediately after sending a batch to reclaim memory. Setting `queue_shrink_delay` adds a delay before shrinking, which can help reduce memory allocation/deallocation overhead in scenarios where message rates fluctuate.
+When `client.write_delay` is set, Centrifugo by default waits `1s` after sending a batch before shrinking the client's message queue to reclaim memory. Setting `queue_shrink_delay` changes this delay, which can help reduce memory allocation/deallocation overhead in scenarios where message rates fluctuate. A negative value means shrinking immediately after each batch.
 
 Example:
 
@@ -138,7 +138,7 @@ Note, that channel batching is applied for each individual channel in namespace 
 
 ### `batch_flush_latest`
 
-One more option related to per-channel batching algorithm is `batch_flush_latest` (boolean, default `false`). Once you enable it then Centrifugo only sends the latest message in the collected batch to the client connection. This is useful for channels where each message contains the entire state, so skipping intermediary messages is beneficial to reduce CPU utilization, bandwidth and the processing work required on the client side.
+One more option related to per-channel batching algorithm is `batch_flush_latest` (boolean, default `false`). Once you enable it then Centrifugo only sends the latest publication in the collected batch to the client connection. For [map subscriptions](./map_subscriptions.md) the latest publication per key is kept. Join/leave messages are not dropped. The option has no effect unless `batch_max_size` or `batch_max_delay` is set. This is useful for channels where each message contains the entire state, so skipping intermediary messages is beneficial to reduce CPU utilization, bandwidth and the processing work required on the client side.
 
 Example of configuration:
 

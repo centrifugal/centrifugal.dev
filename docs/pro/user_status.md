@@ -16,7 +16,7 @@ The feature can be useful for chat applications when you need to get online/acti
 
 ### Client-side status update RPC
 
-Centrifugo PRO provides a built-in RPC method of client API called `update_user_status`. Call it with empty parameters from a client side whenever user performs a useful action that proves it's active status in your app. For example, in Javascript:
+Centrifugo PRO provides a built-in RPC method of client API called `update_user_status`. Call it with an empty JSON object (`{}`) as data from a client side whenever user performs a useful action that proves it's active status in your app – empty data is rejected with a bad request error. For example, in Javascript:
 
 ```javascript
 await centrifuge.rpc('update_user_status', {});
@@ -28,7 +28,7 @@ Don't forget to debounce these method calls on the client side to avoid triggeri
 
 :::
 
-This RPC call sets the user's last active time value in Redis (with sharding and Cluster support). Information about active status will be kept in Redis for a configured time interval, then expire.
+This RPC call sets the user's last active (and online) time value in Redis (with sharding and Cluster support). Information about active status will be kept in Redis for a configured time interval, then expire. For anonymous connections the call does nothing.
 
 ## Server API methods
 
@@ -190,3 +190,7 @@ In this case the Redis active status will simply connect to Redis instances conf
   }
 }
 ```
+
+`storage_type` – storage backend for user status. Only `redis` (default) is supported at the moment.
+
+`disable_for_client` – boolean, when `true` the client-side `update_user_status` RPC returns a not available error, so status can only be updated over the server API.

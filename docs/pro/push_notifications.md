@@ -168,7 +168,7 @@ This is intentional: declaring the full state (especially the owner) on every re
 
 **2. Re-registration — pass the stored `id` with the full device state.** On app start, and **especially when the provider rotates the push token**, call `device_register` again with the **stored `id`** plus the complete state (`provider`, `token`, `platform`, `user`, and `timezone`/`locale`/`topics` if you use them — see the full-replace note above). This updates the same device. The behavior to understand:
 
-- Re-register **with** the stored `id` (token same or refreshed) → the existing device is updated. No duplicate. ✅ Recommended.
+- Re-register **with** the stored `id` (token same or refreshed) → the existing device is updated. No duplicate. If another device record already holds the token (e.g. one created by an earlier registration without `id` after a token rotation), that record is removed and the token moves to the device with the stored `id`. ✅ Recommended.
 - Re-register **without** `id`, token **unchanged** → Centrifugo recognizes the token (`provider` + `token` is unique) and returns the same device. Also fine.
 - Re-register **without** `id`, token **changed** → Centrifugo can't match the old device and creates a **new** one; the old token sticks around until its next push fails and is removed automatically. Passing the stored `id` avoids this temporary duplicate.
 
@@ -639,7 +639,7 @@ Maximum time interval to keep a device without updates. Devices inactive longer 
 
 ### push_notifications.read_from_replica
 
-When true, Centrifugo will use PostgreSQL replicas for read operations where possible. Requires `database.postgresql.replica_dsn` to be configured.
+When true, Centrifugo will use PostgreSQL replicas for read operations where possible. Replicas are configured with `database.postgresql.replica_dsn`.
 
 - **Type:** `bool`
 - **Default:** `false`
@@ -677,7 +677,7 @@ PostgreSQL queue configuration object. Supports DSN, replica DSN, and TLS config
 | `reuse_from_database` | bool | `false` | Reuse PostgreSQL connection from the database configuration |
 | `consumer_concurrency` | int | `16` | Number of concurrent consumer workers |
 | `scheduler_consumer_concurrency` | int | `16` | Number of concurrent scheduler consumer workers for delayed pushes |
-| `prefix` | string | `""` | Table name prefix for queue-related tables |
+| `prefix` | string | `""` | Prefix for queue names |
 
 ### push_notifications.fcm
 
@@ -686,7 +686,7 @@ FCM (Firebase Cloud Messaging) provider configuration object.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `credentials_file` | string | | **Required.** Path to Firebase service account credentials JSON file |
-| `tokens_batch_size` | int | `500` | Maximum number of tokens in a single batch request to FCM |
+| `tokens_batch_size` | int | `500` | Maximum number of tokens in a single batch request to FCM. FCM accepts at most 500 tokens per batch – Centrifugo does not start with a higher value |
 
 ### push_notifications.hms
 
@@ -698,7 +698,7 @@ HMS (Huawei Messaging Service) provider configuration object.
 | `app_secret` | string | | **Required.** Your HMS application secret |
 | `auth_endpoint` | string | | Custom HMS authentication endpoint. Uses HMS default if not set |
 | `push_endpoint` | string | | Custom HMS push endpoint. Uses HMS default if not set |
-| `tokens_batch_size` | int | `1000` | Maximum number of tokens in a single batch request to HMS |
+| `tokens_batch_size` | int | `1000` | Maximum number of tokens in a single batch request to HMS. HMS accepts at most 1000 tokens per batch – Centrifugo does not start with a higher value |
 
 ### push_notifications.apns
 
@@ -709,14 +709,14 @@ APNs (Apple Push Notification service) provider configuration object.
 | `endpoint` | string | `"development"` | APNs endpoint: `"development"`, `"production"`, or custom `https://` URL |
 | `bundle_id` | string | | **Required.** iOS application bundle identifier |
 | `auth_type` | string | | **Required.** Authentication method: `"token"` or `"cert"` |
-| `tokens_batch_size` | int | `100` | Maximum number of tokens to process in parallel |
+| `tokens_batch_size` | int | `100` | Maximum number of device tokens Centrifugo handles together when sending a notification. APNs has no batch requests – every token still gets its own request |
 
 **Token-based authentication (`auth_type: "token"`, recommended):**
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `token_key_file` | string | Path to .p8 authentication key file from Apple Developer portal. Mutually exclusive with `token_key_pem` |
-| `token_key_pem` | string | PEM-encoded authentication key content (inline). Mutually exclusive with `token_key_file` |
+| `token_key_file` | string | Path to .p8 authentication key file from Apple Developer portal. Set either it or `token_key_pem` |
+| `token_key_pem` | string | PEM-encoded authentication key content (inline). If both are set, `token_key_pem` is used and `token_key_file` is silently ignored |
 | `token_key_id` | string | **Required.** 10-character Key ID from Apple Developer account |
 | `token_team_id` | string | **Required.** 10-character Team ID from Apple Developer account |
 
@@ -724,8 +724,8 @@ APNs (Apple Push Notification service) provider configuration object.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `cert_p12_file` | string | Path to .p12 certificate file. Mutually exclusive with `cert_p12_b64` |
-| `cert_p12_b64` | string | Base64-encoded .p12 certificate content. Mutually exclusive with `cert_p12_file` |
+| `cert_p12_file` | string | Path to .p12 certificate file. Set either it or `cert_p12_b64` |
+| `cert_p12_b64` | string | Base64-encoded .p12 certificate content. If both are set, `cert_p12_b64` is used and `cert_p12_file` is silently ignored |
 | `cert_p12_password` | string | Password for .p12 certificate (if encrypted) |
 
 ### push_notifications.webpush
@@ -734,10 +734,10 @@ Web Push (VAPID) provider configuration object.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `vapid_public_key` | string | | **Required.** base64url-encoded VAPID public (application server) key. Must match the `applicationServerKey` used on the frontend |
+| `vapid_public_key` | string | | **Required.** base64url-encoded VAPID public (application server) key. Must match the `applicationServerKey` used on the frontend, and the private key – Centrifugo does not start otherwise |
 | `vapid_private_key` | string | | **Required.** base64url-encoded VAPID private key. Keep it secret |
 | `subject` | string | | **Required.** VAPID subject (JWT `sub` claim) — a `mailto:` or `https:` URL identifying the application server contact |
-| `tokens_batch_size` | int | `100` | Maximum number of subscriptions to send to concurrently |
+| `tokens_batch_size` | int | `100` | Maximum number of subscriptions Centrifugo handles together when sending a notification. Web Push has no batch requests – every subscription still gets its own request |
 | `allowed_endpoint_origins` | array[string] | built-in list | Allowed push service origins (glob patterns, same syntax as `client.allowed_origins`). When **empty**, a built-in list of the mainstream browser push services is used; when **set**, it **replaces** that list. Use `*` to allow any origin. See [Endpoint SSRF protection](#web-push-endpoint-ssrf-protection) |
 | `extra_allowed_endpoint_origins` | array[string] | `[]` | Origins (same glob syntax) **added on top of** `allowed_endpoint_origins` (or the built-in defaults when it is unset). Use it to allow a self-hosted push service while keeping the defaults |
 
@@ -810,13 +810,13 @@ Registers or updates device information.
 
 | Field      | Type                | Required | Description                                                                                                                                                                                          |
 |------------|---------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `id`       | `string`            | no       | Device ID. Omit on first registration — Centrifugo generates one and returns it. Pass the stored value on re-registration to update the same device. See [Device lifecycle](#device-lifecycle-and-best-practices). |
+| `id`       | `string`            | no       | Device ID. Omit on first registration — Centrifugo generates one and returns it. Pass the stored value on re-registration to update the same device. Re-registration does not change the device's `provider` and `platform`. See [Device lifecycle](#device-lifecycle-and-best-practices). |
 | `provider` | `string`            | yes      | Provider of the device token (valid choices: `fcm`, `hms`, `apns`, `webpush`).                                                                                                                       |
 | `token`    | `string`            | yes      | Push notification token for the device. For `webpush`, this is the browser `PushSubscription` object serialized as a JSON string.                                                                    |
 | `platform` | `string`            | yes      | Platform of the device (valid choices: `ios`, `android`, `web`).                                                                                                                                     |
 | `user`     | `string`            | no       | User associated with the device.                                                                                                                                                                     |
 | `timezone` | `string`            | no       | Timezone of device user ([IANA time zone identifier](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones), ex. `Europe/Nicosia`). See [Timezone aware push](#timezone-aware-push)           |
-| `locale`   | `string`            | no       | Locale of device user. Must be IETF BCP 47 language tag - ex. `en-US`, `fr-CA`. See [Localizations](#localizations)                                                                                  |
+| `locale`   | `string`            | no       | Locale of device user. Must have the `ll-CC` form (two lowercase language letters, a dash, two uppercase country letters) - ex. `en-US`, `fr-CA`. See [Localizations](#localizations)                 |
 | `topics`   | `array[string]`     | no       | Device topic subscriptions. This should be a full list which replaces all the topics previously associated with the device. User topics managed by `UserTopic` model will be automatically attached. |
 | `meta`     | `map[string]string` | no       | Additional custom metadata for the device                                                                                                                                                            |
 
@@ -828,7 +828,7 @@ Registers or updates device information.
 
 ### device_update
 
-Call this method to update a device. For example, when a user logs out of the app and you need to detach the user ID from the device.
+Call this method to update devices. To detach a user from a device on logout, use [`device_remove`](#device_remove) or re-register the device with [`device_register`](#device_register) – `user_update` rewrites the user ID only and keeps the device's topics (see the note below).
 
 #### device_update request
 
@@ -875,6 +875,8 @@ To assign a device to a **different user** (e.g. a different person logs in on a
 | Field  | Type                 | Required | Description |
 |--------|----------------------|----------|-------------|
 | `meta` | `map[string]string` | yes      | Meta to set |
+
+`meta_update` only updates devices which already have meta. To set meta on a device registered without it, re-register the device with [`device_register`](#device_register).
 
 `DeviceTopicsUpdate`:
 
@@ -974,7 +976,7 @@ Manage mapping of device to topics.
 
 | Field       | Type            | Required | Description                |
 |-------------|-----------------|----------|----------------------------|
-| `device_id` | `string`        | yes      | Device ID.                 |
+| `device_id` | `string`        | yes      | Device ID. `add` and `set` for a device which doesn't exist fail with a `not found` error, `remove` succeeds (there is nothing to remove) unless `user` is set |
 | `op`        | `string`        | yes      | `add` or `remove` or `set` |
 | `topics`    | `array[string]` | no       | List of topics.            |
 | `user`      | `string`        | no       | Optional ownership guard. If set, the update is applied only if the device currently belongs to this user. If the device exists but is owned by someone else, the request fails with a `conflict` error; if the device doesn't exist, it fails with a `not found` error. Nothing is changed in either case. Use it to avoid landing one user's topics on a device that has changed hands. |
@@ -1038,7 +1040,7 @@ Manage the per-user topic list. Updating it **immediately** applies the change t
 
 | Field    | Type            | Required | Description                |
 |----------|-----------------|----------|----------------------------|
-| `user`   | `string`        | yes      | User ID.                   |
+| `user`   | `string`        | yes      | User ID. May be `""` to update the global binding, which every device – including anonymous ones – gets on its next `device_register`. |
 | `op`     | `string`        | yes      | `add` or `remove` or `set` |
 | `topics` | `array[string]` | no       | List of topics.            |
 
@@ -1096,7 +1098,7 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 | `uid`                      | `string`                      | no       | Unique identifier for each push notification request, can be used to cancel push. We recommend using UUID v4 for it. Two different requests must have different `uid`      |
 | `send_at`                  | `int64`                       | no       | Optional Unix time in the future (in seconds) when to send push notification, push will be queued until that time.                                                         |
 | `optimize_for_reliability` | `bool`                        | no       | Makes processing heavier, but handles edge cases — for example, it avoids losing pushes that are mid-send if the queue is briefly unavailable.                            |
-| `limit_strategy`           | `PushLimitStrategy`           | no       | Can be used to set push time constraints (based on device timezone) and rate limits. Note, when it's used Centrifugo processes pushes one by one instead of batch sending |
+| `limit_strategy`           | `PushLimitStrategy`           | no       | Can be used to set push time constraints (based on device timezone) and rate limits. Limits are applied to each device separately. A push delayed by limits may be sent slightly later than the limits allow – never earlier, and never outside the device time window. Requires `notification.expire_at` to be set |
 | `analytics_uid`            | `string`                      | no       | Identifier for push notification analytics, if not set - Centrifugo will use `uid` field.                                                                                  |
 | `localizations`            | `map[string]PushLocalization` | no       | Optional per language localizations for push notification.                                                                                                                 |
 | `use_templating`           | `bool`                        | no       | If set - Centrifugo will use templating for push notification. Note that setting localizations enables templating automatically.                                           |
@@ -1120,7 +1122,7 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 
 | Field       | Type                   | Required | Description                                                                                                                                                                                                                                                                       |
 |-------------|------------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `expire_at` | `int64`                | no       | Unix timestamp when Centrifugo stops attempting to send this notification. Note, it's Centrifugo specific and does not relate to notification TTL fields. We generally recommend to always set this to a reasonable value to protect your app from old push notifications sending |
+| `expire_at` | `int64`                | no       | Unix timestamp when Centrifugo stops attempting to send this notification (including retries after provider errors). Note, it's Centrifugo specific and does not relate to notification TTL fields. Without it, Centrifugo stops attempting to send a notification 24 hours after it was queued. We generally recommend to always set this to a reasonable value to protect your app from old push notifications sending |
 | `fcm`       | `FcmPushNotification`  | no       | Notification for FCM                                                                                                                                                                                                                                                              |
 | `hms`       | `HmsPushNotification`  | no       | Notification for HMS                                                                                                                                                                                                                                                              |
 | `apns`      | `ApnsPushNotification` | no       | Notification for APNs                                                                                                                                                                                                                                                             |
@@ -1150,7 +1152,7 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 | Field     | Type                | Required | Description                                                                                                                                               |
 |-----------|---------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `headers` | `map[string]string` | no       | Web Push HTTP headers. Recognized keys: `TTL` (seconds to retain for offline devices, default 4 weeks), `Urgency` (`very-low`/`low`/`normal`/`high`), `Topic` (collapse key) |
-| `payload` | `JSON` object       | yes      | Arbitrary JSON payload delivered to the browser service worker (received via `event.data.json()` in the `push` event)                                     |
+| `payload` | `JSON` object       | yes      | Arbitrary JSON payload delivered to the browser service worker (received via `event.data.json()` in the `push` event). Must fit the Web Push message size limit                   |
 
 `PushLocalization`:
 
@@ -1162,7 +1164,7 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 
 | Field        | Type                    | Required | Description             |
 |--------------|-------------------------|----------|-------------------------|
-| `rate_limit` | `PushRateLimitStrategy` | no       | Set rate limit policies |
+| `rate_limit` | `PushRateLimitStrategy` | no       | Set rate limit policies. Requires `distributed_rate_limit.enabled` in the configuration, otherwise the request is rejected with bad request error |
 | `time_limit` | `PushTimeLimitStrategy` | no       | Set time limit policy   |
 
 `PushRateLimitStrategy`:
@@ -1185,8 +1187,36 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 | Field              | Type     | Required | Description                                                                          |
 |--------------------|----------|----------|--------------------------------------------------------------------------------------|
 | `send_after_time`  | `string` | yes      | Local time in format `HH:MM:SS` after which push must be sent                        |
-| `send_before_time` | `string` | yes      | Local time in format `HH:MM:SS` before which push must be sent                       |
+| `send_before_time` | `string` | yes      | Local time in format `HH:MM:SS` before which push must be sent. Must not be earlier than `send_after_time` – windows crossing midnight are rejected. Make the window at least a minute long: a push delayed to the window may be sent slightly after the scheduled time, so a shorter window may be missed |
 | `no_tz_send_now`   | `bool`   | no       | If device does not have timezone send push immediately, by default - will be dropped |
+
+Example `notification` objects for each provider (one request may contain several of them – each device gets the one for its provider):
+
+```json
+{
+  "fcm": {
+    "message": {
+      "notification": {"title": "Hello", "body": "How are you?"}
+    }
+  },
+  "hms": {
+    "message": {
+      "notification": {"title": "Hello", "body": "How are you?"},
+      "android": {"notification": {"click_action": {"type": 3}}}
+    }
+  },
+  "apns": {
+    "payload": {
+      "aps": {"alert": {"title": "Hello", "body": "How are you?"}}
+    }
+  },
+  "webpush": {
+    "payload": {"title": "Hello", "body": "How are you?"}
+  }
+}
+```
+
+Do not set target fields (`token`, `topic`, `condition`) inside FCM and HMS messages – Centrifugo sets them from `recipient`. An FCM or HMS message which the provider SDK considers invalid is not sent (with an error in logs), so check messages against provider docs. For APNs, Centrifugo sets the `apns-push-type` header to `alert` unless you pass it in `headers`. The Web Push payload format is up to your service worker.
 
 #### send_push_notification result
 
@@ -1197,6 +1227,8 @@ Send push notification to specific `device_ids`, or to `topics`, or native provi
 ### cancel_push
 
 Cancel delayed push notification (which was sent with custom `send_at` value).
+
+Canceling works until Centrifugo starts processing the push at its `send_at` time. A push already being processed is not stopped, and the result is the same empty object whether the push was canceled or not (for example, when it was already sent or the `uid` is unknown). Devices delayed by a [limit strategy](#send_push_notification-request) (time limits, rate limits) and retries are scheduled separately and can't be canceled with the original `uid`.
 
 #### cancel_push request
 
@@ -1217,6 +1249,8 @@ Centrifugo PRO also allows tracking status of push notification delivery and int
 The `update_push_status` API supposes that you are using `uid` field with each notification sent and you are using Centrifugo PRO generated device IDs (as described in [steps to integrate](#steps-to-integrate)).
 
 This is part of the server API at the moment, so you need to send these requests from your backend. We can consider making this API suitable for requests from the client side – please reach out if your use case requires it.
+
+`update_push_status` requires [ClickHouse analytics](./analytics.md) – without it the call returns a `not available` error. The status is stored only when the notifications export (`clickhouse_analytics.export.notifications.enabled`) is on – otherwise the call succeeds but saves nothing.
 
 #### update_push_status request
 
@@ -1249,8 +1283,17 @@ It's possible to use templating in the content of your push notification payload
 
 ```json
 {
-  ..
-  "title": "Hello {{.device.meta.first_name}}"
+  "recipient": {"filter": {"topics": ["news"]}},
+  "use_templating": true,
+  "use_meta": true,
+  "notification": {
+    "fcm": {
+      "message": {
+        "notification": {"title": "Hello {{.device.meta.first_name}}", "body": "How are you?"}
+      }
+    }
+  }
+}
 ```
 
 To access device meta content in a push template (as shown above), additionally set the `use_meta` flag to `true` in the send push notification request. Without `use_meta` you only have access to `.device.id` and `.device.user` variables.
@@ -1292,12 +1335,14 @@ In push payload you can then use templating and `l10n` object will be set to a p
 ```json
 {
   ..
-  "title": "{{default [[hello]] .l10n.greeting}}! {{ default [[How is it going]] .l10n.question }} ?"
+  "title": "{{default [[Hello]] .l10n.greeting}}! {{default [[How is it going]] .l10n.question}}?"
 ```
 
 So that a device with `pt-BR` locale will get a push notification with title `Olá! Como tá indo?`.
 
 Note, it's required to set a default value here (we used English in the example) for cases when no locale is found for the device, or no translations for the device language are provided in the request.
+
+Template string literals are written as `[[...]]` instead of `"..."`, so they don't break the JSON of the payload: inside `{{ }}` Centrifugo turns `[[` and `]]` into double quotes before executing the template.
 
 ## Push rate limits
 
@@ -1307,7 +1352,7 @@ To do this, use the `rate_limit` field of `PushLimitStrategy`. For example, you 
 
 :::tip
 
-Given Centrifugo takes timezone from devices table into account timezone aware pushes only work with requests where `DeviceFilter` is used for sending – i.e. when Centrifugo iterates over devices in the database. If you send using raw tokens and want to inherit possibility to use rate limits - reach out to us, this may be supported.
+Push limit strategies (rate limits and time limits) only work with requests where `DeviceFilter` is used for sending – i.e. when Centrifugo iterates over devices in the database. A request with `limit_strategy` sent to raw tokens, a topic or a condition is rejected with a bad request error. If you send using raw tokens and want to inherit possibility to use rate limits - reach out to us, this may be supported.
 
 :::
 
@@ -1319,14 +1364,28 @@ Several metrics are available to monitor the state of Centrifugo push worker sys
 
 - **Type:** Counter
 - **Labels:** provider, recipient_type, platform, success, err_code
-- **Description:** Total count of push notifications.
+- **Description:** Total count of push notifications. The `platform` label is the device platform for sends to devices (`filter`) through FCM, APNs and Web Push, `na` for HMS sends (raw tokens included) and for FCM topic and condition sends which reached the provider, and empty for FCM, APNs and Web Push sends to raw tokens. Pushes dropped without a send attempt (for example after a failed re-queue, a template error, or when a push to a device would be sent after `expire_at`) are counted with `err_code` `dropped`, with the device platform for `filter` sends, `na` for topic and condition sends, and an empty platform for raw tokens. A batch retried later (see `centrifugo_push_deferred_batch_count`) is counted by the attempt which sends it.
 - **Usage:** Helps in tracking the number and success rate of push notifications sent, providing insights for optimization and troubleshooting.
+
+#### centrifugo_push_deferred_batch_count
+
+- **Type:** Counter
+- **Labels:** provider, reason
+- **Description:** Count of push batches handed over to a later attempt instead of being sent. `reason` is `retry_later` when the batch failed with retryable provider errors (provider unavailable or throttling), `send_time_budget` when the job ran out of time before sending the whole batch, `error` for other errors. Counted once per batch.
+- **Usage:** Grows during provider outages, when `centrifugo_push_notification_count` may stay flat because nothing is sent – a good signal to alert on.
+
+#### centrifugo_push_dropped_job_count
+
+- **Type:** Counter
+- **Labels:** provider, reason
+- **Description:** Count of push jobs dropped without being processed. `reason` is `expired` when the notification `expire_at` passed, `retry_period_exceeded` when a push without `expire_at` was queued more than 24 hours ago.
+- **Usage:** Shows pushes which could not be delivered in time, for example after a long provider outage or queue backlog.
 
 #### centrifugo_push_queue_consuming_lag
 
 - **Type:** Gauge
 - **Labels:** provider, queue
-- **Description:** Queue consuming lag in seconds.
+- **Description:** Approximate number of jobs waiting to be consumed (not seconds).
 - **Usage:** Useful for monitoring the delay in processing jobs from the queue, helping identify potential bottlenecks and ensuring timely processing.
 
 #### centrifugo_push_consuming_inflight_jobs
@@ -1339,6 +1398,12 @@ Several metrics are available to monitor the state of Centrifugo push worker sys
 #### centrifugo_push_job_duration_seconds
 
 - **Type:** Summary
+- **Labels:** provider, recipient_type
+- **Description:** Duration of push processing job in seconds. Deprecated: will be removed in Centrifugo v7, not exposed when `prometheus.native_histograms` is enabled. Use `centrifugo_push_job_duration_seconds_histogram`.
+
+#### centrifugo_push_job_duration_seconds_histogram
+
+- **Type:** Histogram
 - **Labels:** provider, recipient_type
 - **Description:** Duration of push processing job in seconds.
 - **Usage:** Useful for monitoring the performance of job processing, helping in performance tuning and issue resolution.

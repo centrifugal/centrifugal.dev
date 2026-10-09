@@ -75,7 +75,7 @@ Turns on JWKS authentication for HTTP API or GRPC API. When enabled, Centrifugo 
 
 String. Required when JWKS is enabled.
 
-URL to fetch JWKS from. This is typically the OIDC provider's JWKS endpoint.
+URL to fetch JWKS from. This is typically the OIDC provider's JWKS endpoint. Only keys with `"use": "sig"` are used – keys without the `use` parameter (or with another value) are skipped.
 
 Examples:
 - Keycloak: `https://keycloak.example.com/realms/myrealm/protocol/openid-connect/certs`
@@ -165,7 +165,7 @@ response, err := client.Publish(ctx, &api.PublishRequest{
 
 ### JWKS caching, refresh and rotation
 
-Centrifugo automatically caches the JWKS keys fetched from the endpoint to avoid making a request on every API call. The cache is periodically refreshed to pick up key rotations performed by your identity provider.
+Centrifugo automatically caches the JWKS keys fetched from the endpoint to avoid making a request on every API call. The cache is periodically refreshed to pick up key rotations performed by your identity provider. Keys which don't have `"use": "sig"` are not cached and can't be used to verify tokens.
 
 ### Combining with API key authentication
 
@@ -272,7 +272,7 @@ response, err := client.Publish(ctx, &api.PublishRequest{
 
 The `subscribe`, `unsubscribe`, `disconnect`, and `refresh` server-API methods accept two optional arguments for [client-label](./client_authentication.md#client-labels)-based targeting:
 
-- **`label_filter`** — a `FilterNode` predicate matched against `Client.Labels`. Same expression language as the [server tags filter](./server_tags_filter.md) — operators `eq`, `neq`, `in`, `nin`, `ex`, `nex`, `sw`, `ew`, `ct`, `gt`, `gte`, `lt`, `lte`, `and`, `or`, `not`. The difference vs. `server_tags_filter` is the subject: `server_tags_filter` matches publication tags; `label_filter` matches connection labels.
+- **`label_filter`** — a `FilterNode` predicate matched against `Client.Labels`. Same expression language as the [server tags filter](./server_tags_filter.md) — operators `eq`, `neq`, `in`, `nin`, `ex`, `nex`, `sw`, `ew`, `ct`, `gt`, `gte`, `lt`, `lte`, `and`, `or`, `not`. The difference vs. `server_tags_filter` is the subject: `server_tags_filter` matches publication tags; `label_filter` matches connection labels. `gt`, `gte`, `lt` and `lte` compare numbers only: both the label value and `val` must parse as decimal numbers, otherwise the node does not match (so use them with labels like a numeric build number, not with version strings like `3.0.0`).
 - **`all_users`** — boolean. Changes the meaning of an empty `user` from "anonymous-user bucket only" to "every connection on every node." No effect when `user` is non-empty. Required to act fleet-wide on labels alone.
 
 ### How `user`, `all_users`, and `label_filter` interact
@@ -351,7 +351,7 @@ curl --header "X-API-Key: <API_KEY>" \
       "op": "and",
       "nodes": [
         {"key": "platform", "cmp": "eq", "val": "desktop"},
-        {"key": "app_version", "cmp": "lt", "val": "3.0.0"}
+        {"key": "app_build", "cmp": "lt", "val": "300"}
       ]
     }
   }' \
@@ -374,7 +374,7 @@ curl --header "X-API-Key: <API_KEY>" \
 
 Fleet-wide ops iterate every shard's full connection table on every node. For deployments with tens of thousands of connections per node, this is O(N) work per call — single call site, no label index. Prefer narrower scoping (`user`, or per-tenant channels) when the same query can be expressed that way. Reach for `all_users` + `label_filter` when label-based targeting is the genuine intent or for one-shot operational actions.
 
-Cluster behavior: a fleet-wide op is fanned out via the control protocol — every receiving node runs the same hub-iteration filter locally. Mixed-version clusters (during rolling upgrade) safely degrade: older nodes that don't know `all_users` interpret it as `false` and run the anonymous-only path on their share. Bump every node before relying on fleet-wide semantics in production.
+Cluster behavior: a fleet-wide op is applied on every node. Mixed-version clusters (during rolling upgrade) safely degrade: older nodes that don't know `all_users` interpret it as `false` and apply the operation to anonymous connections only. `label_filter` is also carried in a control message field which older nodes ignore – so during a rolling upgrade older nodes apply an operation filtered by labels to every connection of the targeted user (or, for a fleet-wide op, to every anonymous connection). Bump every node before relying on fleet-wide semantics in production.
 
 ### Connections listing with `label_filter`
 
