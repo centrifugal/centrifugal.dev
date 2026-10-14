@@ -195,6 +195,8 @@ A subscription token already belongs to a channel (it has a `channel` claim). So
 
 Putting the `sub` permission in the subscription token does not make much sense – Centrifugo only expects a valid token for a subscription permission check.
 
+Like connection capabilities, `hst` and `prs` granted with a subscription also let the client make this subscription positioned or recoverable (`hst`) and consume join/leave events (`prs`) when it asks for that upon subscribing. Since Centrifugo v6.10.0.
+
 ### Expiration considerations
 
 * In the JWT auth case – capabilities in the subscription JWT will work until token expiration, that's why it's important to keep reasonably small token expiration times. We can recommend using something like 5–10 minutes as a good expiration value, but of course this is application specific.
@@ -208,3 +210,5 @@ If at some point you need to revoke some capability from a client:
     * provide new caps in subscription token, Centrifugo will update channel caps.
 * In the case of using subscribe proxy – you can unsubscribe a user (or client) with a resubscribe code. Or disconnect with a reconnect code. New capabilities will be set up upon resubscription/reconnection.
 * In the case of using JWT auth – revoke the token (Centrifugo PRO feature) and unsubscribe/disconnect the user (or client) with a resubscribe/reconnect code. Upon resubscription/reconnection the user will receive an error that the token was revoked and will try to load a new one.
+
+Note, positioning, recovery and join/leave events are set up for a subscription upon subscribing. Removing `hst` or `prs` upon refresh stops history and presence calls, but join/leave events keep coming to the subscription (and positioning and recovery stay on) until the client resubscribes. To stop them, unsubscribe the user (or client) with a resubscribe code.
