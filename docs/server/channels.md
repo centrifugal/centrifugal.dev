@@ -217,6 +217,8 @@ When on all clients will receive join/leave events for a channel in a namespace 
 
 If pushing join/leave is not forced then client can provide a corresponding Subscription option to enable it – but it should have permissions to access channel presence (by having an explicit capability or if allowed on a namespace level).
 
+This works whichever way the subscription was authorized – including a subscription token and, since Centrifugo v6.10.0, a subscribe proxy. When a subscription token or a subscribe proxy overrides `join_leave`, the overridden value decides whether join/leave messages are emitted and so may be pushed to a client which asked for them.
+
 ### history_size
 
 `history_size` (integer, default `0`) – history size (amount of messages) for channels. As Centrifugo keeps all history messages in process memory (or in a broker memory) it's very important to limit the maximum amount of messages in channel history with a reasonable value. `history_size` defines the maximum amount of messages that Centrifugo will keep for **each** channel in the namespace. As soon as history has more messages than defined by history size – old messages will be evicted.
@@ -311,11 +313,11 @@ If Centrifugo detects a bad position of the client (i.e. potential message loss)
 
 `force_positioning` option must be used in conjunction with reasonably configured message history for a channel i.e. `history_size` and `history_ttl` **must be set** (because Centrifugo uses channel history to check client position in a stream).
 
-If positioning is not forced then client can provide a corresponding Subscription option to enable it – but it should have permissions to access channel history (by having an explicit capability or if allowed on a namespace level).
+If positioning is not forced then client can provide a corresponding Subscription option to enable it – when the namespace has [allow_positioning](#allow_positioning) on, or when the client has permissions to access channel history (by having an explicit capability or if allowed on a namespace level). Since Centrifugo v6.10.0 this also applies to subscriptions authorized by a subscribe proxy.
 
 ### allow_positioning
 
-`allow_positioning` (boolean, default `false`) – when on clients may enable `positioned` mode themselves when subscribing to channels in a namespace, instead of it being forced for everyone via `force_positioning`. As with forced positioning, `history_size` and `history_ttl` **must be set** for the namespace since Centrifugo uses channel history to check a client's position in the stream. A client opting in also needs permission to access channel history.
+`allow_positioning` (boolean, default `false`) – when on clients may enable `positioned` mode themselves when subscribing to channels in a namespace, instead of it being forced for everyone via `force_positioning`. As with forced positioning, `history_size` and `history_ttl` **must be set** for the namespace since Centrifugo uses channel history to check a client's position in the stream. With `allow_positioning` on, a client does not need permission to access channel history to enable positioning – without it, only clients with history permission can.
 
 ### force_recovery
 
@@ -323,7 +325,7 @@ If positioning is not forced then client can provide a corresponding Subscriptio
 
 `force_recovery` option must be used in conjunction with a reasonably configured message history for a channel, i.e. `history_size` and `history_ttl` **must be set** (because Centrifugo uses channel history to recover messages).
 
-If recovery is not forced then client can provide a corresponding Subscription option to enable it – but it should have permissions to access channel history (by having an explicit capability or if allowed on a namespace level).
+If recovery is not forced then client can provide a corresponding Subscription option to enable it – when the namespace has [allow_recovery](#allow_recovery) on, or when the client has permissions to access channel history (by having an explicit capability or if allowed on a namespace level). Since Centrifugo v6.10.0 this also applies to subscriptions authorized by a subscribe proxy.
 
 :::tip
 
@@ -333,7 +335,7 @@ Not all real-time events require this feature turned on so think wisely when you
 
 ### allow_recovery
 
-`allow_recovery` (boolean, default `false`) – when on clients may enable `recoverable` mode themselves when subscribing to channels in a namespace, instead of it being forced for everyone via `force_recovery`. Like forced recovery it requires `history_size` and `history_ttl` to be set (and enabling recovery turns positioning on automatically), and a client opting in needs permission to access channel history. See more details about how recovery works in the [special chapter](history_and_recovery.md).
+`allow_recovery` (boolean, default `false`) – when on clients may enable `recoverable` mode themselves when subscribing to channels in a namespace, instead of it being forced for everyone via `force_recovery`. Like forced recovery it requires `history_size` and `history_ttl` to be set (and enabling recovery turns positioning on automatically). With `allow_recovery` on, a client does not need permission to access channel history to enable recovery – without it, only clients with history permission can. See more details about how recovery works in the [special chapter](history_and_recovery.md).
 
 ### force_recovery_mode
 
