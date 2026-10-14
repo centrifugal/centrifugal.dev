@@ -63,6 +63,14 @@ Optional. Additional channel-specific information about connection (**valid JSON
 
 Optional. Additional information for connection inside this channel in base64 format (**string**). Will be decoded by Centrifugo to raw bytes.
 
+### data
+
+Optional. Custom data to send to the client in the subscribe reply (**valid JSON**).
+
+### b64data
+
+Optional. Same as `data` but in base64 format to send binary data (**string**). Will be decoded by Centrifugo to raw bytes.
+
 ### exp
 
 Optional. This is a standard JWT claim that allows setting private channel subscription token expiration time (a UNIX timestamp in the future, in seconds, as integer) and configures subscription expiration time.
