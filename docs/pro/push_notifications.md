@@ -174,6 +174,8 @@ This is intentional: declaring the full state (especially the owner) on every re
 
 If the client lost its stored `id` (fresh install, cleared storage), just omit `id` — Centrifugo recognizes the token and returns the existing device, as long as the token is still valid.
 
+If Centrifugo rejects the stored `id` (error `107` bad request or `113` conflict – e.g. the `id` is malformed or belongs to another provider), drop it and call `device_register` again without `id`, then store the returned one. Never keep resending a rejected `id`: the device would never get registered. On transient errors (internal error, timeout) keep the stored `id` and retry later.
+
 :::caution Keep the stored device `id` out of backups
 
 Store the device `id` in storage that is **not** backed up or restored to another device. Otherwise restoring a backup onto a new phone (while the old phone is still in use) leaves both installs with the same `id`. Each of them re-registers it with its own token, so the device record keeps switching between the two tokens: only the install which registered last receives notifications, and re-registering does not fix it – it just moves the problem to the other install.
