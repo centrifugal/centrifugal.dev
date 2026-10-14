@@ -319,7 +319,7 @@ export default function PermissionExplorer({ op = 'subscribe' }) {
           </button>
           {showAdvanced && (
             <div className={styles.group}>
-              <Check state={state} set={set} name="insecure" label="client.insecure (dev only — bypasses all checks)" />
+              <Check state={state} set={set} name="insecure" label="client.insecure (dev only — grants what nothing earlier decided)" />
             </div>
           )}
         </div>

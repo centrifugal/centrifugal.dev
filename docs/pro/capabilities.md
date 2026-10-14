@@ -96,7 +96,7 @@ If at some point you need to revoke some capability from a client:
     * if using proxy – provide new caps in refresh proxy result. If caps differ from the current ones, Centrifugo disconnects the client with a reconnect code, and new caps are applied upon reconnection. A successful refresh proxy result without `caps` means no caps – so the refresh proxy must return caps on every refresh to keep them (otherwise a connection which had caps will be reconnected).
     * if JWT auth - provide new caps in connection token. If caps differ from the current ones, Centrifugo disconnects the client with a reconnect code, and new caps are applied upon reconnection.
 * In the case of using connect proxy – you can disconnect a user (or client) with a reconnect code. New capabilities will be requested upon reconnection.
-* In the case of using token auth – revoke the token (Centrifugo PRO feature) and disconnect the user (or client) with a reconnect code. Upon reconnection the user will receive an error that the token was revoked and will try to load a new one.
+* In the case of using token auth – revoke the token (Centrifugo PRO feature). Centrifugo disconnects clients with a revoked token shortly by itself; to do it immediately, disconnect the user (or client) with a reconnect code. Upon reconnection the user will receive an error that the token was revoked and will try to load a new one.
 
 ### Example: wildcard match
 
@@ -135,6 +135,12 @@ Or regex:
     ]
 }
 ```
+
+:::caution
+
+A regex is not anchored: `posts_[\d]+` would also match `xposts_1y`. Always anchor patterns with `^` and `$`, like in the example above.
+
+:::
 
 ### Example: different types of match
 
@@ -209,6 +215,6 @@ If at some point you need to revoke some capability from a client:
 * Simplest way is to wait for a subscription expiration, then upon refresh:
     * provide new caps in subscription token, Centrifugo will update channel caps.
 * In the case of using subscribe proxy – you can unsubscribe a user (or client) with a resubscribe code. Or disconnect with a reconnect code. New capabilities will be set up upon resubscription/reconnection.
-* In the case of using JWT auth – revoke the token (Centrifugo PRO feature) and unsubscribe/disconnect the user (or client) with a resubscribe/reconnect code. Upon resubscription/reconnection the user will receive an error that the token was revoked and will try to load a new one.
+* In the case of using JWT auth – revoke the token (Centrifugo PRO feature). Centrifugo unsubscribes subscriptions made with a revoked token shortly by itself; to do it immediately, unsubscribe/disconnect the user (or client) with a resubscribe/reconnect code. Upon resubscription/reconnection the user will receive an error that the token was revoked and will try to load a new one.
 
 Note, positioning, recovery and join/leave events are set up for a subscription upon subscribing. Removing `hst` or `prs` upon refresh stops history and presence calls, but join/leave events keep coming to the subscription (and positioning and recovery stay on) until the client resubscribes. To stop them, unsubscribe the user (or client) with a resubscribe code.

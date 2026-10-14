@@ -75,7 +75,7 @@ User-limited channels must be enabled for a channel namespace using [allow_user_
 
 Centrifugo maintains compatibility with its previous versions which had concept of private channels. In earlier versions — specifically Centrifugo v1, v2, and v3 — only channels beginning with `$` required a subscription JWT for subscribing. With Centrifugo v4, this is no longer the case; clients can subscribe to any channel if they have a valid subscription token.
 
-However, for namespaces where the `allow_subscribe_for_client` option is activated, Centrifugo prohibits subscriptions to channels that start with the private channel prefix (configured via `channel.private_prefix`, which defaults to `$`) unless a subscription token is provided. This restriction is designed to facilitate a secure migration to Centrifugo v4 or later versions.
+However, Centrifugo prohibits subscriptions to channels that start with the private channel prefix (configured via `channel.private_prefix`, which defaults to `$`) unless a subscription token is provided – whatever other options are on in the namespace. This restriction is designed to facilitate a secure migration to Centrifugo v4 or later versions. Note, the private prefix only limits subscribing: publish, history and presence permissions are checked on their own, see [channel permissions](./channel_permissions.md).
 
 ### Channel is just a string
 
@@ -361,7 +361,7 @@ Turning this option on effectively makes namespace public – no subscribe permi
 
 ### allow_publish_for_subscriber
 
-`allow_publish_for_subscriber` (boolean, default `false`) - when the `allow_publish_for_subscriber` option is enabled client can publish into a channel in namespace directly from the client side over real-time connection but only if client subscribed to that channel.
+`allow_publish_for_subscriber` (boolean, default `false`) - when the `allow_publish_for_subscriber` option is enabled client can publish into a channel in namespace directly from the client side over real-time connection but only if client subscribed to that channel. Anonymous clients additionally need [allow_publish_for_anonymous](#allow_publish_for_anonymous).
 
 :::danger
 
@@ -391,11 +391,11 @@ If you still enable this option, consider setting [publication_data_format](#pub
 
 ### allow_history_for_subscriber
 
-`allow_history_for_subscriber` (boolean, default `false`) – allows clients who subscribed on a channel to call history API from that channel.
+`allow_history_for_subscriber` (boolean, default `false`) – allows clients who subscribed on a channel to call history API from that channel. Anonymous clients additionally need [allow_history_for_anonymous](#allow_history_for_anonymous).
 
 ### allow_history_for_client
 
-`allow_history_for_client` (boolean, default `false`) – allows all clients to call history information in a namespace.
+`allow_history_for_client` (boolean, default `false`) – allows all authenticated (non-anonymous) clients to call history information in a namespace. To also allow anonymous clients use [allow_history_for_anonymous](#allow_history_for_anonymous).
 
 ### allow_history_for_anonymous
 
@@ -403,11 +403,11 @@ If you still enable this option, consider setting [publication_data_format](#pub
 
 ### allow_presence_for_subscriber
 
-`allow_presence_for_subscriber` (boolean, default `false`) – allows clients who subscribed on a channel to call presence information from that channel.
+`allow_presence_for_subscriber` (boolean, default `false`) – allows clients who subscribed on a channel to call presence information from that channel. Anonymous clients additionally need [allow_presence_for_anonymous](#allow_presence_for_anonymous).
 
 ### allow_presence_for_client
 
-`allow_presence_for_client` (boolean, default `false`) – allows all clients to call presence information in a namespace.
+`allow_presence_for_client` (boolean, default `false`) – allows all authenticated (non-anonymous) clients to call presence information in a namespace. To also allow anonymous clients use [allow_presence_for_anonymous](#allow_presence_for_anonymous).
 
 ### allow_presence_for_anonymous
 
@@ -417,9 +417,9 @@ If you still enable this option, consider setting [publication_data_format](#pub
 
 `allow_user_limited_channels` (boolean, default `false`) - allows using user-limited channels in a namespace for checking subscribe permission.
 
-:::note
+:::caution
 
-If client subscribes to a user-limited channel while this option is off then server rejects subscription with `103: permission denied` error.
+When this option is off, `#` has no special meaning in channel names of the namespace: a channel like `personal:#17` is authorized like any other channel – for example, with `allow_subscribe_for_client` on, any authenticated client can subscribe to it. A client without user ID can't subscribe to a user-limited channel. User-limited channels only limit subscribing: publish, history and presence permissions are checked on their own, see [channel permissions](./channel_permissions.md).
 
 :::
 
