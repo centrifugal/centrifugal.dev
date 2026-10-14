@@ -134,7 +134,7 @@ In the idiomatic Centrifugo use case, data is published to channels from the app
 
 :::
 
-By default, a client's attempt to publish to a channel is rejected with a `103: permission denied` error. Publication data must first pass the validation configured for the namespace (such as [publication_data_format](./channels.md#publication_data_format)) – otherwise the publish is rejected with `400: bad request`. Then Centrifugo evaluates the following **in order**, first match wins:
+By default, a client's attempt to publish to a channel is rejected with a `103: permission denied` error. A publish is only possible in a namespace with the `stream` subscription type (the default) – channels of [map subscriptions](./map_subscriptions.md) are published into with a map publish, which has its own `map.*` permission options – otherwise it's rejected with `103: permission denied`. Publication data must first pass the validation configured for the namespace (such as [publication_data_format](./channels.md#publication_data_format)) – otherwise the publish is rejected with `400: bad request`. Then Centrifugo evaluates the following **in order**, first match wins:
 
 1. **Publish proxy** — if `publish_proxy_enabled`, the proxy **takes precedence over everything else**. The built-in `allow_publish_*` flags and token capabilities are not consulted; the proxy response alone decides.
 2. **Subscribe stream proxy** — in a namespace with a subscribe stream proxy, a client can only publish into a bidirectional stream it has open in the channel. Otherwise the publish is rejected with `108: not available`, and nothing below is consulted.

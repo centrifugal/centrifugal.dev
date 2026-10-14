@@ -12,7 +12,7 @@ It's possible to set a list of channels for a connection in several ways:
 
 * over connection JWT using `channels` claim, which is an array of strings
 * over connect proxy returning `channels` field in result (also an array of strings)
-* providing channels as part of unidirectional transport connect payload – if client has enough permissions subscriptions will be created. Channels which need a subscription token (with the private prefix) or which are authorized by a subscribe proxy or a subscribe stream proxy are never subscribed this way
+* providing channels as part of unidirectional transport connect payload – if client has enough permissions subscriptions will be created. Channels which need a subscription token (with the private prefix), which are authorized by a subscribe proxy or a subscribe stream proxy, or which belong to a namespace with a subscription type other than `stream` are never subscribed this way
 * dynamically over server subscribe API
 
 On the client-side, when using bidirectional transport and our SDKs you need to listen for publications from server-side channels using a top-level client event handler. For example with `centrifuge-js`:
