@@ -174,6 +174,17 @@ This is intentional: declaring the full state (especially the owner) on every re
 
 If the client lost its stored `id` (fresh install, cleared storage), just omit `id` — Centrifugo recognizes the token and returns the existing device, as long as the token is still valid.
 
+:::caution Keep the stored device `id` out of backups
+
+Store the device `id` in storage that is **not** backed up or restored to another device. Otherwise restoring a backup onto a new phone (while the old phone is still in use) leaves both installs with the same `id`. Each of them re-registers it with its own token, so the device record keeps switching between the two tokens: only the install which registered last receives notifications, and re-registering does not fix it – it just moves the problem to the other install.
+
+- **iOS** – `UserDefaults` and regular Keychain items are restored from backups. Use a Keychain item with a `…ThisDeviceOnly` accessibility class (e.g. `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`), or a file marked with `isExcludedFromBackup`.
+- **Android** – Auto Backup restores `SharedPreferences` and app files. Keep the `id` in `Context.getNoBackupFilesDir()`, or exclude its storage in your backup rules.
+
+If a restored install has no `id`, it simply registers without one and gets its own device.
+
+:::
+
 **3. Topics: prefer user-bound, and know that `device_register` rebuilds the device's set.** A device gets topics from two sources, and each `device_register` rebuilds the device's topic set as the `topics` argument **∪** the topics currently bound to the device's user:
 
 - **User-bound topics (recommended, convenient).** Keep a topic list per user with [`user_topic_update`](#user_topic_update). Then on every (re-)register you pass only the `user` — Centrifugo copies that user's topics onto the device for you. **You never resend the topic list.** This is usually all you need: subscribe a *user* to topics once, and all their devices pick them up. (Changes apply to the user's already-registered devices immediately; a device that hasn't registered yet picks them up when it does.)
