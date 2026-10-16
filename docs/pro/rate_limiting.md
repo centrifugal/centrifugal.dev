@@ -77,7 +77,7 @@ From there you can tighten specific commands by adding explicit buckets — for 
 
 :::info Version
 
-`dry_run` and `disconnect_on_accounted_limit` are available since Centrifugo v6.10.0. The `centrifugo_transport_frame_size` metric referenced below is available since v6.9.4.
+`dry_run` is available since Centrifugo v6.10.0. The `centrifugo_transport_frame_size` metric referenced below is available since v6.9.4.
 
 :::
 
@@ -93,7 +93,7 @@ Each is described in detail below. Connection attempts per client address are be
 Every limit which is enforced can affect legitimate users, not only abusive ones. Before enabling a layer, consider what your clients will see:
 
 * **Refused commands.** A command over its limit gets the `111` (too many requests) error. SDKs retry a refused subscribe as a temporary error, while for publish, RPC, history and presence the error reaches your application code, which has to handle it.
-* **Disconnects.** `client_error` and `disconnect_on_accounted_limit` close the connection with a code which tells SDKs not to reconnect. A legitimate client caught by a limit set too tight stays disconnected until the application reconnects it.
+* **Disconnects.** `client_error` closes the connection with a code which tells SDKs not to reconnect. A legitimate client caught by a limit set too tight stays disconnected until the application reconnects it.
 * **Mass reconnects.** After a Centrifugo restart, a deploy or a network incident, many clients reconnect at once. Connection rate limits slow this recovery down – users behind a shared address (a corporate NAT, a mobile carrier gateway, a VPN) are affected first by limits applied per address.
 * **Shared user budgets.** `user_command` and `redis_user_command` limit a user across all their connections – tabs and devices of one user draw from the same buckets.
 
@@ -437,7 +437,7 @@ Their buckets remain fully effective. These commands consume tokens like any oth
 
 ### Disconnecting a client that exceeds them
 
-For clients that persistently exceed these buckets, `disconnect_on_accounted_limit` closes the connection:
+In `client_command`, an `unsubscribe` or `untrack` over its own bucket (or over the `default` bucket, when the command has none) counts as a client error, the same way a refused command does through its error reply. The command is still completed. With [`client_error`](#disconnecting-abusive-or-misbehaving-connections) enabled, a connection which keeps going over these buckets is disconnected:
 
 ```json title="config.json"
 {
@@ -445,7 +445,6 @@ For clients that persistently exceed these buckets, `disconnect_on_accounted_lim
     "rate_limit": {
       "client_command": {
         "enabled": true,
-        "disconnect_on_accounted_limit": true,
         "unsubscribe": {
           "enabled": true,
           "buckets": [{"interval": "1s", "rate": 50}]
@@ -454,13 +453,20 @@ For clients that persistently exceed these buckets, `disconnect_on_accounted_lim
           "enabled": true,
           "buckets": [{"interval": "1s", "rate": 50}]
         }
+      },
+      "client_error": {
+        "enabled": true,
+        "total": {
+          "enabled": true,
+          "buckets": [{"interval": "5s", "rate": 20}]
+        }
       }
     }
   }
 }
 ```
 
-Disconnecting is not the same as refusing a command. The disconnect code is in the range that instructs SDKs not to reconnect, so the connection is released rather than re-established.
+Disconnecting is not the same as refusing a command. The disconnect code is in the range that instructs SDKs not to reconnect, so the connection is released rather than re-established. Without `client_error`, going over these buckets is only counted in the metric.
 
 :::tip Limit connection rate as well
 
@@ -468,7 +474,7 @@ Closing a connection is effective when combined with a limit on how quickly a cl
 
 :::
 
-The option is off by default and worth sizing carefully: a client legitimately switching channels quickly should not be disconnected by a bucket set too tight. Run with `dry_run: true` first and watch the metric before enabling it. The decision is made per connection — the per-user layer never disconnects, so one session cannot affect a user's other sessions.
+Size these buckets carefully: a client legitimately switching channels quickly should not go over them. Run with `dry_run: true` first and watch the metric. Only the per-connection layer counts these commands as errors: going over a `user_command` bucket is only reported in the metric, so one session cannot affect a user's other sessions. An empty `total` bucket does not count as going over: it refuses the commands which can be refused.
 
 These buckets are also a useful signal on their own. Configured at a rate no normal client reaches, over-limit hits appear as `centrifugo_rate_limit_client_over_limit_count{command="unsubscribe"}` and indicate a connection behaving abnormally rather than a command being refused.
 
@@ -655,7 +661,7 @@ The configuration on error limits per connection may look like this:
 }
 ```
 
-If a client will have more than 20 protocol errors per 5 second – it will be disconnected.
+If a client will have more than 20 protocol errors per 5 second – it will be disconnected. Besides error replies, an `unsubscribe` or `untrack` over its `client_command` bucket counts as an error too, see [Disconnecting a client that exceeds them](#disconnecting-a-client-that-exceeds-them).
 
 `client_error` also supports `dry_run`, which reports would-be disconnects to metrics (`layer="client_error"`) without ever disconnecting. Since this limit ends in a disconnect rather than a rejected command, sizing it in dry run first is worth the extra step.
 
@@ -667,7 +673,7 @@ Changes in Centrifugo v6.10.0:
 * **`unsubscribe` and `untrack` are now limited in `user_command` too**, so they draw from the per-user `total` and `default` buckets. If those are tight, check with `dry_run` first.
 * **Stricter validation.** Centrifugo does not start when a bucket of any channel command (including `map_publish`, `map_remove`, `track`, `unsubscribe`, `untrack`) is invalid – an interval outside `1s`–`1h`, a zero rate, a namespace override without `namespace_name` – even when the layer is disabled, or when `unsubscribe` or `untrack` are set in `redis_user_command`.
 
-New options (`dry_run`, `disconnect_on_accounted_limit`) are off by default.
+The new option `dry_run` is off by default.
 
 ## RPC method overrides format change
 
