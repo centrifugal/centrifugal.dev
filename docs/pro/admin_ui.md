@@ -1,5 +1,5 @@
 ---
-description: "Centrifugo PRO admin UI features: SSO via OpenID Connect, a redacted configuration viewer, real-time channel and connection snapshots, a config-aware channel and user inspector, analytics dashboards (trends, explorers, flight recorder), and enhanced system state monitoring."
+description: "Centrifugo PRO admin UI features: SSO via OpenID Connect with admin and viewer roles, an audit log, a redacted configuration viewer, real-time channel and connection snapshots, a config-aware channel and user inspector, analytics dashboards (trends, explorers, flight recorder), and enhanced system state monitoring."
 id: admin_ui
 sidebar_label: "Admin UI: SSO and enhancements"
 title: "Admin UI: SSO and enhancements"
@@ -40,10 +40,16 @@ As soon as OIDC integration is configured, instead of the password field, Centri
 * `admin.oidc.display_name` – required string, name of IDP to be displayed on login button.
 * `admin.oidc.issuer` - required string, the URL identifier of Identity Provider which will issue tokens. It's used for initializing OIDC provider and used as a base for the OIDC endpoint discovery.
 * `admin.oidc.client_id` - required string, identifier for registered client in IDP for OIDC integration with Centrifugo.
-* `admin.oidc.audience` - optional string, if not set Centrifugo expects access token audience (`aud`) to match configured `client_id` value (as required by the OIDC spec).
+* `admin.oidc.audience` - optional string, if not set Centrifugo expects access token audience (`aud`) to match configured `client_id` value (as required by the OIDC spec). ID tokens of the server-side flow are always checked against `client_id`.
 * `admin.oidc.redirect_uri` - required string, redirect URI to use.
 * `admin.oidc.extra_scopes` - optional array of extra string scopes to request from IDP. Centrifugo always includes `openid` scope as it's required by OpenID Connect protocol.
-* `admin.oidc.access_cel` – required string, this is a CEL expression which describes the rule for checking access to Centrifugo admin resources. For now we don't provide RBAC – when this expression returns true the user gets full access to Centrifugo admin resources. If false – no access at all. For more information about what CEL is, check out the [Channel CEL expressions](./cel_expressions.md) chapter where CEL expressions are used for channel permission checks.
+* `admin.oidc.access_cel` – required string, this is a CEL expression which decides whether the user may log in to Centrifugo admin UI. What the user may do there is decided by [roles](#roles). For more information about what CEL is, check out the [Channel CEL expressions](./cel_expressions.md) chapter where CEL expressions are used for channel permission checks.
+
+:::info
+
+With the PKCE flow (no `client_secret`) the admin UI sends the access token to Centrifugo, so the Identity Provider must issue access tokens as JWT with `aud` matching `client_id` (or `audience`). Some providers need extra setup for that, e.g. an audience mapper in Keycloak.
+
+:::
 
 Let's look closer at `admin.oidc.access_cel`. In the example above we check this based on a user group membership:
 
@@ -78,6 +84,38 @@ This is usually not recommended, since every new user in your IDP will get acces
   }
 }
 ```
+
+### Roles
+
+Starting from Centrifugo PRO v6.10.0, a user logged in over OIDC has a role:
+
+* `admin` – may do everything.
+* `viewer` – sees everything an admin sees, but can't change anything: no publishing, disconnecting, blocking, push notifications, snapshots and so on. The admin UI hides the controls a viewer can't use, and Centrifugo rejects such requests.
+
+Roles are given by rules over token claims:
+
+```json title="config.json"
+{
+  "admin": {
+    ...
+    "oidc": {
+      ...
+      "access_cel": "claims.groups.exists(g, g.startsWith('centrifugo_'))",
+      "roles": [
+        {"role": "admin", "cel": "'centrifugo_admins' in claims.groups"}
+      ],
+      "default_role": "viewer"
+    }
+  }
+}
+```
+
+Here members of `centrifugo_admins` are admins, and every other user allowed by `access_cel` is a viewer.
+
+* `admin.oidc.roles` – optional array of rules, each with `role` (`admin` or `viewer`) and `cel` – a CEL expression over token `claims`. Every rule whose expression returns true gives its role, and a user matching several rules gets the access of all their roles.
+* `admin.oidc.default_role` – optional string, the role of users matching no rule: `admin` or `viewer`. By default `viewer` when `roles` are set.
+
+Without `roles` every user allowed by `access_cel` is `admin`, as before. Access with the admin password or API key is always `admin`.
 
 ### Configuring server-side OIDC
 
@@ -125,6 +163,33 @@ When `client_secret` is configured:
 6. All subsequent admin UI requests are authenticated by decrypting and validating the cookie
 
 The choice between PKCE and server-side flow depends on your security requirements and infrastructure. For most cases, PKCE flow (without `client_secret`) is sufficient and easier to set up.
+
+## Audit log
+
+Starting from Centrifugo PRO v6.10.0, admin logins and every change made through the admin UI and admin API can be written to the Centrifugo log – to know who did what:
+
+```json title="config.json"
+{
+  "admin": {
+    ...
+    "audit": {
+      "log": {
+        "enabled": true
+      }
+    }
+  }
+}
+```
+
+* `admin.audit.log.enabled` – boolean, by default `false`. Logs admin logins and every change made through the admin UI and admin API, including changes denied to a viewer.
+
+Each record is a log line with `component` set to `admin_audit`. It names the action, who made it – the OIDC user, or `admin` and `API key` for password and API key access – their role and IP, the target (channel, user, client) and the result:
+
+```json
+{"level":"info","component":"admin_audit","action":"api.publish","actor":"jane@example.com","auth":"oidc","role":"admin","ip":"10.0.0.5","channel":"chat","result":"ok","time":"2026-10-17T09:00:00Z","message":"admin action"}
+```
+
+Payloads, such as publication data, are never logged. Records are written whatever `log.level` is, so they are kept when only errors are logged. Calls of the server API (HTTP and GRPC) are not part of the audit log.
 
 ## Inspector
 
@@ -278,6 +343,21 @@ The admin UI includes a **Config** page that shows the effective configuration o
 ![Admin config viewer](/img/admin_config.png)
 
 The view is read-only: secret values and credentials in URLs/DSNs are masked before being sent to the browser.
+
+## Instance name
+
+To tell environments apart, give each Centrifugo a name – it is shown on the login page, under the product name and in the browser tab title:
+
+```json title="config.json"
+{
+  "admin": {
+    ...
+    "instance_name": "production-eu"
+  }
+}
+```
+
+* `admin.instance_name` – optional string, available since Centrifugo PRO v6.10.0. It is shown before login.
 
 ## More data in admin UI
 

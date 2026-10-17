@@ -40,7 +40,7 @@ Log in using `admin.password` value:
 
 :::tip
 
-Centrifugo PRO [supports Single Sign-On](../pro/admin_idp_auth.md) (SSO) authentication for web interface using OpenID Connect (OIDC) protocol.
+Centrifugo PRO [supports Single Sign-On](../pro/admin_ui.md#sso-for-admin-ui-oidc) (SSO) authentication for web interface using OpenID Connect (OIDC) protocol.
 
 :::
 
