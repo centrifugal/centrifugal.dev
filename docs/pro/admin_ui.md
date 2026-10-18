@@ -189,7 +189,9 @@ Each record is a log line with `component` set to `admin_audit`. It names the ac
 {"level":"info","component":"admin_audit","action":"api.publish","actor":"jane@example.com","auth":"oidc","role":"admin","ip":"10.0.0.5","channel":"chat","result":"ok","time":"2026-10-17T09:00:00Z","message":"admin action"}
 ```
 
-Payloads, such as publication data, are never logged. Records are written whatever `log.level` is, so they are kept when only errors are logged. Calls of the server API (HTTP and GRPC) are not part of the audit log.
+Audit records are always written at `info` level, and `log.level` does not filter them out. For example, with `log.level` set to `error`, Centrifugo logs only errors – plus the audit records, at `info` level, as long as `admin.audit.log.enabled` is on.
+
+Payloads, such as publication data, are never logged. Calls of the server API (HTTP and GRPC) are not part of the audit log.
 
 ## Inspector
 
