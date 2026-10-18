@@ -59,6 +59,28 @@ wget https://github.com/centrifugal/centrifugo-pro/releases/download/v6.10.0/cen
 sudo yum install centrifugo-pro-6.10.0-0.x86_64.rpm
 ```
 
+### Verifying release artifacts
+
+Starting from Centrifugo PRO v6.10.0, release artifacts are signed and include an SBOM, the same way as for the [OSS version](../getting-started/installation.md#verifying-release-artifacts). Centrifugo PRO is built in the `centrifugal/centrifugo-pro-source` repository and published to `centrifugal/centrifugo-pro`, so the signing identity refers to the build repository:
+
+```bash
+VERSION=6.10.0
+cosign verify-blob \
+  --certificate-identity "https://github.com/centrifugal/centrifugo-pro-source/.github/workflows/release.yml@refs/tags/v${VERSION}" \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  --bundle centrifugo-pro_${VERSION}_checksums.txt.sigstore.json \
+  centrifugo-pro_${VERSION}_checksums.txt
+sha256sum --ignore-missing -c centrifugo-pro_${VERSION}_checksums.txt
+```
+
+To verify a Docker image:
+
+```bash
+cosign verify centrifugo/centrifugo-pro:v6.10.0 \
+  --certificate-identity "https://github.com/centrifugal/centrifugo-pro-source/.github/workflows/release.yml@refs/tags/v6.10.0" \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
 ## Setting PRO license key
 
 Centrifugo PRO inherits all features and configuration options from the open-source version. The only difference is that it expects a valid license key on start to avoid sandbox mode limits.

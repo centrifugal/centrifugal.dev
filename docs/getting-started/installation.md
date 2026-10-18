@@ -89,6 +89,8 @@ Pin to the exact Docker Image tag in production, for instance: `centrifugo/centr
 
 :::
 
+Starting from Centrifugo v6.10.0, pre-releases (for example `v6.10.1-rc.1`) are published under their exact version tag only – the `latest`, `v6` and `v6.10` tags always point to stable releases.
+
 ## Docker-compose example
 
 Create configuration file `config.json`:
@@ -175,6 +177,36 @@ brew install centrifugo
 ```
 
 The `brew trust` step is required by recent Homebrew versions for all third-party taps (see [Homebrew Tap Trust documentation](https://docs.brew.sh/Tap-Trust)). Without it, Homebrew skips the tap with a warning like `Skipping centrifugal/centrifugo because it is not trusted`. On older Homebrew versions where the `brew trust` command does not exist yet, simply skip that step.
+
+## Verifying release artifacts
+
+Starting from Centrifugo v6.10.0, release artifacts are signed with [Sigstore](https://www.sigstore.dev/) keyless signing in the GitHub Actions release workflow, and every release includes a Software Bill of Materials (SBOM):
+
+* `centrifugo_<version>_checksums.txt` lists SHA-256 checksums of release archives, DEB and RPM packages and SBOMs. It is signed, the signature bundle is published as `centrifugo_<version>_checksums.txt.sigstore.json`.
+* `<archive>.sbom.json` is an [SPDX](https://spdx.dev/) SBOM for each release archive. It lists the Go modules compiled into the binary, and can be used with SBOM tooling and vulnerability scanners.
+* Docker images are signed, including multi-architecture manifests.
+
+To verify, install [cosign](https://docs.sigstore.dev/cosign/system_config/installation/) v3 or newer. Download the release archive together with the checksums file and its bundle from the [release page](https://github.com/centrifugal/centrifugo/releases), then check the signature of the checksums file and the checksums of downloaded files:
+
+```bash
+VERSION=6.10.0
+cosign verify-blob \
+  --certificate-identity "https://github.com/centrifugal/centrifugo/.github/workflows/release.yml@refs/tags/v${VERSION}" \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  --bundle centrifugo_${VERSION}_checksums.txt.sigstore.json \
+  centrifugo_${VERSION}_checksums.txt
+sha256sum --ignore-missing -c centrifugo_${VERSION}_checksums.txt
+```
+
+On macOS, use `shasum -a 256 --ignore-missing -c` instead of `sha256sum`.
+
+To verify a Docker image:
+
+```bash
+cosign verify centrifugo/centrifugo:v6.10.0 \
+  --certificate-identity "https://github.com/centrifugal/centrifugo/.github/workflows/release.yml@refs/tags/v6.10.0" \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
 
 ## Build from source
 

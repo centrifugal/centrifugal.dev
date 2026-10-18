@@ -92,6 +92,8 @@ GRPC service definitions can be found in the Centrifugo repository, see [proxy.p
 
 We also publish Centrifugo GRPC proxy Protobuf definitions to [Buf Schema Registry](https://buf.build/centrifugo/proxyproto/docs/main:centrifugal.centrifugo.proxy). This means that it's possible to depend on pre-generated Protobuf definitions for your programming language instead of manually generating them from the schema file (see [SDKs supported by Buf registry here](https://buf.build/centrifugo/proxyproto/sdks)).
 
+The `main` label follows the latest stable Centrifugo release. Starting from Centrifugo v6.10.0, every release is also published under its version label, for example `buf.build/centrifugo/proxyproto:v6.10.0`.
+
 :::
 
 Every proxy call in this case is an unary GRPC call (except `subscribe_stream` case which is [a bit special](./proxy_streams.md) and represented by unidirectional or bidirectional GRPC stream). Note also that Centrifugo transforms real-time connection client HTTP request headers into GRPC metadata in this case (since GRPC doesn't have headers concept).

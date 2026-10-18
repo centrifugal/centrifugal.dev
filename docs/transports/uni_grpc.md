@@ -13,6 +13,8 @@ Protobuf definitions can be found [here](https://github.com/centrifugal/centrifu
 
 We publish [Centrifugo GRPC uni stream Protobuf definitions](https://buf.build/centrifugo/unistream/docs/main:centrifugal.centrifugo.unistream) to [Buf Schema Registry](https://buf.build/product/bsr). This means that it's possible to depend on pre-generated Protobuf definitions for your programming language instead of manually generating them from the schema file (see [SDKs supported by Buf registry here](https://buf.build/centrifugo/unistream/sdks)).
 
+The `main` label follows the latest stable Centrifugo release. Starting from Centrifugo v6.10.0, every release is also published under its version label, for example `buf.build/centrifugo/unistream:v6.10.0`.
+
 :::
 
 ## How to enable

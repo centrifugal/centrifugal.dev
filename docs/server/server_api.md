@@ -1008,6 +1008,8 @@ The program starts and periodically publishes the same payload into `chat:index`
 
 We publish [Centrifugo GRPC API Protobuf definitions](https://buf.build/centrifugo/apiproto/docs/main:centrifugal.centrifugo.api) to [Buf Schema Registry](https://buf.build/product/bsr). This means that to use Centrifugo GRPC APIs it's possible to depend on pre-generated Protobuf definitions for your programming language instead of manually generating them from the schema file (see [SDKs supported by Buf registry here](https://buf.build/centrifugo/apiproto/sdks)).
 
+The `main` label follows the latest stable Centrifugo release. Starting from Centrifugo v6.10.0, every release is also published under its version label, for example `buf.build/centrifugo/apiproto:v6.10.0`, so you can pin the definitions to the Centrifugo version you run.
+
 :::caution
 
 Note, Centrifugo is not compatible with Buf Connect HTTP protocol – i.e. you can use Buf tools to communicate with Centrifugo GRPC API only.
