@@ -777,6 +777,24 @@ Type: `TLSConfig` object
 
 [TLS object](./configuration.md#tls-config-object). By default, no TLS is used.
 
+### `consumers[].redis_stream.aws_iam_auth`
+
+Type: `RedisAWSIAMAuth` object
+
+Experimental, new in Centrifugo v6.10.0. AWS IAM authentication for Amazon ElastiCache. See [Redis IAM authentication](./engines.md#aws_iam_auth) for options.
+
+### `consumers[].redis_stream.gcp_iam_auth`
+
+Type: `RedisGCPIAMAuth` object
+
+Experimental, new in Centrifugo v6.10.0. Google Cloud IAM authentication for Memorystore. See [Redis IAM authentication](./engines.md#gcp_iam_auth).
+
+### `consumers[].redis_stream.azure_entra_auth`
+
+Type: `RedisAzureEntraAuth` object
+
+Experimental, new in Centrifugo v6.10.0. Microsoft Entra ID authentication for Azure Managed Redis and Azure Cache for Redis. See [Redis IAM authentication](./engines.md#azure_entra_auth).
+
 ### `consumers[].redis_stream.streams`
 
 Type: `[]string`
