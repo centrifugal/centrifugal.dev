@@ -29,6 +29,12 @@ Centrifugo PRO uses a different image from OSS version – [centrifugo/centrifug
 docker run --ulimit nofile=262144:262144 -v /host/dir/with/config/file:/centrifugo -p 8000:8000 centrifugo/centrifugo-pro:v6.10.0 centrifugo -c config.json
 ```
 
+There is also a minimal image variant based on [distroless](https://github.com/GoogleContainerTools/distroless): `centrifugo/centrifugo-pro:v6.10.0-distroless` (and `v6-distroless`, `v6.10-distroless`, `latest-distroless`). It contains only the Centrifugo binary, CA certificates and timezone data, without a shell or package manager. Its entrypoint is the `centrifugo` binary, so pass only arguments. It runs as the `nonroot` user (UID 65532), so mounted files must be readable by it:
+
+```
+docker run --ulimit nofile=262144:262144 -v /host/dir/with/config/file:/centrifugo -p 8000:8000 centrifugo/centrifugo-pro:v6.10.0-distroless -c config.json
+```
+
 ### Kubernetes
 
 You can use our [official Helm chart](https://github.com/centrifugal/helm-charts) but make sure you changed Docker image to use PRO version and point to the correct image tag:
