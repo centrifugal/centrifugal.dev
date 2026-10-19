@@ -18,7 +18,7 @@
 
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.0be39b2d.css">
-<script src="/assets/js/runtime~main.8b75b2b8.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.52c0f0b6.js" defer="defer"></script>
 <script src="/assets/js/main.211d347d.js" defer="defer"></script>
 </head>
 <body>
@@ -43,7 +43,7 @@
 <p>Some implementation restrictions and details to know about:</p>
 <ul>
 <li class="">When using the channel patterns feature, the <code>:</code> symbol in a namespace pattern defines a variable part. The entire channel starting with <code>/</code> is matched against the configured channel patterns; the namespace name does not participate in matching at all.</li>
-<li class="">Centrifugo only allows explicit channel pattern matching that does not result in channel pattern conflicts at runtime; this is checked during configuration validation on server start. Explicitly defined static patterns (without variables) take precedence over patterns with variables.</li>
+<li class="">Overlapping patterns are allowed (for example, <code>/a/:x/b</code> and <code>/a/c/:y</code>). A channel matching several patterns resolves deterministically: at each segment a static segment takes precedence over a variable, and if it leads to no full match the variable is tried (with <code>/a/c/d</code> and <code>/a/:x/e</code> defined, <code>/a/c/e</code> matches <code>/a/:x/e</code>). Only patterns of the same shape (like <code>/users/:name</code> and <code>/users/:id</code>) conflict – such conflicts are rejected during configuration validation on server start.</li>
 <li class="">There is no analogue of a top-level namespace (like we have for standard namespace configuration) for channels starting with <code>/</code>. If a channel starting with <code>/</code> does not match any explicitly defined pattern, Centrifugo returns the <code>102: unknown channel</code> error. Centrifugo also prohibits defining a pattern for channels without a namespace (i.e. inside the <code>channel.without_namespace</code> section).</li>
 <li class="">If you define <code>channel_regex</code> inside channel pattern options – then the regex matches over the entire channel (since variable parts are located in the namespace name in this case).</li>
 <li class="">Channel pattern must only contain ASCII characters.</li>

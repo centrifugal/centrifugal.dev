@@ -18,7 +18,7 @@
 
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.0be39b2d.css">
-<script src="/assets/js/runtime~main.8b75b2b8.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.52c0f0b6.js" defer="defer"></script>
 <script src="/assets/js/main.211d347d.js" defer="defer"></script>
 </head>
 <body>
@@ -31,7 +31,7 @@
 <ul>
 <li class="">over connection JWT using <code>channels</code> claim, which is an array of strings</li>
 <li class="">over connect proxy returning <code>channels</code> field in result (also an array of strings)</li>
-<li class="">providing channels as part of unidirectional transport connect payload – if client has enough permissions subscriptions will be created</li>
+<li class="">providing channels as part of unidirectional transport connect payload – if client has enough permissions subscriptions will be created. Channels which need a subscription token (with the private prefix), which are authorized by a subscribe proxy or a subscribe stream proxy, or which belong to a namespace with a subscription type other than <code>stream</code> are never subscribed this way</li>
 <li class="">dynamically over server subscribe API</li>
 </ul>
 <p>On the client-side, when using bidirectional transport and our SDKs you need to listen for publications from server-side channels using a top-level client event handler. For example with <code>centrifuge-js</code>:</p>
