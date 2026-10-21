@@ -747,12 +747,14 @@ At this point only `centrifuge-js` SDK supports shared poll subscriptions.
 ### Creating a shared poll subscription
 
 ```javascript
-const sub = client.newSharedPollSubscription('post_votes:feed1', {
+const channel = 'post_votes:feed1';
+const sub = client.newSharedPollSubscription(channel, {
   getSignature: async (ctx) => {
-    // Request signature from your backend for the tracked keys
+    // Request signature from your backend for the tracked keys. The context
+    // carries only the keys: send the channel your backend signs for.
     const resp = await fetch('/api/sign-poll', {
       method: 'POST',
-      body: JSON.stringify({ channel: ctx.channel, keys: ctx.keys }),
+      body: JSON.stringify({ channel, keys: ctx.keys }),
     });
     const { signature, keys } = await resp.json();
     return { signature, keys };
@@ -831,6 +833,10 @@ When using the simplified `track(keys)` API or on signature refresh, the `getSig
 3. Only authorized keys are sent to the server
 
 This lets your backend revoke access to specific items in real time — for example, when a user's permissions change or content is deleted. The revocation takes effect on the next signature refresh cycle (controlled by the signature TTL) without requiring an explicit unsubscribe.
+
+Return only keys from `ctx.keys`, and sign exactly the keys you return, in the order you return them. The SDK sends the returned keys it tracks to the server with the signature, and the server verifies the signature over the keys it receives: a returned key the SDK did not ask for is not sent, so the signature no longer matches and the whole track request is rejected.
+
+To revoke access, return fewer keys - none, for a user who may see nothing. Rejecting the callback's promise does not revoke anything: the SDK emits an `error` event and calls `getSignature` again with backoff.
 
 ## Example: live vote results
 
