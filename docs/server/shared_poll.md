@@ -756,6 +756,14 @@ const sub = client.newSharedPollSubscription(channel, {
       method: 'POST',
       body: JSON.stringify({ channel, keys: ctx.keys }),
     });
+    if (resp.status === 403) {
+      // Unsubscribes, as from getToken: the user may not use the subscription.
+      throw new Centrifuge.UnauthorizedError();
+    }
+    if (!resp.ok) {
+      // Retried with backoff.
+      throw new Error(`Unexpected status code ${resp.status}`);
+    }
     const { signature, keys } = await resp.json();
     return { signature, keys };
   },
@@ -836,7 +844,7 @@ This lets your backend revoke access to specific items in real time — for exam
 
 Return only keys from `ctx.keys`, and sign exactly the keys you return, in the order you return them. The SDK sends the returned keys it tracks to the server with the signature, and the server verifies the signature over the keys it receives: a returned key the SDK did not ask for is not sent, so the signature no longer matches and the whole track request is rejected.
 
-To revoke access, return fewer keys - none, for a user who may see nothing. Rejecting the callback's promise does not revoke anything: the SDK emits an `error` event and calls `getSignature` again with backoff.
+To revoke access to some keys, return fewer keys. To end the subscription - when the user may no longer use it at all - throw `UnauthorizedError` from the callback: the subscription is unsubscribed with the `unauthorized` code and not retried, as when `getToken` throws it. Any other error is emitted as an `error` event, and the SDK calls `getSignature` again with backoff.
 
 ## Example: live vote results
 
