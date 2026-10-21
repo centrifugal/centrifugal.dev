@@ -291,7 +291,7 @@ While the standard `client.token.jwks_public_endpoint` configuration allows fetc
 ```
 
 :::note
-The `client.token.jwks.enabled` field must be set to `true` to enable multiple JWKS providers feature. Without it, the providers configuration will be ignored. When it is enabled, only the providers are used to verify tokens – HMAC, RSA and ECDSA keys from the token config are ignored. If `providers` is empty, Centrifugo starts but rejects every token.
+The `client.token.jwks.enabled` field must be set to `true` to enable multiple JWKS providers feature. Without it, the providers configuration will be ignored. When it is enabled, only the providers are used to verify tokens – HMAC, RSA, ECDSA and Ed25519 keys from the token config are ignored. If `providers` is empty, Centrifugo starts but rejects every token.
 :::
 
 ### Same issuer with different audiences
