@@ -35,7 +35,7 @@ Just like connection JWT, using subscription JWT with a reasonable expiration ti
 
 :::
 
-Supported JWT algorithms for private subscription tokens match algorithms to create connection JWT. The same HMAC secret key, RSA, and ECDSA public keys set for authentication tokens are re-used to check subscription JWT.
+Supported JWT algorithms for private subscription tokens match algorithms to create connection JWT. The same HMAC secret key, RSA, ECDSA and Ed25519 public keys set for authentication tokens are re-used to check subscription JWT.
 
 ## Subscription JWT claims
 
@@ -197,7 +197,7 @@ const jose = require('jose')
 </Tabs>
 ````
 
-Where `"secret"` is the `client.token.hmac_secret_key` from Centrifugo configuration (we use HMAC tokens in this example which relies on a shared secret key, for RSA or ECDSA tokens you need to use a private key known only by your backend).
+Where `"secret"` is the `client.token.hmac_secret_key` from Centrifugo configuration (we use HMAC tokens in this example which relies on a shared secret key, for RSA, ECDSA or EdDSA tokens you need to use a private key known only by your backend).
 
 ## Example: subscribe with JWT
 

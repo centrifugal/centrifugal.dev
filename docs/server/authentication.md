@@ -1,5 +1,5 @@
 ---
-description: "Centrifugo JWT authentication for client connections. Supports HMAC, RSA, ECDSA algorithms, JWK/JWKS, token expiration, and key rotation mechanisms."
+description: "Centrifugo JWT authentication for client connections. Supports HMAC, RSA, ECDSA, EdDSA algorithms, JWK/JWKS, token expiration, and key rotation mechanisms."
 id: authentication
 title: Client JWT authentication
 ---
@@ -28,7 +28,7 @@ Upon connection, the client should supply a connection JWT containing several pr
 
 For more information about handling connection tokens on the client side, see the [client SDK specification](../transports/client_api.md#client-connection-token).
 
-Currently, Centrifugo supports HMAC, RSA, and ECDSA JWT algorithms - specifically HS256, HS384, HS512, RS256, RS384, RS512, ES256, ES384, and ES512 (and EdDSA/Ed25519 via JWKS).
+Currently, Centrifugo supports HMAC, RSA, ECDSA and EdDSA JWT algorithms - specifically HS256, HS384, HS512, RS256, RS384, RS512, ES256, ES384, ES512 and EdDSA (Ed25519).
 
 Here, we will demonstrate example snippets using the Javascript Centrifugo client for the client-side and the [PyJWT](https://github.com/jpadilla/pyjwt) Python library to generate a connection token on the backend side.
 
@@ -70,6 +70,21 @@ To add an ECDSA public key (must be a PEM encoded string) add the `client.token.
   }
 }
 ```
+
+To add an Ed25519 public key for EdDSA tokens (must be a PEM encoded string) add the `client.token.ed25519_public_key` option, ex:
+
+```json title="config.json"
+{
+  ...
+  "client": {
+    "token": {
+      "ed25519_public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2Vw..."
+    }
+  }
+}
+```
+
+Ed25519 is a good choice for a new setup: its keys and signatures are small, and signing is fast and deterministic. Before this option, EdDSA tokens could only be verified with keys from a [JWKS endpoint](#json-web-key-support), which remains available.
 
 ## Connection JWT Claims
 
