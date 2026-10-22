@@ -237,11 +237,11 @@ Allow per-connection overrides of some channel namespace options:
 
 ### meta
 
-`meta` is an additional JSON object (e.g., `{"key": "value"}`) that is attached to a connection. It differs from `info` as Centrifugo never sends it to clients – not in presence, join/leave events or any other message. It can be included in proxy calls from Centrifugo to the application backend (refer to the `include_connection_meta` option of [proxy configuration object](./proxy.md#proxy-configuration-object)). In Centrifugo PRO, there is a `connections` API method that returns this metadata within the connection description object.
+`meta` is an additional JSON object (e.g., `{"key": "value"}`) that is attached to a connection. It differs from `info` as it is not visible to other clients – Centrifugo never sends it in presence, join/leave events or any other message. It can be included in proxy calls from Centrifugo to the application backend (refer to the `include_connection_meta` option of [proxy configuration object](./proxy.md#proxy-configuration-object)). In Centrifugo PRO, there is a `connections` API method that returns this metadata within the connection description object.
 
 :::caution
 
-A JWT is signed, not encrypted: anyone holding a token can decode its payload. The client holds its connection token, so it can read the `meta` claim. Do not put secrets into `meta` of a JWT – pass data the client must not see through the [connect proxy](./proxy.md#connect-proxy) instead, whose `meta` result never reaches the client.
+A JWT is signed, not encrypted: its payload can be decoded by whoever holds the token. So the `meta` of a connection token is visible to the user who owns the token – though not to other clients. Do not put into it anything that user must not see – pass such data through the [connect proxy](./proxy.md#connect-proxy) instead, whose `meta` result never reaches the client.
 
 :::
 
