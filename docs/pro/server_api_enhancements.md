@@ -100,7 +100,7 @@ Example: `https://keycloak.test.env/auth/realms/myrealm`
 
 ##### `http_api.jwks.scope` / `grpc_api.jwks.scope`
 
-String. Optional.
+String. Optional; when not set, scope check is skipped. Recommended when your identity provider issues scopes.
 
 The required scope claim in the JWT token. If set, Centrifugo will verify that the token contains this scope. The scope claim can be either a string or an array of strings in the JWT.
 
@@ -111,6 +111,18 @@ Example: `centrifugo:api`
 [Unified TLS object](../server/configuration.md#tls-config-object). Optional.
 
 TLS configuration for HTTPS connection to JWKS endpoint. Use this if your JWKS endpoint requires custom TLS settings, such as custom CA certificates or client certificates.
+
+#### Keep API tokens apart from client tokens
+
+A token passing the checks above can call any server API method. Centrifugo verifies its signature with a key from the JWKS endpoint, then checks only what is configured: `exp` and `nbf` when the token has them, and `aud`, `iss` and the scope when the options above are set.
+
+So make sure no other token passes these checks. Connection and subscription tokens are the main risk: your users' browsers and apps hold them. If they are signed with keys from the same JWKS endpoint, without a claim to tell them apart, any user can call the server API with their connection token.
+
+We recommend:
+
+- Use a separate JWKS endpoint, with separate keys, for server API tokens. Do not reuse the endpoint of [`client.token.jwks_public_endpoint`](../server/authentication.md#json-web-key-support).
+- Set `audience`, and `scope` where your identity provider supports it, to values that only server API tokens carry. This also keeps out tokens your identity provider issues for other services, since they usually share one JWKS endpoint.
+- Issue server API tokens with a short `exp`. Centrifugo accepts a token without `exp` until its key is removed from the JWKS endpoint.
 
 ### Usage
 
