@@ -18,7 +18,7 @@
 
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.0be39b2d.css">
-<script src="/assets/js/runtime~main.52c0f0b6.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.adbabbf3.js" defer="defer"></script>
 <script src="/assets/js/main.211d347d.js" defer="defer"></script>
 </head>
 <body>
@@ -61,19 +61,28 @@
 <p>The expected issuer claim (<code>iss</code>) in the JWT token. This should match the issuer of tokens from your identity provider.</p>
 <p>Example: <code>https://keycloak.test.env/auth/realms/myrealm</code></p>
 <h5 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="http_apijwksscope--grpc_apijwksscope"><code>http_api.jwks.scope</code> / <code>grpc_api.jwks.scope</code><a href="#http_apijwksscope--grpc_apijwksscope" class="hash-link" aria-label="Direct link to http_apijwksscope--grpc_apijwksscope" title="Direct link to http_apijwksscope--grpc_apijwksscope" translate="no">​</a></h5>
-<p>String. Optional.</p>
+<p>String. Optional; when not set, scope check is skipped. Recommended when your identity provider issues scopes.</p>
 <p>The required scope claim in the JWT token. If set, Centrifugo will verify that the token contains this scope. The scope claim can be either a string or an array of strings in the JWT.</p>
 <p>Example: <code>centrifugo:api</code></p>
 <h5 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="http_apijwkstls--grpc_apijwkstls"><code>http_api.jwks.tls</code> / <code>grpc_api.jwks.tls</code><a href="#http_apijwkstls--grpc_apijwkstls" class="hash-link" aria-label="Direct link to http_apijwkstls--grpc_apijwkstls" title="Direct link to http_apijwkstls--grpc_apijwkstls" translate="no">​</a></h5>
 <p><a class="" href="/docs/server/configuration#tls-config-object">Unified TLS object</a>. Optional.</p>
 <p>TLS configuration for HTTPS connection to JWKS endpoint. Use this if your JWKS endpoint requires custom TLS settings, such as custom CA certificates or client certificates.</p>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="keep-api-tokens-apart-from-client-tokens">Keep API tokens apart from client tokens<a href="#keep-api-tokens-apart-from-client-tokens" class="hash-link" aria-label="Direct link to Keep API tokens apart from client tokens" title="Direct link to Keep API tokens apart from client tokens" translate="no">​</a></h4>
+<p>A token passing the checks above can call any server API method. Centrifugo verifies its signature with a key from the JWKS endpoint, then checks only what is configured: <code>exp</code> and <code>nbf</code> when the token has them, and <code>aud</code>, <code>iss</code> and the scope when the options above are set.</p>
+<p>So make sure no other token passes these checks. Connection and subscription tokens are the main risk: your users&#x27; browsers and apps hold them. If they are signed with keys from the same JWKS endpoint, without a claim to tell them apart, any user can call the server API with their connection token.</p>
+<p>We recommend:</p>
+<ul>
+<li class="">Use a separate JWKS endpoint, with separate keys, for server API tokens. Do not reuse the endpoint of <a class="" href="/docs/server/authentication#json-web-key-support"><code>client.token.jwks_public_endpoint</code></a>.</li>
+<li class="">Set <code>audience</code>, and <code>scope</code> where your identity provider supports it, to values that only server API tokens carry. This also keeps out tokens your identity provider issues for other services, since they usually share one JWKS endpoint.</li>
+<li class="">Issue server API tokens with a short <code>exp</code>. Centrifugo accepts a token without <code>exp</code> until its key is removed from the JWKS endpoint.</li>
+</ul>
 <h3 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="usage">Usage<a href="#usage" class="hash-link" aria-label="Direct link to Usage" title="Direct link to Usage" translate="no">​</a></h3>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="http-api-1">HTTP API<a href="#http-api-1" class="hash-link" aria-label="Direct link to HTTP API" title="Direct link to HTTP API" translate="no">​</a></h4>
 <p>Once JWKS authentication is configured, API clients need to provide a valid JWT token in the <code>Authorization</code> header when making HTTP API requests:</p>
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">curl --header &quot;Authorization: Bearer &lt;JWT_TOKEN&gt;&quot; \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --request POST \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  --data &#x27;{&quot;channel&quot;: &quot;chat&quot;, &quot;data&quot;: {&quot;text&quot;: &quot;hello&quot;}}&#x27; \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  http://localhost:8000/api/publish</span><br></div></code></pre></div></div>
 <p>Example with httpie:</p>
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">echo &#x27;{&quot;channel&quot;: &quot;chat&quot;, &quot;data&quot;: {&quot;text&quot;: &quot;hello&quot;}}&#x27; | \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  http POST &quot;http://localhost:8000/api/publish&quot; \</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">  &quot;Authorization: Bearer &lt;JWT_TOKEN&gt;&quot;</span><br></div></code></pre></div></div>
-<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="grpc-api-1">GRPC API<a href="#grpc-api-1" class="hash-link" aria-label="Direct link to GRPC API" title="Direct link to GRPC API" translate="no">  ​</a></h4>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="grpc-api-1">GRPC API<a href="#grpc-api-1" class="hash-link" aria-label="Direct link to GRPC API" title="Direct link to GRPC API" translate="no">​</a></h4>
 <p>For GRPC API, clients need to provide the JWT token in the gRPC metadata with the <code>authorization</code> key:</p>
 <div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">authorization: Bearer &lt;JWT_TOKEN&gt;</span><br></div></code></pre></div></div>
 <p>The exact implementation depends on your gRPC client library. Here&#x27;s an example using Go:</p>

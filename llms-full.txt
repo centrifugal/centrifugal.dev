@@ -4041,7 +4041,7 @@ Upon connection, the client should supply a connection JWT containing several pr
 
 For more information about handling connection tokens on the client side, see the [client SDK specification](../transports/client_api.md#client-connection-token).
 
-Currently, Centrifugo supports HMAC, RSA, and ECDSA JWT algorithms - specifically HS256, HS384, HS512, RS256, RS384, RS512, ES256, ES384, and ES512 (and EdDSA/Ed25519 via JWKS).
+Currently, Centrifugo supports HMAC, RSA, ECDSA and EdDSA JWT algorithms - specifically HS256, HS384, HS512, RS256, RS384, RS512, ES256, ES384, ES512 and EdDSA (Ed25519).
 
 Here, we will demonstrate example snippets using the Javascript Centrifugo client for the client-side and the [PyJWT](https://github.com/jpadilla/pyjwt) Python library to generate a connection token on the backend side.
 
@@ -4083,6 +4083,21 @@ To add an ECDSA public key (must be a PEM encoded string) add the `client.token.
   }
 }
 ```
+
+To add an Ed25519 public key for EdDSA tokens (must be a PEM encoded string) add the `client.token.ed25519_public_key` option, ex:
+
+```json title="config.json"
+{
+  ...
+  "client": {
+    "token": {
+      "ed25519_public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2Vw..."
+    }
+  }
+}
+```
+
+Ed25519 is a good choice for a new setup: its keys and signatures are small, and signing is fast and deterministic. Before this option, EdDSA tokens could only be verified with keys from a [JWKS endpoint](#json-web-key-support), which remains available.
 
 ## Connection JWT Claims
 
@@ -4250,7 +4265,13 @@ Allow per-connection overrides of some channel namespace options:
 
 ### meta
 
-`meta` is an additional JSON object (e.g., `{"key": "value"}`) that is attached to a connection. It differs from `info` as it is never disclosed to clients within presence and join/leave events; it is only accessible on the server side. It can be included in proxy calls from Centrifugo to the application backend (refer to the `include_connection_meta` option of [proxy configuration object](./proxy.md#proxy-configuration-object)). In Centrifugo PRO, there is a `connections` API method that returns this metadata within the connection description object.
+`meta` is an additional JSON object (e.g., `{"key": "value"}`) that is attached to a connection. It differs from `info` as it is not visible to other clients – Centrifugo never sends it in presence, join/leave events or any other message. It can be included in proxy calls from Centrifugo to the application backend (refer to the `include_connection_meta` option of [proxy configuration object](./proxy.md#proxy-configuration-object)). In Centrifugo PRO, there is a `connections` API method that returns this metadata within the connection description object.
+
+:::caution
+
+A JWT is signed, not encrypted: its payload can be decoded by whoever holds the token. So the `meta` of a connection token is visible to the user who owns the token – though not to other clients. Do not put into it anything that user must not see – pass such data through the [connect proxy](./proxy.md#connect-proxy) instead, whose `meta` result never reaches the client.
+
+:::
 
 ### expire_at
 
@@ -5111,7 +5132,7 @@ Just like connection JWT, using subscription JWT with a reasonable expiration ti
 
 :::
 
-Supported JWT algorithms for private subscription tokens match algorithms to create connection JWT. The same HMAC secret key, RSA, and ECDSA public keys set for authentication tokens are re-used to check subscription JWT.
+Supported JWT algorithms for private subscription tokens match algorithms to create connection JWT. The same HMAC secret key, RSA, ECDSA and Ed25519 public keys set for authentication tokens are re-used to check subscription JWT.
 
 ## Subscription JWT claims
 
@@ -5273,7 +5294,7 @@ const jose = require('jose')
 </Tabs>
 ````
 
-Where `"secret"` is the `client.token.hmac_secret_key` from Centrifugo configuration (we use HMAC tokens in this example which relies on a shared secret key, for RSA or ECDSA tokens you need to use a private key known only by your backend).
+Where `"secret"` is the `client.token.hmac_secret_key` from Centrifugo configuration (we use HMAC tokens in this example which relies on a shared secret key, for RSA, ECDSA or EdDSA tokens you need to use a private key known only by your backend).
 
 ## Example: subscribe with JWT
 
@@ -11757,7 +11778,7 @@ When `map.publish_proxy_enabled` or `map.remove_proxy_enabled` is set, the corre
 - Allow or deny the operation, or disconnect the client
 - Validate that the client has permission to publish/remove for the specific key
 - Override the key (e.g. force it to a server-derived value) — leave `result.key` unset to approve the client-supplied key as-is
-- Override the data and provide a separate stream payload
+- Override the data
 - Stamp server-controlled metadata on the resulting publication — tags, version, key mode, idempotency key, delta hint
 
 Because the proxy is the single keying authority when enabled, `map.client_key` cannot be set on the same namespace — Centrifugo rejects that combination at config-load. To get server-driven keying behind a proxy, derive the key inside the proxy and return it via `result.key`.
@@ -11803,7 +11824,7 @@ The proxy receives a JSON request with these fields:
 | `client`    | `string` | unique client ID generated by Centrifugo for the connection                                          |
 | `transport` | `string` | transport name (e.g. `websocket`)                                                                    |
 | `protocol`  | `string` | protocol type (`json` or `protobuf`)                                                                 |
-| `encoding`  | `string` | protocol encoding (`json` or `binary`)                                                               |
+| `encoding`  | `string` | `binary` when the proxy uses [binary encoding mode](./proxy.md#binary-encoding-mode), so that payloads come in `b64` fields, `json` otherwise |
 | `user`      | `string` | the connection's user ID from authentication                                                         |
 | `channel`   | `string` | the map channel the client is publishing to                                                          |
 | `key`       | `string` | the key sent by the client (may be empty if the client did not supply one)                           |
@@ -11821,7 +11842,7 @@ The proxy receives a JSON request with these fields:
 
 ##### MapPublishResult
 
-All fields are optional. Any field left unset falls back to the value sent by the client (for `key`/`data`) or to the default behaviour. Returning a `Result` (even an empty one) means the publish is approved.
+All fields are optional. Any field left unset falls back to the value sent by the client (for `key`/`data`) or to the default behaviour. Returning a `Result` (even an empty one) means the publish is approved – and so does a response with no `result`, `error` or `disconnect` at all.
 
 | Field              | Type                  | Description                                                                                                                                                                                       |
 |--------------------|-----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -11842,7 +11863,7 @@ All fields are optional. Any field left unset falls back to the value sent by th
 | `client`    | `string` | unique client ID generated by Centrifugo for the connection                                          |
 | `transport` | `string` | transport name                                                                                       |
 | `protocol`  | `string` | protocol type (`json` or `protobuf`)                                                                 |
-| `encoding`  | `string` | protocol encoding (`json` or `binary`)                                                               |
+| `encoding`  | `string` | `binary` when the proxy uses [binary encoding mode](./proxy.md#binary-encoding-mode), so that payloads come in `b64` fields, `json` otherwise |
 | `user`      | `string` | the connection's user ID from authentication                                                         |
 | `channel`   | `string` | the map channel the client is removing from                                                          |
 | `key`       | `string` | the key the client wants to remove                                                                   |
@@ -11858,7 +11879,7 @@ All fields are optional. Any field left unset falls back to the value sent by th
 
 ##### MapRemoveResult
 
-All fields are optional. Any field left unset falls back to the value sent by the client (for `key`) or to the default behaviour. Returning a `Result` (even an empty one) means the remove is approved.
+All fields are optional. Any field left unset falls back to the value sent by the client (for `key`) or to the default behaviour. Returning a `Result` (even an empty one) means the remove is approved – and so does a response with no `result`, `error` or `disconnect` at all.
 
 | Field             | Type                  | Description                                                                                                                                                                                                                            |
 |-------------------|-----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -13653,7 +13674,7 @@ This is what sent from Centrifugo to application backend in case of connect prox
 | `client`    | `string`        | yes      | unique client ID generated by Centrifugo for each incoming connection                                                                      |
 | `transport` | `string`        | yes      | transport name (ex. `websocket`, `sse`, `uni_sse` etc)                                                                                     |
 | `protocol`  | `string`        | yes      | protocol type used by the client (`json` or `protobuf` at moment)                                                                          |
-| `encoding`  | `string`        | yes      | protocol encoding type used (`json` or `binary` at moment)                                                                                 |
+| `encoding`  | `string`        | yes      | `binary` when the proxy uses [binary encoding mode](#binary-encoding-mode), so that payloads come in `b64` fields, `json` otherwise |
 | `name`      | `string`        | no       | optional name of the client (this field will only be set if provided by a client on connect)                                               |
 | `version`   | `string`        | no       | optional version of the client (this field will only be set if provided by a client on connect)                                            |
 | `data`      | `JSON`          | no       | optional data from client (this field will only be set if provided by a client on connect)                                                 |
@@ -13837,7 +13858,7 @@ Where `expire_at` contains some Unix time in the future (until which connection 
 | `client`    | `string` | yes      | unique client ID generated by Centrifugo for each incoming connection                      |
 | `transport` | `string` | yes      | transport name (ex. `websocket`, `sockjs`, `uni_sse` etc.)                                 |
 | `protocol`  | `string` | yes      | protocol type used by client (`json` or `protobuf` at moment)                              |
-| `encoding`  | `string` | yes      | protocol encoding type used (`json` or `binary` at moment)                                 |
+| `encoding`  | `string` | yes      | `binary` when the proxy uses [binary encoding mode](#binary-encoding-mode), so that payloads come in `b64` fields, `json` otherwise |
 | `user`      | `string` | yes      | a connection user ID obtained during authentication process                                |
 | `meta`      | `JSON`   | no       | a connection attached meta (off by default, enable with `"include_connection_meta": true`) |
 
@@ -13958,7 +13979,7 @@ See below on how to [return an error](#what-if-connection-is-not-allowed-to-subs
 | `client`    | `string` | yes      | unique client ID generated by Centrifugo for each incoming connection                                                      |
 | `transport` | `string` | yes      | transport name (ex. `websocket` or `sockjs`)                                                                               |
 | `protocol`  | `string` | yes      | protocol type used by the client (`json` or `protobuf` at moment)                                                          |
-| `encoding`  | `string` | yes      | protocol encoding type used (`json` or `binary` at moment)                                                                 |
+| `encoding`  | `string` | yes      | `binary` when the proxy uses [binary encoding mode](#binary-encoding-mode), so that payloads come in `b64` fields, `json` otherwise |
 | `user`      | `string` | yes      | a connection user ID obtained during authentication process                                                                |
 | `channel`   | `string` | yes      | a string channel client wants to subscribe to                                                                              |
 | `token`     | `string` | no       | subscription token (JWT) provided by the client for this channel when [subscription token authorization](channel_token_auth.md) is used — empty otherwise |
@@ -14120,7 +14141,7 @@ The expected response example if a publication is allowed:
 | `client`    | `string` | yes      | unique client ID generated by Centrifugo for each incoming connection                            |
 | `transport` | `string` | yes      | transport name (ex. `websocket`, `sockjs`)                                                       |
 | `protocol`  | `string` | yes      | protocol type used by the client (`json` or `protobuf` at moment)                                |
-| `encoding`  | `string` | yes      | protocol encoding type used (`json` or `binary` at moment)                                       |
+| `encoding`  | `string` | yes      | `binary` when the proxy uses [binary encoding mode](#binary-encoding-mode), so that payloads come in `b64` fields, `json` otherwise |
 | `user`      | `string` | yes      | a connection user ID obtained during authentication process                                      |
 | `channel`   | `string` | yes      | a string channel client wants to publish to                                                      |
 | `data`      | `JSON`   | no       | data sent by client                                                                              |
@@ -14153,7 +14174,7 @@ See below on how to [return an error](#return-custom-error) in case you don't wa
 
 ### Map publish/remove proxy
 
-Map subscriptions ([experimental](./map_subscriptions.md)) have their own publish and remove proxies — they intercept client-originated map `publish` and `remove` calls (i.e. `mapSub.publish(key, data)` / `mapSub.remove(key)` in the SDK) in the same way the regular publish proxy intercepts client publishes. The map proxies share the same authorization model and the same `error` / `disconnect` response semantics as the publish proxy described above, but accept and return additional fields that only make sense for map subscriptions (key overrides, score, conditional `key_mode`, separate stream payload, server-stamped tags on removals, etc.).
+Map subscriptions ([experimental](./map_subscriptions.md)) have their own publish and remove proxies — they intercept client-originated map `publish` and `remove` calls (i.e. `mapSub.publish(key, data)` / `mapSub.remove(key)` in the SDK) in the same way the regular publish proxy intercepts client publishes. The map proxies share the same authorization model and the same `error` / `disconnect` response semantics as the publish proxy described above, but accept and return additional fields that only make sense for map subscriptions (key overrides, conditional `key_mode`, server-stamped tags on removals, etc.).
 
 The complete request/response reference for the map publish/remove proxy lives in the map subscriptions doc — see [Map publish/remove proxy](./map_subscriptions.md#map-publishremove-proxy).
 
@@ -14257,7 +14278,7 @@ Very similar to connection-wide refresh response.
 | `client`    | `string` | yes      | unique client ID generated by Centrifugo for each incoming connection                            |
 | `transport` | `string` | yes      | transport name (ex. `websocket`, `sockjs`, `uni_sse` etc.)                                       |
 | `protocol`  | `string` | yes      | protocol type used by client (`json` or `protobuf` at moment)                                    |
-| `encoding`  | `string` | yes      | protocol encoding type used (`json` or `binary` at moment)                                       |
+| `encoding`  | `string` | yes      | `binary` when the proxy uses [binary encoding mode](#binary-encoding-mode), so that payloads come in `b64` fields, `json` otherwise |
 | `user`      | `string` | yes      | a connection user ID obtained during authentication process                                      |
 | `channel`   | `string` | yes      | channel for which Subscription is going to expire                                                |
 | `meta`      | `JSON`   | no       | a connection attached meta (off by default, enable with `"include_connection_meta": true`)       |
@@ -14358,7 +14379,7 @@ See below on how to [return a custom error](#return-custom-error).
 | `client`    | `string` | yes      | unique client ID generated by Centrifugo for each incoming connection                            |
 | `transport` | `string` | yes      | transport name (ex. `websocket` or `sockjs`)                                                     |
 | `protocol`  | `string` | yes      | protocol type used by the client (`json` or `protobuf` at moment)                                |
-| `encoding`  | `string` | yes      | protocol encoding type used (`json` or `binary` at moment)                                       |
+| `encoding`  | `string` | yes      | `binary` when the proxy uses [binary encoding mode](#binary-encoding-mode), so that payloads come in `b64` fields, `json` otherwise |
 | `user`      | `string` | yes      | a connection user ID obtained during authentication process                                      |
 | `method`    | `string` | no       | an RPC method string, if the client does not use named RPC call then method will be omitted      |
 | `data`      | `JSON`   | no       | RPC custom data sent by client                                                                   |
@@ -14395,6 +14416,12 @@ Application backend can return JSON object that contains an error to return it t
 ```
 
 Applications **must use error codes in range [400, 1999]**. Error code field is `uint32` internally.
+
+:::caution
+
+A response with none of `result`, `error` or `disconnect` set – an empty JSON object, say – allows the request: a subscribe, publish, map publish or map remove request goes through as the client sent it, and an RPC call is answered with no data. To deny a request, always return an `error` or a `disconnect`.
+
+:::
 
 :::note
 
@@ -17424,13 +17451,23 @@ At this point only `centrifuge-js` SDK supports shared poll subscriptions.
 ### Creating a shared poll subscription
 
 ```javascript
-const sub = client.newSharedPollSubscription('post_votes:feed1', {
+const channel = 'post_votes:feed1';
+const sub = client.newSharedPollSubscription(channel, {
   getSignature: async (ctx) => {
-    // Request signature from your backend for the tracked keys
+    // Request signature from your backend for the tracked keys. The context
+    // carries only the keys: send the channel your backend signs for.
     const resp = await fetch('/api/sign-poll', {
       method: 'POST',
-      body: JSON.stringify({ channel: ctx.channel, keys: ctx.keys }),
+      body: JSON.stringify({ channel, keys: ctx.keys }),
     });
+    if (resp.status === 403) {
+      // Unsubscribes, as from getToken: the user may not use the subscription.
+      throw new Centrifuge.UnauthorizedError();
+    }
+    if (!resp.ok) {
+      // Retried with backoff.
+      throw new Error(`Unexpected status code ${resp.status}`);
+    }
     const { signature, keys } = await resp.json();
     return { signature, keys };
   },
@@ -17508,6 +17545,10 @@ When using the simplified `track(keys)` API or on signature refresh, the `getSig
 3. Only authorized keys are sent to the server
 
 This lets your backend revoke access to specific items in real time — for example, when a user's permissions change or content is deleted. The revocation takes effect on the next signature refresh cycle (controlled by the signature TTL) without requiring an explicit unsubscribe.
+
+Return only keys from `ctx.keys`, and sign exactly the keys you return, in the order you return them. The SDK sends the returned keys it tracks to the server with the signature, and the server verifies the signature over the keys it receives: a returned key the SDK did not ask for is not sent, so the signature no longer matches and the whole track request is rejected.
+
+To revoke access to some keys, return fewer keys. To end the subscription - when the user may no longer use it at all - throw `UnauthorizedError` from the callback: the subscription is unsubscribed with the `unauthorized` code and not retried, as when `getToken` throws it. Any other error is emitted as an `error` event, and the SDK calls `getSignature` again with backoff.
 
 ## Example: live vote results
 
@@ -23750,7 +23791,7 @@ While the standard `client.token.jwks_public_endpoint` configuration allows fetc
 ```
 
 :::note
-The `client.token.jwks.enabled` field must be set to `true` to enable multiple JWKS providers feature. Without it, the providers configuration will be ignored. When it is enabled, only the providers are used to verify tokens – HMAC, RSA and ECDSA keys from the token config are ignored. If `providers` is empty, Centrifugo starts but rejects every token.
+The `client.token.jwks.enabled` field must be set to `true` to enable multiple JWKS providers feature. Without it, the providers configuration will be ignored. When it is enabled, only the providers are used to verify tokens – HMAC, RSA, ECDSA and Ed25519 keys from the token config are ignored. If `providers` is empty, Centrifugo starts but rejects every token.
 :::
 
 ### Same issuer with different audiences
@@ -25030,13 +25071,13 @@ curl -sSLf https://centrifugal.dev/install_pro.sh | sh
 Centrifugo PRO uses a different image from OSS version – [centrifugo/centrifugo-pro](https://hub.docker.com/r/centrifugo/centrifugo-pro):
 
 ```
-docker run --ulimit nofile=262144:262144 -v /host/dir/with/config/file:/centrifugo -p 8000:8000 centrifugo/centrifugo-pro:v6.10.0 centrifugo -c config.json
+docker run --ulimit nofile=262144:262144 -v /host/dir/with/config/file:/centrifugo -p 8000:8000 centrifugo/centrifugo-pro:v6.10.2 centrifugo -c config.json
 ```
 
-There is also a minimal image variant based on [distroless](https://github.com/GoogleContainerTools/distroless): `centrifugo/centrifugo-pro:v6.10.0-distroless` (and `v6-distroless`, `v6.10-distroless`, `latest-distroless`). It contains only the Centrifugo binary, CA certificates and timezone data, without a shell or package manager. Its entrypoint is the `centrifugo` binary, so pass only arguments. It runs as the `nonroot` user (UID 65532), so mounted files must be readable by it:
+There is also a minimal image variant based on [distroless](https://github.com/GoogleContainerTools/distroless): `centrifugo/centrifugo-pro:v6.10.2-distroless` (and `v6-distroless`, `v6.10-distroless`, `latest-distroless`). It contains only the Centrifugo binary, CA certificates and timezone data, without a shell or package manager. Its entrypoint is the `centrifugo` binary, so pass only arguments. It runs as the `nonroot` user (UID 65532), so mounted files must be readable by it:
 
 ```
-docker run --ulimit nofile=262144:262144 -v /host/dir/with/config/file:/centrifugo -p 8000:8000 centrifugo/centrifugo-pro:v6.10.0-distroless -c config.json
+docker run --ulimit nofile=262144:262144 -v /host/dir/with/config/file:/centrifugo -p 8000:8000 centrifugo/centrifugo-pro:v6.10.2-distroless -c config.json
 ```
 
 ### Kubernetes
@@ -25048,7 +25089,7 @@ You can use our [official Helm chart](https://github.com/centrifugal/helm-charts
 image:
   registry: docker.io
   repository: centrifugo/centrifugo-pro
-  tag: v6.10.0
+  tag: v6.10.2
 ```
 
 ### Debian and Ubuntu
@@ -25056,8 +25097,8 @@ image:
 DEB package [available in release assets](https://github.com/centrifugal/centrifugo-pro/releases).
 
 ```
-wget https://github.com/centrifugal/centrifugo-pro/releases/download/v6.10.0/centrifugo-pro_6.10.0-0_amd64.deb
-sudo dpkg -i centrifugo-pro_6.10.0-0_amd64.deb
+wget https://github.com/centrifugal/centrifugo-pro/releases/download/v6.10.2/centrifugo-pro_6.10.2-0_amd64.deb
+sudo dpkg -i centrifugo-pro_6.10.2-0_amd64.deb
 ```
 
 ### Centos
@@ -25065,16 +25106,16 @@ sudo dpkg -i centrifugo-pro_6.10.0-0_amd64.deb
 RPM package [available in release assets](https://github.com/centrifugal/centrifugo-pro/releases).
 
 ```
-wget https://github.com/centrifugal/centrifugo-pro/releases/download/v6.10.0/centrifugo-pro-6.10.0-0.x86_64.rpm
-sudo yum install centrifugo-pro-6.10.0-0.x86_64.rpm
+wget https://github.com/centrifugal/centrifugo-pro/releases/download/v6.10.2/centrifugo-pro-6.10.2-0.x86_64.rpm
+sudo yum install centrifugo-pro-6.10.2-0.x86_64.rpm
 ```
 
 ### Verifying release artifacts
 
-Starting from Centrifugo PRO v6.10.0, release artifacts are signed and include an SBOM, the same way as for the [OSS version](../getting-started/installation.md#verifying-release-artifacts). Centrifugo PRO is built in the `centrifugal/centrifugo-pro-source` repository and published to `centrifugal/centrifugo-pro`, so the signing identity refers to the build repository:
+Starting from Centrifugo PRO v6.10.2, release artifacts are signed and include an SBOM, the same way as for the [OSS version](../getting-started/installation.md#verifying-release-artifacts). Centrifugo PRO is built in the `centrifugal/centrifugo-pro-source` repository and published to `centrifugal/centrifugo-pro`, so the signing identity refers to the build repository:
 
 ```bash
-VERSION=6.10.0
+VERSION=6.10.2
 cosign verify-blob \
   --certificate-identity "https://github.com/centrifugal/centrifugo-pro-source/.github/workflows/release.yml@refs/tags/v${VERSION}" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
@@ -25086,8 +25127,8 @@ sha256sum --ignore-missing -c centrifugo-pro_${VERSION}_checksums.txt
 To verify a Docker image:
 
 ```bash
-cosign verify centrifugo/centrifugo-pro:v6.10.0 \
-  --certificate-identity "https://github.com/centrifugal/centrifugo-pro-source/.github/workflows/release.yml@refs/tags/v6.10.0" \
+cosign verify centrifugo/centrifugo-pro:v6.10.2 \
+  --certificate-identity "https://github.com/centrifugal/centrifugo-pro-source/.github/workflows/release.yml@refs/tags/v6.10.2" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
@@ -28943,7 +28984,7 @@ Example: `https://keycloak.test.env/auth/realms/myrealm`
 
 ##### `http_api.jwks.scope` / `grpc_api.jwks.scope`
 
-String. Optional.
+String. Optional; when not set, scope check is skipped. Recommended when your identity provider issues scopes.
 
 The required scope claim in the JWT token. If set, Centrifugo will verify that the token contains this scope. The scope claim can be either a string or an array of strings in the JWT.
 
@@ -28954,6 +28995,18 @@ Example: `centrifugo:api`
 [Unified TLS object](../server/configuration.md#tls-config-object). Optional.
 
 TLS configuration for HTTPS connection to JWKS endpoint. Use this if your JWKS endpoint requires custom TLS settings, such as custom CA certificates or client certificates.
+
+#### Keep API tokens apart from client tokens
+
+A token passing the checks above can call any server API method. Centrifugo verifies its signature with a key from the JWKS endpoint, then checks only what is configured: `exp` and `nbf` when the token has them, and `aud`, `iss` and the scope when the options above are set.
+
+So make sure no other token passes these checks. Connection and subscription tokens are the main risk: your users' browsers and apps hold them. If they are signed with keys from the same JWKS endpoint, without a claim to tell them apart, any user can call the server API with their connection token.
+
+We recommend:
+
+- Use a separate JWKS endpoint, with separate keys, for server API tokens. Do not reuse the endpoint of [`client.token.jwks_public_endpoint`](../server/authentication.md#json-web-key-support).
+- Set `audience`, and `scope` where your identity provider supports it, to values that only server API tokens carry. This also keeps out tokens your identity provider issues for other services, since they usually share one JWKS endpoint.
+- Issue server API tokens with a short `exp`. Centrifugo accepts a token without `exp` until its key is removed from the JWKS endpoint.
 
 ### Usage
 
