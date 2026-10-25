@@ -120,7 +120,7 @@ Enabling it in the config file makes the feature *available*. Nothing is served 
 
 The **structure dictionary** is the free tier: a fixed dictionary made from Centrifugo's own protocol, with none of your data in it, so there is nothing to review and nothing to disclose. Turning it on is one click.
 
-On a deployment with no profiles yet, the **Compression** page offers **Get started**: one confirmed step that turns serving on, serves the structure dictionary, creates a `default` profile for every connection without one, and starts a 30-minute shape-only training session for it. When the session ends, the profile offers the dictionary it made, and nothing trained serves until you activate it.
+On a deployment with no profiles yet, the **Compression** page offers **Get started**: one confirmed step that turns serving on, serves the structure dictionary, creates a `default` profile for every connection without one, and starts a shape-only training session for it, 30 minutes unless you choose otherwise. When the session ends, the profile offers the dictionary it made, and nothing trained serves until you activate it.
 
 It is not sent to Protobuf connections. Protobuf messages carry numeric field tags instead of repeated field names, so there is little for this dictionary to match: it measured 1.16x against 1.14x with no dictionary at all, which does not repay the cost of downloading it.
 
