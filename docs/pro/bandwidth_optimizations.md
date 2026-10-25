@@ -180,7 +180,7 @@ The admin UI reports results per **dictionary**, not per profile — one row for
 Each row shows:
 
 * **new versus returning connections** — how many arrived already holding the dictionary. This should settle towards returning; those connections pay nothing to receive it.
-* **what it is actually saving**, next to what it was expected to save when you approved it. Both are measured on traffic the dictionary was not built from, so a widening gap really does mean it is time to retrain.
+* **what it is actually saving**, next to what it was expected to save when you approved it. Both are measured on traffic the dictionary was not built from, so a widening gap really does mean it is time to retrain. A dictionary from a session stopped before its control window has no expectation and reads *not measured*.
 * **bytes saved**, after subtracting the cost of sending the dictionary out.
 * **how often a compressed message was reused** instead of being compressed again.
 
