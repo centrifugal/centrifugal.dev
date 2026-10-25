@@ -469,6 +469,7 @@ This is what an application returns to Centrifugo inside `result` field in of `C
 | `meta`      | `JSON` object (ex. `{"key": "value"}`) | no       | a custom data to attach to connection (this **won't be exposed to client-side**)                                                                                                                |
 | `caps`      | `array`                                | no       | (**Centrifugo PRO**) capability-based authorization rules to grant the connection. See [capabilities](../pro/capabilities.md)                                                                    |
 | `labels`    | `map[string]string`                    | no       | (**Centrifugo PRO**) connection labels to attach — forwarded to later proxy requests as the `labels` field                                                                                       |
+| `profile`   | `string`                               | no       | (**Centrifugo PRO**) [dictionary compression](../pro/bandwidth_optimizations.md#profiles) profile, overrides the one the client declared                                                         |
 
 #### SubscribeOptions
 

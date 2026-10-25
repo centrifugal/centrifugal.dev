@@ -128,7 +128,7 @@ A **profile** groups connections whose traffic looks alike — a page, a screen,
 
 A profile is set explicitly, one of two ways:
 
-1. **Your application**, via a `profile` claim in the connection token, read in `OnConnecting`. Needs a change where tokens are issued.
+1. **Your application**, via a `profile` claim in the connection token, or `profile` in the [connect proxy result](../server/proxy.md#connectresult). Needs a change where connections are authenticated, not in clients, so connections can be classified without a client release.
 2. **The client**, passing `profile` in SDK options — but only if the profile exists *and* is marked client-declarable. Needs no server-side change.
 
 A name that matches no configured profile is ignored and the connection is left unclassified, so a client can never invent a profile. Names clients declare that you have not configured show up in the admin UI, which is how typos and untrained populations surface.
