@@ -4505,7 +4505,12 @@ Read a tutorial in our blog about [using Centrifugo with Keycloak SSO](/blog/202
 
 :::
 
-At the moment Centrifugo caches keys loaded from an endpoint for one hour.
+Centrifugo caches keys loaded from an endpoint for five minutes (one hour before v6.10.2), and keeps using keys it loaded while the endpoint is unavailable. A token signed with a key Centrifugo has not loaded makes it fetch the endpoint again – at most once every five seconds.
+
+Since v6.10.2, a token is no longer refused as invalid in these cases:
+
+* While its key is not found at the endpoint, the token is treated as expired: client SDKs ask for a new token and connect again. To rotate keys without refused tokens, publish a new key at the endpoint before signing tokens with it.
+* While the endpoint is unavailable and the key was not loaded before, verification fails with a temporary error, and clients retry.
 
 Centrifugo will load keys from JWKS endpoint by issuing GET HTTP request with 1 second timeout and one retry in case of failure (not configurable at the moment).
 

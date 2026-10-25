@@ -18,7 +18,7 @@
 
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.0be39b2d.css">
-<script src="/assets/js/runtime~main.adbabbf3.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.dd058b0a.js" defer="defer"></script>
 <script src="/assets/js/main.211d347d.js" defer="defer"></script>
 </head>
 <body>
@@ -177,7 +177,12 @@ centrifuge.connect();</code></pre></div><div class="hint_oQhj" style="margin-top
 <p>A mechanism can be enabled by providing <code>client.token.jwks_public_endpoint</code> string option to Centrifugo (HTTP address).</p>
 <p>As soon as <code>client.token.jwks_public_endpoint</code> is set, all tokens will be verified using the JSON Web Key Set loaded from the JWKS endpoint. This makes it impossible to use non-JWK based tokens to connect and subscribe to private channels.</p>
 <div class="theme-admonition theme-admonition-tip admonition_xJq3 alert alert--success"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 12 16"><path fill-rule="evenodd" d="M6.5 0C3.48 0 1 2.19 1 5c0 .92.55 2.25 1 3 1.34 2.25 1.78 2.78 2 4v1h5v-1c.22-1.22.66-1.75 2-4 .45-.75 1-2.08 1-3 0-2.81-2.48-5-5.5-5zm3.64 7.48c-.25.44-.47.8-.67 1.11-.86 1.41-1.25 2.06-1.45 3.23-.02.05-.02.11-.02.17H5c0-.06 0-.13-.02-.17-.2-1.17-.59-1.83-1.45-3.23-.2-.31-.42-.67-.67-1.11C2.44 6.78 2 5.65 2 5c0-2.2 2.02-4 4.5-4 1.22 0 2.36.42 3.22 1.19C10.55 2.94 11 3.94 11 5c0 .66-.44 1.78-.86 2.48zM4 14h5c-.23 1.14-1.3 2-2.5 2s-2.27-.86-2.5-2z"></path></svg></span>tip</div><div class="admonitionContent_BuS1"><p>Read a tutorial in our blog about <a class="" href="/blog/2023/03/31/keycloak-sso-centrifugo">using Centrifugo with Keycloak SSO</a>. In that case connection tokens are verified using public key loaded from the JWKS endpoint of Keycloak.</p></div></div>
-<p>At the moment Centrifugo caches keys loaded from an endpoint for one hour.</p>
+<p>Centrifugo caches keys loaded from an endpoint for five minutes (one hour before v6.10.2), and keeps using keys it loaded while the endpoint is unavailable. A token signed with a key Centrifugo has not loaded makes it fetch the endpoint again – at most once every five seconds.</p>
+<p>Since v6.10.2, a token is no longer refused as invalid in these cases:</p>
+<ul>
+<li class="">While its key is not found at the endpoint, the token is treated as expired: client SDKs ask for a new token and connect again. To rotate keys without refused tokens, publish a new key at the endpoint before signing tokens with it.</li>
+<li class="">While the endpoint is unavailable and the key was not loaded before, verification fails with a temporary error, and clients retry.</li>
+</ul>
 <p>Centrifugo will load keys from JWKS endpoint by issuing GET HTTP request with 1 second timeout and one retry in case of failure (not configurable at the moment).</p>
 <p>Centrifugo supports the following key types (<code>kty</code>) for JWKs tokens:</p>
 <ul>
