@@ -80,9 +80,9 @@ Dictionary compression is an experimental feature. Configuration options, admin 
 
 Real-time applications send small messages, often. Compressing each one on its own finds little to work with — there is barely any repetition *inside* a single message — while the repetition *between* messages is large, since they share field names, the protocol envelope, and often a handful of values. On WebSocket connections the usual answer is the `permessage-deflate` extension, which has exactly this weakness.
 
-Dictionary compression gives the compressor that shared context up front. Centrifugo PRO trains a dictionary from real connections, sends it to a client once, and compresses every frame against it. There are three tiers, in increasing order of what they ask of you:
+Dictionary compression gives the compressor that shared context up front. Centrifugo PRO trains a dictionary from real connections, sends it to a client once, and compresses every frame against it. There are three levels, in increasing order of what they ask of you:
 
-| tier | what it costs you |
+| level | what it costs you |
 |---|---|
 | structure dictionary | one click in the admin UI — a fixed dictionary built from Centrifugo's own protocol, containing none of your data |
 | trained on your traffic, shape only | a training session; field names and nesting, no values, so nothing to review |
@@ -118,7 +118,7 @@ Dictionary compression needs a PostgreSQL database — profiles, training sessio
 
 Enabling it in the config file makes the feature *available*. Nothing is served until you switch it on in the admin UI, and everything after that is an admin UI operation rather than a config change — dictionaries are created, activated and withdrawn without a deploy or a restart.
 
-The **structure dictionary** is the free tier: a fixed dictionary made from Centrifugo's own protocol, with none of your data in it, so there is nothing to review and nothing to disclose. Turning it on is one click.
+The **structure dictionary** is the free level: a fixed dictionary made from Centrifugo's own protocol, with none of your data in it, so there is nothing to review and nothing to disclose. Turning it on is one click.
 
 On a deployment with no profiles yet, the **Compression** page offers **Get started**: one confirmed step that turns serving on, serves the structure dictionary, creates a `default` profile for every connection without one, and starts a shape-only training session for it, 30 minutes unless you choose otherwise. When the session ends, the profile offers the dictionary it made, and nothing trained serves until you activate it.
 
