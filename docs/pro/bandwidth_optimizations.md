@@ -180,7 +180,7 @@ The admin UI reports results per **dictionary**, not per profile — one row for
 Each row shows:
 
 * **new versus returning connections** — how many arrived already holding the dictionary. This should settle towards returning; those connections pay nothing to receive it.
-* **what it is actually saving**, next to what it was measured to save when you approved it. The measured ratio comes from traffic the dictionary was not built from, compressed one message at a time. Live traffic usually does better, because messages sent to a connection together are compressed together. Treat the measured ratio as a floor: live falling below it means your messages changed and it is time to retrain. A dictionary from a session stopped before its control window has no measured ratio and reads *not measured*.
+* **what it is actually saving**, next to what it was measured to save when you approved it. The measured ratio comes from traffic the dictionary was not built from, compressed one message at a time. Live traffic matches it, or does better when several messages are sent to a connection together, because those are compressed together. That happens on a single node; across several nodes publications arrive one at a time, and live comes out about the same as measured. Treat the measured ratio as a floor: live falling below it means your messages changed and it is time to retrain. A dictionary from a session stopped before its control window has no measured ratio and reads *not measured*.
 * **bytes saved**, after subtracting the cost of sending the dictionary out.
 * **how often a compressed message was reused** instead of being compressed again.
 
