@@ -23,7 +23,7 @@ Here is a list of SDKs maintained by Centrifugal Labs:
 * [centrifuge-java](https://github.com/centrifugal/centrifuge-java) – for native Android development and general Java
 * [centrifuge-python](https://github.com/centrifugal/centrifuge-python) – real-time SDK for Python on top of asyncio
 * [centrifuge-rust](https://github.com/centrifugal/centrifuge-rust) – for Rust on top of Tokio, with WebSocket and HTTP-streaming transports
-* [WIP] [centrifuge-csharp](https://github.com/centrifugal/centrifuge-csharp) - for modern .NET environments (including MAUI, Blazor, Unity)
+* [centrifuge-csharp](https://github.com/centrifugal/centrifuge-csharp) - for modern .NET environments (including MAUI, Blazor, Unity)
 
 SDKs driven by the community:
 
@@ -57,7 +57,7 @@ Below you can find information regarding support of different features in our of
 
 <div className="features">
 
-| Client feature                             | js | dart | swift | go | java | python | rust | c# [WIP] |
+| Client feature                             | js | dart | swift | go | java | python | rust | c# |
 |--------------------------------------------|----|------|-------|----|------|--------|------|--------|
 | connect to a server                        | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
 | setting client options                     | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
@@ -82,7 +82,7 @@ Below you can find information regarding support of different features in our of
 
 <div className="features">
 
-| Client feature                               | js | dart | swift | go | java | python | rust | c# [WIP] |
+| Client feature                               | js | dart | swift | go | java | python | rust | c# |
 |----------------------------------------------|----|------|-------|----|------|--------|------|--------|
 | subscribe to a channel                       | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
 | setting subscription options                 | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
