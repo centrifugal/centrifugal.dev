@@ -48,7 +48,7 @@ Centrifugo supports JSON and binary Protobuf protocols for client-server communi
 
 ### Client SDKs and backend integrations
 
-Official real-time SDKs cover web and mobile — [JavaScript, Go, Dart/Flutter, Swift, Java, Python, and C# (WIP)](../transports/client_sdk.md) — wrapping the protocol and handling reconnects, resubscriptions, and message recovery. On the backend, [framework integrations](./ecosystem.md) provide a native experience for Laravel, Symfony, Django, and others.
+Official real-time SDKs cover web and mobile — [JavaScript, Go, Dart/Flutter, Swift, Java, Python, Rust, and C#](../transports/client_sdk.md) — wrapping the protocol and handling reconnects, resubscriptions, and message recovery. On the backend, [framework integrations](./ecosystem.md) provide a native experience for Laravel, Symfony, Django, and others.
 
 ### Flexible authentication
 

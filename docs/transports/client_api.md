@@ -46,6 +46,7 @@ import TabItem from '@theme/TabItem';
     {label: 'Swift', value: 'swift'},
     {label: 'Java', value: 'java'},
     {label: 'Go', value: 'go'},
+    {label: 'Rust', value: 'rust'},
   ]
 }>
 <TabItem value="javascript">
@@ -159,6 +160,21 @@ client.OnDisconnected(func(e centrifuge.DisconnectedEvent) {
 })
 
 _ = client.connect()
+```
+
+</TabItem>
+<TabItem value="rust">
+
+```rust
+use centrifuge::Client;
+
+let client = Client::builder("ws://localhost:8000/connection/websocket")
+    .on_connecting(|_, e| println!("connecting: {} ({})", e.code, e.reason))
+    .on_connected(|_, e| println!("connected with ID {}", e.client_id))
+    .on_disconnected(|_, e| println!("disconnected: {} ({})", e.code, e.reason))
+    .build()?;
+
+client.connect()?;
 ```
 
 </TabItem>
@@ -311,6 +327,7 @@ If subscription to a channel is not successful then depending on error type subs
     {label: 'Swift', value: 'swift'},
     {label: 'Java', value: 'java'},
     {label: 'Go', value: 'go'},
+    {label: 'Rust', value: 'rust'},
   ]
 }>
 <TabItem value="javascript">
@@ -428,6 +445,24 @@ if err != nil {
 ```
 
 </TabItem>
+<TabItem value="rust">
+
+```rust
+let sub = client
+    .new_subscription("example")
+    .on_subscribing(|sub, e| {
+        println!("subscribing to {}: {} ({})", sub.channel(), e.code, e.reason)
+    })
+    .on_subscribed(|sub, _| println!("subscribed to {}", sub.channel()))
+    .on_unsubscribed(|sub, e| {
+        println!("unsubscribed from {}: {} ({})", sub.channel(), e.code, e.reason)
+    })
+    .build()?;
+
+sub.subscribe();
+```
+
+</TabItem>
 </Tabs>
 ````
 
@@ -504,6 +539,7 @@ So minimal code where we connect to a server and listen for messages published i
     {label: 'Swift', value: 'swift'},
     {label: 'Java', value: 'java'},
     {label: 'Go', value: 'go'},
+    {label: 'Rust', value: 'rust'},
   ]
 }>
 <TabItem value="javascript">
@@ -619,6 +655,23 @@ if err != nil {
 if err = client.Connect(); err != nil {
     log.Fatalln(err)
 }
+```
+
+</TabItem>
+<TabItem value="rust">
+
+```rust
+use centrifuge::Client;
+
+let client = Client::builder("ws://localhost:8000/connection/websocket").build()?;
+
+let sub = client
+    .new_subscription("example")
+    .on_publication(|_, e| println!("publication: {}", String::from_utf8_lossy(&e.data)))
+    .build()?;
+
+sub.subscribe();
+client.connect()?;
 ```
 
 </TabItem>

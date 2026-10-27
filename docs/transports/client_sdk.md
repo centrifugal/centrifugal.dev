@@ -1,5 +1,5 @@
 ---
-description: "List of official Centrifugo real-time client SDKs for JavaScript, Go, Dart, Swift, Java, Python, and C# with feature comparison matrix."
+description: "List of official Centrifugo real-time client SDKs for JavaScript, Go, Dart, Swift, Java, Python, Rust, and C# with feature comparison matrix."
 id: client_sdk
 title: Client real-time SDKs
 ---
@@ -22,7 +22,8 @@ Here is a list of SDKs maintained by Centrifugal Labs:
 * [centrifuge-swift](https://github.com/centrifugal/centrifuge-swift) – for native iOS development
 * [centrifuge-java](https://github.com/centrifugal/centrifuge-java) – for native Android development and general Java
 * [centrifuge-python](https://github.com/centrifugal/centrifuge-python) – real-time SDK for Python on top of asyncio
-* [WIP] [centrifuge-csharp](https://github.com/centrifugal/centrifuge-csharp) - for modern .NET environments (including MAUI, Blazor, Unity)
+* [centrifuge-rust](https://github.com/centrifugal/centrifuge-rust) – for Rust on top of Tokio, with WebSocket and HTTP-streaming transports
+* [centrifuge-csharp](https://github.com/centrifugal/centrifuge-csharp) - for modern .NET environments (including MAUI, Blazor, Unity)
 
 SDKs driven by the community:
 
@@ -42,6 +43,8 @@ Our Javascript SDK - `centrifuge-js` - uses JSON serialization for protocol fram
 
 `centrifuge-go` real-time SDK for Go language also supports both JSON and Protobuf formats when communicating with Centrifugo server.
 
+`centrifuge-rust` supports both formats too, with Protobuf by default and JSON available as an option.
+
 Other SDKs, like `centrifuge-dart`, `centrifuge-swift`, `centrifuge-java` work using only Protobuf serialization for Centrifuge protocol internally. So they utilize the fastest and the most compact wire representation by default. Note, that while internally in those SDKs the serialization format is Protobuf, you can still send JSON towards these clients as JSON objects may be encoded as UTF-8 bytes. So these SDKs may work with both custom binary and JSON payloads.
 
 There are some important notes about [JSON and Protobuf interoperability](../faq/index.md#can-i-have-both-binary-and-json-clients-in-one-channel) mentioned in our FAQ.
@@ -54,24 +57,24 @@ Below you can find information regarding support of different features in our of
 
 <div className="features">
 
-| Client feature                             | js | dart | swift | go | java | python | c# [WIP] |
-|--------------------------------------------|----|------|-------|----|------|--------|--------|
-| connect to a server                        | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
-| setting client options                     | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
-| automatic reconnect with backoff algorithm | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
-| client state changes                       | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
-| command-reply                              | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
-| command timeouts                           | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
-| async pushes                               | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
-| ping-pong                                  | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
-| connection token refresh                   | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
-| handle disconnect advice from server       | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
-| server-side subscriptions                  | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
-| batching API                               | ✅  |      |       |    |      |        |        |
-| bidirectional WebSocket emulation          | ✅  |      |       |    |      |        |    ✅    |
-| headers emulation                          | ✅  | ✅    | na    | na | na   | na     | ✅     |
-| [channel compaction](../pro/bandwidth_optimizations.md#channel-compaction) (Centrifugo PRO) | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
-| [client publish debouncing](../pro/bandwidth_optimizations.md#client-publish-debouncing) (Centrifugo PRO) | ✅  |      |       |    |      |        |        |
+| Client feature                             | js | dart | swift | go | java | python | rust | c# |
+|--------------------------------------------|----|------|-------|----|------|--------|------|--------|
+| connect to a server                        | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
+| setting client options                     | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
+| automatic reconnect with backoff algorithm | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
+| client state changes                       | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
+| command-reply                              | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
+| command timeouts                           | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
+| async pushes                               | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
+| ping-pong                                  | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
+| connection token refresh                   | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
+| handle disconnect advice from server       | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
+| server-side subscriptions                  | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
+| batching API                               | ✅  |      |       |    |      |        |      |        |
+| bidirectional WebSocket emulation          | ✅  |      |       |    |      |        | ✅    |    ✅    |
+| headers emulation                          | ✅  | ✅    | na    | na | na   | na     | ✅    | ✅     |
+| [channel compaction](../pro/bandwidth_optimizations.md#channel-compaction) (Centrifugo PRO) | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
+| [client publish debouncing](../pro/bandwidth_optimizations.md#client-publish-debouncing) (Centrifugo PRO) | ✅  |      |       |    |      |        |      |        |
 
 </div>
 
@@ -79,22 +82,22 @@ Below you can find information regarding support of different features in our of
 
 <div className="features">
 
-| Client feature                               | js | dart | swift | go | java | python | c# [WIP] |
-|----------------------------------------------|----|------|-------|----|------|--------|--------|
-| subscribe to a channel                       | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
-| setting subscription options                 | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
-| automatic resubscribe with backoff algorithm | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
-| subscription state changes                   | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅
-| subscription command-reply                   | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅
-| subscription async pushes                    | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅
-| subscription token refresh                   | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅ |
-| handle unsubscribe advice from server        | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅
-| manage subscription registry                 | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅
-| optimistic subscriptions                     | ✅  |      |       |    |      |        |        |
-| [delta compression](../server/delta_compression.md) | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      |   ✅     |
-| [publication tags filter](../server/publication_filtering.md) | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
-| [stream subscription getState](client_api.md#subscription-getstate) | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅      |
-| [map subscriptions](../server/map_subscriptions.md) | ✅  |      |       |    |      |        |        |
-| [shared poll subscriptions](../server/shared_poll.md) | ✅  |      |       |    |      |        |        |
+| Client feature                               | js | dart | swift | go | java | python | rust | c# |
+|----------------------------------------------|----|------|-------|----|------|--------|------|--------|
+| subscribe to a channel                       | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
+| setting subscription options                 | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
+| automatic resubscribe with backoff algorithm | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
+| subscription state changes                   | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅
+| subscription command-reply                   | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅
+| subscription async pushes                    | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅
+| subscription token refresh                   | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅ |
+| handle unsubscribe advice from server        | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅
+| manage subscription registry                 | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅
+| optimistic subscriptions                     | ✅  |      |       |    |      |        |      |        |
+| [delta compression](../server/delta_compression.md) | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    |   ✅     |
+| [publication tags filter](../server/publication_filtering.md) | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
+| [stream subscription getState](client_api.md#subscription-getstate) | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
+| [map subscriptions](../server/map_subscriptions.md) | ✅  |      |       |    |      |        |      |        |
+| [shared poll subscriptions](../server/shared_poll.md) | ✅  |      |       |    |      |        |      |        |
 
 </div>
