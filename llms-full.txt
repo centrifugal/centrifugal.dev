@@ -2520,7 +2520,7 @@ Below you can find information regarding support of different features in our of
 | connection token refresh                   | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
 | handle disconnect advice from server       | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
 | server-side subscriptions                  | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
-| batching API                               | ✅  |      |       |    |      |        |      |        |
+| batching API                               | ✅  |      |       |    |      |        | auto | auto   |
 | bidirectional WebSocket emulation          | ✅  |      |       |    |      |        | ✅    |    ✅    |
 | headers emulation                          | ✅  | ✅    | na    | na | na   | na     | ✅    | ✅     |
 | [channel compaction](../pro/bandwidth_optimizations.md#channel-compaction) (Centrifugo PRO) | ✅  | ✅    | ✅     | ✅  | ✅    | ✅      | ✅    | ✅      |
