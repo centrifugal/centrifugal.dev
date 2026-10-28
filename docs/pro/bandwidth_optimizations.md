@@ -112,7 +112,7 @@ How long a client keeps the dictionary depends on the SDK:
 
 **WebSocket only.** A compressed frame is arbitrary bytes, which a WebSocket connection carries natively as a binary message; text-framed transports like SSE would have to re-encode it and give the savings straight back. Connections over other transports are unaffected and stay exactly as they are today.
 
-Both the JSON and Protobuf client protocols are supported, but the data you publish must be JSON. Clients whose SDK does not support the feature receive no dictionary and stay uncompressed, so a mixed fleet is safe. `centrifuge-dart` supports it on the Dart VM and Flutter native platforms; browser builds do not offer it and stay uncompressed.
+Both the JSON and Protobuf client protocols are supported, but the data you publish must be JSON. Clients whose SDK does not support the feature receive no dictionary and keep what they had — `permessage-deflate` if [`websocket.compression`](../transports/websocket.md#websocketcompression) is on, otherwise no compression — so a mixed fleet is safe. `centrifuge-dart` supports it on the Dart VM and Flutter native platforms; browser builds do not offer it.
 
 ### Enabling
 
@@ -312,7 +312,7 @@ Three things make messages smaller:
 * **[Dictionary compression](#dictionary-compression)** — compresses each message against a dictionary of your own traffic, so the repeated parts of your messages are already known and cost almost nothing to send.
 * **[Channel compaction](#channel-compaction)** — replaces the channel name in each message with a short number.
 
-The first two do the same job, so you pick one. Compaction works alongside either.
+The first two do the same job, but you do not have to choose between them. With both enabled, each connection uses the best one it supports: one that gets a dictionary is compressed with it, and `permessage-deflate` is switched off for its frames, so nothing is compressed twice. Every other connection keeps `permessage-deflate`. So if you already run `websocket.compression`, keep it on when you enable dictionary compression. Compaction works alongside either.
 
 :::note Why delta compression is not in this comparison
 
@@ -342,7 +342,7 @@ They also differ in how much work they are to adopt, which no benchmark shows:
 
 * **`permessage-deflate`** is one config option and works with every browser and SDK.
 * **Channel compaction** is one namespace option; SDKs that do not support it simply keep receiving channel names.
-* **Dictionary compression** needs PostgreSQL, a training session on live traffic, and a person to review the words that go into the dictionary before it is served. It currently works with `centrifuge-js` and `centrifuge-go`, with `centrifuge-dart` to follow; other clients stay uncompressed, which is safe but means a mixed fleet gets mixed results.
+* **Dictionary compression** needs PostgreSQL, a training session on live traffic, and a person to review the words that go into the dictionary before it is served. It currently works with `centrifuge-js` and `centrifuge-go`, with `centrifuge-dart` to follow; other clients keep `permessage-deflate` or no compression, which is safe but means a mixed fleet gets mixed results.
 
 ### Turning them on
 

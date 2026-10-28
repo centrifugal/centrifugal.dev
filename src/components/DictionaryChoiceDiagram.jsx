@@ -76,7 +76,7 @@ export default function DictionaryChoiceDiagram() {
       <path d={`M ${px + pw / 2} 258 L ${px + pw / 2} 306 L ${qx + qw + 6} 306`} fill="none" stroke={C.muted} strokeWidth="1.4" strokeDasharray="4 3" markerEnd="url(#dict-choice-arr)" />
 
       <text x="360" y="350" fontSize="10.5" fill={C.muted} textAnchor="middle" fontFamily={FONT}>
-        Protobuf connections are never sent the structure dictionary: where it would apply, they stay uncompressed.
+        Protobuf connections never get the structure dictionary: where it would apply, they keep permessage-deflate, if on.
       </text>
     </svg>
   );
