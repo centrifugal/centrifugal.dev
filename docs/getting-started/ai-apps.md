@@ -34,27 +34,27 @@ Publish a response from one place, in order, each publish call waiting for the p
 Give each response its own channel, in a namespace with history and recovery, so that a client which reconnects, or opens the page while the response is generated, replays it from the start. Size two limits for your longest response:
 
 - [`history_size`](../server/channels.md#history_size) must hold the publications of a whole response.
-- [`client.recovery_max_publication_limit`](../server/configuration.md#clientrecovery_max_publication_limit) is the most publications Centrifugo returns in one recovery: 300 by default, which is 15 seconds of streaming at 20 publications a second. A client which missed more is told the stream was not recovered (`recovered: false`) and gets none of it.
+- [`recovery_max_publication_limit`](../server/channels.md#recovery_max_publication_limit) is the most publications Centrifugo returns in one recovery: 300 by default, which is 15 seconds of streaming at 20 publications a second. A client which missed more is told the stream was not recovered (`recovered: false`) and gets none of it. Set it on the namespace, so that other namespaces keep the default.
 
 For responses of up to two and a half minutes at 20 publications a second:
 
 ```json title="config.json"
 {
-  "client": {
-    "recovery_max_publication_limit": 3000
-  },
   "channel": {
     "namespaces": [
       {
         "name": "ai",
         "history_size": 3000,
         "history_ttl": "10m",
-        "force_recovery": true
+        "force_recovery": true,
+        "recovery_max_publication_limit": 3000
       }
     ]
   }
 }
 ```
+
+Before Centrifugo v6.10.3 the limit can be set only for all namespaces at once, with [`client.recovery_max_publication_limit`](../server/configuration.md#clientrecovery_max_publication_limit).
 
 Once a response is complete, store it with the conversation and serve it from there: history is for the stream in flight.
 
