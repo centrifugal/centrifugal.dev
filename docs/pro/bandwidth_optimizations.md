@@ -4,6 +4,11 @@ id: bandwidth_optimizations
 title: Bandwidth optimizations
 ---
 
+import DictionaryConnectDiagram from '@site/src/components/DictionaryConnectDiagram';
+import DictionaryChoiceDiagram from '@site/src/components/DictionaryChoiceDiagram';
+import DictionaryTrainingDiagram from '@site/src/components/DictionaryTrainingDiagram';
+import DictionaryBatchingDiagram from '@site/src/components/DictionaryBatchingDiagram';
+
 In high-volume scenarios, bandwidth optimizations can be crucial for reducing network traffic costs and improving performance. Here you can see features of Centrifugo PRO which help optimize bandwidth usage.
 
 This page covers five features. The first three make each message smaller; the last two reduce how many messages there are.
@@ -74,29 +79,40 @@ Channel compaction is supported by the official SDKs — see the [client SDK fea
 
 :::caution Experimental
 
-Dictionary compression is an experimental feature. Configuration options, admin API, and client SDK behaviour may change in future releases. On the client side it currently requires `centrifuge-js` or `centrifuge-go`.
+Dictionary compression is an experimental feature. Configuration options, admin API, and client SDK behaviour may change in future releases. On the client side it requires `centrifuge-js` or `centrifuge-go`; `centrifuge-dart` supports it from its next release.
 
 :::
 
 Real-time applications send small messages, often. Compressing each one on its own finds little to work with — there is barely any repetition *inside* a single message — while the repetition *between* messages is large, since they share field names, the protocol envelope, and often a handful of values. On WebSocket connections the usual answer is the `permessage-deflate` extension, which has exactly this weakness.
 
-Dictionary compression gives the compressor that shared context up front. Centrifugo PRO trains a dictionary from real connections, sends it to a client once, and compresses every frame against it. There are three levels, in increasing order of what they ask of you:
+Dictionary compression gives the compressor that shared context up front. Centrifugo PRO trains a dictionary from real connections, sends it to a client once, and compresses every frame against it. A dictionary costs **no per-connection memory** — every connection shares the same immutable bytes — and one publication is compressed once for all of its subscribers.
 
-| level | what it costs you |
+There are three kinds of dictionary, in increasing order of what they ask of you:
+
+| dictionary | what it takes |
 |---|---|
-| structure dictionary | one click in the admin UI — a fixed dictionary built from Centrifugo's own protocol, containing none of your data |
+| structure | one click in the admin UI — a fixed dictionary built from Centrifugo's own protocol, containing none of your data |
 | trained on your traffic, shape only | a training session; field names and nesting, no values, so nothing to review |
-| plus approved values | the same, plus reading a ranked word list |
+| trained, with approved values | the same, plus reading a ranked word list |
 
 What each is worth depends on your payloads and your message rate; [the measured comparison](#which-compression-to-use-measured-cost-and-benefit) below puts numbers on it.
 
-Unlike streaming compression, a dictionary costs **no per-connection memory** — every connection shares the same immutable bytes — and one publication is compressed once for all of its subscribers.
+### How a connection gets its dictionary
 
-The dictionary travels in the **connect reply**. The client caches it under a content hash and sends only that hash next time, so a returning client pays nothing for it. The connect reply itself is never compressed, whether it carries the dictionary or only names it; every frame after it is. So no compressed frame can reach a client that does not yet hold the dictionary, and every frame carries a marker saying which it is. A dictionary is chosen at connect and never changes mid-connection.
+A client whose SDK supports the feature says so when it connects, and the server sends the dictionary in the **connect reply**. A client that already holds the dictionary names it when connecting, and the reply carries only its id.
+
+<DictionaryConnectDiagram />
+
+The connect reply is never compressed, whether it carries the dictionary or only names it; every frame after it is, and starts with a marker saying so. So no compressed frame can reach a client that does not yet hold the dictionary. A dictionary is chosen at connect and never changes mid-connection. If the client cannot use the dictionary, or a frame fails to decode, it drops the dictionary and reconnects without it.
+
+How long a client keeps the dictionary depends on the SDK:
+
+* `centrifuge-js` stores it in `localStorage` for up to seven days, checked against its id before use, so even a page reload costs only the id. Where `localStorage` or WebCrypto is missing, it keeps it in memory for the life of the page.
+* `centrifuge-go` and `centrifuge-dart` keep it in memory for the life of the client: a reconnect costs only the id, a restarted application downloads it again.
 
 **WebSocket only.** A compressed frame is arbitrary bytes, which a WebSocket connection carries natively as a binary message; text-framed transports like SSE would have to re-encode it and give the savings straight back. Connections over other transports are unaffected and stay exactly as they are today.
 
-Both the JSON and Protobuf client protocols are supported, but the data you publish must be JSON. Clients whose SDK does not support the feature receive no dictionary and stay uncompressed, so a mixed fleet is safe.
+Both the JSON and Protobuf client protocols are supported, but the data you publish must be JSON. Clients whose SDK does not support the feature receive no dictionary and stay uncompressed, so a mixed fleet is safe. `centrifuge-dart` supports it on the Dart VM and Flutter native platforms; browser builds do not offer it and stay uncompressed.
 
 ### Enabling
 
@@ -118,11 +134,9 @@ Dictionary compression needs a PostgreSQL database — profiles, training sessio
 
 Enabling it in the config file makes the feature *available*. Nothing is served until you switch it on in the admin UI, and everything after that is an admin UI operation rather than a config change — dictionaries are created, activated and withdrawn without a deploy or a restart.
 
-The **structure dictionary** is the free level: a fixed dictionary made from Centrifugo's own protocol, with none of your data in it, so there is nothing to review and nothing to disclose. Turning it on is one click.
-
 On a deployment with no profiles yet, the **Compression** page offers **Get started**: one confirmed step that turns serving on, serves the structure dictionary, creates a `default` profile for every connection without one, and starts a shape-only training session for it, 30 minutes unless you choose otherwise. When the session ends, the profile offers the dictionary it made, and nothing trained serves until you activate it.
 
-It is not sent to Protobuf connections. Protobuf messages carry numeric field tags instead of repeated field names, so there is little for this dictionary to match: it measured 1.16x against 1.14x with no dictionary at all, which does not repay the cost of downloading it.
+The structure dictionary on its own is a reasonable place to stop: with none of your data in it, there is nothing to review and nothing to disclose. It is not sent to Protobuf connections, though. Protobuf messages carry numeric field tags instead of repeated field names, so there is little for it to match: it measured 1.16x against 1.14x with no dictionary at all, which does not repay the cost of downloading it.
 
 ### Profiles
 
@@ -137,6 +151,10 @@ A name that matches no configured profile is ignored and the connection is left 
 
 Unclassified connections get the structure dictionary — or, if you nominate a **default profile**, that profile's dictionary instead. A mismatched trained dictionary is never worse than the structure one, so the default is a cheap way to cover everything you have not classified. Connections classified into some *other* profile never receive it.
 
+Put together, this is how a connection's dictionary is chosen:
+
+<DictionaryChoiceDiagram />
+
 :::caution Client-declarable profiles
 
 A client-declared profile cannot be verified, so anyone who can connect can claim it. That is a legitimate way to run this and needs no server-side change — but the profile's dictionary is then effectively published to your whole deployment. Turning the flag on invalidates the active version and requires re-approval.
@@ -145,7 +163,11 @@ A client-declared profile cannot be verified, so anyone who can connect can clai
 
 ### Training
 
-Everything in this section happens in the **admin UI** — there is no configuration to write and no code to deploy. You start a training session over connections you select the same way you do on the **Inspector** page: by user (one user, or anonymous ones), by a channel they are subscribed to, and by profile (one profile, or connections with none). No profile is needed to start, so you can find out what a dictionary would be worth before classifying anything.
+Everything from here on happens in the **admin UI** — there is no configuration to write and no code to deploy. A dictionary goes through the same cycle every time:
+
+<DictionaryTrainingDiagram />
+
+You start a training session over connections you select the same way you do on the **Inspector** page: by user (one user, or anonymous ones), by a channel they are subscribed to, and by profile (one profile, or connections with none). No profile is needed to start, so you can find out what a dictionary would be worth before classifying anything.
 
 You choose a **duration** — between a minute and 24 hours — and whether to **collect values**. The session collects for that long and stops; you can extend or stop it early. Up to 50 connections are sampled across the cluster at once. While it runs it shows what it observed: connections sampled, distinct users, protocols seen, which frame types it did and did not see, payload parse rate, and how many distinct shapes, keys and values it has found. That last group tells you the session is seeing your traffic: once the shape count stops moving, it has seen the message types this traffic produces. Let it reach its deadline anyway, or at least its last quarter, which measures the result (see below).
 
@@ -153,17 +175,29 @@ By default a session keeps **shape only**: field names, nesting and key order, w
 
 A session spends its **last quarter as a control window**: what it observes there is kept aside and never used to build anything. That held-back traffic is what the build measures against, and it is the difference between a number you can trust and one you cannot — scored against its own contents a dictionary reads 4-5x almost regardless of what is in it, including in the cases where it does worst on the wire.
 
+#### Build
+
 When collection ends, opening the session builds its candidates. Building does the search an operator would otherwise do by hand: it builds a dictionary at every size on the ladder and at several cut-offs down the ranked value list, measures each against the control window, and comes back with a **recommended size and a selection already ticked** — the smallest dictionary within a couple of percent of the best measured ratio, and the selection that achieved it there. A session stopped before its control window has nothing to measure against: its ratios are projected, and the recommended selection is simply the values that fit.
 
-That selection is exactly what the dictionary will hold. A dictionary fills to its budget and stops, so a longer list of approved values does not make a bigger dictionary — it makes the same dictionary out of better material, until the budget runs out and the remainder is simply left over. Values approved but not held are the worst of both: disclosed to everyone the profile reaches, and contributing nothing. So the build settles on the set that actually lands, and the review screen ranks it so the values carrying the saving are the ones you read first.
+Building does not replace what it built before: an operator halfway through a review can rebuild without losing their decisions, and the newest set is marked current.
+
+#### Review
+
+The selection is exactly what the dictionary will hold. A dictionary fills to its budget and stops, so a longer list of approved values does not make a bigger dictionary — it makes the same dictionary out of better material, until the budget runs out. A value approved but not held is the worst of both: disclosed to everyone the profile reaches, and contributing nothing. Centrifugo never recommends such a value, and the review panel warns you if your own choices include one.
 
 The size is chosen at the top of the review screen rather than after it, because it decides how many values are worth approving: change the size and the ticked selection follows it to the one measured there. Every rung shows what it was measured at, how many values it holds and what a cold connect pays for it, and the recommended rung is marked.
 
-Your job in review is the part no machine can do: untick anything that should not be shown to everyone this profile reaches. As you edit, the panel measures what you have ticked and shows the dictionary you would get — its size, how much it saves, what a new connection pays to download it, and how many of your ticked values actually fit inside it.
+Your job in review is the part no machine can do: untick anything that should not be shown to everyone this profile reaches. As you edit, the panel measures what you have ticked and shows the dictionary you would get — its size, how much it saves, what a new connection pays to download it, and how many of your ticked values fit inside it. A shape-only session has no values, so there is nothing to untick.
 
-Pay attention to that last number. A dictionary fills up and stops, so a value that does not fit still counts as approved — and therefore disclosed — without ever being used. Centrifugo never recommends such a value, and the panel warns you if your own choices include one.
+#### Activate
 
-Then create the version for its profile, which is preselected when the session was started for one, and activate it, in the same step or later from the profile — optionally staged to a percentage of new connections, split by user so a client keeps its side of the split across reconnects. Two dictionaries are generated from every approved vocabulary, one for JSON and one for Protobuf, and they activate together. Building does not replace what it built before: an operator halfway through a review can rebuild without losing their decisions, and the newest set is marked current. Retraining is starting another session over the same connections — **Retrain** on the profile fills one in from the session its dictionary came from; nothing activates on its own, so a dictionary only ever changes when an operator says so.
+Approving creates a **version** for the profile, which is preselected when the session was started for one. A version holds two dictionaries made from the same vocabulary, one for JSON connections and one for Protobuf, and they activate together.
+
+Activate it in the same step or later from the profile. You can stage it to a percentage of new connections first, split by user so a client keeps its side of the split across reconnects; connections left out of the rollout keep the structure dictionary.
+
+#### Retrain
+
+Retraining is starting another session over the same connections: **Retrain** on the profile fills one in from the session its dictionary came from. Nothing activates on its own, so a dictionary only ever changes when an operator says so. When to retrain is what [monitoring](#measured-and-live-ratios) tells you.
 
 ### Withdrawal and monitoring
 
@@ -180,11 +214,23 @@ The admin UI reports results per **dictionary**, not per profile — one row for
 Each row shows:
 
 * **new versus returning connections** — how many arrived already holding the dictionary. This should settle towards returning; those connections pay nothing to receive it.
-* **what it is actually saving**, next to what it was measured to save when you approved it. The measured ratio comes from traffic the dictionary was not built from, compressed one message at a time. Live traffic matches it, or does better when several messages are sent to a connection together, because those are compressed together. That happens on a single node; across several nodes publications arrive one at a time, and live comes out about the same as measured. Treat the measured ratio as a floor: live falling below it means your messages changed and it is time to retrain. A dictionary from a session stopped before its control window has no measured ratio and reads *not measured*.
+* **what it is actually saving**, next to what it was measured to save when you approved it — see below.
 * **bytes saved**, after subtracting the cost of sending the dictionary out.
 * **how often a compressed message was reused** instead of being compressed again.
 
 The same figures are available as Prometheus metrics.
+
+#### Measured and live ratios
+
+The measured ratio comes from the control window: traffic the dictionary was not built from, compressed one message at a time. A dictionary from a session stopped before its control window has no measured ratio and reads *not measured*.
+
+Live traffic matches the measured ratio or does better, because messages written to a connection together are compressed together, and the later ones reuse what the earlier ones sent. On a single node, a burst of publications reaches a connection at once and goes out in one write. Across several nodes, publications come through the broker one by one and each is written as it arrives, so live comes out about the same as measured.
+
+<DictionaryBatchingDiagram />
+
+To group messages again on several nodes, set a small [`client.write_delay`](./client_msg_batching.md#clientwrite_delay), such as 10–25 ms: each connection then collects its messages for that long and writes them together. It adds that much latency, and it only helps connections that receive several messages close together — one that gets a message every few seconds has nothing to group.
+
+Either way, treat the measured ratio as a floor. Live falling *below* it means your messages have changed since training, and it is time to retrain.
 
 ### Configuration
 
@@ -211,7 +257,7 @@ Everything else — profiles, sessions, review, activation — is managed in the
 * **No structure dictionary for Protobuf connections**, as described above.
 * **Channel names are never put into a dictionary**, since they routinely carry a user or room id. If channel names dominate your frames, [channel compaction](#channel-compaction) removes them from the wire instead — the two features are complementary.
 * **WebSocket connections only.** Other transports are unaffected.
-* **Client SDK support** is limited to `centrifuge-js` and `centrifuge-go` at the moment.
+* **Client SDK support** is limited to `centrifuge-js` and `centrifuge-go` at the moment, with `centrifuge-dart` (Dart VM and Flutter native) from its next release.
 
 ## Client publish debouncing
 
@@ -296,7 +342,7 @@ They also differ in how much work they are to adopt, which no benchmark shows:
 
 * **`permessage-deflate`** is one config option and works with every browser and SDK.
 * **Channel compaction** is one namespace option; SDKs that do not support it simply keep receiving channel names.
-* **Dictionary compression** needs PostgreSQL, a training session on live traffic, and a person to review the words that go into the dictionary before it is served. It currently works with `centrifuge-js` and `centrifuge-go`; other clients stay uncompressed, which is safe but means a mixed fleet gets mixed results.
+* **Dictionary compression** needs PostgreSQL, a training session on live traffic, and a person to review the words that go into the dictionary before it is served. It currently works with `centrifuge-js` and `centrifuge-go`, with `centrifuge-dart` to follow; other clients stay uncompressed, which is safe but means a mixed fleet gets mixed results.
 
 ### Turning them on
 
@@ -393,7 +439,7 @@ In between, a dictionary costs roughly 10-20% more CPU than `permessage-deflate`
 
 #### The one-off cost of a dictionary
 
-A dictionary has to reach the client before it can be used. In these runs that was **2.3 KB, once per connection** — after which the client caches it and reconnects cost nothing, even across restarts, because it is identified by its content.
+A dictionary has to reach the client before it can be used. It travels compressed, and in these runs that was **2.3 KB, once per connection**. After that, a reconnect sends only its id, for as long as the client keeps the dictionary — [how long depends on the SDK](#how-a-connection-gets-its-dictionary).
 
 At roughly 650 bytes saved per message, that download pays for itself after about four messages. So it only becomes a problem with very short-lived connections — a client that reconnects every few seconds to receive a single message will spend more than it saves. `permessage-deflate` has no such cost, and this is the one place where it clearly wins.
 
@@ -431,7 +477,7 @@ What each keeps between messages:
 
 | | size | grows with |
 |---|---|---|
-| the dictionary itself | 16 KB, shared by every connection using it | nothing |
+| the dictionary itself | up to 16 KB, the largest size a build offers; one copy shared by every connection using it | nothing |
 | dictionary's cache of recently compressed messages | about 0.4 MB by default ([`frame_cache_size`](#configuration)) | nothing — it holds a fixed number of messages |
 | `permessage-deflate`'s [prepared message cache](./performance.md#websocket-compression-optimizations) | whatever budget you give it, e.g. 10 MB | how many *different* messages you send |
 
