@@ -322,6 +322,13 @@ The first two do the same job, but you do not have to choose between them. With 
 
 We measured all of them on a 16-core Linux server, sending JSON:
 
+:::info These numbers are for our payloads, not yours
+
+Every number below comes from four generated JSON messages, described in [by payload](#by-payload). How much any scheme saves depends on what your messages contain: how many fields repeat, how many values come from small sets, how short they are. Treat the numbers as the shape of the trade-off. For your own traffic, a [training session](#training) measures what a dictionary achieves before anything is served, on traffic it was not built from: that is the number to trust.
+
+:::
+
+
 * **Connections that aren't receiving anything cost nothing.** With 2 000 and 8 000 idle connections, every option measured the same as no compression. Turning compression on does not tax connections that are sitting quiet.
 * **What you send decides how much you save.** On a structured JSON feed a dictionary cut traffic 6.4x, where `permessage-deflate` managed 2.5x. On 49-byte messages it was 2.5x against 1.8x. Counted the way egress metrics count it, with packet headers, those become 4.6x against 2.2x and 1.75x against 1.5x — see [what egress metrics show](#what-egress-metrics-show).
 * **How many subscribers share a channel decides the CPU.** With a handful of subscribers per channel a dictionary used 1.8x the CPU of no compression. With 500 subscribers on one channel it used 1.05x — practically free — because the message is compressed once and the result is reused for everyone.
@@ -333,7 +340,7 @@ Putting that together:
 | your situation | what to use |
 |---|---|
 | you pay for outbound traffic, and your messages are JSON with repeating fields | **dictionary compression**, plus channel compaction if your channel names are long |
-| CPU is what you are short of | **`permessage-deflate`, with its [prepared message cache](./performance.md#websocket-compression-optimizations) turned on** — cuts traffic by around 60% where a dictionary cuts it by around 84%, for slightly less CPU and nothing to set up |
+| CPU is what you are short of | **`permessage-deflate`, with its [prepared message cache](./performance.md#websocket-compression-optimizations) turned on** — on the operations feed below it cut traffic by around 60% where a dictionary cut it by around 84%, for slightly less CPU and nothing to set up |
 | messages are small but channel names are long | **channel compaction** first — it costs almost nothing and helps most exactly where compression helps least |
 | messages are binary, encrypted or already compact | none of them will help much — try one and measure before committing |
 | bandwidth is flat-rate, or traffic stays inside your network | none of them: you would spend CPU to save bytes nobody charges you for |
@@ -410,7 +417,7 @@ These runs all send the same message — 652 bytes of JSON from an operations fe
 }
 ```
 
-We picked a middle-of-the-road message rather than a flattering one. Field names repeat in every message, and several values come from small sets — `status`, `carrier`, `region`, the hub codes — which is what a dictionary lives on. But each message also carries a fresh timestamp, sequence number and correlation id that nothing can compress. Expect less if your messages have no repeated vocabulary, more if they are more repetitive than this.
+Field names repeat in every message, and several values come from small sets — `status`, `carrier`, `region`, the hub codes — which is what a dictionary lives on. Each message also carries a fresh timestamp, sequence number and correlation id that nothing can compress. The message is generated, and it is more repetitive than most real feeds: several fields never change and shipment ids come from a small pool. With more varied values the same kind of message measured about 5x with a dictionary rather than 6.4x. Expect less if your messages have no repeated vocabulary.
 
 Every connection is subscribed to one channel. CPU is measured against the same load with compression off, and so is the saving.
 
@@ -508,7 +515,7 @@ What each keeps between messages:
 
 Both caches exist for the same reason: when one message goes to many subscribers, you want to compress it once and send the same bytes to everyone. They differ in what they keep. The prepared message cache keeps a compressed copy of each distinct message it has seen lately, so how much it helps depends on how repetitive your traffic is. A dictionary is a single shared copy of your vocabulary, and its size never changes with your traffic.
 
-The dictionary used less memory than `permessage-deflate` in every case we measured, while sending about 2.6 times fewer bytes:
+The dictionary used less memory than `permessage-deflate` in every case we measured, while sending about 2.6 times fewer bytes of the operations feed:
 
 | traffic | `permessage-deflate` + cache | dictionary |
 |---|---|---|
