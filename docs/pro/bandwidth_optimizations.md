@@ -95,7 +95,7 @@ There are three kinds of dictionary, in increasing order of what they ask of you
 | trained on your traffic, shape only | a training session; field names and nesting, no values, so nothing to review |
 | trained, with approved values | the same, plus reading a ranked word list |
 
-What each is worth depends on your payloads and your message rate; [the measured comparison](#which-compression-to-use-measured-cost-and-benefit) below puts numbers on it.
+What each is worth depends on your payloads and your message rate; [the measured comparison](#which-compression-to-use-measured-cost-and-benefit) below puts numbers on it, [kind by kind](#by-kind-of-dictionary).
 
 ### How a connection gets its dictionary
 
@@ -464,6 +464,26 @@ All with 2 000 connections receiving 4 messages a second each, so only the messa
 A dictionary helps most when your messages share field names and repeat the same values, and least when they are short or every message is genuinely different.
 
 Channel compaction works the other way round. It removes the channel name from every message, which is a fixed number of bytes, so it matters most when the message itself is small — on tiny messages it saved 1.57x on its own, and took the dictionary from 2.55x to 4.00x. Its own CPU cost was too small to measure.
+
+### By kind of dictionary
+
+The tables above use a dictionary trained with approved values. The other two kinds ask less of you, and give less. To compare all three, we trained each on the first three quarters of a stream of messages and compressed every message of the last quarter on its own, the way a training session's control window measures a dictionary. The first four payloads are the same kinds of message as above, generated with more variation in their values; the fifth is a trading board with prices for a handful of symbols, recorded from a running application.
+
+| payload (average message) | `permessage-deflate` | structure dictionary | trained, shape only | trained, with approved values |
+|---|---|---|---|---|
+| operations feed (684 B) | 1.55x | 1.76x | 2.90x | **5.31x** |
+| telemetry (276 B, mostly numbers) | 1.45x | 1.67x | 2.73x | **3.02x** |
+| chat prose (259 B) | 1.36x | 1.54x | 1.80x | **2.46x** |
+| tiny (113 B) | 0.95x | 1.56x | 1.76x | **2.03x** |
+| trading board (230 B) | 0.98x | 1.47x | 1.90x | **2.27x** |
+
+These messages vary more than the ones above and each was compressed on its own, so the numbers are lower throughout: compare the columns with each other rather than with the tables above.
+
+* **Shape-only training gets most of the way on structured messages, and needs no review.** Its dictionary holds field names and nesting, and came out at 300-530 bytes to download whatever size was asked for.
+* **Approved values pay when values repeat.** Carriers, statuses, hubs and regions took the operations feed from 2.90x to 5.31x. On telemetry, where numbers rarely repeat, they added little. Values also need room: the operations feed measured 3.89x at 2 KB, 5.26x at 8 KB and 5.31x at 16 KB, downloading 2.8 KB at that size.
+* **The structure dictionary is the free step.** It is modest, but helps most on small messages, where `permessage-deflate` can send more bytes than it was given.
+
+The last column approves every value that passes the built-in filters. A review that rejects some of them lands between the last two columns.
 
 ### Memory
 
