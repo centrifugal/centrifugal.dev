@@ -1,5 +1,5 @@
 ---
-description: "Centrifugo JWT authentication for client connections. Supports HMAC, RSA, ECDSA algorithms, JWK/JWKS, token expiration, and key rotation mechanisms."
+description: "Centrifugo JWT authentication for client connections. Supports HMAC, RSA, ECDSA, EdDSA algorithms, JWK/JWKS, token expiration, and key rotation mechanisms."
 id: authentication
 title: Client JWT authentication
 ---
@@ -28,7 +28,7 @@ Upon connection, the client should supply a connection JWT containing several pr
 
 For more information about handling connection tokens on the client side, see the [client SDK specification](../transports/client_api.md#client-connection-token).
 
-Currently, Centrifugo supports HMAC, RSA, and ECDSA JWT algorithms - specifically HS256, HS384, HS512, RS256, RS384, RS512, ES256, ES384, and ES512 (and EdDSA/Ed25519 via JWKS).
+Currently, Centrifugo supports HMAC, RSA, ECDSA and EdDSA JWT algorithms - specifically HS256, HS384, HS512, RS256, RS384, RS512, ES256, ES384, ES512 and EdDSA (Ed25519).
 
 Here, we will demonstrate example snippets using the Javascript Centrifugo client for the client-side and the [PyJWT](https://github.com/jpadilla/pyjwt) Python library to generate a connection token on the backend side.
 
@@ -70,6 +70,21 @@ To add an ECDSA public key (must be a PEM encoded string) add the `client.token.
   }
 }
 ```
+
+To add an Ed25519 public key for EdDSA tokens (must be a PEM encoded string) add the `client.token.ed25519_public_key` option, ex:
+
+```json title="config.json"
+{
+  ...
+  "client": {
+    "token": {
+      "ed25519_public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2Vw..."
+    }
+  }
+}
+```
+
+Ed25519 is a good choice for a new setup: its keys and signatures are small, and signing is fast and deterministic. Before this option, EdDSA tokens could only be verified with keys from a [JWKS endpoint](#json-web-key-support), which remains available.
 
 ## Connection JWT Claims
 
@@ -237,7 +252,13 @@ Allow per-connection overrides of some channel namespace options:
 
 ### meta
 
-`meta` is an additional JSON object (e.g., `{"key": "value"}`) that is attached to a connection. It differs from `info` as it is never disclosed to clients within presence and join/leave events; it is only accessible on the server side. It can be included in proxy calls from Centrifugo to the application backend (refer to the `include_connection_meta` option of [proxy configuration object](./proxy.md#proxy-configuration-object)). In Centrifugo PRO, there is a `connections` API method that returns this metadata within the connection description object.
+`meta` is an additional JSON object (e.g., `{"key": "value"}`) that is attached to a connection. It differs from `info` as it is not visible to other clients – Centrifugo never sends it in presence, join/leave events or any other message. It can be included in proxy calls from Centrifugo to the application backend (refer to the `include_connection_meta` option of [proxy configuration object](./proxy.md#proxy-configuration-object)). In Centrifugo PRO, there is a `connections` API method that returns this metadata within the connection description object.
+
+:::caution
+
+A JWT is signed, not encrypted: its payload can be decoded by whoever holds the token. So the `meta` of a connection token is visible to the user who owns the token – though not to other clients. Do not put into it anything that user must not see – pass such data through the [connect proxy](./proxy.md#connect-proxy) instead, whose `meta` result never reaches the client.
+
+:::
 
 ### expire_at
 
@@ -475,7 +496,12 @@ Read a tutorial in our blog about [using Centrifugo with Keycloak SSO](/blog/202
 
 :::
 
-At the moment Centrifugo caches keys loaded from an endpoint for one hour.
+Centrifugo caches keys loaded from an endpoint for five minutes (one hour before v6.10.2), and keeps using keys it loaded while the endpoint is unavailable. A token signed with a key Centrifugo has not loaded makes it fetch the endpoint again – at most once every five seconds.
+
+Since v6.10.2, a token is no longer refused as invalid in these cases:
+
+* While its key is not found at the endpoint, the token is treated as expired: client SDKs ask for a new token and connect again. To rotate keys without refused tokens, publish a new key at the endpoint before signing tokens with it.
+* While the endpoint is unavailable and the key was not loaded before, verification fails with a temporary error, and clients retry.
 
 Centrifugo will load keys from JWKS endpoint by issuing GET HTTP request with 1 second timeout and one retry in case of failure (not configurable at the moment).
 

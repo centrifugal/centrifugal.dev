@@ -26,10 +26,12 @@ example.
 
 ```json title="config.json"
 {
-  "tls": {
-    "enabled": true,
-    "key_pem": "server.key",
-    "cert_pem": "server.crt"
+  "http_server": {
+    "tls": {
+      "enabled": true,
+      "key_pem": "server.key",
+      "cert_pem": "server.crt"
+    }
   }
 }
 ```
@@ -48,30 +50,32 @@ For automatic certificates from Let's Encrypt add into configuration file:
 
 ```json title="config.json"
 {
-  "tls_autocert": {
-    "enabled": true,
-    "host_whitelist": ["www.example.com"],
-    "cache_dir": "/tmp/certs",
-    "email": "user@example.com",
-    "http": true,
-    "http_addr": ":80"
+  "http_server": {
+    "tls_autocert": {
+      "enabled": true,
+      "host_whitelist": ["www.example.com"],
+      "cache_dir": "/tmp/certs",
+      "email": "user@example.com",
+      "http": true,
+      "http_addr": ":80"
+    }
   }
 }
 ```
 
-`tls_autocert.enabled` (boolean) says Centrifugo that you want automatic certificate handling using ACME provider.
+`http_server.tls_autocert.enabled` (boolean) says Centrifugo that you want automatic certificate handling using ACME provider.
 
-`tls_autocert.host_whitelist` (array of strings) is the list of domains certificates are allowed for. It's optional but recommended for extra security.
+`http_server.tls_autocert.host_whitelist` (array of strings) is the list of domains certificates are allowed for. It's optional but recommended for extra security.
 
-`tls_autocert.cache_dir` (string) is a path to a folder to cache issued certificate files. This is optional
+`http_server.tls_autocert.cache_dir` (string) is a path to a folder to cache issued certificate files. This is optional
 but will increase performance.
 
-`tls_autocert.email` (string) is optional - it's an email address ACME provider will send notifications
+`http_server.tls_autocert.email` (string) is optional - it's an email address ACME provider will send notifications
 about problems with your certificates.
 
-`tls_autocert.http` (boolean) is an option to handle http_01 ACME challenge on non-TLS port.
+`http_server.tls_autocert.http` (boolean) is an option to handle http_01 ACME challenge on non-TLS port.
 
-`tls_autocert.http_addr` (string) can be used to set address for handling http_01 ACME challenge (default is `:80`)
+`http_server.tls_autocert.http_addr` (string) can be used to set address for handling http_01 ACME challenge (default is `:80`)
 
 When configured correctly and your domain is valid (`localhost` will not work) - certificates
 will be retrieved on first request to Centrifugo.
@@ -119,12 +123,18 @@ So in the configuration the usage of new TLS config may be like this:
 
 ```json title="config.json"
 {
-  "unified_proxy": {
-    "grpc": {
-      "tls": {
+  "client": {
+    "proxy": {
+      "connect": {
         "enabled": true,
-        "cert_pem": "/path/to/cert.pem",
-        "key_pem": "/path/to/key.pem"
+        "endpoint": "grpc://localhost:12000",
+        "grpc": {
+          "tls": {
+            "enabled": true,
+            "cert_pem": "/path/to/cert.pem",
+            "key_pem": "/path/to/key.pem"
+          }
+        }
       }
     }
   }

@@ -1,0 +1,418 @@
+{
+  "categories": [
+    {
+      "id": "state",
+      "label": "State sync"
+    },
+    {
+      "id": "presence",
+      "label": "Presence & geo"
+    },
+    {
+      "id": "dashboards",
+      "label": "Dashboards & feeds"
+    },
+    {
+      "id": "chat",
+      "label": "Chat"
+    },
+    {
+      "id": "ai",
+      "label": "AI streaming"
+    },
+    {
+      "id": "scale",
+      "label": "Scale"
+    },
+    {
+      "id": "production",
+      "label": "In production"
+    }
+  ],
+  "demos": [
+    {
+      "id": "cursors",
+      "title": "Shared cursors",
+      "blurb": "Every tab sees the other cursors move, and a fresh tab knows where they all are before anyone moves again.",
+      "details": "Cursor positions live in an ephemeral map subscription — no history, entries expire by TTL. A client that joins gets the full snapshot from the subscription itself, so there is no REST call to load initial state and no gap to bridge.",
+      "category": "state",
+      "tags": [
+        "map subscriptions",
+        "ephemeral mode"
+      ],
+      "video": "/img/demo_cursors.mp4",
+      "at": 0,
+      "links": {
+        "source": "https://github.com/centrifugal/examples/tree/master/v6/map_demo",
+        "story": "/blog/2026/05/22/map-subscriptions",
+        "docs": "/docs/server/map_subscriptions"
+      },
+      "posterAt": 4
+    },
+    {
+      "id": "inventory",
+      "title": "Limited inventory shop",
+      "blurb": "Two tabs buy the last item at the same moment. One wins, the other retries with fresh stock.",
+      "details": "Each purchase is a compare-and-swap write: the client reads current stock, decrements it, and writes back only if nothing changed in between. Conflicts auto-retry, and the snapshot stays correct in every tab.",
+      "category": "state",
+      "tags": [
+        "map subscriptions",
+        "conditional writes"
+      ],
+      "video": "/img/demo_inventory.mp4",
+      "at": 6,
+      "links": {
+        "source": "https://github.com/centrifugal/examples/tree/master/v6/map_demo",
+        "story": "/blog/2026/05/22/map-subscriptions",
+        "docs": "/docs/server/map_subscriptions"
+      }
+    },
+    {
+      "id": "taskboard",
+      "title": "Sprint board on PostgreSQL",
+      "blurb": "Drag a card between columns — the board update and the real-time message commit in the same transaction.",
+      "details": "The PostgreSQL map broker stores state in regular SQL tables, so a write and its publication either both land or both roll back. No dual write, no outbox to babysit.",
+      "category": "state",
+      "tags": [
+        "map subscriptions",
+        "PostgreSQL",
+        "transactional"
+      ],
+      "video": "/img/demo_taskboard.mp4",
+      "at": 10,
+      "links": {
+        "source": "https://github.com/centrifugal/examples/tree/master/v6/map_demo",
+        "story": "/blog/2026/05/23/map-subscriptions-part-2",
+        "docs": "/docs/server/map_subscriptions"
+      },
+      "posterAt": 12
+    },
+    {
+      "id": "polls",
+      "title": "Live polls",
+      "blurb": "A vote lands in PostgreSQL and shows up in every open tab as part of the same commit.",
+      "details": "Each vote atomically updates the result row and publishes the change. Late joiners get the current tally from the subscription, so counts never drift between tabs.",
+      "category": "state",
+      "tags": [
+        "map subscriptions",
+        "PostgreSQL",
+        "transactional"
+      ],
+      "video": "/img/demo_polls.mp4",
+      "at": 4,
+      "links": {
+        "source": "https://github.com/centrifugal/examples/tree/master/v6/map_demo",
+        "story": "/blog/2026/05/23/map-subscriptions-part-2",
+        "docs": "/docs/server/map_subscriptions"
+      },
+      "posterAt": 5
+    },
+    {
+      "id": "visualizer",
+      "title": "Sync protocol visualizer",
+      "blurb": "The three phases of a map subscription, frame by frame: paginated state, stream catch-up, live updates.",
+      "details": "Disconnect and re-subscribe on demand and watch how the client converges — either catching up from the stream or re-syncing from scratch. Useful for seeing what the SDK hides.",
+      "category": "state",
+      "tags": [
+        "map subscriptions",
+        "protocol"
+      ],
+      "video": "/img/demo_visualizer.mp4",
+      "at": 6,
+      "links": {
+        "source": "https://github.com/centrifugal/examples/tree/master/v6/map_demo",
+        "story": "/blog/2026/05/22/map-subscriptions",
+        "docs": "/docs/server/map_subscriptions"
+      }
+    },
+    {
+      "id": "lobby",
+      "title": "Game lobby",
+      "blurb": "Players join and leave, the sidebar keeps up, and a reconnecting client lands on the same list as everyone else.",
+      "details": "Presence built on map subscriptions in recoverable mode — a reconnecting client catches up from the stream instead of re-fetching the whole participant list.",
+      "category": "presence",
+      "tags": [
+        "map presence",
+        "recoverable mode"
+      ],
+      "video": "/img/demo_lobby.mp4",
+      "at": 6,
+      "links": {
+        "source": "https://github.com/centrifugal/examples/tree/master/v6/map_demo",
+        "story": "/blog/2026/05/22/map-subscriptions",
+        "docs": "/docs/server/map_subscriptions"
+      }
+    },
+    {
+      "id": "map_presence_100k",
+      "title": "100,000 presence members",
+      "blurb": "Two tabs subscribed to one presence channel while the population fills to 100k. Each cell is a connection.",
+      "details": "Green flashes are joins, red are leaves. The tabs connect during the fill, so they reconcile a moving target: paginated state plus live joins. The clip ends with a reconnect — state paginates back at 10k entries per page. This is a deliberately extreme shape, not a recommended one.",
+      "category": "scale",
+      "tags": [
+        "map presence",
+        "scale"
+      ],
+      "video": "/img/demo_massive_map_presence.mp4",
+      "fullVideo": "/img/demo_map_presence.mp4",
+      "at": 0,
+      "links": {
+        "source": "https://github.com/centrifugal/examples/tree/master/v6/map_presence_demo",
+        "story": "/blog/2026/05/22/map-subscriptions",
+        "docs": "/docs/server/map_subscriptions"
+      },
+      "posterAt": 2
+    },
+    {
+      "id": "drones",
+      "title": "Drone tracking over San Francisco",
+      "blurb": "500 drones move over a map, and each client only receives the ones inside its own viewport.",
+      "details": "Cell-based spatial partitioning with shared poll subscriptions: the viewport decides which keys a client tracks, and the tracked set changes as the map is dragged. Per-key authorization is signed by the backend.",
+      "category": "presence",
+      "tags": [
+        "shared poll",
+        "geospatial"
+      ],
+      "video": "/img/demo_drones.mp4",
+      "at": 6,
+      "links": {
+        "source": "https://github.com/centrifugal/examples/tree/master/v6/shared_poll_demo/drones",
+        "story": "/blog/2026/05/21/shared-poll-subscriptions",
+        "docs": "/docs/server/shared_poll"
+      }
+    },
+    {
+      "id": "scoreboard",
+      "title": "Football scoreboard",
+      "blurb": "Live match state for a page full of games, with a counter showing how much delta compression saves.",
+      "details": "Deltas are computed per key, between successive values of the same entry, so a client receives a compact patch when only the score changes instead of the full payload.",
+      "category": "dashboards",
+      "tags": [
+        "map subscriptions",
+        "delta compression"
+      ],
+      "video": "/img/demo_scoreboard.mp4",
+      "at": 2,
+      "links": {
+        "source": "https://github.com/centrifugal/examples/tree/master/v6/map_demo",
+        "story": "/blog/2026/05/22/map-subscriptions",
+        "docs": "/docs/server/delta_compression"
+      },
+      "posterAt": 6
+    },
+    {
+      "id": "votes",
+      "title": "Vote counts in a feed",
+      "blurb": "Counters update only for the posts currently on screen — scrolling changes what the client tracks.",
+      "details": "One shared poll subscription covers the whole feed. The client declares the keys it cares about, the server polls them together, and results arrive in one stream instead of a subscription per post.",
+      "category": "dashboards",
+      "tags": [
+        "shared poll"
+      ],
+      "video": "/img/demo_votes.mp4",
+      "at": 6,
+      "links": {
+        "source": "https://github.com/centrifugal/examples/tree/master/v6/shared_poll_demo/votes",
+        "story": "/blog/2026/05/21/shared-poll-subscriptions",
+        "docs": "/docs/server/shared_poll"
+      }
+    },
+    {
+      "id": "leaderboard",
+      "title": "Real-time leaderboard",
+      "blurb": "Ranks move as scores change, with rows highlighting on the way up and down.",
+      "details": "Redis holds the leaderboard, Python triggers ranking changes, React renders. Uses cache recovery and versioned publications so a reconnecting client never shows a stale board.",
+      "category": "dashboards",
+      "tags": [
+        "cache recovery",
+        "Redis"
+      ],
+      "video": "/img/leaderboard_demo.mp4",
+      "at": 6,
+      "links": {
+        "source": "https://github.com/centrifugal/examples/tree/master/v6/leaderboard",
+        "story": "/blog/2025/04/28/websocket-real-time-leaderboard",
+        "docs": "/docs/server/cache_recovery"
+      }
+    },
+    {
+      "id": "tags_filter",
+      "title": "Stock ticker with server-side filtering",
+      "blurb": "One channel carries every ticker, and the client asks for AAPL only. The rest never leaves the server.",
+      "details": "Publications carry tags, and a subscription can attach a filter over them. Filtering happens on the server, so clients save bandwidth and CPU without extra channels to manage.",
+      "category": "dashboards",
+      "tags": [
+        "publication filtering"
+      ],
+      "video": "/img/blog_filter_by_tags_demo.mp4",
+      "at": 8,
+      "links": {
+        "story": "/blog/2025/10/14/server-side-publication-filtering-by-tags",
+        "docs": "/docs/server/publication_filtering"
+      }
+    },
+    {
+      "id": "kitchen",
+      "title": "Kitchen orders",
+      "blurb": "One orders table shared by all restaurants, one channel per restaurant, each display sees only its own.",
+      "details": "The PostgreSQL stream broker turns rows into publications, so the order state and the notification stay consistent without a separate message bus.",
+      "category": "dashboards",
+      "tags": [
+        "PostgreSQL",
+        "stream broker"
+      ],
+      "video": "/img/demo_kitchen.mp4",
+      "at": 6,
+      "links": {
+        "source": "https://github.com/centrifugal/examples/tree/master/v6/pg_stream_broker",
+        "story": "/blog/2026/05/24/pg-stream-broker-benefits",
+        "docs": "/docs/server/engines"
+      }
+    },
+    {
+      "id": "loki",
+      "title": "Loki logs in the browser",
+      "blurb": "Type a LogQL selector, get a live tail of matching logs over WebSocket.",
+      "details": "A gRPC subscription stream proxy sits between Centrifugo and Loki: the browser speaks WebSocket, the backend speaks gRPC, and each subscription becomes its own server-side stream.",
+      "category": "dashboards",
+      "tags": [
+        "subscription streams",
+        "gRPC"
+      ],
+      "video": "/img/loki.mp4",
+      "at": 4,
+      "links": {
+        "source": "https://github.com/centrifugal/examples/tree/master/v5/subscription_streams_loki",
+        "story": "/blog/2024/03/18/stream-loki-logs-to-browser-with-websocket-to-grpc-subscriptions",
+        "docs": "/docs/server/proxy_streams"
+      },
+      "posterAt": 8
+    },
+    {
+      "id": "grand_chat",
+      "title": "Grand chat tutorial app",
+      "blurb": "A multi-room messenger with unread counters, room discovery, and state that survives a reload.",
+      "details": "The full tutorial app: Django backend, React frontend, Centrifugo in front. Built to go past the usual chat basics — message ordering, catch-up after a gap, and per-room counters that stay right.",
+      "category": "chat",
+      "tags": [
+        "tutorial",
+        "recovery"
+      ],
+      "video": "/img/grand-chat-tutorial-demo.mp4",
+      "at": 20,
+      "links": {
+        "source": "https://github.com/centrifugal/grand-chat-tutorial",
+        "docs": "/docs/tutorial/intro"
+      }
+    },
+    {
+      "id": "grand_chat_push",
+      "title": "Push when the tab is closed",
+      "blurb": "The same chat sends a web push notification once the user is no longer connected.",
+      "details": "Centrifugo PRO tracks who is online and delivers a push notification to devices that are not. One place decides between a real-time message and a push.",
+      "category": "chat",
+      "tags": [
+        "push notifications",
+        "PRO"
+      ],
+      "badge": "PRO",
+      "video": "/img/grand-chat-tutorial-demo-push.mp4",
+      "at": 12,
+      "links": {
+        "source": "https://github.com/centrifugal/grand-chat-tutorial",
+        "docs": "/docs/tutorial/push_notifications"
+      },
+      "posterAt": 12
+    },
+    {
+      "id": "grand_chat_100k",
+      "title": "The same chat at 100k connections",
+      "blurb": "The tutorial app with a hundred thousand connections attached, still delivering messages as usual.",
+      "details": "Same code, more load: Redis engine, several Centrifugo nodes, and a load test that keeps 100k WebSocket connections subscribed while messages flow.",
+      "category": "scale",
+      "tags": [
+        "scale",
+        "Redis"
+      ],
+      "video": "/img/grand-chat-100k.mp4",
+      "at": 5,
+      "links": {
+        "source": "https://github.com/centrifugal/grand-chat-tutorial",
+        "docs": "/docs/tutorial/scale"
+      }
+    },
+    {
+      "id": "particles",
+      "title": "Two million particles",
+      "blurb": "A physics simulation streamed to the browser as binary frames, rendered in real time.",
+      "details": "A Go simulation publishes particle state through Centrifugo at high frequency. Started as a port of David Gerrells' experiment and turned into a test of how much binary data a single connection can take.",
+      "category": "scale",
+      "tags": [
+        "binary",
+        "throughput"
+      ],
+      "video": "/img/demo_particles_tiny.mp4",
+      "at": 5,
+      "links": {
+        "source": "https://github.com/centrifugal/examples/tree/master/v6/millions_of_particles",
+        "story": "/blog/2026/05/21/two-million-particles-on-centrifugo"
+      },
+      "posterAt": 6
+    },
+    {
+      "id": "gpt",
+      "title": "Streaming LLM responses",
+      "blurb": "Tokens appear as the model generates them, delivered over a temporary channel instead of a direct SSE pipe.",
+      "details": "The backend calls the model and publishes tokens to Centrifugo. The browser subscribes to a per-generation channel, so the stream survives a reload and can be watched from more than one tab.",
+      "category": "ai",
+      "tags": [
+        "AI",
+        "temporary channels"
+      ],
+      "video": "/img/gpt.mp4",
+      "at": 7,
+      "links": {
+        "source": "https://github.com/centrifugal/examples/tree/master/v6/gpt-stream",
+        "story": "/blog/2025/06/17/streaming-ai-gpt-responses-with-centrifugo",
+        "docs": "/docs/getting-started/ai_apps"
+      },
+      "posterAt": 10
+    },
+    {
+      "id": "ai_recovery",
+      "title": "AI stream that survives a disconnect",
+      "blurb": "Drop the connection mid-generation: the client reconnects and the missed tokens arrive at once.",
+      "details": "Token streams get history and recovery like any other channel. The playground also shows publisher-side aggregation, transport switching, and a second tab picking up the same generation.",
+      "category": "ai",
+      "tags": [
+        "AI",
+        "recovery"
+      ],
+      "video": "/img/scale_ai_recovery.mp4",
+      "at": 0.8,
+      "links": {
+        "source": "https://github.com/centrifugal/examples/tree/master/v6/scale-ai",
+        "story": "/blog/2026/03/01/scaling-ai-token-streams-with-centrifugo",
+        "docs": "/docs/getting-started/ai_apps"
+      },
+      "posterAt": 6
+    },
+    {
+      "id": "rabbitx",
+      "title": "RabbitX exchange",
+      "blurb": "A perpetual futures exchange running Centrifugo for order books, trades, and account updates.",
+      "details": "RabbitX pushes market data to traders through Centrifugo. Their team wrote about the setup, including how they handle bursts and keep clients in sync during volatile periods.",
+      "category": "production",
+      "tags": [
+        "case study",
+        "fintech"
+      ],
+      "badge": "Production",
+      "video": "/img/rabbitx.mp4",
+      "at": 5,
+      "links": {
+        "story": "/blog/2023/08/29/using-centrifugo-in-rabbitx"
+      }
+    }
+  ]
+}

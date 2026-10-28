@@ -76,12 +76,7 @@ export default function Pricing() {
             <div className={styles.content}>
                 <div className={styles.priceHeader}>
                     <span className={styles.eyebrow}>Pricing</span>
-                    <div className={styles.priceAnchor}>
-                        <span className={styles.priceFrom}>from</span>
-                        <span className={styles.priceAmount}>€3,500</span>
-                        <span className={styles.pricePer}>/ year</span>
-                    </div>
-                    <div className={styles.priceScale}>flat — scaling with company size</div>
+                    <div className={styles.priceScale}>Flat — scaling with company size</div>
                 </div>
                 <div className={styles.text}>
                     <p>

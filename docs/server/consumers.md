@@ -5,11 +5,17 @@ sidebar_label: Async consumers
 title: Built-in API command async consumers
 ---
 
+import ConsumersDiagram from '@site/src/components/ConsumersDiagram';
+
 In [server API](./server_api.md) chapter we've shown how to execute various Centrifugo server API commands (publish, broadcast, etc.) over HTTP or GRPC. In many cases you will call those APIs from your application business logic synchronously. But to deal with temporary network and availability issues, and achieve reliable execution of API commands upon changes in your primary application database you may want to use queuing techniques and call Centrifugo API asynchronously.
 
 Asynchronous delivery of real-time events upon changes in primary database may be done is several ways. Some companies use transactional outbox pattern, some using techniques like Kafka Connect with CDC (Change Data Capture) approach. The fact Centrifugo provides API allows users to implement any of those techniques and build worker which will send API commands to Centrifugo reliably.
 
 But Centrifugo also provides some built-in asynchronous consumers to simplify the integration process.
+
+<ConsumersDiagram />
+
+The application writes an API command to a queue, a stream or an outbox table instead of calling Centrifugo over HTTP. Centrifugo consumes it and executes the command with the same handlers the synchronous API uses.
 
 ## Supported consumers
 
@@ -35,7 +41,7 @@ Async consumers only process commands which modify state – such as [publish](.
 
 Centrifugo **only supports JSON payloads for asynchronous commands coming to consumers for now**. If you need binary format – reach out with your use case.
 
-If Centrifugo encounters an error while processing consumed messages – then internal errors will be retried, all other errors logged on `error` level – and the message will be marked as processed. The processing logic for [broadcast](./server_api.md#broadcast) API is special: if any of the publications to any channel from broadcast `channels` array failed – then the entire broadcast command will be retried. To prevent duplicate messages being published during such retries – consider using `idempotency_key` in the broadcast command.
+If Centrifugo encounters an error while processing consumed messages – then [temporary errors](./server_api.md#error) (internal error 100 and, since v6.10.0, too many requests 111) will be retried, all other errors logged on `error` level – and the message will be marked as processed. Errors which retrying can not fix, such as bad request 107, are not retried. The processing logic for [broadcast](./server_api.md#broadcast) API is special: if any of the publications to any channel from broadcast `channels` array failed with a temporary error – then the entire broadcast command will be retried. To prevent duplicate messages being published during such retries – consider using `idempotency_key` in the broadcast command.
 
 :::tip
 
@@ -407,7 +413,7 @@ To enable publication data mode:
         "consumer_group": "centrifugo",
         "publication_data_mode": {
           "enabled": true,
-          "channels_header": "x-centrifugo-channels"
+          "channels_header": "x-centrifugo-channels",
           "idempotency_key_header": "x-centrifugo-idempotency-key"
         }
       }
@@ -770,6 +776,24 @@ Env: `CENTRIFUGO_CONSUMERS_<NAME>_REDIS_STREAM_SENTINEL_CLIENT_NAME`
 Type: `TLSConfig` object
 
 [TLS object](./configuration.md#tls-config-object). By default, no TLS is used.
+
+### `consumers[].redis_stream.aws_iam_auth`
+
+Type: `RedisAWSIAMAuth` object
+
+Experimental, new in Centrifugo v6.10.0. AWS IAM authentication for Amazon ElastiCache. See [Redis IAM authentication](./engines.md#aws_iam_auth) for options.
+
+### `consumers[].redis_stream.gcp_iam_auth`
+
+Type: `RedisGCPIAMAuth` object
+
+Experimental, new in Centrifugo v6.10.0. Google Cloud IAM authentication for Memorystore. See [Redis IAM authentication](./engines.md#gcp_iam_auth).
+
+### `consumers[].redis_stream.azure_entra_auth`
+
+Type: `RedisAzureEntraAuth` object
+
+Experimental, new in Centrifugo v6.10.0. Microsoft Entra ID authentication for Azure Managed Redis and Azure Cache for Redis. See [Redis IAM authentication](./engines.md#azure_entra_auth).
 
 ### `consumers[].redis_stream.streams`
 

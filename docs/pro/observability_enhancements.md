@@ -60,7 +60,7 @@ To enable:
 }
 ```
 
-When enabled, the following metrics will include the `accept_protocol` label:
+The following metrics have the `accept_protocol` label, filled in only when the option is enabled:
 - `centrifugo_client_connections_accepted` - counter of accepted connections
 - `centrifugo_client_connections_inflight` - gauge of current connections
 
@@ -68,6 +68,10 @@ The `accept_protocol` label can have the following values:
 - `h1` - HTTP/1.1
 - `h2` - HTTP/2
 - `h3` - HTTP/3
+- `unknown` - the HTTP version could not be determined
+- `mem` - internal connections of the admin UI channel tracing
+
+For the GRPC unidirectional transport the value is always `h2`. When `expose_transport_accept_protocol` is not enabled, the label is still present but empty.
 
 This helps in understanding the protocol distribution across your infrastructure and can be useful for performance analysis and infrastructure planning.
 
@@ -231,6 +235,280 @@ If you leave `prometheus.native_histograms` off but still enable `opentelemetry.
 The pro-only Summary metrics deprecated by the same migration are: `centrifugo_push_job_duration_seconds`, `centrifugo_clickhouse_analytics_flush_duration_seconds`, `centrifugo_clickhouse_analytics_batch_size`, and `centrifugo_shared_poll_relay_backend_duration_seconds`. Each has an `_histogram` companion (added in v6.8.1) that becomes the canonical instrument when native histograms is enabled.
 
 **Why Summaries are being removed**: in a clustered Centrifugo deployment (multiple nodes), Summary's pre-computed quantile estimates cannot be aggregated across instances — there's no mathematically valid way to combine per-node p99s into a fleet-wide p99. Histograms solve this by aggregating bucket counts across nodes, then computing percentiles with `histogram_quantile()`. For any multi-node deployment the Summary quantile data is, at best, misleading.
+
+## PRO metrics reference
+
+Beyond the enhanced labels described above, Centrifugo PRO exposes its own metrics. They follow the same conventions as the [OSS metrics reference](../server/observability.md#exposed-metrics): the `centrifugo_` namespace, Histograms that switch to native schema when [`prometheus.native_histograms`](../server/observability.md#native-histograms) is on, and deprecated Summaries that disappear in that mode.
+
+All of them, except the license expiration metric meant for alerting, are visualized by the `PRO · …` rows of the [official Grafana dashboard](https://grafana.com/grafana/dashboards/13039).
+
+One family of PRO-only metrics is described in the OSS reference rather than here, because it sits next to closely related OSS metrics: the `*_redis_node_grouped_*` Redis Cluster metrics, which only the PRO node-grouped sharded PUB/SUB path can fill. They are marked as PRO there and are not registered at all in Centrifugo OSS.
+
+Note that the map broker and the PostgreSQL broker are **not** PRO features — both ship in Centrifugo OSS, so their metrics (`centrifugo_map_broker_*`, `centrifugo_broker_postgres_*`) belong to the OSS reference. What PRO adds on top is described in [map subscriptions](./map_subscriptions.md) — per-namespace map brokers and sharded PUB/SUB among them.
+
+### Push notifications
+
+#### centrifugo_push_notification_count
+
+- **Type:** Counter
+- **Labels:** provider, recipient_type, platform, success, err_code
+- **Description:** Count of push notifications sent, split by provider (`fcm`, `apns`, `hms`, `webpush`), recipient type, platform, whether the provider accepted it, and the provider error code when it did not. `platform` is the device platform for sends to devices (`filter`) through FCM, APNs and Web Push, `na` for HMS sends (raw tokens included) and for FCM topic and condition sends which reached the provider, and empty for FCM, APNs and Web Push sends to raw tokens. When ClickHouse analytics is enabled, pushes dropped after a failed re-queue are counted too, with the device platform for `filter` sends, `na` for topic and condition sends, and an empty platform for raw tokens.
+- **Usage:** Build a delivery success ratio from `success="true"` over the total. Codes such as `unregistered` are normal device-token churn; authentication errors are not.
+
+#### centrifugo_push_scheduled_request_count
+
+- **Type:** Counter
+- **Labels:** recipient_type
+- **Description:** Count of push notification requests accepted for later execution.
+- **Usage:** Shows how much of your push volume is scheduled rather than immediate.
+
+#### centrifugo_push_queue_consuming_lag
+
+- **Type:** Gauge
+- **Labels:** provider, queue
+- **Description:** Approximate number of push jobs waiting to be consumed. Despite the name this is a **job count, not a duration**, and it is a Gauge — take its current value, do not wrap it in `rate()`.
+- **Usage:** Sustained growth means push workers cannot keep up with the send rate.
+
+#### centrifugo_push_consuming_inflight_jobs
+
+- **Type:** Gauge
+- **Labels:** provider, queue
+- **Description:** Number of push jobs currently being processed.
+- **Usage:** Shows worker utilization per queue.
+
+#### centrifugo_push_job_duration_seconds
+
+:::caution Deprecated
+This Summary is deprecated and will be removed in Centrifugo v7. Use `centrifugo_push_job_duration_seconds_histogram`. Not exposed when [`prometheus.native_histograms`](../server/observability.md#native-histograms) is enabled.
+:::
+
+- **Type:** Summary
+- **Labels:** provider, recipient_type
+- **Description:** Duration of a push processing job.
+
+#### centrifugo_push_job_duration_seconds_histogram
+
+- **Type:** Histogram. Uses native (sparse, exponential) schema when [`prometheus.native_histograms`](../server/observability.md#native-histograms) is enabled.
+- **Labels:** provider, recipient_type
+- **Description:** Same data as the Summary above, in `histogram_quantile()`- and OpenTelemetry-friendly form.
+- **Usage:** Prefer this metric for percentile queries. Its `_count` also gives you the push job rate.
+
+### Analytics (ClickHouse)
+
+#### centrifugo_clickhouse_analytics_flush_duration_seconds
+
+:::caution Deprecated
+Deprecated Summary — use `centrifugo_clickhouse_analytics_flush_duration_seconds_histogram`. Not exposed when native histograms are enabled.
+:::
+
+- **Type:** Summary
+- **Labels:** type, retries, result
+- **Description:** Duration of a ClickHouse data flush.
+
+#### centrifugo_clickhouse_analytics_flush_duration_seconds_histogram
+
+- **Type:** Histogram. Uses native schema when native histograms are enabled.
+- **Labels:** type, retries, result
+- **Description:** Time to write one batch to ClickHouse, by data type, attempt count and outcome. The `result` label is `ok` or `error`. Despite its name, the `retries` label of a successful flush (`result="ok"`) is the number of attempts it took: `1` means it succeeded on the first attempt, `2` that it needed one retry, and so on. For failed flushes (`result="error"`) the `retries` label carries no information.
+- **Usage:** Rising flush latency is the leading indicator of analytics drops — the buffer fills while writes are slow.
+
+#### centrifugo_clickhouse_analytics_batch_size
+
+:::caution Deprecated
+Deprecated Summary — use `centrifugo_clickhouse_analytics_batch_size_histogram`. Not exposed when native histograms are enabled.
+:::
+
+- **Type:** Summary
+- **Labels:** type
+- **Description:** ClickHouse flush batch size distribution.
+
+#### centrifugo_clickhouse_analytics_batch_size_histogram
+
+- **Type:** Histogram. Uses native schema when native histograms are enabled.
+- **Labels:** type
+- **Description:** Rows per flush, by data type.
+- **Usage:** Batches pinned at the configured maximum mean Centrifugo is flushing as fast as it can — the next thing to give is the buffer.
+
+#### centrifugo_clickhouse_analytics_drop_count
+
+- **Type:** Counter
+- **Labels:** type
+- **Description:** Number of analytics events discarded because the buffer was full.
+- **Usage:** Direct analytics data loss. Alert on any sustained non-zero rate.
+
+### PostgreSQL connection pool
+
+These metrics describe the pgx connection pool Centrifugo PRO uses for PostgreSQL-backed features. The `pool` label separates pools when more than one is configured.
+
+#### centrifugo_database_pool_max_conns
+
+- **Type:** Gauge
+- **Labels:** pool
+- **Description:** Maximum size of the PostgreSQL connection pool.
+
+#### centrifugo_database_pool_total_conns
+
+- **Type:** Gauge
+- **Labels:** pool
+- **Description:** Current number of connections in the pool (idle + acquired + constructing).
+
+#### centrifugo_database_pool_idle_conns
+
+- **Type:** Gauge
+- **Labels:** pool
+- **Description:** Current number of idle connections.
+
+#### centrifugo_database_pool_acquired_conns
+
+- **Type:** Gauge
+- **Labels:** pool
+- **Description:** Connections currently checked out of the pool.
+- **Usage:** Riding at `pool_max_conns` means the pool is saturated — the queries below start queueing.
+
+#### centrifugo_database_pool_acquires_total
+
+- **Type:** Counter
+- **Labels:** pool
+- **Description:** Total successful connection acquires.
+
+#### centrifugo_database_pool_empty_acquires_total
+
+- **Type:** Counter
+- **Labels:** pool
+- **Description:** Acquires that had to wait for a connection to become free.
+- **Usage:** The clearest saturation signal for the pool — a growing rate here means raising `max_conns` (or reducing query time) will help.
+
+#### centrifugo_database_pool_canceled_acquires_total
+
+- **Type:** Counter
+- **Labels:** pool
+- **Description:** Acquires abandoned by context cancellation while waiting.
+- **Usage:** These are requests that gave up — usually visible to clients as errors or timeouts.
+
+#### centrifugo_database_pool_acquire_wait_seconds_total
+
+- **Type:** Counter
+- **Labels:** pool
+- **Description:** Total time spent waiting on connection acquires.
+- **Usage:** Divide its rate by the rate of `pool_acquires_total` to get the mean acquire wait time.
+
+### Bus, rate limiting and channel state
+
+#### centrifugo_bus_messages_processed_total
+
+- **Type:** Counter
+- **Labels:** name
+- **Description:** Total number of messages processed by a PRO bus consumer.
+
+#### centrifugo_bus_errors_total
+
+- **Type:** Counter
+- **Labels:** name
+- **Description:** Total number of errors while processing bus messages.
+
+#### centrifugo_rate_limit_client_over_limit_count
+
+- **Type:** Counter
+- **Labels:** layer, command, namespace, dry_run
+- **Description:** Since Centrifugo v6.10.0. Number of client operations which exceeded a [rate limit](./rate_limiting.md#metrics) of `client.rate_limit`. `layer` is `client_command`, `user_command`, `redis_user_command` or `client_error`; `command` is the command which exceeded its bucket (`publish`, `subscribe`, `rpc.<method>`, `error` for `client_error`, …); `namespace` is filled only with `prometheus.channel_namespace_resolution` enabled. `dry_run` is `true` for hits of a layer in [dry run](./rate_limiting.md#try-limits-before-enforcing-them) – counted, but nothing was rejected – and `false` for operations which were actually refused (or, for `unsubscribe` and `untrack`, counted and treated as a client error when `client_error` is enabled).
+- **Usage:** Size limits with `dry_run="true"` before enforcing them; alert on sustained `dry_run="false"` hits, which mean traffic is being refused.
+
+#### centrifugo_rate_limit_hits_over_limit
+
+- **Type:** Counter
+- **Description:** Number of distributed rate limiter (`distributed_rate_limit`, used for example by [push notification](./push_notifications.md) rate limit strategies) evaluations in Redis which exceeded the limit, dry runs included. Rejections by client command [rate limiting](./rate_limiting.md) (`client.rate_limit`) are not counted here.
+- **Usage:** Expect a non-zero baseline when limits are tuned tightly; alert on step changes rather than on any non-zero value.
+
+#### centrifugo_channel_state_events_queue_consuming_lag_milliseconds
+
+- **Type:** Gauge
+- **Labels:** name, partition
+- **Description:** Consuming lag of the channel state events queue, per partition, in milliseconds.
+- **Usage:** A single lagging partition usually points at an unbalanced key distribution rather than at overall throughput.
+
+### License
+
+#### centrifugo_license_expiration_timestamp_seconds
+
+- **Type:** Gauge
+- **Labels:** none
+- **Description:** Since Centrifugo v6.10.0. Unix time (seconds) of the license key expiration. There is no series without a license key or for a key without expiration. Not shown on the Grafana dashboard – it is meant for alerting.
+- **Usage:** Alert ahead of the expiration, for example 30 days before: `centrifugo_license_expiration_timestamp_seconds - time() < 30 * 24 * 3600`. The alert keeps firing after the date until a renewed license key is configured and nodes are restarted.
+
+### Shared poll relay
+
+Metrics of the PRO [shared poll relay](./shared_poll.md), which offloads polling to a dedicated relay instead of polling per node.
+
+#### centrifugo_shared_poll_relay_poll_cycles_total
+
+- **Type:** Counter
+- **Labels:** namespace
+- **Description:** Total number of completed relay poll cycles.
+
+#### centrifugo_shared_poll_relay_backend_requests_total
+
+- **Type:** Counter
+- **Labels:** proxy_name
+- **Description:** Total number of backend refresh requests issued by the relay.
+
+#### centrifugo_shared_poll_relay_backend_errors_total
+
+- **Type:** Counter
+- **Labels:** proxy_name
+- **Description:** Total number of failed backend refresh calls.
+
+#### centrifugo_shared_poll_relay_backend_duration_seconds
+
+:::caution Deprecated
+Deprecated Summary — use `centrifugo_shared_poll_relay_backend_duration_seconds_histogram`. Not exposed when native histograms are enabled.
+:::
+
+- **Type:** Summary
+- **Labels:** proxy_name
+- **Description:** Duration of backend refresh calls.
+
+#### centrifugo_shared_poll_relay_backend_duration_seconds_histogram
+
+- **Type:** Histogram. Uses native schema when native histograms are enabled.
+- **Labels:** proxy_name
+- **Description:** Backend refresh latency in `histogram_quantile()`-friendly form.
+
+#### centrifugo_shared_poll_relay_cycle_duration_seconds
+
+- **Type:** Histogram. Uses native schema when native histograms are enabled.
+- **Labels:** namespace
+- **Description:** Full poll cycle wall time.
+
+#### centrifugo_shared_poll_relay_cycle_work_duration_seconds
+
+- **Type:** Histogram. Uses native schema when native histograms are enabled.
+- **Labels:** namespace
+- **Description:** Poll cycle work time, minus the spread delay.
+- **Usage:** Compare against your configured poll interval — approaching it means the relay cannot keep up.
+
+#### centrifugo_shared_poll_relay_sem_wait_duration_seconds
+
+- **Type:** Histogram. Uses native schema when native histograms are enabled.
+- **Labels:** proxy_name
+- **Description:** Semaphore wait duration — the contention indicator for relay concurrency limits.
+
+#### centrifugo_shared_poll_relay_active_channels
+
+- **Type:** Gauge
+- **Description:** Number of channels currently polled by the relay.
+
+#### centrifugo_shared_poll_relay_tracked_keys
+
+- **Type:** Gauge
+- **Labels:** namespace
+- **Description:** Number of keys tracked by the relay, per namespace.
+
+#### centrifugo_shared_poll_relay_items_count
+
+- **Type:** Counter
+- **Labels:** namespace, result
+- **Description:** Items returned per cycle, by result — `changed`, `unchanged` or `removed`.
+- **Usage:** A dominant `unchanged` share means the poll interval is shorter than it needs to be.
 
 ## Sentry integration
 

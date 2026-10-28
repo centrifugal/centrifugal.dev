@@ -162,7 +162,11 @@ Boolean, default `false`. If set to true it forces using RESP2 protocol for comm
 
 ### `engine.redis.history_use_lists`
 
-Boolean, default `false` – turns on using Redis Lists instead of Stream data structure for keeping history (not recommended, keeping this for backwards compatibility mostly).
+:::caution Deprecated
+This option is deprecated and may be removed in a future Centrifugo release. Keep history in Redis Streams – the default.
+:::
+
+Boolean, default `false` – turns on using Redis Lists instead of Stream data structure for keeping history. Lists do not support reverse-order history retrieval and [delta compression](./delta_compression.md).
 
 ### `engine.redis.presence_ttl`
 
@@ -208,7 +212,7 @@ Let's see how to start several Centrifugo nodes using the Redis Engine. We will 
 First, you should have [Redis installed and running](https://redis.io/docs/latest/operate/oss_and_stack/install/install-redis/). As soon as it's running - we can launch 3 Centrifugo instances. Open your terminal and start the first one:
 
 ```
-centrifugo --config=config.json --port=8000 --engine.type=redis
+centrifugo --config=config.json --http_server.port=8000 --engine.type=redis
 ```
 
 If your Redis is on the same machine and runs on its default port you can omit `engine.redis.address` option in the command above.
@@ -216,7 +220,7 @@ If your Redis is on the same machine and runs on its default port you can omit `
 Then open another terminal and start another Centrifugo instance:
 
 ```
-centrifugo --config=config.json --port=8001 --engine.type=redis
+centrifugo --config=config.json --http_server.port=8001 --engine.type=redis
 ```
 
 Note that we use another port number (`8001`) as port 8000 is already busy by our first Centrifugo instance. If you are starting Centrifugo instances on different machines then you most probably can use
@@ -225,7 +229,7 @@ the same port number (`8000` or whatever you want) for all instances.
 And finally, let's start the third instance:
 
 ```
-centrifugo --config=config.json --port=8002 --engine.type=redis
+centrifugo --config=config.json --http_server.port=8002 --engine.type=redis
 ```
 
 Now you have 3 Centrifugo instances running on ports 8000, 8001, 8002 all connected to Redis on `localhost:6379` (default used by Centrifugo) and clients can connect to any of them. You can also send API requests to any of those nodes – as all nodes connected over Redis PUB/SUB message will be delivered to all interested clients on all nodes.
@@ -448,6 +452,88 @@ Some known options:
 * [DragonflyDB](https://dragonflydb.io/) - should work fine (if you experience issues with it try enabling `engine.redis.force_resp2` option). We have not tested a Redis Cluster emulation mode provided by DragonflyDB yet. We suggest you testing the setup including failover tests and work under load.
 * [Valkey](https://github.com/valkey-io/valkey) – should work fine since it's based on Redis v7, but no tests were performed by Centrifugal Labs.
 
+### Redis IAM authentication
+
+New in Centrifugo v6.10.0
+
+:::caution Experimental
+
+Redis IAM authentication is experimental. Configuration options may change based on feedback. Please test it with your cloud setup (including failover and long-running connections) before using it in production.
+
+:::
+
+Managed Redis/Valkey services allow authenticating with short-lived cloud identity tokens instead of a static password. Centrifugo supports:
+
+* `aws_iam_auth` – Amazon ElastiCache (node-based and Serverless)
+* `gcp_iam_auth` – Google Cloud Memorystore
+* `azure_entra_auth` – Azure Managed Redis and Azure Cache for Redis (Microsoft Entra ID)
+
+Centrifugo obtains and refreshes tokens automatically, and keeps established connections authenticated. With `force_resp2` enabled, PUB/SUB connections may reconnect when their token is refreshed.
+
+The options are part of the common Redis configuration, so they work everywhere Redis is configured: `engine.redis`, `broker.redis`, `presence_manager.redis`, Redis map broker and [Redis Stream consumer](./consumers.md). Only one of them can be enabled, and `password` must not be set together with them. Cloud providers require TLS for IAM authentication – use `rediss://` scheme in the address (or `tls` options).
+
+#### `aws_iam_auth`
+
+```json title="config.json"
+{
+  "engine": {
+    "type": "redis",
+    "redis": {
+      "address": "rediss://my-cache-x2e9hv.serverless.use1.cache.amazonaws.com:6379",
+      "user": "iam-user-01",
+      "aws_iam_auth": {
+        "enabled": true,
+        "serverless_cache_name": "my-cache",
+        "region": "us-east-1"
+      }
+    }
+  }
+}
+```
+
+* `user` – ID of the IAM-enabled ElastiCache user (for IAM-enabled users the user ID and user name must be the same). Required.
+* `replication_group_id` – replication group ID of a node-based cache. Or:
+* `serverless_cache_name` – name of an ElastiCache Serverless cache. Exactly one of `replication_group_id` and `serverless_cache_name` must be set.
+* `region` – AWS region of the cache. Optional, by default resolved from the AWS SDK chain (`AWS_REGION`, etc.).
+
+Credentials come from the default AWS SDK chain: environment variables, shared config, ECS task role, IRSA on EKS, EC2 instance metadata. The IAM identity needs the `elasticache:Connect` permission on both the cache and the ElastiCache user ARNs. See [ElastiCache IAM authentication](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/auth-iam.html).
+
+#### `gcp_iam_auth`
+
+```json title="config.json"
+{
+  "engine": {
+    "type": "redis",
+    "redis": {
+      "address": "rediss://10.0.0.3:6379",
+      "gcp_iam_auth": {
+        "enabled": true
+      }
+    }
+  }
+}
+```
+
+Centrifugo gets OAuth2 access tokens via [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/application-default-credentials) – automatic on GKE, GCE and Cloud Run with an attached service account, or via `GOOGLE_APPLICATION_CREDENTIALS`. The instance must have IAM authentication enabled, and the identity needs the `roles/memorystore.dbConnectionUser` role. See [Memorystore IAM authentication](https://cloud.google.com/memorystore/docs/valkey/about-iam-auth).
+
+#### `azure_entra_auth`
+
+```json title="config.json"
+{
+  "engine": {
+    "type": "redis",
+    "redis": {
+      "address": "rediss://my-cache.westeurope.redis.azure.net:10000",
+      "azure_entra_auth": {
+        "enabled": true
+      }
+    }
+  }
+}
+```
+
+Centrifugo gets Microsoft Entra ID access tokens via `DefaultAzureCredential`: environment variables (`AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`), workload identity on AKS, managed identity (for a user-assigned identity set `AZURE_CLIENT_ID`). The identity must be added to the cache as a Redis user with an access policy. `user` is optional – by default Centrifugo uses the object ID of the identity, which is what Azure expects. See [Microsoft Entra authentication for Azure Redis](https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-azure-active-directory-for-authentication).
+
 ## Separate broker and presence manager
 
 Above we described two full-feature engines available in Centrifugo. But as we mentioned engine in Centrifugo is internally consists of two isolated parts:
@@ -650,6 +736,8 @@ Nats raw mode when on tells Centrifugo to consume core Nats topics and not expec
 When using Nats raw mode join/leave feature of Centrifugo can't be used.
 
 :::
+
+Since Centrifugo v6.10.0 messages consumed in raw mode are checked against the channel's [publication_data_format](./channels.md#publication_data_format): when it is `json` or `json_object`, a message which does not match is logged and not delivered. Channels without such a format are not affected.
 
 Here is how raw mode may be enabled:
 
@@ -936,7 +1024,7 @@ Centrifugo automatically manages the required database schema (tables, functions
 
 ### Read replica support
 
-The controller supports routing read operations (outbox polling) to a PostgreSQL replica while keeping writes on the primary:
+[Centrifugo PRO](../pro/overview.md) lets the controller route read operations (outbox polling) to a PostgreSQL replica while keeping writes on the primary. In Centrifugo OSS `replica` is not a known option:
 
 ```json title="config.json"
 {

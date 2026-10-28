@@ -27,6 +27,39 @@ Centrifugo sits between your inference backend and your clients. Your backend st
 
 For high-throughput streams, the [binary Protobuf protocol](../transports/overview.md) keeps per-token overhead low. [Online presence](../server/presence.md) tracks who is attached to a session. And when an assistant message is persisted, the [PostgreSQL stream broker](../server/engines.md#postgresql-broker) can publish the realtime event inside the same database transaction as the row write — so the stored message and the delivered event never diverge.
 
+## Configuring a channel for a stream
+
+Publish a response from one place, in order, each publish call waiting for the previous one: calls made concurrently have no order. Publish in chunks — what the model produced in the last 50 ms or so — rather than one publication per token: a model emits up to hundreds of tokens a second, and 20 publications a second render just as smoothly at a fraction of the messages.
+
+Give each response its own channel, in a namespace with history and recovery, so that a client which reconnects, or opens the page while the response is generated, replays it from the start. Size two limits for your longest response:
+
+- [`history_size`](../server/channels.md#history_size) must hold the publications of a whole response.
+- [`client.recovery_max_publication_limit`](../server/configuration.md#clientrecovery_max_publication_limit) is the most publications Centrifugo returns in one recovery: 300 by default, which is 15 seconds of streaming at 20 publications a second. A client which missed more is told the stream was not recovered (`recovered: false`) and gets none of it.
+
+For responses of up to two and a half minutes at 20 publications a second:
+
+```json title="config.json"
+{
+  "client": {
+    "recovery_max_publication_limit": 3000
+  },
+  "channel": {
+    "namespaces": [
+      {
+        "name": "ai",
+        "history_size": 3000,
+        "history_ttl": "10m",
+        "force_recovery": true
+      }
+    ]
+  }
+}
+```
+
+Once a response is complete, store it with the conversation and serve it from there: history is for the stream in flight.
+
+Publishing the whole response so far with [delta compression](../server/delta_compression.md) and [cache recovery](../server/cache_recovery.md) instead lets a late client get one message rather than every chunk. But the backend then sends the growing text with every publication — for a response of a few thousand tokens, over a hundred times its size — and live subscribers, receiving deltas, get more bytes than chunks would send them. Chunks are the better default.
+
 ## Examples
 
 - **[Streaming AI responses with Centrifugo](/blog/2025/06/17/streaming-ai-gpt-responses-with-centrifugo)** — end-to-end tutorial streaming GPT responses with FastAPI and temporary channels.

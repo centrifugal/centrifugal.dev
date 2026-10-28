@@ -43,7 +43,7 @@ In the example we are using custom `meta` information (must be an object) attach
 * when set in the [connect proxy](../server/proxy.md#connect-proxy) result
 * or provided in JWT as [meta](../server/authentication.md#meta) claim
 
-An expression is evaluated for every subscription attempt to a channel in a namespace. So if `meta` attached to the connection is something like this:
+An expression is evaluated for a subscription attempt to a channel in a namespace when nothing else already allowed the subscription. So if `meta` attached to the connection is something like this:
 
 ```json
 {
@@ -56,6 +56,12 @@ An expression is evaluated for every subscription attempt to a channel in a name
 :::tip
 
 `meta` must be JSON object (any `{}`) for CEL expressions to work.
+
+:::
+
+:::info
+
+CEL expressions are an additional way to allow an operation, not an extra check on top of other permissions. An expression is evaluated only when nothing else already allowed the operation: it's not evaluated when a subscription token, a user-limited channel, `allow_subscribe_for_client` (or other `allow_*` channel options), capabilities or `client.insecure` mode allow it. It's also not evaluated when a subscribe or subscribe stream proxy handles the subscription, or – for publish – when a publish proxy or a subscribe stream proxy is enabled for the channel.
 
 :::
 
@@ -74,16 +80,21 @@ Say client with user ID `123` subscribes to a channel `/users/4` which matched t
 | meta       | `map[string]any`       | `{"roles": ["admin"]}`   | Meta information attached to the connection by the application backend (in JWT or over connect proxy result)                                                      |
 | channel    | `string`               | `"/users/4"`             | Channel client tries to subscribe                                                                                                                                 |
 | vars       | `map[string]string`    | `{"user": "4"}`          | Extracted variables from the matched channel pattern. It's empty in case of using channels without variables.                                                     |
-| labels     | `map[string]string`    | `{"region": "eu"}`       | [Client labels](./client_authentication.md#client-labels) attached to the connection (in JWT, `labels_from_claim` mapping, or connect proxy result). Always present as a map (empty when the client has no labels). Direct access like `labels.region` errors on a missing key — guard with `"region" in labels` first, same idiom as `meta`. |
+| labels     | `map[string]string`    | `{"region": "eu"}`       | [Client labels](./client_authentication.md#client-labels) attached to the connection (in JWT, `labels_from_claim` mapping, or connect proxy result). Always present as a map (empty when the client has no labels). Direct access like `labels.region` errors on a missing key — guard with `"region" in labels` first, as in the example below. |
 
 In this case, to allow admin to subscribe on any user's channel or allow non-admin user to subscribe only on its own channel, you may construct an expression like this:
 
 ```json
 {
   "channel": {
-    "without_namespace": {
-      "subscribe_cel": "vars.user == user or 'admin' in meta.roles"
-    }
+    "patterns": true,
+    "namespaces": [
+      {
+        "name": "users",
+        "pattern": "/users/:user",
+        "subscribe_cel": "vars.user == user || 'admin' in meta.roles"
+      }
+    ]
   }
 }
 ```
@@ -108,10 +119,12 @@ Let's look at one more example. Say a client with user ID `123` subscribes to a 
 ```json
 {
   "channel": {
+    "patterns": true,
     "namespaces": [
       {
-        "name": "/:tenant/users/:user",
-        "subscribe_cel": "vars.tenant == meta.tenant && (vars.user == user or 'admin' in meta.roles)"
+        "name": "tenant_users",
+        "pattern": "/:tenant/users/:user",
+        "subscribe_cel": "vars.tenant == meta.tenant && (vars.user == user || 'admin' in meta.roles)"
       }
     ]
   }
@@ -126,6 +139,10 @@ CEL expression to check permissions to publish into a channel. [Same expression 
 
 CEL expression to check permissions for channel history. [Same expression variables](#expression-variables) are available.
 
+`history_cel` is only used for history calls. It's not consulted on subscribe to allow recovery or positioning – those depend on `allow_recovery`/`allow_positioning` or on other history permissions.
+
 ## presence_cel
 
 CEL expression to check permissions for channel presence. [Same expression variables](#expression-variables) are available.
+
+`presence_cel` is only used for presence and presence stats calls. It's not consulted on subscribe to allow join/leave messages – those depend on other presence permissions.

@@ -136,6 +136,7 @@ function ChannelCaps({ state, set, capType, channel }) {
   };
   const CAPS = [['pub', 'pub'], ['hst', 'hst'], ['prs', 'prs']];
   const grants = state.channelCapsAllow.includes(capType);
+  const subscribed = !!state.isSubscribed;
   return (
     <div className={styles.field}>
       <span>
@@ -150,9 +151,9 @@ function ChannelCaps({ state, set, capType, channel }) {
           </div>
         ))}
       </div>
-      {grants
-        ? <span className={styles.capsOk}>✓ grants <code>{capType}</code> for <code>{channel}</code></span>
-        : <span className={styles.capsHint}>Check <code>{capType}</code> to grant this operation for <code>{channel}</code>.</span>}
+      {grants && subscribed && <span className={styles.capsOk}>✓ grants <code>{capType}</code> for <code>{channel}</code></span>}
+      {grants && !subscribed && <span className={styles.capsHint}>Grants <code>{capType}</code> for <code>{channel}</code> only while the connection is subscribed to it.</span>}
+      {!grants && <span className={styles.capsHint}>Check <code>{capType}</code> to grant this operation for <code>{channel}</code>.</span>}
     </div>
   );
 }
@@ -319,7 +320,7 @@ export default function PermissionExplorer({ op = 'subscribe' }) {
           </button>
           {showAdvanced && (
             <div className={styles.group}>
-              <Check state={state} set={set} name="insecure" label="client.insecure (dev only — bypasses all checks)" />
+              <Check state={state} set={set} name="insecure" label="client.insecure (dev only — grants what nothing earlier decided)" />
             </div>
           )}
         </div>
@@ -371,7 +372,7 @@ export default function PermissionExplorer({ op = 'subscribe' }) {
 
       <div className={styles.caveat}>
         Mirrors Centrifugo's decision order for teaching purposes. Advanced knobs
-        (CEL expressions, the bidirectional subscribe-stream proxy) are omitted for clarity.
+        (CEL expressions, the subscribe stream proxy) are omitted for clarity.
         Server API calls from your backend always bypass these checks.
       </div>
     </div>

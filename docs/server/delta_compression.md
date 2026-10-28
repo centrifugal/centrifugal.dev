@@ -19,7 +19,7 @@ The diff is calculated using [Fossil](https://fossil-scm.org/home/doc/tip/www/de
 
 :::tip
 
-At this point delta compression is only available for bidirectional client-side subscriptions and supported by Centrifugo Javascript SDK [centrifuge-js](https://github.com/centrifugal/centrifuge-js), Java SDK [centrifuge-java](https://github.com/centrifugal/centrifuge-java), Python SDK [centrifuge-python](https://github.com/centrifugal/centrifuge-python). There is also [unfinished PR](https://github.com/centrifugal/centrifuge-swift/pull/104) to Swift SDK. See also [SDK feature matrix](../transports/client_sdk.md#sdk-feature-matrix).
+At this point delta compression is supported by all official Centrifugo SDKs. See [SDK feature matrix](../transports/client_sdk.md#sdk-feature-matrix).
 
 :::
 
@@ -35,8 +35,9 @@ To successfully negotiate delta compression for a subscriber several conditions 
 
 * subscriber provides `delta: "fossil"` option when creating a client-side Subscription
 * server uses `"allowed_delta_types": ["fossil"]` for a channel namespace a client subscribes to
-* server uses history for a channel
+* server uses history for a channel (with Redis engine, history must be kept in Streams – the default, delta compression is not supported with [`history_use_lists`](./engines.md#engineredishistory_use_lists))
 * positioning or recovery are used for channel subscription
+* subscription does not use a [tags filter](./publication_filtering.md) – client-side or server-side
 
 Example of subscription creation on the client side:
 
@@ -103,6 +104,14 @@ For example, this means that to automatically use delta calculation for all publ
 ```
 
 Again – subscribers which support delta compression and do not support it can co-exist in one channel.
+
+In Centrifugo PRO, a namespace with `allowed_delta_types` can not use [`batch_flush_latest`](../pro/client_msg_batching.md#batch_flush_latest): skipping publications would leave subscribers applying deltas to data they never received.
+
+:::caution
+
+The `skip_history` option of publish and broadcast can't be used in channels with delta compression: subscribers fail to apply the delta of the publication following a publication not saved to history.
+
+:::
 
 ### Example and further reading
 

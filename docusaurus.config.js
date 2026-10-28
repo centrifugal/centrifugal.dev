@@ -119,11 +119,19 @@ module.exports = {
               label: "Twitter",
               href: "https://twitter.com/centrifugalabs",
             },
+            {
+              label: "LinkedIn",
+              href: "https://www.linkedin.com/company/centrifugalabs",
+            },
           ],
         },
         {
           title: "More",
           items: [
+            {
+              label: "Demos",
+              to: "/demos",
+            },
             {
               label: "Attributions",
               to: "docs/attributions",

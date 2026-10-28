@@ -75,7 +75,7 @@ User-limited channels must be enabled for a channel namespace using [allow_user_
 
 Centrifugo maintains compatibility with its previous versions which had concept of private channels. In earlier versions — specifically Centrifugo v1, v2, and v3 — only channels beginning with `$` required a subscription JWT for subscribing. With Centrifugo v4, this is no longer the case; clients can subscribe to any channel if they have a valid subscription token.
 
-However, for namespaces where the `allow_subscribe_for_client` option is activated, Centrifugo prohibits subscriptions to channels that start with the private channel prefix (configured via `channel.private_prefix`, which defaults to `$`) unless a subscription token is provided. This restriction is designed to facilitate a secure migration to Centrifugo v4 or later versions.
+However, Centrifugo prohibits subscriptions to channels that start with the private channel prefix (configured via `channel.private_prefix`, which defaults to `$`) unless a subscription token is provided – whatever other options are on in the namespace. This restriction is designed to facilitate a secure migration to Centrifugo v4 or later versions. Note, the private prefix only limits subscribing: publish, history and presence permissions are checked on their own, see [channel permissions](./channel_permissions.md).
 
 ### Channel is just a string
 
@@ -217,6 +217,8 @@ When on all clients will receive join/leave events for a channel in a namespace 
 
 If pushing join/leave is not forced then client can provide a corresponding Subscription option to enable it – but it should have permissions to access channel presence (by having an explicit capability or if allowed on a namespace level).
 
+This works whichever way the subscription was authorized – including a subscription token and, since Centrifugo v6.10.0, a subscribe proxy. When a subscription token or a subscribe proxy overrides `join_leave`, the overridden value decides whether join/leave messages are emitted and so may be pushed to a client which asked for them.
+
 ### history_size
 
 `history_size` (integer, default `0`) – history size (amount of messages) for channels. As Centrifugo keeps all history messages in process memory (or in a broker memory) it's very important to limit the maximum amount of messages in channel history with a reasonable value. `history_size` defines the maximum amount of messages that Centrifugo will keep for **each** channel in the namespace. As soon as history has more messages than defined by history size – old messages will be evicted.
@@ -311,11 +313,11 @@ If Centrifugo detects a bad position of the client (i.e. potential message loss)
 
 `force_positioning` option must be used in conjunction with reasonably configured message history for a channel i.e. `history_size` and `history_ttl` **must be set** (because Centrifugo uses channel history to check client position in a stream).
 
-If positioning is not forced then client can provide a corresponding Subscription option to enable it – but it should have permissions to access channel history (by having an explicit capability or if allowed on a namespace level).
+If positioning is not forced then client can provide a corresponding Subscription option to enable it – when the namespace has [allow_positioning](#allow_positioning) on, or when the client has permissions to access channel history (by having an explicit capability or if allowed on a namespace level). Since Centrifugo v6.10.0 this also applies to subscriptions authorized by a subscribe proxy.
 
 ### allow_positioning
 
-`allow_positioning` (boolean, default `false`) – when on clients may enable `positioned` mode themselves when subscribing to channels in a namespace, instead of it being forced for everyone via `force_positioning`. As with forced positioning, `history_size` and `history_ttl` **must be set** for the namespace since Centrifugo uses channel history to check a client's position in the stream. A client opting in also needs permission to access channel history.
+`allow_positioning` (boolean, default `false`) – when on clients may enable `positioned` mode themselves when subscribing to channels in a namespace, instead of it being forced for everyone via `force_positioning`. As with forced positioning, `history_size` and `history_ttl` **must be set** for the namespace since Centrifugo uses channel history to check a client's position in the stream. With `allow_positioning` on, a client does not need permission to access channel history to enable positioning – without it, only clients with history permission can.
 
 ### force_recovery
 
@@ -323,7 +325,7 @@ If positioning is not forced then client can provide a corresponding Subscriptio
 
 `force_recovery` option must be used in conjunction with a reasonably configured message history for a channel, i.e. `history_size` and `history_ttl` **must be set** (because Centrifugo uses channel history to recover messages).
 
-If recovery is not forced then client can provide a corresponding Subscription option to enable it – but it should have permissions to access channel history (by having an explicit capability or if allowed on a namespace level).
+If recovery is not forced then client can provide a corresponding Subscription option to enable it – when the namespace has [allow_recovery](#allow_recovery) on, or when the client has permissions to access channel history (by having an explicit capability or if allowed on a namespace level). Since Centrifugo v6.10.0 this also applies to subscriptions authorized by a subscribe proxy.
 
 :::tip
 
@@ -333,7 +335,7 @@ Not all real-time events require this feature turned on so think wisely when you
 
 ### allow_recovery
 
-`allow_recovery` (boolean, default `false`) – when on clients may enable `recoverable` mode themselves when subscribing to channels in a namespace, instead of it being forced for everyone via `force_recovery`. Like forced recovery it requires `history_size` and `history_ttl` to be set (and enabling recovery turns positioning on automatically), and a client opting in needs permission to access channel history. See more details about how recovery works in the [special chapter](history_and_recovery.md).
+`allow_recovery` (boolean, default `false`) – when on clients may enable `recoverable` mode themselves when subscribing to channels in a namespace, instead of it being forced for everyone via `force_recovery`. Like forced recovery it requires `history_size` and `history_ttl` to be set (and enabling recovery turns positioning on automatically). With `allow_recovery` on, a client does not need permission to access channel history to enable recovery – without it, only clients with history permission can. See more details about how recovery works in the [special chapter](history_and_recovery.md).
 
 ### force_recovery_mode
 
@@ -359,11 +361,13 @@ Turning this option on effectively makes namespace public – no subscribe permi
 
 ### allow_publish_for_subscriber
 
-`allow_publish_for_subscriber` (boolean, default `false`) - when the `allow_publish_for_subscriber` option is enabled client can publish into a channel in namespace directly from the client side over real-time connection but only if client subscribed to that channel.
+`allow_publish_for_subscriber` (boolean, default `false`) - when the `allow_publish_for_subscriber` option is enabled client can publish into a channel in namespace directly from the client side over real-time connection but only if client subscribed to that channel. Anonymous clients additionally need [allow_publish_for_anonymous](#allow_publish_for_anonymous).
 
 :::danger
 
 Keep in mind that in this case subscriber can publish any payload to a channel – Centrifugo does not validate input at all. Your app backend won't receive those messages - publications just go through Centrifugo towards channel subscribers. Consider always validate messages which are being published to channels (i.e. using server API to publish after validating input on the backend side, or using [publish proxy](proxy.md#publish-proxy) - see [idiomatic usage](../getting-started/design.md#idiomatic-usage)).
+
+If you still enable this option, consider setting [publication_data_format](#publication_data_format) for the namespace: by default a client can publish a payload which is not valid JSON, and such a publication can't be delivered to subscribers which use JSON protocol.
 
 :::
 
@@ -377,6 +381,8 @@ Keep in mind that in this case subscriber can publish any payload to a channel �
 
 Keep in mind that in this case client can publish any payload to a channel – Centrifugo does not validate input at all. Your app backend won't receive those messages - publications just go through Centrifugo towards channel subscribers. Consider always validate messages which are being published to channels (i.e. using server API to publish after validating input on the backend side, or using [publish proxy](proxy.md#publish-proxy) - see [idiomatic usage](../getting-started/design.md#idiomatic-usage)).
 
+If you still enable this option, consider setting [publication_data_format](#publication_data_format) for the namespace: by default a client can publish a payload which is not valid JSON, and such a publication can't be delivered to subscribers which use JSON protocol.
+
 :::
 
 ### allow_publish_for_anonymous
@@ -385,11 +391,11 @@ Keep in mind that in this case client can publish any payload to a channel – C
 
 ### allow_history_for_subscriber
 
-`allow_history_for_subscriber` (boolean, default `false`) – allows clients who subscribed on a channel to call history API from that channel.
+`allow_history_for_subscriber` (boolean, default `false`) – allows clients who subscribed on a channel to call history API from that channel. Anonymous clients additionally need [allow_history_for_anonymous](#allow_history_for_anonymous).
 
 ### allow_history_for_client
 
-`allow_history_for_client` (boolean, default `false`) – allows all clients to call history information in a namespace.
+`allow_history_for_client` (boolean, default `false`) – allows all authenticated (non-anonymous) clients to call history information in a namespace. To also allow anonymous clients use [allow_history_for_anonymous](#allow_history_for_anonymous).
 
 ### allow_history_for_anonymous
 
@@ -397,11 +403,11 @@ Keep in mind that in this case client can publish any payload to a channel – C
 
 ### allow_presence_for_subscriber
 
-`allow_presence_for_subscriber` (boolean, default `false`) – allows clients who subscribed on a channel to call presence information from that channel.
+`allow_presence_for_subscriber` (boolean, default `false`) – allows clients who subscribed on a channel to call presence information from that channel. Anonymous clients additionally need [allow_presence_for_anonymous](#allow_presence_for_anonymous).
 
 ### allow_presence_for_client
 
-`allow_presence_for_client` (boolean, default `false`) – allows all clients to call presence information in a namespace.
+`allow_presence_for_client` (boolean, default `false`) – allows all authenticated (non-anonymous) clients to call presence information in a namespace. To also allow anonymous clients use [allow_presence_for_anonymous](#allow_presence_for_anonymous).
 
 ### allow_presence_for_anonymous
 
@@ -411,9 +417,9 @@ Keep in mind that in this case client can publish any payload to a channel – C
 
 `allow_user_limited_channels` (boolean, default `false`) - allows using user-limited channels in a namespace for checking subscribe permission.
 
-:::note
+:::caution
 
-If client subscribes to a user-limited channel while this option is off then server rejects subscription with `103: permission denied` error.
+When this option is off, `#` has no special meaning in channel names of the namespace: a channel like `personal:#17` is authorized like any other channel – for example, with `allow_subscribe_for_client` on, any authenticated client can subscribe to it. A client without user ID can't subscribe to a user-limited channel. User-limited channels only limit subscribing: publish, history and presence permissions are checked on their own, see [channel permissions](./channel_permissions.md).
 
 :::
 
@@ -469,6 +475,10 @@ Available since Centrifugo v6.5.2
 When set to `"json"` or `"json_object"`, Centrifugo validates publication data on both server API and client publish operations, ensuring data integrity across all publish sources. This is useful when you want to guarantee that only valid JSON messages flow through specific channels.
 
 When set to `"binary"`, Centrifugo allows empty data to be published, which can be useful for channels where you need to send signals or work with arbitrary binary payloads.
+
+With the default empty value Centrifugo passes payloads through as they are given. This is a deliberate choice: the same channel may carry JSON or binary data depending on what your application needs, and Centrifugo expects payloads to come from a trusted source – your application backend, which has validated them already. The only check happens on delivery: a payload which is not valid JSON can't be encoded into JSON protocol, so a client connected with JSON protocol which is supposed to receive it is disconnected with [code](codes.md) `3506` (inappropriate protocol), while clients connected with Protobuf protocol receive it as is. Setting `"json"` or `"json_object"` moves the check to the publish stage, where the publisher gets an error and the publication never reaches a channel.
+
+Note that `publication_data_format` is about publication data only. Connection info and channel info (`info`, `b64info` in a connection token, in proxy responses and in server API requests) always come from your backend and are not validated by this option. The same delivery rule applies to them: info which is not valid JSON can't be delivered to clients which use JSON protocol.
 
 This option can be set globally for all channels at the top level of channel configuration, and can be overridden per namespace if needed.
 
@@ -541,7 +551,7 @@ Available since Centrifugo v6.4.0.
 
 ### subscribe_proxy_name
 
-`subscribe_proxy_name` (string, default `""`) – allows setting custom subscribe proxy to use by name. More info in [proxy chapter](proxy.md).
+`subscribe_proxy_name` (string, default `"default"`, the proxy configured under `channel.proxy`) – allows setting custom subscribe proxy to use by name. More info in [proxy chapter](proxy.md).
 
 ### publish_proxy_enabled
 
@@ -549,7 +559,7 @@ Available since Centrifugo v6.4.0.
 
 ### publish_proxy_name
 
-`publish_proxy_name` (string, default `""`) – allows setting custom publish proxy to use by name. More info in [proxy chapter](proxy.md).
+`publish_proxy_name` (string, default `"default"`, the proxy configured under `channel.proxy`) – allows setting custom publish proxy to use by name. More info in [proxy chapter](proxy.md).
 
 ### sub_refresh_proxy_enabled
 
@@ -557,7 +567,7 @@ Available since Centrifugo v6.4.0.
 
 ### sub_refresh_proxy_name
 
-`sub_refresh_proxy_name` (string, default `""`) – allows setting custom sub refresh proxy to use by name. More info in [proxy chapter](proxy.md).
+`sub_refresh_proxy_name` (string, default `"default"`, the proxy configured under `channel.proxy`) – allows setting custom sub refresh proxy to use by name. More info in [proxy chapter](proxy.md).
 
 ### subscribe_stream_proxy_enabled
 
@@ -565,7 +575,7 @@ Available since Centrifugo v6.4.0.
 
 ### subscribe_stream_proxy_name
 
-`subscribe_stream_proxy_name` (string, default `""`) – allows setting custom subscribe stream proxy to use by name. See [subscription streams](./proxy_streams.md).
+`subscribe_stream_proxy_name` (string, default `"default"`, the proxy configured under `channel.proxy`) – allows setting custom subscribe stream proxy to use by name. See [subscription streams](./proxy_streams.md).
 
 ### subscribe_stream_proxy_bidirectional
 
@@ -577,7 +587,7 @@ Available since Centrifugo v6.4.0.
 
 ### cache_empty_proxy_name
 
-`cache_empty_proxy_name` (string, default `""`, Centrifugo PRO only) – allows setting custom cache empty proxy to use by name.
+`cache_empty_proxy_name` (string, default `"default"`, Centrifugo PRO only) – allows setting custom cache empty proxy to use by name.
 
 ### state_proxy_enabled
 

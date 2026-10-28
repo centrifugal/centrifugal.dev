@@ -46,6 +46,7 @@ import TabItem from '@theme/TabItem';
     {label: 'Swift', value: 'swift'},
     {label: 'Java', value: 'java'},
     {label: 'Go', value: 'go'},
+    {label: 'Rust', value: 'rust'},
   ]
 }>
 <TabItem value="javascript">
@@ -159,6 +160,21 @@ client.OnDisconnected(func(e centrifuge.DisconnectedEvent) {
 })
 
 _ = client.connect()
+```
+
+</TabItem>
+<TabItem value="rust">
+
+```rust
+use centrifuge::Client;
+
+let client = Client::builder("ws://localhost:8000/connection/websocket")
+    .on_connecting(|_, e| println!("connecting: {} ({})", e.code, e.reason))
+    .on_connected(|_, e| println!("connected with ID {}", e.client_id))
+    .on_disconnected(|_, e| println!("disconnected: {} ({})", e.code, e.reason))
+    .build()?;
+
+client.connect()?;
 ```
 
 </TabItem>
@@ -311,6 +327,7 @@ If subscription to a channel is not successful then depending on error type subs
     {label: 'Swift', value: 'swift'},
     {label: 'Java', value: 'java'},
     {label: 'Go', value: 'go'},
+    {label: 'Rust', value: 'rust'},
   ]
 }>
 <TabItem value="javascript">
@@ -428,6 +445,24 @@ if err != nil {
 ```
 
 </TabItem>
+<TabItem value="rust">
+
+```rust
+let sub = client
+    .new_subscription("example")
+    .on_subscribing(|sub, e| {
+        println!("subscribing to {}: {} ({})", sub.channel(), e.code, e.reason)
+    })
+    .on_subscribed(|sub, _| println!("subscribed to {}", sub.channel()))
+    .on_unsubscribed(|sub, e| {
+        println!("unsubscribed from {}: {} ({})", sub.channel(), e.code, e.reason)
+    })
+    .build()?;
+
+sub.subscribe();
+```
+
+</TabItem>
 </Tabs>
 ````
 
@@ -504,6 +539,7 @@ So minimal code where we connect to a server and listen for messages published i
     {label: 'Swift', value: 'swift'},
     {label: 'Java', value: 'java'},
     {label: 'Go', value: 'go'},
+    {label: 'Rust', value: 'rust'},
   ]
 }>
 <TabItem value="javascript">
@@ -622,6 +658,23 @@ if err = client.Connect(); err != nil {
 ```
 
 </TabItem>
+<TabItem value="rust">
+
+```rust
+use centrifuge::Client;
+
+let client = Client::builder("ws://localhost:8000/connection/websocket").build()?;
+
+let sub = client
+    .new_subscription("example")
+    .on_publication(|_, e| println!("publication: {}", String::from_utf8_lossy(&e.data)))
+    .build()?;
+
+sub.subscribe();
+client.connect()?;
+```
+
+</TabItem>
 </Tabs>
 ````
 
@@ -736,6 +789,8 @@ const sub = client.newSubscription('updates', {
 The order matters: read the stream position **before** loading data. This ensures the position is a lower bound — publications between the captured position and the moment data was loaded may be returned by Centrifugo during recovery. Your application must handle replaying these publications without corrupting its state — the exact approach depends on your data model (e.g., offset-based dedup, last-write-wins, or idempotent updates).
 
 Without `getState`, a failed recovery results in a `subscribed` event with `recovered: false`, and the application must handle the gap manually. With `getState`, the SDK handles it automatically — the application just reloads its state and the SDK re-subscribes from the correct position.
+
+See the [App-owned state with stream subscriptions](/blog/2026/07/27/app-owned-state-stream-subscriptions) blog post for the reasoning behind the callback and two worked examples — a Kafka aggregator and per-tenant kitchen orders.
 
 ## Server-side subscriptions
 
