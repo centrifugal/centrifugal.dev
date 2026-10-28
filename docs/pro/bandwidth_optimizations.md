@@ -103,7 +103,7 @@ A client whose SDK supports the feature says so when it connects, and the server
 
 <DictionaryConnectDiagram />
 
-The connect reply is never compressed, whether it carries the dictionary or only names it; every frame after it is, and starts with a marker saying so. So no compressed frame can reach a client that does not yet hold the dictionary. A dictionary is chosen at connect and never changes mid-connection. If the client cannot use the dictionary, or a frame fails to decode, it drops the dictionary and reconnects without it.
+The connect reply is never compressed, whether it carries the dictionary or only names it; every frame after it is, and starts with a marker saying so. So no compressed frame can reach a client that does not yet hold the dictionary. A dictionary is chosen at connect and never changes mid-connection. If the client cannot use the dictionary, or a frame fails to decode, that is a protocol error, handled like any other: the client disconnects with code 2 (bad protocol) and a reason saying what failed, and does not reconnect on its own. It forgets the dictionary, so connecting again does not offer it.
 
 How long a client keeps the dictionary depends on the SDK:
 
