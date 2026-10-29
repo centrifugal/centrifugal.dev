@@ -199,9 +199,20 @@ Activate it in the same step or later from the profile. You can stage it to a pe
 
 Retraining is starting another session over the same connections: **Retrain** on the profile fills one in from the session its dictionary came from. Nothing activates on its own, so a dictionary only ever changes when an operator says so. When to retrain is what [monitoring](#measured-and-live-ratios) tells you.
 
+### Which clients get one
+
+By default every client that can decode a dictionary is offered one. **Serve to** on the **Compression** page narrows that by the name a client sends when it connects. Official SDKs send their own name (`js`, `dart`, `swift` and so on) unless the application sets another:
+
+* **Only** offers dictionaries to the clients you list, and to nobody else: a way to try the feature on one platform first. A client name that appears later is left out until you add it.
+* **All except** offers them to everyone but the clients you list: a way to take a client out of service if it turns out to decode badly. A client name that appears later is served.
+
+A client that sends no name can be listed as **no name**. Browser, React Native and Node applications all send `js`, so telling them apart needs a [profile](#profiles) or a name the application sets. The name is the client's own claim: this decides who is offered a dictionary and protects nothing.
+
+Like the other switches, it applies to every node within seconds and to new connections only. Connections it leaves out are counted in `centrifugo_dict_compression_excluded_connects_total`.
+
 ### Withdrawal and monitoring
 
-Deactivating a version drops that profile back to the structure dictionary — immediately for new connections, on reconnect for existing ones. Deactivating the structure dictionary as well turns the feature off entirely.
+Deactivating a version drops that profile back to the structure dictionary — immediately for new connections, on reconnect for existing ones. With the structure dictionary off as well, connections that have no active version to receive get no dictionary; **Serve dictionaries** turns the feature off for everyone.
 
 :::caution
 

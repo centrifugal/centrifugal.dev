@@ -100,6 +100,18 @@ Depending on the load profile, this may give:
 * lower memory usage and fewer goroutines during large broadcasts
 * higher throughput of single publications under heavy load
 
+Measured against Centrifugo OSS on the same machine, with Redis, 256-byte payloads and a fixed rate both editions held, so these are costs of identical work (medians of three alternating runs):
+
+| | Centrifugo CPU, OSS → PRO | latency p50, OSS → PRO |
+|---|---|---|
+| `broadcast` into 1000 channels, 100,000 publications/sec | 0.88 → 0.15 cores (**5.9x less**) | 2.0 → 1.6 ms |
+| `broadcast` into 1000 channels with history, 30,000/sec | 0.30 → 0.06 cores (**5x less**) | 10.6 → 8.0 ms |
+| `batch` of 100 `publish` commands, 25,000 publications/sec | 0.58 → 0.23 cores (**2.5x less**) | 1.0 → 0.80 ms |
+| `batch` of 100 `publish` commands with history, 10,000/sec | 0.26 → 0.09 cores (**2.9x less**) | 2.6 → 2.1 ms |
+| `batch` of 100 `publish` commands, 5,000/sec, 3 ms round trip to Redis | 0.16 → 0.06 cores (**2.7x less**) | 5.2 → 4.9 ms |
+
+Batches in Centrifugo OSS here run with `"parallel": true`, its fastest mode. Without it, Centrifugo OSS publishes one command after another and waits for a Redis round trip for each: a batch of 100 took 13 ms with Redis on the same machine and 365 ms with a 3 ms round trip. Centrifugo PRO sends the publications of a batch to Redis in one call, with or without `parallel`.
+
 The effect is larger when a call carries many publications, and for single publications it grows with load. It also depends on the broker setup – for example, with Redis Cluster without sharded PUB/SUB the gain is smaller, since publications to different channels can not share one Redis call. Under load, a single publication may wait a little for others, which adds up to 250 microseconds to its latency; the latency of a broadcast with history may also increase slightly, since one broker call carrying many channels takes Redis longer than a single publish.
 
 ## Faster HTTP proxy

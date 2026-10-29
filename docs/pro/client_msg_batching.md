@@ -13,6 +13,15 @@ But still in this model, if you have a lot of messages sent to each individual c
 
 We have customer reports showing that enabling options described here reduced total CPU usage of Centrifugo cluster by half. This may be a significant cost reduction at scale.
 
+The busier each connection, the more there is to batch. We measured one node delivering a channel's publications to 1,000 subscribers, with and without `client.write_delay: 10ms` (medians of alternating runs):
+
+| messages per second to each subscriber | Centrifugo CPU, no delay → 10ms delay |
+|---|---|
+| 100 | 1.76 → 1.12 cores (1.6x less) |
+| 500 | 3.48 → 1.29 cores (**2.7x less**) |
+
+At 500 messages a second the node without a delay also fell behind: a publish call took 55 ms at the median, against 0.28 ms with the delay.
+
 :::tip
 
 Note, this is only useful when you have lots of messages per client. This specific feature won't be helpful in the case where the message is broadcast to many different connections, as the feature described here only batches message writing in terms of a single socket.

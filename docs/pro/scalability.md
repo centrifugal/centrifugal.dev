@@ -26,6 +26,15 @@ This option can radically reduce the load on a broker in the following situation
 
 Using this option only makes sense with remote engine (such as Redis), it won't provide a benefit in case of using a Memory engine.
 
+How much it saves depends on how many identical requests overlap in time: the more clients arrive together and the longer a request to Redis takes, the more of them share one. We measured a node going away behind a load balancer, with every client of one channel reconnecting to another node and recovering from the same position, and 0.5 ms between Centrifugo and Redis:
+
+| clients reconnecting | recovery requests to Redis, without → with singleflight | all Redis commands of the reconnect |
+|---|---|---|
+| 1,000 | 1,000 → 82-197 | about 4,050 → 380-840 |
+| 10,000 | 10,000 → 2,200-3,200 | about 40,300 → 9,300-13,100 |
+
+With Redis on the same machine and no network in between, requests finish before others can join them, and the saving was about 2x.
+
 To enable:
 
 ```json title="config.json"
@@ -44,7 +53,7 @@ Shared position synchronization feature allows reducing the load on the broker f
 
 Centrifugo uses periodic position synchronization requests to make sure there was no message loss between Engine PUB/SUB and Centrifugo. These requests create additional load on broker.
 
-When `shared_position_sync` is enabled, subscribers use an intermediary cache to only send position requests to the broker if another channel subscriber has not done so recently. The benefit here is proportional to the number of channel subscribers on a Centrifugo node.
+When `shared_position_sync` is enabled, subscribers use an intermediary cache to only send position requests to the broker if another channel subscriber has not done so recently. The benefit here is proportional to the number of channel subscribers on a Centrifugo node: with 10,000 subscribers of one channel on one node, the position checks that reached Redis over 25 seconds went from 20,009 to 4.
 
 To enable in the specific channel namespace use boolean channel option `shared_position_sync`:
 
