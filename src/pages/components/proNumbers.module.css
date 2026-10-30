@@ -1,0 +1,289 @@
+.section {
+    width: 100%;
+    padding: 64px 0 56px;
+}
+
+.inner {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+.header {
+    text-align: center;
+    max-width: 660px;
+    margin: 0 auto 40px;
+}
+
+.eyebrow {
+    display: inline-block;
+    font-family: "Nunito";
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 999px;
+    margin-bottom: 18px;
+}
+
+html[data-theme="light"] .eyebrow {
+    color: #E84C3B;
+    background: rgba(232, 76, 59, 0.08);
+    border: 1px solid rgba(232, 76, 59, 0.2);
+}
+
+html[data-theme="dark"] .eyebrow {
+    color: #fe5e5e;
+    background: rgba(254, 94, 94, 0.1);
+    border: 1px solid rgba(254, 94, 94, 0.25);
+}
+
+.heading {
+    font-family: "Nunito";
+    font-size: 2.4rem;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0 0 12px;
+    color: var(--ifm-font-color-base);
+}
+
+.subheading {
+    font-size: 1.05rem;
+    line-height: 1.5;
+    margin: 0;
+    color: var(--ifm-color-emphasis-600);
+}
+
+html[data-theme="dark"] .subheading {
+    color: var(--ifm-color-emphasis-500);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+@media (max-width: 900px) {
+    .grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    padding: 28px 26px 22px;
+    border: 1px solid var(--ifm-color-emphasis-200);
+    border-radius: 16px;
+    background: var(--ifm-background-color);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 24px 60px -34px rgba(0, 0, 0, 0.22);
+    color: inherit;
+    text-decoration: none;
+    transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.card:hover {
+    color: inherit;
+    text-decoration: none;
+    border-color: rgba(232, 76, 59, 0.35);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 30px 70px -30px rgba(232, 76, 59, 0.35);
+}
+
+html[data-theme="dark"] .card {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.02);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 30px 80px -42px rgba(0, 0, 0, 0.6);
+}
+
+html[data-theme="dark"] .card:hover {
+    border-color: rgba(254, 94, 94, 0.35);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 30px 80px -30px rgba(254, 94, 94, 0.3);
+}
+
+.value {
+    font-family: "Nunito";
+    font-size: 3.4rem;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    align-self: flex-start;
+}
+
+.label {
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin: 10px 0 22px;
+}
+
+.bars {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.barRow {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) 72px;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.82rem;
+}
+
+.barName {
+    color: var(--ifm-color-emphasis-600);
+}
+
+.barTrack {
+    height: 10px;
+    border-radius: 999px;
+    background: var(--ifm-color-emphasis-100);
+    overflow: hidden;
+}
+
+html[data-theme="dark"] .barTrack {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.bar {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--ifm-color-emphasis-400);
+}
+
+.barAccent {
+    background: linear-gradient(90deg, #fe5e5e, #d56464);
+    box-shadow: 0 0 10px rgba(254, 94, 94, 0.45);
+}
+
+.barGrow {
+    transition: width 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.barGrow.barAccent {
+    transition-delay: 0.25s;
+}
+
+.barValue {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--ifm-color-emphasis-600);
+}
+
+.barValueAccent {
+    font-weight: 700;
+    color: var(--ifm-font-color-base);
+}
+
+.note {
+    flex: 1;
+    font-size: 0.9rem;
+    color: var(--ifm-color-emphasis-600);
+    margin-bottom: 14px;
+}
+
+.link {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--ifm-color-primary);
+}
+
+.barLive {
+    transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.controls {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.stepper {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr) 40px;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.82rem;
+    cursor: pointer;
+}
+
+.controlsNote {
+    font-size: 0.9rem;
+    color: var(--ifm-color-emphasis-600);
+    margin-top: 4px;
+}
+
+.stepperLabel {
+    color: var(--ifm-color-emphasis-600);
+}
+
+.stepperValue {
+    text-align: right;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    margin: 0;
+    border-radius: 999px;
+    background: var(--ifm-color-emphasis-200);
+    cursor: pointer;
+}
+
+html[data-theme="dark"] .range {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border: none;
+    border-radius: 50%;
+    background: #fe5e5e;
+    box-shadow: 0 0 8px rgba(254, 94, 94, 0.5);
+}
+
+.range::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border: none;
+    border-radius: 50%;
+    background: #fe5e5e;
+    box-shadow: 0 0 8px rgba(254, 94, 94, 0.5);
+}
+
+.range:focus-visible {
+    outline: 2px solid rgba(254, 94, 94, 0.6);
+    outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .card,
+    .barGrow {
+        transition: none;
+    }
+}
+
+.row + .row {
+    margin-top: 44px;
+}
+
+.rowTitle {
+    font-family: "Nunito";
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ifm-color-emphasis-600);
+    margin: 0 0 16px 4px;
+}

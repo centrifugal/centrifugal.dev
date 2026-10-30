@@ -84,11 +84,15 @@ const data = [
             },
             {
                 name: 'Performance optimizations', pro: true, link: '/docs/pro/performance',
-                description: 'Batch periodic client events (ping, presence updates) to reduce CPU usage and system calls. Reported over 2x CPU reduction for idle connections in benchmarks.',
+                description: 'Batch periodic client events (ping, presence updates) to reduce CPU usage and system calls, and cut memory per connection. 2x less CPU and 2.5x less memory for idle connections.',
             },
             {
                 name: 'Sharded PUB/SUB for Redis Cluster', pro: true, link: '/docs/pro/scalability#redis-cluster-sharded-pubsub',
                 description: 'Use Redis 7.0+ sharded PUB/SUB to distribute channel load across cluster nodes instead of broadcasting to all. Includes node-grouped mode that reduces connection count from num_partitions to num_redis_nodes. Works for both Engine and Map Broker.',
+            },
+            {
+                name: 'Dictionary compression', pro: true, link: '/docs/pro/bandwidth_optimizations#dictionary-compression',
+                description: 'Compress every message against a dictionary trained on your own traffic, with no per-connection memory. Up to 4.6x less bandwidth for JSON.',
             },
             {
                 name: 'Bandwidth optimizations', pro: true, link: '/docs/pro/bandwidth_optimizations',

@@ -1,0 +1,53 @@
+.wrap {
+  background: #0f0f13;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 12px 10px 0;
+}
+
+.tab {
+  appearance: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  color: #c4c4cd;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.tab:hover {
+  border-color: rgba(254, 94, 94, 0.5);
+  color: #ffffff;
+}
+
+.tabActive,
+.tabActive:hover {
+  background: rgba(254, 94, 94, 0.16);
+  border-color: #fe5e5e;
+  color: #ffffff;
+}
+
+.caption {
+  margin: 0;
+  padding: 10px 16px 12px;
+  min-height: 4.6em;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #c4c4cd;
+}
+
+.wrap svg {
+  display: block;
+}

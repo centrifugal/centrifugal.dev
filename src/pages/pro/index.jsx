@@ -13,6 +13,7 @@ import ImageRotator from '../../components/ImageRotator';
 import Pricing from '../components/Pricing';
 import ComparisonTable from '../components/ComparisonTable';
 import FAQ from '../components/FAQ';
+import ProNumbers from '../components/ProNumbers';
 
 function Feature({ imageUrl, title, children }) {
     const imgUrl = useBaseUrl(imageUrl);
@@ -88,7 +89,7 @@ function Pro() {
                         "applicationCategory": "DeveloperApplication",
                         "operatingSystem": "Linux, macOS, Windows, Docker, Kubernetes",
                         "description": "Enhanced version of Centrifugo — a self-hosted realtime messaging server for chats, AI/LLM response streaming, live updates, and more. PRO unlocks push notifications, ClickHouse analytics, realtime tracing, rate limiting, SSO, channel state events, and performance optimizations for production workloads at scale.",
-                        "featureList": "Channel capabilities & CEL expressions, Channel patterns, Operation rate limiting, User blocking API, Token revocation & invalidation, Multiple JWKS providers, Server API JWKS authentication, Per-namespace engines, Singleflight & shared position sync, Performance optimizations, Bandwidth optimizations, Advanced message write and batching, ClickHouse analytics, Realtime channel & user tracing, Connection & channel snapshots, SSO/OIDC for admin UI, Enhanced metrics, Push notifications (FCM, APNs, HMS), Device token management & topics, Channel state events, Cache empty events, User status API, Connections API, Prioritized support",
+                        "featureList": "Channel capabilities & CEL expressions, Channel patterns, Operation rate limiting, User blocking API, Token revocation & invalidation, Multiple JWKS providers, Server API JWKS authentication, Per-namespace engines, Singleflight & shared position sync, Performance optimizations, Idle connection memory tuning, Bandwidth optimizations, Dictionary compression, Advanced message write and batching, ClickHouse analytics, Realtime channel & user tracing, Connection & channel snapshots, SSO/OIDC for admin UI, Enhanced metrics, Push notifications (FCM, APNs, HMS), Device token management & topics, Channel state events, Cache empty events, User status API, Connections API, Prioritized support",
                         "offers": {
                             "@type": "Offer",
                             "priceCurrency": "EUR",
@@ -164,6 +165,7 @@ function Pro() {
                         </>
                     }
                 />
+                <ProNumbers />
                 <ComparisonTable />
             </main >
             <Pricing />
