@@ -60,11 +60,45 @@ Once a response is complete, store it with the conversation and serve it from th
 
 Publishing the whole response so far with [delta compression](../server/delta_compression.md) and [cache recovery](../server/cache_recovery.md) instead lets a late client get one message rather than every chunk. But the backend then sends the growing text with every publication — for a response of a few thousand tokens, over a hundred times its size — and live subscribers, receiving deltas, get more bytes than chunks would send them. Chunks are the better default.
 
+### Responses longer than history: checkpoints
+
+Sizing history and the recovery limit as above is enough for most responses. It has a limit, though: an agent working for minutes produces more chunks than is reasonable to keep and to replay. A checkpoint removes it, at the cost of storing the response in flight. While the response streams, the backend periodically stores the response so far, together with the stream position of the last publication it includes – in Redis, or next to the conversation in the database. Store the chunks merged, with the pieces of each text part joined into one, so the checkpoint stays about as small as the text.
+
+A client which opens the conversation while the response is generated loads the checkpoint, renders it, and subscribes from its position – see [loading a conversation](#loading-a-conversation) below. So:
+
+- history only has to cover what was published since the last checkpoint, plus a reconnect – not the whole response;
+- a client joining mid-response receives the response so far at once, instead of every chunk of it.
+
+## Loading a conversation
+
+A client which opens a conversation needs two things joined without a gap: the stored conversation, with the response in flight, and every publication after it. The subscription option [`getState`](../transports/client_api.md#subscription-getstate) does the joining: the SDK calls it before subscribing, subscribes from the stream position it returns, and calls it again whenever the server can't recover what the client missed – after a long disconnect, or when the loaded checkpoint is older than what history still holds.
+
+```javascript
+const sub = centrifuge.newSubscription(`ai:${conversationId}`, {
+  getState: async () => {
+    // Your endpoint reads the channel position first, then the conversation.
+    const conv = await fetch(`/api/conversations/${conversationId}`).then((r) => r.json());
+    render(conv.messages, conv.checkpoint?.response);
+    // A response in flight: continue from its checkpoint.
+    return conv.checkpoint?.position ?? conv.position;
+  },
+});
+sub.on('publication', (ctx) => applyChunk(ctx.data));
+sub.subscribe();
+```
+
+The endpoint gets the channel position from the server API – a [`history`](../server/server_api.md#history) call without a limit returns just the position – and must read it **before** the conversation. In this order a publication made between the two reads may be loaded and delivered again, but is never lost: skip chunks the checkpoint already includes, for example by a sequence number in each publication.
+
+## Stopping generation from every device
+
+With the response generated on the backend and watched from several tabs or devices, stop should work from any of them, and stop the model call itself. The client asks your backend to stop the response; the backend publishes a cancel event into the response channel; the process generating the response – subscribed to the channel since the response started – aborts the model call. This works whichever backend instance received the request, and every viewer sees the response end at the same text.
+
 ## Examples
 
 - **[Streaming AI responses with Centrifugo](/blog/2025/06/17/streaming-ai-gpt-responses-with-centrifugo)** — end-to-end tutorial streaming GPT responses with FastAPI and temporary channels.
 - **[Scaling AI token streams with Centrifugo](/blog/2026/03/01/scaling-ai-token-streams-with-centrifugo)** — reconnect recovery, multi-tab synchronization, transport fallbacks, and horizontal scaling with Redis. Source on [GitHub](https://github.com/centrifugal/examples/tree/master/v6/scale-ai).
 - **[Transactional publishing with the PostgreSQL stream broker](/blog/2026/05/24/pg-stream-broker-benefits)** — committing the stored message and the published event in one transaction.
+- **[Chat with the Vercel AI SDK](https://github.com/centrifugal/examples/tree/master/v6/ai-sdk-chat)** — `useChat` over Centrifugo: a response survives reloads, every tab and device of a conversation shows it live, and stop works from any of them. Uses checkpoints and `getState`, with tests against a real Centrifugo.
 
 ## When you don't need Centrifugo
 
