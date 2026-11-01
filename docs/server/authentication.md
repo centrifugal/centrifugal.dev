@@ -269,10 +269,6 @@ Although Centrifugo typically uses the `exp` claim to manage connection expirati
 * To expire the connection at a specific future time, set it to that time.
 * To prevent connection expiration, set it to `0` (token `exp` claim will still be checked).
 
-### profile
-
-**Centrifugo PRO only.** `profile` assigns the connection to a [dictionary compression](../pro/bandwidth_optimizations.md#profiles) profile, e.g. `"trading-dashboard"`. It takes precedence over a profile the client declares, so your backend can classify connections without a client release.
-
 ## Connection expiration
 
 As mentioned, the `exp` claim in a connection token is designed to expire the client connection at some point in time. Here's a detailed look at the process when Centrifugo identifies that the connection is going to expire.

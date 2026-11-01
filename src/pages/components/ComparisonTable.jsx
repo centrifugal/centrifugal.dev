@@ -18,7 +18,7 @@ const data = [
             { name: 'Shared poll subscriptions', oss: true, pro: true },
             {
                 name: 'Shared poll enhancements', pro: true, link: '/docs/pro/shared_poll',
-                description: 'Instant initial data via cached items, delta compression, notification fast path for near-instant updates, adaptive backpressure, and a standalone relay server to centralize backend polling.',
+                description: 'Instant initial data via cached items, delta compression, notification fast path for near-instant updates, and adaptive backpressure. A standalone relay server to centralize backend polling is in progress and not yet officially supported.',
             },
             { name: 'Presence & join/leave events', oss: true, pro: true },
             { name: 'Delta compression, client-side publication filtering by tags', oss: true, pro: true },
@@ -48,7 +48,7 @@ const data = [
                 description: 'Limit the number of subscribe, publish, history, presence, RPC and other operations per connection using a token bucket algorithm. Automatically disconnect clients that generate too many errors.',
             },
             {
-                name: 'User blocking API', pro: true, link: '/docs/pro/user_block',
+                name: 'User blocking API', pro: true, link: '/docs/pro/access_revoke#user-blocking',
                 description: 'Block users at the Centrifugo level — blocked users are immediately disconnected and cannot reconnect. Supports optional persistence to Redis or database so blocks survive restarts.',
             },
             {
@@ -91,10 +91,6 @@ const data = [
                 description: 'Use Redis 7.0+ sharded PUB/SUB to distribute channel load across cluster nodes instead of broadcasting to all. Includes node-grouped mode that reduces connection count from num_partitions to num_redis_nodes. Works for both Engine and Map Broker.',
             },
             {
-                name: 'Dictionary compression', pro: true, link: '/docs/pro/bandwidth_optimizations#dictionary-compression',
-                description: 'Compress every message against a dictionary trained on your own traffic, with no per-connection memory. Up to 4.6x less bandwidth for JSON.',
-            },
-            {
                 name: 'Bandwidth optimizations', pro: true, link: '/docs/pro/bandwidth_optimizations',
                 description: 'Delta compression for at-most-once delivery, channel compaction, and client publish debouncing to coalesce rapid updates. Reduces bandwidth and broker load.',
             },
@@ -128,6 +124,10 @@ const data = [
             {
                 name: 'SSO/OIDC for admin UI', pro: true, link: '/docs/pro/admin_ui',
                 description: 'Authenticate admin UI users via any OIDC-compatible identity provider (Okta, KeyCloak, Google, Azure, etc.) with PKCE support. Checks user permissions on every request.',
+            },
+            {
+                name: 'Admin roles and audit log', pro: true, link: '/docs/pro/admin_ui#audit-log',
+                description: 'Give admin UI users an admin or viewer role based on claims from your identity provider. Log admin logins and every change made through the admin UI and admin API, with who made it, their IP, the target and the result.',
             },
             {
                 name: 'Configuration viewer', pro: true, link: '/docs/pro/admin_ui',

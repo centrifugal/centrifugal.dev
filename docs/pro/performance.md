@@ -170,7 +170,9 @@ Centrifugo PRO provides an integer option `websocket.compression_prepared_messag
 }
 ```
 
-This can significantly improve CPU and memory Centrifugo resource usage when using [WebSocket compression feature](../transports/websocket.md#websocketcompression). Measured on a 500-subscriber fan-out, the cache took compression from 2.40x the CPU of no compression down to 1.04x, and from 133 MB of heap down to 93 MB — see [the full comparison](./bandwidth_optimizations.md#which-compression-to-use-measured-cost-and-benefit). Note the option is a byte budget rather than a message count: set it too small and it caches almost nothing.
+This can significantly improve CPU and memory Centrifugo resource usage when using [WebSocket compression feature](../transports/websocket.md#websocketcompression). Measured on a 500-subscriber fan-out, the cache took compression from 2.40x the CPU of no compression down to 1.04x, and from 133 MB of heap down to 93 MB, on an idle 16-core Linux server with Centrifugo and the load generator as separate processes. Note the option is a byte budget rather than a message count: set it too small and it caches almost nothing.
+
+Turning up the compression level is not worth much: moving from the default level to a much slower one improved the saving from 2.47x to 2.58x while costing more CPU.
 
 Check out blog post [Performance optimizations of WebSocket compression in Go application](/blog/2024/08/19/optimizing-websocket-compression) which describes the possible effect of this optimization.
 
