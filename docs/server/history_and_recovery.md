@@ -143,7 +143,7 @@ Everything above maps to a handful of namespace options:
 | [`force_recovery`](./channels.md#force_recovery) | Make subscriptions recoverable (implies positioning) |
 | [`force_positioning`](./channels.md#force_positioning) | Detect dropped messages on live connections (`3010` on loss) |
 | [`force_recovery_mode`](./channels.md#force_recovery_mode) | `stream` (all messages) or `cache` (latest only) |
-| `client.recovery_max_publication_limit` | Cap on publications recovered in one go (default `300`) |
+| [`recovery_max_publication_limit`](./channels.md#recovery_max_publication_limit) | Cap on publications recovered in one go, for the namespace (default: `client.recovery_max_publication_limit`, `300`) |
 
 A minimal recoverable namespace:
 

@@ -702,13 +702,13 @@ Each client connection has individual message queue, this is the size of that qu
 
 Integer. Default: `300`
 
-Limit for the max number of publications to be returned via client protocol. See more in [History and recovery](./history_and_recovery.md)
+Limit for the max number of publications to be returned via client protocol. A namespace can set its own with [history_max_publication_limit](./channels.md#history_max_publication_limit). See more in [History and recovery](./history_and_recovery.md)
 
 ### `client.recovery_max_publication_limit`
 
 Integer. Default: `300`
 
-Limit for the max number of publications to be recovered via client protocol. See more in [History and recovery](./history_and_recovery.md)
+Limit for the max number of publications to be recovered via client protocol. A namespace can set its own with [recovery_max_publication_limit](./channels.md#recovery_max_publication_limit). See more in [History and recovery](./history_and_recovery.md)
 
 ### `client.channel_limit`
 

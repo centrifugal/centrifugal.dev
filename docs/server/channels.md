@@ -305,6 +305,16 @@ If not specified Centrifugo namespace inherits value from `channel.history_meta_
 
 The motivation to have history meta information TTL is as follows. When using a history in a channel, Centrifugo keeps some metadata for each channel stream. Metadata includes the latest stream offset and its epoch value. In some cases, when channels are created for а short time and then not used anymore, created metadata can stay in memory while not useful. For example, you can have a personal user channel but after using your app for a while user left it forever. From a long-term perspective, this can be an unwanted memory growth. Setting a reasonable value to this option can help to expire metadata faster (or slower if you need it). The rule of thumb here is to keep this value larger than history TTL used.
 
+### recovery_max_publication_limit
+
+`recovery_max_publication_limit` (integer, default `0`, available since Centrifugo v6.10.3) – the maximum number of publications Centrifugo returns to a client recovering a channel of the namespace. A client which missed more is not recovered (`recovered: false`) and gets none of them: partial recovery would leave a gap. If zero, [client.recovery_max_publication_limit](./configuration.md#clientrecovery_max_publication_limit) is used, `300` by default.
+
+Use it for a namespace whose history holds many small publications – a streamed AI response published in chunks, say, passes 300 publications in 15 seconds at 20 a second – without raising the limit for every namespace. Keep it in line with [history_size](#history_size): a limit above it is never reached. It applies however the subscription was authorized, and to server-side subscriptions.
+
+### history_max_publication_limit
+
+`history_max_publication_limit` (integer, default `0`, available since Centrifugo v6.10.3) – the maximum number of publications Centrifugo returns per client history request in a channel of the namespace. If zero, [client.history_max_publication_limit](./configuration.md#clienthistory_max_publication_limit) is used, `300` by default.
+
 ### force_positioning
 
 `force_positioning` (boolean, default `false`) – when the `force_positioning` option is on Centrifugo forces all subscriptions in a namespace to be `positioned`. I.e. Centrifugo will try to compensate at most once delivery of PUB/SUB broker checking client position inside a stream.
