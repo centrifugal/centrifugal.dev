@@ -1204,7 +1204,7 @@ Section to configure server shutdown behavior.
 
 [Duration](#duration-type). Default `"30s"`.
 
-Allows configuring max shutdown duration.
+Allows configuring max shutdown duration: the whole graceful shutdown has to finish within it, see [signal handling](#signal-handling).
 
 ## `pid_file`
 
@@ -1347,7 +1347,23 @@ kill -HUP <PID>
 
 Though at moment **this will only reload token secrets and channel options (top-level and namespaces)**.
 
-Centrifugo tries to gracefully shut down client connections when SIGINT or SIGTERM signals are received. By default, the maximum graceful shutdown period is 30 seconds but can be changed using the `shutdown.timeout` ([duration](#duration-type), default `"30s"`) configuration option.
+Proxies are created on start, so a reload can't start using a proxy which wasn't in use before: since v6.10.3 such a reload is rejected with an error in logs, and the previous configuration stays active. Restart Centrifugo to start using a new proxy.
+
+On SIGINT or SIGTERM Centrifugo shuts down gracefully: it stops accepting new connections and requests, lets [async consumers](./consumers.md) finish and acknowledge the messages they already took, closes client connections, then closes connections to Redis, PostgreSQL, NATS and other systems it uses. The whole shutdown has to finish within `shutdown.timeout` ([duration](#duration-type), default `"30s"`). If it doesn't, Centrifugo logs `shutdown timeout reached` and exits with code 1.
+
+If a server, an async consumer or another component fails after start, Centrifugo runs the same graceful shutdown before exiting with code 1.
+
+## Restart on config file change
+
+For development, Centrifugo can restart itself when its configuration file changes – available since v6.10.3:
+
+```bash
+centrifugo --config config.json --watch-config-file
+```
+
+When the configuration in the file changes, Centrifugo restarts in the same process with the new configuration, and all options apply – unlike the SIGHUP reload above. Client connections are closed by the restart, and clients reconnect. A change which fails validation is logged and ignored, and Centrifugo keeps running with the previous configuration. The process keeps its PID, so it works as the main process of a container.
+
+Only the configuration file itself is watched: changes of environment variables or of files the configuration refers to need a restart. Use the flag for development – in production prefer deploying a new configuration with a regular restart.
 
 ## Anonymous usage stats
 
