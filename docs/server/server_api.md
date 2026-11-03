@@ -40,7 +40,7 @@ You can just use one of our [available HTTP API libraries](../server/server_api.
 
 :::
 
-Request keys are matched without regard to letter case. In Centrifugo PRO since v6.10.0 request bodies of `/api/<method>` endpoints are otherwise decoded strictly per RFC 8259: a key given twice, invalid UTF-8 or data after the JSON value make the request a bad request. The same applies to proxy responses and to JWT claims in PRO.
+Request keys are the snake_case field names of each method, such as `idempotency_key`. They are matched without regard to ASCII letter case, so `Channel` works, but a key matching no field is ignored without an error: a camelCase `idempotencyKey` is dropped, and the publication goes out without an idempotency key. In Centrifugo PRO since v6.10.0 request bodies of `/api/<method>` endpoints are otherwise decoded strictly per RFC 8259: a key given twice, invalid UTF-8 or data after the JSON value make the request a bad request. The same applies to proxy responses and to JWT claims in PRO.
 
 Below we look at all aspects of Centrifugo HTTP API in detail, starting with information about authorization.
 
@@ -68,6 +68,8 @@ X-API-Key: <YOUR_API_KEY>
 ```
 
 It's also possible to pass API key over URL query param. Simply add `?api_key=<YOUR_API_KEY>` query param to the API endpoint. Keep in mind that passing the API key in the `X-API-Key` header is a recommended way as it is considered more secure.
+
+A request without a valid key is answered with HTTP 401 and an empty body. A request with a method other than `POST` is answered with 405.
 
 ### `http_api.insecure`
 
@@ -159,7 +161,7 @@ Since v6.9.7, Centrifugo PRO may send a publication to the broker together with 
 | `skip_history`    | `bool`              | no       | Skip adding publication to history for this request. Can't be used in channels with [delta compression](./delta_compression.md)                                                                                                                                                                                                                                                                                                                                                                          |
 | `tags`            | `map[string]string` | no       | Publication tags - map with arbitrary string keys and values which is attached to publication and will be delivered to clients                                                                                                                                                                                                                                                                                               |
 | `b64data`         | `string`            | no       | Custom binary data to publish into a channel encoded to base64 so it's possible to use HTTP API to send binary to clients. Centrifugo will decode it from base64 before publishing. In case of GRPC you can publish binary using `data` field.                                                                                                                                                                               |
-| `idempotency_key` | `string`            | no       | Optional idempotency key to drop duplicate publications upon retries. It acts per channel. Centrifugo currently keeps the cache of idempotent publish results during 5 minutes window. Supported only by Memory and Redis engines                                                                                                                                                                                            |
+| `idempotency_key` | `string`            | no       | Optional idempotency key to drop duplicate publications upon retries. It acts per channel. Centrifugo currently keeps the cache of idempotent publish results during 5 minutes window. Supported by the Memory, Redis and PostgreSQL brokers, and by Redis with NATS through Redis; the NATS broker ignores it, so a retry publishes again                                                                                                                                                                                            |
 | `delta`           | `boolean`           | no       | When set to true tells Centrifugo to construct delta update if possible when broadcasting message to subscribers.                                                                                                                                                                                                                                                                                                            |
 | `version`         | `integer`           | no       | When >0 gives Centrifugo a tip about the version of real-time document being sent, Centrifugo will check the version and ignore publications with versions less or equal than already seen. **Checking version only works in channels with history enabled** and mostly useful when publications in channel contain the entire state, so skipping intermediate publications is safe and beneficial. New in Centrifugo v6.2.0 |
 | `version_epoch`   | `string`            | no       | When set tells Centrifugo the epoch of version. When it changes – it tells Centrifugo that version has another epoch and even if it is less than previous - Centrifugo will accept the publication.                                                                                                                                                                                                                          |
@@ -759,7 +761,7 @@ It's also possible to pass `"parallel": true` on `batch` data top level to make 
 
 ## HTTP API libraries
 
-Sending an API request to Centrifugo is a simple task to do in any programming language - this is just a POST request with JSON payload in body and `Authorization` header.
+Sending an API request to Centrifugo is a simple task to do in any programming language - this is just a POST request with JSON payload in body and the `X-API-Key` header.
 
 But we have several official HTTP API libraries for different languages, to help developers to avoid constructing proper HTTP requests manually:
 
@@ -1078,7 +1080,7 @@ For other languages refer to GRPC docs.
 
 ## Transport error mode
 
-By default, Centrifugo server API never returns transport-level errors — for example, it always returns 200 OK for HTTP API and never returns GRPC transport-level errors. Centrifugo returns its custom errors from API calls inside the optional `error` field of the response, as we showed above in this doc. This means that an API call to Centrifugo API may return 200 OK, but in the `error` field you may find a Centrifugo-specific `100: internal error`.
+By default, Centrifugo server API does not return its errors as transport-level errors — for example, it returns 200 OK for HTTP API and never returns GRPC transport-level errors. Centrifugo returns its custom errors from API calls inside the optional `error` field of the response, as we showed above in this doc. A request which never reaches its API method is the exception, in either mode: one whose body is not valid JSON of the method's request is answered with HTTP 400 and a plain text body, one without a valid API key with 401, and a path which is no API method with 404. This means that an API call to Centrifugo API may return 200 OK, but in the `error` field you may find a Centrifugo-specific `100: internal error`.
 
 Since Centrifugo v5.1.0, Centrifugo has an option to use transport-native error codes instead of the Centrifugo `error` field in the response. The main motivation is to make API calls friendly to integrate with the network ecosystem — for automatic retries, better logging, etc. In many situations this may also be more obvious for humans.
 

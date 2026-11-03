@@ -181,7 +181,11 @@ Centrifugo automatically caches the JWKS keys fetched from the endpoint to avoid
 
 ### Combining with API key authentication
 
-JWKS authentication can be used alongside API key authentication provided by Centrifugo OSS. If both `http_api.key` and `http_api.jwks` are configured (or `grpc_api.key` and `grpc_api.jwks`), Centrifugo PRO will accept requests authenticated with either method:
+JWKS authentication can be used alongside API key authentication provided by Centrifugo OSS. If both `http_api.key` and `http_api.jwks` are configured (or `grpc_api.key` and `grpc_api.jwks`), Centrifugo PRO will accept requests authenticated with either method.
+
+A request is judged by one method only. One with an `Authorization: Bearer` header is judged by its token alone: an `X-API-Key` header sent with it is not looked at, so a request with an expired token and a valid key is refused. A request without a bearer token is judged by its API key.
+
+Keys fetched from the JWKS endpoint are cached, and a key fetched before keeps being used while the endpoint can't be reached. A token whose key was never fetched – the first requests after Centrifugo starts, or a key just added by rotation – can't be verified while the endpoint is down: such a request is answered with 503, not 401, since retrying may succeed.
 
 ```json title="config.json"
 {
