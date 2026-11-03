@@ -32,6 +32,11 @@ SDKs driven by the community:
 * [IntrepidAI/tokio-centrifuge](https://github.com/IntrepidAI/tokio-centrifuge) – client SDK for Rust using Tokio
 * [s00d/tauri-plugin-centrifugo](https://github.com/s00d/tauri-plugin-centrifugo) – Tauri plugin for real-time communication with Centrifugo server using the tokio-centrifuge library
 
+Community tools built on top of the SDKs above, such as framework bindings and wrappers:
+
+* [priemskiyyy/react-centrifugo](https://github.com/priemskiyyy/react-centrifugo) – React provider and hooks on top of `centrifuge-js`, components using the same channel share one subscription
+* [priemskiyyy/simulcast](https://github.com/priemskiyyy/simulcast) – subscription lifecycle runtime with a Centrifugo adapter and bindings for React, Vue, Solid, and Svelte, includes devtools and typed event-hook generation
+
 
 See a description of [client protocol](./client_protocol.md) if you want to write a custom bidirectional connector or are eager to learn how Centrifugo protocol internals are structured. If you have any questions about how the protocol works, take a look at existing SDK source code or reach out in the community rooms.
 

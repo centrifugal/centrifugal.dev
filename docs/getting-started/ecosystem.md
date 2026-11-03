@@ -24,7 +24,7 @@ Many things said in the Centrifugo doc can be considered as extra documentation 
 
 ## Framework integrations
 
-There are some community-driven projects that provide integration with frameworks for more native experience.
+There are some community-driven projects that provide integration with backend frameworks for more native experience. For frontend tools built on top of client SDKs see the [client SDKs](../transports/client_sdk.md#list-of-client-sdks) page.
 
 :::tip
 
