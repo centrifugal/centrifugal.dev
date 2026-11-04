@@ -4,6 +4,15 @@
 
 Typical usage: your application backend publishes events to channels via the Centrifugo server API, and Centrifugo fans them out to all online subscribers. Centrifugo handles persistent connections, horizontal scaling (via Redis or Nats engines), channel history and recovery on reconnect, online presence, and client authentication/authorization. The links below point to the documentation for the latest version (v6).
 
+## Instructions for coding agents
+
+- To call the server API from a backend, use the official server SDK for its language (Go: gocent, Python: cent, JavaScript/TypeScript: jscent, PHP: phpcent, Ruby: cent, Rust: cent, .NET: Centrifugal.Cent) rather than raw HTTP. They handle retries, partial broadcast failures, timeouts, tokens and proxy answers.
+- Retry a publication only with the same `idempotency_key` on every attempt: an error does not mean nothing was published. Never retry a failed broadcast as a whole; use the SDK's broadcast retry, which resends only to the channels which failed.
+- A broadcast or batch error may be partial: check each part's outcome in the error.
+- Send the API key in the `X-API-Key` header from the backend only, never to browsers. Keep proxy endpoints reachable by Centrifugo only.
+- A 404 from a method marked "Centrifugo PRO only" means the server is Centrifugo OSS.
+- For streaming LLM responses, publish chunks in order, one call after another, never concurrently: see Real-time for AI apps.
+
 ## Getting started
 
 - [Introduction](https://centrifugal.dev/docs/getting-started/introduction): what Centrifugo is, its background and core concepts.
@@ -35,6 +44,7 @@ Typical usage: your application backend publishes events to channels via the Cen
 - [Client authentication](https://centrifugal.dev/docs/server/authentication): JWT-based and proxy-based connection authentication.
 - [Channel token authorization](https://centrifugal.dev/docs/server/channel_token_auth): subscription tokens for private channel access.
 - [Server API](https://centrifugal.dev/docs/server/server_api): HTTP/GRPC API to publish, broadcast, manage subscriptions and query state.
+- [Server SDKs](https://centrifugal.dev/docs/server/server_sdks): the official backend SDKs for Go, Python, JavaScript/TypeScript, PHP, Ruby, Rust and .NET, what they share, and notes for coding agents.
 - [Server-side subscriptions](https://centrifugal.dev/docs/server/server_subs): subscribing connections on the server side.
 - [Proxy](https://centrifugal.dev/docs/server/proxy): delegate connect, subscribe, publish, refresh and RPC events to your backend.
 - [Proxy streams](https://centrifugal.dev/docs/server/proxy_streams): stream data to clients from a backend GRPC stream.
@@ -54,6 +64,17 @@ Typical usage: your application backend publishes events to channels via the Cen
 - [Load balancing](https://centrifugal.dev/docs/server/load_balancing): running multiple nodes behind a load balancer.
 - [TLS](https://centrifugal.dev/docs/server/tls): configuring TLS, including automatic Let's Encrypt.
 - [Error and disconnect codes](https://centrifugal.dev/docs/server/codes): protocol error and disconnect code reference.
+
+## Server SDKs
+
+- [gocent](https://github.com/centrifugal/gocent): Go, `go get github.com/centrifugal/gocent/v4`.
+- [cent for Python](https://github.com/centrifugal/pycent): `pip install cent`, blocking and async clients.
+- [jscent](https://github.com/centrifugal/jscent): JavaScript and TypeScript for Node.js, Deno, Bun and edge runtimes, `npm install jscent`.
+- [phpcent](https://github.com/centrifugal/phpcent): PHP, `composer require centrifugal/phpcent`.
+- [cent for Ruby](https://github.com/centrifugal/rubycent): `gem "cent", "~> 5.0"`.
+- [cent for Rust](https://github.com/centrifugal/rustcent): `cargo add cent`, async and blocking clients.
+- [Centrifugal.Cent](https://github.com/centrifugal/csharpcent): .NET, `dotnet add package Centrifugal.Cent`, with ASP.NET Core integration.
+- [Server SDK specification](https://github.com/centrifugal/gocent/blob/master/spec.md): the behaviour every server SDK shares.
 
 ## Tutorial
 

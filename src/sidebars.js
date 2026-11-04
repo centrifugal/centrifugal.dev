@@ -15,6 +15,7 @@ module.exports = {
   Guides: [
     "server/configuration",
     "server/server_api",
+    "server/server_sdks",
     "server/authentication",
     "server/channels",
     "server/channel_permissions",

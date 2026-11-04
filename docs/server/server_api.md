@@ -36,7 +36,7 @@ curl --header "X-API-Key: <API_KEY>" \
 
 :::tip
 
-You can just use one of our [available HTTP API libraries](../server/server_api.md#http-api-libraries) or use Centrifugo [GRPC API](#grpc-api) to avoid manually constructing requests structures.
+You can just use one of the official [server SDKs](./server_sdks.md) - for Go, Python, JavaScript and TypeScript, PHP, Ruby, Rust and .NET - or use Centrifugo [GRPC API](#grpc-api) to avoid manually constructing requests structures.
 
 :::
 
@@ -763,21 +763,17 @@ It's also possible to pass `"parallel": true` on `batch` data top level to make 
 
 Sending an API request to Centrifugo is a simple task to do in any programming language - this is just a POST request with JSON payload in body and the `X-API-Key` header.
 
-But we have several official HTTP API libraries for different languages, to help developers to avoid constructing proper HTTP requests manually:
+But the official [server SDKs](./server_sdks.md) do more than build the requests: they retry without publishing twice, report which channels of a broadcast failed, bound every call by a timeout, sign tokens and answer the proxy. There is one for each of these languages:
 
-* [cent](https://github.com/centrifugal/cent) for Python
-* [phpcent](https://github.com/centrifugal/phpcent) for PHP
 * [gocent](https://github.com/centrifugal/gocent) for Go
-* [rubycent](https://github.com/centrifugal/rubycent) for Ruby
+* [cent](https://github.com/centrifugal/pycent) for Python
+* [jscent](https://github.com/centrifugal/jscent) for JavaScript and TypeScript
+* [phpcent](https://github.com/centrifugal/phpcent) for PHP
+* [cent](https://github.com/centrifugal/rubycent) for Ruby
+* [cent](https://github.com/centrifugal/rustcent) for Rust
+* [Centrifugal.Cent](https://github.com/centrifugal/csharpcent) for .NET
 
-Also, there are Centrifugo server API libraries created by community:
-
-* [katarinamolotova/javacent](https://github.com/katarinamolotova/javacent) – HTTP API client for Java
-* [SocketSomeone/cent.js](https://github.com/SocketSomeone/cent.js) – API client for NodeJS
-* [sajjad-fatehi/CentriAgent](https://github.com/sajjad-fatehi/centri-agent) – one more API client for NodeJS
-* [ismkdc/Centrifugo.AspNetCore](https://github.com/ismkdc/Centrifugo.AspNetCore) – API client for ASP.NET Core
-* [devops-israel/crystalcent](https://github.com/devops-israel/crystalcent) – API client for Crystal language
-* [Cyberguru1/rucent](https://github.com/Cyberguru1/rucent) – HTTP API client for Rust
+See the [server SDKs](./server_sdks.md) page for installing them, what they share, and the libraries the community made.
 
 :::tip
 
