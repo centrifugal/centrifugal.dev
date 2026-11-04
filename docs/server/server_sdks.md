@@ -12,17 +12,23 @@ A server SDK is the library your backend uses to work with Centrifugo - as oppos
 * **[Shared poll signatures](./shared_poll.md#authorization-with-hmac-signatures)**, and the endpoint client SDKs call for them.
 * **[Proxy](./proxy.md) handlers**: your backend's side of Centrifugo's HTTP proxy - connect, subscribe, publish, RPC, refresh and the rest - each answering with exactly what its proxy type can carry.
 
+:::info Not a real-time connection
+
+Server SDKs call Centrifugo from your backend: they publish, manage channels and sign tokens, but don't hold a connection open to receive publications. To connect to Centrifugo and get publications in real time - from a browser, a mobile app, or a backend process which subscribes to channels - use a [client real-time SDK](../transports/client_sdk.md#list-of-client-sdks): centrifuge-js, centrifuge-go, centrifuge-python, centrifuge-dart, centrifuge-swift, centrifuge-java, centrifuge-rust or centrifuge-csharp. For example, in Python, pycent publishes from your backend, and centrifuge-python subscribes as a client.
+
+:::
+
 ## Official SDKs
 
 | Language | SDK | Install | Requires |
 |---|---|---|---|
 | Go | [gocent](https://github.com/centrifugal/gocent) | `go get github.com/centrifugal/gocent/v4` | Go 1.27 |
-| Python | [cent](https://github.com/centrifugal/pycent) | `pip install cent` | Python 3.11 |
+| Python | [pycent](https://github.com/centrifugal/pycent) | `pip install cent` | Python 3.11 |
 | JavaScript, TypeScript | [jscent](https://github.com/centrifugal/jscent) | `npm install jscent` | Node.js 22, Deno 2, Bun 1.2, edge runtimes |
 | PHP | [phpcent](https://github.com/centrifugal/phpcent) | `composer require centrifugal/phpcent` | PHP 8.3 |
-| Ruby | [cent](https://github.com/centrifugal/rubycent) | `gem "cent", "~> 5.0"` | Ruby 3.4 |
-| Rust | [cent](https://github.com/centrifugal/rustcent) | `cargo add cent` | Rust 1.85 |
-| .NET | [Centrifugal.Cent](https://github.com/centrifugal/csharpcent) | `dotnet add package Centrifugal.Cent` | .NET 8 |
+| Ruby | [rubycent](https://github.com/centrifugal/rubycent) | `gem "cent", "~> 5.0"` | Ruby 3.4 |
+| Rust | [rustcent](https://github.com/centrifugal/rustcent) | `cargo add cent` | Rust 1.85 |
+| .NET | [csharpcent](https://github.com/centrifugal/csharpcent) | `dotnet add package Centrifugal.Cent` | .NET 8 |
 
 All of them work with Centrifugo v6. The map and shared poll methods need Centrifugo v6.8.0 or newer, and the methods marked "Centrifugo PRO only" need [Centrifugo PRO](../pro/overview.md).
 

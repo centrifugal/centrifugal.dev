@@ -766,12 +766,14 @@ Sending an API request to Centrifugo is a simple task to do in any programming l
 But the official [server SDKs](./server_sdks.md) do more than build the requests: they retry without publishing twice, report which channels of a broadcast failed, bound every call by a timeout, sign tokens and answer the proxy. There is one for each of these languages:
 
 * [gocent](https://github.com/centrifugal/gocent) for Go
-* [cent](https://github.com/centrifugal/pycent) for Python
+* [pycent](https://github.com/centrifugal/pycent) for Python
 * [jscent](https://github.com/centrifugal/jscent) for JavaScript and TypeScript
 * [phpcent](https://github.com/centrifugal/phpcent) for PHP
-* [cent](https://github.com/centrifugal/rubycent) for Ruby
-* [cent](https://github.com/centrifugal/rustcent) for Rust
-* [Centrifugal.Cent](https://github.com/centrifugal/csharpcent) for .NET
+* [rubycent](https://github.com/centrifugal/rubycent) for Ruby
+* [rustcent](https://github.com/centrifugal/rustcent) for Rust
+* [csharpcent](https://github.com/centrifugal/csharpcent) for .NET
+
+These call Centrifugo from your backend. To receive publications in real time, use a [client real-time SDK](../transports/client_sdk.md) instead.
 
 See the [server SDKs](./server_sdks.md) page for installing them, what they share, and the libraries the community made.
 

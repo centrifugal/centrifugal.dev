@@ -6,7 +6,8 @@ Typical usage: your application backend publishes events to channels via the Cen
 
 ## Instructions for coding agents
 
-- To call the server API from a backend, use the official server SDK for its language (Go: gocent, Python: cent, JavaScript/TypeScript: jscent, PHP: phpcent, Ruby: cent, Rust: cent, .NET: Centrifugal.Cent) rather than raw HTTP. They handle retries, partial broadcast failures, timeouts, tokens and proxy answers.
+- To call the server API from a backend, use the official server SDK for its language rather than raw HTTP: gocent (Go), pycent (Python, package `cent`), jscent (JavaScript/TypeScript), phpcent (PHP), rubycent (Ruby, gem `cent`), rustcent (Rust, crate `cent`), csharpcent (.NET, package `Centrifugal.Cent`). They handle retries, partial broadcast failures, timeouts, tokens and proxy answers.
+- Server SDKs don't receive publications. To connect and subscribe in real time - from a browser, an app, or a backend process - use a client SDK (centrifuge-js, centrifuge-go, centrifuge-python and the others): pycent publishes, centrifuge-python subscribes.
 - Retry a publication only with the same `idempotency_key` on every attempt: an error does not mean nothing was published. Never retry a failed broadcast as a whole; use the SDK's broadcast retry, which resends only to the channels which failed.
 - A broadcast or batch error may be partial: check each part's outcome in the error.
 - Send the API key in the `X-API-Key` header from the backend only, never to browsers. Keep proxy endpoints reachable by Centrifugo only.
@@ -68,12 +69,12 @@ Typical usage: your application backend publishes events to channels via the Cen
 ## Server SDKs
 
 - [gocent](https://github.com/centrifugal/gocent): Go, `go get github.com/centrifugal/gocent/v4`.
-- [cent for Python](https://github.com/centrifugal/pycent): `pip install cent`, blocking and async clients.
+- [pycent](https://github.com/centrifugal/pycent): Python, `pip install cent`, blocking and async clients.
 - [jscent](https://github.com/centrifugal/jscent): JavaScript and TypeScript for Node.js, Deno, Bun and edge runtimes, `npm install jscent`.
 - [phpcent](https://github.com/centrifugal/phpcent): PHP, `composer require centrifugal/phpcent`.
-- [cent for Ruby](https://github.com/centrifugal/rubycent): `gem "cent", "~> 5.0"`.
-- [cent for Rust](https://github.com/centrifugal/rustcent): `cargo add cent`, async and blocking clients.
-- [Centrifugal.Cent](https://github.com/centrifugal/csharpcent): .NET, `dotnet add package Centrifugal.Cent`, with ASP.NET Core integration.
+- [rubycent](https://github.com/centrifugal/rubycent): Ruby, `gem "cent", "~> 5.0"`.
+- [rustcent](https://github.com/centrifugal/rustcent): Rust, `cargo add cent`, async and blocking clients.
+- [csharpcent](https://github.com/centrifugal/csharpcent): .NET, `dotnet add package Centrifugal.Cent`, with ASP.NET Core integration.
 - [Server SDK specification](https://github.com/centrifugal/gocent/blob/master/spec.md): the behaviour every server SDK shares.
 
 ## Tutorial
