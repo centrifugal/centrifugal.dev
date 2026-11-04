@@ -158,7 +158,7 @@ Who calls what (the `device_register` API is **server-side** — it needs your A
 
 :::caution `device_register` writes the device's **whole** state, not just the fields you change
 
-Every call replaces the device record. `provider`, `platform` and `token` are required (empty values are rejected). Anything you leave out of `user`, `timezone`, `locale` or `topics` is **reset to empty**, and the device's topic list is rebuilt from the `topics` you pass **plus** the current user's bound topics. So always send the complete device state you want — and include the saved `id` so the existing device is updated instead of a duplicate being created.
+Every call replaces the device record. `provider`, `platform` and `token` are required (empty values are rejected). Anything you leave out of `user`, `timezone`, `locale`, `topics` or `meta` is **reset to empty**, and the device's topic list is rebuilt from the `topics` you pass **plus** the current user's bound topics. So always send the complete device state you want — and include the saved `id` so the existing device is updated instead of a duplicate being created.
 
 This is intentional: declaring the full state (especially the owner) on every registration is what keeps shared devices safe — there's no way to accidentally leave a device attached to a previous user. To change one field *without* re-sending the token, use [`device_update`](#device_update) (metadata) or [`device_topic_update`](#device_topic_update) (topics) — those are the partial-update methods; `device_register` is the full-state one.
 
@@ -847,8 +847,8 @@ Call this method to update devices. To detach a user from a device on logout, us
 
 | Field             | Type                   | Required | Description                        |
 |-------------------|------------------------|----------|------------------------------------|
-| `ids`             | `array[string]`        | no       | Device ids to filter               |
-| `users`           | `array[string]`        | no       | Device users filter                |
+| `ids`             | `array[string]`        | one of   | Device ids to filter               |
+| `users`           | `array[string]`        | one of   | Device users filter                |
 | `user_update`     | `DeviceUserUpdate`     | no       | Optional user update object        |
 | `timezone_update` | `DeviceTimezoneUpdate` | no       | Optional timezone update object    |
 | `locale_update`   | `DeviceLocaleUpdate`   | no       | Optional locale update object      |
@@ -910,8 +910,8 @@ Removes a device from storage. This may also be called when a user logs out of t
 
 | Field Name | Type            | Required | Description                                           |
 |------------|-----------------|----------|-------------------------------------------------------|
-| `ids`      | `array[string]` | no       | A list of device IDs to be removed                    |
-| `users`    | `array[string]` | no       | A list of device user IDs to filter devices to remove |
+| `ids`      | `array[string]` | one of   | A list of device IDs to be removed                    |
+| `users`    | `array[string]` | one of   | A list of device user IDs to filter devices to remove |
 
 #### device_remove result
 

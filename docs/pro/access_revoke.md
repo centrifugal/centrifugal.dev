@@ -174,7 +174,7 @@ Unlike many other Redis features in Centrifugo, consistent sharding is not suppo
 
 :::caution
 
-One more thing you may notice is that Redis configuration here does not have the `use_redis_from_engine` option. The reason is that since Redis is not shardable here, reusing Redis configuration could cause problems at the moment of Redis scaling – which we want to avoid, thus requiring explicit configuration here.
+One more thing you may notice is that Redis configuration here does not have the `reuse_from_engine` option. The reason is that since Redis is not shardable here, reusing Redis configuration could cause problems at the moment of Redis scaling – which we want to avoid, thus requiring explicit configuration here.
 
 :::
 

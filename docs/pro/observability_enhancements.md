@@ -252,7 +252,7 @@ Note that the map broker and the PostgreSQL broker are **not** PRO features — 
 
 - **Type:** Counter
 - **Labels:** provider, recipient_type, platform, success, err_code
-- **Description:** Count of push notifications sent, split by provider (`fcm`, `apns`, `hms`, `webpush`), recipient type, platform, whether the provider accepted it, and the provider error code when it did not. `platform` is the device platform for sends to devices (`filter`) through FCM, APNs and Web Push, `na` for HMS sends (raw tokens included) and for FCM topic and condition sends which reached the provider, and empty for FCM, APNs and Web Push sends to raw tokens. When ClickHouse analytics is enabled, pushes dropped after a failed re-queue are counted too, with the device platform for `filter` sends, `na` for topic and condition sends, and an empty platform for raw tokens.
+- **Description:** Count of push notifications sent, split by provider (`fcm`, `apns`, `hms`, `webpush`), recipient type, platform, whether the provider accepted it, and the provider error code when it did not. `platform` is the device platform for sends to devices (`filter`) through FCM, APNs and Web Push, `na` for HMS sends (raw tokens included) and for FCM topic and condition sends which reached the provider, and empty for FCM, APNs and Web Push sends to raw tokens. Pushes dropped without a send attempt (for example after a failed re-queue, a template error, or when a push to a device would be sent after `expire_at`) are counted with `err_code` `dropped`, with the device platform for `filter` sends, `na` for topic and condition sends, and an empty platform for raw tokens. A batch retried later (see `centrifugo_push_deferred_batch_count`) is counted by the attempt which sends it.
 - **Usage:** Build a delivery success ratio from `success="true"` over the total. Codes such as `unregistered` are normal device-token churn; authentication errors are not.
 
 #### centrifugo_push_scheduled_request_count
@@ -261,6 +261,20 @@ Note that the map broker and the PostgreSQL broker are **not** PRO features — 
 - **Labels:** recipient_type
 - **Description:** Count of push notification requests accepted for later execution.
 - **Usage:** Shows how much of your push volume is scheduled rather than immediate.
+
+#### centrifugo_push_deferred_batch_count
+
+- **Type:** Counter
+- **Labels:** provider, reason
+- **Description:** Count of push batches handed over to a later attempt instead of being sent. `reason` is `retry_later` when the batch failed with retryable provider errors (provider unavailable or throttling), `send_time_budget` when the job ran out of time before sending the whole batch, `error` for other errors. Counted once per batch.
+- **Usage:** Grows during provider outages, when `centrifugo_push_notification_count` may stay flat because nothing is sent – a good signal to alert on.
+
+#### centrifugo_push_dropped_job_count
+
+- **Type:** Counter
+- **Labels:** provider, reason
+- **Description:** Count of push jobs dropped without being processed. `reason` is `expired` when the notification `expire_at` passed, `retry_period_exceeded` when a push without `expire_at` was queued more than 24 hours ago.
+- **Usage:** Shows pushes which could not be delivered in time, for example after a long provider outage or queue backlog.
 
 #### centrifugo_push_queue_consuming_lag
 
