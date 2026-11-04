@@ -5,7 +5,12 @@ sidebar_label: Server SDKs
 title: Server SDKs
 ---
 
-A server SDK is the library your backend uses to talk to Centrifugo - as opposed to a [client SDK](../transports/client_sdk.md), which runs in browsers and apps. The [server API](./server_api.md) is plain HTTP with JSON, so you can always call it directly, but an SDK takes care of what is easy to get wrong: retries which don't publish twice, broadcasts where some channels fail, timeouts, tokens and proxy answers.
+A server SDK is the library your backend uses to work with Centrifugo - as opposed to a [client SDK](../transports/client_sdk.md), which runs in browsers and apps. It covers what a backend does with Centrifugo over HTTP, not only API calls:
+
+* **The [server API](./server_api.md)**: every method, Centrifugo PRO's included. The API is plain HTTP with JSON, so you can always call it directly, but an SDK takes care of what is easy to get wrong: retries which don't publish twice, broadcasts where some channels fail, timeouts.
+* **[Connection tokens](./authentication.md)** and **[subscription tokens](./channel_token_auth.md)**, signed with HMAC, RSA, ECDSA or Ed25519 keys, with a JWKS endpoint for the public keys - and the endpoints your client SDK's [connection](../transports/client_api.md#client-connection-token) and [subscription](../transports/client_api.md#subscription-token) token callbacks call.
+* **[Shared poll signatures](./shared_poll.md#authorization-with-hmac-signatures)**, and the endpoint client SDKs call for them.
+* **[Proxy](./proxy.md) handlers**: your backend's side of Centrifugo's HTTP proxy - connect, subscribe, publish, RPC, refresh and the rest - each answering with exactly what its proxy type can carry.
 
 ## Official SDKs
 
