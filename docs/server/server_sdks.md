@@ -173,6 +173,18 @@ If you are an AI coding agent writing a backend which talks to Centrifugo, these
 * **Keep proxy handlers reachable by Centrifugo only**: whoever can call them can claim to be any user.
 * **For streaming AI responses**, see [Real-time for AI apps](../getting-started/ai-apps.md): publish chunks in order, one call after another, not concurrently.
 
+## HTTP or GRPC
+
+The server SDKs use the [HTTP API](./server_api.md#http-api). Centrifugo also has a [GRPC API](./server_api.md#grpc-api) with the same methods, for which you generate a client from Centrifugo's Protobuf schema. HTTP is the default choice: with connections kept alive and calls batched automatically, its per-call cost is small, it needs no dependencies, and it works on every platform - edge runtimes included.
+
+GRPC is worth it when:
+
+* **you publish at very high rates**, and serializing JSON shows in your profiles: GRPC uses Protobuf;
+* **your payloads are binary**: GRPC carries them as bytes, where the HTTP API takes them base64-encoded in `b64data`;
+* **you need the [proxy streams](./proxy_streams.md)**, which only GRPC supports.
+
+A generated GRPC client calls the methods, and nothing more: what the SDKs add - retries which don't publish twice, broadcast errors with each channel's outcome, Centrifugo errors matched by code, one timeout per call - you write yourself. The SDKs' token signing, client SDK endpoints and proxy handlers work the same alongside a GRPC client, as they don't depend on the API transport.
+
 ## Community libraries
 
 These server API libraries are made by the community. They are not part of the official set, and may not cover every method:
@@ -184,4 +196,3 @@ These server API libraries are made by the community. They are not part of the o
 * [devops-israel/crystalcent](https://github.com/devops-israel/crystalcent) – API client for Crystal language
 * [Cyberguru1/rucent](https://github.com/Cyberguru1/rucent) – HTTP API client for Rust
 
-Centrifugo also has a [GRPC API](./server_api.md#grpc-api): you can generate a client for any language GRPC supports from its schema.
