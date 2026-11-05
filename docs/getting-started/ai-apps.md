@@ -23,7 +23,7 @@ Every row is the same shape: the toy version doesn't need it, the real product d
 
 ## How it fits
 
-Centrifugo sits between your inference backend and your clients. Your backend stays in control of the model call and publishes tokens (or larger chunks) to a channel through the [server API](../server/server_api.md); Centrifugo delivers them to every connected subscriber over whatever transport each client uses. It's language- and framework-agnostic — it doesn't care whether your inference pipeline runs Python, Go, or anything else.
+Centrifugo sits between your inference backend and your clients. Your backend stays in control of the model call and publishes tokens (or larger chunks) to a channel through the [server API](../server/server_api.md) - with one of the [server SDKs](../server/server_sdks.md), in your backend's language; Centrifugo delivers them to every connected subscriber over whatever transport each client uses. It's language- and framework-agnostic — it doesn't care whether your inference pipeline runs Python, Go, or anything else.
 
 For high-throughput streams, the [binary Protobuf protocol](../transports/overview.md) keeps per-token overhead low. [Online presence](../server/presence.md) tracks who is attached to a session. And when an assistant message is persisted, the [PostgreSQL stream broker](../server/engines.md#postgresql-broker) can publish the realtime event inside the same database transaction as the row write — so the stored message and the delivered event never diverge.
 
@@ -87,7 +87,7 @@ sub.on('publication', (ctx) => applyChunk(ctx.data));
 sub.subscribe();
 ```
 
-The endpoint gets the channel position from the server API – a [`history`](../server/server_api.md#history) call without a limit returns just the position – and must read it **before** the conversation. In this order a publication made between the two reads may be loaded and delivered again, but is never lost: skip chunks the checkpoint already includes, for example by a sequence number in each publication.
+The endpoint gets the channel position from the server API – a [`history`](../server/server_api.md#history) call without a limit returns just the position, which the [server SDKs](../server/server_sdks.md) give as a stream position (gocent: `res.Position()`) – and must read it **before** the conversation. In this order a publication made between the two reads may be loaded and delivered again, but is never lost: skip chunks the checkpoint already includes, for example by a sequence number in each publication.
 
 ## Stopping generation from every device
 

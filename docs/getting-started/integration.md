@@ -66,7 +66,7 @@ Everything should work now – as soon as a user opens some page of your applica
 
 Now let's imagine you want to send a real-time message to users subscribed to a specific channel. This message can be a reaction to some event that happened in your app: someone posted a new comment, an administrator just created a new post, a user pressed the "like" button, etc. Anyway, this is an event your backend has just received, and you want to immediately send it to interested users.
 
-You can do this using the Centrifugo [HTTP API](../server/server_api.md). To simplify your life, [we have several API libraries](../server/server_api.md#http-api-libraries) for different languages. You can publish messages into a channel using one of those libraries, or you can simply [follow the API description](../server/server_api.md#http-api) to construct API requests yourself - this is very simple. Centrifugo also supports a [GRPC API](../server/server_api.md#grpc-api). As soon as you have published a message to the channel, it must be delivered to your online clients subscribed to that channel.
+You can do this using the Centrifugo [HTTP API](../server/server_api.md). To simplify your life, [we have official server SDKs](../server/server_sdks.md) for Go, Python, JavaScript and TypeScript, PHP, Ruby, Rust and .NET. You can publish messages into a channel using one of those libraries, or you can simply [follow the API description](../server/server_api.md#http-api) to construct API requests yourself - this is very simple. Centrifugo also supports a [GRPC API](../server/server_api.md#grpc-api). As soon as you have published a message to the channel, it must be delivered to your online clients subscribed to that channel.
 
 ## 6. Deploy to production
 

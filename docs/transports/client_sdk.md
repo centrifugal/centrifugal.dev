@@ -25,6 +25,12 @@ Here is a list of SDKs maintained by Centrifugal Labs:
 * [centrifuge-rust](https://github.com/centrifugal/centrifuge-rust) – for Rust on top of Tokio, with WebSocket and HTTP-streaming transports
 * [centrifuge-csharp](https://github.com/centrifugal/centrifuge-csharp) - for modern .NET environments (including MAUI, Blazor, Unity)
 
+:::tip Calling Centrifugo from your backend
+
+The SDKs above connect to Centrifugo to receive publications in real time. To publish from your backend, manage channels, sign connection and subscription tokens or answer the proxy, use a [server SDK](../server/server_sdks.md) instead: gocent, pycent, jscent, phpcent, rubycent, rustcent or csharpcent.
+
+:::
+
 SDKs driven by the community:
 
 * [PlugFox/spinify](https://github.com/PlugFox/spinify) – alternative SDK for Dart/Flutter with faster performance, custom HTTP client, and more

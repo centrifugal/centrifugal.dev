@@ -194,39 +194,48 @@ history(limit: 10, since: {offset: 0, epoch: "epoch"}, reverse: false)   // 10 a
 history(limit: 10, since: {offset: 11, epoch: "epoch"}, reverse: true)   // 10 before a known position
 ```
 
-Here's a Go program (using the [gocent](https://github.com/centrifugal/gocent) API library) that endlessly walks a stream, flipping direction each time it reaches an end — not practical, but it shows the pagination pattern:
+Here's a Go program (using the [gocent](https://github.com/centrifugal/gocent) server SDK) that endlessly walks a stream, flipping direction each time it reaches an end — not practical, but it shows the pagination pattern:
 
 ```go
 // Iterate by 10.
-limit := 10
+const limit = 10
 // Paginate in reversed order first, then invert it.
 reverse := true
-// Start with nil StreamPosition, then fill it with value while paginating.
-var sp *gocent.StreamPosition
+// Start from the stream's end, then from the last publication read.
+var since gocent.StreamPosition
 
 for {
-	historyResult, err = c.History(
-        ctx,
-        channel,
-		gocent.WithLimit(limit),
-		gocent.WithReverse(reverse),
-        gocent.WithSince(sp),
-	)
+	res, err := client.History(ctx, gocent.HistoryRequest{
+		Channel: channel,
+		Limit:   limit,
+		Since:   since,
+		Reverse: reverse,
+	})
 	if err != nil {
-		log.Fatalf("Error calling history: %v", err)
+		log.Fatalf("history: %v", err)
 	}
-	for _, pub := range historyResult.Publications {
+	for _, pub := range res.Publications {
 		log.Println(pub.Offset, "=>", string(pub.Data))
-		sp = &gocent.StreamPosition{
-			Offset: pub.Offset,
-			Epoch:  historyResult.Epoch,
-		}
+		since = gocent.StreamPosition{Offset: pub.Offset, Epoch: res.Epoch}
 	}
-	if len(historyResult.Publications) < limit {
-		// Got all pubs, invert pagination direction.
+	if len(res.Publications) < limit {
+		// Got all publications: invert the direction.
 		reverse = !reverse
 		log.Println("end of stream reached, change iteration direction")
 	}
+}
+```
+
+To read forward only, the [server SDKs](./server_sdks.md) page the stream for you, each publication with its position - in gocent, `client.HistoryAll`:
+
+```go
+var last gocent.StreamPosition
+for item, err := range client.HistoryAll(ctx, gocent.HistoryRequest{Channel: channel, Limit: 100}) {
+	if err != nil {
+		return err
+	}
+	log.Println(item.Offset, "=>", string(item.Data))
+	last = item.Position() // where to resume from later
 }
 ```
 
