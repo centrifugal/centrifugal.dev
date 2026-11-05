@@ -195,7 +195,7 @@ Live falling well below the measured ratio means your messages have probably cha
 | `frame_budget_per_second` | `14000` | Upper bound on frames a node extracts per second while training, shared across concurrent sessions. Exceeding it lowers the sample size rather than the fidelity. |
 | `size_ladder_bytes` | `[512, 2048, 4096, 8192, 16384]` | Dictionary sizes built and scored during a build, so the size curve shows what each one buys. |
 | `snapshot_poll_interval` | `"20s"` | How often nodes poll the database for activation changes. Activating, deactivating or editing a profile also nudges every node immediately, so this is a backstop rather than the usual path. |
-| `flush_interval` | `"5s"` | How often a node writes what it observed during a training session to the database. Jittered per node. |
+| `flush_interval` | `"5s"` | How often a node writes its training progress to the database during a session. Jittered per node. What it observed is written at most once a minute, and always when the session ends or the node stops. |
 | `maintenance_interval` | `"60s"` | How often a node re-checks that sampled connections still match the session filter and rotates a fraction of them. |
 | `max_concurrent_sessions` | `3` | How many training sessions may collect at once. They share the frame budget. |
 | `candidate_ttl` | `"168h"` | How long an unused candidate is kept before deletion. The per-node reports it was built from are cleared on the same schedule. |

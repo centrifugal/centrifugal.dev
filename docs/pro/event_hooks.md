@@ -22,7 +22,7 @@ This feature is **in the preview state now**. We still need some time before it 
 
 :::
 
-To enable the feature you must use the `redis` engine. Also, only channels with `presence` enabled may deliver channel state notifications. When enabling the channel state proxy, Centrifugo PRO starts using another approach to create Redis keys for presence for namespaces where channel state events are enabled; this is an important implementation detail.
+To enable the feature presence must be kept in Redis: use the `redis` engine, or a separate `redis` presence manager. Also, only channels with `presence` enabled may deliver channel state notifications. When enabling the channel state proxy, Centrifugo PRO starts using another approach to create Redis keys for presence for namespaces where channel state events are enabled; this is an important implementation detail.
 
 :::caution
 
