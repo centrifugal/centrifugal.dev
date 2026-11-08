@@ -22,7 +22,7 @@ Here is a list of SDKs maintained by Centrifugal Labs:
 * [centrifuge-swift](https://github.com/centrifugal/centrifuge-swift) – for native iOS development
 * [centrifuge-java](https://github.com/centrifugal/centrifuge-java) – for native Android development and general Java
 * [centrifuge-python](https://github.com/centrifugal/centrifuge-python) – real-time SDK for Python on top of asyncio
-* [centrifuge-rust](https://github.com/centrifugal/centrifuge-rust) – for Rust on top of Tokio, with WebSocket and HTTP-streaming transports
+* [centrifuge-rust](https://github.com/centrifugal/centrifuge-rust) – for Rust: native apps on top of Tokio, and browsers via WebAssembly (WASM), with WebSocket and HTTP-streaming transports
 * [centrifuge-csharp](https://github.com/centrifugal/centrifuge-csharp) - for modern .NET environments (including MAUI, Blazor, Unity)
 
 :::tip Calling Centrifugo from your backend
