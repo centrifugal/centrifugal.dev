@@ -17,9 +17,9 @@
 <link rel="search" type="application/opensearchdescription+xml" title="Centrifugo" href="/opensearch.xml">
 
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.0be39b2d.css">
-<script src="/assets/js/runtime~main.b54d3f69.js" defer="defer"></script>
-<script src="/assets/js/main.211d347d.js" defer="defer"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.46887012.css">
+<script src="/assets/js/runtime~main.314d2647.js" defer="defer"></script>
+<script src="/assets/js/main.ca0706b1.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -33,7 +33,7 @@
 <li class=""><strong><code>vacated</code></strong> — called when the last subscriber leaves a channel</li>
 </ul>
 <div class="theme-admonition theme-admonition-info admonition_xJq3 alert alert--info"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 14 16"><path fill-rule="evenodd" d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg></span>Preview state</div><div class="admonitionContent_BuS1"><p>This feature is <strong>in the preview state now</strong>. We still need some time before it will be ready for usage in production. But the feature is available for evaluation.</p></div></div>
-<p>To enable the feature you must use the <code>redis</code> engine. Also, only channels with <code>presence</code> enabled may deliver channel state notifications. When enabling the channel state proxy, Centrifugo PRO starts using another approach to create Redis keys for presence for namespaces where channel state events are enabled; this is an important implementation detail.</p>
+<p>To enable the feature presence must be kept in Redis: use the <code>redis</code> engine, or a separate <code>redis</code> presence manager. Also, only channels with <code>presence</code> enabled may deliver channel state notifications. When enabling the channel state proxy, Centrifugo PRO starts using another approach to create Redis keys for presence for namespaces where channel state events are enabled; this is an important implementation detail.</p>
 <div class="theme-admonition theme-admonition-caution admonition_xJq3 alert alert--warning"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z"></path></svg></span>caution</div><div class="admonitionContent_BuS1"><p>When using client-side Redis sharding (multiple Redis shard addresses), changing the number of shards while the system has active state will result in temporary event loss. Some partitions will be routed to different shards after the change, but their data (presence entries, pending vacated events, event streams) remains on the old shards. This leads to missed <code>vacated</code> events and orphaned state. The system will recover as clients reconnect and re-establish presence, but channels where all clients have already disconnected will never receive a <code>vacated</code> event. If this is acceptable, the change can be made while the system operates. Otherwise, consider using Redis Cluster instead — it handles slot migration transparently and is fully compatible with this feature.</p></div></div>
 <h3 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="configuration">Configuration<a href="#configuration" class="hash-link" aria-label="Direct link to Configuration" title="Direct link to Configuration" translate="no">​</a></h3>
 <p>Minimal config — <code>occupied</code> and <code>vacated</code> events for channels in <code>chat</code> namespace will be sent to the configured endpoint:</p>

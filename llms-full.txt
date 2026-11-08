@@ -527,7 +527,7 @@ Every row is the same shape: the toy version doesn't need it, the real product d
 
 ## How it fits
 
-Centrifugo sits between your inference backend and your clients. Your backend stays in control of the model call and publishes tokens (or larger chunks) to a channel through the [server API](../server/server_api.md); Centrifugo delivers them to every connected subscriber over whatever transport each client uses. It's language- and framework-agnostic — it doesn't care whether your inference pipeline runs Python, Go, or anything else.
+Centrifugo sits between your inference backend and your clients. Your backend stays in control of the model call and publishes tokens (or larger chunks) to a channel through the [server API](../server/server_api.md) - with one of the [server SDKs](../server/server_sdks.md), in your backend's language; Centrifugo delivers them to every connected subscriber over whatever transport each client uses. It's language- and framework-agnostic — it doesn't care whether your inference pipeline runs Python, Go, or anything else.
 
 For high-throughput streams, the [binary Protobuf protocol](../transports/overview.md) keeps per-token overhead low. [Online presence](../server/presence.md) tracks who is attached to a session. And when an assistant message is persisted, the [PostgreSQL stream broker](../server/engines.md#postgresql-broker) can publish the realtime event inside the same database transaction as the row write — so the stored message and the delivered event never diverge.
 
@@ -538,37 +538,71 @@ Publish a response from one place, in order, each publish call waiting for the p
 Give each response its own channel, in a namespace with history and recovery, so that a client which reconnects, or opens the page while the response is generated, replays it from the start. Size two limits for your longest response:
 
 - [`history_size`](../server/channels.md#history_size) must hold the publications of a whole response.
-- [`client.recovery_max_publication_limit`](../server/configuration.md#clientrecovery_max_publication_limit) is the most publications Centrifugo returns in one recovery: 300 by default, which is 15 seconds of streaming at 20 publications a second. A client which missed more is told the stream was not recovered (`recovered: false`) and gets none of it.
+- [`recovery_max_publication_limit`](../server/channels.md#recovery_max_publication_limit) is the most publications Centrifugo returns in one recovery: 300 by default, which is 15 seconds of streaming at 20 publications a second. A client which missed more is told the stream was not recovered (`recovered: false`) and gets none of it. Set it on the namespace, so that other namespaces keep the default.
 
 For responses of up to two and a half minutes at 20 publications a second:
 
 ```json title="config.json"
 {
-  "client": {
-    "recovery_max_publication_limit": 3000
-  },
   "channel": {
     "namespaces": [
       {
         "name": "ai",
         "history_size": 3000,
         "history_ttl": "10m",
-        "force_recovery": true
+        "force_recovery": true,
+        "recovery_max_publication_limit": 3000
       }
     ]
   }
 }
 ```
 
+Before Centrifugo v6.10.3 the limit can be set only for all namespaces at once, with [`client.recovery_max_publication_limit`](../server/configuration.md#clientrecovery_max_publication_limit).
+
 Once a response is complete, store it with the conversation and serve it from there: history is for the stream in flight.
 
 Publishing the whole response so far with [delta compression](../server/delta_compression.md) and [cache recovery](../server/cache_recovery.md) instead lets a late client get one message rather than every chunk. But the backend then sends the growing text with every publication — for a response of a few thousand tokens, over a hundred times its size — and live subscribers, receiving deltas, get more bytes than chunks would send them. Chunks are the better default.
+
+### Responses longer than history: checkpoints
+
+Sizing history and the recovery limit as above is enough for most responses. It has a limit, though: an agent working for minutes produces more chunks than is reasonable to keep and to replay. A checkpoint removes it, at the cost of storing the response in flight. While the response streams, the backend periodically stores the response so far, together with the stream position of the last publication it includes – in Redis, or next to the conversation in the database. Store the chunks merged, with the pieces of each text part joined into one, so the checkpoint stays about as small as the text.
+
+A client which opens the conversation while the response is generated loads the checkpoint, renders it, and subscribes from its position – see [loading a conversation](#loading-a-conversation) below. So:
+
+- history only has to cover what was published since the last checkpoint, plus a reconnect – not the whole response;
+- a client joining mid-response receives the response so far at once, instead of every chunk of it.
+
+## Loading a conversation
+
+A client which opens a conversation needs two things joined without a gap: the stored conversation, with the response in flight, and every publication after it. The subscription option [`getState`](../transports/client_api.md#subscription-getstate) does the joining: the SDK calls it before subscribing, subscribes from the stream position it returns, and calls it again whenever the server can't recover what the client missed – after a long disconnect, or when the loaded checkpoint is older than what history still holds.
+
+```javascript
+const sub = centrifuge.newSubscription(`ai:${conversationId}`, {
+  getState: async () => {
+    // Your endpoint reads the channel position first, then the conversation.
+    const conv = await fetch(`/api/conversations/${conversationId}`).then((r) => r.json());
+    render(conv.messages, conv.checkpoint?.response);
+    // A response in flight: continue from its checkpoint.
+    return conv.checkpoint?.position ?? conv.position;
+  },
+});
+sub.on('publication', (ctx) => applyChunk(ctx.data));
+sub.subscribe();
+```
+
+The endpoint gets the channel position from the server API – a [`history`](../server/server_api.md#history) call without a limit returns just the position, which the [server SDKs](../server/server_sdks.md) give as a stream position (gocent: `res.Position()`) – and must read it **before** the conversation. In this order a publication made between the two reads may be loaded and delivered again, but is never lost: skip chunks the checkpoint already includes, for example by a sequence number in each publication.
+
+## Stopping generation from every device
+
+With the response generated on the backend and watched from several tabs or devices, stop should work from any of them, and stop the model call itself. The client asks your backend to stop the response; the backend publishes a cancel event into the response channel; the process generating the response – subscribed to the channel since the response started – aborts the model call. This works whichever backend instance received the request, and every viewer sees the response end at the same text.
 
 ## Examples
 
 - **[Streaming AI responses with Centrifugo](/blog/2025/06/17/streaming-ai-gpt-responses-with-centrifugo)** — end-to-end tutorial streaming GPT responses with FastAPI and temporary channels.
 - **[Scaling AI token streams with Centrifugo](/blog/2026/03/01/scaling-ai-token-streams-with-centrifugo)** — reconnect recovery, multi-tab synchronization, transport fallbacks, and horizontal scaling with Redis. Source on [GitHub](https://github.com/centrifugal/examples/tree/master/v6/scale-ai).
 - **[Transactional publishing with the PostgreSQL stream broker](/blog/2026/05/24/pg-stream-broker-benefits)** — committing the stored message and the published event in one transaction.
+- **[Chat with the Vercel AI SDK](https://github.com/centrifugal/examples/tree/master/v6/ai-sdk-chat)** — `useChat` over Centrifugo: a response survives reloads, every tab and device of a conversation shows it live, and stop works from any of them. Uses checkpoints and `getState`, with tests against a real Centrifugo.
 
 ## When you don't need Centrifugo
 
@@ -691,7 +725,7 @@ Many things said in the Centrifugo doc can be considered as extra documentation 
 
 ## Framework integrations
 
-There are some community-driven projects that provide integration with frameworks for more native experience.
+There are some community-driven projects that provide integration with backend frameworks for more native experience. For frontend tools built on top of client SDKs see the [client SDKs](../transports/client_sdk.md#list-of-client-sdks) page.
 
 :::tip
 
@@ -991,7 +1025,7 @@ Everything should work now – as soon as a user opens some page of your applica
 
 Now let's imagine you want to send a real-time message to users subscribed to a specific channel. This message can be a reaction to some event that happened in your app: someone posted a new comment, an administrator just created a new post, a user pressed the "like" button, etc. Anyway, this is an event your backend has just received, and you want to immediately send it to interested users.
 
-You can do this using the Centrifugo [HTTP API](../server/server_api.md). To simplify your life, [we have several API libraries](../server/server_api.md#http-api-libraries) for different languages. You can publish messages into a channel using one of those libraries, or you can simply [follow the API description](../server/server_api.md#http-api) to construct API requests yourself - this is very simple. Centrifugo also supports a [GRPC API](../server/server_api.md#grpc-api). As soon as you have published a message to the channel, it must be delivered to your online clients subscribed to that channel.
+You can do this using the Centrifugo [HTTP API](../server/server_api.md). To simplify your life, [we have official server SDKs](../server/server_sdks.md) for Go, Python, JavaScript and TypeScript, PHP, Ruby, Rust and .NET. You can publish messages into a channel using one of those libraries, or you can simply [follow the API description](../server/server_api.md#http-api) to construct API requests yourself - this is very simple. Centrifugo also supports a [GRPC API](../server/server_api.md#grpc-api). As soon as you have published a message to the channel, it must be delivered to your online clients subscribed to that channel.
 
 ## 6. Deploy to production
 
@@ -2475,8 +2509,14 @@ Here is a list of SDKs maintained by Centrifugal Labs:
 * [centrifuge-swift](https://github.com/centrifugal/centrifuge-swift) – for native iOS development
 * [centrifuge-java](https://github.com/centrifugal/centrifuge-java) – for native Android development and general Java
 * [centrifuge-python](https://github.com/centrifugal/centrifuge-python) – real-time SDK for Python on top of asyncio
-* [centrifuge-rust](https://github.com/centrifugal/centrifuge-rust) – for Rust on top of Tokio, with WebSocket and HTTP-streaming transports
+* [centrifuge-rust](https://github.com/centrifugal/centrifuge-rust) – for Rust: native apps on top of Tokio, and browsers via WebAssembly (WASM), with WebSocket and HTTP-streaming transports
 * [centrifuge-csharp](https://github.com/centrifugal/centrifuge-csharp) - for modern .NET environments (including MAUI, Blazor, Unity)
+
+:::tip Calling Centrifugo from your backend
+
+The SDKs above connect to Centrifugo to receive publications in real time. To publish from your backend, manage channels, sign connection and subscription tokens or answer the proxy, use a [server SDK](../server/server_sdks.md) instead: gocent, pycent, jscent, phpcent, rubycent, rustcent or csharpcent.
+
+:::
 
 SDKs driven by the community:
 
@@ -2484,6 +2524,11 @@ SDKs driven by the community:
 * [charmy/centrifuge-csharp](https://github.com/charmy/centrifuge-csharp) - SDK in C# for .NET and Unity 2022.3+
 * [IntrepidAI/tokio-centrifuge](https://github.com/IntrepidAI/tokio-centrifuge) – client SDK for Rust using Tokio
 * [s00d/tauri-plugin-centrifugo](https://github.com/s00d/tauri-plugin-centrifugo) – Tauri plugin for real-time communication with Centrifugo server using the tokio-centrifuge library
+
+Community tools built on top of the SDKs above, such as framework bindings and wrappers:
+
+* [priemskiyyy/react-centrifugo](https://github.com/priemskiyyy/react-centrifugo) – React provider and hooks on top of `centrifuge-js`, components using the same channel share one subscription
+* [priemskiyyy/simulcast](https://github.com/priemskiyyy/simulcast) – subscription lifecycle runtime with a Centrifugo adapter and bindings for React, Vue, Solid, and Svelte, includes devtools and typed event-hook generation
 
 See a description of [client protocol](./client_protocol.md) if you want to write a custom bidirectional connector or are eager to learn how Centrifugo protocol internals are structured. If you have any questions about how the protocol works, take a look at existing SDK source code or reach out in the community rooms.
 
@@ -3778,7 +3823,7 @@ Centrifugo supports `permessage-deflate` compression for websocket messages. Che
 
 :::caution
 
-Enabling WebSocket compression may result in more CPU and memory usage by Centrifugo – depending on your load profile the increase may be notable. But it [can be still economically sufficient](/blog/2024/08/19/optimizing-websocket-compression) due to reduced bandwidth costs.
+Enabling WebSocket compression may result in more CPU and memory usage by Centrifugo – depending on your load profile the increase may be notable. But it [can be still economically sufficient](/blog/2024/08/19/optimizing-websocket-compression) due to reduced bandwidth costs. Centrifugo PRO has [measured numbers for that trade-off](../pro/performance.md#websocket-compression-optimizations) — CPU, memory and ratio for `permessage-deflate` against the alternatives, across message rates and payload shapes.
 
 :::
 
@@ -5739,6 +5784,16 @@ If not specified Centrifugo namespace inherits value from `channel.history_meta_
 
 The motivation to have history meta information TTL is as follows. When using a history in a channel, Centrifugo keeps some metadata for each channel stream. Metadata includes the latest stream offset and its epoch value. In some cases, when channels are created for а short time and then not used anymore, created metadata can stay in memory while not useful. For example, you can have a personal user channel but after using your app for a while user left it forever. From a long-term perspective, this can be an unwanted memory growth. Setting a reasonable value to this option can help to expire metadata faster (or slower if you need it). The rule of thumb here is to keep this value larger than history TTL used.
 
+### recovery_max_publication_limit
+
+`recovery_max_publication_limit` (integer, default `0`, available since Centrifugo v6.10.3) – the maximum number of publications Centrifugo returns to a client recovering a channel of the namespace. A client which missed more is not recovered (`recovered: false`) and gets none of them: partial recovery would leave a gap. If zero, [client.recovery_max_publication_limit](./configuration.md#clientrecovery_max_publication_limit) is used, `300` by default.
+
+Use it for a namespace whose history holds many small publications – a streamed AI response published in chunks, say, passes 300 publications in 15 seconds at 20 a second – without raising the limit for every namespace. Keep it in line with [history_size](#history_size): a limit above it is never reached. It applies however the subscription was authorized, and to server-side subscriptions.
+
+### history_max_publication_limit
+
+`history_max_publication_limit` (integer, default `0`, available since Centrifugo v6.10.3) – the maximum number of publications Centrifugo returns per client history request in a channel of the namespace. If zero, [client.history_max_publication_limit](./configuration.md#clienthistory_max_publication_limit) is used, `300` by default.
+
 ### force_positioning
 
 `force_positioning` (boolean, default `false`) – when the `force_positioning` option is on Centrifugo forces all subscriptions in a namespace to be `positioned`. I.e. Centrifugo will try to compensate at most once delivery of PUB/SUB broker checking client position inside a stream.
@@ -7261,13 +7316,13 @@ Each client connection has individual message queue, this is the size of that qu
 
 Integer. Default: `300`
 
-Limit for the max number of publications to be returned via client protocol. See more in [History and recovery](./history_and_recovery.md)
+Limit for the max number of publications to be returned via client protocol. A namespace can set its own with [history_max_publication_limit](./channels.md#history_max_publication_limit). See more in [History and recovery](./history_and_recovery.md)
 
 ### `client.recovery_max_publication_limit`
 
 Integer. Default: `300`
 
-Limit for the max number of publications to be recovered via client protocol. See more in [History and recovery](./history_and_recovery.md)
+Limit for the max number of publications to be recovered via client protocol. A namespace can set its own with [recovery_max_publication_limit](./channels.md#recovery_max_publication_limit). See more in [History and recovery](./history_and_recovery.md)
 
 ### `client.channel_limit`
 
@@ -7763,7 +7818,7 @@ Section to configure server shutdown behavior.
 
 [Duration](#duration-type). Default `"30s"`.
 
-Allows configuring max shutdown duration.
+Allows configuring max shutdown duration: the whole graceful shutdown has to finish within it, see [signal handling](#signal-handling).
 
 ## `pid_file`
 
@@ -7906,7 +7961,23 @@ kill -HUP <PID>
 
 Though at moment **this will only reload token secrets and channel options (top-level and namespaces)**.
 
-Centrifugo tries to gracefully shut down client connections when SIGINT or SIGTERM signals are received. By default, the maximum graceful shutdown period is 30 seconds but can be changed using the `shutdown.timeout` ([duration](#duration-type), default `"30s"`) configuration option.
+Proxies are created on start, so a reload can't start using a proxy which wasn't in use before: since v6.10.3 such a reload is rejected with an error in logs, and the previous configuration stays active. Restart Centrifugo to start using a new proxy.
+
+On SIGINT or SIGTERM Centrifugo shuts down gracefully: it stops accepting new connections and requests, lets [async consumers](./consumers.md) finish and acknowledge the messages they already took, closes client connections, then closes connections to Redis, PostgreSQL, NATS and other systems it uses. The whole shutdown has to finish within `shutdown.timeout` ([duration](#duration-type), default `"30s"`). If it doesn't, Centrifugo logs `shutdown timeout reached` and exits with code 1.
+
+If a server, an async consumer or another component fails after start, Centrifugo runs the same graceful shutdown before exiting with code 1.
+
+## Restart on config file change
+
+For development, Centrifugo can restart itself when its configuration file changes – available since v6.10.3:
+
+```bash
+centrifugo --config config.json --watch-config-file
+```
+
+When the configuration in the file changes, Centrifugo restarts in the same process with the new configuration, and all options apply – unlike the SIGHUP reload above. Client connections are closed by the restart, and clients reconnect. A change which fails validation is logged and ignored, and Centrifugo keeps running with the previous configuration. The process keeps its PID, so it works as the main process of a container.
+
+Only the configuration file itself is watched: changes of environment variables or of files the configuration refers to need a restart. Use the flag for development – in production prefer deploying a new configuration with a regular restart.
 
 ## Anonymous usage stats
 
@@ -8173,7 +8244,11 @@ Async consumers only process commands which modify state – such as [publish](.
 
 Centrifugo **only supports JSON payloads for asynchronous commands coming to consumers for now**. If you need binary format – reach out with your use case.
 
+The `payload` of a command is the JSON object of the method's request. When a message is a whole command, `{"method": ..., "payload": ...}`, its `payload` may also be a string holding that JSON, for change data capture pipelines which write a JSON column as a string – the Debezium PostgreSQL connector writes a `jsonb` column so. When the method comes apart from the payload – in a message header or attribute, or in the PostgreSQL outbox table's `method` column – the payload must be the request's JSON itself: a string fails to decode, and the command is logged and dropped.
+
 If Centrifugo encounters an error while processing consumed messages – then [temporary errors](./server_api.md#error) (internal error 100 and, since v6.10.0, too many requests 111) will be retried, all other errors logged on `error` level – and the message will be marked as processed. Errors which retrying can not fix, such as bad request 107, are not retried. The processing logic for [broadcast](./server_api.md#broadcast) API is special: if any of the publications to any channel from broadcast `channels` array failed with a temporary error – then the entire broadcast command will be retried. To prevent duplicate messages being published during such retries – consider using `idempotency_key` in the broadcast command.
+
+When Centrifugo stops, consumers stop taking new messages, then finish and acknowledge the messages they already took, within [`shutdown.timeout`](./configuration.md#shutdowntimeout). So a restart doesn't deliver already processed messages again. Since Centrifugo v6.10.3 – before, a message processed right before a stop could be delivered once more after the restart.
 
 :::tip
 
@@ -10876,7 +10951,7 @@ Everything above maps to a handful of namespace options:
 | [`force_recovery`](./channels.md#force_recovery) | Make subscriptions recoverable (implies positioning) |
 | [`force_positioning`](./channels.md#force_positioning) | Detect dropped messages on live connections (`3010` on loss) |
 | [`force_recovery_mode`](./channels.md#force_recovery_mode) | `stream` (all messages) or `cache` (latest only) |
-| `client.recovery_max_publication_limit` | Cap on publications recovered in one go (default `300`) |
+| [`recovery_max_publication_limit`](./channels.md#recovery_max_publication_limit) | Cap on publications recovered in one go, for the namespace (default: `client.recovery_max_publication_limit`, `300`) |
 
 A minimal recoverable namespace:
 
@@ -10927,39 +11002,48 @@ history(limit: 10, since: {offset: 0, epoch: "epoch"}, reverse: false)   // 10 a
 history(limit: 10, since: {offset: 11, epoch: "epoch"}, reverse: true)   // 10 before a known position
 ```
 
-Here's a Go program (using the [gocent](https://github.com/centrifugal/gocent) API library) that endlessly walks a stream, flipping direction each time it reaches an end — not practical, but it shows the pagination pattern:
+Here's a Go program (using the [gocent](https://github.com/centrifugal/gocent) server SDK) that endlessly walks a stream, flipping direction each time it reaches an end — not practical, but it shows the pagination pattern:
 
 ```go
 // Iterate by 10.
-limit := 10
+const limit = 10
 // Paginate in reversed order first, then invert it.
 reverse := true
-// Start with nil StreamPosition, then fill it with value while paginating.
-var sp *gocent.StreamPosition
+// Start from the stream's end, then from the last publication read.
+var since gocent.StreamPosition
 
 for {
-	historyResult, err = c.History(
-        ctx,
-        channel,
-		gocent.WithLimit(limit),
-		gocent.WithReverse(reverse),
-        gocent.WithSince(sp),
-	)
+	res, err := client.History(ctx, gocent.HistoryRequest{
+		Channel: channel,
+		Limit:   limit,
+		Since:   since,
+		Reverse: reverse,
+	})
 	if err != nil {
-		log.Fatalf("Error calling history: %v", err)
+		log.Fatalf("history: %v", err)
 	}
-	for _, pub := range historyResult.Publications {
+	for _, pub := range res.Publications {
 		log.Println(pub.Offset, "=>", string(pub.Data))
-		sp = &gocent.StreamPosition{
-			Offset: pub.Offset,
-			Epoch:  historyResult.Epoch,
-		}
+		since = gocent.StreamPosition{Offset: pub.Offset, Epoch: res.Epoch}
 	}
-	if len(historyResult.Publications) < limit {
-		// Got all pubs, invert pagination direction.
+	if len(res.Publications) < limit {
+		// Got all publications: invert the direction.
 		reverse = !reverse
 		log.Println("end of stream reached, change iteration direction")
 	}
+}
+```
+
+To read forward only, the [server SDKs](./server_sdks.md) page the stream for you, each publication with its position - in gocent, `client.HistoryAll`:
+
+```go
+var last gocent.StreamPosition
+for item, err := range client.HistoryAll(ctx, gocent.HistoryRequest{Channel: channel, Limit: 100}) {
+	if err != nil {
+		return err
+	}
+	log.Println(item.Offset, "=>", string(item.Data))
+	last = item.Position() // where to resume from later
 }
 ```
 
@@ -15557,11 +15641,11 @@ curl --header "X-API-Key: <API_KEY>" \
 
 :::tip
 
-You can just use one of our [available HTTP API libraries](../server/server_api.md#http-api-libraries) or use Centrifugo [GRPC API](#grpc-api) to avoid manually constructing requests structures.
+You can just use one of the official [server SDKs](./server_sdks.md) - for Go, Python, JavaScript and TypeScript, PHP, Ruby, Rust and .NET - or use Centrifugo [GRPC API](#grpc-api) to avoid manually constructing requests structures.
 
 :::
 
-Request keys are matched without regard to letter case. In Centrifugo PRO since v6.10.0 request bodies of `/api/<method>` endpoints are otherwise decoded strictly per RFC 8259: a key given twice, invalid UTF-8 or data after the JSON value make the request a bad request. The same applies to proxy responses and to JWT claims in PRO.
+Request keys are the snake_case field names of each method, such as `idempotency_key`. They are matched without regard to ASCII letter case, so `Channel` works, but a key matching no field is ignored without an error: a camelCase `idempotencyKey` is dropped, and the publication goes out without an idempotency key. In Centrifugo PRO since v6.10.0 request bodies of `/api/<method>` endpoints are otherwise decoded strictly per RFC 8259: a key given twice, invalid UTF-8 or data after the JSON value make the request a bad request. The same applies to proxy responses and to JWT claims in PRO.
 
 Below we look at all aspects of Centrifugo HTTP API in detail, starting with information about authorization.
 
@@ -15589,6 +15673,8 @@ X-API-Key: <YOUR_API_KEY>
 ```
 
 It's also possible to pass API key over URL query param. Simply add `?api_key=<YOUR_API_KEY>` query param to the API endpoint. Keep in mind that passing the API key in the `X-API-Key` header is a recommended way as it is considered more secure.
+
+A request without a valid key is answered with HTTP 401 and an empty body. A request with a method other than `POST` is answered with 405.
 
 ### `http_api.insecure`
 
@@ -15680,7 +15766,7 @@ Since v6.9.7, Centrifugo PRO may send a publication to the broker together with 
 | `skip_history`    | `bool`              | no       | Skip adding publication to history for this request. Can't be used in channels with [delta compression](./delta_compression.md)                                                                                                                                                                                                                                                                                                                                                                          |
 | `tags`            | `map[string]string` | no       | Publication tags - map with arbitrary string keys and values which is attached to publication and will be delivered to clients                                                                                                                                                                                                                                                                                               |
 | `b64data`         | `string`            | no       | Custom binary data to publish into a channel encoded to base64 so it's possible to use HTTP API to send binary to clients. Centrifugo will decode it from base64 before publishing. In case of GRPC you can publish binary using `data` field.                                                                                                                                                                               |
-| `idempotency_key` | `string`            | no       | Optional idempotency key to drop duplicate publications upon retries. It acts per channel. Centrifugo currently keeps the cache of idempotent publish results during 5 minutes window. Supported only by Memory and Redis engines                                                                                                                                                                                            |
+| `idempotency_key` | `string`            | no       | Optional idempotency key to drop duplicate publications upon retries. It acts per channel. Centrifugo currently keeps the cache of idempotent publish results during 5 minutes window. Supported by the Memory, Redis and PostgreSQL brokers; the NATS broker ignores it, so a retry publishes again                                                                                                                                                                                            |
 | `delta`           | `boolean`           | no       | When set to true tells Centrifugo to construct delta update if possible when broadcasting message to subscribers.                                                                                                                                                                                                                                                                                                            |
 | `version`         | `integer`           | no       | When >0 gives Centrifugo a tip about the version of real-time document being sent, Centrifugo will check the version and ignore publications with versions less or equal than already seen. **Checking version only works in channels with history enabled** and mostly useful when publications in channel contain the entire state, so skipping intermediate publications is safe and beneficial. New in Centrifugo v6.2.0 |
 | `version_epoch`   | `string`            | no       | When set tells Centrifugo the epoch of version. When it changes – it tells Centrifugo that version has another epoch and even if it is less than previous - Centrifugo will accept the publication.                                                                                                                                                                                                                          |
@@ -16279,23 +16365,21 @@ It's also possible to pass `"parallel": true` on `batch` data top level to make 
 
 ## HTTP API libraries
 
-Sending an API request to Centrifugo is a simple task to do in any programming language - this is just a POST request with JSON payload in body and `Authorization` header.
+Sending an API request to Centrifugo is a simple task to do in any programming language - this is just a POST request with JSON payload in body and the `X-API-Key` header.
 
-But we have several official HTTP API libraries for different languages, to help developers to avoid constructing proper HTTP requests manually:
+But the official [server SDKs](./server_sdks.md) do more than build the requests: they retry without publishing twice, report which channels of a broadcast failed, bound every call by a timeout, sign tokens and answer the proxy. There is one for each of these languages:
 
-* [cent](https://github.com/centrifugal/cent) for Python
-* [phpcent](https://github.com/centrifugal/phpcent) for PHP
 * [gocent](https://github.com/centrifugal/gocent) for Go
+* [pycent](https://github.com/centrifugal/pycent) for Python
+* [jscent](https://github.com/centrifugal/jscent) for JavaScript and TypeScript
+* [phpcent](https://github.com/centrifugal/phpcent) for PHP
 * [rubycent](https://github.com/centrifugal/rubycent) for Ruby
+* [rustcent](https://github.com/centrifugal/rustcent) for Rust
+* [csharpcent](https://github.com/centrifugal/csharpcent) for .NET
 
-Also, there are Centrifugo server API libraries created by community:
+These call Centrifugo from your backend. To receive publications in real time, use a [client real-time SDK](../transports/client_sdk.md) instead.
 
-* [katarinamolotova/javacent](https://github.com/katarinamolotova/javacent) – HTTP API client for Java
-* [SocketSomeone/cent.js](https://github.com/SocketSomeone/cent.js) – API client for NodeJS
-* [sajjad-fatehi/CentriAgent](https://github.com/sajjad-fatehi/centri-agent) – one more API client for NodeJS
-* [ismkdc/Centrifugo.AspNetCore](https://github.com/ismkdc/Centrifugo.AspNetCore) – API client for ASP.NET Core
-* [devops-israel/crystalcent](https://github.com/devops-israel/crystalcent) – API client for Crystal language
-* [Cyberguru1/rucent](https://github.com/Cyberguru1/rucent) – HTTP API client for Rust
+See the [server SDKs](./server_sdks.md) page for installing them, what they share, and the libraries the community made.
 
 :::tip
 
@@ -16598,7 +16682,7 @@ For other languages refer to GRPC docs.
 
 ## Transport error mode
 
-By default, Centrifugo server API never returns transport-level errors — for example, it always returns 200 OK for HTTP API and never returns GRPC transport-level errors. Centrifugo returns its custom errors from API calls inside the optional `error` field of the response, as we showed above in this doc. This means that an API call to Centrifugo API may return 200 OK, but in the `error` field you may find a Centrifugo-specific `100: internal error`.
+By default, Centrifugo server API does not return its errors as transport-level errors — for example, it returns 200 OK for HTTP API and never returns GRPC transport-level errors. Centrifugo returns its custom errors from API calls inside the optional `error` field of the response, as we showed above in this doc. A request which never reaches its API method is the exception, in either mode: one whose body is not valid JSON of the method's request is answered with HTTP 400 and a plain text body, one without a valid API key with 401, and a path which is no API method with 404. This means that an API call to Centrifugo API may return 200 OK, but in the `error` field you may find a Centrifugo-specific `100: internal error`.
 
 Since Centrifugo v5.1.0, Centrifugo has an option to use transport-native error codes instead of the Centrifugo `error` field in the response. The main motivation is to make API calls friendly to integrate with the network ecosystem — for automatic retries, better logging, etc. In many situations this may also be more obvious for humans.
 
@@ -16711,6 +16795,212 @@ func MapErrorToGRPCCode(err *Error) codes.Code {
 	}
 }
 ```
+
+---
+
+## Server SDKs
+
+A server SDK is the library your backend uses to work with Centrifugo - as opposed to a [client SDK](../transports/client_sdk.md), which runs in browsers and apps. It covers what a backend does with Centrifugo over HTTP, not only API calls:
+
+* **The [server API](./server_api.md)**: every method, Centrifugo PRO's included. The API is plain HTTP with JSON, so you can always call it directly, but an SDK takes care of what is easy to get wrong: retries which don't publish twice, broadcasts where some channels fail, timeouts.
+* **[Connection tokens](./authentication.md)** and **[subscription tokens](./channel_token_auth.md)**, signed with HMAC, RSA, ECDSA or Ed25519 keys, with a JWKS endpoint for the public keys - and the endpoints your client SDK's [connection](../transports/client_api.md#client-connection-token) and [subscription](../transports/client_api.md#subscription-token) token callbacks call.
+* **[Shared poll signatures](./shared_poll.md#authorization-with-hmac-signatures)**, and the endpoint client SDKs call for them.
+* **[Proxy](./proxy.md) handlers**: your backend's side of Centrifugo's HTTP proxy - connect, subscribe, publish, RPC, refresh and the rest - each answering with exactly what its proxy type can carry.
+
+:::info Not a real-time connection
+
+Server SDKs call Centrifugo from your backend: they publish, manage channels and sign tokens, but don't hold a connection open to receive publications. To connect to Centrifugo and get publications in real time - from a browser, a mobile app, or a backend process which subscribes to channels - use a [client real-time SDK](../transports/client_sdk.md#list-of-client-sdks): centrifuge-js, centrifuge-go, centrifuge-python, centrifuge-dart, centrifuge-swift, centrifuge-java, centrifuge-rust or centrifuge-csharp. For example, in Python, pycent publishes from your backend, and centrifuge-python subscribes as a client.
+
+:::
+
+## Official SDKs
+
+| Language | SDK | Install | Requires |
+|---|---|---|---|
+| Go | [gocent](https://github.com/centrifugal/gocent) | `go get github.com/centrifugal/gocent/v4` | Go 1.27 |
+| Python | [pycent](https://github.com/centrifugal/pycent) | `pip install cent` | Python 3.11 |
+| JavaScript, TypeScript | [jscent](https://github.com/centrifugal/jscent) | `npm install jscent` | Node.js 22, Deno 2, Bun 1.2, edge runtimes |
+| PHP | [phpcent](https://github.com/centrifugal/phpcent) | `composer require centrifugal/phpcent` | PHP 8.3 |
+| Ruby | [rubycent](https://github.com/centrifugal/rubycent) | `gem "cent", "~> 5.0"` | Ruby 3.4 |
+| Rust | [rustcent](https://github.com/centrifugal/rustcent) | `cargo add cent` | Rust 1.85 |
+| .NET | [csharpcent](https://github.com/centrifugal/csharpcent) | `dotnet add package Centrifugal.Cent` | .NET 8 |
+
+All of them work with Centrifugo v6. The map and shared poll methods need Centrifugo v6.8.0 or newer, and the methods marked "Centrifugo PRO only" need [Centrifugo PRO](../pro/overview.md).
+
+## What every SDK does
+
+The SDKs follow one [specification](https://github.com/centrifugal/gocent/blob/master/spec.md), so they behave the same in every language - only the way a call is written is the language's own. Each SDK:
+
+* **Calls every server API method**, Centrifugo PRO's included, with request and result types generated from Centrifugo's own API schema.
+* **Returns an error unless the call did everything asked.** A [broadcast](./server_api.md#broadcast) or [batch](./server_api.md#batch) in which some parts failed is an error which still holds every part's outcome, so you can see which channels got the publication.
+* **Matches Centrifugo errors by code** - unknown channel, not available, too many requests - and tells which errors a retry may fix.
+* **Retries safely.** A publication is retried with the same `idempotency_key`, and a broadcast retry is sent only to the channels which have not got it yet.
+* **Bounds every call by a timeout** - 10 seconds by default - which a call can shorten or replace.
+* **Checks a request before sending it**: a missing required field or a payload which is not valid JSON fails at once, naming the field, rather than as a bad request from Centrifugo.
+* **Batches concurrent calls automatically**, if you enable it, to cut the requests Centrifugo handles under load - never delaying a call while requests are below the limit you set.
+* **Reads paged results for you**: history, map state and device lists are iterated a page at a time, each item with its [stream position](./history_and_recovery.md).
+* **Signs tokens**: [connection](./authentication.md) and [subscription](./channel_token_auth.md) tokens with HMAC, RSA, ECDSA or Ed25519 keys, a JWKS endpoint for the public keys, and API tokens for Centrifugo PRO's [JWKS authentication](../pro/server_api_enhancements.md#jwks-authentication) of the server API.
+* **Serves the endpoints client SDKs call** for connection and subscription tokens and [shared poll](./shared_poll.md) signatures.
+* **Answers the [proxy](./proxy.md)**: a handler per proxy type, which answers with exactly what the proxy type can carry.
+* **Writes commands for the [async consumers](./consumers.md)**, to put into an outbox table or a Kafka topic.
+
+Each SDK's README has the details for its language, and its API reference documents every method.
+
+## A first publication
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs
+  className="unique-tabs"
+  defaultValue="go"
+  values={[
+    {label: 'Go', value: 'go'},
+    {label: 'Python', value: 'python'},
+    {label: 'JavaScript', value: 'javascript'},
+    {label: 'PHP', value: 'php'},
+    {label: 'Ruby', value: 'ruby'},
+    {label: 'Rust', value: 'rust'},
+    {label: '.NET', value: 'dotnet'},
+  ]
+}>
+<TabItem value="go">
+
+```go
+client, err := gocent.New(gocent.Config{
+	APIEndpoint: "http://localhost:8000/api",
+	APIKey:      os.Getenv("CENTRIFUGO_API_KEY"),
+})
+if err != nil {
+	log.Fatal(err)
+}
+res, err := client.Publish(ctx, gocent.PublishRequest{
+	Channel: "news",
+	Data:    jsontext.Value(`{"text":"hello"}`),
+})
+if err != nil {
+	log.Fatal(err)
+}
+log.Printf("published at offset %d", res.Offset)
+```
+
+</TabItem>
+<TabItem value="python">
+
+```python
+import os
+import cent
+
+client = cent.Client("http://localhost:8000/api", api_key=os.environ["CENTRIFUGO_API_KEY"])
+
+res = client.publish(channel="news", data={"text": "hello"})
+print(f"published at offset {res.offset}")
+```
+
+</TabItem>
+<TabItem value="javascript">
+
+```javascript
+import { Client } from 'jscent';
+
+const client = new Client({ apiEndpoint: 'http://localhost:8000/api', apiKey: process.env.CENTRIFUGO_API_KEY });
+
+const res = await client.publish({ channel: 'news', data: { text: 'hello' } });
+console.log(`published at offset ${res.offset}`);
+```
+
+</TabItem>
+<TabItem value="php">
+
+```php
+use Centrifugal\Phpcent\Client;
+
+$client = new Client('http://localhost:8000/api', apiKey: (string) getenv('CENTRIFUGO_API_KEY'));
+
+$res = $client->publish(channel: 'news', data: ['text' => 'hello']);
+echo "published at offset {$res->offset}\n";
+```
+
+</TabItem>
+<TabItem value="ruby">
+
+```ruby
+require "cent"
+
+client = Cent::Client.new(api_endpoint: "http://localhost:8000/api", api_key: ENV.fetch("CENTRIFUGO_API_KEY"))
+
+res = client.publish(channel: "news", data: { text: "hello" })
+puts "published at offset #{res.offset}"
+```
+
+</TabItem>
+<TabItem value="rust">
+
+```rust
+use cent::{Client, Config, PublishRequest};
+use serde_json::json;
+
+let client = Client::new(
+    Config::new("http://localhost:8000/api").api_key(std::env::var("CENTRIFUGO_API_KEY").unwrap()),
+)?;
+let data = cent::json(&json!({"text": "hello"}))?;
+let res = client.publish(PublishRequest::new("news").data(data)).await?;
+println!("published at offset {}", res.offset);
+```
+
+</TabItem>
+<TabItem value="dotnet">
+
+```csharp
+using Centrifugal.Cent;
+
+await using var client = new CentClient(new CentClientOptions
+{
+    ApiEndpoint = "http://localhost:8000/api",
+    ApiKey = apiKey,
+});
+var result = await client.PublishAsync("news", new { text = "hello" });
+Console.WriteLine(result.Offset);
+```
+
+</TabItem>
+</Tabs>
+
+## For AI coding agents
+
+If you are an AI coding agent writing a backend which talks to Centrifugo, these are the points where generated code most often goes wrong:
+
+* **Use the SDK for the language rather than raw HTTP calls.** It already handles the error model, timeouts and retries below.
+* **Retry a publication only with an `idempotency_key`**, the same one on every attempt: an error does not mean nothing was published. A key built from an ID must name the event too - `order-42-paid`, not `order-42`.
+* **Don't retry a failed broadcast as a whole**: it would publish twice into the channels which got it. Use the SDK's broadcast retry, which resends only to the channels which failed.
+* **Check every part of a broadcast or batch.** An error from a broadcast may be partial - some channels got the publication - and the error holds each channel's outcome.
+* **A 404 from a method marked "Centrifugo PRO only" means the server is Centrifugo OSS**, not that the endpoint is wrong.
+* **Put the API key in the `X-API-Key` header** - the SDKs do - and never in a client-side token or the browser.
+* **Keep proxy handlers reachable by Centrifugo only**: whoever can call them can claim to be any user.
+* **For streaming AI responses**, see [Real-time for AI apps](../getting-started/ai-apps.md): publish chunks in order, one call after another, not concurrently.
+
+## HTTP or GRPC
+
+The server SDKs use the [HTTP API](./server_api.md#http-api). Centrifugo also has a [GRPC API](./server_api.md#grpc-api) with the same methods, for which you generate a client from Centrifugo's Protobuf schema. HTTP is the default choice: with connections kept alive and calls batched automatically, its per-call cost is small, it needs no dependencies, and it works on every platform - edge runtimes included.
+
+GRPC is worth it when:
+
+* **you publish at very high rates**, and serializing JSON shows in your profiles: GRPC uses Protobuf;
+* **your payloads are binary**: GRPC carries them as bytes, where the HTTP API takes them base64-encoded in `b64data`;
+* **you need the [proxy streams](./proxy_streams.md)**, which only GRPC supports.
+
+A generated GRPC client calls the methods, and nothing more: what the SDKs add - retries which don't publish twice, broadcast errors with each channel's outcome, Centrifugo errors matched by code, one timeout per call - you write yourself. The SDKs' token signing, client SDK endpoints and proxy handlers work the same alongside a GRPC client, as they don't depend on the API transport.
+
+## Community libraries
+
+These server API libraries are made by the community. They are not part of the official set, and may not cover every method:
+
+* [katarinamolotova/javacent](https://github.com/katarinamolotova/javacent) – HTTP API client for Java
+* [SocketSomeone/cent.js](https://github.com/SocketSomeone/cent.js) – API client for NodeJS
+* [sajjad-fatehi/CentriAgent](https://github.com/sajjad-fatehi/centri-agent) – one more API client for NodeJS
+* [ismkdc/Centrifugo.AspNetCore](https://github.com/ismkdc/Centrifugo.AspNetCore) – API client for ASP.NET Core
+* [devops-israel/crystalcent](https://github.com/devops-israel/crystalcent) – API client for Crystal language
+* [Cyberguru1/rucent](https://github.com/Cyberguru1/rucent) – HTTP API client for Rust
 
 ---
 
@@ -16877,7 +17167,7 @@ Refresh cycle (interval=1s, 3000 tracked keys, batch_size=1000)
 
 `subscribe` is lightweight (no data delivery, no recovery) — `track` is where data starts flowing. Shared poll works for both authenticated and anonymous users.
 
-On a **single Centrifugo node**, backend load scales with the number of unique tracked items, not connected clients — if many clients watch the same 200 items, those 200 items are polled once per cycle. In a **multi-node** Centrifugo deployment, each node runs its own refresh worker and polls the backend independently for the keys tracked by its own connections. With `N` nodes that each have at least one connection tracking a given key, that key is polled `N` times per cycle. The backend still scales with `O(unique_items × active_nodes)` rather than `O(clients)`, but operators sizing the backend should account for the node count. Centrifugo PRO's [shared poll relay](../pro/shared_poll.md#shared-poll-relay) centralises polling into a single process so the backend sees one request per cycle regardless of node count.
+On a **single Centrifugo node**, backend load scales with the number of unique tracked items, not connected clients — if many clients watch the same 200 items, those 200 items are polled once per cycle. In a **multi-node** Centrifugo deployment, each node runs its own refresh worker and polls the backend independently for the keys tracked by its own connections. With `N` nodes that each have at least one connection tracking a given key, that key is polled `N` times per cycle. The backend still scales with `O(unique_items × active_nodes)` rather than `O(clients)`, but operators sizing the backend should account for the node count. Centrifugo PRO's [shared poll relay](../pro/shared_poll.md#shared-poll-relay) (in progress, not yet officially supported) centralises polling into a single process so the backend sees one request per cycle regardless of node count.
 
 ### Authorization with HMAC signatures
 
@@ -21555,7 +21845,7 @@ Unlike many other Redis features in Centrifugo, consistent sharding is not suppo
 
 :::caution
 
-One more thing you may notice is that Redis configuration here does not have the `use_redis_from_engine` option. The reason is that since Redis is not shardable here, reusing Redis configuration could cause problems at the moment of Redis scaling – which we want to avoid, thus requiring explicit configuration here.
+One more thing you may notice is that Redis configuration here does not have the `reuse_from_engine` option. The reason is that since Redis is not shardable here, reusing Redis configuration could cause problems at the moment of Redis scaling – which we want to avoid, thus requiring explicit configuration here.
 
 :::
 
@@ -21597,77 +21887,14 @@ docker run -it --rm -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=pass -p 5432:
 
 ## SSO for admin UI using OpenID connect (OIDC)
 
-Admin UI of Centrifugo OSS supports only one admin user identified by the preconfigured password. For the corporate and enterprise environments Centrifugo PRO provides a way to integrate with popular User [Identity Providers](https://en.wikipedia.org/wiki/Identity_provider) (IDP), such as Okta, KeyCloak, Google Workspace, Azure and others. Most of the modern providers which support [OpenID connect](https://openid.net/specs/openid-connect-core-1_0.html) (OIDC) protocol with [Proof Key for Code Exchange](https://oauth.net/2/pkce/)
-(PKCE) and [OpenID Connect Discovery](https://openid.net/specs/openid-connect-discovery-1_0.html) are supported. This provides a way to integrate Centrifugo PRO into your existing [Single Sign-On](https://en.wikipedia.org/wiki/Single_sign-on) (SSO) infrastructure.
+Centrifugo PRO admin UI integrates with OpenID Connect (OIDC) identity providers such as Okta, Keycloak, Google Workspace and Azure, so admins log in through your existing Single Sign-On infrastructure.
 
-## How it works
+The feature is described on the [Admin UI](./admin_ui.md#sso-for-admin-ui-oidc) page, which covers:
 
-As soon as OIDC integration is configured, instead of the password field, Centrifugo PRO admin web UI shows a button to log in using a configured Identity Provider. As soon as a user successfully logs in via the IDP, the user is redirected back to Centrifugo admin UI. Centrifugo checks the user's access token and permissions to access admin functionality upon every request to admin resources.
-
-![](/img/admin_idp_auth.png)
-
-## Configuration
-
-```json title="config.json"
-{
-  "admin": {
-    ...
-    "oidc": {
-      "enabled": true,
-      "display_name": "Keycloak",
-      "issuer": "http://localhost:8080/realms/master",
-      "client_id": "myclient",
-      "audience": "myclient",
-      "redirect_uri": "http://localhost:8000",
-      "extra_scopes": [],
-      "access_cel": "'centrifugo_admins' in claims.groups"
-    }
-  }
-}
-```
-
-* `admin.oidc.enabled` - boolean option which enables OIDC integration. When it's on, it's only possible to log in to Centrifugo over OIDC. By default, `false`. Enabling OIDC also enables validation of the required options below.
-* `admin.oidc.display_name` – required string, name of IDP to be displayed on login button.
-* `admin.oidc.issuer` - required string, the URL identifier of Identity Provider which will issue tokens. It's used for initializing OIDC provider and used as a base for the OIDC endpoint discovery.
-* `admin.oidc.client_id` - required string, identifier for registered client in IDP for OIDC integration with Centrifugo.
-* `admin.oidc.audience` - optional string, if not set Centrifugo expects access token audience (`aud`) to match configured `client_id` value (as required by the OIDC spec).
-* `admin.oidc.redirect_uri` - required string, redirect URI to use.
-* `admin.oidc.extra_scopes` - optional array of extra string scopes to request from IDP. Centrifugo always includes `openid` scope as it's required by OpenID Connect protocol.
-* `admin.oidc.access_cel` – required string, this is a CEL expression which describes the rule for checking access to Centrifugo admin resources. For now we don't provide RBAC – when this expression returns true the user gets full access to Centrifugo admin resources. If false – no access at all. For more information about what CEL is, check out the [Channel CEL expressions](./cel_expressions.md) chapter where CEL expressions are used for channel permission checks.
-
-Let's look closer at `admin.oidc.access_cel`. In the example above we check this based on a user group membership:
-
-```json title="config.json"
-{
-  "admin": {
-    ...
-    "oidc": {
-      ...
-      "access_cel": "'centrifugo_admins' in claims.groups"
-    }
-  }
-}
-```
-
-The expression may differ depending on the IDP used – you can modify it to fit your case. Inside CEL you have access to the token `claims` object with all claims of the access token (which is a JWT), so custom logic is possible. If you want to allow all authenticated users to access Centrifugo admin resources – then you can do the following:
-
-:::caution
-
-This is usually not recommended, since every new user in your IDP will get access to Centrifugo admin UI. Deciding based on groups or some other token attribute is more secure and flexible.
-
-:::
-
-```json title="config.json"
-{
-  "admin": {
-    ...
-    "oidc": {
-      ...
-      "access_cel": "true"
-    }
-  }
-}
-```
+* [Configuration](./admin_ui.md#configuration) – the `admin.oidc` options and the `access_cel` expression deciding who may log in.
+* [Roles](./admin_ui.md#roles) – `admin` and `viewer` roles given by rules over token claims.
+* [Server-side OIDC](./admin_ui.md#configuring-server-side-oidc) – the flow with a client secret, when the identity provider does not allow PKCE.
+* [Audit log](./admin_ui.md#audit-log) – who did what in the admin UI.
 
 ---
 
@@ -22785,6 +23012,17 @@ The `labels` column is a `Map(String, String)` — every unique label key/value 
 
 In high-volume scenarios, bandwidth optimizations can be crucial for reducing network traffic costs and improving performance. Here you can see features of Centrifugo PRO which help optimize bandwidth usage.
 
+This page covers four features. The first two make each message smaller; the last two reduce how many messages there are.
+
+| feature | what it does |
+|---|---|
+| [Delta compression for at most once](#delta-compression-for-at-most-once) | sends what changed since the previous publication, without requiring recovery |
+| [Channel compaction](#channel-compaction) | replaces channel names in messages with short numeric ids |
+| [Client publish debouncing](#client-publish-debouncing) | coalesces bursts of publications coming from a client |
+| [Drop intermediary publications](#drop-intermediary-publications) | keeps only the newest publication for a subscriber that fell behind |
+
+WebSocket compression (`permessage-deflate`) is available in Centrifugo OSS through [`websocket.compression`](../transports/websocket.md#websocketcompression). Centrifugo PRO adds a [prepared message cache](./performance.md#websocket-compression-optimizations) which keeps its CPU and memory cost low when broadcasting.
+
 ## Delta compression for at most once
 
 Centrifugo OSS supports [delta compression](./../server/delta_compression.md) only in channels with recovery and positioning on. To support delta compression for the case when subscribers do not use recovery and positioning Centrifugo PRO provides a boolean namespace option called `keep_latest_publication`. When it's on – Centrifugo saves latest publication in channels to node's memory and uses it to construct delta updates. The publication lives in node's memory while there are active channel subscribers. This allows dealing with at most once guarantee of Broker's PUB/SUB layer and send deltas properly. So you get efficient at most once broadcast and the reduced bandwidth (of course if delta compression makes sense for data in a channel).
@@ -22835,7 +23073,9 @@ To enable channel compaction, set the `allow_channel_compaction` option to `true
 
 After that, client SDKs which support channel compaction will automatically negotiate it during the subscription; no additional steps are required.
 
-At this moment only JavaScript SDK (`centrifuge-js`) supports this feature (since v5.5.0). Centrifugo PRO supports this since v6.5.0.
+Channel compaction is supported by the official SDKs — see the [client SDK feature matrix](../transports/client_sdk.md). `centrifuge-js` has it since v5.5.0. Centrifugo PRO supports it since v6.5.0. An SDK that does not negotiate it simply keeps receiving channel names, so a mixed fleet needs no coordination.
+
+Compaction removes a fixed number of bytes from every message, so it matters most when the message itself is small. On a 49-byte message it saved 1.58x on its own, and its CPU cost was too small to measure.
 
 ## Client publish debouncing
 
@@ -24034,6 +24274,15 @@ But still in this model, if you have a lot of messages sent to each individual c
 
 We have customer reports showing that enabling options described here reduced total CPU usage of Centrifugo cluster by half. This may be a significant cost reduction at scale.
 
+The busier each connection, the more there is to batch. We measured one node delivering a channel's publications to 1,000 subscribers, with and without `client.write_delay: 10ms` (medians of alternating runs):
+
+| messages per second to each subscriber | Centrifugo CPU, no delay → 10ms delay |
+|---|---|
+| 100 | 1.76 → 1.12 cores (1.6x less) |
+| 500 | 3.48 → 1.29 cores (**2.7x less**) |
+
+At 500 messages a second the node without a delay also fell behind: a publish call took 55 ms at the median, against 0.28 ms with the delay.
+
 :::tip
 
 Note, this is only useful when you have lots of messages per client. This specific feature won't be helpful in the case where the message is broadcast to many different connections, as the feature described here only batches message writing in terms of a single socket.
@@ -24905,7 +25154,7 @@ This feature is **in the preview state now**. We still need some time before it 
 
 :::
 
-To enable the feature you must use the `redis` engine. Also, only channels with `presence` enabled may deliver channel state notifications. When enabling the channel state proxy, Centrifugo PRO starts using another approach to create Redis keys for presence for namespaces where channel state events are enabled; this is an important implementation detail.
+To enable the feature presence must be kept in Redis: use the `redis` engine, or a separate `redis` presence manager. Also, only channels with `presence` enabled may deliver channel state notifications. When enabling the channel state proxy, Centrifugo PRO starts using another approach to create Redis keys for presence for namespaces where channel state events are enabled; this is an important implementation detail.
 
 :::caution
 
@@ -25165,13 +25414,13 @@ curl -sSLf https://centrifugal.dev/install_pro.sh | sh
 Centrifugo PRO uses a different image from OSS version – [centrifugo/centrifugo-pro](https://hub.docker.com/r/centrifugo/centrifugo-pro):
 
 ```
-docker run --ulimit nofile=262144:262144 -v /host/dir/with/config/file:/centrifugo -p 8000:8000 centrifugo/centrifugo-pro:v6.10.2 centrifugo -c config.json
+docker run --ulimit nofile=262144:262144 -v /host/dir/with/config/file:/centrifugo -p 8000:8000 centrifugo/centrifugo-pro:v6.10.3 centrifugo -c config.json
 ```
 
-There is also a minimal image variant based on [distroless](https://github.com/GoogleContainerTools/distroless): `centrifugo/centrifugo-pro:v6.10.2-distroless` (and `v6-distroless`, `v6.10-distroless`, `latest-distroless`). It contains only the Centrifugo binary, CA certificates and timezone data, without a shell or package manager. Its entrypoint is the `centrifugo` binary, so pass only arguments. It runs as the `nonroot` user (UID 65532), so mounted files must be readable by it:
+There is also a minimal image variant based on [distroless](https://github.com/GoogleContainerTools/distroless): `centrifugo/centrifugo-pro:v6.10.3-distroless` (and `v6-distroless`, `v6.10-distroless`, `latest-distroless`). It contains only the Centrifugo binary, CA certificates and timezone data, without a shell or package manager. Its entrypoint is the `centrifugo` binary, so pass only arguments. It runs as the `nonroot` user (UID 65532), so mounted files must be readable by it:
 
 ```
-docker run --ulimit nofile=262144:262144 -v /host/dir/with/config/file:/centrifugo -p 8000:8000 centrifugo/centrifugo-pro:v6.10.2-distroless -c config.json
+docker run --ulimit nofile=262144:262144 -v /host/dir/with/config/file:/centrifugo -p 8000:8000 centrifugo/centrifugo-pro:v6.10.3-distroless -c config.json
 ```
 
 ### Kubernetes
@@ -25183,7 +25432,7 @@ You can use our [official Helm chart](https://github.com/centrifugal/helm-charts
 image:
   registry: docker.io
   repository: centrifugo/centrifugo-pro
-  tag: v6.10.2
+  tag: v6.10.3
 ```
 
 ### Debian and Ubuntu
@@ -25191,8 +25440,8 @@ image:
 DEB package [available in release assets](https://github.com/centrifugal/centrifugo-pro/releases).
 
 ```
-wget https://github.com/centrifugal/centrifugo-pro/releases/download/v6.10.2/centrifugo-pro_6.10.2-0_amd64.deb
-sudo dpkg -i centrifugo-pro_6.10.2-0_amd64.deb
+wget https://github.com/centrifugal/centrifugo-pro/releases/download/v6.10.3/centrifugo-pro_6.10.3-0_amd64.deb
+sudo dpkg -i centrifugo-pro_6.10.3-0_amd64.deb
 ```
 
 ### Centos
@@ -25200,16 +25449,16 @@ sudo dpkg -i centrifugo-pro_6.10.2-0_amd64.deb
 RPM package [available in release assets](https://github.com/centrifugal/centrifugo-pro/releases).
 
 ```
-wget https://github.com/centrifugal/centrifugo-pro/releases/download/v6.10.2/centrifugo-pro-6.10.2-0.x86_64.rpm
-sudo yum install centrifugo-pro-6.10.2-0.x86_64.rpm
+wget https://github.com/centrifugal/centrifugo-pro/releases/download/v6.10.3/centrifugo-pro-6.10.3-0.x86_64.rpm
+sudo yum install centrifugo-pro-6.10.3-0.x86_64.rpm
 ```
 
 ### Verifying release artifacts
 
-Starting from Centrifugo PRO v6.10.2, release artifacts are signed and include an SBOM, the same way as for the [OSS version](../getting-started/installation.md#verifying-release-artifacts). Centrifugo PRO is built in the `centrifugal/centrifugo-pro-source` repository and published to `centrifugal/centrifugo-pro`, so the signing identity refers to the build repository:
+Starting from Centrifugo PRO v6.10.3, release artifacts are signed and include an SBOM, the same way as for the [OSS version](../getting-started/installation.md#verifying-release-artifacts). Centrifugo PRO is built in the `centrifugal/centrifugo-pro-source` repository and published to `centrifugal/centrifugo-pro`, so the signing identity refers to the build repository:
 
 ```bash
-VERSION=6.10.2
+VERSION=6.10.3
 cosign verify-blob \
   --certificate-identity "https://github.com/centrifugal/centrifugo-pro-source/.github/workflows/release.yml@refs/tags/v${VERSION}" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
@@ -25221,8 +25470,8 @@ sha256sum --ignore-missing -c centrifugo-pro_${VERSION}_checksums.txt
 To verify a Docker image:
 
 ```bash
-cosign verify centrifugo/centrifugo-pro:v6.10.2 \
-  --certificate-identity "https://github.com/centrifugal/centrifugo-pro-source/.github/workflows/release.yml@refs/tags/v6.10.2" \
+cosign verify centrifugo/centrifugo-pro:v6.10.3 \
+  --certificate-identity "https://github.com/centrifugal/centrifugo-pro-source/.github/workflows/release.yml@refs/tags/v6.10.3" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
@@ -25877,7 +26126,7 @@ Note that the map broker and the PostgreSQL broker are **not** PRO features — 
 
 - **Type:** Counter
 - **Labels:** provider, recipient_type, platform, success, err_code
-- **Description:** Count of push notifications sent, split by provider (`fcm`, `apns`, `hms`, `webpush`), recipient type, platform, whether the provider accepted it, and the provider error code when it did not. `platform` is the device platform for sends to devices (`filter`) through FCM, APNs and Web Push, `na` for HMS sends (raw tokens included) and for FCM topic and condition sends which reached the provider, and empty for FCM, APNs and Web Push sends to raw tokens. When ClickHouse analytics is enabled, pushes dropped after a failed re-queue are counted too, with the device platform for `filter` sends, `na` for topic and condition sends, and an empty platform for raw tokens.
+- **Description:** Count of push notifications sent, split by provider (`fcm`, `apns`, `hms`, `webpush`), recipient type, platform, whether the provider accepted it, and the provider error code when it did not. `platform` is the device platform for sends to devices (`filter`) through FCM, APNs and Web Push, `na` for HMS sends (raw tokens included) and for FCM topic and condition sends which reached the provider, and empty for FCM, APNs and Web Push sends to raw tokens. Pushes dropped without a send attempt (for example after a failed re-queue, a template error, or when a push to a device would be sent after `expire_at`) are counted with `err_code` `dropped`, with the device platform for `filter` sends, `na` for topic and condition sends, and an empty platform for raw tokens. A batch retried later (see `centrifugo_push_deferred_batch_count`) is counted by the attempt which sends it.
 - **Usage:** Build a delivery success ratio from `success="true"` over the total. Codes such as `unregistered` are normal device-token churn; authentication errors are not.
 
 #### centrifugo_push_scheduled_request_count
@@ -25886,6 +26135,20 @@ Note that the map broker and the PostgreSQL broker are **not** PRO features — 
 - **Labels:** recipient_type
 - **Description:** Count of push notification requests accepted for later execution.
 - **Usage:** Shows how much of your push volume is scheduled rather than immediate.
+
+#### centrifugo_push_deferred_batch_count
+
+- **Type:** Counter
+- **Labels:** provider, reason
+- **Description:** Count of push batches handed over to a later attempt instead of being sent. `reason` is `retry_later` when the batch failed with retryable provider errors (provider unavailable or throttling), `send_time_budget` when the job ran out of time before sending the whole batch, `error` for other errors. Counted once per batch.
+- **Usage:** Grows during provider outages, when `centrifugo_push_notification_count` may stay flat because nothing is sent – a good signal to alert on.
+
+#### centrifugo_push_dropped_job_count
+
+- **Type:** Counter
+- **Labels:** provider, reason
+- **Description:** Count of push jobs dropped without being processed. `reason` is `expired` when the notification `expire_at` passed, `retry_period_exceeded` when a push without `expire_at` was queued more than 24 hours ago.
+- **Usage:** Shows pushes which could not be delivered in time, for example after a long provider outage or queue backlog.
 
 #### centrifugo_push_queue_consuming_lag
 
@@ -26318,6 +26581,18 @@ Depending on the load profile, this may give:
 * lower memory usage and fewer goroutines during large broadcasts
 * higher throughput of single publications under heavy load
 
+Measured against Centrifugo OSS on the same machine, with Redis, 256-byte payloads and a fixed rate both editions held, so these are costs of identical work (medians of three alternating runs):
+
+| | Centrifugo CPU, OSS → PRO | latency p50, OSS → PRO |
+|---|---|---|
+| `broadcast` into 1000 channels, 100,000 publications/sec | 0.88 → 0.15 cores (**5.9x less**) | 2.0 → 1.6 ms |
+| `broadcast` into 1000 channels with history, 30,000/sec | 0.30 → 0.06 cores (**5x less**) | 10.6 → 8.0 ms |
+| `batch` of 100 `publish` commands, 25,000 publications/sec | 0.58 → 0.23 cores (**2.5x less**) | 1.0 → 0.80 ms |
+| `batch` of 100 `publish` commands with history, 10,000/sec | 0.26 → 0.09 cores (**2.9x less**) | 2.6 → 2.1 ms |
+| `batch` of 100 `publish` commands, 5,000/sec, 3 ms round trip to Redis | 0.16 → 0.06 cores (**2.7x less**) | 5.2 → 4.9 ms |
+
+Batches in Centrifugo OSS here run with `"parallel": true`, its fastest mode. Without it, Centrifugo OSS publishes one command after another and waits for a Redis round trip for each: a batch of 100 took 13 ms with Redis on the same machine and 365 ms with a 3 ms round trip. Centrifugo PRO sends the publications of a batch to Redis in one call, with or without `parallel`.
+
 The effect is larger when a call carries many publications, and for single publications it grows with load. It also depends on the broker setup – for example, with Redis Cluster without sharded PUB/SUB the gain is smaller, since publications to different channels can not share one Redis call. Under load, a single publication may wait a little for others, which adds up to 250 microseconds to its latency; the latency of a broadcast with history may also increase slightly, since one broker call carrying many channels takes Redis longer than a single publish.
 
 ## Faster HTTP proxy
@@ -26376,7 +26651,9 @@ Centrifugo PRO provides an integer option `websocket.compression_prepared_messag
 }
 ```
 
-This can significantly improve CPU and memory Centrifugo resource usage when using [WebSocket compression feature](../transports/websocket.md#websocketcompression).
+This can significantly improve CPU and memory Centrifugo resource usage when using [WebSocket compression feature](../transports/websocket.md#websocketcompression). Measured on a 500-subscriber fan-out, the cache took compression from 2.40x the CPU of no compression down to 1.04x, and from 133 MB of heap down to 93 MB, on an idle 16-core Linux server with Centrifugo and the load generator as separate processes. Note the option is a byte budget rather than a message count: set it too small and it caches almost nothing.
+
+Turning up the compression level is not worth much: moving from the default level to a much slower one improved the saving from 2.47x to 2.58x while costing more CPU.
 
 Check out blog post [Performance optimizations of WebSocket compression in Go application](/blog/2024/08/19/optimizing-websocket-compression) which describes the possible effect of this optimization.
 
@@ -26557,7 +26834,7 @@ Who calls what (the `device_register` API is **server-side** — it needs your A
 
 :::caution `device_register` writes the device's **whole** state, not just the fields you change
 
-Every call replaces the device record. `provider`, `platform` and `token` are required (empty values are rejected). Anything you leave out of `user`, `timezone`, `locale` or `topics` is **reset to empty**, and the device's topic list is rebuilt from the `topics` you pass **plus** the current user's bound topics. So always send the complete device state you want — and include the saved `id` so the existing device is updated instead of a duplicate being created.
+Every call replaces the device record. `provider`, `platform` and `token` are required (empty values are rejected). Anything you leave out of `user`, `timezone`, `locale`, `topics` or `meta` is **reset to empty**, and the device's topic list is rebuilt from the `topics` you pass **plus** the current user's bound topics. So always send the complete device state you want — and include the saved `id` so the existing device is updated instead of a duplicate being created.
 
 This is intentional: declaring the full state (especially the owner) on every registration is what keeps shared devices safe — there's no way to accidentally leave a device attached to a previous user. To change one field *without* re-sending the token, use [`device_update`](#device_update) (metadata) or [`device_topic_update`](#device_topic_update) (topics) — those are the partial-update methods; `device_register` is the full-state one.
 
@@ -27246,8 +27523,8 @@ Call this method to update devices. To detach a user from a device on logout, us
 
 | Field             | Type                   | Required | Description                        |
 |-------------------|------------------------|----------|------------------------------------|
-| `ids`             | `array[string]`        | no       | Device ids to filter               |
-| `users`           | `array[string]`        | no       | Device users filter                |
+| `ids`             | `array[string]`        | one of   | Device ids to filter               |
+| `users`           | `array[string]`        | one of   | Device users filter                |
 | `user_update`     | `DeviceUserUpdate`     | no       | Optional user update object        |
 | `timezone_update` | `DeviceTimezoneUpdate` | no       | Optional timezone update object    |
 | `locale_update`   | `DeviceLocaleUpdate`   | no       | Optional locale update object      |
@@ -27307,8 +27584,8 @@ Removes a device from storage. This may also be called when a user logs out of t
 
 | Field Name | Type            | Required | Description                                           |
 |------------|-----------------|----------|-------------------------------------------------------|
-| `ids`      | `array[string]` | no       | A list of device IDs to be removed                    |
-| `users`    | `array[string]` | no       | A list of device user IDs to filter devices to remove |
+| `ids`      | `array[string]` | one of   | A list of device IDs to be removed                    |
+| `users`    | `array[string]` | one of   | A list of device user IDs to filter devices to remove |
 
 #### device_remove result
 
@@ -28592,6 +28869,15 @@ This option can radically reduce the load on a broker in the following situation
 
 Using this option only makes sense with remote engine (such as Redis), it won't provide a benefit in case of using a Memory engine.
 
+How much it saves depends on how many identical requests overlap in time: the more clients arrive together and the longer a request to Redis takes, the more of them share one. We measured a node going away behind a load balancer, with every client of one channel reconnecting to another node and recovering from the same position, and 0.5 ms between Centrifugo and Redis:
+
+| clients reconnecting | recovery requests to Redis, without → with singleflight | all Redis commands of the reconnect |
+|---|---|---|
+| 1,000 | 1,000 → 82-197 | about 4,050 → 380-840 |
+| 10,000 | 10,000 → 2,200-3,200 | about 40,300 → 9,300-13,100 |
+
+With Redis on the same machine and no network in between, requests finish before others can join them, and the saving was about 2x.
+
 To enable:
 
 ```json title="config.json"
@@ -28610,7 +28896,7 @@ Shared position synchronization feature allows reducing the load on the broker f
 
 Centrifugo uses periodic position synchronization requests to make sure there was no message loss between Engine PUB/SUB and Centrifugo. These requests create additional load on broker.
 
-When `shared_position_sync` is enabled, subscribers use an intermediary cache to only send position requests to the broker if another channel subscriber has not done so recently. The benefit here is proportional to the number of channel subscribers on a Centrifugo node.
+When `shared_position_sync` is enabled, subscribers use an intermediary cache to only send position requests to the broker if another channel subscriber has not done so recently. The benefit here is proportional to the number of channel subscribers on a Centrifugo node: with 10,000 subscribers of one channel on one node, the position checks that reached Redis over 25 seconds went from 20,009 to 4.
 
 To enable in the specific channel namespace use boolean channel option `shared_position_sync`:
 
@@ -29159,7 +29445,11 @@ Centrifugo automatically caches the JWKS keys fetched from the endpoint to avoid
 
 ### Combining with API key authentication
 
-JWKS authentication can be used alongside API key authentication provided by Centrifugo OSS. If both `http_api.key` and `http_api.jwks` are configured (or `grpc_api.key` and `grpc_api.jwks`), Centrifugo PRO will accept requests authenticated with either method:
+JWKS authentication can be used alongside API key authentication provided by Centrifugo OSS. If both `http_api.key` and `http_api.jwks` are configured (or `grpc_api.key` and `grpc_api.jwks`), Centrifugo PRO will accept requests authenticated with either method.
+
+A request is judged by one method only. One with an `Authorization: Bearer` header is judged by its token alone: an `X-API-Key` header sent with it is not looked at, so a request with an expired token and a valid key is refused. A request without a bearer token is judged by its API key.
+
+Keys fetched from the JWKS endpoint are cached, and a key fetched before keeps being used while the endpoint can't be reached. A token whose key was never fetched – the first requests after Centrifugo starts, or a key just added by rotation – can't be verified while the endpoint is down: such a request is answered with 503, not 401, since retrying may succeed.
 
 ```json title="config.json"
 {
@@ -39597,7 +39887,7 @@ The OSS shape we've described works for most deployments. Three patterns start t
 
 - **First-paint latency on cold keys.** With long refresh intervals — think a 30-second configuration channel — a new client arriving between cycles waits seconds for first data. PRO's `keep_latest_data` keeps the latest value and version per key in memory; new clients tracking a known key get data straight from cache, with no backend call. The wait drops from "until next cycle" to milliseconds.
 - **Bandwidth on slow-changing payloads.** When only part of a tracked entry changes each cycle but the whole payload is re-sent, you pay for the unchanged bytes on every fan-out. Paired with `keep_latest_data`, PRO computes [fossil deltas](/docs/server/delta_compression) between successive values per key — clients that negotiated delta receive the patch instead of the full payload. The savings scale with payload size and how rarely it fully changes.
-- **Backend load that grows with cluster size.** Each Centrifugo node polls the backend independently — fine at a few nodes, visible at a dozen. The PRO **shared poll relay** is a standalone process that polls once per cycle and serves cached results to all nodes, so backend load stays at one poll per cycle regardless of how many Centrifugo nodes are behind it. The relay also retains version history, providing `prev_data` for delta compression with no changes on your backend side.
+- **Backend load that grows with cluster size.** Each Centrifugo node polls the backend independently — fine at a few nodes, visible at a dozen. The PRO **shared poll relay**, which is in progress and not yet officially supported, is a standalone process that polls once per cycle and serves cached results to all nodes, so backend load stays at one poll per cycle regardless of how many Centrifugo nodes are behind it. The relay also retains version history, providing `prev_data` for delta compression with no changes on your backend side.
 - **Cascading failure when the backend lags.** If a refresh cycle takes longer than the configured interval — during a traffic spike, a slow query, a degraded downstream — independent nodes keep stacking calls on top of each other and make recovery harder. PRO's **adaptive backpressure** automatically stretches the interval when responses slow down and shrinks it back as the backend recovers, so a slow backend stays slow but doesn't get pushed over the edge.
 
 ## Why this isn't just another PUB/SUB feature

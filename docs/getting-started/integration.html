@@ -17,9 +17,9 @@
 <link rel="search" type="application/opensearchdescription+xml" title="Centrifugo" href="/opensearch.xml">
 
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.0be39b2d.css">
-<script src="/assets/js/runtime~main.b54d3f69.js" defer="defer"></script>
-<script src="/assets/js/main.211d347d.js" defer="defer"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.46887012.css">
+<script src="/assets/js/runtime~main.314d2647.js" defer="defer"></script>
+<script src="/assets/js/main.ca0706b1.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -58,7 +58,7 @@
 <h2 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="5-publish-to-a-channel">5. Publish to a channel<a href="#5-publish-to-a-channel" class="hash-link" aria-label="Direct link to 5. Publish to a channel" title="Direct link to 5. Publish to a channel" translate="no">​</a></h2>
 <p>Everything should work now – as soon as a user opens some page of your application, they must successfully connect to Centrifugo and subscribe to a channel (or channels).</p>
 <p>Now let&#x27;s imagine you want to send a real-time message to users subscribed to a specific channel. This message can be a reaction to some event that happened in your app: someone posted a new comment, an administrator just created a new post, a user pressed the &quot;like&quot; button, etc. Anyway, this is an event your backend has just received, and you want to immediately send it to interested users.</p>
-<p>You can do this using the Centrifugo <a class="" href="/docs/server/server_api">HTTP API</a>. To simplify your life, <a class="" href="/docs/server/server_api#http-api-libraries">we have several API libraries</a> for different languages. You can publish messages into a channel using one of those libraries, or you can simply <a class="" href="/docs/server/server_api#http-api">follow the API description</a> to construct API requests yourself - this is very simple. Centrifugo also supports a <a class="" href="/docs/server/server_api#grpc-api">GRPC API</a>. As soon as you have published a message to the channel, it must be delivered to your online clients subscribed to that channel.</p>
+<p>You can do this using the Centrifugo <a class="" href="/docs/server/server_api">HTTP API</a>. To simplify your life, <a class="" href="/docs/server/server_sdks">we have official server SDKs</a> for Go, Python, JavaScript and TypeScript, PHP, Ruby, Rust and .NET. You can publish messages into a channel using one of those libraries, or you can simply <a class="" href="/docs/server/server_api#http-api">follow the API description</a> to construct API requests yourself - this is very simple. Centrifugo also supports a <a class="" href="/docs/server/server_api#grpc-api">GRPC API</a>. As soon as you have published a message to the channel, it must be delivered to your online clients subscribed to that channel.</p>
 <h2 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="6-deploy-to-production">6. Deploy to production<a href="#6-deploy-to-production" class="hash-link" aria-label="Direct link to 6. Deploy to production" title="Direct link to 6. Deploy to production" translate="no">​</a></h2>
 <p>To put all this into production, you need to deploy Centrifugo on your production server. To help you with this, we have many things like a Docker image, <code>rpm</code> and <code>deb</code> packages, Nginx configuration. See the <a class="" href="/docs/server/infra_tuning">Infrastructure tuning</a> chapter for some actions you have to do to prepare your server infrastructure for handling many persistent connections.</p>
 <h2 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="7-monitor-centrifugo">7. Monitor Centrifugo<a href="#7-monitor-centrifugo" class="hash-link" aria-label="Direct link to 7. Monitor Centrifugo" title="Direct link to 7. Monitor Centrifugo" translate="no">​</a></h2>

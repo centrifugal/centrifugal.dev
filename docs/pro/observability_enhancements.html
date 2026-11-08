@@ -17,9 +17,9 @@
 <link rel="search" type="application/opensearchdescription+xml" title="Centrifugo" href="/opensearch.xml">
 
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.0be39b2d.css">
-<script src="/assets/js/runtime~main.b54d3f69.js" defer="defer"></script>
-<script src="/assets/js/main.211d347d.js" defer="defer"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/assets/css/styles.46887012.css">
+<script src="/assets/js/runtime~main.314d2647.js" defer="defer"></script>
+<script src="/assets/js/main.ca0706b1.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -115,7 +115,7 @@
 <ul>
 <li class=""><strong>Type:</strong> Counter</li>
 <li class=""><strong>Labels:</strong> provider, recipient_type, platform, success, err_code</li>
-<li class=""><strong>Description:</strong> Count of push notifications sent, split by provider (<code>fcm</code>, <code>apns</code>, <code>hms</code>, <code>webpush</code>), recipient type, platform, whether the provider accepted it, and the provider error code when it did not. <code>platform</code> is the device platform for sends to devices (<code>filter</code>) through FCM, APNs and Web Push, <code>na</code> for HMS sends (raw tokens included) and for FCM topic and condition sends which reached the provider, and empty for FCM, APNs and Web Push sends to raw tokens. When ClickHouse analytics is enabled, pushes dropped after a failed re-queue are counted too, with the device platform for <code>filter</code> sends, <code>na</code> for topic and condition sends, and an empty platform for raw tokens.</li>
+<li class=""><strong>Description:</strong> Count of push notifications sent, split by provider (<code>fcm</code>, <code>apns</code>, <code>hms</code>, <code>webpush</code>), recipient type, platform, whether the provider accepted it, and the provider error code when it did not. <code>platform</code> is the device platform for sends to devices (<code>filter</code>) through FCM, APNs and Web Push, <code>na</code> for HMS sends (raw tokens included) and for FCM topic and condition sends which reached the provider, and empty for FCM, APNs and Web Push sends to raw tokens. Pushes dropped without a send attempt (for example after a failed re-queue, a template error, or when a push to a device would be sent after <code>expire_at</code>) are counted with <code>err_code</code> <code>dropped</code>, with the device platform for <code>filter</code> sends, <code>na</code> for topic and condition sends, and an empty platform for raw tokens. A batch retried later (see <code>centrifugo_push_deferred_batch_count</code>) is counted by the attempt which sends it.</li>
 <li class=""><strong>Usage:</strong> Build a delivery success ratio from <code>success=&quot;true&quot;</code> over the total. Codes such as <code>unregistered</code> are normal device-token churn; authentication errors are not.</li>
 </ul>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_push_scheduled_request_count">centrifugo_push_scheduled_request_count<a href="#centrifugo_push_scheduled_request_count" class="hash-link" aria-label="Direct link to centrifugo_push_scheduled_request_count" title="Direct link to centrifugo_push_scheduled_request_count" translate="no">​</a></h4>
@@ -124,6 +124,20 @@
 <li class=""><strong>Labels:</strong> recipient_type</li>
 <li class=""><strong>Description:</strong> Count of push notification requests accepted for later execution.</li>
 <li class=""><strong>Usage:</strong> Shows how much of your push volume is scheduled rather than immediate.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_push_deferred_batch_count">centrifugo_push_deferred_batch_count<a href="#centrifugo_push_deferred_batch_count" class="hash-link" aria-label="Direct link to centrifugo_push_deferred_batch_count" title="Direct link to centrifugo_push_deferred_batch_count" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> provider, reason</li>
+<li class=""><strong>Description:</strong> Count of push batches handed over to a later attempt instead of being sent. <code>reason</code> is <code>retry_later</code> when the batch failed with retryable provider errors (provider unavailable or throttling), <code>send_time_budget</code> when the job ran out of time before sending the whole batch, <code>error</code> for other errors. Counted once per batch.</li>
+<li class=""><strong>Usage:</strong> Grows during provider outages, when <code>centrifugo_push_notification_count</code> may stay flat because nothing is sent – a good signal to alert on.</li>
+</ul>
+<h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_push_dropped_job_count">centrifugo_push_dropped_job_count<a href="#centrifugo_push_dropped_job_count" class="hash-link" aria-label="Direct link to centrifugo_push_dropped_job_count" title="Direct link to centrifugo_push_dropped_job_count" translate="no">​</a></h4>
+<ul>
+<li class=""><strong>Type:</strong> Counter</li>
+<li class=""><strong>Labels:</strong> provider, reason</li>
+<li class=""><strong>Description:</strong> Count of push jobs dropped without being processed. <code>reason</code> is <code>expired</code> when the notification <code>expire_at</code> passed, <code>retry_period_exceeded</code> when a push without <code>expire_at</code> was queued more than 24 hours ago.</li>
+<li class=""><strong>Usage:</strong> Shows pushes which could not be delivered in time, for example after a long provider outage or queue backlog.</li>
 </ul>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_push_queue_consuming_lag">centrifugo_push_queue_consuming_lag<a href="#centrifugo_push_queue_consuming_lag" class="hash-link" aria-label="Direct link to centrifugo_push_queue_consuming_lag" title="Direct link to centrifugo_push_queue_consuming_lag" translate="no">​</a></h4>
 <ul>
@@ -155,7 +169,7 @@
 </ul>
 <h3 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="analytics-clickhouse">Analytics (ClickHouse)<a href="#analytics-clickhouse" class="hash-link" aria-label="Direct link to Analytics (ClickHouse)" title="Direct link to Analytics (ClickHouse)" translate="no">​</a></h3>
 <h4 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="centrifugo_clickhouse_analytics_flush_duration_seconds">centrifugo_clickhouse_analytics_flush_duration_seconds<a href="#centrifugo_clickhouse_analytics_flush_duration_seconds" class="hash-link" aria-label="Direct link to centrifugo_clickhouse_analytics_flush_duration_seconds" title="Direct link to centrifugo_clickhouse_analytics_flush_duration_seconds" translate="no">​</a></h4>
-<div class="theme-admonition theme-admonition-caution admonition_xJq3 alert alert--warning"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z"></path></svg></span>Deprecated</div><div class="admonitionContent_BuS1"><p>Deprecated Summary  — use <code>centrifugo_clickhouse_analytics_flush_duration_seconds_histogram</code>. Not exposed when native histograms are enabled.</p></div></div>
+<div class="theme-admonition theme-admonition-caution admonition_xJq3 alert alert--warning"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z"></path></svg></span>Deprecated</div><div class="admonitionContent_BuS1"><p>Deprecated Summary — use <code>centrifugo_clickhouse_analytics_flush_duration_seconds_histogram</code>. Not exposed when native histograms are enabled.</p></div></div>
 <ul>
 <li class=""><strong>Type:</strong> Summary</li>
 <li class=""><strong>Labels:</strong> type, retries, result</li>
