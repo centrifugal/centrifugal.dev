@@ -1,13 +1,11 @@
 import React from 'react';
 
 // Launch-week hero theme: a Miami-style sunset with palms, a skyline and its
-// reflection, planes, boats, and the Centrifugo rotating segments as neon
+// reflection, a jet, a helicopter, boats, and the Centrifugo rotating segments as neon
 // tubes. Shown only inside VICE_START..VICE_END (local time) or with
 // ?theme=vice in the URL.
 const VICE_START = new Date(2026, 10, 18); // Nov 18, 2026
 const VICE_END = new Date(2026, 10, 26);   // exclusive: through Nov 25
-
-const BANNER_TEXT = 'WELCOME TO REALTIME';
 
 export function isViceWeek(now = new Date()) {
     if (typeof window !== 'undefined') {
@@ -301,45 +299,6 @@ function glowSprite(color, r, dpr) {
     return { c, r };
 }
 
-function bannerSprite(dpr) {
-    const font = '800 12px Nunito, system-ui, sans-serif';
-    const probe = document.createElement('canvas').getContext('2d');
-    probe.font = font;
-    probe.letterSpacing = '1px';
-    const tw = Math.ceil(probe.measureText(BANNER_TEXT).width) + BANNER_TEXT.length;
-    const w = tw + 24;
-    const h = 20;
-    const { c, ctx } = makeCanvas(w, h, dpr);
-    // Sunset gradient cloth: magenta -> coral -> amber.
-    const g = ctx.createLinearGradient(0, 0, w, 0);
-    g.addColorStop(0, '#e8197d');
-    g.addColorStop(0.5, '#ff4f6d');
-    g.addColorStop(1, '#ff8a3d');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, w, h);
-    // Soft vertical shading so it reads as fabric.
-    const v = ctx.createLinearGradient(0, 0, 0, h);
-    v.addColorStop(0, 'rgba(255, 255, 255, 0.22)');
-    v.addColorStop(0.45, 'rgba(255, 255, 255, 0)');
-    v.addColorStop(1, 'rgba(60, 0, 40, 0.25)');
-    ctx.fillStyle = v;
-    ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = 'rgba(255, 240, 220, 0.9)';
-    ctx.fillRect(0, 0, w, 1);
-    ctx.fillStyle = 'rgba(80, 0, 50, 0.45)';
-    ctx.fillRect(0, h - 1, w, 1);
-    ctx.font = font;
-    ctx.letterSpacing = '1px';
-    ctx.textBaseline = 'middle';
-    ctx.textAlign = 'center';
-    ctx.shadowColor = 'rgba(90, 0, 50, 0.55)';
-    ctx.shadowOffsetY = 1;
-    ctx.shadowBlur = 2;
-    ctx.fillStyle = '#fffaf2';
-    ctx.fillText(BANNER_TEXT, w / 2, h / 2 + 0.5);
-    return { c, w, h };
-}
-
 function makePalms(w, h) {
     const small = w < 700;
     const base = h + 8;
@@ -501,126 +460,6 @@ function drawJet(ctx, j, t) {
     }
 }
 
-// Small high-wing plane, facing +x, about 36px long.
-function drawPlaneBody(ctx, t, color) {
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.moveTo(17, 0.4);
-    ctx.quadraticCurveTo(16.5, -2.6, 12, -3);
-    ctx.lineTo(8, -4.6);
-    ctx.quadraticCurveTo(2, -5.2, -3, -4);
-    ctx.lineTo(-15, -1.6);
-    ctx.lineTo(-18, -1.2);
-    ctx.lineTo(-18, 0.4);
-    ctx.lineTo(-6, 2.6);
-    ctx.quadraticCurveTo(6, 3.4, 13, 2.6);
-    ctx.quadraticCurveTo(16.5, 2.2, 17, 0.4);
-    ctx.fill();
-    // Tail fin and stabilizer.
-    ctx.beginPath();
-    ctx.moveTo(-11, -2.4);
-    ctx.lineTo(-16.2, -9);
-    ctx.lineTo(-18.6, -9);
-    ctx.lineTo(-18, -1.2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(-15, -0.6, 4.5, 0.8, 0, 0, TAU);
-    ctx.fill();
-    // High wing seen edge-on, with a strut.
-    ctx.beginPath();
-    ctx.ellipse(3, -5.2, 7.5, 1, 0, 0, TAU);
-    ctx.fill();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 0.8;
-    ctx.beginPath();
-    ctx.moveTo(1, 2); ctx.lineTo(6, -4.6);
-    ctx.stroke();
-    // Landing gear.
-    ctx.beginPath();
-    ctx.moveTo(6, 2.6); ctx.lineTo(7, 5.2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(7, 5.6, 1.2, 0, TAU);
-    ctx.fill();
-    // Lit cabin windows.
-    ctx.fillStyle = 'rgba(255, 190, 150, 0.85)';
-    ctx.beginPath();
-    ctx.moveTo(10.5, -2.6); ctx.lineTo(8, -4); ctx.lineTo(5.5, -4); ctx.lineTo(5.5, -1.6); ctx.lineTo(10.5, -1.6);
-    ctx.fill();
-    ctx.fillRect(1, -3.8, 3.6, 2.2);
-    // Sunset rim light along the belly.
-    ctx.strokeStyle = 'rgba(255, 150, 120, 0.7)';
-    ctx.lineWidth = 0.7;
-    ctx.beginPath();
-    ctx.moveTo(-6, 2.6);
-    ctx.quadraticCurveTo(6, 3.4, 13, 2.6);
-    ctx.stroke();
-    // Spinner and spinning prop disc.
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.ellipse(17.6, 0.4, 1.4, 1.1, 0, 0, TAU);
-    ctx.fill();
-    ctx.fillStyle = `rgba(255, 225, 235, ${0.22 + 0.12 * Math.sin(t * 47)})`;
-    ctx.beginPath();
-    ctx.ellipse(18.6, 0.4, 0.7, 6, 0, 0, TAU);
-    ctx.fill();
-}
-
-function drawProp(ctx, p, t, sprite, color) {
-    const py = p.y + Math.sin(t * 1.3) * 1.2;
-    const tailX = p.x - p.dir * 18;
-    const towLen = 30;
-    const bridle = 9;
-    // The banner trails behind the plane; lead edge is the side nearest it.
-    const leadX = tailX - p.dir * towLen;
-    const bx0 = p.dir > 0 ? leadX - sprite.w : leadX;
-    const by = py - sprite.h / 2 + 4;
-    const slice = 2;
-    const phase = (d) => t * 6.5 - d * 0.085;
-    const amp = (k) => 0.4 + 2.2 * k;
-    for (let i = 0; i < sprite.w; i += slice) {
-        const d = p.dir > 0 ? sprite.w - i : i; // distance from lead edge
-        const k = d / sprite.w;
-        const off = Math.sin(phase(d)) * amp(k);
-        const sw = Math.min(slice, sprite.w - i);
-        ctx.drawImage(sprite.c, i * sprite.dpr, 0, sw * sprite.dpr, sprite.h * sprite.dpr, bx0 + i, by + off, sw + 0.35, sprite.h);
-        // Folds catch light on one side and fall into shadow on the other.
-        const shade = Math.cos(phase(d)) * Math.min(1, k * 2.5);
-        ctx.fillStyle = shade > 0 ? `rgba(255, 245, 230, ${shade * 0.16})` : `rgba(40, 0, 30, ${-shade * 0.22})`;
-        ctx.fillRect(bx0 + i, by + off, sw + 0.35, sprite.h);
-    }
-    // Lead pole, bridle and tow line.
-    const leadOff = Math.sin(phase(0)) * amp(0);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1.3;
-    ctx.beginPath();
-    ctx.moveTo(leadX, by + leadOff - 1.5);
-    ctx.lineTo(leadX, by + leadOff + sprite.h + 1.5);
-    ctx.stroke();
-    const knotX = leadX + p.dir * bridle;
-    const knotY = by + leadOff + sprite.h / 2;
-    ctx.lineWidth = 0.7;
-    ctx.strokeStyle = 'rgba(20, 4, 32, 0.8)';
-    ctx.beginPath();
-    ctx.moveTo(leadX, by + leadOff);
-    ctx.lineTo(knotX, knotY);
-    ctx.lineTo(leadX, by + leadOff + sprite.h);
-    ctx.moveTo(knotX, knotY);
-    ctx.quadraticCurveTo((knotX + tailX) / 2, (knotY + py) / 2 + 2, tailX, py);
-    ctx.stroke();
-
-    ctx.save();
-    ctx.translate(p.x, py);
-    ctx.rotate(Math.sin(t * 0.9) * 0.02);
-    ctx.scale(p.dir, 1);
-    drawPlaneBody(ctx, t, color);
-    ctx.restore();
-    if ((t * 0.9) % 1 < 0.1) {
-        ctx.fillStyle = '#ff4060';
-        ctx.fillRect(p.x + p.dir * 3 - 1, py - 7, 2, 2);
-    }
-}
-
 function drawHeli(ctx, hl, t, color, skylineTop) {
     // Searchlight cone sweeping over the skyline.
     const ang = Math.PI / 2 + Math.sin(t * 0.45) * 0.45;
@@ -730,7 +569,6 @@ function draw(canvas, isDarkTheme) {
     });
     const palms = makePalms(W, H);
     const beaconGlow = glowSprite('rgba(255, 50, 80, 0.8)', 7, dpr);
-    const banner = { ...bannerSprite(dpr), dpr };
 
     const stars = [];
     if (pal.stars) {
@@ -763,7 +601,6 @@ function draw(canvas, isDarkTheme) {
 
     // Moving actors. Each one waits off-screen for a while, then crosses.
     const jet = { active: true, x: W * 0.7, y: H * 0.09, dir: -1, speed: 42, wait: 0, trail: [], trailT: 0, phase: 0.3 };
-    const prop = { active: true, x: W * 0.12, y: H * 0.2, dir: 1, speed: 34, wait: 0 };
     const heli = wide ? { x: W * 0.78, y: horizon - skyMax * 2.1, baseX: W * 0.78, baseY: horizon - skyMax * 2.1 } : null;
     const boat = { active: true, x: W * 0.25, y: horizon + (H - horizon) * 0.32, dir: 1, speed: 70, wait: 0, foam: [], foamT: 0, bob: 0 };
     let shooting = null;
@@ -998,19 +835,6 @@ function draw(canvas, isDarkTheme) {
         for (const f of boat.foam) f.age += dt;
         while (boat.foam.length && boat.foam[0].age > 2.6) boat.foam.shift();
         if (boat.active || boat.foam.length) drawSpeedboat(ctx, boat, pal.silhouette);
-
-        // Banner plane.
-        if (prop.active) {
-            prop.x += prop.dir * prop.speed * dt;
-            if ((prop.dir > 0 && prop.x > W + banner.w + 90) || (prop.dir < 0 && prop.x < -banner.w - 90)) {
-                respawn(prop, 0.15, 0.24, 14 + Math.random() * 10);
-                prop.x = prop.dir > 0 ? -20 : W + 20;
-            }
-            drawProp(ctx, prop, t, banner, pal.silhouette);
-        } else if (!reduceMotion) {
-            prop.wait -= dt;
-            if (prop.wait <= 0) prop.active = true;
-        }
 
         // Soft scrim behind the hero text so it stays readable.
         const scrim = ctx.createRadialGradient(W / 2, H * 0.48, 0, W / 2, H * 0.48, Math.max(W * 0.32, 260));
