@@ -15,7 +15,7 @@ The Engine in Centrifugo is responsible for:
 * keep publication history (in channels where it was configured to be kept)
 * save/retrieve online presence information
 
-By default, Centrifugo uses a `memory` engine – where all the data is kept in Centrifugo process memory. And there is another full-featured Engine implementation – `redis` – where Centrifugo utilizes [Redis](https://redis.io/) (or Redis-compatible storages like AWS Elasticache, Google Memorystore, KeyDB, DragonflyDB, Valkey).
+By default, Centrifugo uses a `memory` engine – where all the data is kept in Centrifugo process memory. And there is another full-featured Engine implementation – `redis` – where Centrifugo utilizes [Redis](https://redis.io/) (or Redis-compatible storages like Valkey, AWS ElastiCache, Google Memorystore, DragonflyDB).
 
 With default `memory` engine you can start only one node of Centrifugo, while Redis engine allows running several nodes on different machines for high availability and to scale client connections. In distributed case all Centrifugo nodes will be connected via broker PUB/SUB, will discover each other and deliver publications to the node where active channel subscribers exist – so it's possible to publish message to a channel on any node and it will be automatically delivered to subscriber which can be connected to another Centrifugo node.
 
@@ -62,7 +62,7 @@ Trade-offs:
 
 Centrifugo integrates with it to provide a scalable and highly available real-time messaging solution. When running multiple Centrifugo nodes and pointing them to a Redis installation by configuring the Redis engine, you get a distributed real-time messaging system where Centrifugo nodes form a cluster and communicate with each other over Redis PUB/SUB. In this case, channel history and presence information are stored in Redis.
 
-These days, the engine also supports Redis-compatible storage solutions such as AWS ElastiCache, KeyDB, DragonflyDB, and Valkey (see more information [below](#redis-compatible-storages)).
+These days, the engine also supports Redis-compatible storage solutions such as Valkey, AWS ElastiCache (including Serverless), Google Memorystore and DragonflyDB (see more information [below](#redis-compatible-storages)).
 
 To switch from the in-memory engine to the Redis engine, update your configuration as follows:
 
@@ -200,6 +200,64 @@ This may be useful to drastically reduce the time of Redis operation if you call
 The feature comes with a cost – it increases memory usage in Redis, possibly up to 2x from what was spent on presence information before enabling (less if you use `info` attached to a client connection, since Centrifugo does not include info payload to user mapping structures).
 
 To enable set the option to `true`.
+
+### `engine.redis.detect_lost_writes`
+
+New in Centrifugo v6.10.4
+
+Boolean, default `false`.
+
+Redis replication and persistence are asynchronous. After a failover to a replica that missed the latest writes, or a restart from an older RDB or AOF file, a channel's history may lose its latest publications while keeping its epoch. New publications then reuse offsets that clients have already seen, and clients skip them as duplicates. Maps have the same problem with their change streams.
+
+With `detect_lost_writes` enabled, Centrifugo detects that a Redis server's data may have lost writes, and the channels and maps stored on that server start a new epoch. Subscribers then get the usual "not recovered" signal and resync from the current state, instead of silently missing publications.
+
+```json title="config.json"
+{
+  "engine": {
+    "type": "redis",
+    "redis": {
+      "address": "redis://localhost:6379",
+      "detect_lost_writes": true
+    }
+  }
+}
+```
+
+How detection works depends on the server:
+
+* **Redis 7+ and Valkey** – Centrifugo detects restarts and failovers using the server's Lua script cache, which is never persisted and never replicated. This needs no extra permissions.
+* **Redis 6, DragonflyDB, AWS ElastiCache Serverless** – the script cache can't show a restart there, so Centrifugo detects lost writes only in channels with subscribers, when a subscriber receives an offset it has already seen. [`detect_lost_writes_with_info`](#engineredisdetect_lost_writes_with_info) covers all channels on Redis 6 and DragonflyDB (but not on ElastiCache Serverless, which does not allow it).
+
+At start, Centrifugo logs a `redis potential lost writes detection` line for every Redis shard, also when the option is off. It shows which detection is in use and which are supported by the server, with the reasons for those that are not. When the option is on and only limited detection is available, the line is logged at warn level.
+
+Things to know:
+
+* Enable the option on every Centrifugo node. During a rolling upgrade, detection is complete once all nodes run with it.
+* Expect one resync of subscribers after every failover or restart of a Redis server – even one that lost nothing. Centrifugo can't know what a server lost, so it treats every restart or failover as potentially lossy. Only channels and maps stored on the affected server resync: in Redis Cluster those of the failed shard.
+* Enabling the option on existing data resets nothing.
+* In Redis Cluster, a slot moved to another node keeps its history without resync while its source node is alive.
+* Centrifugo keeps a small key with the server's lineage under its prefix: `<prefix>.lineage.state` (one per hash slot in Redis Cluster).
+
+Detections are reported by the [`centrifugo_broker_redis_potential_lost_writes_detections`](./observability.md#centrifugo_broker_redis_potential_lost_writes_detections) and [`centrifugo_broker_redis_potential_lost_writes_epoch_resets`](./observability.md#centrifugo_broker_redis_potential_lost_writes_epoch_resets) metrics.
+
+The option is also available for a separate Redis broker (`broker.redis.detect_lost_writes`) and for the Redis map broker (`map_broker.redis.detect_lost_writes`).
+
+### `engine.redis.detect_lost_writes_with_info`
+
+New in Centrifugo v6.10.4
+
+Boolean, default `false`. Turns on detection by itself: [`detect_lost_writes`](#engineredisdetect_lost_writes) isn't needed with it.
+
+Makes Centrifugo detect lost writes with the Redis `INFO` command, which shows the replication history of a server. It catches every case the default detection catches, also on Redis 6 and DragonflyDB, plus a quick failback to the old primary before any Centrifugo call reached the new one.
+
+The cost:
+
+* `INFO` runs in Lua scripts, so the Redis user needs the `@dangerous` ACL category. Some managed services do not allow `INFO` in scripts at all (AWS ElastiCache Serverless) – the startup log line tells whether it's supported.
+* More resyncs without any loss: channels and maps also start a new epoch when a Redis primary gets its first replica or has had no replicas for a while, and in Redis Cluster when their slot moves to another node.
+
+Use it when silent loss in rare failback scenarios matters more to you than the extra resyncs and permissions.
+
+The option is also available as `broker.redis.detect_lost_writes_with_info` and `map_broker.redis.detect_lost_writes_with_info`.
 
 ### `engine.redis.tls`
 
@@ -444,13 +502,21 @@ Centrifugo PRO supports Redis Cluster [sharded PUB/SUB](../pro/scalability.md#re
 
 When using Redis engine it's possible to point Centrifugo not only to Redis itself, but also to the other Redis compatible server. Such servers may work just fine if implement Redis protocol and support all the data structures Centrifugo uses and have PUB/SUB implemented.
 
-Some known options:
+#### Tested by Centrifugal Labs
 
-* [AWS Elasticache](https://aws.amazon.com/elasticache/) – it was reported to work, but we suggest you testing the setup including failover tests and the work under load.
-* [Google Memorystore](https://cloud.google.com/memorystore) – was also reported to work, we also suggest you testing the setup including failover tests and the work under load.
-* [KeyDB](https://keydb.dev/) – should work fine with Centrifugo, no known problems at this point regarding Centrifugo compatibility.
+The following were tested with the broker (publish, history), the map broker, PUB/SUB delivery, failovers and – where the service offers them – maintenance events and resharding:
+
+* [Valkey](https://github.com/valkey-io/valkey) – works, both self-hosted and as a managed service (see below). Valkey supports everything Centrifugo uses from Redis 7, including [detection of lost writes](#engineredisdetect_lost_writes).
+* [AWS ElastiCache](https://aws.amazon.com/elasticache/), node-based clusters (Valkey, Redis OSS 7 and 6) – works with cluster mode on and off and with TLS. Use the primary endpoint with cluster mode off and the configuration endpoint with cluster mode on. During a failover publishes fail until ElastiCache promotes the replica and moves the primary endpoint, then Centrifugo continues without restart.
+* [AWS ElastiCache Serverless](https://aws.amazon.com/elasticache/serverless/) (Valkey and Redis OSS) – works. TLS is required (`rediss://`). Serverless presents itself as a Redis Cluster, which Centrifugo detects automatically, so configure [sharded PUB/SUB](../pro/scalability.md#redis-cluster-sharded-pubsub) as for any Redis Cluster. Serverless runs Lua scripts in its proxy and does not allow `INFO` in scripts, so [`detect_lost_writes`](#engineredisdetect_lost_writes) detects lost writes only in channels with subscribers there (the startup log says so).
+* [Google Memorystore](https://cloud.google.com/memorystore) – Memorystore for Redis, Memorystore for Redis Cluster, and Memorystore for Valkey (cluster mode on and off) all work. Connect to the instance address (Memorystore for Redis), or to the discovery endpoint (Redis Cluster, Valkey in cluster mode) or primary endpoint (Valkey with cluster mode off). Redis Cluster and Valkey are reached over Private Service Connect, so a service connection policy must exist in your VPC before you create them. When Memorystore for Redis fails over, the old primary keeps running as a replica behind the same address: Centrifugo notices the `READONLY` replies and reconnects to the new primary. Maintenance, which fails shards over and replaces nodes, does not interrupt sharded PUB/SUB.
+
+Managed services were tested without persistence, so a restart from disk was not covered. We still suggest testing your own setup, including failovers and work under load.
+
+#### Other Redis compatible storages
+
 * [DragonflyDB](https://dragonflydb.io/) - should work fine (if you experience issues with it try enabling `engine.redis.force_resp2` option). We have not tested a Redis Cluster emulation mode provided by DragonflyDB yet. We suggest you testing the setup including failover tests and work under load.
-* [Valkey](https://github.com/valkey-io/valkey) – should work fine since it's based on Redis v7, but no tests were performed by Centrifugal Labs.
+* [KeyDB](https://keydb.dev/) – may work, but it has not been updated for a long time, so we do not recommend it. Prefer Redis or Valkey.
 
 ### Redis IAM authentication
 

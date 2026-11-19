@@ -28,7 +28,7 @@ See real-world benchmarks in the [Million WebSocket with Centrifugo](/blog/2020/
 
 Centrifugo scales horizontally across multiple nodes connected into a cluster. Publishing a message to a channel on any node delivers it to all subscribers across the cluster via a PUB/SUB broker.
 
-The primary broker is Redis, with support for client-side consistent sharding and Redis Cluster. Redis-compatible databases (Valkey, AWS ElastiCache, Google Memorystore, KeyDB, DragonflyDB) and NATS are also supported.
+The primary broker is Redis, with support for client-side consistent sharding and Redis Cluster. Redis-compatible databases (Valkey, AWS ElastiCache, Google Memorystore, DragonflyDB) and NATS are also supported.
 
 The [PostgreSQL broker](../server/engines.md#postgresql-broker) is an alternative for teams already running PostgreSQL who want to eliminate Redis as a dependency. It implements stream and map subscription storage on PostgreSQL and enables transactional publishing — `cf_stream_publish` or `cf_map_publish` called inside your own SQL transaction commits the real-time event atomically with your business write, eliminating the dual-write problem. Requires PostgreSQL 16 or later.
 
