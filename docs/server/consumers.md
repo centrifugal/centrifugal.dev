@@ -360,6 +360,14 @@ Boolean. Default: `false`. New in Centrifugo v6.2.3
 
 If set to `true`, the consumer will read uncommitted messages from Kafka. By default, it uses `ReadCommitted` mode.
 
+### `consumers[].kafka.start_offset`
+
+String. Default: `"earliest"`. New in Centrifugo v6.10.4
+
+Where a consumer starts in a partition which has no committed offset in the consumer group yet (a new consumer group, or a topic added to an existing one): `earliest` reads from the oldest record still in the topic, `latest` reads only records produced from now on. Partitions with a committed offset resume from it, whatever this option is.
+
+Use `latest` to keep a new consumer group from processing all the records still in retention, for example in [publication data mode](#publication-data-mode), where they would reach online clients.
+
 ### `consumers[].kafka.sasl_mechanism`
 
 String. Default: `""`.
