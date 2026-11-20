@@ -675,6 +675,15 @@ Env: `CENTRIFUGO_CONSUMERS_<NAME>_REDIS_STREAM_IO_TIMEOUT`
 
 `io_timeout` is a timeout for all read/write operations against Redis (can be considered as a request timeout).
 
+### `consumers[].redis_stream.startup_wait_timeout`
+
+Type: `Duration`
+
+Env: `CENTRIFUGO_CONSUMERS_<NAME>_REDIS_STREAM_STARTUP_WAIT_TIMEOUT`
+
+`startup_wait_timeout` is how long Centrifugo keeps trying to connect to Redis on start before exiting
+with an error. Not set by default – the first failed attempt to connect is fatal.
+
 ### `consumers[].redis_stream.db`
 
 Type: `int`. Default: `0`
