@@ -135,7 +135,7 @@ services:
 Run with:
 
 ```
-docker-compose up
+docker compose up
 ```
 
 ## Kubernetes Helm chart
