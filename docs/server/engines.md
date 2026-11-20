@@ -160,6 +160,34 @@ String, default `"centrifugo"` – custom prefix to use for channels and keys in
 
 Boolean, default `false`. If set to true it forces using RESP2 protocol for communicating with Redis. By default, Redis client used by Centrifugo tries to detect supported Redis protocol automatically trying RESP3 first.
 
+### `engine.redis.startup_wait_timeout`
+
+Duration, default `"0s"`.
+
+By default, Centrifugo exits if Redis is not available at the moment it starts. With `startup_wait_timeout` set, Centrifugo keeps trying to connect instead: until Redis accepts a connection and answers `PING`, or until the timeout passes. Then it exits with the error of the last attempt. Delays between attempts start at 100ms and grow up to 5 seconds, with jitter.
+
+```json title="config.json"
+{
+  "engine": {
+    "type": "redis",
+    "redis": {
+      "address": "redis://127.0.0.1:6379",
+      "startup_wait_timeout": "30s"
+    }
+  }
+}
+```
+
+This helps when Centrifugo and Redis restart at the same time, for example during a Kubernetes node upgrade. A Redis that is still loading its dataset into memory (replies with `LOADING`) is waited for too. Errors that waiting can't fix, such as a wrong password, still stop Centrifugo right away.
+
+The timeout applies to each Redis shard separately, so several unavailable shards are waited for one after another.
+
+:::tip
+
+Centrifugo does not start its HTTP server until Redis is connected, so health checks fail during the wait. In Kubernetes, a liveness probe may restart the container before `startup_wait_timeout` passes – use a `startupProbe` which allows at least as much time as the timeout.
+
+:::
+
 ### `engine.redis.history_use_lists`
 
 :::caution Deprecated
