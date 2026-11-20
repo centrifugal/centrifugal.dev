@@ -53,14 +53,23 @@ The proxy endpoint is an extension of [Centrifugo OSS proxy](../server/proxy.md)
 ```json
 {
     "events": [
-        {"channel": "chat:index", "type": "occupied", "time_ms": 1697206286533}
+        {"channel": "chat:index", "type": "occupied", "time_ms": 1697206286533, "version": 1697206286533000}
     ]
 }
 ```
 
-The payload may contain a batch of events, that's why `events` is an array – this is important for achieving high event throughput. Your backend must be fast enough to keep up with the events rate and volume, otherwise event queues will grow. Event queues are bounded – if too many events are waiting for delivery, the oldest undelivered events are dropped, while new events are still accepted. Centrifugo PRO logs an error and increments the [`centrifugo_channel_state_events_queue_dropped_checks_total`](./observability_enhancements.md#centrifugo_channel_state_events_queue_dropped_checks_total) metric when this happens – it's a signal to make the backend faster, and to sync channel state as described at the end of this page.
+The payload may contain a batch of events, that's why `events` is an array – this is important for achieving high event throughput. Your backend must be fast enough to keep up with the events rate and volume, otherwise event queues will grow. Event queues are bounded (`max_queue_length` events per partition, see below) – if too many events are waiting for delivery, the oldest undelivered events are dropped, while new events are still accepted. Centrifugo PRO logs an error and increments the [`centrifugo_channel_state_events_queue_dropped_checks_total`](./observability_enhancements.md#centrifugo_channel_state_events_queue_dropped_checks_total) metric when this happens – it's a signal to make the backend faster, and to sync channel state as described at the end of this page.
 
 Respond with an empty result object, without an `error` object set, to let Centrifugo PRO know that events were processed successfully. If the request to the backend fails or the response contains an `error` object, Centrifugo PRO will retry sending events with exponential backoff and jitter. The same event may occasionally be delivered more than once – for example, after a retry of a request your backend has already processed, or a repeated `vacated` for a channel which is already vacated. Make your handler idempotent: process an event so that receiving it again changes nothing.
+
+Rarely, an older event of a channel may also arrive after a newer one – for example, when your backend handles a request only after Centrifugo PRO timed it out and sent the events again. To apply events in order, use `version`: versions of a channel's events grow over time, also after Redis lost data. Keep the version of the last event you applied for each channel, and skip an event whose `version` is not above it. With SQL this is one condition:
+
+```sql
+UPDATE channels SET state = $type, version = $version
+WHERE name = $channel AND version < $version;
+```
+
+Versions are not consecutive: do not expect them to grow by one. During a rolling upgrade from a Centrifugo PRO version without event versions, events may come with `version` 0 – apply those without comparing, and keep the version you stored. A backend which ignores `version` and treats each event as the channel's current state works too: it only sees a repeat or a rare older event as described.
 
 Here is an example of an HTTP handler for processing channel state events using Flask:
 
@@ -88,7 +97,7 @@ if __name__ == '__main__':
     app.run(port=3000)
 ```
 
-When the last subscriber leaves a channel, Centrifugo PRO delays the `vacated` event by a configurable interval (default `5s`) before sending it. If a client resubscribes during this interval, the `vacated` event is cancelled. This avoids unnecessary webhooks for quick reconnect scenarios. These are configurable via `channel_state` options. `num_partitions` (default `128`) sets the number of isolated partitions used to serialize channel state events in the system.
+When the last subscriber leaves a channel, Centrifugo PRO delays the `vacated` event by a configurable interval (default `5s`) before sending it. If a client resubscribes during this interval, the `vacated` event is cancelled. This avoids unnecessary webhooks for quick reconnect scenarios. These are configurable via `channel_state` options. `num_partitions` (default `128`) sets the number of isolated partitions used to serialize channel state events in the system. `max_queue_length` (default `100000`) is the number of events which may wait for delivery per partition: increase it to survive a longer slowdown or outage of your backend without dropping events. `detect_lost_writes` (default `false`) is described below.
 
 :::caution
 
@@ -103,6 +112,8 @@ When the last subscriber leaves a channel, Centrifugo PRO delays the `vacated` e
     "redis": {
       "channel_state": {
         "vacated_event_delay": "10s",
+        "max_queue_length": 100000,
+        "detect_lost_writes": true,
         "num_partitions": 128
       }
     }
@@ -149,4 +160,10 @@ For example, to use a dedicated Redis instance for presence with channel state e
 
 When a separate presence manager is enabled, `channel_state` options are read from `presence_manager.redis.channel_state` instead of `engine.redis.channel_state`.
 
-Centrifugo PRO does the best effort delivering channel state events, making retries when the backend endpoint is unavailable (with exponential backoff), also survives cases when Centrifugo node dies unexpectedly. But there are scenarios when events may be lost — some of them are described above (Redis eviction, configuration changes). Even as best-effort notifications, channel state events can be very useful for applications — for example, to lazily clean up resources or update external state when channels become empty. For cases where stronger consistency is required, we recommend periodically syncing state by querying channel presence information using the server API.
+With `detect_lost_writes` enabled, Centrifugo PRO detects that Redis lost data of channel state – after a failover to a replica which missed the latest writes, or a restart without persistence – and sends the current state of the affected channels again: `occupied` for every channel which still has subscribers. Without it, such a loss may leave a channel `vacated` for your backend while it has subscribers. The detection needs Redis 7+ or Valkey, with no proxy between Centrifugo and Redis. On other servers, or when the Redis ACL does not permit `SCRIPT LOAD`, nothing is detected and Centrifugo PRO logs a warning at start. Expect repeated `occupied` events after every Redis restart or failover, also a planned one which lost nothing, and sometimes after resharding a Redis Cluster. They are sent gradually, so that your backend is not flooded and other events are not delayed behind them. The option is separate from the Redis engine's [`detect_lost_writes`](../server/engines.md#engineredisdetect_lost_writes), which makes subscribers resync – enable each where you need it.
+
+Centrifugo PRO does the best effort delivering channel state events, making retries when the backend endpoint is unavailable (with exponential backoff), also survives cases when Centrifugo node dies unexpectedly. But there are scenarios when events may be lost — some of them are described above (Redis eviction, configuration changes). Others:
+
+* Your backend falls behind until an event queue is full: the oldest undelivered events are dropped (see the metric above).
+* Redis loses data before the events were delivered, or shortly after a channel became empty – a channel may then stay `occupied` for your backend. With `detect_lost_writes`, a channel which has subscribers is always reported `occupied` again; a channel which became empty around the loss may still be missed.
+ Even as best-effort notifications, channel state events can be very useful for applications — for example, to lazily clean up resources or update external state when channels become empty. For cases where stronger consistency is required, we recommend periodically syncing state by querying channel presence information using the server API.
