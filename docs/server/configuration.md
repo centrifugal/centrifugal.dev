@@ -872,8 +872,6 @@ Live subscribers keep such a meta while they stay subscribed. The first publicat
 
 Must be at least 3 × `client.channel_position_check_delay`. Zero keeps such metas as long as any other.
 
-With PostgreSQL, enable the option only after all nodes run Centrifugo v6.10.4 or newer. Metas which exist when it is enabled are not shortened.
-
 ### `channel.proxy.subscribe`
 
 Object.
