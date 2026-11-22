@@ -160,6 +160,14 @@ When using `recoverable` or `persistent` mode, Redis must retain all stream data
 
 PostgreSQL-backed storage for durable, persistent state. Requires **PostgreSQL 16** or later. Centrifugo creates the required tables automatically on startup (unless `skip_schema_init` is set).
 
+:::caution Schema change in Centrifugo v6.10.4
+
+Centrifugo v6.10.4 migrates the schema to version 2 on start. After that, older Centrifugo versions don't start with the PostgreSQL map broker on this database: nodes which are running keep working during a rolling upgrade, but can't be restarted. To go back, see the manual rollback in the [release notes](https://github.com/centrifugal/centrifugo/releases/tag/v6.10.4).
+
+With `skip_schema_init`, start one v6.10.4 node with the option disabled and a database user allowed to create functions before upgrading the others. Otherwise, subscriptions to maps without publications fail with an internal error.
+
+:::
+
 ```json title="config.json"
 {
   "map_broker": {
@@ -189,6 +197,8 @@ Key options:
 | `skip_schema_init` | boolean | `false` | Skip automatic table creation on startup |
 | `partition_lookahead_days` | integer | `2` | Number of future daily partitions to pre-create |
 | `partition_retention_days` | integer | `7` | Partitions older than this are dropped automatically. Set to `0` for unlimited retention |
+
+The first subscription to a `recoverable` or `persistent` map nobody published to creates its meta row, so that clients are told when they can't recover. This is a write, so it fails while the primary is down. For `persistent` maps the row stays until it is cleared, unless [`channel.history_meta_ttl_unpublished`](./configuration.md#channelhistory_meta_ttl_unpublished) is set.
 
 The stream table is always partitioned by `created_at` (daily). Old partitions are dropped entirely — this is instant and avoids the table bloat and expensive vacuum operations that row-level `DELETE` produces at scale. The `partition_retention_days` setting controls how many days of partitions to keep; the `partition_lookahead_days` setting controls how many future partitions to pre-create (to avoid write failures at the day boundary).
 
@@ -221,7 +231,7 @@ Centrifugo automatically creates these SQL functions when the PostgreSQL map bro
 
 :::note
 
-`cf_map_expire_keys` function is also created but is for Centrifugo internal use only — do not call it from application code.
+`cf_map_expire_keys` and `cf_map_ensure_meta` functions are also created but are for Centrifugo internal use only — do not call them from application code.
 
 :::
 

@@ -866,11 +866,13 @@ It's possible to redefine `history_meta_ttl` on channel namespace level.
 
 [Duration](#duration-type). Default `0` (off). New in Centrifugo v6.10.4
 
-How long the stream or map meta of a channel nobody published to yet is kept. Subscribing to a channel with history, or reading its position, creates the channel's meta even when nothing was ever published there, and by default it is kept for [`channel.history_meta_ttl`](#channelhistory_meta_ttl) (30 days). With many channels which are subscribed to but never published to, this option keeps them from leaving long-lived keys in Redis.
+How long the stream or map meta of a channel nobody published to yet is kept. Subscribing to a channel with history, or reading its position, creates the channel's meta even when nothing was ever published there, and by default it is kept for [`channel.history_meta_ttl`](#channelhistory_meta_ttl) (30 days). With many channels which are subscribed to but never published to, this option keeps them from leaving long-lived keys in Redis or rows in PostgreSQL.
 
 Live subscribers keep such a meta while they stay subscribed. The first publication switches the meta to `history_meta_ttl` (or the map's meta TTL).
 
 Must be at least 3 × `client.channel_position_check_delay`. Zero keeps such metas as long as any other.
+
+With PostgreSQL, enable the option only after all nodes run Centrifugo v6.10.4 or newer. Metas which exist when it is enabled are not shortened.
 
 ### `channel.proxy.subscribe`
 
