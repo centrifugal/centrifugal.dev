@@ -215,6 +215,8 @@ By default, every Centrifugo node polls the PostgreSQL outbox independently. Wit
 
 Shard leadership is coordinated through PostgreSQL advisory locks — only one node per shard holds the lock and processes outbox entries. Lock IDs are `broker_fanout.advisory_lock_base_id` plus the shard number, so brokers with fan-out in the same database need lock ranges which don't overlap: the default base is the same for all map brokers, and for all stream brokers. Centrifugo does not start when brokers with the same `dsn` have overlapping ranges – the same database reached through different DSNs is not checked.
 
+With Redis, outbox rows are published in batches. Bursts of large publications (from a few KB) can exceed the Redis limit of a PUB/SUB connection (`client-output-buffer-limit pubsub`, 32 MB by default): Redis then disconnects the node, which misses publications until it subscribes again. If you publish large messages this way, raise the limit in Redis.
+
 :::tip
 Automatic daily partitioning with configurable retention is built into the open-source PostgreSQL broker via the `partition_retention_days` and `partition_lookahead_days` settings — see [PostgreSQL map broker configuration](/docs/server/map_subscriptions#postgresql).
 :::
