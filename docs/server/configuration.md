@@ -862,15 +862,19 @@ The motivation to have history meta information TTL is as follows. When using a 
 
 It's possible to redefine `history_meta_ttl` on channel namespace level.
 
-### `channel.history_meta_ttl_unpublished`
+### `channel.history_meta_ttl_initial`
 
 [Duration](#duration-type). Default `0` (off). New in Centrifugo v6.10.4
 
-How long the stream or map meta of a channel nobody published to yet is kept. Subscribing to a channel with history, or reading its position, creates the channel's meta even when nothing was ever published there, and by default it is kept for [`channel.history_meta_ttl`](#channelhistory_meta_ttl) (30 days). With many channels which are subscribed to but never published to, this option keeps them from leaving long-lived keys in Redis or rows in PostgreSQL.
+How long the stream or map meta of a channel is kept until the channel's first publication. Subscribing to a channel with history, or reading its position, creates the channel's meta even when nothing was ever published there, and by default it is kept for [`channel.history_meta_ttl`](#channelhistory_meta_ttl) (30 days). When clients can subscribe to channels with arbitrary names, for example random ones, each name leaves a meta behind for that long. This option bounds that: such a meta disappears this long after the channel's last subscriber left, in every broker (memory, Redis, PostgreSQL) and map broker.
 
-Live subscribers keep such a meta while they stay subscribed. The first publication switches the meta to `history_meta_ttl` (or the map's meta TTL).
+Live subscribers keep the meta while they stay subscribed. The first publication switches the meta to `history_meta_ttl` (or the map's meta TTL). A meta created again after it expired starts with this TTL again.
+
+A client which was away from a channel nobody published to for longer than this can't recover its position there and gets `recovered: false`. Choose a value above your typical reconnect gaps (deploys, network outages) so that idle channels recover seamlessly.
 
 Must be at least 3 × `client.channel_position_check_delay`. Zero keeps such metas as long as any other.
+
+It's possible to redefine `history_meta_ttl_initial` on channel namespace level, and `map.meta_ttl_initial` for map namespaces.
 
 ### `channel.proxy.subscribe`
 

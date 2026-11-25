@@ -335,6 +335,7 @@ Declares the subscription type for the namespace — one of the [supported types
 | `map.stream_size` | integer | | Max stream entries (auto-derived for recoverable/persistent: 100) |
 | `map.stream_ttl` | [duration](./configuration.md#duration-type) | | Stream entry retention (auto-derived for recoverable/persistent: "1m") |
 | `map.meta_ttl` | [duration](./configuration.md#duration-type) | | Metadata retention (auto-derived) |
+| `map.meta_ttl_initial` | [duration](./configuration.md#duration-type) | | Metadata retention until the map's first publication, see [channel.history_meta_ttl_initial](./configuration.md#channelhistory_meta_ttl_initial) (inherited when not set). Not for `"ephemeral"` mode |
 
 #### Map publish permissions
 

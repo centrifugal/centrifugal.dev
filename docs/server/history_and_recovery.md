@@ -140,6 +140,7 @@ Everything above maps to a handful of namespace options:
 | [`history_size`](./channels.md#history_size) | How many publications the stream keeps (window size) |
 | [`history_ttl`](./channels.md#history_ttl) | How long publications are kept (window age) |
 | [`history_meta_ttl`](./channels.md#history_meta_ttl) | How long the stream's epoch/offset metadata survives |
+| [`history_meta_ttl_initial`](./channels.md#history_meta_ttl_initial) | How long that metadata survives until the channel's first publication |
 | [`force_recovery`](./channels.md#force_recovery) | Make subscriptions recoverable (implies positioning) |
 | [`force_positioning`](./channels.md#force_positioning) | Detect dropped messages on live connections (`3010` on loss) |
 | [`force_recovery_mode`](./channels.md#force_recovery_mode) | `stream` (all messages) or `cache` (latest only) |
