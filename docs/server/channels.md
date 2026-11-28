@@ -305,6 +305,12 @@ If not specified Centrifugo namespace inherits value from `channel.history_meta_
 
 The motivation to have history meta information TTL is as follows. When using a history in a channel, Centrifugo keeps some metadata for each channel stream. Metadata includes the latest stream offset and its epoch value. In some cases, when channels are created for а short time and then not used anymore, created metadata can stay in memory while not useful. For example, you can have a personal user channel but after using your app for a while user left it forever. From a long-term perspective, this can be an unwanted memory growth. Setting a reasonable value to this option can help to expire metadata faster (or slower if you need it). The rule of thumb here is to keep this value larger than history TTL used.
 
+### history_meta_ttl_initial
+
+`history_meta_ttl_initial` ([duration](./configuration.md#duration-type), available since Centrifugo v6.10.4) – how long the history stream metadata of a channel of the namespace is kept until the channel's first publication (with seconds precision). Subscribing to a channel creates its metadata; with this option set, a channel nobody published to keeps it only this long after its last subscriber left. Useful for namespaces where clients can subscribe to channels with arbitrary names. Must be at least 3 × `client.channel_position_check_delay`.
+
+If not specified Centrifugo namespace inherits value from [channel.history_meta_ttl_initial](./configuration.md#channelhistory_meta_ttl_initial), which is off by default.
+
 ### recovery_max_publication_limit
 
 `recovery_max_publication_limit` (integer, default `0`, available since Centrifugo v6.10.3) – the maximum number of publications Centrifugo returns to a client recovering a channel of the namespace. A client which missed more is not recovered (`recovered: false`) and gets none of them: partial recovery would leave a gap. If zero, [client.recovery_max_publication_limit](./configuration.md#clientrecovery_max_publication_limit) is used, `300` by default.

@@ -189,7 +189,7 @@ Distribute read load across PostgreSQL replicas:
 }
 ```
 
-Replicas are used when `replica.enabled` is `true` and `replica.dsn` lists them – Centrifugo does not start when only one of the two is set. Reads from subscribers are spread across replicas, and a subscriber's read includes at least what it already received in live updates. With replicas, Centrifugo checks on start that the database is compatible with this, and logs an error if it is not or if the check can't be run. The stream broker reads history from replicas for every history call, including server API ones – as replicas lag behind the primary, a publication may be missing from history read right after it was published. When the [in-memory cache layer](#in-memory-cache-layer) is enabled, cache loads and syncs read from the primary, not from replicas.
+Replicas are used when `replica.enabled` is `true` and `replica.dsn` lists them – Centrifugo does not start when only one of the two is set. Reads from subscribers are spread across replicas, and a subscriber's read includes at least what it already received in live updates. With replicas, Centrifugo checks on start that the database is compatible with this, and logs an error if it is not or if the check can't be run. The stream broker reads history from replicas, including for server API calls (channels without publications may be read from the primary) – as replicas lag behind the primary, a publication may be missing from history read right after it was published. When the [in-memory cache layer](#in-memory-cache-layer) is enabled, cache loads and syncs read from the primary, not from replicas.
 
 ### Broker fan-out
 
@@ -214,6 +214,8 @@ By default, every Centrifugo node polls the PostgreSQL outbox independently. Wit
 ```
 
 Shard leadership is coordinated through PostgreSQL advisory locks — only one node per shard holds the lock and processes outbox entries. Lock IDs are `broker_fanout.advisory_lock_base_id` plus the shard number, so brokers with fan-out in the same database need lock ranges which don't overlap: the default base is the same for all map brokers, and for all stream brokers. Centrifugo does not start when brokers with the same `dsn` have overlapping ranges – the same database reached through different DSNs is not checked.
+
+With Redis, outbox rows are published in batches. Bursts of large publications (from a few KB) can exceed the Redis limit of a PUB/SUB connection (`client-output-buffer-limit pubsub`, 32 MB by default): Redis then disconnects the node, which misses publications until it subscribes again. If you publish large messages this way, raise the limit in Redis.
 
 :::tip
 Automatic daily partitioning with configurable retention is built into the open-source PostgreSQL broker via the `partition_retention_days` and `partition_lookahead_days` settings — see [PostgreSQL map broker configuration](/docs/server/map_subscriptions#postgresql).

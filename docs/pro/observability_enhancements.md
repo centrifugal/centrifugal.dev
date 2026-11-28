@@ -440,6 +440,13 @@ These metrics describe the pgx connection pool Centrifugo PRO uses for PostgreSQ
 - **Description:** Consuming lag of the channel state events queue, per partition, in milliseconds.
 - **Usage:** A single lagging partition usually points at an unbalanced key distribution rather than at overall throughput.
 
+#### centrifugo_channel_state_events_queue_dropped_checks_total
+
+- **Type:** Counter
+- **Labels:** name, partition
+- **Description:** Since Centrifugo v6.10.4. Number of checks which found that undelivered channel state events were dropped from the queue of a partition, because the queue reached its maximum length while the backend endpoint was behind. Each partition is checked every 15 seconds, and a check counts only when more events were dropped since the previous one – so the value is the number of checks, not the number of dropped events. Every counted check is also logged as an error.
+- **Usage:** Alert on any increase. Dropped events may include `vacated` events, so after an increase sync the state of channels using presence information, as the [channel events](./channel_events.md) docs recommend.
+
 ### License
 
 #### centrifugo_license_expiration_timestamp_seconds

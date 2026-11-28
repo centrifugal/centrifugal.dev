@@ -160,6 +160,12 @@ When using `recoverable` or `persistent` mode, Redis must retain all stream data
 
 PostgreSQL-backed storage for durable, persistent state. Requires **PostgreSQL 16** or later. Centrifugo creates the required tables automatically on startup (unless `skip_schema_init` is set).
 
+:::caution Schema change in v6.10.4
+
+Centrifugo v6.10.4 updates the schema, and older versions don't start with it. See the [release notes](https://github.com/centrifugal/centrifugo/releases/tag/v6.10.4) before upgrading if you may need to roll back or use `skip_schema_init`.
+
+:::
+
 ```json title="config.json"
 {
   "map_broker": {
@@ -329,6 +335,7 @@ Declares the subscription type for the namespace — one of the [supported types
 | `map.stream_size` | integer | | Max stream entries (auto-derived for recoverable/persistent: 100) |
 | `map.stream_ttl` | [duration](./configuration.md#duration-type) | | Stream entry retention (auto-derived for recoverable/persistent: "1m") |
 | `map.meta_ttl` | [duration](./configuration.md#duration-type) | | Metadata retention (auto-derived) |
+| `map.meta_ttl_initial` | [duration](./configuration.md#duration-type) | | Metadata retention until the map's first publication, see [channel.history_meta_ttl_initial](./configuration.md#channelhistory_meta_ttl_initial) (inherited when not set). Not for `"ephemeral"` mode |
 
 #### Map publish permissions
 

@@ -500,6 +500,20 @@ New in Centrifugo v6.8.1
 - **Description:** Number of messages buffered in Redis PUB/SUB of the Redis map broker.
 - **Usage:** Monitor buffer levels to detect potential bottlenecks in map broker message processing and prevent message drops.
 
+#### centrifugo_broker_redis_potential_lost_writes_detections
+
+- **Type:** Counter
+- **Labels:** broker_name, reason
+- **Description:** Number of times this node detected that a Redis server's data may have lost writes, with [`detect_lost_writes`](./engines.md#engineredisdetect_lost_writes) enabled. `reason` is `restart_or_failover`, `stale_copy` (a server came back with data it had before a failover) or `reused_offset` (a subscriber received an offset it had already seen). The first use of a fresh Redis server is not counted.
+- **Usage:** Shows Redis failovers and restarts as Centrifugo saw them. Each detection is followed by a resync of subscribers of the affected channels and maps.
+
+#### centrifugo_broker_redis_potential_lost_writes_epoch_resets
+
+- **Type:** Counter
+- **Labels:** broker_name, kind, detection
+- **Description:** Number of channel streams (`kind` is `stream`) and maps (`kind` is `map`) that started a new epoch because their Redis server's data may have lost writes. `detection` is `script_cache` (the default detection) or `info` (with [`detect_lost_writes_with_info`](./engines.md#engineredisdetect_lost_writes_with_info)).
+- **Usage:** Shows how many channels and maps resynced their subscribers after a detection. Used for both the broker and the map broker.
+
 #### centrifugo_broker_publish_suppressed_count
 
 - **Type:** Counter
